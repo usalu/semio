@@ -21,7 +21,7 @@
 //! ## §6: `ruststep` is the independent READER, never a second producer
 //! `ruststep` 0.4 parses real ISO 10303-21 clear text (IFC2X3 is that syntax under the IFC2X3
 //! EXPRESS schema) but has no writer at all, so this module cannot claim a differential against a
-//! third-party PRODUCER. Every scenario in `../../../../🧪️tests/💎️mutate-ifc-2x3-cv20/🥒️.feature`
+//! third-party PRODUCER. Every scenario in `../../../../🧪️tests/🤝️mutate-ifc-2x3-cv20/🥒️.feature`
 //! is typed `@mode-property`/`@mode-round-trip` accordingly. `ruststep` IS what reads every result
 //! back before `semantic-ifc-v1` compares it, through `project_ifc_2x3_cv20` below.
 //!
@@ -193,7 +193,7 @@ mod tests {
     use super::{oracle_apply_mutation, project_ifc_2x3_cv20};
     use semio_repo_test_host::Json;
 
-    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
+    const FIXTURE: &[u8] = include_bytes!("../🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
 
     fn obj(entries: Vec<(&str, Json)>) -> Json {
         Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())

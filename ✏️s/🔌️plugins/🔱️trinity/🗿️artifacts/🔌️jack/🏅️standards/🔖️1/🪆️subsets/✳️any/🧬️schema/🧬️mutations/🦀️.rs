@@ -146,9 +146,9 @@ mod structural_correspondence_tests {
         {
             let kind = "create-node";
             let aggregate_variant = "CreateNode";
-            let directory = "🌱️create-node";
+            let directory = "➕️create-node";
             let binary_tag = 0;
-            let owner = mutation_root.join("🌱️create-node");
+            let owner = mutation_root.join("➕️create-node");
             let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
             let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");

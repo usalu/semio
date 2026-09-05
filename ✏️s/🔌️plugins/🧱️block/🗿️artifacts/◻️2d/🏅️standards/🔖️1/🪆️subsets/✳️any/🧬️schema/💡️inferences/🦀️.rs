@@ -33,19 +33,19 @@ pub struct Block2dInference {
 }
 
 impl protocol::Inference<Block2dSnapshot> for Block2dInference {
-    async fn infer(snapshot: &Block2dSnapshot) -> Self {
+    fn infer(snapshot: &Block2dSnapshot) -> Self {
         Self { bounds: compute_block2d_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Block2dSnapshot> for Block2dInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.block.block2d.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.block.block2d.inference.bounds", reads: &["handles"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::block2d::standards::v1::subsets::any
 /// its `Kit×Type` media port. Block owns no wire/edge-kind rows (`AGENTS.md`: referenced by
 /// `default_wire_kind` only), so those arrays stay empty here — a merge keeps the puzzle manifest's
 /// existing rows.
-pub async fn puzzle2d_manifest_fragment(definition: &Block2dSnapshot) -> Value {
+pub fn puzzle2d_manifest_fragment(definition: &Block2dSnapshot) -> Value {
     let port_kinds: Vec<Value> = definition.handle_kinds.iter().map(|kind| json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "presentation": { "color": kind.color.as_str(), "defaultWireKind": kind.default_wire_kind.as_str() } })).collect();
     let handles: Vec<Value> = definition.handles.iter().map(|handle| json!({ "handleKind": handle.handle_kind.as_str(), "angle": handle.angle, "radius": handle.radius })).collect();
     let node_kind = json!({
@@ -118,11 +118,11 @@ mod tests {
     use std::f64::consts::FRAC_PI_2;
 
     //#region 🧸️Fixtures
-    async fn handle(id: &str, angle: f64, radius: f64) -> Block2dHandleTemplate {
+    fn handle(id: &str, angle: f64, radius: f64) -> Block2dHandleTemplate {
         Block2dHandleTemplate { id: id.into(), handle_kind: "wire".into(), angle, radius }
     }
 
-    async fn snapshot_with_handles(handles: Vec<Block2dHandleTemplate>) -> Block2dSnapshot {
+    fn snapshot_with_handles(handles: Vec<Block2dHandleTemplate>) -> Block2dSnapshot {
         Block2dSnapshot { node_kind: BlockKindIdentity { id: "square".into(), name: "square".into(), label: "Square".into(), ..Default::default() }, handles, ..Block2dSnapshot::default() }
     }
     //#endregion 🧸️Fixtures

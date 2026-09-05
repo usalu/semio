@@ -4,7 +4,7 @@ use crate::{GatewayError, GatewayErrorCode};
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
 use semio_framework_os_kernel::os_directory::{
     client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
-    descriptor_digest_v1, hex_lower, DirectoryEventBody, DirectorySpaceDetailV1, DirectoryStreamMessage, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
+    descriptor_digest_v1, hex_lower, DirectoryEventBody, DirectorySpaceAdministrationPageV1, DirectoryStreamMessage, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
 };
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -182,13 +182,19 @@ impl HubRemoteBinding {
             error
         })?;
         self.set_progress(HubBindingPhase::LoadingSpace, 0, 0);
-        let detail = match client.space(ctx, &self.space_id).await {
-            Ok(detail) => detail,
+        let administration = match client.space_administration_page(ctx, &self.space_id, None).await {
+            Ok(page) => page,
             Err(error) => return self.fail(generation, map_client_error(error)),
         };
-        let (space, members, documents) = match detail {
-            DirectorySpaceDetailV1::Member { space, members, documents } | DirectorySpaceDetailV1::Author { space, members, documents, .. } => (space, members, documents),
-            DirectorySpaceDetailV1::Public { .. } => return self.fail(generation, HubBindingError::MembershipRequired),
+        let (space, members, documents) = match administration.page().clone() {
+            DirectorySpaceAdministrationPageV1::Member { space, members, documents, .. } | DirectorySpaceAdministrationPageV1::Author { space, members, documents, .. } => {
+                if members.next_cursor.is_some() || documents.next_cursor.is_some() {
+                    return self.fail(generation, HubBindingError::InvalidResponse("space administration page exceeds one bounded window"));
+                }
+                let members = members.rows.into_iter().map(|row| MemberView { user_id: row.user_id, email: row.email, display_name: row.display_name, role: row.role }).collect::<Vec<_>>();
+                (space, members, documents.rows)
+            }
+            DirectorySpaceAdministrationPageV1::Public { .. } => return self.fail(generation, HubBindingError::MembershipRequired),
         };
         let observed_event_seq = self.observed_event_seq.load(Ordering::SeqCst);
         let snapshot = match self.validate_snapshot(session.user_id, session.expires_at_ms, space, members, documents, observed_event_seq, ctx) {
@@ -430,7 +436,7 @@ fn unavailable_gateway_error(state: HubRemoteBindingState) -> GatewayError {
         .retryable()
 }
 
-fn percent_encode(value: &str) -> String {
+pub(crate) fn percent_encode(value: &str) -> String {
     let mut output = String::with_capacity(value.len());
     for byte in value.bytes() {
         match byte {
@@ -474,6 +480,7 @@ pub struct NativeHubBindingDriver {
     thread: Option<std::thread::JoinHandle<()>>,
     runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
     pair_transport: Arc<NativeCanonicalPairTransport<semio_framework_os_services::TokioHostRuntime>>,
+    inference_transport: Arc<crate::inference::NativeInferenceHubTransport<semio_framework_os_services::TokioHostRuntime>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -503,6 +510,7 @@ impl NativeHubBindingDriver {
             ActorId(0x4d43_5001),
         );
         let pair_transport = Arc::new(NativeCanonicalPairTransport::new(transport.clone(), credential.clone()));
+        let inference_transport = Arc::new(crate::inference::NativeInferenceHubTransport::new(transport.clone(), credential.clone()));
         let client = Arc::new(DirectoryClient::authenticated(transport, credential));
         let grant_source: Arc<dyn HubSocketGrantSource> = client.clone();
         let binding = Arc::new(HubRemoteBinding::new(base_url, space_id).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, error.to_string()))?);
@@ -625,7 +633,7 @@ impl NativeHubBindingDriver {
                 stream.close();
             })
             .map_err(|_| GatewayError::new(GatewayErrorCode::Internal, "could not start the hub descriptor binding actor"))?;
-        Ok((binding, Self { cancel, thread: Some(thread), runtime, pair_transport }, grant_source))
+        Ok((binding, Self { cancel, thread: Some(thread), runtime, pair_transport, inference_transport }, grant_source))
     }
 
     pub fn mount_canonical_pair(
@@ -689,6 +697,140 @@ fn complete_authorized_directory_dial<T: DirectoryTransport + Clone>(
     }
     stream.complete_dial(operation_now_ms, Ok(connection))
 }
+
+//#region 💡️Inference
+/// ⏱️ The bounded deadline every authenticated inference route call runs under. It is the hub's own
+/// fixed job lifetime plus one binding-operation timeout of slack, because `POST …/jobs` runs the
+/// bounded deterministic service inline before it answers.
+pub const HUB_INFERENCE_OPERATION_TIMEOUT_MS: u64 = 120_000 + HUB_BINDING_OPERATION_TIMEOUT_MS;
+
+impl HubRemoteBinding {
+    /// 🌐️ The normalized origin every protected inference request is pinned to.
+    pub fn hub_origin(&self) -> &str {
+        &self.hub_origin
+    }
+
+    /// 🏷️ The one space this binding was constructed for; a caller never supplies another.
+    pub fn space_id(&self) -> &str {
+        &self.space_id
+    }
+
+    /// 👤️ The live authenticated subject and coarse authority fence one inference job is owned by.
+    pub fn inference_subject(&self, wall_now_ms: i64) -> Result<crate::inference::HubInferenceSubjectV1, GatewayError> {
+        let snapshot = self.ready_snapshot(wall_now_ms)?;
+        let authority_generation = self.authority_generation.load(Ordering::SeqCst);
+        if authority_generation == 0 {
+            return Err(unavailable_gateway_error(HubRemoteBindingState::Refreshing));
+        }
+        Ok(crate::inference::HubInferenceSubjectV1 { hub_origin: self.hub_origin.clone(), space_id: self.space_id.clone(), user_id: snapshot.authenticated_user_id.clone(), authority_generation })
+    }
+
+    /// 📄️ Resolves one document id inside this binding's own space against the authenticated
+    /// descriptor index — never a caller-supplied scope, never a document from another space.
+    pub fn inference_document(&self, document_id: &str, wall_now_ms: i64) -> Result<(DocumentScope, AuthorizedDocumentView), GatewayError> {
+        let snapshot = self.ready_snapshot(wall_now_ms)?;
+        let scope = DocumentScope::new(self.space_id.clone(), document_id.to_string());
+        let document = snapshot
+            .documents
+            .get(&scope)
+            .ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("document `{document_id}` is not in this authenticated hub space")))?;
+        Ok((scope, document.clone()))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl NativeHubBindingDriver {
+    fn inference_context(&self, cancel: &semio_framework_async::CancelToken, timeout_ms: u64) -> (OperationContext, u64) {
+        use semio_framework_async::TraceId;
+        let operation_now = self.runtime.block_on(self.runtime.now_ms());
+        let context = OperationContext {
+            actor: 0x4d43_5002,
+            generation: 0,
+            trace: TraceId(operation_now),
+            lane: 1,
+            deadline_ms: Some(operation_now.saturating_add(timeout_ms)),
+            cancel: cancel.child_now(),
+            capability: None,
+        };
+        (context, operation_now)
+    }
+
+    /// 📥️ Submits one closed client intent through the protected inference transport and blocks the
+    /// synchronous MCP tool call until the hub answers or `cancel`/the deadline interrupts it.
+    pub fn submit_gis_map_inference_job(
+        &self, scope: &DocumentScope, hub_origin: &str, request: &crate::inference::GisMapInferenceSubmitRequestV1, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<crate::inference::GisMapInferenceJobReceiptV1, crate::inference::InferenceRouteErrorV1> {
+        let (context, _) = self.inference_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
+        self.runtime.block_on(crate::inference::submit_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
+    }
+
+    /// 📤️ Reads one owner-private bounded event page.
+    pub fn read_gis_map_inference_job_events(
+        &self, scope: &DocumentScope, hub_origin: &str, job_id: &str, after: u64, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<crate::inference::GisMapInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
+        let (context, _) = self.inference_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        self.runtime.block_on(crate::inference::read_gis_map_job_events(self.inference_transport.as_ref(), &context, hub_origin, scope, job_id, after))
+    }
+
+    /// 🛑️ Records the owner's durable cancel request.
+    pub fn cancel_gis_map_inference_job(
+        &self, scope: &DocumentScope, hub_origin: &str, job_id: &str, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<crate::inference::GisMapInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
+        let (context, _) = self.inference_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        self.runtime.block_on(crate::inference::cancel_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, job_id))
+    }
+
+    /// ✅️ Sends one explicit approval of an exact proposal hash.
+    pub fn approve_gis_map_inference_job(
+        &self, scope: &DocumentScope, hub_origin: &str, request: &crate::inference::GisMapInferenceApprovalRequestV1, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<crate::inference::GisMapInferenceApprovalReceiptV1, crate::inference::InferenceRouteErrorV1> {
+        let (context, _) = self.inference_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
+        self.runtime.block_on(crate::inference::approve_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
+    }
+
+    /// 🧊️ Mounts the P4-C canonical checkpoint pair for one scope and projects exactly the frozen
+    /// base identity an inference job is compared against: descriptor digest, active checkpoint,
+    /// catalog generation, etag and the verified baseline frontier.
+    pub fn gis_map_inference_base(&self, binding: &HubRemoteBinding, scope: &DocumentScope, cancel: &semio_framework_async::CancelToken) -> Result<crate::inference::GisMapInferenceBaseBindingV1, CanonicalPairMountError> {
+        let (context, operation_now) = self.inference_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        let mount = self.mount_canonical_pair(binding, scope, None, None, &context, wall_now_ms(), operation_now)?;
+        let identity = mount.identity();
+        let baseline = mount.baseline();
+        Ok(crate::inference::GisMapInferenceBaseBindingV1 {
+            hub_origin: identity.hub_origin.clone(),
+            space_id: identity.scope.space_id.clone(),
+            document_id: identity.scope.document_id.clone(),
+            authority_generation: identity.authority_generation,
+            descriptor_digest_v1: identity.descriptor_digest_v1.clone(),
+            active_checkpoint_id: identity.active_checkpoint_id.clone(),
+            etag: identity.etag.clone(),
+            catalog_generation: identity.catalog_generation,
+            head_edit_ordinal: baseline.head_edit_ordinal,
+            head_edit_id: baseline.head_edit_id.clone(),
+            last_commit_seq: baseline.last_commit_seq,
+            chain_hash: hex_lower(&baseline.chain_hash.0),
+        })
+    }
+}
+
+/// ⚠️ The typed gateway error one canonical pair mount failure answers with — the same closed
+/// mapping `binding_error_to_gateway` establishes for descriptor refresh failures.
+pub fn pair_mount_error_to_gateway(error: CanonicalPairMountError) -> GatewayError {
+    let code = match error {
+        CanonicalPairMountError::Cancelled => GatewayErrorCode::Cancelled,
+        CanonicalPairMountError::ResourceLimit => GatewayErrorCode::BudgetExceeded,
+        CanonicalPairMountError::InvalidResponse(_) => GatewayErrorCode::PreconditionFailed,
+        CanonicalPairMountError::Unauthorized => GatewayErrorCode::PermissionDenied,
+        CanonicalPairMountError::DeadlineExceeded | CanonicalPairMountError::DescriptorUnavailable | CanonicalPairMountError::InFlight | CanonicalPairMountError::StaleCompletion | CanonicalPairMountError::Unavailable => GatewayErrorCode::PluginUnavailable,
+    };
+    let gateway = GatewayError::new(code, error.to_string());
+    if matches!(code, GatewayErrorCode::PluginUnavailable) {
+        gateway.retryable()
+    } else {
+        gateway
+    }
+}
+//#endregion 💡️Inference
 
 #[cfg(test)]
 mod tests {
@@ -772,7 +914,10 @@ mod tests {
     fn client_for(case: &serde_json::Value) -> (DirectoryClient<RecordingTransport>, Arc<Mutex<Vec<(HttpMethod, String, bool)>>>) {
         let responses = case["responses"].as_array().unwrap().iter().map(|response| HttpResponse {
             status: response["status"].as_u64().unwrap() as u16,
-            body: serde_json::to_vec(&response["body"]).unwrap(),
+            body: match response.get("canonicalBody").and_then(serde_json::Value::as_str) {
+                Some(canonical) => canonical.as_bytes().to_vec(),
+                None => serde_json::to_vec(&response["body"]).unwrap(),
+            },
         }).collect();
         let requests = Arc::new(Mutex::new(Vec::new()));
         let transport = RecordingTransport { responses: Arc::new(Mutex::new(responses)), requests: requests.clone() };

@@ -35,6 +35,23 @@
         "forwardAllArgs": true
       }
     },
+    "inference-bridge-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-bridge-check --source"
+      }
+    },
+    "inference-bridge-process-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [{ "target": "build", "projects": ["@semio-tech/framework-os-mcp-rs"] }],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts inference-bridge-check --process"
+      }
+    },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "cache": false,

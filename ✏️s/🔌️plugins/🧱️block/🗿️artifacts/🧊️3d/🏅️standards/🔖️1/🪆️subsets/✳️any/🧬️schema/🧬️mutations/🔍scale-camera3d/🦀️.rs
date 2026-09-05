@@ -17,20 +17,20 @@ pub struct ScaleCamera3d {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn scale_camera3d(new_zoom: f64) -> Block3dMutation {
+pub fn scale_camera3d(new_zoom: f64) -> Block3dMutation {
     Block3dMutation::ScaleCamera3d(ScaleCamera3d { new_zoom })
 }
 
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ScaleCamera3d {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "camera3d", kind: "scale-camera3d", record: "ScaledCamera3d" };
 
-    async fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+    fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Scale camera to {}", self.new_zoom)
     }
 }

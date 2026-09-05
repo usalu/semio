@@ -19,7 +19,7 @@ export default {
   ],
   arrangement: {
     id: "recherche-schweiz-überblick",
-    name: "Überblick.ts",
+    name: "Überblick",
     dispositions: [
       {
         participantId: PARTICIPANT,

@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "appends-concrete-c30",
-              "directoryName": "🧪️appends-concrete-c30"
+              "directoryName": "🧱️appends-concrete-c30"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "removes-the-unreferenced-timber-material",
-              "directoryName": "🧪️removes-the-unreferenced-timber-material"
+              "directoryName": "🚫️removes-the-unreferenced-timber-material"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "restates-steel-as-s355-in-its-original-slot",
-              "directoryName": "🧪️restates-steel-as-s355-in-its-original-slot"
+              "directoryName": "🏗️restates-steel-as-s355-in-its-original-slot"
             }
           ]
         }

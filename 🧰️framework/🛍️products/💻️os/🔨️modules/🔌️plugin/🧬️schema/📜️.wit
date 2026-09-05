@@ -543,6 +543,17 @@ interface effects {
     topic: string,
   }
 
+  /// 💡️ The closed set of host-owned inference proposals a program may ask its shell to open.
+  enum inference-proposal-kind {
+    gis-map-bounds-region,
+  }
+
+  /// 💡️ Intent only: no document id, space id, idempotency key, receipt or credential crosses this
+  /// boundary — the shell already owns the document scope and holds every lifecycle state itself.
+  record request-inference-proposal-effect {
+    kind: inference-proposal-kind,
+  }
+
   variant effect {
     send-message(send-message-effect),
     publish-event(publish-event-effect),
@@ -589,6 +600,7 @@ interface effects {
     release-capability(release-capability-effect),
     subscribe(subscribe-effect),
     unsubscribe(subscribe-effect),
+    request-inference-proposal(request-inference-proposal-effect),
   }
 }
 

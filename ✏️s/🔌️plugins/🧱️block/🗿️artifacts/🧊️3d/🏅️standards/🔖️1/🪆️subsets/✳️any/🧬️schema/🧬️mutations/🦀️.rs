@@ -72,7 +72,7 @@ pub enum Block3dMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Block3dMutation`] variant, in declaration order — the exact
 /// vocabulary the `block-3d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `🧩️mutate-block-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `🧱️mutate-block-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "rename-object-kind",
@@ -155,14 +155,14 @@ pub use super::resize_vortex::{resize_vortex, ResizeVortex};
 pub use super::scale_camera3d::{scale_camera3d, ScaleCamera3d};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub async fn apply_block3d_mutation(projection: &mut Block3dSnapshot, mutation: &Block3dMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_block3d_mutation(projection: &mut Block3dSnapshot, mutation: &Block3dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub async fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3dMutation) -> Vec<Block3dMutation> {
+pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3dMutation) -> Vec<Block3dMutation> {
     mutation.inverse(projection)
 }
 
@@ -177,7 +177,7 @@ mod tests {
     use protocol::MutationDiff;
     use protocol::SemanticMutation;
 
-    async fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {
+    fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
@@ -189,7 +189,7 @@ mod tests {
         forward
     }
 
-    async fn seeded_snapshot() -> Block3dSnapshot {
+    fn seeded_snapshot() -> Block3dSnapshot {
         let mut base = empty_block3d_snapshot();
         base.representations.push(BlockRepresentation {
             id: "r0".into(),

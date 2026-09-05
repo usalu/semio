@@ -19,6 +19,13 @@
     }
   ],
   "fuelGrants": [1, 7, 4096],
+  "resume": {
+    "cuts": [32, 165, 166, 180, 254, 255],
+    "record": { "kind": 64, "flags": 2, "payloadHex": "020304" },
+    "addedBytes": 89,
+    "wrongSinkOffsets": [-1, 1],
+    "exhaustedSequence": "18446744073709551615"
+  },
   "negative": [
     { "id": "magic", "operation": "header-xor", "offset": 0, "value": 1, "repairCrc": true, "error": "header" },
     { "id": "major", "operation": "header-xor", "offset": 8, "value": 2, "repairCrc": true, "error": "header" },

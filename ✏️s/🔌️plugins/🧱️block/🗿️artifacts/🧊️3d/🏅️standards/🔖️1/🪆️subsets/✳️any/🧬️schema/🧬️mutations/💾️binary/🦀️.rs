@@ -11,12 +11,12 @@ use crate::artifacts::block3d::schema::mutations::text::Block3dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block3dMutation` to its binary command form.
-pub async fn encode_op(operation: &Block3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &Block3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Block3dMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Block3dMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Block3dMutation, protocol::ProtocolError> {
     Block3dMutation::decode_op(bytes)
 }
 

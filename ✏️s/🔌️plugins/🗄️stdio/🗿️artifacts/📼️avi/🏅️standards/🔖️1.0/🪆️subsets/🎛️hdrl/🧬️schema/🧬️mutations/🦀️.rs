@@ -368,6 +368,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🐬️promotes-the-second-movi-chunk-to-a-keyframe/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔑️promotes-the-second-movi-chunk-to-a-keyframe/🦀️.rs"]
 mod set_snapshot_promotes_the_second_movi_chunk_to_a_keyframe;
 //#endregion 🧪️FixtureCases

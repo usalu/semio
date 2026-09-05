@@ -457,6 +457,13 @@ export function parseDirectoryCommandRequestV1(source: string): DirectoryCommand
   return request;
 }
 
+/** 🔐️ Seals one completion by hashing its declaration-ordered unsigned canonical JSON — the exact
+ * twin of the Rust `DirectoryCommandReceiptV1::seal`. */
+export async function sealDirectoryCommandReceiptV1(requestId: string, commandSha256: string, outcome: DirectoryCommandOutcomeV1, events: readonly DirectoryEvent[], result: DirectoryCommandResultV1): Promise<DirectoryCommandReceiptV1> {
+  const unsigned = { schema: "semio.directory.command-receipt.v1" as const, requestId: directoryCommandRequestId(requestId), commandSha256: directoryEventPageHash(commandSha256, false), outcome, events: [...events], result };
+  return { ...unsigned, receiptSha256: await directoryEventPageSha256(JSON.stringify(unsigned)) };
+}
+
 /** 📥️ Parses exactly one canonical receipt bound to the request that asked for it. */
 export async function parseDirectoryCommandReceiptV1(source: string, request: DirectoryCommandRequestV1): Promise<DirectoryCommandReceiptV1> {
   if (new TextEncoder().encode(source).length > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES) throw new Error("directory-command.receipt-too-large");
@@ -643,7 +650,7 @@ export type DirectorySpaceListEntryV1 =
 
 export const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS = 64;
 export const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES = 48 * 1024;
-export const DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES = 512;
+export const DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES = 1024;
 export const DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA = "semio.directory.space-administration-page.v1";
 
 /** 🗂️ The one independently paged window a cursor may advance. */
@@ -1382,6 +1389,478 @@ export interface DocumentExecutionTargetProgressV1 {
   totalBytes: number;
 }
 //#endregion 🪪️ExecutionTargetLease
+
+//#region 💡️InferencePort
+/** 🧯️ Exact maximum accepted bytes for one inference request or approval body — the hub's own
+ * `REQUEST_MAX_BYTES`, shared verbatim by every transport so a client can never post a body the
+ * route would only reject. */
+export const GIS_MAP_INFERENCE_REQUEST_MAX_BYTES = 1024;
+/** 🧯️ Exact maximum accepted bytes for one bounded owner-private response body. */
+export const GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES = 16 * 1024;
+/** 📈️ Highest progress cursor the hub's append-only bounded progress table admits. */
+export const GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR = 16;
+/** 📃️ Highest number of lifecycle events one owner-private page may carry. */
+export const GIS_MAP_INFERENCE_EVENT_PAGE_MAX_ITEMS = 8;
+/** ⏳️ Highest job lifetime the hub admits for one submitted job. */
+export const GIS_MAP_INFERENCE_JOB_MAX_LIFETIME_MS = 120_000;
+/** 🔖️ The one inference service the GIS Map port may name. */
+export const GIS_MAP_INFERENCE_SERVICE_ID = "s.gis.gismap.inference";
+
+/** 📤️ The closed client intent one submit carries. It names a service and a lifetime and nothing
+ * else: no model, provider, prompt, budget, base pack or proposal ever crosses this boundary. */
+export interface GisMapInferenceJobRequestV1 {
+  schema: "semio.hub.inference-request/v1";
+  version: 1;
+  requestId: string;
+  serviceId: typeof GIS_MAP_INFERENCE_SERVICE_ID;
+  policyVersion: 1;
+  lifetimeMs: number;
+}
+
+/** ✅️ The closed body one approval carries: the offered job and the exact hash the server itself
+ * published. A client never computes this hash — it only echoes back what `offered` reported. */
+export interface GisMapInferenceApprovalRequestV1 {
+  schema: "semio.hub.inference-approval/v1";
+  version: 1;
+  jobId: string;
+  proposalHash: string;
+}
+
+/** 🖥️ The hub's own job lifecycle vocabulary, mirrored exactly. */
+export type GisMapInferenceJobStateV1 = "accepted" | "running" | "succeeded" | "failed" | "cancelled";
+/** 🖥️ The hub's own proposal lifecycle vocabulary, mirrored exactly. */
+export type GisMapInferenceProposalStateV1 = "none" | "offered" | "approved" | "stale" | "cancelled";
+
+/** 🧾️ The closed receipt one accepted submit returns; it never carries private result or base bytes. */
+export interface GisMapInferenceJobReceiptV1 {
+  schema: string;
+  jobId: string;
+  state: GisMapInferenceJobStateV1;
+  proposalState: GisMapInferenceProposalStateV1;
+  proposalHash?: string;
+  cursor: number;
+  expiresAtMs: number;
+}
+
+/** 📈️ One owner-private progress row. */
+export interface GisMapInferenceProgressV1 {
+  cursor: number;
+  runEpoch: number;
+  completed: number;
+  total: number;
+  atMs: number;
+}
+
+/** 🗓️ One owner-private lifecycle event. */
+export interface GisMapInferenceEventV1 {
+  ordinal: number;
+  kind: string;
+  atMs: number;
+}
+
+/** 🗺️ Hub-validated, owner-private bounds geometry safe for host review. */
+export interface GisMapInferencePreviewV1 {
+  schema: "semio.hub.gis-map-inference-preview/v1";
+  jobId: string;
+  proposalHash: string;
+  regionId: string;
+  ring: readonly [readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number]];
+}
+
+/** 📃️ The owner-private bounded page one events, cancel or poll read returns. */
+export interface GisMapInferenceEventPageV1 {
+  schema: string;
+  jobId: string;
+  state: GisMapInferenceJobStateV1;
+  proposalState: GisMapInferenceProposalStateV1;
+  cancelRequested: boolean;
+  stale: boolean;
+  proposalHash?: string;
+  preview?: GisMapInferencePreviewV1;
+  events: readonly GisMapInferenceEventV1[];
+  progress: readonly GisMapInferenceProgressV1[];
+  nextCursor: number;
+}
+
+/** ✅️ The closed approval outcome; `applied` is true only after a real committed-WAL witness. */
+export interface GisMapInferenceApprovalReceiptV1 {
+  schema: string;
+  jobId: string;
+  mutationId: string;
+  commandHash: string;
+  proposalHash: string;
+  applied: boolean;
+}
+
+/** 🚦️ The complete published failure vocabulary the four authenticated routes may answer with,
+ * plus the two the client itself may reach: `transport` for an indeterminate call and
+ * `lease-unverified` for a port refused before any request existed. */
+export type GisMapInferencePortCodeV1 =
+  | "inference.unavailable"
+  | "inference.denied"
+  | "inference.not-found"
+  | "inference.invalid"
+  | "inference.bounds"
+  | "inference.conflict"
+  | "inference.capacity"
+  | "inference.expired"
+  | "inference.cancelled"
+  | "approval.commit-unavailable"
+  | "inference.storage"
+  | "inference.transport"
+  | "inference.lease-unverified";
+
+/** 💡️ The complete rendered lifecycle of one host-owned ephemeral inference port. `idle` and
+ * `submitting` have no server counterpart at all (nothing has been accepted yet), `approving`
+ * corresponds to the server's `approval-prepared`, and the four terminals are exactly the packet's
+ * `applied | cancelled | stale | failed`. */
+export type GisMapInferencePortPhaseV1 = "idle" | "submitting" | "running" | "offered" | "approving" | "applied" | "cancelled" | "stale" | "failed";
+
+/** 💡️ Complete renderer-visible state of one document's port. It carries a phase, the server's own
+ * job id, its bounded progress cursor, the hash the server published, whether a cancel was
+ * requested, and one closed failure code — never a receipt, bearer, origin, path, base pack,
+ * proposal body or user identity, and never anything persisted into the document. */
+export interface GisMapInferencePortStatusV1 {
+  phase: GisMapInferencePortPhaseV1;
+  jobId: string | null;
+  cursor: number;
+  completed: number;
+  total: number;
+  proposalHash: string | null;
+  preview?: GisMapInferencePreviewV1;
+  cancelRequested: boolean;
+  code: GisMapInferencePortCodeV1 | null;
+}
+
+/** 🎬️ Every input the port's state machine accepts. `start`/`approve`/`cancel` are operator
+ * intents, `receipt`/`page`/`approval` are exact server answers, `lease-unverified` is the
+ * precondition refusal, `failed` is one closed transport/route rejection, and `clear` retires the
+ * port. Nothing else can move a phase. */
+export type GisMapInferencePortEventV1 =
+  | { kind: "start" }
+  | { kind: "lease-unverified" }
+  | { kind: "receipt"; receipt: GisMapInferenceJobReceiptV1 }
+  | { kind: "page"; page: GisMapInferenceEventPageV1 }
+  | { kind: "approve" }
+  | { kind: "approval"; receipt: GisMapInferenceApprovalReceiptV1 }
+  | { kind: "cancel" }
+  | { kind: "failed"; code: GisMapInferencePortCodeV1 }
+  | { kind: "clear" };
+
+/** 💤️ The one starting value; a document with no port has exactly this. */
+export function idleGisMapInferencePortStatusV1(): GisMapInferencePortStatusV1 {
+  return { phase: "idle", jobId: null, cursor: 0, completed: 0, total: 0, proposalHash: null, cancelRequested: false, code: null };
+}
+
+/** 🏁️ A terminal phase accepts no further server answer — only an explicit `clear`. */
+export function gisMapInferencePortTerminalV1(phase: GisMapInferencePortPhaseV1): boolean {
+  return phase === "applied" || phase === "cancelled" || phase === "stale" || phase === "failed";
+}
+
+/** 🔊️ ARIA live-region politeness: work in flight announces politely, every terminal asserts. */
+export function gisMapInferencePortRoleV1(phase: GisMapInferencePortPhaseV1): "status" | "alert" {
+  return gisMapInferencePortTerminalV1(phase) ? "alert" : "status";
+}
+
+/** 🗺️ Projects one exact server page onto a rendered phase. `stale` outranks everything (the base
+ * the job was accepted against is gone), then the job's own terminal states, then the proposal's. */
+function gisMapInferenceServerPhaseV1(page: GisMapInferenceEventPageV1): GisMapInferencePortPhaseV1 {
+  if (page.stale || page.proposalState === "stale") return "stale";
+  if (page.state === "cancelled" || page.proposalState === "cancelled") return "cancelled";
+  if (page.state === "failed") return "failed";
+  if (page.proposalState === "approved") return "applied";
+  if (page.proposalState === "offered" || page.state === "succeeded") return "offered";
+  return "running";
+}
+
+function gisMapInferenceWithoutPreviewV1(status: GisMapInferencePortStatusV1): Omit<GisMapInferencePortStatusV1, "preview"> {
+  const { preview: _preview, ...rest } = status;
+  return rest;
+}
+
+/** 🧮️ Total, pure transition. It never fabricates a phase the server has not reported: `submitting`
+ * is only left on an exact receipt, `cancelled` only on an exact server answer (a Cancel click is
+ * recorded as `cancelRequested`, never as an optimistic terminal), `approving` is only reachable
+ * from `offered`, and an answer for a different job id or after a terminal is ignored outright. */
+export function reduceGisMapInferencePortV1(current: GisMapInferencePortStatusV1, event: GisMapInferencePortEventV1): GisMapInferencePortStatusV1 {
+  if (event.kind === "clear") return idleGisMapInferencePortStatusV1();
+  if (gisMapInferencePortTerminalV1(current.phase)) return current;
+  switch (event.kind) {
+    case "start":
+      return current.phase === "idle" ? { ...idleGisMapInferencePortStatusV1(), phase: "submitting" } : current;
+    case "lease-unverified":
+      return current.phase === "idle" || current.phase === "submitting" ? { ...current, phase: "failed", code: "inference.lease-unverified" } : current;
+    case "receipt": {
+      if (current.phase !== "submitting") return current;
+      const page: GisMapInferenceEventPageV1 = {
+        schema: event.receipt.schema,
+        jobId: event.receipt.jobId,
+        state: event.receipt.state,
+        proposalState: event.receipt.proposalState,
+        cancelRequested: false,
+        stale: false,
+        ...(event.receipt.proposalHash === undefined ? {} : { proposalHash: event.receipt.proposalHash }),
+        events: [],
+        progress: [],
+        nextCursor: event.receipt.cursor,
+      };
+      return { ...gisMapInferenceWithoutPreviewV1(current), phase: gisMapInferenceServerPhaseV1(page), jobId: event.receipt.jobId, cursor: event.receipt.cursor, proposalHash: event.receipt.proposalHash ?? null };
+    }
+    case "page": {
+      if (current.jobId === null || current.jobId !== event.page.jobId) return current;
+      const latest = event.page.progress.at(-1);
+      const server = gisMapInferenceServerPhaseV1(event.page);
+      const phase = current.phase === "approving" && !gisMapInferencePortTerminalV1(server) ? "approving" : server;
+      return {
+        ...gisMapInferenceWithoutPreviewV1(current),
+        phase,
+        cursor: Math.max(current.cursor, event.page.nextCursor),
+        completed: latest?.completed ?? current.completed,
+        total: latest?.total ?? current.total,
+        proposalHash: event.page.proposalHash ?? null,
+        ...((phase === "offered" || phase === "approving") && event.page.preview !== undefined ? { preview: event.page.preview } : {}),
+        cancelRequested: current.cancelRequested || event.page.cancelRequested,
+        code: phase === "failed" ? (current.code ?? "inference.storage") : current.code,
+      };
+    }
+    case "approve":
+      return current.phase === "offered" && current.proposalHash !== null && current.preview?.proposalHash === current.proposalHash && current.preview.jobId === current.jobId && !current.cancelRequested ? { ...current, phase: "approving" } : current;
+    case "approval": {
+      if (current.phase !== "approving" || current.jobId !== event.receipt.jobId || current.proposalHash !== event.receipt.proposalHash) return current;
+      const withoutPreview = gisMapInferenceWithoutPreviewV1(current);
+      return event.receipt.applied ? { ...withoutPreview, phase: "applied" } : { ...withoutPreview, phase: "failed", code: "approval.commit-unavailable" };
+    }
+    case "cancel":
+      return current.phase === "idle" ? current : { ...current, cancelRequested: true };
+    case "failed":
+      return { ...gisMapInferenceWithoutPreviewV1(current), phase: event.code === "inference.cancelled" ? "cancelled" : "failed", code: event.code };
+  }
+}
+
+/** 🌐️ Complete localized phase text. EN and DE are both explicit; there is no default language and
+ * no fallback. No string carries an origin, path, receipt, digest or user identity. */
+export const GIS_MAP_INFERENCE_PORT_TEXT_V1: Readonly<Record<GisMapInferencePortPhaseV1, Readonly<Record<"en" | "de", string>>>> = Object.freeze({
+  idle: Object.freeze({ en: "No proposal requested.", de: "Kein Vorschlag angefordert." }),
+  submitting: Object.freeze({ en: "Requesting a bounds proposal…", de: "Begrenzungsvorschlag wird angefordert…" }),
+  running: Object.freeze({ en: "Computing the bounds proposal…", de: "Begrenzungsvorschlag wird berechnet…" }),
+  offered: Object.freeze({ en: "A bounds proposal is ready for review.", de: "Ein Begrenzungsvorschlag liegt zur Prüfung bereit." }),
+  approving: Object.freeze({ en: "Waiting for the server to commit the approved proposal…", de: "Warten auf die Freigabe des Vorschlags durch den Server…" }),
+  applied: Object.freeze({ en: "The approved proposal was committed to the document.", de: "Der freigegebene Vorschlag wurde im Dokument übernommen." }),
+  cancelled: Object.freeze({ en: "The proposal was cancelled.", de: "Der Vorschlag wurde abgebrochen." }),
+  stale: Object.freeze({ en: "The document changed while the proposal ran. Request a new one.", de: "Das Dokument hat sich während des Vorschlags geändert. Fordern Sie einen neuen an." }),
+  failed: Object.freeze({ en: "The proposal did not complete.", de: "Der Vorschlag wurde nicht abgeschlossen." }),
+});
+
+/** 🌐️ Complete localized failure text, one entry per published code, EN and DE both explicit. */
+export const GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1: Readonly<Record<GisMapInferencePortCodeV1, Readonly<Record<"en" | "de", string>>>> = Object.freeze({
+  "inference.unavailable": Object.freeze({ en: "Proposals are unavailable for this document.", de: "Für dieses Dokument sind keine Vorschläge verfügbar." }),
+  "inference.denied": Object.freeze({ en: "You may not request proposals for this document.", de: "Sie dürfen für dieses Dokument keine Vorschläge anfordern." }),
+  "inference.not-found": Object.freeze({ en: "This proposal no longer exists.", de: "Dieser Vorschlag existiert nicht mehr." }),
+  "inference.invalid": Object.freeze({ en: "The request was rejected as malformed.", de: "Die Anfrage wurde als fehlerhaft abgelehnt." }),
+  "inference.bounds": Object.freeze({ en: "The request exceeded its accepted size.", de: "Die Anfrage hat die zulässige Größe überschritten." }),
+  "inference.conflict": Object.freeze({ en: "The document changed; request a new proposal.", de: "Das Dokument hat sich geändert; fordern Sie einen neuen Vorschlag an." }),
+  "inference.capacity": Object.freeze({ en: "Too many proposals are running. Try again shortly.", de: "Es laufen zu viele Vorschläge. Versuchen Sie es in Kürze erneut." }),
+  "inference.expired": Object.freeze({ en: "This proposal expired before it was approved.", de: "Dieser Vorschlag ist vor der Freigabe abgelaufen." }),
+  "inference.cancelled": Object.freeze({ en: "The proposal was cancelled.", de: "Der Vorschlag wurde abgebrochen." }),
+  "approval.commit-unavailable": Object.freeze({ en: "The approved proposal could not be committed and was not applied.", de: "Der freigegebene Vorschlag konnte nicht übernommen werden und wurde nicht angewendet." }),
+  "inference.storage": Object.freeze({ en: "The proposal service is temporarily unavailable.", de: "Der Vorschlagsdienst ist vorübergehend nicht verfügbar." }),
+  "inference.transport": Object.freeze({ en: "The outcome is unknown. Reopen the document before retrying.", de: "Das Ergebnis ist unbekannt. Öffnen Sie das Dokument erneut, bevor Sie es wiederholen." }),
+  "inference.lease-unverified": Object.freeze({ en: "This document has no verified execution target, so no proposal can start.", de: "Dieses Dokument hat kein verifiziertes Ausführungsziel, daher kann kein Vorschlag starten." }),
+});
+
+/** 🌐️ Complete localized control and region labels, EN and DE both explicit. */
+export const GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1: Readonly<Record<"heading" | "cancel" | "approve" | "close" | "progress" | "region" | "longitude" | "latitude", Readonly<Record<"en" | "de", string>>>> = Object.freeze({
+  heading: Object.freeze({ en: "Bounds proposal", de: "Begrenzungsvorschlag" }),
+  cancel: Object.freeze({ en: "Cancel proposal", de: "Vorschlag abbrechen" }),
+  approve: Object.freeze({ en: "Approve proposal", de: "Vorschlag freigeben" }),
+  close: Object.freeze({ en: "Close proposal", de: "Vorschlag schließen" }),
+  progress: Object.freeze({ en: "Proposal progress", de: "Fortschritt des Vorschlags" }),
+  region: Object.freeze({ en: "Region", de: "Gebiet" }),
+  longitude: Object.freeze({ en: "Longitude extent", de: "Längengradbereich" }),
+  latitude: Object.freeze({ en: "Latitude extent", de: "Breitengradbereich" }),
+});
+
+function gisMapInferenceHex(value: unknown, length: number): string {
+  if (typeof value !== "string" || value.length !== length || !/^[0-9a-f]+$/u.test(value)) throw new Error("gis-map-inference.invalid-hex");
+  return value;
+}
+
+function gisMapInferenceJobState(value: unknown): GisMapInferenceJobStateV1 {
+  if (value !== "accepted" && value !== "running" && value !== "succeeded" && value !== "failed" && value !== "cancelled") throw new Error("gis-map-inference.invalid-state");
+  return value;
+}
+
+function gisMapInferenceProposalState(value: unknown): GisMapInferenceProposalStateV1 {
+  if (value !== "none" && value !== "offered" && value !== "approved" && value !== "stale" && value !== "cancelled") throw new Error("gis-map-inference.invalid-proposal-state");
+  return value;
+}
+
+/** 🗺️ Strictly decodes one bounded rectangular preview and rejects any substituted shape. */
+export function parseGisMapInferencePreviewV1(value: unknown): GisMapInferencePreviewV1 {
+  const object = documentOpenObject(value, ["schema", "jobId", "proposalHash", "regionId", "ring"]);
+  const jobId = gisMapInferenceHex(object.jobId, 32);
+  const proposalHash = gisMapInferenceHex(object.proposalHash, 64);
+  if (object.schema !== "semio.hub.gis-map-inference-preview/v1" || object.regionId !== `inference-${jobId}` || !Array.isArray(object.ring) || object.ring.length !== 5) throw new Error("gis-map-inference.invalid-preview");
+  const ring = object.ring.map((point) => {
+    if (!Array.isArray(point) || point.length !== 2 || point.some((coordinate) => typeof coordinate !== "number" || !Number.isFinite(coordinate))) throw new Error("gis-map-inference.invalid-preview");
+    return [point[0] as number, point[1] as number] as const;
+  }) as unknown as GisMapInferencePreviewV1["ring"];
+  const [lonMin, latMin] = ring[0];
+  const [lonMax, latMax] = ring[2];
+  if (lonMin < -180 || lonMax > 180 || latMin < -90 || latMax > 90 || lonMin > lonMax || latMin > latMax
+    || ring.some((point, index) => point[0] !== [lonMin, lonMax, lonMax, lonMin, lonMin][index] || point[1] !== [latMin, latMin, latMax, latMax, latMin][index])) throw new Error("gis-map-inference.invalid-preview");
+  return { schema: object.schema, jobId, proposalHash, regionId: object.regionId, ring };
+}
+
+/** 💡️ Strictly decodes the private worker-to-host status projection. */
+export function parseGisMapInferencePortStatusV1(value: unknown): GisMapInferencePortStatusV1 {
+  const object = documentOpenObject(value, ["phase", "jobId", "cursor", "completed", "total", "proposalHash", "cancelRequested", "code"], ["preview"]);
+  const phases: readonly GisMapInferencePortPhaseV1[] = ["idle", "submitting", "running", "offered", "approving", "applied", "cancelled", "stale", "failed"];
+  const codes: readonly GisMapInferencePortCodeV1[] = ["inference.unavailable", "inference.denied", "inference.not-found", "inference.invalid", "inference.bounds", "inference.conflict", "inference.capacity", "inference.expired", "inference.cancelled", "approval.commit-unavailable", "inference.storage", "inference.transport", "inference.lease-unverified"];
+  if (!phases.includes(object.phase as GisMapInferencePortPhaseV1) || typeof object.cancelRequested !== "boolean" || object.jobId !== null && typeof object.jobId !== "string" || object.proposalHash !== null && typeof object.proposalHash !== "string" || object.preview !== undefined && (typeof object.preview !== "object" || object.preview === null) || object.code !== null && !codes.includes(object.code as GisMapInferencePortCodeV1)) throw new Error("gis-map-inference.invalid-status");
+  const status: GisMapInferencePortStatusV1 = {
+    phase: object.phase as GisMapInferencePortPhaseV1,
+    jobId: object.jobId === null ? null : gisMapInferenceHex(object.jobId, 32),
+    cursor: documentOpenInteger(object.cursor),
+    completed: documentOpenInteger(object.completed),
+    total: documentOpenInteger(object.total, true),
+    proposalHash: object.proposalHash === null ? null : gisMapInferenceHex(object.proposalHash, 64),
+    ...(object.preview === undefined ? {} : { preview: parseGisMapInferencePreviewV1(object.preview) }),
+    cancelRequested: object.cancelRequested,
+    code: object.code as GisMapInferencePortCodeV1 | null,
+  };
+  if (status.cursor > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR || status.completed > status.total || status.preview !== undefined && (status.phase !== "offered" && status.phase !== "approving" || status.jobId !== status.preview.jobId || status.proposalHash !== status.preview.proposalHash)) throw new Error("gis-map-inference.invalid-status");
+  return status;
+}
+
+/** 📤️ Seals one submit intent under the exact route bound; an oversized body never leaves. */
+export function sealGisMapInferenceJobRequestV1(requestId: string, lifetimeMs: number): GisMapInferenceJobRequestV1 {
+  const request: GisMapInferenceJobRequestV1 = {
+    schema: "semio.hub.inference-request/v1",
+    version: 1,
+    requestId: gisMapInferenceHex(requestId, 32),
+    serviceId: GIS_MAP_INFERENCE_SERVICE_ID,
+    policyVersion: 1,
+    lifetimeMs: documentOpenInteger(lifetimeMs, true),
+  };
+  if (request.lifetimeMs > GIS_MAP_INFERENCE_JOB_MAX_LIFETIME_MS) throw new Error("gis-map-inference.invalid-lifetime");
+  if (new TextEncoder().encode(JSON.stringify(request)).length > GIS_MAP_INFERENCE_REQUEST_MAX_BYTES) throw new Error("gis-map-inference.oversized-request");
+  return request;
+}
+
+/** ✅️ Seals one approval body; the hash is echoed, never computed here. */
+export function sealGisMapInferenceApprovalRequestV1(jobId: string, proposalHash: string): GisMapInferenceApprovalRequestV1 {
+  const request: GisMapInferenceApprovalRequestV1 = { schema: "semio.hub.inference-approval/v1", version: 1, jobId: gisMapInferenceHex(jobId, 32), proposalHash: gisMapInferenceHex(proposalHash, 64) };
+  if (new TextEncoder().encode(JSON.stringify(request)).length > GIS_MAP_INFERENCE_REQUEST_MAX_BYTES) throw new Error("gis-map-inference.oversized-request");
+  return request;
+}
+
+/** 🧾️ Strictly parses one accepted-submit receipt. */
+export function parseGisMapInferenceJobReceiptV1(value: unknown): GisMapInferenceJobReceiptV1 {
+  const object = documentOpenObject(value, ["schema", "jobId", "state", "proposalState", "cursor", "expiresAtMs"], ["proposalHash"]);
+  const cursor = documentOpenInteger(object.cursor);
+  if (cursor > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR) throw new Error("gis-map-inference.invalid-cursor");
+  return {
+    schema: documentOpenText(object.schema),
+    jobId: gisMapInferenceHex(object.jobId, 32),
+    state: gisMapInferenceJobState(object.state),
+    proposalState: gisMapInferenceProposalState(object.proposalState),
+    ...(object.proposalHash === undefined ? {} : { proposalHash: gisMapInferenceHex(object.proposalHash, 64) }),
+    cursor,
+    expiresAtMs: documentOpenInteger(object.expiresAtMs, true),
+  };
+}
+
+/** 📃️ Strictly parses one bounded owner-private page, enforcing every published item/cursor bound
+ * and a monotonically non-decreasing progress fold. */
+export function parseGisMapInferenceEventPageV1(value: unknown): GisMapInferenceEventPageV1 {
+  const object = documentOpenObject(value, ["schema", "jobId", "state", "proposalState", "cancelRequested", "stale", "events", "progress", "nextCursor"], ["proposalHash", "preview"]);
+  if (typeof object.cancelRequested !== "boolean" || typeof object.stale !== "boolean") throw new Error("gis-map-inference.invalid-flags");
+  if (!Array.isArray(object.events) || object.events.length > GIS_MAP_INFERENCE_EVENT_PAGE_MAX_ITEMS) throw new Error("gis-map-inference.invalid-events");
+  if (!Array.isArray(object.progress) || object.progress.length > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR) throw new Error("gis-map-inference.invalid-progress");
+  const nextCursor = documentOpenInteger(object.nextCursor);
+  if (nextCursor > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR) throw new Error("gis-map-inference.invalid-cursor");
+  let ordinal = 0;
+  const events = object.events.map((row) => {
+    const event = documentOpenObject(row, ["ordinal", "kind", "atMs"]);
+    const next = documentOpenInteger(event.ordinal, true);
+    if (next <= ordinal) throw new Error("gis-map-inference.unordered-events");
+    ordinal = next;
+    return { ordinal: next, kind: documentOpenText(event.kind), atMs: documentOpenInteger(event.atMs, true) };
+  });
+  let cursor = 0;
+  let completed = 0;
+  const progress = object.progress.map((row) => {
+    const item = documentOpenObject(row, ["cursor", "runEpoch", "completed", "total", "atMs"]);
+    const nextCursorValue = documentOpenInteger(item.cursor, true);
+    const nextCompleted = documentOpenInteger(item.completed);
+    const total = documentOpenInteger(item.total, true);
+    if (nextCursorValue <= cursor || nextCursorValue > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR || nextCompleted < completed || nextCompleted > total) throw new Error("gis-map-inference.invalid-progress");
+    cursor = nextCursorValue;
+    completed = nextCompleted;
+    return { cursor: nextCursorValue, runEpoch: documentOpenInteger(item.runEpoch), completed: nextCompleted, total, atMs: documentOpenInteger(item.atMs, true) };
+  });
+  const jobId = gisMapInferenceHex(object.jobId, 32);
+  const state = gisMapInferenceJobState(object.state);
+  const proposalState = gisMapInferenceProposalState(object.proposalState);
+  const proposalHash = object.proposalHash === undefined ? undefined : gisMapInferenceHex(object.proposalHash, 64);
+  const preview = object.preview === undefined ? undefined : parseGisMapInferencePreviewV1(object.preview);
+  if (preview !== undefined && (state !== "succeeded" || proposalState !== "offered" || object.cancelRequested || object.stale || proposalHash === undefined || preview.jobId !== jobId || preview.proposalHash !== proposalHash)) throw new Error("gis-map-inference.invalid-preview-owner");
+  return {
+    schema: documentOpenText(object.schema),
+    jobId,
+    state,
+    proposalState,
+    cancelRequested: object.cancelRequested,
+    stale: object.stale,
+    ...(proposalHash === undefined ? {} : { proposalHash }),
+    ...(preview === undefined ? {} : { preview }),
+    events,
+    progress,
+    nextCursor,
+  };
+}
+
+/** ✅️ Strictly parses one approval receipt. */
+export function parseGisMapInferenceApprovalReceiptV1(value: unknown): GisMapInferenceApprovalReceiptV1 {
+  const object = documentOpenObject(value, ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied"]);
+  if (typeof object.applied !== "boolean") throw new Error("gis-map-inference.invalid-applied");
+  return {
+    schema: documentOpenText(object.schema),
+    jobId: gisMapInferenceHex(object.jobId, 32),
+    mutationId: gisMapInferenceHex(object.mutationId, 64),
+    commandHash: gisMapInferenceHex(object.commandHash, 64),
+    proposalHash: gisMapInferenceHex(object.proposalHash, 64),
+    applied: object.applied,
+  };
+}
+
+/** 🚦️ Maps one exact HTTP status onto the published failure vocabulary; an unmapped status is
+ * indeterminate, never silently successful. */
+export function gisMapInferenceCodeFromStatusV1(status: number): GisMapInferencePortCodeV1 {
+  switch (status) {
+    case 400:
+      return "inference.invalid";
+    case 403:
+      return "inference.denied";
+    case 404:
+      return "inference.not-found";
+    case 409:
+      return "inference.conflict";
+    case 410:
+      return "inference.expired";
+    case 413:
+      return "inference.bounds";
+    case 429:
+      return "inference.capacity";
+    case 503:
+      return "inference.unavailable";
+    default:
+      return "inference.transport";
+  }
+}
+//#endregion 💡️InferencePort
+
 
 export interface ArtifactFrontier {
   documentId: string;

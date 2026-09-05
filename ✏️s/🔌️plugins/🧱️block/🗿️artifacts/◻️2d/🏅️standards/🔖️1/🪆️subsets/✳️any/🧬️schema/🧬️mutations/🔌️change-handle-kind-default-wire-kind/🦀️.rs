@@ -18,23 +18,23 @@ pub struct ChangeHandleKindDefaultWireKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_handle_kind_default_wire_kind(id: String, new_default_wire_kind: String) -> Block2dMutation {
+pub fn change_handle_kind_default_wire_kind(id: String, new_default_wire_kind: String) -> Block2dMutation {
     Block2dMutation::ChangeHandleKindDefaultWireKind(ChangeHandleKindDefaultWireKind { id, new_default_wire_kind })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeHandleKindDefaultWireKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "handle-kind", kind: "change-handle-kind-default-wire-kind", record: "ChangedHandleKindDefaultWireKind" };
 
-    async fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change handle kind \"{}\" default wire kind to \"{}\"", self.id, self.new_default_wire_kind)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

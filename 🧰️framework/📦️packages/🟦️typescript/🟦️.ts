@@ -795,7 +795,8 @@ if (import.meta.vitest) {
       const opened: string[] = [], closed: string[] = [];
       vi.stubGlobal("EventSource", class {
         onmessage: ((event: MessageEvent) => void) | null = null;
-        constructor(private readonly url: string) { opened.push(url); }
+        readonly url: string;
+        constructor(url: string) { this.url = url; opened.push(url); }
         close() { closed.push(this.url); }
       });
       try {

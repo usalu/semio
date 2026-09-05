@@ -1,0 +1,208 @@
+\label{anlage:skalierung}
+
+Diese Anlage fasst die Rechercheergebnisse zur Skalierung der Wiederverwendung in einer Systemkarte zusammen. Zwei ergänzende Prüftabellen stehen als eigene Anhänge: die dokumentierte Funktionsabdeckung von elf Plattformen (\appendixref{anlage:nachweismatrix}) und deren Integrationsreife als anbindbare Datenquelle (\appendixref{anlage:integrationsreife}).
+
+Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Bericht genannten Fällen zusammengeführt (Stand August~2026). Sie liegen damit teils nach dem Berichtszeitraum, ergänzen den Bericht und sind nicht Teil der im Zeitraum erbrachten Leistung.
+
+\appendixsection[SM]{Systemkarte}
+
+%region Daten
+% Ein Spaltenraster für B, C und D: der Prozess-Rückgrat der neun D2R-Prozesse
+% (buildingSMART), auf das die Funktions- und Dienste-Spannen sich beziehen.
+\SemioVizScale{d2r}{band}
+  {pre-decon, decon, bank, reuse, reman, inventory, design-reuse, design-with, building}
+  {27, 146.5}
+
+\SemioVizTable{sk-dimension}{label}
+\SemioVizRow{sk-dimension}{Geografische Reichweite}
+\SemioVizRow{sk-dimension}{Organisa\-torische Reichweite}
+\SemioVizRow{sk-dimension}{Operative Aktivität}
+\SemioVizRow{sk-dimension}{Institu\-tionelle Reife}
+\SemioVizRow{sk-dimension}{Kontinuität}
+\SemioVizRow{sk-dimension}{Funktionale Integration}
+
+\SemioVizTable{sk-evidenz}{chip, s1, s2, s3, s4}
+\SemioVizRow{sk-evidenz}{EU26,   {Öffentliche Beschaffung}, {planbare Nachfrage}, {Marktbildung}, {Operative Aktivität}}
+\SemioVizRow{sk-evidenz}{CCRI25, {Regionales Kataster}, {interkommunaler Austausch}, {größerer Sekundärmarkt}, {Geografische Reichweite}}
+\SemioVizRow{sk-evidenz}{UPP25,  {Förderung und Lagerung}, {stetigere Materialflüsse}, {neue Akteure}, {Institutionelle Reife}}
+\SemioVizRow{sk-evidenz}{CCRI25, {Risikoteilung}, {Vertrauen}, {regelmäßige Rückgewinnung}, {Operative Aktivität}}
+
+\SemioVizTable{sk-prozess}{key, label}
+\SemioVizRow{sk-prozess}{pre-decon,    Pre-decon\-struction}
+\SemioVizRow{sk-prozess}{decon,        Decon\-struction}
+\SemioVizRow{sk-prozess}{bank,         Material Bank Assess\-ment}
+\SemioVizRow{sk-prozess}{reuse,        Reuse}
+\SemioVizRow{sk-prozess}{reman,        Remanu\-facturing}
+\SemioVizRow{sk-prozess}{inventory,    Inventory Manage\-ment}
+\SemioVizRow{sk-prozess}{design-reuse, Pre-con\-struction Design for Reuse}
+\SemioVizRow{sk-prozess}{design-with,  Pre-con\-struction Design with Reus\-ables}
+\SemioVizRow{sk-prozess}{building,     Building Design}
+
+% Spannen als benannte Endpunkte auf dem D2R-Rückgrat, nicht als Indexpaare:
+% eine Umsortierung eines Prozesses kann keine Spanne mehr stillschweigend verschieben.
+\SemioVizTable{sk-funktion}{label, von, bis}
+\SemioVizRow{sk-funktion}{{Interoperabilität},  pre-decon, building}
+\SemioVizRow{sk-funktion}{{Lebenszyklus},       pre-decon, building}
+\SemioVizRow{sk-funktion}{{Bestandserfassung},  pre-decon, bank}
+\SemioVizRow{sk-funktion}{{Suche und Matching}, bank, design-with}
+\SemioVizRow{sk-funktion}{{Bedarfserfassung},   design-reuse, building}
+\SemioVizRow{sk-funktion}{{Austauschwege},      reuse, inventory}
+\SemioVizRow{sk-funktion}{{Reservierung},       reuse, inventory}
+\SemioVizRow{sk-funktion}{{Portfolio},          bank, inventory}
+\SemioVizRow{sk-funktion}{{Auswertung},         bank, building}
+
+\SemioVizTable{sk-dienst}{label, von, bis}
+\SemioVizRow{sk-dienst}{{Dienstleister},    pre-decon, building}
+\SemioVizRow{sk-dienst}{{Rückbau},          pre-decon, decon}
+\SemioVizRow{sk-dienst}{{Prüfung},          decon, bank}
+\SemioVizRow{sk-dienst}{{Zertifizierung},   bank, reuse}
+\SemioVizRow{sk-dienst}{{Aufbereitung},     bank, reman}
+\SemioVizRow{sk-dienst}{{Reparatur},        reuse, reman}
+\SemioVizRow{sk-dienst}{{Lagerung},         bank, inventory}
+\SemioVizRow{sk-dienst}{{Logistik},         decon, inventory}
+
+\SemioVizTable{sk-rahmen}{label}
+\SemioVizRow{sk-rahmen}{Öffentliche Beschaffung}
+\SemioVizRow{sk-rahmen}{Normen}
+\SemioVizRow{sk-rahmen}{Finan\-zierung}
+\SemioVizRow{sk-rahmen}{Geneh\-migung}
+\SemioVizRow{sk-rahmen}{Fläche und Raum}
+\SemioVizRow{sk-rahmen}{Risiko und Haftung}
+\SemioVizRow{sk-rahmen}{Kompe\-tenzen}
+\SemioVizRow{sk-rahmen}{Governance}
+\SemioVizRow{sk-rahmen}{Ressourcen\-kataster}
+\SemioVizRow{sk-rahmen}{Wertmodell}
+
+\SemioVizTable{sk-h1}{label, value}
+\SemioVizRow{sk-h1}{{Öffentliche Beschaffung},   83}
+\SemioVizRow{sk-h1}{{Finanzielle Anreize},       72}
+\SemioVizRow{sk-h1}{{Technische Normen},         56}
+\SemioVizRow{sk-h1}{{Vereinfachte Genehmigung},  44}
+\SemioVizRow{sk-h1}{{EU-Finanzierung},           44}
+\SemioVizRow{sk-h1}{{Qualifizierung},            28}
+\SemioVizRow{sk-h1}{{Matching-Plattformen},      11}
+
+\SemioVizTable{sk-h2}{zeile, spalte, value}
+\SemioVizRow{sk-h2}{Markt,       Kos, .44}
+\SemioVizRow{sk-h2}{Regulierung, Kos, .49}
+\SemioVizRow{sk-h2}{Regulierung, Mkt, .45}
+\SemioVizRow{sk-h2}{Wahrnehmung, Kos, .36}
+\SemioVizRow{sk-h2}{Wahrnehmung, Mkt, .35}
+\SemioVizRow{sk-h2}{Wahrnehmung, Reg, .40}
+\SemioVizRow{sk-h2}{Risiko,      Kos, .34}
+\SemioVizRow{sk-h2}{Risiko,      Mkt, .38}
+\SemioVizRow{sk-h2}{Risiko,      Reg, .38}
+\SemioVizRow{sk-h2}{Risiko,      Wah, .63}
+\SemioVizRow{sk-h2}{Gesundheit,  Kos, .35}
+
+\SemioVizTable{sk-h3}{label, value}
+\SemioVizRow{sk-h3}{{RBC-Händler},        46.4}
+\SemioVizRow{sk-h3}{{BC-Händler},         17.2}
+\SemioVizRow{sk-h3}{{Abbruchunternehmen}, 15.6}
+\SemioVizRow{sk-h3}{{Marktplatz},         5.9}
+\SemioVizRow{sk-h3}{{Lokales Handwerk},   5.6}
+\SemioVizRow{sk-h3}{{Netzwerkplattform},  4.6}
+\SemioVizRow{sk-h3}{{RBC-Dienstleistung}, 1.9}
+\SemioVizRow{sk-h3}{{RBC-Wissen},         1.6}
+\SemioVizRow{sk-h3}{{Datenplattform},     1.3}
+%endregion Daten
+
+\begin{VizFigure}[title=Systemkarte Skalierung der Wiederverwendung, width=147]
+
+\begin{VizSection}[rule=false]
+\node[anchor=north west, align=left, text width=143mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-1) {%
+  \textbf{SYNTHESE (E2/E3):}\ \ Skalierung entsteht nicht durch eine digitale Plattform allein, sondern aus dem Zusammenspiel von Wiederverwendungsprozessen~(B), digitalen Plattformfunktionen~(C), operativen Diensten~(D) und institutionellen Rahmenbedingungen~(E). Hemmnisse~(F) wirken an den Schnittstellen und bestimmen, ob dauerhaft skaliert wird.};
+\end{VizSection}
+
+\begin{VizSection}[title={A \ SKALIERUNG \ \textperiodcentered\ \ sechs Dimensionen (E3)}]
+\SemioVizLayout{grid}[data=sk-dimension, label=label, columns=6, boxheight=7.5]
+\end{VizSection}
+
+\begin{VizSection}[title={G \ EVIDENZPFADE \ \textperiodcentered\ \ durchgezogen belegt, gestrichelt analytisch (E3)}]
+\SemioVizLayout{process}[data=sk-evidenz, chip=chip, stages={s1,s2,s3,s4}, boxheight=4.7]
+\end{VizSection}
+
+\begin{VizSection}[title={B \ D2R-PROZESSE \ \textperiodcentered\ \ buildingSMART, neun Prozesse, nicht-linear}]
+\node[anchor=north west, align=left, text width=25mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-7.5) {Prozess-Rückgrat};
+\SemioVizLayout{grid}[data=sk-prozess, label=label, key=key, scale=d2r, boxheight=14.5]
+\end{VizSection}
+
+\begin{VizSection}[title={C \ DIGITALE FUNKTIONEN \ \textperiodcentered\ \ neun Gruppen als Spannen (E3)}, aside={H-05 \SemioSlash{} H-09 \SemioSlash{} H-10}]
+\SemioVizLayout{gantt}[data=sk-funktion, label=label, from=von, to=bis, xscale=d2r, boxheight=2.4, labelwidth=25]
+\end{VizSection}
+
+\begin{VizSection}[title={D \ OPERATIVE DIENSTE \ \textperiodcentered\ \ physische Ausführung}, aside={H-11 \SemioSlash{} H-07 \SemioSlash{} H-04}]
+\SemioVizLayout{gantt}[data=sk-dienst, label=label, from=von, to=bis, xscale=d2r, boxheight=2.4, labelwidth=25]
+\end{VizSection}
+
+\begin{VizSection}[title={E \ RAHMENBEDINGUNGEN \ \textperiodcentered\ \ Umfeld, keine Plattformfunktionen}, aside={H-01 \SemioSlash{} H-13 \SemioSlash{} H-03 \SemioSlash{} H-12}]
+\SemioVizLayout{grid}[data=sk-rahmen, label=label, columns=5, boxheight=6.6]
+\end{VizSection}
+
+\begin{VizSection}[title={H1 \ UNTERSTÜTZUNG (EU26)}]
+\begin{VizColumn}[width=72, note={19 Antworten, 10 Länder; n\,=\,18 abgeleitet}]
+\SemioVizLayout{bar}[data=sk-h1, label=label, value=value, orient=horizontal, domain={0,100}, unit={\,\%}, labelwidth=38, boxheight=2.6, frame=false]
+\end{VizColumn}
+\begin{VizColumn}[width=70, title={H2 \ HEMMNIS-KOPPLUNG}, note={C-Index (Jaccard), sign. Paare, Rakhshan 2020}]
+\SemioVizLayout{heat}[data=sk-h2, row=zeile, col=spalte, value=value, header=true, boxheight=4.3, anchor=sk-h2-end]
+\SemioVizNoteBelow{sk-h2-end}{66}{Zusammenhang, keine Kausalität (eigene Einordnung).}
+\end{VizColumn}
+\end{VizSection}
+
+\begin{VizSection}[title={H3 \ MARKTSNAPSHOT 2022 \ \textperiodcentered\ \ n\,=\,746 Digital Reuse Market Solutions, Europa}]
+\begin{VizColumn}[width=72]
+\SemioVizLayout{bar}[data=sk-h3, label=label, value=value, orient=horizontal, labelwidth=38, boxheight=2.55, frame=false]
+\end{VizColumn}
+\begin{VizColumn}[width=68, note={Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.}]
+\end{VizColumn}
+\end{VizSection}
+
+\end{VizFigure}
+
+\clearpage
+
+\appendixsection[LS]{Leseschlüssel}
+
+\SemioTableLong{Ebenen der Systemkarte}{0.16,0.84}{Ebene & Bedeutung}{%
+  \SemioTableRow{A & Skalierung: sechs analytische Dimensionen, auf die das System wirkt. Kein Einzelwert; die Dimensionen werden getrennt erhoben.}
+  \SemioTableRow{G & Evidenzpfade: quellenbelegte Wirkungsketten mit Quellenchip; der letzte Schritt ist die analytische Zuordnung zu einer Dimension aus A.}
+  \SemioTableRow{B & D2R-Prozesse (buildingSMART): neun Prozesse als gemeinsames Prozess-Rückgrat. Nicht-lineare Menge, keine Zeitachse.}
+  \SemioTableRow{C & Digitale Plattformfunktionen: neun Gruppen, dargestellt als Spannen über die Prozesse, die sie unterstützen.}
+  \SemioTableRow{D & Operative Dienste: physische und professionelle Leistungen, ohne die ein digitales Match nicht zur Wiederverwendung führt.}
+  \SemioTableRow{E & Ökosystemische Rahmenbedingungen: institutionelles und marktliches Umfeld, ausdrücklich keine Plattformfunktionen.}
+  \SemioTableRow{F & Reibungspunkte: H-Kennungen an den Schnittstellen zwischen den Ebenen.}
+  \SemioTableRow{H1--H3 & Empirische Insets neben der Ebene, die sie stützen.}
+}
+
+\SemioTableLong{Zeichen und Evidenzgrade}{0.16,0.84}{Zeichen & Bedeutung}{%
+  \SemioTableRow{durchgezogener Pfeil & Quellenbelegte Beziehung (E1 direkt berichtet, E2 quellenübergreifend synthetisiert).}
+  \SemioTableRow{gestrichelter Pfeil & Analytische Zuordnung dieses Projekts (E3) zu einer Skalierungsdimension; keine Quellenaussage.}
+  \SemioTableRow{Balken (Spanne) & Analytische Zuordnung (E3) einer Funktion oder Leistung zu den Prozessen, die sie unterstützt.}
+  \SemioTableRow{H-xx & Reibungspunkt an einer Schnittstelle. Die Platzierung ist eine analytische Zuordnung (E3); das Register führt nur die Bezeichnungen, keine Gewichtung.}
+  \SemioTableRow{EU26 & Big Buyers Working Together (2026): Public Procurement of Circular Buildings.}
+  \SemioTableRow{CCRI25 & CCRI TWG C-BUILD (2025): Final Report on Construction and Circular Buildings.}
+  \SemioTableRow{UPP25 & CCRI (2025): Fallbericht Bauteilmarktplatz Uppsala.}
+}
+
+\SemioTableLong{Hemmnis-Register}{0.16,0.84}{Kennung & Hemmnis}{%
+  \SemioTableRow{H-01 & Kosten}
+  \SemioTableRow{H-02 & Akzeptanz, Motivation und Interesse}
+  \SemioTableRow{H-03 & Ablauf und Koordination von Rück- und Wiedereinbau}
+  \SemioTableRow{H-04 & Logistik}
+  \SemioTableRow{H-05 & Informationen über Quellobjekte}
+  \SemioTableRow{H-06 & Kompetenzen}
+  \SemioTableRow{H-07 & Haftung, Garantie und Versicherung}
+  \SemioTableRow{H-08 & Branchenentwicklung}
+  \SemioTableRow{H-09 & Technische Qualität der Quellobjekte}
+  \SemioTableRow{H-10 & Gesetze, Normen und Vorschriften}
+  \SemioTableRow{H-11 & Technische Verfahren für Rück- und Wiedereinbau}
+  \SemioTableRow{H-12 & Zusammenarbeit von Akteur:innen}
+  \SemioTableRow{H-13 & Beschaffung}
+}
+
+\noindent{\SemioSans\fontsize{7.2pt}{9pt}\selectfont\color{semio-chrome-text-normal}%
+Die Systemkarte führt Skalierungsdimensionen, digitale Funktionen, operative Dienste und Rahmenbedingungen in einer Darstellung zusammen; die dokumentierte Funktionsabdeckung und die Integrationsreife der Plattformen sind in \appendixref{anlage:nachweismatrix} und \appendixref{anlage:integrationsreife} gesondert belegt.\par
+\vspace{1mm}%
+Das Register folgt der Anlage „Hürden der Wiederverwendung” (Zwischenbericht) und führt die Hemmnisse ausdrücklich ohne Gewichtung. In der Systemkarte erscheinen nur die Kennungen; die Zuordnung einer Kennung zu einer Schnittstelle ist eine analytische Festlegung dieses Projekts (E3) und nicht aus den Quellen abgeleitet. H-02, H-06 und H-08 wirken ebenenübergreifend und sind daher keiner einzelnen Schnittstelle zugeordnet.\par
+\vspace{1mm}%
+Quellen der Insets: H1 EU-Umfrage (EU26). H2 Rakhshan et al.\ 2020~\cite{rakhshan-components-reuse-review-2020}, C-Index als Jaccard-Kookkurrenz, signifikante Paare laut Tabelle~4, n\,=\,51 ausgewertete Artikel; die Tabelle listet 16 von 190 möglichen Paaren, also nicht alle bestehenden Zusammenhänge. H3 Sivers, Fröhlich und Fivet 2022~\cite{sivers-froehlich-fivet-digital-market-solutions-2022}; Momentaufnahme Mai 2022, kein aktueller Marktanteil.\par}

@@ -54,6 +54,8 @@ pub mod schema_metadata {
         SchemaMetadata { name: "DockUiState", version: 1, typescript: r##"export type DockUiState = { layout: LayoutNode | null, panelsVisible: ByAnchor<boolean>, };"## },
         SchemaMetadata { name: "ExtraWindowInstance", version: 1, typescript: r##"export type ExtraWindowInstance = { windowId: string, kind: string, params: unknown, };"## },
         SchemaMetadata { name: "IconName", version: 1, typescript: r##"export type IconName = string;"## },
+        SchemaMetadata { name: "InferencePortPhase", version: 1, typescript: r##"export type InferencePortPhase = "idle" | "submitting" | "running" | "offered" | "approving" | "applied" | "cancelled" | "stale" | "failed";"## },
+        SchemaMetadata { name: "InferencePortStatus", version: 1, typescript: r##"export type InferencePortStatus = { phase: InferencePortPhase, jobId: string | null, cursor: number, completed: number, total: number, proposalHash: string | null, cancelRequested: boolean, code: string | null, };"## },
         SchemaMetadata { name: "LayoutNode", version: 1, typescript: r##"export type LayoutNode = { "kind": "leaf", windowId: string, } | { "kind": "split", orientation: SplitOrientation, children: Array<LayoutNode>, sizes: Array<number>, };"## },
         SchemaMetadata { name: "LoadedPlugin", version: 1, typescript: r##"export type LoadedPlugin = { pluginId: string, moduleUrl: string, label: string | null, };"## },
         SchemaMetadata { name: "MergePolicy", version: 1, typescript: r##"export type MergePolicy = "preferLocal" | "preferRemote" | "manual";"## },
@@ -64,7 +66,7 @@ pub mod schema_metadata {
         SchemaMetadata {
             name: "ShellCommand",
             version: 1,
-            typescript: r##"export type ShellCommand = { "type": "registerLoadedPlugin", plugin: LoadedPlugin, } | { "type": "unregisterLoadedPlugin", pluginId: string, } | { "type": "setPluginStatus", pluginId: string, status: PluginPanelStatus, } | { "type": "setPluginSupervisorState", pluginId: string, state: PluginSupervisorState, } | { "type": "setActiveSession", session: ActiveSession | null, } | { "type": "setSessionError", error: string | null, } | { "type": "setAppLabelOverride", appId: string, labelKey: string, value: string | null, } | { "type": "setActionPaneFolded", windowId: string, folded: boolean, } | { "type": "setActionPaneExpanded", windowId: string, actionId: string | null, } | { "type": "stageActionArg", windowId: string, actionId: string, argId: string, value: unknown, } | { "type": "resetActionArgs", windowId: string, actionId: string, } | { "type": "setActiveUtility", windowId: string, utilityId: string | null, } | { "type": "setActiveTool", toolId: string | null, } | { "type": "setCommandExpanded", commandId: string | null, } | { "type": "stageCommandArg", commandId: string, argId: string, value: unknown, } | { "type": "resetCommandArgs", commandId: string, } | { "type": "setPanelVisible", anchor: Anchor, visible: boolean, } | { "type": "setPanelSize", anchor: Anchor, size: number, } | { "type": "setPanelPath", anchor: Anchor, path: Array<string>, } | { "type": "setDockOverride", dock: LayoutNode | null, } | { "type": "setPanelPathMemory", panelKey: string, path: string | null, } | { "type": "setTreeOpenState", treeId: string, open: boolean, } | { "type": "hydrateDockUi", dock: DockUiState | null, } | { "type": "resetDock" } | { "type": "focusWindow", windowId: string | null, } | { "type": "setShellLayout", layout: LayoutNode | null, } | { "type": "setActiveExample", exampleId: string, } | { "type": "setMobilePanelPath", path: Array<string>, } | { "type": "setMobilePanelVisible", visible: boolean, } | { "type": "setExtraWindows", windows: Array<ExtraWindowInstance>, } | { "type": "setWindowTitle", windowId: string, title: string, } | { "type": "setWindowIcon", windowId: string, icon: IconName, } | { "type": "setSearchOpen", open: boolean, } | { "type": "setFindOpen", open: boolean, } | { "type": "autoStartIntroduction", key: string, } | { "type": "setIntroductionStep", stepIndex: number | null, } | { "type": "completeIntroductionInteraction", interactionIndex: number, } | { "type": "openDialog", dialogId: string, seedArgs: unknown, } | { "type": "closeDialog", dialogId: string | null, } | { "type": "showTransientNotice", notice: TransientNotice, } | { "type": "dismissTransientNotice" } | { "type": "setOpenWithFocusRole", role: AppRole | null, } | { "type": "setActiveTutorial", tutorialId: string | null, } | { "type": "setUiAppearance", appearance: UiAppearance, } | { "type": "setUiLayout", layout: UiChromeLayout, } | { "type": "setUiDriver", driverId: string, } | { "type": "setUiCustomDriver", driverId: string, driver: UiDriver | null, } | { "type": "setUiDriverDraft", draft: UiDriver | null, } | { "type": "setUiLocale", locale: UiLocale, } | { "type": "setUiTerminology", terminologyId: string, } | { "type": "setUiTheme", themeId: string, } | { "type": "setUiCustomTheme", themeId: string, theme: UiTheme | null, } | { "type": "setUiThemeDraft", draft: UiTheme | null, } | { "type": "setUiKeybindingOverride", controlId: string, keys: string | null, } | { "type": "setSyncBackboneUri", uri: string | null, } | { "type": "setSyncCardKind", kind: SyncCardKind | null, } | { "type": "setSyncDraftPath", path: string, } | { "type": "setDocumentSyncStatus", documentId: string, status: ArtifactSyncStatus, } | { "type": "setMergePolicy", policy: MergePolicy, } | { "type": "setConflicts", conflicts: Array<Conflict>, } | { "type": "selectConflict", conflictId: string | null, } | { "type": "setStorageScope", scope: ShellScope, } | { "type": "setOpeningPreference", role: string, dialectId: string | null, };"##,
+            typescript: r##"export type ShellCommand = { "type": "registerLoadedPlugin", plugin: LoadedPlugin, } | { "type": "unregisterLoadedPlugin", pluginId: string, } | { "type": "setPluginStatus", pluginId: string, status: PluginPanelStatus, } | { "type": "setPluginSupervisorState", pluginId: string, state: PluginSupervisorState, } | { "type": "setActiveSession", session: ActiveSession | null, } | { "type": "setSessionError", error: string | null, } | { "type": "setAppLabelOverride", appId: string, labelKey: string, value: string | null, } | { "type": "setActionPaneFolded", windowId: string, folded: boolean, } | { "type": "setActionPaneExpanded", windowId: string, actionId: string | null, } | { "type": "stageActionArg", windowId: string, actionId: string, argId: string, value: unknown, } | { "type": "resetActionArgs", windowId: string, actionId: string, } | { "type": "setActiveUtility", windowId: string, utilityId: string | null, } | { "type": "setActiveTool", toolId: string | null, } | { "type": "setCommandExpanded", commandId: string | null, } | { "type": "stageCommandArg", commandId: string, argId: string, value: unknown, } | { "type": "resetCommandArgs", commandId: string, } | { "type": "setPanelVisible", anchor: Anchor, visible: boolean, } | { "type": "setPanelSize", anchor: Anchor, size: number, } | { "type": "setPanelPath", anchor: Anchor, path: Array<string>, } | { "type": "setDockOverride", dock: LayoutNode | null, } | { "type": "setPanelPathMemory", panelKey: string, path: string | null, } | { "type": "setTreeOpenState", treeId: string, open: boolean, } | { "type": "hydrateDockUi", dock: DockUiState | null, } | { "type": "resetDock" } | { "type": "focusWindow", windowId: string | null, } | { "type": "setShellLayout", layout: LayoutNode | null, } | { "type": "setActiveExample", exampleId: string, } | { "type": "setMobilePanelPath", path: Array<string>, } | { "type": "setMobilePanelVisible", visible: boolean, } | { "type": "setExtraWindows", windows: Array<ExtraWindowInstance>, } | { "type": "setWindowTitle", windowId: string, title: string, } | { "type": "setWindowIcon", windowId: string, icon: IconName, } | { "type": "setSearchOpen", open: boolean, } | { "type": "setFindOpen", open: boolean, } | { "type": "autoStartIntroduction", key: string, } | { "type": "setIntroductionStep", stepIndex: number | null, } | { "type": "completeIntroductionInteraction", interactionIndex: number, } | { "type": "openDialog", dialogId: string, seedArgs: unknown, } | { "type": "closeDialog", dialogId: string | null, } | { "type": "showTransientNotice", notice: TransientNotice, } | { "type": "dismissTransientNotice" } | { "type": "setOpenWithFocusRole", role: AppRole | null, } | { "type": "setActiveTutorial", tutorialId: string | null, } | { "type": "setUiAppearance", appearance: UiAppearance, } | { "type": "setUiLayout", layout: UiChromeLayout, } | { "type": "setUiDriver", driverId: string, } | { "type": "setUiCustomDriver", driverId: string, driver: UiDriver | null, } | { "type": "setUiDriverDraft", draft: UiDriver | null, } | { "type": "setUiLocale", locale: UiLocale, } | { "type": "setUiTerminology", terminologyId: string, } | { "type": "setUiTheme", themeId: string, } | { "type": "setUiCustomTheme", themeId: string, theme: UiTheme | null, } | { "type": "setUiThemeDraft", draft: UiTheme | null, } | { "type": "setUiKeybindingOverride", controlId: string, keys: string | null, } | { "type": "setSyncBackboneUri", uri: string | null, } | { "type": "setSyncCardKind", kind: SyncCardKind | null, } | { "type": "setSyncDraftPath", path: string, } | { "type": "setDocumentSyncStatus", documentId: string, status: ArtifactSyncStatus, } | { "type": "setDocumentInferencePort", documentId: string, port: InferencePortStatus, } | { "type": "clearDocumentInferencePort", documentId: string, } | { "type": "setMergePolicy", policy: MergePolicy, } | { "type": "setConflicts", conflicts: Array<Conflict>, } | { "type": "selectConflict", conflictId: string | null, } | { "type": "setStorageScope", scope: ShellScope, } | { "type": "setOpeningPreference", role: string, dialectId: string | null, };"##,
         },
         SchemaMetadata {
             name: "ShellError",
@@ -80,7 +82,7 @@ pub mod schema_metadata {
         SchemaMetadata {
             name: "ShellState",
             version: 1,
-            typescript: r##"export type ShellState = { revision: number, loadedPlugins: Array<LoadedPlugin>, pluginStatusById: { [key in string]?: PluginPanelStatus }, pluginSupervisorById: { [key in string]?: PluginSupervisorState }, activeSession: ActiveSession | null, sessionError: string | null, appLabelsOverlay: { [key in string]?: { [key in string]?: string } }, actionPaneFoldedByWindow: { [key in string]?: boolean }, actionPaneExpandedByWindow: { [key in string]?: string | null }, stagedActionArgs: Record<string, Record<string, Record<string, unknown>>>, activeUtilityByWindow: { [key in string]?: string | null }, activeToolId: string | null, commandPanelExpanded: string | null, stagedCommandArgs: Record<string, Record<string, unknown>>, panelsVisible: ByAnchor<boolean>, panelsSize: ByAnchor<number>, panelsPath: ByAnchor<Array<string>>, dockOverride: LayoutNode | null, panelPathMemory: { [key in string]?: string }, treeOpenStates: { [key in string]?: boolean }, activeWindowId: string | null, shellLayout: LayoutNode | null, activeExampleId: string, mobilePanelPath: Array<string>, mobilePanelVisible: boolean, extraWindows: Array<ExtraWindowInstance>, windowTitlesById: { [key in string]?: string }, windowIconsById: { [key in string]?: IconName }, searchOpen: boolean, findOpen: boolean, introductionStepIndex: number | null, introductionAutoStartedKeys: Array<string>, introductionCompletedInteractions: Array<number>, dialogStack: Array<DialogState>, transientNotice: TransientNotice | null, openWithFocusRole: AppRole | null, activeTutorialId: string | null, uiAppearance: UiAppearance, uiLayout: UiChromeLayout, uiDriverId: string, uiCustomDrivers: { [key in string]?: UiDriver }, uiDriverDraft: UiDriver | null, uiLocale: UiLocale, uiTerminology: string, uiThemeId: string, uiCustomThemes: { [key in string]?: UiTheme }, uiThemeDraft: UiTheme | null, uiKeybindingOverrides: { [key in string]?: string }, syncBackboneUri: string | null, syncCardKind: SyncCardKind | null, syncDraftPath: string, syncStatusByDocument: { [key in string]?: ArtifactSyncStatus }, mergePolicy: MergePolicy, conflicts: Array<Conflict>, selectedConflictId: string | null, storageScope: ShellScope, openingPreferences: { [key in string]?: string }, };"##,
+            typescript: r##"export type ShellState = { revision: number, loadedPlugins: Array<LoadedPlugin>, pluginStatusById: { [key in string]?: PluginPanelStatus }, pluginSupervisorById: { [key in string]?: PluginSupervisorState }, activeSession: ActiveSession | null, sessionError: string | null, appLabelsOverlay: { [key in string]?: { [key in string]?: string } }, actionPaneFoldedByWindow: { [key in string]?: boolean }, actionPaneExpandedByWindow: { [key in string]?: string | null }, stagedActionArgs: Record<string, Record<string, Record<string, unknown>>>, activeUtilityByWindow: { [key in string]?: string | null }, activeToolId: string | null, commandPanelExpanded: string | null, stagedCommandArgs: Record<string, Record<string, unknown>>, panelsVisible: ByAnchor<boolean>, panelsSize: ByAnchor<number>, panelsPath: ByAnchor<Array<string>>, dockOverride: LayoutNode | null, panelPathMemory: { [key in string]?: string }, treeOpenStates: { [key in string]?: boolean }, activeWindowId: string | null, shellLayout: LayoutNode | null, activeExampleId: string, mobilePanelPath: Array<string>, mobilePanelVisible: boolean, extraWindows: Array<ExtraWindowInstance>, windowTitlesById: { [key in string]?: string }, windowIconsById: { [key in string]?: IconName }, searchOpen: boolean, findOpen: boolean, introductionStepIndex: number | null, introductionAutoStartedKeys: Array<string>, introductionCompletedInteractions: Array<number>, dialogStack: Array<DialogState>, transientNotice: TransientNotice | null, openWithFocusRole: AppRole | null, activeTutorialId: string | null, uiAppearance: UiAppearance, uiLayout: UiChromeLayout, uiDriverId: string, uiCustomDrivers: { [key in string]?: UiDriver }, uiDriverDraft: UiDriver | null, uiLocale: UiLocale, uiTerminology: string, uiThemeId: string, uiCustomThemes: { [key in string]?: UiTheme }, uiThemeDraft: UiTheme | null, uiKeybindingOverrides: { [key in string]?: string }, syncBackboneUri: string | null, syncCardKind: SyncCardKind | null, syncDraftPath: string, syncStatusByDocument: { [key in string]?: ArtifactSyncStatus }, inferencePortByDocument: { [key in string]?: InferencePortStatus }, mergePolicy: MergePolicy, conflicts: Array<Conflict>, selectedConflictId: string | null, storageScope: ShellScope, openingPreferences: { [key in string]?: string }, };"##,
         },
         SchemaMetadata { name: "SplitOrientation", version: 1, typescript: r##"export type SplitOrientation = "horizontal" | "vertical";"## },
         SchemaMetadata { name: "SyncCardKind", version: 1, typescript: r##"export type SyncCardKind = "file" | "folder" | "remote";"## },
@@ -498,6 +500,86 @@ pub enum ArtifactSyncStatus {
 }
 //#endregion 🔄️Sync
 
+//#region 💡️InferencePort
+/// 💡️ The complete rendered lifecycle of one host-owned ephemeral inference port. `Idle` and
+/// `Submitting` have no server counterpart at all, `Approving` is the server's `approval-prepared`,
+/// and the four terminals are exactly `Applied | Cancelled | Stale | Failed`. This is the neutral
+/// twin of the transport-side vocabulary the browser worker and the native turn driver both speak;
+/// the ticket's shared fixture is what keeps the two byte-identical.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
+#[serde(rename_all = "kebab-case")]
+#[value(crate = "::protocol::value", rename_all = "kebab-case")]
+pub enum InferencePortPhase {
+    Idle,
+    Submitting,
+    Running,
+    Offered,
+    Approving,
+    Applied,
+    Cancelled,
+    Stale,
+    Failed,
+}
+
+impl InferencePortPhase {
+    /// 🏁️ A terminal phase accepts no further server answer — only an explicit clear.
+    pub const fn terminal(self) -> bool {
+        matches!(self, Self::Applied | Self::Cancelled | Self::Stale | Self::Failed)
+    }
+
+    /// 🔊️ Work in flight announces politely; every terminal asserts.
+    pub const fn aria_role(self) -> &'static str {
+        if self.terminal() {
+            "alert"
+        } else {
+            "status"
+        }
+    }
+
+    /// 🗣️ Explicit English and German text; there is no default language.
+    pub const fn text(self, locale: UiLocale) -> &'static str {
+        match (self, locale) {
+            (Self::Idle, UiLocale::En) => "No proposal requested.",
+            (Self::Idle, UiLocale::De) => "Kein Vorschlag angefordert.",
+            (Self::Submitting, UiLocale::En) => "Requesting a bounds proposal…",
+            (Self::Submitting, UiLocale::De) => "Begrenzungsvorschlag wird angefordert…",
+            (Self::Running, UiLocale::En) => "Computing the bounds proposal…",
+            (Self::Running, UiLocale::De) => "Begrenzungsvorschlag wird berechnet…",
+            (Self::Offered, UiLocale::En) => "A bounds proposal is ready for review.",
+            (Self::Offered, UiLocale::De) => "Ein Begrenzungsvorschlag liegt zur Prüfung bereit.",
+            (Self::Approving, UiLocale::En) => "Waiting for the server to commit the approved proposal…",
+            (Self::Approving, UiLocale::De) => "Warten auf die Freigabe des Vorschlags durch den Server…",
+            (Self::Applied, UiLocale::En) => "The approved proposal was committed to the document.",
+            (Self::Applied, UiLocale::De) => "Der freigegebene Vorschlag wurde im Dokument übernommen.",
+            (Self::Cancelled, UiLocale::En) => "The proposal was cancelled.",
+            (Self::Cancelled, UiLocale::De) => "Der Vorschlag wurde abgebrochen.",
+            (Self::Stale, UiLocale::En) => "The document changed while the proposal ran. Request a new one.",
+            (Self::Stale, UiLocale::De) => "Das Dokument hat sich während des Vorschlags geändert. Fordern Sie einen neuen an.",
+            (Self::Failed, UiLocale::En) => "The proposal did not complete.",
+            (Self::Failed, UiLocale::De) => "Der Vorschlag wurde nicht abgeschlossen.",
+        }
+    }
+}
+
+/// 💡️ Ephemeral per-document inference-port state. It is never persisted into a document and never
+/// carries a receipt, bearer, origin, path, base pack, proposal body or user identity — only the
+/// phase, the server's own job id, its bounded progress cursor, the hash the server published, and
+/// whether a cancel has been requested.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub struct InferencePortStatus {
+    pub phase: InferencePortPhase,
+    pub job_id: Option<String>,
+    pub cursor: u64,
+    pub completed: u64,
+    pub total: u64,
+    pub proposal_hash: Option<String>,
+    pub cancel_requested: bool,
+    pub code: Option<String>,
+}
+//#endregion 💡️InferencePort
+
 //#region 🤝️Merge
 /// 🤝️ Conflict resolution strategy (audit: `MergePolicy`, persisted).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
@@ -634,6 +716,11 @@ pub struct ShellState {
     pub sync_status_by_document: HashMap<String, ArtifactSyncStatus>,
     //#endregion 🔄️Sync
 
+    //#region 💡️InferencePort
+    /// Ephemeral per-document inference-port state, keyed by document id. Never persisted.
+    pub inference_port_by_document: HashMap<String, InferencePortStatus>,
+    //#endregion 💡️InferencePort
+
     //#region 🤝️Merge
     pub merge_policy: MergePolicy,
     pub conflicts: Vec<Conflict>,
@@ -707,6 +794,7 @@ impl Default for ShellState {
             sync_card_kind: None,
             sync_draft_path: String::new(),
             sync_status_by_document: HashMap::new(),
+            inference_port_by_document: HashMap::new(),
             merge_policy: MergePolicy::Manual,
             conflicts: Vec::new(),
             selected_conflict_id: None,
@@ -801,6 +889,10 @@ pub enum ShellCommand {
     SetSyncCardKind { kind: Option<SyncCardKind> },
     SetSyncDraftPath { path: String },
     SetDocumentSyncStatus { document_id: String, status: ArtifactSyncStatus },
+
+    // ── Inference port — host-owned ephemeral proposal lifecycle, never a document mutation
+    SetDocumentInferencePort { document_id: String, port: InferencePortStatus },
+    ClearDocumentInferencePort { document_id: String },
 
     // ── Merge / conflicts — audit SET_MERGE_POLICY/SET_CONFLICTS/SET_SELECTED_CONFLICT_ID
     SetMergePolicy { policy: MergePolicy },
@@ -1186,6 +1278,19 @@ impl dsl_core::ToValue for ShellCommand {
                 entries.push(("status".to_string(), dsl_core::ToValue::to_value(status)));
                 dsl_core::DslValue::Object(entries)
             }
+            Self::SetDocumentInferencePort { document_id, port } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setDocumentInferencePort".to_string())));
+                entries.push(("documentId".to_string(), dsl_core::ToValue::to_value(document_id)));
+                entries.push(("port".to_string(), dsl_core::ToValue::to_value(port)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::ClearDocumentInferencePort { document_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("clearDocumentInferencePort".to_string())));
+                entries.push(("documentId".to_string(), dsl_core::ToValue::to_value(document_id)));
+                dsl_core::DslValue::Object(entries)
+            }
             Self::SetMergePolicy { policy } => {
                 let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
                 entries.push(("type".to_string(), dsl_core::DslValue::String("setMergePolicy".to_string())));
@@ -1481,6 +1586,15 @@ impl dsl_core::FromValue for ShellCommand {
                 let document_id = match __entries.iter().find(|(k, _)| k == "documentId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("documentId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `documentId`"))) };
                 let status = match __entries.iter().find(|(k, _)| k == "status") { Some((_, v)) => <ArtifactSyncStatus as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("status"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `status`"))) };
                     Ok(Self::SetDocumentSyncStatus { document_id, status })
+                }
+                "setDocumentInferencePort" => {
+                let document_id = match __entries.iter().find(|(k, _)| k == "documentId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("documentId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `documentId`"))) };
+                let port = match __entries.iter().find(|(k, _)| k == "port") { Some((_, v)) => <InferencePortStatus as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("port"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `port`"))) };
+                    Ok(Self::SetDocumentInferencePort { document_id, port })
+                }
+                "clearDocumentInferencePort" => {
+                let document_id = match __entries.iter().find(|(k, _)| k == "documentId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("documentId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `documentId`"))) };
+                    Ok(Self::ClearDocumentInferencePort { document_id })
                 }
                 "setMergePolicy" => {
                 let policy = match __entries.iter().find(|(k, _)| k == "policy") { Some((_, v)) => <MergePolicy as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("policy"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `policy`"))) };
@@ -1925,6 +2039,15 @@ pub fn reduce(state: &ShellState, command: &ShellCommand, now_ms: u64) -> Result
             next.sync_status_by_document.insert(document_id.clone(), status.clone());
         }
 
+        ShellCommand::SetDocumentInferencePort { document_id, port } => {
+            require_non_empty(document_id, "document_id")?;
+            next.inference_port_by_document.insert(document_id.clone(), port.clone());
+        }
+        ShellCommand::ClearDocumentInferencePort { document_id } => {
+            require_non_empty(document_id, "document_id")?;
+            next.inference_port_by_document.remove(document_id);
+        }
+
         ShellCommand::SetMergePolicy { policy } => {
             next.merge_policy = *policy;
         }
@@ -2064,11 +2187,13 @@ fn capability_id_for(command: &ShellCommand) -> String {
         ShellCommand::SetSyncCardKind { .. } => 55,
         ShellCommand::SetSyncDraftPath { .. } => 56,
         ShellCommand::SetDocumentSyncStatus { .. } => 57,
-        ShellCommand::SetMergePolicy { .. } => 58,
-        ShellCommand::SetConflicts { .. } => 59,
-        ShellCommand::SelectConflict { .. } => 60,
-        ShellCommand::SetStorageScope { .. } => 61,
-        ShellCommand::SetOpeningPreference { .. } => 62,
+        ShellCommand::SetDocumentInferencePort { .. } => 58,
+        ShellCommand::ClearDocumentInferencePort { .. } => 59,
+        ShellCommand::SetMergePolicy { .. } => 60,
+        ShellCommand::SetConflicts { .. } => 61,
+        ShellCommand::SelectConflict { .. } => 62,
+        ShellCommand::SetStorageScope { .. } => 63,
+        ShellCommand::SetOpeningPreference { .. } => 64,
     };
     SHELL_COMMAND_CATALOG[index].id.to_string()
 }
@@ -2076,7 +2201,7 @@ fn capability_id_for(command: &ShellCommand) -> String {
 /// 🗂️ One entry per [`ShellCommand`] variant, in declaration order. `id`s reuse the wgpu shell's
 /// existing `shell.*` verb strings where one already exists for this exact mutation (see
 /// `📓️terra-P9-report.md`), and are coined fresh in the same dotted-noun style otherwise.
-const SHELL_COMMAND_CATALOG: [CommandMeta; 63] = [
+const SHELL_COMMAND_CATALOG: [CommandMeta; 65] = [
     CommandMeta { id: "plugin.register", title: "Register Loaded Plugin", description: "Add or replace a plugin's registry entry.", observable_only: false },
     CommandMeta { id: "plugin.unregister", title: "Unregister Loaded Plugin", description: "Remove a plugin's registry entry.", observable_only: false },
     CommandMeta { id: "plugin.setStatus", title: "Set Plugin Status", description: "Set a plugin panel's open/collapsed/error status.", observable_only: false },
@@ -2135,6 +2260,8 @@ const SHELL_COMMAND_CATALOG: [CommandMeta; 63] = [
     CommandMeta { id: "sync.setCardKind", title: "Set Sync Card Kind", description: "Set or clear the check-in target type.", observable_only: false },
     CommandMeta { id: "sync.setDraftPath", title: "Set Sync Draft Path", description: "Set the work-in-progress check-in path.", observable_only: false },
     CommandMeta { id: "sync.setDocumentStatus", title: "Set Document Sync Status", description: "Set one document's sync health.", observable_only: false },
+    CommandMeta { id: "inference.setDocumentPort", title: "Set Document Inference Port", description: "Replace one document's ephemeral inference-port state.", observable_only: false },
+    CommandMeta { id: "inference.clearDocumentPort", title: "Clear Document Inference Port", description: "Retire one document's ephemeral inference-port state.", observable_only: false },
     CommandMeta { id: "merge.setPolicy", title: "Set Merge Policy", description: "Set the conflict resolution strategy.", observable_only: false },
     CommandMeta { id: "merge.setConflicts", title: "Set Conflicts", description: "Replace the open conflict roster.", observable_only: false },
     CommandMeta { id: "merge.selectConflict", title: "Select Conflict", description: "Select a conflict for preview.", observable_only: false },
@@ -2293,7 +2420,7 @@ mod tests {
     #[test]
     fn shell_capabilities_declaration_order_matches_enum() {
         let caps = shell_capabilities();
-        assert_eq!(caps.len(), 63);
+        assert_eq!(caps.len(), 65);
         let mut ids: Vec<&str> = caps.iter().map(|c| c.id.as_str()).collect();
         let unique_before = ids.len();
         ids.sort();
@@ -2366,7 +2493,7 @@ mod tests {
                 assert!(fixtures.insert(name, fixture).is_none(), "duplicate fixture identity");
             }
         }
-        assert_eq!(fixtures.len(), 75);
+        assert_eq!(fixtures.len(), 77);
         let compared = std::cell::RefCell::new(std::collections::HashSet::new());
 
         let assert_ok = |name: &str, state: ShellState, command: ShellCommand| {
@@ -2504,6 +2631,19 @@ mod tests {
         assert_ok("set-sync-card-kind", base.clone(), ShellCommand::SetSyncCardKind { kind: Some(SyncCardKind::Folder) });
         assert_ok("set-sync-draft-path", base.clone(), ShellCommand::SetSyncDraftPath { path: "/tmp/checkin".to_string() });
         assert_ok("set-document-sync-status", base.clone(), ShellCommand::SetDocumentSyncStatus { document_id: "doc-1".to_string(), status: ArtifactSyncStatus::Dirty });
+        assert_ok(
+            "set-document-inference-port",
+            base.clone(),
+            ShellCommand::SetDocumentInferencePort {
+                document_id: "doc-1".to_string(),
+                port: InferencePortStatus { phase: InferencePortPhase::Offered, job_id: Some("11111111111111111111111111111111".to_string()), cursor: 3, completed: 3, total: 3, proposal_hash: Some("9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130".to_string()), cancel_requested: false, code: None },
+            },
+        );
+        {
+            let mut s = base.clone();
+            s.inference_port_by_document.insert("doc-1".to_string(), InferencePortStatus { phase: InferencePortPhase::Applied, job_id: Some("11111111111111111111111111111111".to_string()), cursor: 3, completed: 3, total: 3, proposal_hash: None, cancel_requested: false, code: None });
+            assert_ok("clear-document-inference-port", s, ShellCommand::ClearDocumentInferencePort { document_id: "doc-1".to_string() });
+        }
         assert_ok("set-merge-policy", base.clone(), ShellCommand::SetMergePolicy { policy: MergePolicy::PreferLocal });
         assert_ok("set-conflicts", base.clone(), ShellCommand::SetConflicts { conflicts: vec![Conflict { conflict_id: "c1".to_string(), document_id: "doc-1".to_string(), description: "concurrent edit".to_string() }] });
         {
@@ -2578,7 +2718,7 @@ mod tests {
             }
             checked += 1;
         }
-        assert!(checked >= 63, "expected at least one fixture per ShellCommand variant (63), found {checked}");
+        assert!(checked >= 65, "expected at least one fixture per ShellCommand variant (65), found {checked}");
     }
 }
 //#endregion 🧪️tests

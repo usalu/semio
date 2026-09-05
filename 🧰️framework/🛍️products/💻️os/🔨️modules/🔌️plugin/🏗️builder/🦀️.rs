@@ -728,6 +728,9 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         for (app, factory) in app_defs {
             plugin = plugin.register_app_factory(app, factory);
         }
+        if let Some(breach) = crate::app::surface_dependency_breaches(&plugin.manifest).into_iter().next() {
+            return Err(PluginAssemblyError::new("plugin-assembly.surface-dependency-gate", breach));
+        }
         let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
         crate::app::commit_artifact_registration_plan(&assembly, registry_plan)?;
         // 🛂️ E2-builder-descriptor (`📓️design-abi.md` §3): installs the SAME builder fields that
@@ -762,12 +765,12 @@ mod plugin_builder_dependency_tests {
     use crate::app::{ArtifactContribution, FlowExtensionExecutableIdentity, FlowExtensionManifest};
     use std::sync::atomic::{AtomicUsize, Ordering};
 
-    static MESH_DWG_EXECUTIONS: AtomicUsize = AtomicUsize::new(0);
-    /// 🔒️ `MESH_DWG_EXECUTIONS` is process-global, and BOTH tests that read it reset it to 0 first,
+    static MESH_IMPORT_EXECUTIONS: AtomicUsize = AtomicUsize::new(0);
+    /// 🔒️ `MESH_IMPORT_EXECUTIONS` is process-global, and BOTH tests that read it reset it to 0 first,
     /// so running them concurrently makes each one observe the other's increments — a race that is
     /// invisible whenever either test is run alone. Every test touching that counter takes this
     /// guard, which is what actually makes the assertions about it meaningful.
-    static MESH_DWG_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    static MESH_IMPORT_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     async fn host_media_kind() -> semio_framework::ArtifactKindSpec {
         semio_framework::ArtifactKindSpec {
@@ -786,13 +789,13 @@ mod plugin_builder_dependency_tests {
         }
     }
 
-    fn counting_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String> {
-        MESH_DWG_EXECUTIONS.fetch_add(1, Ordering::SeqCst);
+    fn counting_mesh_importer(_mesh: &semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String> {
+        MESH_IMPORT_EXECUTIONS.fetch_add(1, Ordering::SeqCst);
         Ok(dsl::json!({ "bridge": "counting" }))
     }
 
-    fn alternate_mesh_dwg_importer(_mesh: &semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String> {
-        MESH_DWG_EXECUTIONS.fetch_add(100, Ordering::SeqCst);
+    fn alternate_mesh_importer(_mesh: &semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String> {
+        MESH_IMPORT_EXECUTIONS.fetch_add(100, Ordering::SeqCst);
         Ok(dsl::json!({ "bridge": "alternate" }))
     }
 
@@ -833,10 +836,10 @@ mod plugin_builder_dependency_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
-        let _guard = MESH_DWG_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
+        let _guard = MESH_IMPORT_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        MESH_IMPORT_EXECUTIONS.store(0, Ordering::SeqCst);
         let kind = host_media_kind().await;
-        let bridge = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.mesh-dwg", kind.clone(), kind.schema.clone(), counting_mesh_dwg_importer).expect("typed bridge declaration");
+        let bridge = HostMediaHandlerDeclaration::mesh_import("builder-test.media.mesh-import", kind.clone(), kind.schema.clone(), counting_mesh_importer).expect("typed bridge declaration");
         let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-media")
             .label("Builder Test Media")
             .version("0.1.0")
@@ -845,20 +848,20 @@ mod plugin_builder_dependency_tests {
             .host_media_handler(bridge)
             .try_build()
             .expect("identical frozen host-media declarations are idempotent");
-        assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
+        assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
         assert_eq!(plugin.host_media_handlers().len(), 1);
-        let result = plugin.import_mesh_dwg(crate::MeshDwgBridgeRequest { artifact_kind: kind.id.clone(), document_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
+        let result = plugin.import_mesh(crate::MeshImportRequest { artifact_kind: kind.id.clone(), document_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
         assert_eq!(result.document, dsl::json!({ "bridge": "counting" }));
-        assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 1);
+        assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn host_media_conflicts_reject_the_whole_candidate_before_execution() {
-        let _guard = MESH_DWG_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        MESH_DWG_EXECUTIONS.store(0, Ordering::SeqCst);
+        let _guard = MESH_IMPORT_GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        MESH_IMPORT_EXECUTIONS.store(0, Ordering::SeqCst);
         let kind = host_media_kind().await;
-        let first = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.first", kind.clone(), kind.schema.clone(), counting_mesh_dwg_importer).expect("first bridge");
-        let second = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.second", kind.clone(), kind.schema.clone(), alternate_mesh_dwg_importer).expect("second bridge");
+        let first = HostMediaHandlerDeclaration::mesh_import("builder-test.media.first", kind.clone(), kind.schema.clone(), counting_mesh_importer).expect("first bridge");
+        let second = HostMediaHandlerDeclaration::mesh_import("builder-test.media.second", kind.clone(), kind.schema.clone(), alternate_mesh_importer).expect("second bridge");
         let error = Plugin::<crate::app::NoPluginApp>::builder("builder-test-media-conflict")
             .label("Builder Test Media Conflict")
             .version("0.1.0")
@@ -869,7 +872,7 @@ mod plugin_builder_dependency_tests {
             .err()
             .expect("two executable identities may not own one host-media target");
         assert_eq!(error.code, "plugin-assembly.host-media-target");
-        assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 0, "a rejected aggregate must have no runtime side effect");
+        assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 0, "a rejected aggregate must have no runtime side effect");
     }
 
     #[semio_framework_async_macros::async_test]

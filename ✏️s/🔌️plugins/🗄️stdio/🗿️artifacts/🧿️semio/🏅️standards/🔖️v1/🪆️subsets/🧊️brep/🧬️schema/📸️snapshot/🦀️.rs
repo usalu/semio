@@ -1313,7 +1313,7 @@ impl store::ArtifactPack for SemioBrepSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.brep` — the shape `⚓️mutate-semio-brep` compares under `ordered-json-v1`, derived from the
+/// `s.stdio.semio.brep` — the shape `🧊️mutate-semio-brep` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
 /// away from the type it claims to project. The projection is not flat: `BrepCurve` and `BrepSurface` are `#[value(tag = "kind",
 /// rename_all = "camelCase")]` enums, so every edge carries a discriminated `curve` object and every
@@ -1327,7 +1327,7 @@ pub fn encode_semio_brep_snapshot_json(snapshot: &SemioBrepSnapshot) -> String {
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_brep_snapshot_json`] — decodes the
 /// committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`SemioBrepSnapshot`] values, so `⚓️mutate-semio-brep`'s adapter reads the
+/// specification vectors into real [`SemioBrepSnapshot`] values, so `🧊️mutate-semio-brep`'s adapter reads the
 /// committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_brep_snapshot_json(text: &str) -> Result<SemioBrepSnapshot, String> {
@@ -1336,9 +1336,9 @@ pub fn decode_semio_brep_snapshot_json(text: &str) -> Result<SemioBrepSnapshot, 
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioBrepSnapshot`] — a
 /// thin wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
-/// crate's private `store` extern-crate item (the `⚓️mutate-semio-brep` test adapter, whose
+/// crate's private `store` extern-crate item (the `🧊️mutate-semio-brep` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🧊️solid` artifact) can still
-/// drive the same codec production does. Same shape and same rationale as `✳️flow`'s own bridge.
+/// drive the same codec production does. Same shape and same rationale as `🌊️flow`'s own bridge.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_brep_dsl(text: &str) -> Result<SemioBrepSnapshot, String> {
     <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())

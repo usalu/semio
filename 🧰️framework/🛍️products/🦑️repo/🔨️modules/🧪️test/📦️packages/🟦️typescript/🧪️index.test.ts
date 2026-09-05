@@ -664,7 +664,7 @@ describe("🪆️ case above subset", () => {
     const scopes = discoverTestCases(repoRoot)
       .flatMap((discovered) => caseAboveSubsetBreaches(discovered, parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")), liveRegistry))
       .map((entry) => entry.scope);
-    expect(scopes).toEqual(["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🧪️tests/mutate-obj-3-0-material"]);
+    expect(scopes).toEqual(["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🧪️tests/mutate-obj-3-0-material"]);
   }, 30_000);
 });
 
@@ -1281,8 +1281,8 @@ describe("🧬️ physical mutation vector registry", () => {
 describe("🧫️ real-world artifact fixtures", () => {
   // 🧫️A multi-megabyte real document is read where the domain already keeps it. Copying it into a
   // fixtures directory would duplicate megabytes of git history for no gain.
-  const thesis = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf";
-  const owner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌳️pdf";
+  const thesis = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf";
+  const owner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf";
   const featureFilename = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testFeatureFileKindId);
   const discovered = { owner, ownerName: "📄️pdf", case: "c", caseDir: `${owner}/🧪️tests/c`, featurePath: `${owner}/🧪️tests/c/${featureFilename}`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "p" } as unknown as import("./🟦️.ts").DiscoveredCase;
 

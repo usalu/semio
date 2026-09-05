@@ -1,3 +1,4 @@
 [submodule "♻️mit-bestand/recherche"]
 	path = ♻️mit-bestand/🔎️recherche
 	url = https://github.com/usalu/recherche.git
+	ignore = dirty

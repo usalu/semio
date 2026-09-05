@@ -1,7 +1,7 @@
 //! 📚️ Example "deck" for `stdio.semio.presentation` — the first real, non-hex-scaffold fixture
 //! for this subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's presentation
 //! wave). `PRIMARY_TEXT` is the genuine `SemioPresentationSnapshot::print_dsl` output for
-//! `snapshot::demo_semio_presentation_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️presentation/
+//! `snapshot::demo_semio_presentation_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/📽️presentation/
 //! 🧬️schema/📸️snapshot/🦀️.rs`) — asserted byte-identical to it by that subset's own
 //! `fixture_honesty_law` (`🎹️composer/🦀️.rs`), so this fixture can never silently drift
 //! back to a fake.

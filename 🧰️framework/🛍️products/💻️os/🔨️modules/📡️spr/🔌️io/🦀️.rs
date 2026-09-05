@@ -55,7 +55,7 @@ mod native {
         // absolute `last_commit_offset` — see crate::os_spr::format::FrameCursor::new's doc.
         let mut cursor = FrameCursor::new(&commit_bytes, 0).await;
         let frame = cursor.next_frame().await?.ok_or_else(|| ProtocolError::Malformed { what: "resume commit frame", offset: recovery.last_commit_offset, detail: "expected a REC_COMMIT frame at the recovered commit offset".to_string() })?;
-        let commit = parse_commit_payload(frame.payload().await).await?;
+        let commit = parse_commit_payload(frame.payload().await)?;
         Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: commit.commit_seq, chain_hash: commit.chain_hash })
     }
 

@@ -151,6 +151,118 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedCommands
+/// 🧵️ Every id this app declares is `Migrated`, so every id needs exactly one proof row joined to a
+/// live owned factory — `validate_tool_job_rows` rejects the whole app otherwise
+/// (`interactive-job.catalog-incomplete`), which is why an app with migrated ids and no factory is
+/// not "slow", it is unconstructable.
+const SPACE_INDEX_RETAINED_TOOL_IDS: &[&str] = &[
+    "createArtifact", "deleteArtifact", "renameArtifact", "touchArtifact", "requestDeleteArtifact", "openArtifact", "openArtifactWith",
+    "foldDirectoryEvents", "presenceHeartbeat", "inviteMember", "removeMember", "setVisibility", "copyInviteLink", "requestInviteMember",
+];
+const SPACE_INDEX_RETAINED_PAYLOAD_SCHEMA: &str = "s.space.index.tool-command.v1";
+const SPACE_INDEX_RETAINED_RAW_BYTES: usize = 128 * 1024;
+const SPACE_INDEX_RETAINED_WORK_ITEMS: usize = 1;
+const SPACE_INDEX_RETAINED_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
+/// 🛣️ Read off each handler's own `Emit`: the four document commands publish `artifact_mutations`,
+/// the two directory/presence folds publish `config_mutations`, and every `Effect`-only relay
+/// publishes nothing at all.
+const SPACE_INDEX_RETAINED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "createArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "touchArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestDeleteArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openArtifactWith", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "foldDirectoryEvents", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "inviteMember", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeMember", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setVisibility", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "copyInviteLink", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestInviteMember", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+];
+
+fn space_index_retained_contract() -> semio_framework::ToolExecutionContract {
+    semio_framework::ToolExecutionContract::bounded_first_step(SPACE_INDEX_RETAINED_RAW_BYTES, 64, SPACE_INDEX_RETAINED_WORK_ITEMS as u64, SPACE_INDEX_RETAINED_OUTPUT_BYTES, 7_500)
+}
+
+fn space_index_retained_extent(command: &SpaceIndexCommand, _snapshot: &SSpaceSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    SPACE_INDEX_RETAINED_TOOL_IDS.contains(&command.command_id()).then_some(SPACE_INDEX_RETAINED_WORK_ITEMS)
+}
+
+fn space_index_retained_reduce(
+    command: &SpaceIndexCommand,
+    snapshot: &SSpaceSnapshot,
+    config: &SpaceIndexConfig,
+    history: &semio_framework_plugin::HistoryView,
+    interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &semio_framework_plugin::AppOperationContext,
+) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation, NoDraftMutation>, Fault> {
+    if space_index_retained_extent(command, snapshot, interaction).is_none() {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.index.retained.route"), "the bounded space index reducer rejects an unregistered tool"));
+    }
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+pub struct SpaceIndexRetainedCommandJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl SpaceIndexRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: SPACE_INDEX_RETAINED_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for SpaceIndexRetainedCommandJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<SpaceIndexEditor>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<SpaceIndexEditor>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        SPACE_INDEX_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        space_index_retained_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > SPACE_INDEX_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((semio_framework::ToolJobFactoryError::new("bounded space index command rejects an oversized wire or a checkpoint owner"), input, checkpoint));
+        }
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceIndexRetainedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<SpaceIndexEditor>;
+    const TOOL_IDS: &'static [&'static str] = SPACE_INDEX_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = SPACE_INDEX_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
 //#region 🔖️SpaceIndexEditor
 #[derive(Default)]
 pub struct SpaceIndexEditor;
@@ -171,6 +283,69 @@ impl ArtifactEditor for SpaceIndexEditor {
 
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+
+    /// 🧾️ `controller:` is the runtime tool controller — the surface app id
+    /// `tool_job_registration` is called with, not the manifest's UI `controller_id`
+    /// (`s-space-index`); `contract:` reads the one `space_index_retained_contract()` the factory
+    /// publishes, because the proof/registration join is exact equality. Both are pinned by
+    /// `interactive_job_catalog_tests::tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against`.
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<SpaceIndexEditor>,
+        owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.space.space@1/*#editor",
+        document_schema: "s.space",
+        factory: "SpaceIndexRetainedCommandJobFactory",
+        factory_type: SpaceIndexRetainedCommandJobFactory,
+        contract: space_index_retained_contract(),
+        tools: ["createArtifact", "deleteArtifact", "renameArtifact", "touchArtifact", "requestDeleteArtifact", "openArtifact", "openArtifactWith",
+            "foldDirectoryEvents", "presenceHeartbeat", "inviteMember", "removeMember", "setVisibility", "copyInviteLink", "requestInviteMember"]
+    }
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        crate::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-index-artifact-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        crate::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-index-config-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
+    }
+
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(SpaceIndexRetainedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !SPACE_INDEX_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.index.retained.tool-mismatch"), "space index command does not match its exact registered tool"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, space_index_retained_reduce, space_index_retained_extent));
+        let operation_context = semio_framework_plugin::AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            SpaceIndexCommand::command_id,
+            SPACE_INDEX_RETAINED_RAW_BYTES,
+            SPACE_INDEX_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     fn initial_snapshot() -> SSpaceSnapshot {
         SSpaceSnapshot::default()
@@ -290,7 +465,7 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         // because `home` classifies its own `renameSpace` that way.
         .action_interactive_job("createArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("deleteArtifact", InteractiveJobClassification::Migrated)
-        .action_interactive_job("renameArtifact", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("renameArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("touchArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("requestDeleteArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("openArtifact", InteractiveJobClassification::Migrated)
@@ -300,7 +475,7 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("removeMember", InteractiveJobClassification::Migrated)
         .action_interactive_job("setVisibility", InteractiveJobClassification::Migrated)
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
-        .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::Migrated)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
         // 👁️ View actions — fold host-pushed state into `Config`, never in the palette.
         // 🗨️ Dialogs (worker-brief tasks 2–3). `createArtifact`'s submit re-dispatches the real

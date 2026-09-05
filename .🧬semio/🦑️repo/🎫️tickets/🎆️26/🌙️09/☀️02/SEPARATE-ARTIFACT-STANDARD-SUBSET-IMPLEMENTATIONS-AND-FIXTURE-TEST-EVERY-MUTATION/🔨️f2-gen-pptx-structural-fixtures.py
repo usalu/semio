@@ -24,7 +24,19 @@ NS, VML_CONTENT = _mod.NS, _mod.VML_CONTENT
 zip_read, zip_rewrite, patch_tag_attr, insert_before_close = _mod.zip_read, _mod.zip_rewrite, _mod.patch_tag_attr, _mod.insert_before_close
 remove_fragment, assert_wellformed, assert_zip_valid, sha256_of = _mod.remove_fragment, _mod.assert_wellformed, _mod.assert_zip_valid, _mod.sha256_of
 
-ROOT = Path("/Users/ueli/Documents/semio")
+ROOT = Path(__file__).resolve().parents[7]
+FIXTURE_DIRECTORIES = {
+    "set-snapshot": "📸️set-snapshot-applied",
+    "set-main-namespace": "🏛️set-main-namespace-applied",
+    "set-drawing-namespace": "🎨️set-drawing-namespace-applied",
+    "set-relationship-base": "🔗️set-relationship-base-applied",
+    "set-conformance-attribute": "🔖️set-conformance-attribute-applied",
+    "remove-conformance-attribute": "🏷️remove-conformance-attribute-applied",
+    "insert-alternate-content": "🔀️insert-alternate-content-applied",
+    "remove-alternate-content": "🚫️remove-alternate-content-applied",
+    "insert-vml-part": "🖼️insert-vml-part-applied",
+    "remove-vml-part": "🗑️remove-vml-part-applied",
+}
 PPTX_VERSION = "1.0.2"
 ALT_CONTENT = (
     '<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">'
@@ -129,17 +141,18 @@ def build_for_subset(subset: str):
 
 
 def emit(subset: str):
-    subset_dir = ROOT / f"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️{subset}"
+    subset_name = {"strict": "🔒️strict", "transitional": "🌉️transitional"}[subset]
+    subset_dir = ROOT / f"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/{subset_name}"
     fixtures = subset_dir / "🧫️fixtures"
-    oracle_json = subset_dir / "🧪️oracle/🔣️.json"
+    oracle_json = subset_dir / "🔮️oracle/🔣️.json"
     reader_oracle = f"python-pptx-pptx-ecma-376-{subset}-mutate-reader"
 
     manifests = []
     for mutation_id, klass, before_bytes, after_bytes, note in build_for_subset(subset):
-        case_dir = fixtures / f"{mutation_id}-applied"
+        case_dir = fixtures / FIXTURE_DIRECTORIES[mutation_id]
         case_dir.mkdir(parents=True, exist_ok=True)
-        (case_dir / "before.pptx").write_bytes(before_bytes)
-        (case_dir / "after.pptx").write_bytes(after_bytes)
+        (case_dir / "⬅️before.pptx").write_bytes(before_bytes)
+        (case_dir / "➡️after.pptx").write_bytes(after_bytes)
 
         entry = {
             "schema": "semio.repository-test.fixture/v2",
@@ -150,8 +163,8 @@ def emit(subset: str):
             "outcome": "applied",
             "units": {"length": "unitless", "angle": "degree"},
             "files": [
-                {"role": "expected-before-pptx", "path": f"../🧫️fixtures/{mutation_id}-applied/before.pptx", "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "sha256": sha256_of(before_bytes), "bytes": len(before_bytes)},
-                {"role": "expected-after-pptx", "path": f"../🧫️fixtures/{mutation_id}-applied/after.pptx", "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "sha256": sha256_of(after_bytes), "bytes": len(after_bytes)},
+                {"role": "expected-before-pptx", "path": f"../🧫️fixtures/{FIXTURE_DIRECTORIES[mutation_id]}/⬅️before.pptx", "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "sha256": sha256_of(before_bytes), "bytes": len(before_bytes)},
+                {"role": "expected-after-pptx", "path": f"../🧫️fixtures/{FIXTURE_DIRECTORIES[mutation_id]}/➡️after.pptx", "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "sha256": sha256_of(after_bytes), "bytes": len(after_bytes)},
             ],
             "provenance": {
                 "source": "generated" if klass == "third-party-generated" else "authored",

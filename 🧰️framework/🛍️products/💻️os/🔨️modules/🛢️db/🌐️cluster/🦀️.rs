@@ -204,43 +204,58 @@ pub enum ReplicationOutcome {
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
 pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_storage::DbBackend, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
-    let follower_state = db_sync::replay_sync_state(&follower.wal().await, document.clone()).await?;
-    let leader_state = db_sync::replay_sync_state(&leader.wal().await, document.clone()).await?;
-    if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {
-        return Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier });
-    }
-    let plan = db_sync::decide_bootstrap(&leader_state, &leader.snapshot().await, Some(&follower_state.frontier)).await?;
-    match plan {
-        db_sync::BootstrapPlan::None => Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier }),
-        db_sync::BootstrapPlan::Tail { envelopes } => {
-            let count = envelopes.len();
-            let (mut wal, _report) = db_wal::ArtifactWal::open(&follower.wal().await, document.clone(), policy, now_ms).await?;
-            let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-            for envelope in &envelopes {
-                let bytes = db_sync::encode_command_envelope(envelope).await;
-                let bytes = match db_wal::WalBytes::try_admit(bytes, 1024 * 1024, &mut control).await {
-                    Ok(bytes) => bytes,
-                    Err(mut rejected) => {
-                        while rejected.close_step()? {
-                            control.grant()?;
+    let follower_storage = follower.wal().await;
+    let (mut wal, _report) = db_wal::ArtifactWal::open(&follower_storage, document.clone(), policy, now_ms).await?;
+    let outcome = async {
+        let follower_state = db_sync::replay_sync_state(&follower_storage, document.clone()).await?;
+        let leader_state = db_sync::replay_sync_state(&leader.wal().await, document.clone()).await?;
+        if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {
+            return Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier });
+        }
+        let plan = db_sync::decide_bootstrap(&leader_state, &leader.snapshot().await, Some(&follower_state.frontier)).await?;
+        match plan {
+            db_sync::BootstrapPlan::None => Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier }),
+            db_sync::BootstrapPlan::Tail { envelopes } => {
+                let count = envelopes.len();
+                let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+                for envelope in &envelopes {
+                    let bytes = db_sync::encode_command_envelope(envelope).await;
+                    let bytes = match db_wal::WalBytes::try_admit(bytes, 1024 * 1024, &mut control).await {
+                        Ok(bytes) => bytes,
+                        Err(mut rejected) => {
+                            while rejected.close_step()? { semio_framework_async::yield_once().await; }
+                            return Err(rejected.into_error());
                         }
-                        return Err(rejected.into_error());
+                    };
+                    let mut records = db_wal::WalRecordBatch::new();
+                    if let Err(mut record) = records.push(db_wal::WalRecord::Command(bytes)) {
+                        while record.close_step()? { semio_framework_async::yield_once().await; }
+                        return Err(DbError::LimitExceeded("db_cluster fixed wal record batch"));
                     }
-                };
-                let mut records = db_wal::WalRecordBatch::new();
-                records.push(db_wal::WalRecord::Command(bytes)).map_err(|_| DbError::LimitExceeded("db_cluster fixed wal record batch"))?;
-                wal.submit(&follower.wal().await, &records, DurabilityClass::Fsync, now_ms).await?;
-                while records.close_step()? {
-                    control.grant()?;
+                    let submitted = wal.submit(&follower_storage, &records, DurabilityClass::Fsync, now_ms).await;
+                    let retired = async {
+                        while records.close_step()? { semio_framework_async::yield_once().await; }
+                        Ok(())
+                    }.await;
+                    replication_retired(submitted, retired)?;
                 }
+                let frontier = db_sync::replay_sync_state(&follower_storage, document.clone()).await?.frontier;
+                Ok(ReplicationOutcome::TailApplied { frontier, count })
             }
-            let frontier = db_sync::replay_sync_state(&follower.wal().await, document).await?.frontier;
-            Ok(ReplicationOutcome::TailApplied { frontier, count })
+            db_sync::BootstrapPlan::Snapshot { generation, pages, pack_hash } => {
+                follower.snapshot().await.write_generation(&document, generation, pages).await?;
+                Ok(ReplicationOutcome::SnapshotTransferred { generation, pack_hash })
+            }
         }
-        db_sync::BootstrapPlan::Snapshot { generation, pages, pack_hash } => {
-            follower.snapshot().await.write_generation(&document, generation, pages).await?;
-            Ok(ReplicationOutcome::SnapshotTransferred { generation, pack_hash })
-        }
+    }.await;
+    replication_retired(outcome, wal.close().await)
+}
+
+fn replication_retired<T>(outcome: Result<T, DbError>, retired: Result<(), DbError>) -> Result<T, DbError> {
+    match (outcome, retired) {
+        (outcome, Ok(())) => outcome,
+        (Ok(_), Err(error)) => Err(error),
+        (Err(error), Err(cleanup)) => Err(DbError::Unavailable(format!("replication failed ({error}); retained cleanup failed ({cleanup})"))),
     }
 }
 //#endregion 🔖️Replication
@@ -523,6 +538,45 @@ mod tests {
     //#endregion 🔖️Ownership
 
     //#region 🔖️Replication
+    fn writer_replication_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("../🗄️storage/🔐️writer/🧪️fixtures/🔣️.json")).unwrap()
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn replicate_document_fences_occupied_follower_before_inventory_or_up_to_date() {
+        use db_storage::WalStorage as _;
+        let fixture = writer_replication_fixture();
+        let document: ArtifactId = "doc-1".into();
+        let leader = db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap());
+        let follower = db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap());
+        let storage = follower.wal().await;
+        let writer = storage.acquire_writer(&document).await.unwrap();
+        let result = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await;
+        assert_eq!(if matches!(result, Err(DbError::Conflict(_))) { "conflict" } else { "not-conflict" }, fixture["replication"]["occupiedFollower"]);
+        let mut segments = storage.list_segments(&document).await.unwrap();
+        assert_eq!(serde_json::json!(segments.as_slice()), fixture["replication"]["inventoryAfterConflict"]);
+        while segments.close_step() { semio_framework_async::yield_once().await; }
+        writer.release().await.unwrap();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn replicate_document_releases_follower_after_leader_replay_failure() {
+        use db_storage::WalStorage as _;
+        let fixture = writer_replication_fixture();
+        assert!(fixture["replication"]["releaseAfter"].as_array().unwrap().contains(&serde_json::json!("leader-corrupt")));
+        let document: ArtifactId = "doc-1".into();
+        let leader = db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap());
+        let follower = db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap());
+        let leader_storage = leader.wal().await;
+        let seed = leader_storage.acquire_writer(&document).await.unwrap();
+        leader_storage.create_segment(&seed, 0).await.unwrap();
+        let bytes = db_storage::db_io_copy_pages(&[0xff; 128]).unwrap().await.unwrap();
+        leader_storage.append(&seed, 0, bytes).await.unwrap();
+        seed.release().await.unwrap();
+        assert!(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await.is_err());
+        follower.wal().await.acquire_writer(&document).await.expect("failed replication completes follower release").release().await.unwrap();
+    }
+
     async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
         protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
@@ -554,6 +608,7 @@ mod tests {
             let envelope = sample_envelope(&format!("op-{i}"), i).await;
             submit_record(storage, &mut wal, command_record(&envelope).await, i).await;
         }
+        wal.close().await.unwrap();
     }
 
     #[semio_framework_async_macros::async_test]
@@ -574,6 +629,7 @@ mod tests {
             other => panic!("expected TailApplied, got {other:?}"),
         }
 
+        db_storage::WalStorage::acquire_writer(&follower.wal().await, &document).await.unwrap().release().await.unwrap();
         let follower_state = db_actor::block_on(async { db_sync::replay_sync_state(&follower.wal().await, document).await }).unwrap();
         assert_eq!(follower_state.commands.len(), 4);
         assert_eq!(follower_state.commands[0].mutation_id.0, "op-0");
@@ -592,8 +648,9 @@ mod tests {
         let first = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         assert!(matches!(first, ReplicationOutcome::TailApplied { count: 2, .. }));
 
-        let second = db_actor::block_on(replicate_document(&leader, &follower, document, db_wal::GroupCommitPolicy::default(), 100)).unwrap();
+        let second = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 100)).unwrap();
         assert!(matches!(second, ReplicationOutcome::UpToDate { .. }));
+        db_storage::WalStorage::acquire_writer(&follower.wal().await, &document).await.unwrap().release().await.unwrap();
     }
 
     #[semio_framework_async_macros::async_test]
@@ -607,6 +664,7 @@ mod tests {
         {
             let (mut wal, _report) = db_actor::block_on(db_wal::ArtifactWal::open(&leader, document.clone(), db_wal::GroupCommitPolicy::default(), 1_000)).unwrap();
             submit_record(&leader, &mut wal, db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }, 1_000).await;
+            wal.close().await.unwrap();
         }
         let pages = db_storage::db_io_copy_pages(b"snapshot-bytes").unwrap().await.unwrap();
         db_storage::SnapshotStorage::write_generation(&leader, &document, 9, pages).await.unwrap();
@@ -621,6 +679,7 @@ mod tests {
             }
             other => panic!("expected SnapshotTransferred, got {other:?}"),
         }
+        db_storage::WalStorage::acquire_writer(&follower.wal().await, &document).await.unwrap().release().await.unwrap();
         // 🪡 `DbBackend` itself carries no blanket `SnapshotStorage` impl (only its variant
         // payloads do — `MemoryStorage`, `FsStorage<R>`, …), so the read must go through the
         // matched-out `Memory` payload, not the enum wrapper `replicate_document` above took by reference.

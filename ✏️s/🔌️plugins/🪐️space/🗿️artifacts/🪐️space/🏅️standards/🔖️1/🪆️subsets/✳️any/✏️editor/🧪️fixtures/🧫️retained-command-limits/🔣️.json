@@ -1,0 +1,199 @@
+{
+  "controller": "s-space-index",
+  "documentSchema": "s.space",
+  "factory": "SpaceIndexRetainedCommandJobFactory",
+  "limits": {
+    "bounded": {
+      "maxRawBytes": 131072,
+      "maxDecodedItems": 64,
+      "maxWorkUnitsPerStep": 1,
+      "maxOutputBytes": 4194304,
+      "maxStepMicros": 7500
+    }
+  },
+  "publicationContracts": [
+    {
+      "toolId": "createArtifact",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "deleteArtifact",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "renameArtifact",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "touchArtifact",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "requestDeleteArtifact",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "openArtifact",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "openArtifactWith",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "foldDirectoryEvents",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "presenceHeartbeat",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "inviteMember",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "removeMember",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "setVisibility",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "copyInviteLink",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "requestInviteMember",
+      "lanes": [
+        "hostOnly"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "createArtifact",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "append one artifact row through the installed artifact preparation factory"
+    },
+    {
+      "id": "deleteArtifact",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "remove one artifact row through the installed artifact preparation factory"
+    },
+    {
+      "id": "renameArtifact",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "rename one artifact row through the installed artifact preparation factory"
+    },
+    {
+      "id": "touchArtifact",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "stamp one artifact row's updated-at through the installed artifact preparation factory"
+    },
+    {
+      "id": "requestDeleteArtifact",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "open the delete-confirm dialog for one row, publishing nothing"
+    },
+    {
+      "id": "openArtifact",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "relay one open-artifact shell command, publishing nothing"
+    },
+    {
+      "id": "openArtifactWith",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "relay one open-artifact-with shell command, publishing nothing"
+    },
+    {
+      "id": "foldDirectoryEvents",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "fold one directory event batch into the read model through the installed config preparation factory"
+    },
+    {
+      "id": "presenceHeartbeat",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "publish one presence snapshot through the installed config preparation factory"
+    },
+    {
+      "id": "inviteMember",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "relay one upsert-member directory command, publishing nothing"
+    },
+    {
+      "id": "removeMember",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "relay one remove-member directory command, publishing nothing"
+    },
+    {
+      "id": "setVisibility",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "relay one set-visibility directory command, publishing nothing"
+    },
+    {
+      "id": "copyInviteLink",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "relay one share-link directory command, publishing nothing"
+    },
+    {
+      "id": "requestInviteMember",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "open the invite dialog, publishing nothing"
+    }
+  ],
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "ownedInterface": "SpaceRetainedCatalogOracle",
+    "runtimeDependency": false,
+    "expected": {
+      "routes": 14,
+      "bounded": 14,
+      "batch": 0,
+      "migrated": 14,
+      "unique": true
+    }
+  }
+}

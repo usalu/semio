@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "inserts-a-perspective-camera-ahead-of-the-orthographic-camera",
-              "directoryName": "🧪️inserts-a-perspective-camera-ahead-of-the-orthographic-camera"
+              "directoryName": "🎥️inserts-a-perspective-camera-ahead-of-the-orthographic-camera"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "removes-the-perspective-camera-and-renumbers-the-node",
-              "directoryName": "🧪️removes-the-perspective-camera-and-renumbers-the-node"
+              "directoryName": "🚫️removes-the-perspective-camera-and-renumbers-the-node"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "swaps-the-perspective-and-orthographic-cameras",
-              "directoryName": "🧪️swaps-the-perspective-and-orthographic-cameras"
+              "directoryName": "🚚️swaps-the-perspective-and-orthographic-cameras"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "flips-the-perspective-and-orthographic-cameras",
-              "directoryName": "🧪️flips-the-perspective-and-orthographic-cameras"
+              "directoryName": "🔀️flips-the-perspective-and-orthographic-cameras"
             }
           ]
         }

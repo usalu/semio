@@ -2,7 +2,7 @@
 @oracle-ifcopenshell-ifc-2x3-base-differential
 @comparison-semantic-ifc-v1
 Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independent implementations
-  This case exists for one reason: the sibling `../🐸️mutate-ifc-2x3` cannot make a differential claim.
+  This case exists for one reason: the sibling `../🧱️mutate-ifc-2x3` cannot make a differential claim.
   `ruststep` 0.4 READS ISO 10303-21 and has no writer anywhere in the crate, so all 11 of its
   scenarios are honestly typed `@mode-property`/`@mode-round-trip` — a second READER standing beside
   this repository's own producer, never a second producer. **IfcOpenShell 0.8.4.post1 both reads and
@@ -39,7 +39,7 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
   records that as the chosen integrity strategy and removes `#270549` precisely BECAUSE it is
   referenced. `get_total_inverses(#270549)` on this fixture is **8**, so the two verbs would visibly
   differ on this exact row. Comparing two different verbs is not a differential, so it is not
-  claimed as one; `remove-instance` keeps its `ruststep`-backed scenarios in `../🐸️mutate-ifc-2x3`,
+  claimed as one; `remove-instance` keeps its `ruststep`-backed scenarios in `../🧱️mutate-ifc-2x3`,
   unchanged and unweakened. The removal primitive is guarded the same way everywhere in this
   oracle: any path that would reach it with a non-zero inverse count refuses instead.
 
@@ -56,7 +56,7 @@ Feature: Produce every schema-expressible IFC2X3 mutation twice, in two independ
   `open_model` guard makes the loss impossible to swallow anywhere else: every read compares
   IfcOpenShell's materialized instance count against the count the document text declares and
   refuses a truncated model. `inverse-set-snapshot` keeps its `ruststep`-backed scenario in
-  `../🐸️mutate-ifc-2x3`, unchanged — nothing is lost, and nothing false is claimed here.
+  `../🧱️mutate-ifc-2x3`, unchanged — nothing is lost, and nothing false is claimed here.
 
   📌️ Every Examples row other than `no-mutation` is required to MOVE the semantic projection, and
   the oracle fails the scenario in role when it does not: a row whose parameters make the mutation a

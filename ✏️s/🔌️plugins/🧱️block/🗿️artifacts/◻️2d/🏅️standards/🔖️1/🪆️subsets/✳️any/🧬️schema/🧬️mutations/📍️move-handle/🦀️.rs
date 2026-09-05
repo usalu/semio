@@ -19,23 +19,23 @@ pub struct MoveHandle {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn move_handle(id: String, new_angle: f64, new_radius: f64) -> Block2dMutation {
+pub fn move_handle(id: String, new_angle: f64, new_radius: f64) -> Block2dMutation {
     Block2dMutation::MoveHandle(MoveHandle { id, new_angle, new_radius })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for MoveHandle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "handle", kind: "move-handle", record: "MovedHandle" };
 
-    async fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Move handle \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

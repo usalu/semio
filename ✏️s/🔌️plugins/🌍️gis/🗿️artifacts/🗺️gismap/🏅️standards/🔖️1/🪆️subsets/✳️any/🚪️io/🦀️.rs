@@ -231,3 +231,136 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️IoRegistry
+
+/// 🗺️ Projects DWG geometry into GIS map positions.
+pub mod dwg_projection {
+    use crate::artifacts::gismap::standards::v1::subsets::any::schema::{default_document, dsl_to_value, value_to_dsl};
+    use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
+    use dsl::ToValue;
+    use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    use serde_json::{json, Value};
+//#region 🔖️MediaImport
+/// ✏️ Projects supported DWG geometry into drawing path segments.
+fn dwg_geometry_to_draw_node(geometry: &DwgGeometry) -> Option<DrawNode> {
+    let vertices: Vec<[f64; 2]> = match geometry {
+        DwgGeometry::Point { at } => vec![[at[0], at[1]]],
+        DwgGeometry::Line { start, end } => vec![[start[0], start[1]], [end[0], end[1]]],
+        DwgGeometry::LwPolyline { vertices, .. } => vertices.clone(),
+        DwgGeometry::Polyline3d { vertices, .. } => vertices.iter().map(|v| [v[0], v[1]]).collect(),
+        _ => return None,
+    };
+    if vertices.is_empty() {
+        return None;
+    }
+    let closed = matches!(geometry, DwgGeometry::LwPolyline { closed: true, .. } | DwgGeometry::Polyline3d { closed: true, .. });
+    let mut segments: Vec<PathSegment> = vertices
+        .iter()
+        .enumerate()
+        .map(|(index, v)| {
+            let to = SemioPoint2 { x: v[0], y: v[1] };
+            if index == 0 {
+                PathSegment::MoveTo { to }
+            } else {
+                PathSegment::LineTo { to }
+            }
+        })
+        .collect();
+    if closed {
+        segments.push(PathSegment::Close);
+    }
+    Some(DrawNode::Path { segments, style: None })
+}
+
+/// 🌉️ Builds a `SemioDrawingSnapshot` from a `DwgDrawing`'s entities — one `DrawNode::Path`
+/// per real (non-degenerate) entity, all under one layer.
+fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
+    let children: Vec<DrawNode> = drawing.entities.iter().filter_map(|entity| dwg_geometry_to_draw_node(&entity.geometry)).collect();
+    SemioDrawingSnapshot { layers: vec![DrawLayer { id: "dwg-import".into(), name: "DWG Import".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }], ..SemioDrawingSnapshot::default() }
+}
+
+/// 📍️ Walks a `DrawNode` tree collecting every `MoveTo`/`LineTo` endpoint — the vertex set the
+/// import path turns into position features (mirrors the old direct `DwgGeometry` vertex walk, now
+/// over the semio/drawing shape instead).
+fn collect_draw_node_points(node: &DrawNode, out: &mut Vec<SemioPoint2>) {
+    match node {
+        DrawNode::Path { segments, .. } => {
+            for segment in segments {
+                match segment {
+                    PathSegment::MoveTo { to } | PathSegment::LineTo { to } => out.push(*to),
+                    _ => {}
+                }
+            }
+        }
+        DrawNode::Group { children, .. } => children.iter().for_each(|child| collect_draw_node_points(child, out)),
+        _ => {}
+    }
+}
+
+/// 🗺️ Imports a DWG drawing into a bare gis map document: DWG entities lower to `DrawNode::Path`
+/// geometry (`dwg_drawing_to_semio_drawing`), whose vertices become position features. Falls back
+/// to the default reuse-map document when the DWG carries no point-like geometry.
+pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+    let scene = dwg_drawing_to_semio_drawing(drawing);
+    let mut points = Vec::new();
+    for layer in &scene.layers {
+        collect_draw_node_points(&layer.root, &mut points);
+    }
+    if points.is_empty() {
+        return Ok(dsl_to_value(&default_document().to_value()));
+    }
+    let positions: Vec<MapFeature> = points
+        .iter()
+        .enumerate()
+        .map(|(index, point)| {
+            let id = format!("dwg-{index}");
+            MapFeature { id: id.clone(), data: value_to_dsl(&json!({ "id": id, "lon": point.x, "lat": point.y })) }
+        })
+        .collect();
+    let document = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions, routes: Vec::new(), regions: Vec::new(), ..Default::default() });
+    Ok(dsl_to_value(&document.to_value()))
+}
+//#endregion 🔖️MediaImport
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity};
+    #[semio_framework_async_macros::async_test]
+    async fn dwg_import_collects_point_and_line_vertices() {
+        let mut drawing = DwgDrawing::default();
+        let layer = drawing.ensure_layer("0");
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Point { at: [1.0, 2.0, 0.0] } });
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [3.0, 4.0, 0.0] } });
+        let value = gis2d_document_json_from_dwg(&drawing).expect("import dwg");
+        let positions = value.get("positions").and_then(|v| v.as_array()).expect("positions array");
+        assert_eq!(positions.len(), 3);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn dwg_import_falls_back_to_default_document_when_empty() {
+        let drawing = DwgDrawing::default();
+        let value = gis2d_document_json_from_dwg(&drawing).expect("import empty dwg");
+        let snapshot: GisMapSnapshot = serde_json::from_value(value).expect("document");
+        assert!(!snapshot.positions.is_empty(), "fallback seeds the reuse-map document");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn dwg_import_lowers_a_closed_polyline_through_a_draw_node_and_carries_the_close_segment() {
+        let mut drawing = DwgDrawing::default();
+        let layer = drawing.ensure_layer("0");
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], bulges: vec![0.0, 0.0, 0.0] } });
+        let scene = dwg_drawing_to_semio_drawing(&drawing);
+        let DrawNode::Group { children, .. } = &scene.layers[0].root else { panic!("expected a group root") };
+        let DrawNode::Path { segments, .. } = &children[0] else { panic!("expected a path node") };
+        assert!(matches!(segments.first(), Some(PathSegment::MoveTo { .. })));
+        assert!(matches!(segments.last(), Some(PathSegment::Close)));
+        assert_eq!(segments.len(), 4, "3 vertices + Close");
+
+        let value = gis2d_document_json_from_dwg(&drawing).expect("import dwg");
+        let positions = value.get("positions").and_then(|v| v.as_array()).expect("positions array");
+        assert_eq!(positions.len(), 3, "one position feature per polyline vertex");
+    }
+
+}
+}

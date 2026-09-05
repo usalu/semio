@@ -8,9 +8,9 @@ use semio_document_json::{apply, arrange, build_seed, project, KINDS};
 
 fn fixture_directory(kind: &str) -> &'static str {
     match kind {
-        "insert-image" => "📸️insert-image",
+        "insert-image" => "🖼️insert-image",
         "remove-image" => "🪦️remove-image",
-        "set-image-bytes" => "🧮️set-image-bytes",
+        "set-image-bytes" => "📀️set-image-bytes",
         _ => panic!("unregistered document carrier kind: {kind}"),
     }
 }

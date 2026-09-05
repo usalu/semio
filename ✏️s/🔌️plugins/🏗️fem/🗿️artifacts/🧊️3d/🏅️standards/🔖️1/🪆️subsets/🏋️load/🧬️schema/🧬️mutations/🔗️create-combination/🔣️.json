@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination",
   "semanticKind": "create-combination",
   "displayName": "Create Combination",
-  "emoji": "🌱🔗️",
+  "emoji": "🔗️",
   "aggregateVariant": "CreateCombination",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-combination",

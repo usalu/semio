@@ -664,6 +664,26 @@ pub enum Effect {
     Unsubscribe {
         topic: String,
     },
+    /// @emoji 💡️ Asks the shell to open its own host-owned ephemeral inference port for the active
+    /// document and offer one reviewable proposal. It carries no document id, no space id, no
+    /// idempotency key, no receipt and no credential: the shell already owns the document scope, it
+    /// mints the request identity, it holds every lifecycle state, and it alone decides whether the
+    /// document's execution-target lease permits the port to start. Nothing this effect starts is
+    /// ever persisted into the document — the eventual proposal reaches the artifact only through
+    /// the server-stamped approval command, never through this effect's own result.
+    RequestInferenceProposal {
+        kind: InferenceProposalKind,
+    },
+}
+
+/// 💡️ The closed set of host-owned inference proposals a program may ask its shell to open. It is
+/// deliberately an intent, not a job description: no model, provider, prompt, budget or transport
+/// is nameable here, so a program can never widen what the shell will actually run.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "kebab-case")]
+#[value(rename_all = "kebab-case")]
+pub enum InferenceProposalKind {
+    GisMapBoundsRegion,
 }
 
 /// 🚦 Where a spawned job runs — `📓️design-abi.md` §2's `spawn-job.placement`: `Inline` shares

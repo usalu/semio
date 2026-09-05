@@ -1,0 +1,52 @@
+{
+  "schema": "wal-tail-only-recovery-v1",
+  "document": "d",
+  "commands": ["a", "b"],
+  "commitEnds": [129, 258, 387],
+  "fragmentCopies": [
+    { "offset": 0, "length": 32787, "crc32c": 4138789519 },
+    { "offset": 129, "length": 32787, "crc32c": 3453781200 },
+    { "offset": 16383, "length": 16385, "crc32c": 2097249897 },
+    { "offset": 16384, "length": 16385, "crc32c": 1087485542 }
+  ],
+  "cuts": [
+    { "cut": 0, "trustedEnd": 0, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 1, "trustedEnd": 0, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 15, "trustedEnd": 0, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 31, "trustedEnd": 0, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 32, "trustedEnd": 32, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 54, "trustedEnd": 32, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 128, "trustedEnd": 32, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 129, "trustedEnd": 129, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 148, "trustedEnd": 129, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 160, "trustedEnd": 129, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 183, "trustedEnd": 129, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 257, "trustedEnd": 129, "recoveredEnd": 129, "nextTxId": 1 },
+    { "cut": 258, "trustedEnd": 258, "recoveredEnd": 258, "nextTxId": 2 },
+    { "cut": 277, "trustedEnd": 258, "recoveredEnd": 258, "nextTxId": 2 },
+    { "cut": 289, "trustedEnd": 258, "recoveredEnd": 258, "nextTxId": 2 },
+    { "cut": 312, "trustedEnd": 258, "recoveredEnd": 258, "nextTxId": 2 },
+    { "cut": 386, "trustedEnd": 258, "recoveredEnd": 258, "nextTxId": 2 },
+    { "cut": 387, "trustedEnd": 387, "recoveredEnd": 387, "nextTxId": 3 }
+  ],
+  "lifecycle": [
+    { "name": "missing", "accepted": true },
+    { "name": "highest-sealed", "accepted": true },
+    { "name": "successor-empty", "accepted": true },
+    { "name": "successor-partial", "accepted": true },
+    { "name": "successor-header", "accepted": true },
+    { "name": "compacted-clean", "accepted": true },
+    { "name": "compacted-empty", "accepted": false },
+    { "name": "compacted-header", "accepted": false },
+    { "name": "sealed-torn", "accepted": false },
+    { "name": "sealed-empty", "accepted": false },
+    { "name": "earlier-active", "accepted": false },
+    { "name": "corrupt-crc", "accepted": false },
+    { "name": "partial-header-mismatch", "accepted": false },
+    { "name": "wrong-document", "accepted": false },
+    { "name": "wrong-chain", "accepted": false },
+    { "name": "index-gap", "accepted": false },
+    { "name": "exhausted-tx", "accepted": false },
+    { "name": "exhausted-segment", "accepted": false }
+  ]
+}

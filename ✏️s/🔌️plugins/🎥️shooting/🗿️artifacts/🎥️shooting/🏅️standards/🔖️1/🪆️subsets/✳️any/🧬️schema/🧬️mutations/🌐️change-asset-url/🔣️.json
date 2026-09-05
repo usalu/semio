@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-asset-url",
   "semanticKind": "change-asset-url",
   "displayName": "Change Asset Url",
-  "emoji": "🔗️",
+  "emoji": "🌐️",
   "aggregateVariant": "ChangeAssetUrl",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,

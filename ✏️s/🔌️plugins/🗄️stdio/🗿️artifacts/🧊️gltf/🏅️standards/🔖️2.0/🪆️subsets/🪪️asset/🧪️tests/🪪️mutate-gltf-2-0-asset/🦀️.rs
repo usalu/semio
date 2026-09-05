@@ -71,7 +71,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 //#endregion 🔖️JsonBuild
 
 //#region 🔖️Profile
-/// 📏️ Mirrors `../../../♾️any/🧪️tests/🐞️mutate-gltf-2-0/🦀️.rs`'s own `GLTF_WRITER_FREEDOM` — the
+/// 📏️ Mirrors `../../../♾️any/🧪️tests/🧊️mutate-gltf-2-0/🦀️.rs`'s own `GLTF_WRITER_FREEDOM` — the
 /// SAME `semantic-gltf-v1` profile this case is measured under.
 const GLTF_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "generator", "copyright"];
 //#endregion 🔖️Profile
@@ -117,7 +117,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase — see
-/// `../../../♾️any/🧪️tests/🐞️mutate-gltf-2-0/🦀️.rs`'s identical structure for the artifact-root case.
+/// `../../../♾️any/🧪️tests/🧊️mutate-gltf-2-0/🦀️.rs`'s identical structure for the artifact-root case.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");

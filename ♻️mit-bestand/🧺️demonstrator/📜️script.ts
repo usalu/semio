@@ -5,6 +5,7 @@ import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runC
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
+import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🪧️brand.ts";
 
 const demonstratorRoot = import.meta.dir;
@@ -83,7 +84,10 @@ export function demonstratorRuntimeModuleLayout(rootPluginIds: readonly string[]
     if (byId.get(id)?.role === "extension") extensionIds.push(id);
     else pluginIds.push(id);
   }
-  return { pluginModuleDirNames: ["_vendor", "_shard", ...pluginIds], extensionModuleDirNames: extensionIds };
+  // 🗂️ Physical directory names, not public ids: modules materialize under their hand-authored emoji
+  // directory (`demonstrator` -> `🎪️demonstrator`), so serving the bare id 404s every module and the
+  // SPA fallback answers with HTML — which surfaces as `plugin.descriptor-invalid: … returned HTML`.
+  return { pluginModuleDirNames: [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...pluginIds.map(moduleDirectoryName)], extensionModuleDirNames: extensionIds.map(moduleDirectoryName) };
 }
 
 /** @emoji 🎪️ Builds every pane's runtime plugin crate + declared engines into the shared

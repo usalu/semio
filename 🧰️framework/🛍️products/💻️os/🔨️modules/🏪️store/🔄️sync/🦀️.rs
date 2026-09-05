@@ -1057,7 +1057,7 @@ struct OpenDocument {
 
 struct ArtifactHostState {
     documents: std::collections::HashMap<ArtifactDocumentKey, OpenDocument>,
-    document_socket_surfaces: std::collections::HashMap<ArtifactDocumentKey, crate::os_directory::client::DocumentSocketSurfaceExpectationV1>,
+    document_execution_target_leases: std::collections::HashMap<ArtifactDocumentKey, crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
     #[cfg(not(target_arch = "wasm32"))]
     closing: std::collections::HashMap<u64, ArtifactActorRunnerHandle>,
     next_generation: u64,
@@ -1068,7 +1068,7 @@ impl ArtifactHostState {
     fn new() -> Self {
         Self {
             documents: std::collections::HashMap::new(),
-            document_socket_surfaces: std::collections::HashMap::new(),
+            document_execution_target_leases: std::collections::HashMap::new(),
             #[cfg(not(target_arch = "wasm32"))]
             closing: std::collections::HashMap::new(),
             next_generation: 1,
@@ -1123,16 +1123,16 @@ impl ArtifactHost {
         *self.socket_grant_source.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(source);
     }
 
-    /// 🎯 Binds the exact native plugin/surface selection before this document actor is opened.
-    pub fn set_document_socket_surface(&self, document_key: &ArtifactDocumentKey, surface: crate::os_directory::client::DocumentSocketSurfaceExpectationV1) -> bool {
+    /// 🪪️ Binds one complete verified execution-target lease before this document actor is opened.
+    pub fn set_document_execution_target_lease(&self, document_key: &ArtifactDocumentKey, surface: crate::os_directory::DocumentExecutionTargetLeaseFieldsV1) -> bool {
         if !matches!(document_key, ArtifactDocumentKey::Hub { .. }) {
             return false;
         }
         let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if state.documents.contains_key(document_key) || state.document_socket_surfaces.contains_key(document_key) {
+        if state.documents.contains_key(document_key) || state.document_execution_target_leases.contains_key(document_key) {
             return false;
         }
-        state.document_socket_surfaces.insert(document_key.clone(), surface);
+        state.document_execution_target_leases.insert(document_key.clone(), surface);
         true
     }
 
@@ -1146,7 +1146,7 @@ impl ArtifactHost {
     pub async fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
         let document_id = config.document_id.clone();
         let document_key = ArtifactDocumentKey::for_config(&config);
-        let document_socket_surface = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).document_socket_surfaces.remove(&document_key);
+        let document_execution_target_lease = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).document_execution_target_leases.remove(&document_key);
         let _ = self.close_key(&document_key);
         let generation = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).claim_generation();
         let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}")).await;
@@ -1163,7 +1163,7 @@ impl ArtifactHost {
             event_tx.clone(),
             self.credential.clone(),
             self.socket_grant_source.clone(),
-            document_socket_surface,
+            document_execution_target_lease,
             document_cancel.clone(),
         )
         .await;
@@ -1473,7 +1473,7 @@ mod native_actor {
         hub_space_id: Option<String>,
         credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
         socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
-        document_socket_surface: Option<crate::os_directory::client::DocumentSocketSurfaceExpectationV1>,
+        document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
         operation_cancel: semio_framework_async::CancelToken,
         hub_surface: Option<String>,
         socket_actor: Option<String>,
@@ -1532,7 +1532,7 @@ mod native_actor {
             events: broadcast::Sender<ArtifactEvent>,
             credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
             socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
-            document_socket_surface: Option<crate::os_directory::client::DocumentSocketSurfaceExpectationV1>,
+            document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
             operation_cancel: semio_framework_async::CancelToken,
         ) -> Self {
             let mut folder = None;
@@ -1573,7 +1573,7 @@ mod native_actor {
                 hub_space_id,
                 credential,
                 socket_grant_source,
-                document_socket_surface,
+                document_execution_target_lease,
                 operation_cancel,
                 hub_surface,
                 socket_actor: None,
@@ -1999,7 +1999,7 @@ mod native_actor {
                 artifact_schema: schema,
                 pack_schema_hash,
                 requested_surface_id: surface,
-                surface: self.document_socket_surface.clone(),
+                lease: self.document_execution_target_lease.clone(),
             };
             let client_instance_id = format!("native-document-{:016x}", self.hlc_seed);
             let operation_cancel = self.operation_cancel.child_now();
@@ -2055,7 +2055,7 @@ mod native_actor {
                         || authority.artifact.schema != self.schema
                         || local_schema_hash != Some(authority.pack_schema_hash)
                         || self.hub_surface.as_ref().is_some_and(|surface| surface != &authority.surface.surface_id)
-                        || self.document_socket_surface.as_ref().is_some_and(|surface| !authority.matches_surface(surface))
+                        || self.document_execution_target_lease.as_ref().is_some_and(|lease| !authority.matches_lease_fields(lease))
                     {
                         let _ = stream.close(None).await;
                         self.clear_socket_epoch();
@@ -3134,11 +3134,11 @@ mod native_actor {
         events: broadcast::Sender<ArtifactEvent>,
         credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
         socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
-        document_socket_surface: Option<crate::os_directory::client::DocumentSocketSurfaceExpectationV1>,
+        document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
         operation_cancel: semio_framework_async::CancelToken,
     ) -> ArtifactActorRunnerHandle {
         let mailbox = cmd_rx.close_handle();
-        let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential, socket_grant_source, document_socket_surface, operation_cancel).await;
+        let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential, socket_grant_source, document_execution_target_lease, operation_cancel).await;
         let runner = Arc::new(ActorRunner {
             pool,
             generation,
@@ -3397,6 +3397,38 @@ mod native_actor {
             assert_eq!(generation, runner.generation);
         }
 
+        fn fixture_execution_target_lease(surface_id: &str) -> crate::os_directory::DocumentExecutionTargetLeaseFieldsV1 {
+            crate::os_directory::DocumentExecutionTargetLeaseFieldsV1 {
+                schema: "semio.os.document-execution-target-lease/v1".into(),
+                version: 1,
+                scope: crate::os_directory::DocumentScope::new("space-a", "shared-document"),
+                descriptor_digest_v1: "11".repeat(32),
+                catalog: crate::os_directory::DocumentOpenCatalogV1 { generation_id: "22".repeat(32) },
+                package: crate::os_directory::DocumentOpenPackageV1 {
+                    plugin_id: "fixture.plugin".into(),
+                    package_id: "fixture.package".into(),
+                    version: "1.0.0".into(),
+                    component_sha256: "33".repeat(32),
+                    component_blake3: "44".repeat(32),
+                    descriptor_byte_sha256: "55".repeat(32),
+                },
+                component: crate::os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
+                descriptor: crate::os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
+                artifact: crate::os_directory::DocumentOpenArtifactV1 { kind: "fixture".into(), schema: "fixture/v1".into(), pack_schema_hash: "66".repeat(32) },
+                parent_dialect: crate::os_directory::DocumentOpenParentDialectV1 { artifact_kind: "fixture".into(), standard: "1".into(), subset: "*".into() },
+                surface: crate::os_directory::DocumentOpenSurfaceV1 {
+                    surface_id: surface_id.into(),
+                    app_id: "fixture.app".into(),
+                    window_kind_id: "fixture.window".into(),
+                    role: crate::os_directory::DocumentOpenSurfaceRoleV1::Editor,
+                    renderer_target: crate::os_directory::DocumentOpenRendererTargetV1::Wgpu,
+                },
+                grant: crate::os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
+                checkpoint: None,
+                revalidation: crate::os_directory::DocumentOpenRevalidationV1 { directory_revision: 7, membership_generation: 7, session_generation: Some(3), share_generation: None },
+            }
+        }
+
         #[semio_framework_async_macros::async_test]
         async fn hub_document_actor_and_surface_authority_are_isolated_by_full_scope() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
@@ -3404,22 +3436,10 @@ mod native_actor {
             let host = ArtifactHost::new(pool);
             let space_a = ArtifactDocumentKey::hub("space-a", "shared-document");
             let space_b = ArtifactDocumentKey::hub("space-b", "shared-document");
-            let surface = crate::os_directory::client::DocumentSocketSurfaceExpectationV1 {
-                artifact_kind: "fixture".into(),
-                plugin_id: "fixture.plugin".into(),
-                package_id: "fixture.package".into(),
-                version: "1.0.0".into(),
-                surface_id: "fixture.editor".into(),
-                app_id: "fixture.app".into(),
-                window_kind_id: "fixture.window".into(),
-                role: crate::os_directory::DocumentOpenSurfaceRoleV1::Editor,
-                renderer_target: crate::os_directory::DocumentOpenRendererTargetV1::Wgpu,
-            };
-            assert!(host.set_document_socket_surface(&space_a, surface.clone()));
-            assert!(host.set_document_socket_surface(&space_b, surface));
-            assert!(!host.set_document_socket_surface(&ArtifactDocumentKey::local("shared-document"), crate::os_directory::client::DocumentSocketSurfaceExpectationV1 {
-                artifact_kind: "fixture".into(), plugin_id: "fixture.plugin".into(), package_id: "fixture.package".into(), version: "1.0.0".into(), surface_id: "fixture.editor".into(), app_id: "fixture.app".into(), window_kind_id: "fixture.window".into(), role: crate::os_directory::DocumentOpenSurfaceRoleV1::Editor, renderer_target: crate::os_directory::DocumentOpenRendererTargetV1::Wgpu,
-            }));
+            let surface = fixture_execution_target_lease("fixture.editor");
+            assert!(host.set_document_execution_target_lease(&space_a, surface.clone()));
+            assert!(host.set_document_execution_target_lease(&space_b, surface));
+            assert!(!host.set_document_execution_target_lease(&ArtifactDocumentKey::local("shared-document"), fixture_execution_target_lease("fixture.editor")));
             let channels_a = host
                 .open(ArtifactActorConfig {
                     document_id: "shared-document".into(),
@@ -3445,7 +3465,7 @@ mod native_actor {
                 assert_eq!(state.documents.len(), 2);
                 assert!(state.documents.contains_key(&space_a));
                 assert!(state.documents.contains_key(&space_b));
-                assert!(state.document_socket_surfaces.is_empty());
+                assert!(state.document_execution_target_leases.is_empty());
             }
             assert!(host.close_key(&space_a).is_some());
             assert!(!host.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.contains_key(&space_a));

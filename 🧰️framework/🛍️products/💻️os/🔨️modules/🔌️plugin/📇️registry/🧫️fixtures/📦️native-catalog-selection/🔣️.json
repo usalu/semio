@@ -21,6 +21,19 @@
         }
       ],
       "receiptCount": 1
+    },
+    {
+      "pluginId": "gis",
+      "packageId": "semio:gis",
+      "version": "0.1.0",
+      "dependencies": [
+        {
+          "pluginId": "stdio",
+          "packageId": "semio:stdio",
+          "version": "0.1.0"
+        }
+      ],
+      "receiptCount": 2
     }
   ],
   "profiles": [
@@ -43,6 +56,31 @@
           "version": "0.1.0"
         }
       ]
+    },
+    {
+      "id": "native-stdio-gis-v1",
+      "roots": [
+        {
+          "pluginId": "gis",
+          "packageId": "semio:gis",
+          "version": "0.1.0"
+        }
+      ]
+    },
+    {
+      "id": "native-stdio-gis-vcs-v1",
+      "roots": [
+        {
+          "pluginId": "gis",
+          "packageId": "semio:gis",
+          "version": "0.1.0"
+        },
+        {
+          "pluginId": "vcs",
+          "packageId": "semio:vcs",
+          "version": "0.1.0"
+        }
+      ]
     }
   ],
   "availableProviders": [
@@ -55,6 +93,11 @@
       "pluginId": "vcs",
       "packageId": "semio:vcs",
       "receiptCount": 1
+    },
+    {
+      "pluginId": "gis",
+      "packageId": "semio:gis",
+      "receiptCount": 2
     }
   ],
   "cases": [
@@ -180,7 +223,9 @@
       "profileId": "native-stdio-v1",
       "mutation": "unselected-result",
       "expectedCode": "denied",
-      "expectedCalls": ["semio:stdio"],
+      "expectedCalls": [
+        "semio:stdio"
+      ],
       "expectedReceiptCount": 0
     },
     {
@@ -188,7 +233,10 @@
       "profileId": "native-stdio-vcs-v1",
       "mutation": "selected-provider-failure",
       "expectedCode": "denied",
-      "expectedCalls": ["semio:stdio", "semio:vcs"],
+      "expectedCalls": [
+        "semio:stdio",
+        "semio:vcs"
+      ],
       "expectedReceiptCount": 0
     },
     {
@@ -204,7 +252,9 @@
       "profileId": "native-stdio-vcs-v1",
       "mutation": "cancel-after-first",
       "expectedCode": "denied",
-      "expectedCalls": ["semio:stdio"],
+      "expectedCalls": [
+        "semio:stdio"
+      ],
       "expectedReceiptCount": 0
     },
     {
@@ -212,7 +262,53 @@
       "profileId": "native-stdio-vcs-v1",
       "mutation": "registry-conflict",
       "expectedCode": "denied",
-      "expectedCalls": ["semio:stdio", "semio:vcs"],
+      "expectedCalls": [
+        "semio:stdio",
+        "semio:vcs"
+      ],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "stdio-gis-without-vcs-does-not-call-vcs",
+      "profileId": "native-stdio-gis-v1",
+      "mutation": "none",
+      "expectedCode": "planned",
+      "expectedCalls": [
+        "semio:stdio",
+        "semio:gis"
+      ],
+      "expectedReceiptCount": 28
+    },
+    {
+      "id": "stdio-gis-vcs-dependency-first",
+      "profileId": "native-stdio-gis-vcs-v1",
+      "mutation": "none",
+      "expectedCode": "planned",
+      "expectedCalls": [
+        "semio:stdio",
+        "semio:gis",
+        "semio:vcs"
+      ],
+      "expectedReceiptCount": 29
+    },
+    {
+      "id": "stdio-gis-vcs-selected-provider-failure",
+      "profileId": "native-stdio-gis-vcs-v1",
+      "mutation": "selected-provider-failure",
+      "expectedCode": "denied",
+      "expectedCalls": [
+        "semio:stdio",
+        "semio:gis",
+        "semio:vcs"
+      ],
+      "expectedReceiptCount": 0
+    },
+    {
+      "id": "stdio-gis-vcs-missing-provider",
+      "profileId": "native-stdio-gis-vcs-v1",
+      "mutation": "missing-provider",
+      "expectedCode": "denied",
+      "expectedCalls": [],
       "expectedReceiptCount": 0
     }
   ]

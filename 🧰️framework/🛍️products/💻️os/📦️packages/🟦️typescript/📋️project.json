@@ -17,6 +17,14 @@
       "executor": "nx:run-commands",
       "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts check-wgpu" }
     },
+    "gis-map-inference-port-check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check" }
+    },
+    "gis-map-inference-port-browser-check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check long --browser" }
+    },
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],

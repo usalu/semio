@@ -12,10 +12,10 @@ pub async fn register() {}
 /// `🗒️note`'s sibling serializer. There is no raw-byte field left to stash synthetic JSON in, so
 /// route through the same honest path `🗒️note` uses instead of inventing one: this leaf's own DSL
 /// text is SVG (see the sibling `🎨️svg` serializer in this directory), so render it to SVG and
-/// decode it through the real `svg_to_dwg_bytes` -> `decode_dwg` pipeline -- a genuine (if
+/// decode it through the real `svg_to_polylines` -> artifact `polylines_to_dwg_bytes` -> `decode_dwg` pipeline -- a genuine (if
 /// minimal) decode rather than a fabricated status.
 pub async fn serialize(from: &LayoutSnapshot) -> Result<DwgSnapshot, store::PackError> {
     let text = <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from);
-    let bytes = semio_framework_os::svg_to_dwg_bytes(&text).map_err(store::PackError::Schema)?;
+    let bytes = semio_framework_os::svg_to_polylines(&text).and_then(|paths| semio_s_plugin_stdio::artifacts::dwg::polylines_to_dwg_bytes(paths.iter().map(|path| (path.layer.as_str(), path.vertices.as_slice(), path.closed)))).map_err(store::PackError::Schema)?;
     decode_dwg(&bytes).map_err(store::PackError::Schema)
 }

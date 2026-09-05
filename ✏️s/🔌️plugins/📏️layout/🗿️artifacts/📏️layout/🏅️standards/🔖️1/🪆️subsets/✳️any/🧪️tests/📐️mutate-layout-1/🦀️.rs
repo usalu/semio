@@ -1,5 +1,5 @@
 //! 🦀️ Layout-document exhaustive mutation case — Rust adapter. Recorded no-oracle decision
-//! `layout-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`):
+//! `layout-mutation-semantics` (`../../🔣️oracle.json`):
 //! `s.layout.layout` is a semio-NATIVE format with no third-party reader or writer, so `oracle` here
 //! reads the committed, independently handcrafted per-kind specification vectors literally, and
 //! `subject` drives this repository's own vocabulary over all 25 `LayoutMutation` variants.
@@ -32,7 +32,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `KINDS` in
-/// `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
+/// `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog and
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -89,129 +89,129 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "rename-layout" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/📃️renames-the-document/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/📃️renames-the-document/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/📃️renames-the-document/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/🏷️renames-the-document/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/🏷️renames-the-document/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/🏷️renames-the-document/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-print-target" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-data-fields" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/⛵️attaches-a-data-fields-payload/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/⛵️attaches-a-data-fields-payload/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/⛵️attaches-a-data-fields-payload/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-fields-payload/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-fields-payload/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-fields-payload/📸️snapshot/➡️after/🔣️.json"),
         ),
         "create-page" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-page/🧪️tests/📃️appends-page-3/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-page/🧪️tests/📃️appends-page-3/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-page/🧪️tests/📃️appends-page-3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌱create-page/🧪️tests/➕️appends-page-3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌱create-page/🧪️tests/➕️appends-page-3/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌱create-page/🧪️tests/➕️appends-page-3/📸️snapshot/➡️after/🔣️.json"),
         ),
         "delete-page" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/🚫️removes-page-2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/🚫️removes-page-2/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/🚫️removes-page-2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/🚫️removes-page-2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/🚫️removes-page-2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/🚫️removes-page-2/📸️snapshot/➡️after/🔣️.json"),
         ),
         "rename-page" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/📃️renames-page-1/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/📃️renames-page-1/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/📃️renames-page-1/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/🏷️renames-page-1/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/🏷️renames-page-1/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/🏷️renames-page-1/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-page-width" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/📃️widens-page-1/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/📃️widens-page-1/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/📃️widens-page-1/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/↔️widens-page-1/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/↔️widens-page-1/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/↔️widens-page-1/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-page-height" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/📃️lengthens-page-1/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/📃️lengthens-page-1/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/📃️lengthens-page-1/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/↕️lengthens-page-1/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/↕️lengthens-page-1/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/↕️lengthens-page-1/📸️snapshot/➡️after/🔣️.json"),
         ),
         "update-page-margins" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📃️sets-asymmetric-margins-on-page-1/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📃️sets-asymmetric-margins-on-page-1/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📃️sets-asymmetric-margins-on-page-1/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets-asymmetric-margins-on-page-1/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets-asymmetric-margins-on-page-1/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets-asymmetric-margins-on-page-1/📸️snapshot/➡️after/🔣️.json"),
         ),
         "update-page-columns" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/📃️splits-page-1-into-three-columns/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/📃️splits-page-1-into-three-columns/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/📃️splits-page-1-into-three-columns/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits-page-1-into-three-columns/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits-page-1-into-three-columns/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits-page-1-into-three-columns/📸️snapshot/➡️after/🔣️.json"),
         ),
         "reorder-pages" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/📃️moves-page-1-behind-page-2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/📃️moves-page-1-behind-page-2/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/📃️moves-page-1-behind-page-2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2/📸️snapshot/➡️after/🔣️.json"),
         ),
         "create-story" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖create-story/🧪️tests/🟤️appends-story-3/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖create-story/🧪️tests/🟤️appends-story-3/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖create-story/🧪️tests/🟤️appends-story-3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📖create-story/🧪️tests/📖️appends-story-3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📖create-story/🧪️tests/📖️appends-story-3/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📖create-story/🧪️tests/📖️appends-story-3/📸️snapshot/➡️after/🔣️.json"),
         ),
         "delete-story" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕delete-story/🧪️tests/🚫️removes-story-2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕delete-story/🧪️tests/🚫️removes-story-2/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕delete-story/🧪️tests/🚫️removes-story-2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📕delete-story/🧪️tests/🚫️removes-story-2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📕delete-story/🧪️tests/🚫️removes-story-2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📕delete-story/🧪️tests/🚫️removes-story-2/📸️snapshot/➡️after/🔣️.json"),
         ),
         "edit-story" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/🟦️rewrites-story-1-body/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/🟦️rewrites-story-1-body/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/🟦️rewrites-story-1-body/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/📝️rewrites-story-1-body/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/📝️rewrites-story-1-body/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/📝️rewrites-story-1-body/📸️snapshot/➡️after/🔣️.json"),
         ),
         "create-link" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️create-link/🧪️tests/🔗️appends-link-3/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️create-link/🧪️tests/🔗️appends-link-3/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️create-link/🧪️tests/🔗️appends-link-3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖇️create-link/🧪️tests/🔗️appends-link-3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖇️create-link/🧪️tests/🔗️appends-link-3/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖇️create-link/🧪️tests/🔗️appends-link-3/📸️snapshot/➡️after/🔣️.json"),
         ),
         "delete-link" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/🔗️removes-link-2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/🔗️removes-link-2/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/🔗️removes-link-2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/🔗️removes-link-2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/🔗️removes-link-2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/🔗️removes-link-2/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-link-path" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file/📸️snapshot/➡️after/🔣️.json"),
         ),
         "create-frame" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🚪️inserts-a-rect-frame-at-index-1/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🚪️inserts-a-rect-frame-at-index-1/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🚪️inserts-a-rect-frame-at-index-1/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts-a-rect-frame-at-index-1/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts-a-rect-frame-at-index-1/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts-a-rect-frame-at-index-1/📸️snapshot/➡️after/🔣️.json"),
         ),
         "delete-frame" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership/📸️snapshot/➡️after/🔣️.json"),
         ),
         "move-frame" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/🔵️moves-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/🔵️moves-the-rect-frame/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/🔵️moves-the-rect-frame/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/📍️moves-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/📍️moves-the-rect-frame/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/📍️moves-the-rect-frame/📸️snapshot/➡️after/🔣️.json"),
         ),
         "resize-frame" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-frame-fill" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🍀️repaints-the-rect-frame-fill/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🍀️repaints-the-rect-frame-fill/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🍀️repaints-the-rect-frame-fill/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints-the-rect-frame-fill/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints-the-rect-frame-fill/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints-the-rect-frame-fill/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-frame-stroke" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🦅️adds-a-stroke-to-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🦅️adds-a-stroke-to-the-rect-frame/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🦅️adds-a-stroke-to-the-rect-frame/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-the-rect-frame/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-the-rect-frame/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-frame-wrap-mode" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap/📸️snapshot/➡️after/🔣️.json"),
         ),
         "change-frame-columns" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-frame-into-two-columns/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-frame-into-two-columns/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-frame-into-two-columns/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-frame-into-two-columns/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-frame-into-two-columns/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-frame-into-two-columns/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-layout-1: {other:?} is not a declared kind of this subset"),
     }

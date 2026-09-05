@@ -323,8 +323,8 @@ pub mod derived_composition {
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../✳️base/📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️base/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../../✉️base/📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✉️base/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio");
 
                 let demo = snapshot::demo_brep_snapshot();
 
@@ -343,3 +343,37 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+/// 🖊️ DWG mesh conversion for the BREP artifact.
+pub mod dwg {
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepError, BrepKernel, GeometryHandle};
+struct DwgExporter;
+impl semio_framework_mesh_engine::MeshExporter for DwgExporter {
+    fn format_kind(&self) -> &'static str {
+        "dwg"
+    }
+    fn export(&self, mesh: &semio_framework_mesh_engine::MeshData) -> Result<Vec<u8>, String> {
+        let drawing = crate::artifacts::dwg::mesh_to_dwg_drawing(mesh);
+        crate::artifacts::dwg::dwg_to_bytes(&drawing)
+    }
+}
+struct DwgImporter;
+impl semio_framework_mesh_engine::MeshImporter for DwgImporter {
+    fn format_kind(&self) -> &'static str {
+        "dwg"
+    }
+    fn import(&self, bytes: &[u8]) -> Result<semio_framework_mesh_engine::MeshData, String> {
+        let drawing = crate::artifacts::dwg::dwg_from_bytes(bytes)?;
+        Ok(crate::artifacts::dwg::dwg_drawing_to_mesh(&drawing))
+    }
+}
+
+    /// 📤️ Encodes tessellated BREP geometry through the DWG artifact codec.
+    pub fn export(kernel: &dyn BrepKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+        kernel.export_mesh(shapes, deflection, &DwgExporter)
+    }
+    /// 📥️ Imports a DWG mesh into the BREP artifact's kernel.
+    pub fn import(kernel: &mut dyn BrepKernel, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
+        kernel.import_mesh(data, tolerance, &DwgImporter)
+    }
+}

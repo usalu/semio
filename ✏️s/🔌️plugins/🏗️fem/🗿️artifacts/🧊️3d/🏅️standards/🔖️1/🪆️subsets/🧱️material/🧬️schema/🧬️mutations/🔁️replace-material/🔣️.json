@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material",
   "semanticKind": "replace-material",
   "displayName": "Replace Material",
-  "emoji": "🔁🧱️",
+  "emoji": "🔁️",
   "aggregateVariant": "ReplaceMaterial",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "replace-material",

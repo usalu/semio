@@ -26,7 +26,6 @@ use semio_framework_plugin::{
     ActionDescriptor, AppIo, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
     MediaPortDirection, MediaPortSpec, MediaType, NoDraft, NoDraftMutation, PortMultiplicity, UiNode,
 };
-use dsl::os_pack::json::Value;
 use std::collections::BTreeMap;
 use store::EngineHandles;
 
@@ -91,6 +90,18 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
+/// 🔤️ Admits one dynamic string into the fixed-capacity UI text owner (control values, icons,
+/// commit conventions) — the `UiValue`-free twin of [`ui_value_text`].
+pub fn ui_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiText> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block2d text admission failed"))
+}
+
+/// 🏷️ Admits one dynamic string into the fixed-capacity UI label owner — every panel/window label in
+/// this subset goes through here rather than the renderer's unbounded `Label`.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block2d label admission failed"))
+}
+
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
 pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let mut nodes = semio_framework_plugin::UiFixedList::default();
@@ -109,18 +120,17 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// 🔌️ `Block2dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
 /// (`Kit×Type`, matching the `"2d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle2d_manifest_fragment` a real caller (see `export_media` above).
-pub async fn block2d_io() -> AppIo {
-    AppIo::from_document(BLOCK_2D_SCHEMA, MediaType { class: MediaClass::Kit, form: MediaForm::Type }, ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() }).with_ports(
-        vec![MediaPortSpec {
-            id: "catalog:out".into(),
-            label: "Kit Catalog".into(),
-            direction: MediaPortDirection::Out,
-            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-            kind_id: Some("kit.catalog".into()),
-            required: false,
-            multiplicity: PortMultiplicity::Many,
-        }],
-    )
+pub fn block2d_io() -> AppIo {
+    let io = semio_framework::io::resolve_ready(AppIo::from_document(BLOCK_2D_SCHEMA, MediaType { class: MediaClass::Kit, form: MediaForm::Type }, ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() }));
+    semio_framework::io::resolve_ready(io.with_ports(vec![MediaPortSpec {
+        id: "catalog:out".into(),
+        label: "Kit Catalog".into(),
+        direction: MediaPortDirection::Out,
+        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+        kind_id: Some("kit.catalog".into()),
+        required: false,
+        multiplicity: PortMultiplicity::Many,
+    }]))
 }
 //#endregion 🔖️Io
 
@@ -456,30 +466,30 @@ impl ArtifactEditor for Block2dPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::block2d::config::schema::app_schema_descriptor())
     }
 
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
     /// `setActiveExample` parses), so every window renders real content instead of the all-`Default`
     /// empty node kind — see `crate::artifacts::block2d::schema::default_block2d_snapshot`.
-    async fn initial_snapshot() -> Block2dSnapshot {
+    fn initial_snapshot() -> Block2dSnapshot {
         crate::artifacts::block2d::schema::default_block2d_snapshot()
     }
 
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(block2d_io())
     }
 
-    async fn command_id(command: &Block2dCommand) -> &'static str {
+    fn command_id(command: &Block2dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Block2dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
-        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string);
         match action {
             "patchNodeKind" => Ok(Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
             "addHandleKind" => Ok(Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {})),
@@ -497,7 +507,7 @@ impl ArtifactEditor for Block2dPlayApp {
         }
     }
 
-    async fn handle(
+    fn handle(
         command: &Block2dCommand,
         doc: &ArtifactView<'_, Block2dSnapshot>,
         cfg: &ConfigView<'_, Block2dConfig>,
@@ -513,7 +523,7 @@ impl ArtifactEditor for Block2dPlayApp {
     /// handle nests under its own `handle_kind` (`handle` granularity), so a stale selection is
     /// pruned the moment `removeHandleKind`/`removeHandle` deletes its target, and hovering/selecting
     /// a kind can transitively reach its handles.
-    async fn interaction_topology(doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> InteractionTopology {
         let mut ordered: Vec<TopologyNode> = Vec::new();
         for kind in &doc.snapshot.handle_kinds {
             ordered.push(TopologyNode { id: format!("handleKind:{}", kind.id), granularity: BLOCK2D_GRANULARITY_HANDLE_KIND.into(), parent: None });
@@ -526,14 +536,15 @@ impl ArtifactEditor for Block2dPlayApp {
         InteractionTopology { domains }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = block2d_labels(&cfg.snapshot.locale);
-        match body_key {
-            board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels),
-            document_panel::BLOCK2D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
-            inspection_panel::BLOCK2D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        let node = match body_key {
+            board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels)?,
+            document_panel::BLOCK2D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels)?,
+            inspection_panel::BLOCK2D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block2d unknown-body label admission failed"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     /// 🌉️ `puzzle2d_manifest_fragment`'s first real caller — wraps the block-2d document's
@@ -541,7 +552,7 @@ impl ArtifactEditor for Block2dPlayApp {
     /// `kindCompatibility`) as a `kit.catalog`-schema `Media` value for the `"catalog:out"` port
     /// declared in `block2d_io`. Falls through to the default whole-document pack export for every
     /// other port (`"document:out"`).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, Block2dSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Block2dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -644,7 +655,7 @@ pub(crate) mod testkit {
 
     pub type Block2dApp = VcsArtifactApp<EditorApp<Block2dPlayApp>>;
 
-    pub async fn new_app() -> Block2dApp {
+    pub fn new_app() -> Block2dApp {
         sdk_new_app::<EditorApp<Block2dPlayApp>>()
     }
 
@@ -652,20 +663,20 @@ pub(crate) mod testkit {
     /// examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands` still
     /// expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub async fn block2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn block2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_block2d_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub async fn app_with_registry() -> Block2dApp {
+    pub fn app_with_registry() -> Block2dApp {
         new_app_with_registry::<EditorApp<Block2dPlayApp>>(block2d_app_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut Block2dApp, command: Block2dCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut Block2dApp, command: Block2dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut Block2dApp, body_key: &str) -> String {
+    pub fn render(app: &mut Block2dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -705,7 +716,7 @@ mod tests {
         }
     }
 
-    async fn every_command() -> Vec<Block2dCommand> {
+    fn every_command() -> Vec<Block2dCommand> {
         vec![
             Block2dCommand::PatchNodeKind(patch_node_kind::PatchNodeKind { field: "name".into(), value: "x".into() }),
             Block2dCommand::AddHandleKind(add_handle_kind::AddHandleKind {}),

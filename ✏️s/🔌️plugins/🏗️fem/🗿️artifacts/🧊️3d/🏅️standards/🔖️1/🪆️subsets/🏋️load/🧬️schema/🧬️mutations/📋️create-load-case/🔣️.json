@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case",
   "semanticKind": "create-load-case",
   "displayName": "Create Load Case",
-  "emoji": "🌱📋️",
+  "emoji": "📋️",
   "aggregateVariant": "CreateLoadCase",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-load-case",

@@ -63,7 +63,7 @@ import {
   type WindowEngagement,
   type WindowMeasure,
 } from "@semio-tech/framework";
-import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
+import { idleGisMapInferencePortStatusV1, type ArtifactSyncStatus, type GisMapInferencePortStatusV1 } from "@semio-tech/framework-os";
 // 🧱️core: shellLabel imported directly from ShellHelpers (its real implementation, not via the barrel) —
 // this module calls shellLabel(...) at module top level (UI_INSPECTOR_MIXED_PLACEHOLDER), which requires
 // a non-circular import; routing through the barrel indirection (cleared) hit the same
@@ -72,6 +72,7 @@ import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { DEFAULT_PANEL_WIDTH_PX } from "../🛠️ShellHelpers/🟦️.tsx";
 import { FrameworkOsShell } from "../🏛️ShellHost/🟦️.tsx";
+import type { WindowFault } from "../🏛️ShellHost/🩺️fault/🟦️.ts";
 import { type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY } from "../🛠️ShellHelpers/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -419,6 +420,13 @@ type PluginRuntimeState = {
   readonly pluginSupervisorById: Readonly<Record<string, PluginSupervisorState>>;
   readonly session: ActiveSession | null;
   readonly error: string | null;
+  /** 🩺️ The classified cause behind {@link PluginRuntimeState.error}, moved in lockstep with it by
+   * the one `SET_ERROR` case so a banner and its discriminator can never drift apart. */
+  readonly sessionFault: WindowFault | null;
+  /** 🩺️ A classified fault raised by a BACKGROUND command against the live instance (today the
+   * conflicts roster read), which leaves the canvas mounted — so it stamps the window bodies rather
+   * than replacing them, unlike {@link PluginRuntimeState.sessionFault}. */
+  readonly instanceFault: WindowFault | null;
 };
 
 /** 🪟️ Window UI/engagements/measures are keyed by window INSTANCE id, never by window kind — two
@@ -435,6 +443,9 @@ type WindowUiState = {
 
 type SpawnedWindowState = {
   readonly spawnedWindowUi: BuiltNode | null;
+  /** 🩺️ Why `spawnedWindowUi` went `null`, when it went null because the guest faulted rather than
+   * because the window legitimately has nothing to draw — the difference an empty body cannot show. */
+  readonly spawnedWindowFault: WindowFault | null;
   readonly spawnedWindowEngagements: Readonly<Record<string, WindowEngagement>>;
   readonly spawnedWindowMeasures: Readonly<Record<string, readonly WindowMeasure[]>>;
 };
@@ -576,6 +587,19 @@ type SyncState = {
   readonly syncStatusByDocumentId: Readonly<Record<string, ArtifactSyncStatus>>;
 };
 
+/** 💡️ Host-owned ephemeral inference-port slice, keyed by the exact hub document runtime key. It
+ * is fed solely by `🧵️backbone-worker.ts`'s
+ * `inference-port-status` responses and by the shell's own operator intents; nothing in it is ever
+ * persisted, and the proposal itself reaches a document only through the hub's server-stamped
+ * approval command. */
+type InferenceState = {
+  readonly portByRuntimeKey: Readonly<Record<string, GisMapInferencePortStatusV1>>;
+  /** 🎫️ The operation epoch that currently owns the worker-side port, or `null` when none does. */
+  readonly operationEpoch: number | null;
+  /** 🗂️ The document runtime key the live operation belongs to, or `null` when none does. */
+  readonly operationRuntimeKey: string | null;
+};
+
 /** ⚖️ Merge-outcome/first-class-conflict slice (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-
  * POLICIES-AND-FIRST-CLASS-CONFLICTS` §C3/§C5/§C9) — `mergePolicy` mirrors the persisted
  * `os.config.merge-policy` setting (`🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy`),
@@ -611,6 +635,7 @@ export type ShellState = {
   readonly tutorial: TutorialState;
   readonly uiPrefs: UiPrefsState;
   readonly sync: SyncState;
+  readonly inference: InferenceState;
   readonly merge: MergeState;
 };
 //#endregion slice shapes
@@ -627,13 +652,14 @@ export type ShellAction =
   | { readonly type: "SET_PLUGIN_STATUS"; readonly pluginId: string; readonly value: PluginPanelStatus }
   | { readonly type: "SET_PLUGIN_SUPERVISOR"; readonly pluginId: string; readonly value: PluginSupervisorState }
   | { readonly type: "SET_SESSION"; readonly value: Updatable<ActiveSession | null> }
-  | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null> }
+  | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null>; readonly fault?: WindowFault | null }
+  | { readonly type: "SET_INSTANCE_FAULT"; readonly value: WindowFault | null }
   | { readonly type: "SET_WINDOW_UI_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
   | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_WINDOW_MEASURES_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
   | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
-  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<BuiltNode | null> }
+  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<BuiltNode | null>; readonly fault?: WindowFault | null }
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_ACTION_PANE_FOLDED"; readonly windowId: string; readonly value: boolean }
@@ -693,6 +719,9 @@ export type ShellAction =
   | { readonly type: "SET_SYNC_CARD_KIND"; readonly value: Updatable<SyncCardKind | null> }
   | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> }
   | { readonly type: "SET_SYNC_STATUS_FOR_DOCUMENT"; readonly documentId: string; readonly status: ArtifactSyncStatus }
+  | { readonly type: "OPEN_INFERENCE_PORT"; readonly runtimeKey: string; readonly operationEpoch: number }
+  | { readonly type: "SET_INFERENCE_PORT_FOR_DOCUMENT"; readonly runtimeKey: string; readonly status: GisMapInferencePortStatusV1 }
+  | { readonly type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT"; readonly runtimeKey: string }
   | { readonly type: "SET_MERGE_POLICY"; readonly value: MergePolicy }
   | { readonly type: "SET_CONFLICTS"; readonly value: Updatable<readonly Conflict[]> }
   | { readonly type: "SET_SELECTED_CONFLICT_ID"; readonly value: ConflictId | null };
@@ -715,7 +744,9 @@ function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): P
     case "SET_SESSION":
       return { ...state, session: resolveUpdatable(action.value, state.session) };
     case "SET_ERROR":
-      return { ...state, error: resolveUpdatable(action.value, state.error) };
+      return { ...state, error: resolveUpdatable(action.value, state.error), sessionFault: action.fault ?? null };
+    case "SET_INSTANCE_FAULT":
+      return state.instanceFault === action.value ? state : { ...state, instanceFault: action.value };
     default:
       return state;
   }
@@ -743,7 +774,7 @@ function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiSta
 function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): SpawnedWindowState {
   switch (action.type) {
     case "SET_SPAWNED_WINDOW_UI":
-      return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi) };
+      return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi), spawnedWindowFault: action.fault ?? null };
     case "SET_SPAWNED_WINDOW_ENGAGEMENTS":
       return { ...state, spawnedWindowEngagements: resolveUpdatable(action.value, state.spawnedWindowEngagements) };
     case "SET_SPAWNED_WINDOW_MEASURES":
@@ -969,6 +1000,27 @@ function syncReducer(state: SyncState, action: ShellAction): SyncState {
   }
 }
 
+/** 💡️ Reducer for the host-owned ephemeral inference-port slice — see {@link InferenceState}. It
+ * never invents a phase: `OPEN_INFERENCE_PORT` seeds exactly `idle`, every later phase arrives as an
+ * exact worker answer, and a cleared document leaves no residue. */
+function inferenceReducer(state: InferenceState, action: ShellAction): InferenceState {
+  switch (action.type) {
+    case "OPEN_INFERENCE_PORT":
+      return { portByRuntimeKey: { [action.runtimeKey]: idleGisMapInferencePortStatusV1() }, operationEpoch: action.operationEpoch, operationRuntimeKey: action.runtimeKey };
+    case "SET_INFERENCE_PORT_FOR_DOCUMENT":
+      return state.operationRuntimeKey === action.runtimeKey ? { ...state, portByRuntimeKey: { [action.runtimeKey]: action.status } } : state;
+    case "CLEAR_INFERENCE_PORT_FOR_DOCUMENT": {
+      if (!(action.runtimeKey in state.portByRuntimeKey)) return state;
+      const portByRuntimeKey = { ...state.portByRuntimeKey };
+      delete portByRuntimeKey[action.runtimeKey];
+      const owned = state.operationRuntimeKey === action.runtimeKey;
+      return { portByRuntimeKey, operationEpoch: owned ? null : state.operationEpoch, operationRuntimeKey: owned ? null : state.operationRuntimeKey };
+    }
+    default:
+      return state;
+  }
+}
+
 /** ⚖️ Reducer for the merge-outcome/first-class-conflict slice — see {@link MergeState}. */
 function mergeReducer(state: MergeState, action: ShellAction): MergeState {
   switch (action.type) {
@@ -1029,6 +1081,7 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     tutorial: tutorialReducer(state.tutorial, action),
     uiPrefs: uiPrefsReducer(state.uiPrefs, action),
     sync: syncReducer(state.sync, action),
+    inference: inferenceReducer(state.inference, action),
     merge: mergeReducer(state.merge, action),
   };
 }
@@ -1057,9 +1110,9 @@ export function initialShellState(_props: {
   const defaults = _props.defaults ?? {};
   const storage = _props.storage;
   return {
-    pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, pluginSupervisorById: {}, session: null, error: null },
+    pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, pluginSupervisorById: {}, session: null, error: null, sessionFault: null, instanceFault: null },
     windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
-    spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
+    spawnedWindow: { spawnedWindowUi: null, spawnedWindowFault: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {
@@ -1095,6 +1148,7 @@ export function initialShellState(_props: {
       uiKeybindingOverrides: readStoredUiKeybindingOverrides(storage),
     },
     sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "", syncStatusByDocumentId: {} },
+    inference: { portByRuntimeKey: {}, operationEpoch: null, operationRuntimeKey: null },
     merge: { mergePolicy: DEFAULT_MERGE_POLICY, conflicts: [], selectedConflictId: null },
   };
 }

@@ -23,7 +23,7 @@ use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, 
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, UiNode,
+    AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
 };
 use dsl::os_pack::json::Value;
 use std::collections::BTreeMap;
@@ -41,12 +41,18 @@ pub const BLOCK5D_GRANULARITY_GRIP_KIND: &str = "gripKind";
 /// `block5d_io` and `Block5dPlayApp::export_media`.
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 
-/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
+/// 🎯️ One action binding addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
 pub fn block5d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(BLOCK5D_PLAY_APP_ID).action(action, args)
 }
 
+
+/// 🏷️ Admits one fixed UI contract label — the type every contract node builder takes, distinct from
+/// the SDK's retained authoring `Label`.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d UI label admission failed"))
+}
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -108,13 +114,13 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// 🔌️ `Block5dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
 /// (`Kit×Type`, matching the `"5d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle5d_catalog_fragment` a real caller (see `export_media` below).
-pub async fn block5d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo::from_document(
+pub fn block5d_io() -> semio_framework_plugin::AppIo {
+    let io = semio_framework_plugin::resolve_ready(semio_framework_plugin::AppIo::from_document(
         BLOCK_5D_SCHEMA,
         MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         semio_framework_plugin::ArtifactPresentation { id: "5d.block".into(), name: "Part Kind".into(), dimension: "5d".into(), component_kind: "block5d".into() },
-    )
-    .with_ports(vec![semio_framework_plugin::MediaPortSpec {
+    ));
+    semio_framework_plugin::resolve_ready(io.with_ports(vec![semio_framework_plugin::MediaPortSpec {
         id: "catalog:out".into(),
         label: "Kit Catalog".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
@@ -122,7 +128,7 @@ pub async fn block5d_io() -> semio_framework_plugin::AppIo {
         kind_id: Some("kit.catalog".into()),
         required: false,
         multiplicity: semio_framework_plugin::PortMultiplicity::Many,
-    }])
+    }]))
 }
 //#endregion 🔖️Io
 
@@ -432,27 +438,32 @@ impl ArtifactEditor for Block5dPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::block5d::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> Block5dSnapshot {
-        crate::artifacts::block5d::schema::empty_block5d_snapshot()
+    /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
+    /// `setActiveExample` parses), so the board window shows a part kind and the World3d window a
+    /// `mesh_url` instead of the all-`Default` empty part kind — see
+    /// `crate::artifacts::block5d::schema::default_block5d_snapshot`.
+    fn initial_snapshot() -> Block5dSnapshot {
+        crate::artifacts::block5d::schema::default_block5d_snapshot()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(block5d_io())
     }
 
-    async fn command_id(command: &Block5dCommand) -> &'static str {
+    fn command_id(command: &Block5dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Block5dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
-        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.map(dsl::os_pack::json::from_dsl_value);
+        let str_field = |key: &str| args.as_ref().and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "patchPartKind" => Ok(Block5dCommand::PatchPartKind(patch_part_kind::PatchPartKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
             "addGripKind" => Ok(Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})),
@@ -468,7 +479,7 @@ impl ArtifactEditor for Block5dPlayApp {
         }
     }
 
-    async fn handle(
+    fn handle(
         command: &Block5dCommand,
         doc: &ArtifactView<'_, Block5dSnapshot>,
         cfg: &ConfigView<'_, Block5dConfig>,
@@ -484,7 +495,7 @@ impl ArtifactEditor for Block5dPlayApp {
     /// nests under its own `grip_kind` (`grip` granularity), so a stale selection is pruned the moment
     /// `removeGripKind`/`removeGrip` deletes its target, and hovering/selecting a kind can transitively
     /// reach its grips.
-    async fn interaction_topology(doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> InteractionTopology {
         let mut ordered: Vec<TopologyNode> = Vec::new();
         for kind in &doc.snapshot.grip_kinds {
             ordered.push(TopologyNode { id: format!("gripKind:{}", kind.id), granularity: BLOCK5D_GRANULARITY_GRIP_KIND.into(), parent: None });
@@ -497,15 +508,17 @@ impl ArtifactEditor for Block5dPlayApp {
         InteractionTopology { domains }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = block5d_labels(&cfg.snapshot.locale);
-        match body_key {
-            board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels),
-            world::BLOCK5D_BODY_WORLD => world::render(doc.snapshot, labels),
-            document_panel::BLOCK5D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
-            inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        let node = match body_key {
+            board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels)?,
+            world::BLOCK5D_BODY_WORLD => world::render(doc.snapshot, labels)?,
+            document_panel::BLOCK5D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels)?,
+            inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d unknown-body label admission failed"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s first real caller — wraps the block-5d document's
@@ -513,7 +526,7 @@ impl ArtifactEditor for Block5dPlayApp {
     /// a `kit.catalog`-schema `Media` value for the `"catalog:out"` port declared in `block5d_io`.
     /// Falls through to the default whole-document pack export for every other port
     /// (`"document:out"`).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -620,7 +633,7 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<Block5dPlayApp>` builds it.
     pub type Block5dApp = VcsArtifactApp<EditorApp<Block5dPlayApp>>;
 
-    pub async fn new_app() -> Block5dApp {
+    pub fn new_app() -> Block5dApp {
         sdk_new_app::<EditorApp<Block5dPlayApp>>()
     }
 
@@ -628,20 +641,20 @@ pub(crate) mod testkit {
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`
     /// still expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub async fn block5d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn block5d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_block5d_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub async fn app_with_registry() -> Block5dApp {
+    pub fn app_with_registry() -> Block5dApp {
         new_app_with_registry::<EditorApp<Block5dPlayApp>>(block5d_app_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut Block5dApp, body_key: &str) -> String {
+    pub fn render(app: &mut Block5dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -655,7 +668,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     //#region 🔖️CommandSurface
-    async fn every_command() -> Vec<Block5dCommand> {
+    fn every_command() -> Vec<Block5dCommand> {
         vec![
             Block5dCommand::PatchPartKind(patch_part_kind::PatchPartKind { field: "name".into(), value: "x".into() }),
             Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}),
@@ -780,13 +793,30 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn add_grip_kind_then_add_grip_then_remove_round_trips() {
         let mut app: Block5dApp = new_app();
+        let booted = app.snapshot().expect("snapshot");
+        let (kinds, grips) = (booted.grip_kinds.len(), booted.grips.len());
+        let booted_ids: Vec<String> = booted.grips.iter().map(|grip| grip.id.clone()).collect();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
+        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
         testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {}));
         let projection = app.snapshot().expect("snapshot");
-        assert_eq!(projection.grips.len(), 1);
-        let grip_id = projection.grips[0].id.clone();
+        assert_eq!(projection.grips.len(), grips + 1);
+        let grip_id = projection.grips.iter().map(|grip| grip.id.clone()).find(|id| !booted_ids.contains(id)).expect("the added grip");
         testkit::dispatch(&mut app, Block5dCommand::RemoveGrip(remove_grip::RemoveGrip { id: grip_id }));
-        assert_eq!(app.snapshot().expect("snapshot").grips.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").grips.len(), grips);
+    }
+
+    /// 📄️ The app boots on a real document, so every window renders content before the first action.
+    #[semio_framework_async_macros::async_test]
+    async fn boots_on_the_forest_left_example_document() {
+        let mut app: Block5dApp = new_app();
+        let booted = app.snapshot().expect("snapshot");
+        assert_ne!(booted, crate::artifacts::block5d::schema::empty_block5d_snapshot());
+        assert_eq!(booted.part_kind.label, "Hexagonal Cut Concrete Forest Left");
+        assert!(booted.representations.first().and_then(|representation| representation.mesh_url.as_deref()).is_some());
+        assert!(!booted.grip_kinds.is_empty());
+        assert!(testkit::render(&mut app, board::BLOCK5D_BODY_BOARD).contains("Hexagonal Cut Concrete Forest Left"));
+        assert!(testkit::render(&mut app, world::BLOCK5D_BODY_WORLD).contains("hexagonal-cut-concrete-forest-left.glb"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -801,12 +831,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block5dApp = new_app();
+        let kinds = app.snapshot().expect("snapshot").grip_kinds.len();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
-        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds);
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), 1);
+        assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
     }
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s new caller round-trips through the `"catalog:out"` media port.

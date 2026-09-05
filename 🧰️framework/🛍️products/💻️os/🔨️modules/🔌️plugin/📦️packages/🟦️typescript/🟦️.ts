@@ -14,12 +14,25 @@ import { dirname, join, relative } from "node:path";
 import ts from "typescript";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
-import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
 export const PREVIEW2_VENDOR_RELATIVE = "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim";
 export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fonts.bin";
+
+/** 🫀️ The generated worker's progress-heartbeat cadence, interpolated into
+ * {@link shardWorkerSource}. Its OWNER is the schema-owned liveness policy
+ * (`semio.actor.shard-liveness.v1` — `🎭️actor/📮️shard-client/🧬️schema.json` +
+ * `🧪️fixture/🔣️.json`, mirrored on the host side by `SHARD_LIVENESS_POLICY`); this declaration is
+ * held equal to `policy.progressIntervalMs` by that module's own in-source suite, which reads this
+ * literal straight out of this file, so editing one alone fails closed.
+ *
+ * Declared rather than read from the fixture at generation time on purpose: this module sits in
+ * `⚙️vite.config.ts`'s import graph and is bundled by `Bun.build` for the bench harness, where
+ * neither a relative `import.meta.url` file read nor an import of `📮️shard-client/🟦️.ts` (which
+ * would drag the whole kernel/ui/resident graph into config loading) survives. */
+export const SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS = 1000;
 
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
@@ -116,6 +129,44 @@ if (typeof WebAssembly === "undefined" || typeof WebAssembly.Suspending !== "fun
   throw new Error(message);
 }
 
+// 🩺️ Nothing inside a Worker is visible from the page unless the worker says it: an exception that
+// escapes a message handler, or a promise nobody awaits, reaches the parent as an \`ErrorEvent\` whose
+// \`message\` the platform routinely redacts to nothing (exactly what the 2026-09-05 boot logged, four
+// times, with no other evidence). These three variables are the breadcrumb trail — updated at every
+// boundary so a fault report names the phase, the actor and the module URL it died on — and the two
+// global listeners below are what turn an otherwise-anonymous \`Event\` into a readable payload on the
+// host side. Registered BEFORE the "message" listener so a permissive test stub that keeps only the
+// last handler still keeps the dispatcher.
+let faultPhase = "bootstrap";
+let faultActorId = null;
+let faultModuleUrl = null;
+
+function describeFault(value) {
+  if (value instanceof Error) return { message: value.message, stack: value.stack };
+  if (value && typeof value === "object" && (typeof value.stack === "string" || typeof value.message === "string")) return { message: String(value), stack: typeof value.stack === "string" ? value.stack : undefined };
+  if (value && typeof value === "object") { try { return { message: JSON.stringify(value) }; } catch { return { message: String(value) }; } }
+  return { message: String(value) };
+}
+
+function reportWorkerFault(source, value, event) {
+  const reason = value !== undefined && value !== null ? value : event && typeof event.message === "string" && event.message.length > 0 ? event.message : value;
+  const described = describeFault(reason);
+  self.postMessage({
+    kind: "worker-fault",
+    source,
+    phase: faultPhase,
+    actorId: faultActorId,
+    moduleUrl: faultModuleUrl,
+    message: described.message,
+    stack: described.stack,
+    filename: event && typeof event.filename === "string" ? event.filename : undefined,
+    lineno: event && typeof event.lineno === "number" ? event.lineno : undefined,
+  });
+}
+
+self.addEventListener("error", (event) => reportWorkerFault("error", event && event.error, event));
+self.addEventListener("unhandledrejection", (event) => reportWorkerFault("unhandledrejection", event && event.reason, null));
+
 const actors = new Map(); // actorId -> { api, moduleUrl }
 const activatingActors = new Set();
 let lastActivationGeneration = 0n;
@@ -124,6 +175,12 @@ let turnSeq = 0;
 let heartbeatSabView = null;
 let heartbeatShardIndex = -1;
 const MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096;
+// 🫀️ Progress-heartbeat cadence, interpolated from the ONE schema-owned liveness policy
+// (\`🎭️actor/📮️shard-client/🧪️fixture/🔣️.json\`'s \`policy\`, mirrored by \`SHARD_LIVENESS_POLICY\`) the
+// host watchdog reads — never a literal of this worker's own.
+const PROGRESS_HEARTBEAT_INTERVAL_MS = ${SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS};
+let progressHandle = null;
+let inFlightRequests = 0;
 
 // 📨️ terra-web-shardframe: ShardFrame::Grant/Envelope support — see this file's own header doc.
 const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152 };
@@ -157,10 +214,33 @@ function interpretFrame(frame, actorId) {
   }
 }
 
-function heartbeat() {
+// 🫀️ ONE beat door for every liveness signal this worker emits — \`phase\` is \`undefined\` for the
+// unconditional start-of-request beat, an await-boundary name inside \`loadActor\`, or \`"progress"\`
+// from the while-busy ticker below. \`ShardClient\`'s watchdog treats them identically; the phase is
+// there so a boot stall can be read off the console at the exact boundary it happened on.
+function heartbeat(phase) {
   turnSeq += 1;
-  self.postMessage({ kind: "heartbeat", turnSeq });
+  self.postMessage({ kind: "heartbeat", turnSeq, phase });
   if (heartbeatSabView) Atomics.store(heartbeatSabView, heartbeatShardIndex, turnSeq);
+}
+
+// 🫀️ The whole busy-versus-dead discriminator: while ANY request is outstanding, an interval beats
+// every PROGRESS_HEARTBEAT_INTERVAL_MS. A worker legitimately parked on one multi-second \`await\`
+// (fetching, compiling and instantiating a multi-MB wasm component) still runs its event loop, so it
+// keeps beating and the host's watchdog keeps its miss count at zero; a worker wedged inside
+// synchronous guest code cannot run this callback at all, so it still dies after the same
+// \`missedLimit\` windows. Guarded on \`setInterval\` existing so a bare VM/test context is unaffected.
+function beginRequest() {
+  inFlightRequests += 1;
+  if (progressHandle !== null || typeof setInterval !== "function") return;
+  progressHandle = setInterval(() => heartbeat("progress"), PROGRESS_HEARTBEAT_INTERVAL_MS);
+}
+
+function endRequest() {
+  inFlightRequests -= 1;
+  if (inFlightRequests > 0 || progressHandle === null) return;
+  clearInterval(progressHandle);
+  progressHandle = null;
 }
 
 function reply(requestId, value) {
@@ -187,8 +267,14 @@ function replyError(requestId, error, frames) {
   // on-screen error surface ever saw for the single most common failure there is. Serialize the
   // record itself; \`Error\` still reports its own message, and an unserializable value still falls
   // back to \`String\`.
+  // 🩺️ \`instanceof Error\` is false for an Error thrown in ANOTHER realm (a \`vm\` context, or any
+  // cross-context host callback this worker invokes), and \`JSON.stringify\` of an Error is the useless
+  // \`"{}"\` — which is what the host used to be told for exactly the faults it most needs to read.
+  // Duck-typing on \`stack\`/\`message\` catches the cross-realm case without ever mis-serializing a
+  // genuine lifted fault record, which has neither.
   let reason;
   if (error instanceof Error) reason = error.message;
+  else if (error && typeof error === "object" && (typeof error.stack === "string" || typeof error.message === "string")) reason = String(error);
   else if (error && typeof error === "object") { try { reason = JSON.stringify(error); } catch { reason = String(error); } }
   else reason = String(error);
   self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes });
@@ -200,8 +286,19 @@ async function loadActor(actorId, activationGeneration, moduleUrl) {
   lastActivationGeneration = activationGeneration;
   activatingActors.add(actorId);
   try {
+    // 🫀️ The three await boundaries of the longest turn this worker ever runs: the dynamic import
+    // (network fetch + WebAssembly.compile + instantiate, all opaque inside one await) and the guest's
+    // own \`createActorApi\`. Each boundary beats explicitly so a console trace names where a slow boot
+    // actually sat; the ticker above is what carries liveness THROUGH each of them.
+    faultModuleUrl = moduleUrl;
+    faultPhase = "load-bridge";
+    heartbeat("module-fetch");
     const bridge = await import(/* @vite-ignore */ moduleUrl);
+    faultPhase = "instantiate";
+    heartbeat("module-ready");
     const api = await bridge.createActorApi(actorId, activationGeneration);
+    faultPhase = "actor-ready";
+    heartbeat("actor-ready");
     const entry = { api, moduleUrl, activationGeneration, pendingAssets: [] };
     actors.set(actorId, entry);
     return entry;
@@ -244,7 +341,7 @@ self.addEventListener("message", async (event) => {
   const { kind } = msg;
   if (kind === "attachHeartbeatSab") {
     heartbeatShardIndex = msg.shardIndex;
-    heartbeatSabView = new Int32Array(msg.sab);
+    heartbeatSabView = msg.sab ? new Int32Array(msg.sab) : null;
     return;
   }
   if (kind === "cancelJob") {
@@ -271,6 +368,9 @@ self.addEventListener("message", async (event) => {
   const { requestId, actorId } = msg;
   if (!requestId || !actorId) return;
   heartbeat();
+  beginRequest();
+  faultPhase = kind;
+  faultActorId = actorId;
   try {
     if (kind === "activate") {
       const entry = await loadActor(actorId, msg.activationGeneration, msg.moduleUrl);
@@ -285,6 +385,8 @@ self.addEventListener("message", async (event) => {
         if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
         if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
         inFlightTurnActors.add(actorId);
+        faultPhase = (actor.turns ?? 0) === 0 ? "first-step" : "turn";
+        actor.turns = (actor.turns ?? 0) + 1;
         try {
           reply(requestId, await actor.api.poll(spliceInstanceOpenAssets(actor, msg.events), msg.commandPage, msg.budget));
         } finally {
@@ -342,7 +444,14 @@ self.addEventListener("message", async (event) => {
         throw new Error(\`unknown shard worker message kind: \${kind}\`);
     }
   } catch (error) {
+    // 🩺️ Reported on BOTH channels on purpose: \`replyError\` answers the one caller that is awaiting
+    // this request, \`reportWorkerFault\` names the phase/actor/module to the shell's console for the
+    // boot faults nobody is awaiting a reply for.
+    reportWorkerFault("handler", error, null);
     replyError(requestId, error, msg.events);
+  } finally {
+    endRequest();
+    faultPhase = "idle";
   }
 });
 `;

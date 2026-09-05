@@ -3,7 +3,7 @@ import type { ChangeHeaderFieldsMutation } from './📐️change-header-fields/�
 import type { InsertPaletteEntryMutation } from './📥️insert-palette-entry/🟦️.ts';
 import type { RemovePaletteEntryMutation } from './📤️remove-palette-entry/🟦️.ts';
 import type { ReplacePaletteEntryMutation } from './🎨️replace-palette-entry/🟦️.ts';
-import type { ReplacePixelDataMutation } from './🧮️replace-pixel-data/🟦️.ts';
+import type { ReplacePixelDataMutation } from './🔲️replace-pixel-data/🟦️.ts';
 export type BmpMutation =
   | { readonly mutation: 'change-header-fields'; readonly payload: ChangeHeaderFieldsMutation }
   | { readonly mutation: 'insert-palette-entry'; readonly payload: InsertPaletteEntryMutation }

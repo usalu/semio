@@ -1,12 +1,12 @@
 //! ↔️ GLTF clearance indicators.
 
-#[path = "🦁️clearance-distribution/🦀️.rs"]
+#[path = "📊️clearance-distribution/🦀️.rs"]
 pub mod clearance_distribution;
-#[path = "🟡️interference-volume/🦀️.rs"]
+#[path = "🚧️interference-volume/🦀️.rs"]
 pub mod interference_volume;
-#[path = "🌾️minimum-distance-to-neighbors/🦀️.rs"]
+#[path = "📏️minimum-distance-to-neighbors/🦀️.rs"]
 pub mod minimum_distance_to_neighbors;
-#[path = "🌹️overlap-volume/🦀️.rs"]
+#[path = "🫂️overlap-volume/🦀️.rs"]
 pub mod overlap_volume;
 
 use super::super::modules::measurement_contracts::*;

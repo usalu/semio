@@ -21,7 +21,7 @@
 //!
 //! ## §6: ruststep is the independent READER, never a second producer
 //! Because ruststep cannot write, this module cannot be a genuine differential producer of mutated
-//! bytes against a real third-party writer. Every scenario in `../../../../🧪️tests/🐸️mutate-ifc-2x3/
+//! bytes against a real third-party writer. Every scenario in `../../../../🧪️tests/🧱️mutate-ifc-2x3/
 //! component.feature` is therefore typed `@mode-property`/`@mode-round-trip`, never
 //! `@mode-differential` — the fleet brief's §6 situation, confirmed empirically (not assumed): a
 //! standalone probe fed ruststep this subset's own real derived fixture and it parsed all 3464 real
@@ -495,7 +495,7 @@ mod tests {
     use super::{oracle_apply_mutation, project_ifc_2x3_any};
     use semio_repo_test_host::Json;
 
-    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
+    const FIXTURE: &[u8] = include_bytes!("../🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
 
     fn obj(entries: Vec<(&str, Json)>) -> Json {
         Json::Object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect())

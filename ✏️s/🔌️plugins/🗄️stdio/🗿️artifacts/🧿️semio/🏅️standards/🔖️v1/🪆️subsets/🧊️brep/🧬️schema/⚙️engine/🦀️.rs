@@ -16,11 +16,8 @@
 //! `semio_framework_3d::engine::*` algorithm-module return/accept site across the repo was
 //! repointed at this module in the same wave.
 //!
-//! `📦️mesh-io` (below) moved IN wave DEDUP: it was brep↔mesh bridging/IO code whose only real
-//! consumer was already this file, and its DWG calls were the last framework-tier caller of the
-//! (now-deleted) `semio_framework::mesh_to_dwg_drawing`/`dwg_from_bytes`/`dwg_to_bytes` re-exports —
-//! moving it here (instead of pointing framework-3d at stdio's real `dwg` artifact, which would be
-//! an actual crate cycle given the forward edge above) dissolves that dependency entirely.
+//! 📦️ `mesh_io` converts between kernel topology and meshes through supplied codec interfaces.
+//! Format-specific implementations belong to the artifact I/O tree.
 //!
 //! 📄️ `🟫️step` (below) moved IN wave PEEL3: framework-3d's hand-rolled ISO 10303-21 Part-21
 //! reader/writer, the last thing this file's `export_step`/`import_step` needed from the
@@ -71,37 +68,11 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::top
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::{Affine3, Frame3};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3 as NativeVec3};
-use mesh_io::{export_solid_dwg, export_solid_glb, export_solid_obj, export_solid_stl, import_dwg_to_body, import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
+use mesh_io::{export_solid_mesh, export_solid_glb, export_solid_obj, export_solid_stl, import_mesh_to_body, import_glb_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
 use contract::Vec3 as EVec3;
 use step::{read_step, write_step};
 
-// #region 🔖️DwgCodec
-/// 🖊️ `MeshExporter`/`MeshImporter` adapters over `crate::artifacts::dwg` — this file (the
-/// contract façade that already bridges STEP/DWG/GLB into the kernel) is where a cross-artifact
-/// import belongs, NOT `📦️mesh-io/🦀️.rs` (kernel layer, must not import another artifact —
-/// ticket `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 1). Mirrors `GlbExporter`/
-/// `GlbImporter`'s own shape (`semio_framework_mesh_engine`).
-struct DwgExporter;
-impl semio_framework_mesh_engine::MeshExporter for DwgExporter {
-    fn format_kind(&self) -> &'static str {
-        "dwg"
-    }
-    fn export(&self, mesh: &semio_framework_mesh_engine::MeshData) -> Result<Vec<u8>, String> {
-        let drawing = crate::artifacts::dwg::mesh_to_dwg_drawing(mesh);
-        crate::artifacts::dwg::dwg_to_bytes(&drawing)
-    }
-}
-struct DwgImporter;
-impl semio_framework_mesh_engine::MeshImporter for DwgImporter {
-    fn format_kind(&self) -> &'static str {
-        "dwg"
-    }
-    fn import(&self, bytes: &[u8]) -> Result<semio_framework_mesh_engine::MeshData, String> {
-        let drawing = crate::artifacts::dwg::dwg_from_bytes(bytes)?;
-        Ok(crate::artifacts::dwg::dwg_drawing_to_mesh(&drawing))
-    }
-}
-// #endregion 🔖️DwgCodec
+
 
 // #region 🔖️ContractTypes
 
@@ -399,9 +370,9 @@ pub trait BrepKernel {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn import_obj(&mut self, data: &str, tolerance: f64) -> Result<GeometryHandle, BrepError>;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn export_dwg(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError>;
+    fn export_mesh(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::MeshExporter) -> Result<Vec<u8>, BrepError>;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn import_dwg(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError>;
+    fn import_mesh(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::MeshImporter) -> Result<GeometryHandle, BrepError>;
     // #endregion IO
 
     // #region Core
@@ -1455,13 +1426,13 @@ impl Brep {
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn export_dwg_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+    pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::MeshExporter) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
-        export_solid_dwg(&self.body, solid, deflection, &DwgExporter).map_err(map_err)
+        export_solid_mesh(&self.body, solid, deflection, exporter).map_err(map_err)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn import_dwg_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = import_dwg_to_body(&mut self.body, data, tolerance, &DwgImporter).map_err(map_err)?;
+    pub fn import_mesh_sync(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::MeshImporter) -> Result<GeometryHandle, BrepError> {
+        let solid = import_mesh_to_body(&mut self.body, data, tolerance, importer).map_err(map_err)?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1964,12 +1935,12 @@ impl BrepKernel for Brep {
         self.import_obj_sync(data, tolerance)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn export_dwg(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
-        self.export_dwg_sync(shapes, deflection)
+    fn export_mesh(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::MeshExporter) -> Result<Vec<u8>, BrepError> {
+        self.export_mesh_sync(shapes, deflection, exporter)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn import_dwg(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
-        self.import_dwg_sync(data, tolerance)
+    fn import_mesh(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::MeshImporter) -> Result<GeometryHandle, BrepError> {
+        self.import_mesh_sync(data, tolerance, importer)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn kind(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError> {

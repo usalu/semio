@@ -3450,10 +3450,10 @@ func TestEmojiVariationAutofix(t *testing.T) {
 			input string
 			want  string
 		}{
-			{"💻️", "💻️"},
-			{"🥼️", "🥼️"},
-			{"📃️", "📃️"},
-			{"📜️", "📜️"},
+			{"\U0001F4BB\uFE0F", "\U0001F4BB"},
+			{"\U0001F97C\uFE0F", "\U0001F97C"},
+			{"\U0001F4C3\uFE0F", "\U0001F4C3"},
+			{"\U0001F4DC\uFE0F", "\U0001F4DC"},
 		}
 		for _, tc := range cases {
 			got := emojiText(tc.input)
@@ -3473,7 +3473,7 @@ func TestEmojiVariationAutofix(t *testing.T) {
 		}
 	})
 	t.Run("emojiText strips VS15", func(t *testing.T) {
-		got := emojiText("⚙️")
+		got := emojiText("\u2699\uFE0E")
 		if got != "⚙️" {
 			t.Errorf("emojiText with VS15 = %q, want %q", got, "⚙️")
 		}

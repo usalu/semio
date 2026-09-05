@@ -142,12 +142,12 @@
       "vectors": [
         {
           "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "🟤️set-snapshot",
-          "mutationDirectoryName": "🟤️set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
           "scenarios": [
             {
               "id": "slows-the-second-frame-and-marks-it-do-not-dispose",
-              "directoryName": "🧪️slows-the-second-frame-and-marks-it-do-not-dispose"
+              "directoryName": "⏱️slows-the-second-frame-and-marks-it-do-not-dispose"
             }
           ]
         }

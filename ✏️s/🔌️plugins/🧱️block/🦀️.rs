@@ -166,7 +166,7 @@ impl Default for BlockCamera3d {
     }
 }
 
-async fn block_one_f64() -> f64 {
+fn block_one_f64() -> f64 {
     1.0
 }
 //#endregion 🔖️Cameras

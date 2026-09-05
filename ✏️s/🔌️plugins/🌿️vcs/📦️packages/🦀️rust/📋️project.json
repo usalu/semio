@@ -14,6 +14,15 @@
         "forwardAllArgs": true
       }
     },
+    "native-codec-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-codec-check",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

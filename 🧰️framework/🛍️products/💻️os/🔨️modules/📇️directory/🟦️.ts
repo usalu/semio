@@ -1,6 +1,6 @@
 /** 📇️ Directory read model — pure fold over `DirectoryEvent` (ticket 26/08/16/HUB-SPACES-LIVE-
  * PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1). TypeScript twin of `🦀️.rs` — byte-
- * identical projection over the golden fixture `../../🧫️fixtures/📇️directory/🧾️events.json` (parity
+ * identical projection over the golden fixture `../../🧫️fixtures/📇️directory/⚡️events.json` (parity
  * asserted in `../../🟦️.ts`'s `🔖️Directory` region, the only file this package's vitest
  * config scans for `import.meta.vitest` suites). */
 
@@ -62,6 +62,10 @@ export type {
   Hlc,
   InviteView,
   MemberView,
+  DirectorySpaceListEntryV1,
+  MemberSpaceViewV1,
+  PublicDocumentCatalogEntryV1,
+  PublicSpaceViewV1,
   SpaceView,
   UserView,
 } from "./🧬️schema/🟦️.ts";

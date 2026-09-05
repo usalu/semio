@@ -193,7 +193,7 @@ import {
   type WorldInstanceRecord,
 } from "../🌐️World3dHost/🟦️.tsx";
 import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../🎛️UtilityTree/🟦️.tsx";
-import { loadPluginModule, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
+import { loadPluginModule, pluginLoadProgressAt, SHARD_LIVENESS_POLICY, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region ShellHelpers
@@ -1384,7 +1384,24 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
   return { ...numeric, kind: "stepper" };
 }
 
-const PLUGIN_LOAD_TIMEOUT_MS = 30_000;
+/** 🫀️ Both numbers come from the ONE schema-owned liveness policy (`semio.actor.shard-liveness.v1`,
+ * re-exported through `🔌️PluginRuntime`) — never a literal here. `pluginLoadIdleTimeoutMs` is an IDLE
+ * budget, not a total one: the deadline is pushed forward every time this plugin's own load reports
+ * progress, so a multi-MB wasm component fetching, compiling and instantiating for two minutes on a
+ * loaded machine survives while a plugin whose module 404s or whose worker died still fails within one
+ * idle window. `pluginLoadCeilingMs` bounds the whole attempt regardless of progress, so a plugin that
+ * reports progress forever can never wedge the boot. */
+const PLUGIN_LOAD_IDLE_TIMEOUT_MS = SHARD_LIVENESS_POLICY.pluginLoadIdleTimeoutMs;
+const PLUGIN_LOAD_CEILING_MS = SHARD_LIVENESS_POLICY.pluginLoadCeilingMs;
+
+/** ⏱️ Pure deadline rule, split out so it can be tested without a clock or a `Worker`: given when the
+ * attempt started, when this plugin last reported progress and what time it is now, say how much
+ * longer to wait (`0` means give up now). */
+export function pluginLoadRemainingMs(startedAtMs: number, lastProgressAtMs: number | undefined, nowMs: number, idleTimeoutMs: number = PLUGIN_LOAD_IDLE_TIMEOUT_MS, ceilingMs: number = PLUGIN_LOAD_CEILING_MS): number {
+  const idleRemaining = Math.max(lastProgressAtMs ?? startedAtMs, startedAtMs) + idleTimeoutMs - nowMs;
+  const ceilingRemaining = startedAtMs + ceilingMs - nowMs;
+  return Math.max(0, Math.min(idleRemaining, ceilingRemaining));
+}
 
 /** @emoji 🔌️ Result of {@link installPlugin} — the boot effect must not infer success from
  * `loadedPluginsRef`, which only updates after the next React commit. */
@@ -1401,16 +1418,30 @@ export function pluginShouldReceiveContributions(pluginId: string, sessionPlugin
 }
 
 export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
+  const startedAtMs = Date.now();
+  let timer = 0;
   try {
     return await Promise.race([
       loadPluginModule(pluginId, moduleUrl),
       new Promise<never>((_, reject) => {
-        window.setTimeout(() => reject(new Error(`timeout loading ${pluginId}`)), PLUGIN_LOAD_TIMEOUT_MS);
+        // ⏱️ Re-arms itself for whatever the idle rule still allows instead of firing once at a fixed
+        // wall-clock offset, so an attempt that keeps reporting progress keeps its deadline moving.
+        const arm = () => {
+          const remaining = pluginLoadRemainingMs(startedAtMs, pluginLoadProgressAt(pluginId), Date.now());
+          if (remaining > 0) {
+            timer = window.setTimeout(arm, remaining);
+            return;
+          }
+          reject(new Error(`timeout loading ${pluginId} after ${Date.now() - startedAtMs} ms with no progress for ${PLUGIN_LOAD_IDLE_TIMEOUT_MS} ms`));
+        };
+        arm();
       }),
     ]);
   } catch (error) {
     console.error("[DEBUG] program load failed", pluginId, error);
     return null;
+  } finally {
+    if (timer) window.clearTimeout(timer);
   }
 }
 

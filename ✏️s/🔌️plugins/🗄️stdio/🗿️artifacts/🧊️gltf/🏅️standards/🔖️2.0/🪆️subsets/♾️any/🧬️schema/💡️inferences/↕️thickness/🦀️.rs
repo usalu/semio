@@ -1,12 +1,12 @@
 //! ↕️ GLTF thickness indicators.
 
-#[path = "🦋️mean-thickness/🦀️.rs"]
+#[path = "⚖️mean-thickness/🦀️.rs"]
 pub mod mean_thickness;
-#[path = "⚪️minimum-thickness/🦀️.rs"]
+#[path = "📉️minimum-thickness/🦀️.rs"]
 pub mod minimum_thickness;
-#[path = "🛰️thickness-distribution/🦀️.rs"]
+#[path = "📊️thickness-distribution/🦀️.rs"]
 pub mod thickness_distribution;
-#[path = "🟤️thickness-variability/🦀️.rs"]
+#[path = "↔️thickness-variability/🦀️.rs"]
 pub mod thickness_variability;
 
 use super::super::modules::measurement_contracts::*;

@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/cad-js:test",
+    "test": "bun nx run @semio-tech/fem-js:test",
     "generate": "bun nx run @semio-tech/cad-js:generate",
     "fixture": "bun nx run @semio-tech/cad-js:fixture"
   },

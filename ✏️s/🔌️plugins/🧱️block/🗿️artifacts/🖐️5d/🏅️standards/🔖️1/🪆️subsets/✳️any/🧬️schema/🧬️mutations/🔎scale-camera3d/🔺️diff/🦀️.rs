@@ -5,7 +5,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::diff::Block5dDiff;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ScaleCamera3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &super::ScaleCamera3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if !payload.new_zoom.is_finite() || payload.new_zoom <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera zoom {} is not a finite positive number.", payload.new_zoom), ["camera3d"]);
     }

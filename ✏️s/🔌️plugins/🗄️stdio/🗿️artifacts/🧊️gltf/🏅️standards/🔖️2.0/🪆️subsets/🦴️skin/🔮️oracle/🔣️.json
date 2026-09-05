@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-skin-ahead-of-the-jointed-skin",
-              "directoryName": "🧪️inserts-an-empty-skin-ahead-of-the-jointed-skin"
+              "directoryName": "🦴️inserts-an-empty-skin-ahead-of-the-jointed-skin"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "removes-the-first-skin-and-renumbers-the-bound-node",
-              "directoryName": "🧪️removes-the-first-skin-and-renumbers-the-bound-node"
+              "directoryName": "🚫️removes-the-first-skin-and-renumbers-the-bound-node"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "swaps-the-two-skins-and-rewrites-both-node-bindings",
-              "directoryName": "🧪️swaps-the-two-skins-and-rewrites-both-node-bindings"
+              "directoryName": "🚚️swaps-the-two-skins-and-rewrites-both-node-bindings"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-skins-and-remaps-both-node-bindings",
-              "directoryName": "🧪️flips-the-two-skins-and-remaps-both-node-bindings"
+              "directoryName": "🔀️flips-the-two-skins-and-remaps-both-node-bindings"
             }
           ]
         }

@@ -18,8 +18,8 @@ import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, 
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️.ts";
-import type { DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_EVENT_PAGE_MAX_BYTES, parseDirectoryEventPageV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseGisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
 import type { ArtifactPresencePeer, ClientFrame, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
@@ -560,8 +560,50 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
  * every package/component/descriptor digest with byte lengths, artifact, parent dialect, surface,
  * grant, checkpoint and revalidation. A non-`react` renderer target is admitted only when the
  * worker owns a live private lease that verified those exact bytes. */
-export type { DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, directoryCommandErrorIsTransient, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+/** 💡️ The host-owned ephemeral GIS Map inference port: its closed wire DTOs, its nine-phase state
+ * machine, and its explicit EN/DE vocabulary. Nothing here is ever persisted into a document. */
+export type {
+  GisMapInferenceApprovalReceiptV1,
+  GisMapInferenceApprovalRequestV1,
+  GisMapInferenceEventPageV1,
+  GisMapInferenceEventV1,
+  GisMapInferenceJobReceiptV1,
+  GisMapInferenceJobRequestV1,
+  GisMapInferenceJobStateV1,
+  GisMapInferencePortCodeV1,
+  GisMapInferencePortEventV1,
+  GisMapInferencePortPhaseV1,
+  GisMapInferencePortStatusV1,
+  GisMapInferencePreviewV1,
+  GisMapInferenceProgressV1,
+  GisMapInferenceProposalStateV1,
+} from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export {
+  GIS_MAP_INFERENCE_EVENT_PAGE_MAX_ITEMS,
+  GIS_MAP_INFERENCE_JOB_MAX_LIFETIME_MS,
+  GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1,
+  GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1,
+  GIS_MAP_INFERENCE_PORT_TEXT_V1,
+  GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR,
+  GIS_MAP_INFERENCE_REQUEST_MAX_BYTES,
+  GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
+  GIS_MAP_INFERENCE_SERVICE_ID,
+  gisMapInferenceCodeFromStatusV1,
+  gisMapInferencePortRoleV1,
+  gisMapInferencePortTerminalV1,
+  idleGisMapInferencePortStatusV1,
+  parseGisMapInferenceApprovalReceiptV1,
+  parseGisMapInferenceEventPageV1,
+  parseGisMapInferenceJobReceiptV1,
+  parseGisMapInferencePreviewV1,
+  parseGisMapInferencePortStatusV1,
+  reduceGisMapInferencePortV1,
+  sealGisMapInferenceApprovalRequestV1,
+  sealGisMapInferenceJobRequestV1,
+} from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 
 export type DocumentRuntimeScopeV1 = Readonly<{ kind: "hub"; spaceId: string; documentId: string }> | Readonly<{ kind: "local"; documentId: string }>;
 
@@ -581,7 +623,11 @@ export function documentRuntimeKeyV1(scope: DocumentRuntimeScopeV1): string {
 
 export type PersistenceBinding =
   | { readonly kind: "folder"; readonly path: string }
-  | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly installedTarget?: DocumentExecutionTargetLeaseFieldsV1 };
+  /** 🪪️ A hub binding states which surface it would like (`requestedSurfaceId`) and, when a previous
+   * verified installation is already known, the complete {@link DocumentExecutionTargetLeaseFieldsV1}
+   * to compare the next plan against. Neither is byte ownership: a non-`react` renderer target is
+   * admitted only through a live private lease minted from server-verified bytes. */
+  | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly requestedSurfaceId?: string; readonly installedTarget?: DocumentExecutionTargetLeaseFieldsV1 };
 
 /** 🧾️ Everything the worker needs to open one artifact's actor — mirrors `ArtifactActorConfig`. */
 export type ArtifactActorConfig = {
@@ -693,10 +739,75 @@ export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): 
 export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
   if (parsed.kind === "event" && typeof parsed.event === "object" && parsed.event !== null) {
-    return { kind: "event", documentId: String(parsed.documentId), event: parseArtifactEvent(parsed.event as Record<string, unknown>) };
+    const documentId = workerWireIdV1(parsed.documentId);
+    if (documentId === null) throw new Error("backbone worker response: invalid document id");
+    const event = parseArtifactEvent(parsed.event as Record<string, unknown>);
+    const scope = workerWireScopeV1(parsed.scope, documentId);
+    if (event.kind !== "presence") return { kind: "event", documentId, event, ...(scope === null ? {} : { scope }) };
+    const verifiedSurfaceId = workerWireIdV1(parsed.verifiedSurfaceId);
+    if (scope === null || verifiedSurfaceId === null) return { kind: "event", documentId, event: { kind: "presence", peers: [] }, ...(scope === null ? {} : { scope }) };
+    return { kind: "event", documentId, scope, verifiedSurfaceId, event };
+  }
+  if (
+    parsed.kind === "socket-actor"
+    || parsed.kind === "socket-actor-failed"
+    || parsed.kind === "artifact-bootstrap-progress"
+    || parsed.kind === "artifact-bootstrap-failed"
+    || parsed.kind === "artifact-rebootstrap-required"
+    || parsed.kind === "execution-target-status"
+  ) {
+    const documentId = workerWireIdV1(parsed.documentId);
+    if (documentId === null) throw new Error("backbone worker response: invalid document id");
+    let scope = workerWireScopeV1(parsed.scope, documentId);
+    if (parsed.kind === "execution-target-status" && scope !== null && parsed.spaceId !== scope.spaceId) scope = null;
+    const { documentId: _documentId, scope: _scope, ...rest } = parsed;
+    return { ...rest, documentId, ...(scope === null ? {} : { scope }) } as BackboneWorkerResponse;
+  }
+  if (parsed.kind === "inference-port-status") {
+    if (!Number.isSafeInteger(parsed.operationEpoch) || (parsed.operationEpoch as number) < 0 || typeof parsed.scope !== "object" || parsed.scope === null || Array.isArray(parsed.scope)) throw new Error("backbone worker response: invalid inference owner");
+    const scopeRow = parsed.scope as Record<string, unknown>;
+    const documentId = workerWireIdV1(scopeRow.documentId);
+    if (documentId === null) throw new Error("backbone worker response: invalid inference document id");
+    const scope = workerWireScopeV1(parsed.scope, documentId);
+    if (scope === null) throw new Error("backbone worker response: invalid inference scope");
+    return { kind: "inference-port-status", operationEpoch: parsed.operationEpoch as number, scope, status: parseGisMapInferencePortStatusV1(parsed.status) };
   }
   return parsed as BackboneWorkerResponse;
 }
+
+function workerWireIdV1(value: unknown): string | null {
+  if (typeof value !== "string" || value.length === 0 || new TextEncoder().encode(value).length > 256 || /[\u0000-\u001f\u007f]/u.test(value)) return null;
+  return value;
+}
+
+function workerWireScopeV1(value: unknown, documentId: string): DocumentScope | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const row = value as Record<string, unknown>;
+  if (Object.keys(row).sort().join(",") !== "documentId,spaceId") return null;
+  const spaceId = workerWireIdV1(row.spaceId);
+  const scopedDocumentId = workerWireIdV1(row.documentId);
+  return spaceId === null || scopedDocumentId === null || scopedDocumentId !== documentId ? null : { spaceId, documentId };
+}
+
+/** 🏛️ Closed lifecycle of the one shell-owned retained space-administration operation.
+ * `receipt` is only ever reached through an exact accepted server receipt; every terminal phase
+ * has already erased the page, the receipt, and any invite capability. */
+export type DirectoryAdministrationPhaseV1 =
+  | "loading"
+  | "ready"
+  | "submitting"
+  | "receipt"
+  | "refreshing"
+  | "cancelled"
+  | "denied"
+  | "stale"
+  | "failed";
+
+/** 🗂️ The one independently paged administration window a cursor may advance. */
+export type DirectoryAdministrationSectionV1 = "members" | "invites" | "documents";
+
+/** 📋️ Renderer-visible state of the worker-retained invite capability. */
+export type DirectoryAdministrationInviteCapabilityStatusV1 = "available" | "copying" | "failed";
 
 /** 📤️ Main thread → `🧵️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}).
  * The `directory-*` kinds (contract-freeze §C6) are the shell's ONLY way to reach the directory hub
@@ -714,7 +825,24 @@ export type BackboneWorkerRequest =
   | { readonly kind: "directory-scope-open"; readonly baseUrl: string; readonly scope: DocumentScope; readonly since: number }
   | { readonly kind: "directory-scope-close"; readonly scope: DocumentScope }
   | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
-  | { readonly kind: "directory-close" };
+  | { readonly kind: "directory-command-cancel"; readonly requestId: string }
+  | { readonly kind: "directory-administration-open"; readonly operationEpoch: number; readonly spaceId: string }
+  | { readonly kind: "directory-administration-refresh"; readonly operationEpoch: number; readonly cursor?: string }
+  | { readonly kind: "directory-administration-submit"; readonly operationEpoch: number; readonly requestId: string; readonly command: DirectoryCommand }
+  | { readonly kind: "directory-administration-capability-request"; readonly operationEpoch: number }
+  | { readonly kind: "directory-administration-capability-result"; readonly operationEpoch: number; readonly transferEpoch: number; readonly copied: boolean }
+  | { readonly kind: "directory-administration-close"; readonly operationEpoch: number }
+  | { readonly kind: "directory-close" }
+  /** 💡️ The host-owned ephemeral inference port's only transport. Every request names the exact
+   * document scope the shell already owns and the operation epoch that owns the port; no bearer,
+   * origin, path or receipt ever crosses this boundary, and no request reaches the document socket
+   * or any generic document command. */
+  | { readonly kind: "inference-open"; readonly operationEpoch: number; readonly scope: DocumentScope }
+  | { readonly kind: "inference-propose"; readonly operationEpoch: number; readonly requestId: string }
+  | { readonly kind: "inference-poll"; readonly operationEpoch: number }
+  | { readonly kind: "inference-cancel"; readonly operationEpoch: number }
+  | { readonly kind: "inference-approve"; readonly operationEpoch: number }
+  | { readonly kind: "inference-close"; readonly operationEpoch: number };
 
 /** 🛰️ Worker-local P2-C recovery lifecycle. These are not persisted artifact events: they describe
  * one bounded public bootstrap transfer and therefore remain explicit top-level worker responses. */
@@ -726,6 +854,7 @@ export type ArtifactBootstrapWorkerEvent =
       readonly totalBytes: number;
       readonly receivedChunks: number;
       readonly totalChunks: number;
+      readonly scope?: DocumentScope;
     }
   | {
       readonly kind: "artifact-bootstrap-failed";
@@ -733,28 +862,59 @@ export type ArtifactBootstrapWorkerEvent =
       readonly code: "cancelled" | "deadline-exceeded" | "invalid-bootstrap" | "transport-failure";
       readonly message: string;
       readonly retryable: boolean;
+      readonly scope?: DocumentScope;
     }
   | {
       readonly kind: "artifact-rebootstrap-required";
       readonly documentId: string;
       readonly message: string;
       readonly retryable: true;
+      readonly scope?: DocumentScope;
     };
 
 /** 📥️ `🧵️backbone-worker.ts` → main thread messages. `directory-status.pendingCommands` is the
  * bounded, in-memory offline queue's length (contract-freeze §C6 "commands queue... and flush on
  * reconnect"). */
 export type BackboneWorkerResponse =
-  | { readonly kind: "event"; readonly documentId: string; readonly event: ArtifactEvent }
+  | { readonly kind: "event"; readonly documentId: string; readonly event: ArtifactEvent; readonly scope?: DocumentScope; readonly verifiedSurfaceId?: string }
   | ArtifactBootstrapWorkerEvent
   | { readonly kind: "ready" }
   | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
   | ({ readonly kind: "directory-event-page"; readonly canonicalJson: string } & DirectoryEventPageAckV1 & { readonly afterSeqExclusive: number; readonly hasMore: boolean })
   | { readonly kind: "directory-bootstrap-failed"; readonly bootstrapEpoch: number; readonly code: "unauthorized" | "cancelled" | "transport" | "invalid-page"; readonly retryable: boolean }
   | { readonly kind: "directory-scope-revoked"; readonly scope: DocumentScope }
-  | { readonly kind: "directory-command-result"; readonly requestId: string; readonly ok: boolean; readonly events?: readonly DirectoryEvent[]; readonly error?: string }
-  | { readonly kind: "socket-actor"; readonly documentId: string; readonly actorId: string }
-  | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly code: "installed-target-unavailable" | "session-mismatch" }
+  | { readonly kind: "directory-command-receipt"; readonly requestId: string; readonly receipt: DirectoryCommandReceiptV1 }
+  | { readonly kind: "directory-command-failed"; readonly requestId: string; readonly code: DirectoryCommandErrorCodeV1 }
+  | { readonly kind: "socket-actor"; readonly documentId: string; readonly scope?: DocumentScope; readonly actorId: string }
+  | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly scope?: DocumentScope; readonly code: "installed-target-unavailable" | "session-mismatch" }
+  /** 🪪️ Bounded execution-target install status for the React host's localized live region. It
+   * carries a status code and byte counters only — never bytes, an origin, a path, a module URL, a
+   * receipt, a grant or a digest. */
+  | { readonly kind: "execution-target-status"; readonly documentId: string; readonly spaceId: string; readonly scope?: DocumentScope; readonly code: DocumentExecutionTargetStatusCodeV1; readonly progress?: DocumentExecutionTargetProgressV1 }
+  /** 🏛️ The complete renderer-visible administration state. `canonicalJson` is the exact page the
+   * hub sealed; `inviteCapabilityPending` says a one-shot invite token remains held by the worker
+   * until exact clipboard success. No session identity, bearer, or invite token ever appears here. */
+  | {
+      readonly kind: "directory-administration-state";
+      readonly operationEpoch: number;
+      readonly spaceId: string;
+      readonly phase: DirectoryAdministrationPhaseV1;
+      readonly canonicalJson?: string;
+      readonly receiptSha256?: string;
+      readonly outcome?: DirectoryCommandOutcomeV1;
+      readonly code?: DirectoryCommandErrorCodeV1;
+      readonly inviteCapabilityPending?: boolean;
+      readonly inviteCapabilityStatus?: DirectoryAdministrationInviteCapabilityStatusV1;
+    }
+  /** 🎁️ One operation-bound clipboard offer. The worker retains the capability until the renderer
+   * reports that this exact transfer epoch was copied. */
+  | { readonly kind: "directory-administration-capability"; readonly operationEpoch: number; readonly transferEpoch: number; readonly inviteToken: string }
+  /** 🛡️ A duplicate or stale request/result was rejected without redisclosing the capability. */
+  | { readonly kind: "directory-administration-capability-rejected"; readonly operationEpoch: number; readonly transferEpoch?: number; readonly code: "capacity" | "already-settled" | "mismatch" }
+  /** 💡️ The complete renderer-visible state of one document's inference port. It carries the
+   * phase, the server's own job id, the bounded progress cursor and the hash the server published —
+   * never a receipt, bearer, origin, path, base pack, proposal body or user identity. */
+  | { readonly kind: "inference-port-status"; readonly operationEpoch: number; readonly scope: DocumentScope; readonly status: GisMapInferencePortStatusV1 }
   | { readonly kind: "directory-status"; readonly pendingCommands: number };
 
 function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
@@ -3821,7 +3981,7 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // `🔨️modules/📇️directory/🟦️.ts`; this region only imports/re-exports and, per this
 // package's `🧪️tests/🟦️.ts` (`include`/`includeSource` list only THIS file and
 // `🧵️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
-import { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️.ts";
+import { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind, parseDirectorySpaceAdministrationPageV1 } from "./🔨️modules/📇️directory/🟦️.ts";
 import type { DirectoryReadModel, DocumentDescriptor } from "./🔨️modules/📇️directory/🟦️.ts";
 
 export type {
@@ -3852,7 +4012,12 @@ export type {
   DirectoryEventBody,
   DirectoryReadModel,
   DirectorySpace,
-  DirectorySpaceDetailV1,
+  DirectorySpaceAdministrationCapabilitiesV1,
+  DirectorySpaceAdministrationInviteRowV1,
+  DirectorySpaceAdministrationMemberRowV1,
+  DirectorySpaceAdministrationPageV1,
+  DirectorySpaceAdministrationSectionV1,
+  DirectorySpaceAdministrationWindowV1,
   DirectorySpaceKind,
   DirectorySpaceListEntryV1,
   DirectorySpaceRole,
@@ -3872,7 +4037,7 @@ export type {
   SpaceView,
   UserView,
 } from "./🔨️modules/📇️directory/🟦️.ts";
-export { decodeServerFrame, descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, encodeServerFrame, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind };
+export { decodeServerFrame, descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, encodeServerFrame, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind, parseDirectorySpaceAdministrationPageV1 };
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -3883,7 +4048,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
-      const raw = readFileSync(join(here, "🧫️fixtures", "📇️directory", "🧾️events.json"), "utf8");
+      const raw = readFileSync(join(here, "🧫️fixtures", "📇️directory", "⚡️events.json"), "utf8");
       return (JSON.parse(raw) as { events: DirectoryEvent[] }).events;
     };
 
@@ -3967,7 +4132,14 @@ if (import.meta.vitest) {
 // the network (contract §C6); `🧵️backbone-worker.ts`'s `🔖️Directory` region is the only caller, so
 // the shell never opens a directory socket on the UI thread. `fetch`/`WebSocket` only — no external
 // HTTP library (CLAUDE.md "no external libraries for runtime purposes").
-import type { DirectorySpaceDetailV1, DirectorySpaceListEntryV1, DocumentScope } from "./🔨️modules/📇️directory/🟦️.ts";
+import type { DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DocumentScope } from "./🔨️modules/📇️directory/🟦️.ts";
+import { DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES } from "./🔨️modules/📇️directory/🟦️.ts";
+
+/** 🏛️ One administration page plus the exact response bytes its receipt covers. */
+export interface CanonicalDirectorySpaceAdministrationPageV1 {
+  readonly canonicalJson: string;
+  readonly page: DirectorySpaceAdministrationPageV1;
+}
 
 /** 🔁️ Reconnect backoff shared by every hub transport this package opens — `connectHub` in
  * `🧵️backbone-worker.ts` (artifact sync) and {@link DirectoryClient.stream} both import these
@@ -3997,7 +4169,16 @@ export type DirectoryStream = { readonly close: () => void };
 export type DirectoryAcknowledgedStream = DirectoryStream & { readonly acknowledge: (through: number) => void };
 
 export type DirectorySessionSummary = { readonly userId: string; readonly email: string; readonly displayName: string; readonly expiresAt: number };
-export type DirectoryCommandResult = { readonly events: readonly DirectoryEvent[]; readonly result?: unknown };
+/** 🚨️ One closed command-transport denial. It never carries a raw response body or server text. */
+export class DirectoryCommandError extends Error {
+  readonly code: DirectoryCommandErrorCodeV1;
+
+  constructor(code: DirectoryCommandErrorCodeV1) {
+    super(`directory command: ${code}`);
+    this.name = "DirectoryCommandError";
+    this.code = code;
+  }
+}
 
 /** 📄️ Exact canonical page bytes plus the bounded header a shell needs for ACK ordering. */
 export type CanonicalDirectoryEventPageV1 = Readonly<{
@@ -4172,26 +4353,6 @@ function directoryDocument(value: unknown): boolean {
   return record !== undefined && directoryDescriptor(record.descriptor) && directoryProjectionInteger(record.headSeq) && directoryProjectionInteger(record.commitSeq) && directoryProjectionInteger(record.epoch);
 }
 
-function directoryInvite(value: unknown): boolean {
-  const record = directoryProjectionRecord(value, ["createdAtMs", "expiresAtMs", "id", "revoked", "role", "spaceId"]);
-  return record !== undefined
-    && directoryProjectionText(record.id)
-    && directoryProjectionText(record.spaceId)
-    && (record.role === "author" || record.role === "spectator")
-    && directoryProjectionSignedInteger(record.createdAtMs)
-    && directoryProjectionSignedInteger(record.expiresAtMs)
-    && typeof record.revoked === "boolean";
-}
-
-/** 🛡️ Strictly decodes the discriminated public/member/author detail boundary. */
-export function parseDirectorySpaceDetailV1(value: unknown): DirectorySpaceDetailV1 {
-  const record = value && typeof value === "object" && !Array.isArray(value) ? value as Readonly<Record<string, unknown>> : undefined;
-  if (record?.access === "public" && exactRecordKeys(record, ["access", "documents", "space"]) && directoryPublicSpace(record.space) && Array.isArray(record.documents) && record.documents.every(directoryPublicDocument)) return record as DirectorySpaceDetailV1;
-  if (record?.access === "member" && exactRecordKeys(record, ["access", "documents", "members", "space"]) && directoryMemberSpaceRole(record.space, "spectator") && Array.isArray(record.members) && record.members.every(directoryMember) && Array.isArray(record.documents) && record.documents.every(directoryDocument)) return record as DirectorySpaceDetailV1;
-  if (record?.access === "author" && exactRecordKeys(record, ["access", "documents", "invites", "members", "space"]) && directoryMemberSpaceRole(record.space, "author") && Array.isArray(record.members) && record.members.every(directoryMember) && Array.isArray(record.documents) && record.documents.every(directoryDocument) && Array.isArray(record.invites) && record.invites.every(directoryInvite)) return record as DirectorySpaceDetailV1;
-  throw new Error("directory: invalid space detail projection");
-}
-
 /** 🛡️ Strictly decodes one discriminated list projection. */
 export function parseDirectorySpaceListEntryV1(value: unknown): DirectorySpaceListEntryV1 {
   const record = directoryProjectionRecord(value, ["access", "space"]);
@@ -4328,12 +4489,48 @@ export class DirectoryClient {
     return value.map(parseDirectorySpaceListEntryV1);
   }
 
-  async space(id: string, options?: DirectoryRequestOptions): Promise<DirectorySpaceDetailV1> {
-    return parseDirectorySpaceDetailV1(await this.getJson<unknown>(`/directory/spaces/${encodeURIComponent(id)}`, options));
+  /** 🏛️ Fetches one bounded canonical administration page, preserving the exact receipt bytes.
+   * `cursor` advances precisely the window it was issued for; every other window restarts. */
+  async spaceAdministrationPage(id: string, cursor?: string, options?: DirectoryRequestOptions): Promise<CanonicalDirectorySpaceAdministrationPageV1> {
+    if (cursor !== undefined && (cursor.length === 0 || cursor.length > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES || !/^[A-Za-z0-9._-]+$/u.test(cursor))) throw new Error("directory space administration: invalid cursor");
+    const path = cursor === undefined ? `/directory/spaces/${encodeURIComponent(id)}` : `/directory/spaces/${encodeURIComponent(id)}?cursor=${cursor}`;
+    const response = await this.request(`${this.requestBaseUrl}${path}`, { credentials: "include", headers: this.headers(false) }, { timeoutMs: DIRECTORY_HTTP_TIMEOUT_MS, signal: options?.signal });
+    if (!response.ok) throw new DirectoryHttpError(response.status, `directory: GET ${path} failed (${response.status})`);
+    const canonicalJson = await response.text();
+    if (options?.signal?.aborted) throw options.signal.reason ?? new Error("directory space administration: cancelled");
+    if (new TextEncoder().encode(canonicalJson).byteLength > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES) throw new Error("directory space administration: response too large");
+    let page: DirectorySpaceAdministrationPageV1;
+    try {
+      page = await parseDirectorySpaceAdministrationPageV1(canonicalJson);
+    } catch {
+      throw new Error("directory space administration: invalid canonical response");
+    }
+    if (options?.signal?.aborted) throw options.signal.reason ?? new Error("directory space administration: cancelled");
+    if (page.spaceId !== id) throw new Error("directory space administration: response space mismatch");
+    return { canonicalJson, page };
   }
 
-  async command(command: DirectoryCommand, options?: DirectoryRequestOptions): Promise<DirectoryCommandResult> {
-    return this.postJson<DirectoryCommandResult>("/directory/commands", command, options);
+  /** 🧾️ Posts one sealed V1 request and parses only a raw-byte-capped canonical receipt bound to it.
+   * A non-2xx becomes a closed {@link DirectoryCommandError} code; the response body is never read,
+   * logged, or surfaced. The caller's `signal` cancels the HTTP wait only — a command already past
+   * its server linearization point stays committed, so the operation becomes indeterminate. */
+  async command(request: DirectoryCommandRequestV1, options?: DirectoryRequestOptions): Promise<DirectoryCommandReceiptV1> {
+    const body = directoryCommandRequestJson(request);
+    let response: FetchTimeoutResponse;
+    try {
+      response = await this.request(`${this.requestBaseUrl}/directory/commands`, { method: "POST", credentials: "include", headers: this.headers(true), body }, { timeoutMs: DIRECTORY_HTTP_TIMEOUT_MS, signal: options?.signal });
+    } catch {
+      throw new DirectoryCommandError(options?.signal?.aborted === true ? "cancelled" : "transport");
+    }
+    if (!response.ok) throw new DirectoryCommandError(directoryCommandErrorFromStatus(response.status));
+    const canonicalJson = await response.text();
+    if (options?.signal?.aborted === true) throw new DirectoryCommandError("cancelled");
+    if (new TextEncoder().encode(canonicalJson).byteLength > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES) throw new DirectoryCommandError("too-large");
+    try {
+      return await parseDirectoryCommandReceiptV1(canonicalJson, request);
+    } catch {
+      throw new DirectoryCommandError("invalid");
+    }
   }
 
   async events(since: number, options?: DirectoryRequestOptions): Promise<readonly DirectoryEvent[]> {
@@ -4641,23 +4838,79 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("DirectoryClient space public boundary", () => {
-    const publicDetail = {
-      access: "public",
-      space: { id: "space-public", name: "Public", kind: "studio", visibility: "public", memberCount: 2, documentCount: 1, createdAtMs: 1, updatedAtMs: 2 },
-      documents: [{ documentId: "document-public", artifactKind: "note.document", artifactSchema: "note.document@1", owner: { pluginId: "note", packageId: "note", version: "1", packageHash: "11".repeat(32) }, packSchemaHash: "22".repeat(32) }],
+  async function sampleCanonicalAdministrationPage(access: "public" | "author", overrides: Record<string, unknown> = {}): Promise<string> {
+    const space = access === "public"
+      ? { id: "space-1", name: "Public", kind: "studio", visibility: "public", memberCount: 2, documentCount: 1, createdAtMs: 1, updatedAtMs: 2 }
+      : { id: "space-1", name: "Authored", kind: "studio", visibility: "private", ownerUserId: "user-a", role: "author", memberCount: 2, documentCount: 0, activeConnections: 0, createdAtMs: 1, updatedAtMs: 2 };
+    const documents = access === "public"
+      ? [{ documentId: "document-public", artifactKind: "note.document", artifactSchema: "note.document@1", owner: { pluginId: "note", packageId: "note", version: "1", packageHash: "11".repeat(32) }, packSchemaHash: "22".repeat(32) }]
+      : [];
+    const base = {
+      access,
+      schema: "semio.directory.space-administration-page.v1" as const,
+      sessionBindingSha256: access === "public" ? "0".repeat(64) : "a".repeat(64),
+      authorizationGeneration: access === "public" ? 0 : 7,
+      spaceId: "space-1",
+      space,
     };
+    const unsigned = access === "public"
+      ? { ...base, documents: { rows: documents } }
+      : {
+          ...base,
+          members: { rows: [
+            { userId: "user-a", email: "a@example.invalid", displayName: "A", role: "author", owner: true },
+            { userId: "user-b", email: "b@example.invalid", displayName: "B", role: "spectator", owner: false },
+          ] },
+          documents: { rows: documents },
+          invites: { rows: [{ inviteId: "invite-1", role: "spectator", createdAtMs: 20, expiresAtMs: 900, revoked: false, accepted: false }] },
+          capabilities: { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true },
+        };
+    const sealed = { ...unsigned, ...overrides };
+    const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(sealed))));
+    const receiptSha256 = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    return JSON.stringify({ ...sealed, receiptSha256 });
+  }
 
-    it("narrows the discriminator and rejects identity currentness and unknown fields", () => {
-      const detail = parseDirectorySpaceDetailV1(publicDetail);
-      if (detail.access !== "public") throw new Error("public discriminator did not narrow");
-      const documentId: string = detail.documents[0]!.documentId;
-      expect(documentId).toBe("document-public");
-      expect("members" in detail).toBe(false);
-      expect(() => parseDirectorySpaceDetailV1({ ...publicDetail, actor: "user:secret" })).toThrow("invalid space detail projection");
-      expect(() => parseDirectorySpaceDetailV1({ ...publicDetail, space: { ...publicDetail.space, ownerUserId: "user:secret" } })).toThrow("invalid space detail projection");
-      expect(() => parseDirectorySpaceDetailV1({ ...publicDetail, documents: [{ ...publicDetail.documents[0], headSeq: 9 }] })).toThrow("invalid space detail projection");
-      expect(() => parseDirectorySpaceListEntryV1({ access: "public", space: publicDetail.space, members: [] })).toThrow("invalid space list projection");
+  function administrationResponse(canonical: string): unknown {
+    return { ok: true, status: 200, statusText: "OK", headers: { get: () => "application/json" }, json: async () => { throw new Error("administration pages never use response.json"); }, text: async () => canonical };
+  }
+
+  describe("DirectorySpaceAdministrationPageV1", () => {
+    it("keeps invites and capabilities author-only and rejects a substituted receipt", async () => {
+      const authored = await sampleCanonicalAdministrationPage("author");
+      const page = await parseDirectorySpaceAdministrationPageV1(authored);
+      if (page.access !== "author") throw new Error("author discriminator did not narrow");
+      expect(page.members.rows.map((row) => row.userId)).toEqual(["user-a", "user-b"]);
+      expect(page.members.rows[0]!.owner).toBe(true);
+      expect(page.capabilities.removeMember).toBe(true);
+      expect(page.invites.rows).toHaveLength(1);
+      expect(authored).not.toContain("secretDigest");
+      expect(authored).not.toContain("selector");
+
+      const publicPage = await parseDirectorySpaceAdministrationPageV1(await sampleCanonicalAdministrationPage("public"));
+      if (publicPage.access !== "public") throw new Error("public discriminator did not narrow");
+      expect("members" in publicPage).toBe(false);
+      expect("invites" in publicPage).toBe(false);
+      expect("capabilities" in publicPage).toBe(false);
+
+      await expect(parseDirectorySpaceAdministrationPageV1(authored.replace(/"receiptSha256":"[0-9a-f]{64}"/u, `"receiptSha256":"${"b".repeat(64)}"`))).rejects.toThrow("receipt-mismatch");
+      await expect(parseDirectorySpaceAdministrationPageV1(`${authored} `)).rejects.toThrow();
+      await expect(parseDirectorySpaceAdministrationPageV1(authored.replace('"spaceId":"space-1"', '"spaceId":"space-2"'))).rejects.toThrow();
+      await expect(parseDirectorySpaceAdministrationPageV1(authored.replace('{"access":"author"', '{"actor":"user:secret","access":"author"'))).rejects.toThrow();
+    });
+
+    it("fetches the exact canonical bytes and refuses a foreign space or a bad cursor", async () => {
+      const canonical = await sampleCanonicalAdministrationPage("author");
+      const request = vi.fn(async () => administrationResponse(canonical));
+      const client = new DirectoryClient("https://hub.test", { request: request as unknown as typeof fetchWithTimeout });
+      const fetched = await client.spaceAdministrationPage("space-1");
+      expect(fetched.canonicalJson).toBe(canonical);
+      expect(request.mock.calls[0]?.[0]).toBe("https://hub.test/directory/spaces/space-1");
+
+      await client.spaceAdministrationPage("space-1", "m.6162.deadbeef");
+      expect(request.mock.calls[1]?.[0]).toBe("https://hub.test/directory/spaces/space-1?cursor=m.6162.deadbeef");
+      await expect(client.spaceAdministrationPage("space-1", "not a cursor")).rejects.toThrow("invalid cursor");
+      await expect(client.spaceAdministrationPage("space-9")).rejects.toThrow("response space mismatch");
     });
   });
 
@@ -4668,6 +4921,35 @@ if (import.meta.vitest) {
       const response: BackboneWorkerResponse = { kind: "directory-scope-revoked", scope };
       expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request))).toEqual(request);
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(response))).toEqual(response);
+    });
+
+    it("keeps inference status scope and validated preview exact across the private worker wire", () => {
+      const jobId = "1".repeat(32);
+      const proposalHash = "2".repeat(64);
+      const scope = { spaceId: "space-a", documentId: "same-document" };
+      const response: BackboneWorkerResponse = {
+        kind: "inference-port-status",
+        operationEpoch: 7,
+        scope,
+        status: {
+          phase: "offered",
+          jobId,
+          cursor: 3,
+          completed: 4,
+          total: 4,
+          proposalHash,
+          preview: { schema: "semio.hub.gis-map-inference-preview/v1", jobId, proposalHash, regionId: `inference-${jobId}`, ring: [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]] },
+          cancelRequested: false,
+          code: null,
+        },
+      };
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(response))).toEqual(response);
+      const malformedScope = encodeBackboneWorkerResponse(response).map((byte) => byte);
+      const decoded = decodePackValue(malformedScope.subarray(1)) as Record<string, unknown>;
+      const badScope = encodePackValue({ ...decoded, scope: { spaceId: "space-b", documentId: "same-document", requestedSurface: "forbidden" } });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...badScope]))).toThrow("invalid inference scope");
+      const badStatus = encodePackValue({ ...decoded, status: { ...(decoded.status as Record<string, unknown>), preview: { ...response.status.preview, ring: [[7, 46], [9, 46], [8, 48], [7, 48], [7, 46]] } } });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...badStatus]))).toThrow("invalid-preview");
     });
 
     it("binds one document scope and treats close 4401 as terminal without reacquiring", async () => {

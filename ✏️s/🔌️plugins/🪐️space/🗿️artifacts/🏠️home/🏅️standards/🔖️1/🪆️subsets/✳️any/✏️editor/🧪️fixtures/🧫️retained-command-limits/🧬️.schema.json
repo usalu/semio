@@ -72,8 +72,8 @@
     },
     "routes": {
       "type": "array",
-      "minItems": 17,
-      "maxItems": 17,
+      "minItems": 18,
+      "maxItems": 18,
       "prefixItems": [
         {
           "type": "object",
@@ -115,13 +115,15 @@
               "const": "createStudio"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Creates and resolves studio catalog/draft/backbone owners through process-global ports without resumable external I/O."
+              "const": ""
             }
           }
         },
@@ -139,13 +141,15 @@
               "const": "bindSpaceFile"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "HostOnly"
+              ]
             },
             "blocker": {
-              "const": "Binds a file-backed studio through blocking file/backbone work and process-global port ownership."
+              "const": ""
             }
           }
         },
@@ -163,13 +167,15 @@
               "const": "importSpace"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Mixed request/import branches parse a whole document and publish external storage without retained decoding or cancellation."
+              "const": ""
             }
           }
         },
@@ -239,13 +245,15 @@
               "const": "deleteVirtualFileSystemNode"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Traverses global catalog owners and performs external deletion without an app-owned resumable cursor."
+              "const": ""
             }
           }
         },
@@ -367,13 +375,15 @@
               "const": "renameSpace"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "HostOnly"
+              ]
             },
             "blocker": {
-              "const": "The dialog branch decodes and searches the whole directory read model; the shared command route has no bounded cursor."
+              "const": ""
             }
           }
         },
@@ -389,6 +399,32 @@
           "properties": {
             "id": {
               "const": "shareSpace"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "manageSpace"
             },
             "disposition": {
               "const": "Migrated"
@@ -443,13 +479,15 @@
               "const": "foldDirectoryEvents"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Config"
+              ]
             },
             "blocker": {
-              "const": "Parses the complete event JSON array and repeatedly clones/folds/serializes the directory model in one dispatch."
+              "const": ""
             }
           }
         },

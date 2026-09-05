@@ -40,5 +40,11 @@
     "imageTouched": false,
     "maximumBytes": 65536
   },
-  "hostile": ["drawing-id", "value-id", "missing-drawing", "missing-value", "image-touch", "wrong-index", "wrong-job", "oversize"]
+  "hostile": ["drawing-id", "value-id", "missing-drawing", "missing-value", "image-touch", "wrong-index", "wrong-job", "oversize"],
+  "membershipCases": [
+    { "name": "image-free", "drawingChildId": "gismap-drawing", "valueChildId": "gismap-value", "imageChildId": null, "deriveChildren": false, "accepted": true },
+    { "name": "forged-drawing", "drawingChildId": "forged", "valueChildId": "gismap-value", "imageChildId": null, "deriveChildren": false, "accepted": false },
+    { "name": "forged-value", "drawingChildId": "gismap-drawing", "valueChildId": "forged", "imageChildId": null, "deriveChildren": false, "accepted": false },
+    { "name": "supplied-image-preserved-and-denied", "drawingChildId": "gismap-drawing", "valueChildId": "gismap-value", "imageChildId": "basemap-image", "deriveChildren": true, "accepted": false }
+  ]
 }

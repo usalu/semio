@@ -6,6 +6,10 @@
     "throughSeqInclusive": 11,
     "receiptSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
   },
+  "identities": {
+    "a": { "userId": "user-a", "displayName": "Ada Author" },
+    "b": { "userId": "user-b", "displayName": "Bert Spectator" }
+  },
   "hostile": [
     { "id": "extra", "patch": { "afterSeqExclusive": 10 } },
     { "id": "wrong-schema", "patch": { "schema": "semio.directory.event-page.v1" } },

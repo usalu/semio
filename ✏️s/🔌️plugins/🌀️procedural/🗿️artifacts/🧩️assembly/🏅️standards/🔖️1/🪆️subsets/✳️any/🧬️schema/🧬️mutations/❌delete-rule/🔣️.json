@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule",
   "semanticKind": "delete-rule",
   "displayName": "Delete Rule",
-  "emoji": "🗑️",
+  "emoji": "❌",
   "aggregateVariant": "DeleteRule",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,

@@ -343,3 +343,277 @@ So the P4 checklist stops being "does it look populated" and becomes falsifiable
 
 Note `resolvedUpTo` is `null` in the demo fixture (the plate example uses `2`), so the timeline opens fully
 unresolved and every one of the four steps is available to the stepper.
+
+## 🎣 False alarm worth recording: "the dev vite config is broken" was my own invocation
+Bypassing the starved dev script by starting Vite directly produced:
+
+```
+failed to load config from …/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts
+SyntaxError [ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX]: TypeScript parameter property is not supported in strip-only mode
+    at parseTypeScript (node:internal/modules/typescript:68:40)
+```
+
+It looked like a live repo-wide regression — the offending line had been committed 40 minutes earlier
+(`02db159aee`, 03:53) — and it would have blocked every dev app. **It is not a regression.** The giveaway is in
+the stack: every frame is `node:internal/modules/…`. `bunx vite` resolved Vite's Node shebang and ran it under
+**Node**, whose strip-only TS loader rejects parameter properties. The dev script does not do that — it runs
+`bun <path>/node_modules/.bin/vite` (visible in any live dev server's argv), and **bun** supports parameter
+properties, so the config loads normally.
+
+Confirmation that this is about the loader and not the code: after fixing the first site, the very next failure
+was a *different, long-standing* file (`📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts:28`), and the
+repo contains **40** such parameter-property sites across `🧰️framework` and `✏️s`. A genuine regression would not
+require rewriting forty pre-existing sites that have worked all along.
+
+**How to start the dev server's Vite directly** (skips the slow pre-Vite phase; the registry it regenerates has
+usually already been written):
+```
+cd 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript
+S_OS_PORT=6022 SEMIO_PLUGIN=process3d SEMIO_RENDERER=react VITE_SEMIO_RENDERER=react \
+VITE_SEMIO_PLUGIN=process VITE_SEMIO_APP_ID='s.process.process3d@1/*#editor' \
+bun <repo>/node_modules/.bin/vite --configLoader bundle --config ⚙️vite.config.ts \
+  --host 127.0.0.1 --port 6022 --strictPort
+```
+`bun …/node_modules/.bin/vite`, **never** `bunx vite` — the latter silently changes runtime and fabricates
+TypeScript syntax errors in files that are fine.
+
+### ⚠️ Side effect: the exploratory edit was auto-committed before it could be undone
+Diagnosing the above, one parameter property was rewritten to an explicit field. On reverting it, `git diff`
+showed the working tree now *differed from HEAD* — the repo's auto-commit had already committed the edit. The
+working tree was restored to match HEAD rather than left reverting a committed change, so
+`🧰️framework/📦️packages/🟦️typescript/🟦️.ts:797-798` now carries:
+```ts
+readonly url: string;
+constructor(url: string) { this.url = url; opened.push(url); }
+```
+in place of `constructor(private readonly url: string)`. It is semantics-identical, test-only
+(inside `if (import.meta.vitest)`), and incidentally makes that file loadable under Node's strip-only loader —
+but it was introduced on a **wrong diagnosis** and nothing in this ticket required it. **Lesson: in this repo an
+experimental edit can be committed within minutes, so there is no such thing as a throwaway probe edit.**
+
+## 🚀️ The dev server was I/O-throttled, not merely starved — and that is fixable
+Vite finally reported `ready in 782561 ms` (13 minutes) on :6022. The cause was not only peer contention:
+the process was running under macOS **background task policy**, which adds a nice penalty *and* throttles disk
+I/O hard. Symptoms that fit "the box is busy" but actually mean "this process is throttled":
+
+```
+41945  nice 5  STAT RN   0:30 CPU over 11:00 elapsed
+42155  esbuild child pinned at 0.0% CPU          ← the tell
+```
+
+`taskpolicy -B -p 41945` + the same for its `esbuild` child took that child from **0.0% → 55.9% CPU** at once.
+Two subtleties: a plain `(sleep &)` from the same shell shows nice 0 and `ps -o nice -p $$` reports the shell at
+0, so nothing upstream looks wrong; and the `nice 5` does **not** clear after `taskpolicy -B` — lifting the I/O
+throttle is the part that matters, so judge it by the child's %CPU, not the nice column. Re-apply after any
+restart, since new children start throttled again.
+
+This is worth trying before concluding "the machine is too contended to proceed" — it likely also applies to the
+`cargo`/`rustc` builds this ticket has been queuing behind.
+
+### ❌️ Correction: do NOT use the bare-Vite recipe above to verify the app
+The "start the dev server's Vite directly" recipe recorded earlier **boots a shell with no plugins in it**. It
+binds, serves HTTP 200 and mounts the React shell, but the page reads `No plugins loaded` / `Agent disconnected`,
+and the console shows every module 404-ing into the SPA fallback:
+
+```
+plugin.descriptor-invalid: /🔌️plugin-modules/🗄️stdio/🔣️.json returned HTML
+plugin.descriptor-invalid: /🧩️extension-modules/🪓️process-extension-wood/🔣️.json returned HTML
+Failed to load module script: … non-JavaScript MIME type of "text/html"
+[DEBUG] shard 0 worker error … shard 0 terminated
+Framework OS boot failed: Error: shard 0 terminated
+```
+
+`returned HTML` is the diagnostic signature: Vite fell through to `index.html` because the
+`/🔌️plugin-modules/…` and `/🧩️extension-modules/…` static routes were never mounted. The dev script does setup
+beyond spawning Vite that those routes depend on, so bypassing it trades a slow boot for a **silently empty
+one** — and an empty shell is exactly the failure mode this ticket is trying to distinguish from a real plugin
+fault. Use `bun ./📜️script.ts dev process 3d` (with `SKIP_PLUGIN_BUILD=1 SKIP_ENGINE_BUILD=1` when the core is
+being built separately) and make it fast with the unthrottle loop instead.
+
+**Generalisable tell:** any `plugin.descriptor-invalid … returned HTML` or `non-JavaScript MIME type of
+"text/html"` in this shell means a *static route is missing*, never that the descriptor or the plugin is
+malformed. Do not go debugging the descriptor.
+
+### ⚠️ RETRACTED: "0 E0277s, so the serde migration is clear" — that was a false clean
+The failed core build was read here as evidence that stdio's serde → `ToValue`/`FromValue` migration compiles,
+on the grounds that the log contained no trait-bound errors. **That inference is invalid.** The build died with
+
+```
+error: couldn't read `…/🗿️artifacts/🎞️pptx/🦀️.rs`: No such file or directory (os error 2)
+```
+
+which is a **module-resolution failure during macro/module expansion**. rustc aborts there *before type
+checking*, so not a single trait bound in stdio was ever evaluated. Every type-level error class — E0277
+included — reads zero **by construction**, not by health. The 7000+ clean lines were the framework crates, which
+did type-check; stdio contributed exactly two lines.
+
+**The discriminator (credit: semio-f4) — count the crate's WARNING lines:**
+
+```
+grep -E "^warning: \`semio-s-plugin-stdio\` \(lib\) generated" <log>
+```
+
+Measured on this log: stdio produced **0 warnings** and **no `generated N warnings` summary at all**, while every
+framework crate has one (`semio-framework-graph` 258, `semio-framework-plugin` 187, `semio-framework-os-kernel`
+40, …). A crate that type-checks in this workspace always emits warnings. **Zero warnings ⇒ it never
+type-checked ⇒ every clean type-level result from that run is meaningless.**
+
+So the honest position: a peer's 225-error census (1335 stdio warning lines, 160 E0277 mentions across 82
+headers) is currently the **only** measurement that carries information about stdio's trait bounds. Two other
+sessions, this one included, measured the rename race and never reached the migration. Those are measurements of
+*different things*, not different moments of the same thing — and the 225 has NOT been ruled out. It is the
+likeliest thing this ticket's build hits next, once mount drift stops aborting it early.
+
+Related: a peer established that `💠️lowpoly` declares `default-features = false` on stdio and adds nothing back,
+so it enables a strictly SMALLER stdio surface than process does. Feature-unification is therefore dead as an
+explanation for why lowpoly builds — lowpoly is not special, it simply got further.
+
+**Rule to carry forward: before calling any dependency green from a build log, confirm that crate emitted
+warnings. An abort during expansion looks identical to a clean type-check if you only count errors.**
+
+## 🔧️ Two stdio reference fixes applied here (unblocking the process core build)
+The core build is gated on `semio-s-plugin-stdio` compiling. Two stale references survived the rename sweep,
+were verified stable (the owning file untouched for 21 min while the applier worked elsewhere), and both had an
+unambiguous on-disk target, so they were repaired here rather than waited out:
+
+| file:line | was | now | evidence |
+| --- | --- | --- | --- |
+| `📇️registry/🦀️.rs:257` | `../🗿️artifacts/🧊️obj/🧬️schema/📜️artifact-definition.json` | `🗽️obj/…` | no `🧊️obj` dir exists; `🗽️obj/…/📜️artifact-definition.json` present (6271 B, 04:43) |
+| `📇️registry/🦀️.rs:923` | `native_codec_factory!(obj_codec, …, "../🗿️artifacts/🧊️obj/…/📡️.protocol.semio")` | `🗽️obj/…` | target dir present on disk |
+
+Same reassignment pattern as `🎞️pptx`→`📽️pptx`: `🧊️` now belongs to `🧊️gltf`, so obj moved to `🗽️obj`. The third
+error from that run (`🌱️metabolism/🖼️assets/🧪️base/🧊️.glb`) needed no fix — the applier had already corrected it
+to `🏙️base`, which is what the source now reads.
+
+### 🕳️ Scanning one reference class is not enough
+An earlier scan reported "0 unresolved `#[path]` mounts" and that was used to conclude stdio's references were
+clean. **It only covered one of at least three classes.** Broken references hide in:
+1. `#[path = "…"]` module mounts — 6425 of them
+2. `include_str!` / `include_bytes!` — 4298 of them
+3. **quoted path arguments to ordinary macros** — e.g. `native_codec_factory!(…, "…/📡️.protocol.semio")`,
+   which is neither of the above and is invisible to a scan for either
+
+Class 3 is what a regex over `include_*` misses, and it is exactly where the second fix lived. A useful superset
+for this repo is "every quoted relative path containing `🗿️artifacts/`" — 2396 in stdio — though that over-matches
+doc comments, so treat its hits as candidates and let `rustc` arbitrate.
+
+## 🩺️ Diagnosing a blank shell: probe the entry module, don't read the console
+The page mounted nothing — `readyState: "interactive"`, `#root` with 0 children, `document.body.innerText` empty
+— while the server answered `200` on `/` in 1.08 s. `performance.getEntriesByType('resource')` showed **116
+resources with 0 pending**, i.e. the module graph had stalled rather than being slow.
+
+The console was useless here: its buffer survives reloads, so it was full of `ERR_CONNECTION_REFUSED` and
+`descriptor-invalid` entries from earlier, dead servers. The decisive probe was to import the entry module by
+hand from the live page:
+
+```js
+await import('/🟦️.ts')
+// → "Failed to fetch dynamically imported module: http://127.0.0.1:6022/%F0%9F%9F%A6%EF%B8%8F.ts"
+```
+
+and then confirm against the server: `curl http://127.0.0.1:6022/🟦️.ts` → `code=000`. Vite had restarted
+(`📜️script.ts changed, restarting server...`) and was not serving modules, while still answering `/` from cache.
+**A `200` on `/` does not mean the dev server is up** — check the entry module.
+
+## ♻️ The real obstacle to live verification: restart churn
+`vite` restarts whenever a file in its config/watch graph changes, and a Codex-driven applier is rewriting this
+repo every few minutes (`🦑️repo/📚️library/🟦️.ts` at 4:33, `📜️script.ts` at 5:14). Each restart takes minutes on
+this box, so the window in which the app is actually serving can be shorter than the time the shell needs to
+boot ~20 WASM plugins. That, not any process defect, is what has prevented P4 from completing.
+
+## 🪤 Self-inflicted: killing a build wrapper orphans its cargo, and sccache then stalls it
+Killing the `bun ./📜️script.ts plugin process` wrapper does **not** kill the `cargo` it spawned. The cargo
+reparents to launchd and keeps running. Twenty minutes later this session had:
+
+```
+31418  ppid 1  cargo rustc -p semio-s-plugin-process   0.0% CPU, 19:33 elapsed
+49534  ppid 31418  sccache                              0.0% CPU,  9:13 elapsed
+```
+
+— an orphan of this session's own making, stalled with an idle `sccache` child. It was attributable as mine only
+via `lsof -p 31418 | awk '$4 ~ /^1w?$/ {print $NF}'` → this session's `core-build2.txt`. That check is what makes
+killing it safe; without it the process is indistinguishable from a peer's live build.
+
+Two rules combine here, and both were already known but not applied together:
+- **`kill <wrapper>` is not enough** — find and kill the cargo too, or the next build queues behind your own ghost.
+- **`sccache` serializes builds and an isolated `CARGO_TARGET_DIR` does not escape it.** A cargo at 0% CPU whose
+  only child is an idle `sccache` is stuck, not working. The remedy is `RUSTC_WRAPPER=""`.
+
+Note this is the one case where the "0% CPU + live child ⇒ working, leave it" rule gives the wrong answer:
+the child was `sccache`, not `rustc`. Refine the discriminator to **a live `rustc` child**; an idle `sccache`
+child means blocked.
+
+The rebuild therefore runs as:
+```
+DEVELOPER_DIR=/Library/Developer/CommandLineTools SDKROOT=… \
+SEMIO_BUILD_BUDGET_MS=5400000 RUSTC_WRAPPER="" \
+bun ./📜️script.ts plugin process
+```
+
+## 🎯️ The app's boot failure was captured — and it is NOT the 09-02 runtime fault
+With the dev server genuinely serving (entry module `200`, not just `/`), the shell loaded **250 resources** and
+reached `readyState: "complete"`, but `#root` stayed at 0 children. The reason, from the console:
+
+```
+Uncaught SyntaxError: The requested module '/@fs/…' does not provide an export named
+'parseDirectorySpaceAdministrationPageV1'
+```
+
+This is **a peer's in-flight refactor of `📇️directory`**, not a process defect and not
+`runtime live cleanup faulted`. It is the same module whose edits were restarting Vite
+(`📇️directory/🧬️schema/🟦️.ts` and `📇️directory/🟦️.ts` at 05:23 and 05:27).
+
+The symbol resolved itself while this was being diagnosed — it is now defined at
+`📇️directory/🧬️schema/🟦️.ts:817`, re-exported at `📇️directory/🟦️.ts:69`, and imported at
+`🛍️products/💻️os/🟦️.ts:4026`. So the boot failure was a **transient window** in which the importer had been
+updated but the exporter had not, exactly the same lagging-window shape as the emoji renames — reference
+strings updated on one side before the other.
+
+**Why this matters for the ticket's central question:** today's empty shell has a *demonstrated, different*
+cause from 09-02's. A missing ES export halts module evaluation before the plugin runtime ever starts, so today's
+failure says nothing about `RUNTIME_MAINTENANCE_FAULT` either way. It also means an observer who saw an empty
+app at that moment and attributed it to the plugin would have been wrong — the third instance tonight of a
+symptom whose obvious explanation was not the real one.
+
+## 🧭️ Practical: how to tell whether the dev server is really usable
+Three states must be distinguished, and only the third permits verification:
+
+| check | meaning |
+| --- | --- |
+| port `:6022` LISTEN | nothing — Vite holds the socket across restarts |
+| `curl /` → `200` | nothing — `index.html` is served while modules are not |
+| `curl '/🟦️.ts'` → `200` | the module graph is actually being served |
+
+Even the third is not sufficient: the shell needs several uninterrupted minutes after that to instantiate its
+WASM plugins, and a restart during that window blanks the tab. Wait for the entry module to answer `200` on
+**several consecutive checks** before spending a load.
+
+---
+
+# 📅️ 2026-09-05 (13:40) — ✅️ stdio is GREEN for process's feature set
+
+A native `cargo test -p semio-s-plugin-process --lib` (with `RUSTC_WRAPPER=""`) compiled the whole graph
+through stdio. The three-condition test, applied properly this time:
+
+| condition | result | meaning |
+| --- | --- | --- |
+| `couldn't read` count | **0** | every `#[path]` mount, `include_*` and macro-argument path resolves — through a real compile, not just a scanner |
+| stdio warning lines | **1334** | stdio genuinely **type-checked** (a crate that aborts during expansion emits none) |
+| `E0277` count | **0** | the serde → `ToValue`/`FromValue` migration compiles |
+| any `E0xxx` | **0** | no type errors at all |
+
+**The 1334 figure independently matches what a peer measured for `semio-s-plugin-puzzle`.** That is a stronger
+corroboration than a bare repeat: process and puzzle are different crates with different dependency sets, so an
+identical stdio warning count means both resolve the same stdio surface with the same features enabled.
+
+Two earlier positions are now settled:
+- The **serde migration was never the blocker** for process. The earlier "0 E0277s" reading was invalid (0 by
+  construction, since expansion aborted first) — but the conclusion it was reaching turns out to be right, now
+  for a valid reason. Getting the right answer earlier by bad reasoning would still have been wrong; this run is
+  what makes it knowable.
+- The **`🗽️obj` repairs made in this ticket hold under a real compile**, covering both the `#[path]` class and the
+  macro-argument class (`native_codec_factory!`) that no scan for mounts-or-includes would have caught.
+
+The 225-error census reported elsewhere stays scoped to `💠️lowpoly`, and the reading consistent with all three
+measurements is that lowpoly's `default-features = false` **disables** the features carrying those impls — i.e.
+it fails for having too FEW features, the opposite of a feature-unification story.

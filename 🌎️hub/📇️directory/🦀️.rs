@@ -1895,7 +1895,13 @@ impl DirectoryService {
         let mut clock = self.write.lock().await;
         match self.dir.claim_or_read_directory_command_receipt(&claim).await? {
             DirectoryCommandClaimV1::Conflict => return Ok(DirectoryCommandExecutionV1::Conflict),
-            DirectoryCommandClaimV1::Existing(record) => return Ok(DirectoryCommandExecutionV1::Receipt(replay_directory_command_receipt(&record))),
+            DirectoryCommandClaimV1::Existing(record) => {
+                let receipt = replay_directory_command_receipt(&record);
+                if record.receipt_sha256.as_deref().is_some_and(|digest| digest != receipt.receipt_sha256) {
+                    return Err(DirectoryError::Backend("durable command receipt digest does not match its canonical replay".into()));
+                }
+                return Ok(DirectoryCommandExecutionV1::Receipt(receipt));
+            }
             DirectoryCommandClaimV1::Claimed(_) => {}
         }
         let decision = match decide(self.dir.as_ref(), &actor, command, &mut clock).await {

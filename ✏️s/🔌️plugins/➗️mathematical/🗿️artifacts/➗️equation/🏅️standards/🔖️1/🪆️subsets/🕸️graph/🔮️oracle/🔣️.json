@@ -57,8 +57,8 @@
       "vectors": [
         {
           "mutationId": "change-graph-directed",
-          "sourceMutationDirectoryName": "🔀️change-graph-directed",
-          "mutationDirectoryName": "🔀️change-graph-directed",
+          "sourceMutationDirectoryName": "🧭️change-graph-directed",
+          "mutationDirectoryName": "🧭️change-graph-directed",
           "scenarios": [
             {
               "id": "keeps-an-already-directed-graph-directed",
@@ -90,8 +90,8 @@
         },
         {
           "mutationId": "create-node",
-          "sourceMutationDirectoryName": "🟢️create-node",
-          "mutationDirectoryName": "🟢️create-node",
+          "sourceMutationDirectoryName": "➕️create-node",
+          "mutationDirectoryName": "➕️create-node",
           "scenarios": [
             {
               "id": "rejects-a-duplicate-node-id",
@@ -678,14 +678,14 @@
       "files": [
         {
           "role": "before-csv",
-          "path": "../🧫️fixtures/🟢️create-node-adds-a-row/⬅️before.csv",
+          "path": "../🧫️fixtures/➕️create-node-adds-a-row/⬅️before.csv",
           "mediaType": "text/csv",
           "sha256": "sha256:2dc491642a0b6caf767d5b7a0c3ac6ff537a19099db64c536758c2f270f3b6f4",
           "bytes": 26
         },
         {
           "role": "after-csv",
-          "path": "../🧫️fixtures/🟢️create-node-adds-a-row/➡️after.csv",
+          "path": "../🧫️fixtures/➕️create-node-adds-a-row/➡️after.csv",
           "mediaType": "text/csv",
           "sha256": "sha256:2667502c5635c23092f45069b679f38a024a8c3968b6519009bbe6fce03d9a5b",
           "bytes": 41

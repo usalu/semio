@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section",
   "semanticKind": "delete-section",
   "displayName": "Delete Section",
-  "emoji": "🗑📐️",
+  "emoji": "✂️",
   "aggregateVariant": "DeleteSection",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-section",

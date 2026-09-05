@@ -363,3 +363,105 @@ or my own new code. Verify the rebuilt core first, then apply this on a known-go
 **Not ours, worth telling the owners.** The identical stale "no `InteractionView`" comment appears in 50+ places
 across `📸️remodel`, `📐️cad`, `🌍️gis`, `🕸️dag`, `🎥️shooting`, `🪐️space`, `🧩️puzzle`, `🖍️draw` and others. Each is a
 plugin whose viewport may have the same one-way selection.
+
+### Correction on the selection gap — which channel is actually empty
+`🪚️workpiece::render` **does** populate `MeshView::selection_json`, via
+`process3d_selection_json(config.active_utility())`. That field is not the object-highlight channel: it carries
+the marquee/selection **tool** (which utility is active — select/cut/drill/attach), the same slot `📸️remodel`
+fills with `world3d_selection_json("rectangle", &[], None)`.
+
+Object highlight travels on a different channel — the per-instance `"selected"` / `"hovered"` booleans inside
+`instances_json` — and those are the hardcoded `Bool(false)` at `🪚️workpiece/🦀️.rs:104-105`. So the gap is real
+but narrower than "the window gets no selection at all": the window is handed the active tool and never the
+selected ids, because `process3d_render_body:1319` does not forward `selected_ids` to it.
+
+That also means the fix does not need a new framework channel — `MeshView` already carries everything required;
+only `instances_json` has to be built against the live selection, with the preview-cache key extended to match.
+
+---
+
+# 📅️ 2026-09-05 — checkpoint: what is settled, what is not
+
+## ✅️ Settled by re-verification against today's tree
+| Wave | Verdict | Evidence |
+| --- | --- | --- |
+| P0 crate compiles | holds | `cargo check -p semio-s-plugin-process --target wasm32-wasip2` → 0 errors |
+| P1 fixtures | holds | decoded fixture: stock box **3.0 × 0.2 × 0.3** "Timber Beam", `resolvedUpTo=null`, **4 enabled steps** (crosscut / lap-joint-cut / dowel-drill / dowel-attach) |
+| P2 seven step verbs | holds | each clones `step_payloads`, edits, returns `process3d_step_timeline_diff`; `UNOBSERVABLE` is now `&[]`; `"pending a link resolver"` has 0 occurrences |
+| P3 inspection panel | holds | `render_with_request_context` override at `✏️editor/🦀️.rs:1644` threads live `"geometry"` selection |
+| stdio gltf descriptor blocker | cleared by owner | fixed in `03100691d5` |
+
+## 🆕️ Found here, not previously known
+- **The 3D viewport can never show a selection.** `process3d_render_body:1319` calls `workpiece::render(doc, config)`
+  with no selection argument (only `:1323`, the inspection panel, receives `selected_ids`), and
+  `evaluated_preview_payload` hardcodes `"selected"`/`"hovered"` to `false`. `MeshView::selection_json` IS
+  populated but carries the active *tool*, not the selected ids. Fix shape is recorded above; **not applied**,
+  deliberately, so it cannot confound the stale-core experiment.
+- **Two stdio rename-drift bugs, fixed here** (`📇️registry/🦀️.rs:257` and `:923`, `🧊️obj`→`🗽️obj`). These were
+  blocking three sessions' builds, not just this one; semio-89 confirmed the fix unblocked their `sourcing` build.
+
+## ⛔️ Not done: P4 live verification
+The app has never been observed rendering a populated window in this session. Cause is environmental, and
+specific: a Codex-driven applier rewrites files inside Vite's watch graph every few minutes (**8 restarts**
+observed), each restart costs minutes on a box at load 90–170, and the shell needs several uninterrupted minutes
+to boot ~20 WASM plugins. The serving window has so far been shorter than the boot.
+
+**The honest state of the original question is therefore: still open.** Whether the empty windows of 09-02 were
+a stale core or a framework fault has NOT been settled, because no rebuilt core has yet been produced — the
+build has been blocked in turn by the emoji-rename race, an sccache stall, and lock contention with peers.
+
+### The one substantive thing to carry into the next session
+`🧑️‍💻dev`'s `%CPU` and a bound port are both unreliable signals here, and three separate wrong conclusions in this
+session came from trusting them:
+- a bound `:6022` with `curl /` returning `200` **while Vite was mid-restart and serving no modules** — check the
+  entry module (`/🟦️.ts`), never `/`;
+- a cargo at 0 % CPU that was working (live `rustc` child) vs one that was stuck (idle `sccache` child);
+- a build log with 0 type errors that had **never type-checked** (0 warnings ⇒ aborted during expansion).
+
+---
+
+# 📅️ 2026-09-05 (13:20) — the selection fix, designed properly
+
+Re-reading `🪚️workpiece/🦀️.rs` changed the shape of this fix, and the naive version would have been a
+performance regression.
+
+## ❌️ The naive fix is wrong
+The obvious change — thread `selected_ids` into `workpiece::render` and add the selection to
+`Process3dPreviewCache`'s freshness key — **would recompute the CSG replay on every selection change**.
+`build_preview_cache` calls `processed_mesh` (fresh kernel session, every enabled step replayed as a real CSG
+boolean, tessellation, face-group remap) *and* `processed_volume` (the same sequence again). Keying that memo on
+selection means clicking a step pays for the whole process twice, on a path already suspected of crossing the
+8 ms `INTERACTIVE_STEP_CEILING_US`. That would make the very fault this ticket is chasing *more* likely.
+
+## ✅️ The right split
+Selection affects only one boolean in a small JSON object; it does not affect geometry at all.
+`evaluated_preview_payload` currently returns `(meshes_json, instances_json)` and both go in the memo, which is
+what couples them. Split them by cost:
+
+| value | cost | where it belongs |
+| --- | --- | --- |
+| `meshes_json` | CSG replay + tessellation | **stays memoized**, keyed on `scene`/`resolved_up_to`/`label` as today |
+| `instances_json` | one small object: position, rotation, scale, label, `selected`, `hovered` | **built per render**, outside the memo |
+| `volume` | second CSG replay | stays memoized |
+
+Concretely:
+1. `evaluated_preview_payload` → `evaluated_meshes_json(scene, resolved_up_to) -> String` (memoized) plus a free
+   function `instances_json(fixture, selected: bool) -> String` (cheap, per-render).
+2. `Process3dPreviewCache.payload: (String, String)` → `meshes: String`.
+3. `pub fn render(fixture, config)` → `render(fixture, config, selected_ids: &[String])`, computing
+   `let selected = selected_ids.iter().any(|id| id == &fixture.stock_id);`
+4. `process3d_render_body` (`✏️editor/🦀️.rs:1319`) passes `selected_ids` to the `PROCESS_3D_PLAY_BODY_MAIN` arm,
+   exactly as `:1323` already does for the inspection panel.
+
+`hovered` stays `false`: there is no hover source at this boundary, and inventing one is out of scope. The stale
+doc comment at `🪚️workpiece/🦀️.rs:65-67` gets corrected at the same time.
+
+**Test to add first (this is the TDD order):** a case asserting that with `selected_ids = [stock_id]` the
+rendered instances JSON contains `"selected":true`, and with `[]` it contains `"selected":false` — and, to pin
+the performance property that motivated the split, that both calls share one memo entry (the mesh is not rebuilt).
+
+## Sequencing
+Not yet applied. A baseline `cargo test -p semio-s-plugin-process --lib` is queued behind the shared build lock;
+the fix lands after that returns, so a regression is attributable. The previously recorded baseline is
+**260 passed / 1 failed**, the single failure being `export_brep_out_returns_step_text_structured_payload`,
+which was blocked on stdio and should now pass given the `🗽️obj` repairs made here.

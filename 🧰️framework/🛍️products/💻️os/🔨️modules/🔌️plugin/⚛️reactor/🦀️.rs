@@ -2564,6 +2564,7 @@ mod wit_bridge {
             Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(wit_effects::ReleaseCapabilityEffect { id: id.0 }),
             Effect::Subscribe { topic } => wit::Effect::Subscribe(wit_effects::SubscribeEffect { topic }),
             Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(wit_effects::SubscribeEffect { topic }),
+            Effect::RequestInferenceProposal { kind } => wit::Effect::RequestInferenceProposal(wit_effects::RequestInferenceProposalEffect { kind: kernel_inference_proposal_kind_to_wit(kind) }),
         })
     }
 
@@ -2574,6 +2575,13 @@ mod wit_bridge {
             MessageEndpoint::PluginInstance { id } => wit_types::MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
             MessageEndpoint::Extension { id } => wit_types::MessageEndpoint::Extension(id),
             MessageEndpoint::Topic { name } => wit_types::MessageEndpoint::Topic(name),
+        }
+    }
+
+    /// 💡️ kernel `InferenceProposalKind` → WIT — one closed intent, no transport detail.
+    fn kernel_inference_proposal_kind_to_wit(kind: semio_framework::kernel::InferenceProposalKind) -> wit_effects::InferenceProposalKind {
+        match kind {
+            semio_framework::kernel::InferenceProposalKind::GisMapBoundsRegion => wit_effects::InferenceProposalKind::GisMapBoundsRegion,
         }
     }
 

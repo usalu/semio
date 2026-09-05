@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material",
   "semanticKind": "create-material",
   "displayName": "Create Material",
-  "emoji": "🌱🧱️",
+  "emoji": "🌱️",
   "aggregateVariant": "CreateMaterial",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-material",

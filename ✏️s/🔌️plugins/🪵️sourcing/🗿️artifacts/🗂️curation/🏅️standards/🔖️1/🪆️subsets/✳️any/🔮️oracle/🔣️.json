@@ -64,7 +64,7 @@
           "scenarios": [
             {
               "id": "raises-the-glulam-beam-count-to-20",
-              "directoryName": "🧪️raises-the-glulam-beam-count-to-20"
+              "directoryName": "🔢️raises-the-glulam-beam-count-to-20"
             }
           ]
         },
@@ -75,7 +75,7 @@
           "scenarios": [
             {
               "id": "appends-a-steel-plate-to-the-curation",
-              "directoryName": "🧪️appends-a-steel-plate-to-the-curation"
+              "directoryName": "🧲️appends-a-steel-plate-to-the-curation"
             }
           ]
         },
@@ -86,7 +86,7 @@
           "scenarios": [
             {
               "id": "removes-the-clt-panel-from-the-curation",
-              "directoryName": "🧪️removes-the-clt-panel-from-the-curation"
+              "directoryName": "🚫️removes-the-clt-panel-from-the-curation"
             }
           ]
         }

@@ -7425,21 +7425,24 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         self.storage.clone()
     }
 
-    /// 🧵️ Admits the exact compaction identities before mounting its generation-qualified I/O job.
-    pub fn compact_document_retained(&self, document: ArtifactId, holder: db_storage::DbIoText, consolidate_snapshots: bool, now_ms: u64) -> Result<db_compact::DatabaseCompactionFuture, db_compact::DatabaseCompactionRejected> {
-        db_compact::DatabaseCompactionFuture::try_submit(self.pool.clone(), self.storage.clone(), document, holder, consolidate_snapshots, db_compact::CompactionBudget::default(), now_ms)
+    /// 🧵️ Queues compaction on the document actor that already owns its WAL writer.
+    pub async fn compact_document_retained(
+        &self,
+        document: &protocol::ArtifactId,
+        holder: db_storage::DbIoText,
+        consolidate_snapshots: bool,
+        now_ms: u64,
+        cancelled: Arc<std::sync::atomic::AtomicBool>,
+    ) -> Result<db_actor::AskFuture<db_artifact::ArtifactMessage, Result<db_compact::CompactionReport, DbError>>, DbError> {
+        Ok(self.document(document).await?.compact_retained(holder, consolidate_snapshots, db_compact::CompactionBudget::default(), now_ms, cancelled))
     }
 
     /// 🧹️ Mounts one retained compaction authority and awaits only its terminal witness.
     pub async fn compact_document(&self, document: &protocol::ArtifactId, holder: &str, consolidate_snapshots: bool) -> Result<db_compact::CompactionReport, DbError> {
         let holder = db_storage::DbIoText::try_from_str(holder)?;
-        let core_document = to_core_document_id(document).await;
         let requested_at_ms = now_ms().await;
-        let compaction = match self.compact_document_retained(core_document, holder, consolidate_snapshots, requested_at_ms) {
-            Ok(compaction) => compaction,
-            Err(rejected) => return Err(rejected.close_and_take_error()),
-        };
-        compaction.await?.close_and_take_report()
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        self.compact_document_retained(document, holder, consolidate_snapshots, requested_at_ms, cancelled).await?.await?
     }
 
     /// 👋️ Pre-admits the exact sync-hello owners before mounting shared-pool I/O work.
@@ -9045,6 +9048,23 @@ impl ArtifactHandle {
     /// grant advances either request-to-mailbox handoff or one actor-future poll.
     pub fn submit(&self, batch: db_artifact::CommandBatch, options: db_artifact::SubmitOptions) -> SubmitFuture {
         SubmitFuture::submit(self, batch, options)
+    }
+
+    /// 🧹 Queues one bounded compaction turn behind prior document commands.
+    pub fn compact_retained(
+        &self,
+        holder: db_storage::DbIoText,
+        consolidate_snapshots: bool,
+        budget: db_compact::CompactionBudget,
+        now_ms: u64,
+        cancelled: Arc<std::sync::atomic::AtomicBool>,
+    ) -> db_actor::AskFuture<db_artifact::ArtifactMessage, Result<db_compact::CompactionReport, DbError>> {
+        self.authority.compact_retained(holder, consolidate_snapshots, budget, now_ms, cancelled)
+    }
+
+    pub async fn compact(&self, holder: &str, consolidate_snapshots: bool, cancelled: Arc<std::sync::atomic::AtomicBool>) -> Result<db_compact::CompactionReport, DbError> {
+        let holder = db_storage::DbIoText::try_from_str(holder)?;
+        self.compact_retained(holder, consolidate_snapshots, db_compact::CompactionBudget::default(), now_ms().await, cancelled).await?
     }
 
     /// @emoji 🔎️ The frozen `query`. `Consistency::Canonical` reads the document's live state
@@ -11538,6 +11558,47 @@ mod tests {
 
         let report = database.compact_document(&document, "holder-1", false).await.unwrap();
         assert_eq!(report.wal_segments_deleted, 0, "nothing is below the (nonexistent) snapshot floor yet, but the pass itself must succeed");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn compact_document_uses_live_actor_writer_and_restores_submits() {
+        let root = tempdir("compact-live-writer").await;
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
+        let document = protocol::ArtifactId("compact-live-writer".to_string());
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+        let first = db_artifact::CommandBatch::new(vec![envelope("compact-before", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
+        db_actor::block_on(handle.submit(first, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..db_artifact::SubmitOptions::default() })).unwrap().unwrap();
+        let fill_ids = ["compact-fill-0", "compact-fill-1", "compact-fill-2", "compact-fill-3", "compact-fill-4", "compact-fill-5", "compact-fill-6", "compact-fill-7"];
+        for (index, mutation_id) in fill_ids.iter().enumerate() {
+            let dependency = if index == 0 { "compact-before" } else { fill_ids[index - 1] };
+            let value = format!("{index}:{}", "x".repeat(40_000));
+            let batch = db_artifact::CommandBatch::new(vec![envelope(mutation_id, &[dependency], "alice", &document, &[("x", serde_json::json!(value))]).await]).await.unwrap();
+            db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..db_artifact::SubmitOptions::default() })).unwrap().unwrap();
+        }
+        handle.authority.snapshot_now(100).await.unwrap();
+
+        let core_document = to_core_document_id(&document).await;
+        let storage = database.storage().await;
+        let mut before = storage.wal().await.list_segments(&core_document).await.unwrap();
+        assert!(before.len() >= 2, "bounded public submissions must leave a sealed predecessor and active successor");
+        let active = *before.last().unwrap();
+        while before.close_step() {}
+        assert!(before.terminal_is_empty());
+        assert!(matches!(storage.wal().await.acquire_writer(&core_document).await, Err(DbError::Conflict(_))), "the live actor must retain its original writer before compaction");
+        let report = database.compact_document(&document, "actor-holder", false).await.unwrap();
+        assert!(report.wal_segments_deleted >= 1);
+        let mut after = storage.wal().await.list_segments(&core_document).await.unwrap();
+        assert!(after.as_slice().contains(&active), "the actor WAL's authoritative active segment must survive compaction");
+        while after.close_step() {}
+        assert!(after.terminal_is_empty());
+        assert!(matches!(storage.wal().await.acquire_writer(&core_document).await, Err(DbError::Conflict(_))), "compaction must return the same retained writer to the actor");
+
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        assert!(matches!(handle.compact("cancelled-holder", false, cancelled).await, Err(DbError::Closed)));
+        let second = db_artifact::CommandBatch::new(vec![envelope("compact-after", &["compact-fill-7"], "alice", &document, &[("x", serde_json::json!(2))]).await]).await.unwrap();
+        let receipt = db_actor::block_on(handle.submit(second, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..db_artifact::SubmitOptions::default() })).unwrap().unwrap();
+        assert_eq!(receipt.frontier.head_seq, 10);
+        assert!(matches!(storage.wal().await.acquire_writer(&core_document).await, Err(DbError::Conflict(_))), "cancelled maintenance must restore the engine without releasing its writer");
     }
 
     #[semio_framework_async_macros::async_test]

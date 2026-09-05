@@ -9,6 +9,14 @@
     "default": ["{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs", "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*", "{projectRoot}/**/*"]
   },
   "targets": {
+    "presence-peer-codec-check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts presence-peer-codec-check --oracle-only", "forwardAllArgs": true }
+    },
+    "presence-peer-codec-native-check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts presence-peer-codec-check", "forwardAllArgs": true }
+    },
     "retained-record-observation-check": {
       "executor": "nx:run-commands",
       "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts retained-record-observation-check", "forwardAllArgs": true }

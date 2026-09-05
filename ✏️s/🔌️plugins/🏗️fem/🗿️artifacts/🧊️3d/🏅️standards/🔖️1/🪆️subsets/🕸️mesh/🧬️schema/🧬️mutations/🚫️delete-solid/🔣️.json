@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-solid",
   "semanticKind": "delete-solid",
   "displayName": "Delete Solid",
-  "emoji": "🗑🧊️",
+  "emoji": "🚫️",
   "aggregateVariant": "DeleteSolid",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-solid",

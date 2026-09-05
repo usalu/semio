@@ -366,7 +366,7 @@ impl store::ArtifactPack for SemioSnapshot {
 /// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `mutate-semio-any` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🌐️envelope` artifact) can still
-/// drive the same codec production does. Same shape and same rationale as `✳️flow`'s own bridge.
+/// drive the same codec production does. Same shape and same rationale as `🌊️flow`'s own bridge.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_envelope_dsl(text: &str) -> Result<SemioSnapshot, String> {
     <SemioSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())

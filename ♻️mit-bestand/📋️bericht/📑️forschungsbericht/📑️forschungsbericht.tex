@@ -1,0 +1,231 @@
+% !TEX program = tectonic
+% !TEX root = 📑️forschungsbericht.tex
+\documentclass[type=forschungsbericht]{zukunftbau}
+
+\usepackage{xurl}
+% LR-019: biblatex justifies bibliography entries; its \biburlsetup sets
+% \Urlmuskip=0mu plus 3mu, so every URL breakpoint stretches to fill the line
+% and URLs render with visible gaps ("www . baunetzwissen . de"). Reset the
+% muskip after biblatex's setup so URLs stay continuous (xurl still allows the
+% breaks, just without stretch).
+\usepackage{etoolbox}
+\appto\biburlsetup{\Urlmuskip=0mu\relax}
+\addbibresource{📚️references.bib}
+
+% LR-020: this is a digital deliverable; drop the print-signature padding so
+% the PDF ends right after the bibliography instead of on trailing blank pages.
+\SemioSignaturePadding{false}
+% Digital deliverable: no recto-forcing blank versos before appendix chapters.
+\SemioOpenAny{true}
+
+\title{Entwerfen mit Bestand}
+\subtitle{Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten}
+\antragstellendeinstitution{%
+  \AddressOrg{%
+    Leibniz Universität Hannover\\
+    Fakultät für Architektur und Landschaft\\
+    Institut für Entwerfen und Konstruieren\\
+    Abteilung Nachhaltige Gebäudesysteme%
+  }%
+  \AddressPeople{%
+    Institutsleitung: Prof. Dr.-Ing. Philipp Geyer\\
+    Projektleitung: Ueli Saluz\\
+    Weitere Bearbeitung: Nikolaus Möllenhof%
+  }%
+}
+\kooperationspartner{%
+  \AddressOrg{%
+    Universität der Künste Berlin\\
+    Fakultät für Architektur\\
+    Institut für Architektur und Städtebau\\
+    Konstruktives Entwerfen und Tragwerksplanung%
+  }%
+  \AddressPeople{%
+    Institutsleitung: Prof. Dr.-Ing. Christoph Gengnagel\\
+    Bearbeitung: Kinan Sarakbi%
+  }%
+}
+\aktenzeichen{10.08.18.7-25.06}
+\foerderzeitraum{03.11.2025-02.05.2027}
+% Anlage 8 macht eine DOI bzw. einen anderen Persistent Identifier zur Pflicht.
+% Platzhalter bis zur Vergabe — bewusst sichtbar, nicht leer.
+\doi{10.0000/zzz-doi-ausstehend}
+\footerauthors{Ueli Saluz, Kinan Sarakbi}
+\footerlogos{🖼️asset/🪧️logo/🎓️luh/☀️logo.png, 🖼️asset/🪧️logo/🎨️udk/☀️logo.png}
+% Deckblatt-Blurb, nicht der Abstract: das Beschreibungsfenster des Deckblatts
+% ist eine schmale Zeile im Fensterraster. Die vollständige Kurzbeschreibung und
+% der englische Abstract stehen dort, wo Anlage 8 sie verlangt — im gleichnamigen
+% Kapitel.
+\kurzfassung{%
+  Eine offene End-To-End-Plattform, die Bauteilkatalog, Entwurfsumgebung und Leistungsbewertung verbindet und den Entwurf mit wiederverwendeten Baukomponenten von der Datenaufnahme bis zur Vorbewertung durchgängig unterstützt.%
+}
+
+\ExplSyntaxOn
+% LR-2.16: runs under \ExplSyntaxOn where the space char is catcode 9 (ignored),
+% so plain spaces are eaten and the header renders "VerwendungimBericht". Use
+% explicit ~ space tokens so the words stay separated.
+\cs_set:Npn \semio_glossary_header_definition: { Verwendung~im~Bericht }
+\ExplSyntaxOff
+
+\GlossaryDefine{Baukomponente}{Physisches Bauteil oder zusammengehörige Gruppe von Bauteilen, die im Entwurf als eine Einheit betrachtet und wiederverwendet wird, etwa eine Stütze, eine Decke oder ein Rahmenelement.}
+\GlossaryDefine{Entwurfsrolle}{Funktion, die eine Baukomponente in einem neuen Entwurf übernehmen soll. Sie kann von der ursprünglichen Verwendung abweichen, etwa wenn ein Träger als Stütze eingesetzt wird.}
+\GlossaryDefine{Bestandsquelle}{Ort oder Kanal, aus dem wiederverwendbare Baukomponenten stammen, etwa eine Bauteilbörse, ein Rückbauinventar oder eine direkte Bestandsaufnahme vor Ort.}
+\GlossaryDefine{Bauteilbörse}{Organisation, Lager oder digitaler Angebotskanal, über den wiederverwendbare Baukomponenten dokumentiert, vermittelt oder verkauft werden.}
+\GlossaryDefine{Qualifizierung}{Schrittweise Erfassung, Prüfung und nachvollziehbare Ergänzung von Bauteilinformationen, bis sie für Entwurf und Bewertung nutzbar sind.}
+\GlossaryDefine{Typologiefamilie}{Ordnung von Baukomponenten nach ihrer geometrisch-konstruktiven Grundform: lineare und flächige Elemente, Knoten- und Übergangselemente sowie Rahmen- und Systemelemente.}
+\GlossaryDefine{Nachweiszustände}{Kennzeichnung, wie belastbar eine einzelne Angabe ist: vorhanden, abgeleitet, angenommen oder noch offen.}
+\GlossaryDefine{Leistungsbewertung}{Einschätzung ausgewählter Eigenschaften oder Auswirkungen einer Entwurfsvariante auf Grundlage der verfügbaren Informationen, etwa zu Energie oder Tragwerk.}
+\GlossaryDefine{Vorbewertung}{Frühe, vereinfachte Leistungsbewertung, die im Entwurf der Orientierung dient und keine vollständige fachliche Prüfung ersetzt.}
+\GlossaryDefine{Bauteilobjekt}{Digitales Modell einer Baukomponente, das Geometrie und zugehörige fachliche Angaben in einer gemeinsamen Struktur bündelt.}
+\GlossaryDefine{Generator}{Automatisches Verfahren, das aus erfassten Bauteilangaben ein digitales Bauteilobjekt mit den benötigten geometrischen Darstellungen erzeugt.}
+\GlossaryDefine{Einspeiseplattform}{Digitaler Eingangsbereich der Plattform aus Bauteilportal und Wizard, in dem Bestandsdaten erfasst, übernommen und aufbereitet werden.}
+\GlossaryDefine{Entwurfswerkzeug}{Digitaler Arbeitsbereich aus Bauteilkatalog, Entwurfsumgebung und Konfigurator zur Auswahl, Kombination und Bewertung von Baukomponenten.}
+\GlossaryDefine{Bauteilportal}{Weboberfläche zur manuellen Erfassung, Übernahme und Qualifizierung von Bestandsdaten als Grundlage für digitale Bauteilobjekte.}
+\GlossaryDefine{Wizard}{Benutzeroberfläche für einen geleiteten Abfrageprozess, mit der unvollständige oder unstrukturierte Bauteildaten Schritt für Schritt erfasst und ergänzt werden.}
+\GlossaryDefine{Bauteilkatalog}{Übersichts- und Suchbereich des Entwurfswerkzeugs, in dem verfügbare Baukomponenten und ihre Angaben gefunden und ausgewählt werden.}
+\GlossaryDefine{Entwurfsumgebung}{Arbeitsbereich des Entwurfswerkzeugs, in dem Baukomponenten räumlich angeordnet, kombiniert und zu Entwurfsvarianten weiterentwickelt werden.}
+\GlossaryDefine{Konfigurator}{Austauschbereich des Entwurfswerkzeugs für den Kontakt mit Bauteilbörsen, etwa für Anfragen, Reservierungen, Statusänderungen und projektspezifische Angaben.}
+\GlossaryDefine{semio}{Quelloffenes Software-Toolkit zur Beschreibung, Verknüpfung und räumlichen Anordnung digitaler Baukomponenten; technische Grundlage des Entwurfswerkzeugs.}
+\GlossaryDefine{Human-Interface-Design}{Gestaltung der Bedienoberflächen und Interaktionsabläufe zwischen Nutzenden und der digitalen Arbeitsumgebung.}
+\GlossaryDefine{User-Experience}{Wahrnehmung und Einbindung der digitalen Arbeitsumgebung in den tatsächlichen Arbeitsablauf der Nutzenden.}
+\GlossaryDefine{Entwurfsgrammatik}{Regelwerk des Projekts dafür, wie Entwurfsvarianten gebildet, verändert und auf Zulässigkeit geprüft werden.}
+\GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall, an dem die digitale Werkzeugkette schrittweise entwickelt und geprüft wird.}
+
+\AbbreviationDefine{AP}{Arbeitspaket}{Klar abgegrenzter Teilbereich des Projekts mit eigenen Zielen und Aufgaben.}
+\AbbreviationDefine{API}{Application Programming Interface}{Festgelegte Programmierschnittstelle, über die zwei Computerprogramme Daten austauschen.}
+\AbbreviationDefine{KI}{Künstliche Intelligenz}{Oberbegriff für Computerprogramme, die Aufgaben lösen, für die normalerweise menschliches Denken nötig ist.}
+\AbbreviationDefine{LLM}{Large-Language-Model}{Mit sehr großen Textmengen trainiertes Computerprogramm, das Texte verstehen, beantworten und formulieren kann.}
+\AbbreviationDefine{HID}{Human Interface Design}{Gestaltung, wie Menschen ein Computerprogramm bedienen und mit ihm interagieren.}
+\AbbreviationDefine{REST}{Representational State Transfer}{Verbreitetes technisches Verfahren, mit dem Computerprogramme über das Internet standardisiert Daten austauschen.}
+\AbbreviationDefine{NGS}{Nachhaltige Gebäudesysteme}{Am Projekt beteiligte Abteilung der Leibniz Universität Hannover.}
+\AbbreviationDefine{KET}{Konstruktives Entwerfen und Tragwerksplanung}{Am Projekt beteiligte Abteilung der Universität der Künste Berlin.}
+\AbbreviationDefine{BBSR}{Bundesinstitut für Bau-, Stadt- und Raumforschung}{Bundesbehörde, die dieses Forschungsvorhaben fördert.}
+
+% Reset bold to normal (scoped to this document): the table header cells get a
+% synthetic FakeBold via \SemioSansBold (defined in semio-window.sty). Redefine it
+% here — after the class/window.sty have loaded — to the plain Regular face so
+% header rows (Plattform, Land, …) render at normal weight without touching the
+% shared style files or any other report.
+\makeatletter
+\renewfontfamily\SemioSansBold{Anta-Regular.ttf}
+\makeatother
+
+% Keine Diagramm-Vokabel lebt im Dokument-Preamble: die Systemkarte
+% (Anlage SK) verwendet semio-viz.sty (VizFigure/VizSection/VizColumn,
+% \SemioVizLayout, \SemioVizText, \SemioVizScale), der Hürden-Baum (Anlage HW)
+% semio-tree.sty (\SemioTreeRoot/Group/Leaf). Beide von semio.cls geladen wie
+% semio-graph.sty.
+
+\begin{document}
+
+\makecoverpages
+
+\maketableofcontents
+
+% Anlage 8 verlangt den Förderhinweis im vorgeschriebenen Wortlaut, prominent
+% platziert, deutsch und englisch.
+\makefundingacknowledgement
+
+\makemainmatter
+
+% Gliederung wörtlich nach Anlage 8 „Berichtswesen", Version 2.3 vom 12.02.2025,
+% Abschnitt „Forschungsbericht". Jedes Kapitel trägt vorerst den BBSR-Auftrag
+% als Platzhalter; der Fließtext wird schrittweise befüllt.
+
+\chapter*{Kurzbeschreibung und Abstract}
+
+Entwerfen mit wiederverwendeten Baukomponenten ist ästhetisch, historisch und ökologisch reizvoll, aber entwurfstechnisch anspruchsvoll und komplex, da funktionale, konstruktive und qualitative Abhängigkeiten direkt beim Entwerfen berücksichtigt werden müssen.
+Die im Projekt entwickelte End-To-End-Plattform, welche gleichzeitig Katalog-, Entwurfs- und Leistungsbewertungs-Tool beinhaltet, ermöglicht es, in dieser Situation effektiv Lösungen zu entwickeln.
+Das Performance-Assessment hinsichtlich Energie und Tragwerk erlaubt frühe multidisziplinäre Optimierung.
+Mithilfe einer KI-Assistenz können auch große Bestandspools, in welchen es explosionsartig viele Kombinationsmöglichkeiten gibt, im Entwurfsprozess berücksichtigt werden.
+Die Assistenz schlägt für die jeweilige Entwurfssituation passende Baukomponenten und Verknüpfungen vor.
+Basierend auf einer semantischen Repräsentation der Baukomponenten und des komponentenbasierten Entwurfes wird die generative Stärke der vortrainierten Large-Language-Models direkt für den Entwurf genutzt.
+Über eine Framework-unabhängige Schnittstellendefinition wird es bestehenden Bauteilbörsen ermöglicht, ihre Baukomponenten nahtlos maschinenlesbar zu veröffentlichen, sodass die Integrierbarkeit in die Plattform gewährleistet ist.
+Das Schema dieser Schnittstellendefinition beinhaltet neben Fotos und den üblichen Metadaten wie Ort und Preis auch 3D-Modelle und Performance-Kennwerte wie das Treibhauspotential, welche direkt von den Tools verwendet werden.
+Ein Modellierungstool, welches moderne Bild-zu-3D-KI-Modelle benutzt, reduziert den Aufbereitungsaufwand der Bauteilbörsen.
+Durch die open-source Veröffentlichung der gesamten Plattform, deren Dokumentation und den Aufbau einer Community werden die Langlebigkeit und das Vertrauen gestärkt.
+Das Self-Hosting ermöglicht einerseits eine Breitenwirkung, wodurch der zukünftige Unterhalt und neue Featureentwicklung effizient geteilt wird.
+Andererseits bleibt die Datensouveränität gewährleistet.
+
+Englischer Abstract.
+
+\chapter{Einführung}
+\label{kapitel:einfuehrung}
+Das Themenfeld und den Untersuchungsgegenstand darstellen: Was wurde beforscht?
+
+\chapter{Problemstellung}
+\label{kapitel:problemstellung}
+Stand der Forschung und der Baupraxis, darauf aufbauend die Forschungslücke und den Entwicklungsbedarf aufzeigen: Warum wurde geforscht?
+
+\chapter{Zielstellung}
+\label{kapitel:zielstellung}
+Die konkreten Projektziele sowie die übergeordneten Ziele und den Beitrag des Projekts dazu benennen: Wofür wurde geforscht?
+
+\chapter{Forschungsdesign}
+\label{kapitel:forschungsdesign}
+Arbeitshypothesen, methodischen Ansatz, Projektteam, Projektorganisation und Kooperationspartner sowie Arbeitsschritte und Meilensteine beschreiben: Wie wurde geforscht?
+
+\makeworkpackages{%
+  \SemioTableTwo{%
+    \SemioTableHeaderRow{Arbeitspaket & Federführung}
+    \SemioTableRow{AP-Erfahrung & UdK Berlin \SemioSlash{} KET}
+    \SemioTableRow{AP-Plattform & Leibniz Universität Hannover \SemioSlash{} NGS}
+    \SemioTableRow{AP-Tool & Leibniz Universität Hannover \SemioSlash{} NGS}
+    \SemioTableRow{AP-Validierung & UdK Berlin \SemioSlash{} KET}
+  }%
+}
+
+\chapter{Projektverlauf}
+\label{kapitel:projektverlauf}
+Hauptteil des Berichts als Beweisführung: durchgeführte Arbeiten und Erkenntnisse einschließlich Zwischenergebnissen und Meilensteinen darstellen, Änderungen gegenüber dem ursprünglichen Antrag beschreiben und begründen.
+
+\chapter{Ergebnisse}
+\label{kapitel:ergebnisse}
+Zwischenergebnisse zum Endergebnis zusammenführen und durch Bewertung, Diskussion und Zielerreichung in den wissenschaftlichen Kontext einordnen; bekannt gewordene Ergebnisse Dritter einbeziehen.
+
+\chapter{Verwertung der erzielten Ergebnisse}
+\label{kapitel:verwertung}
+Überblick über die Transferaktivitäten geben und den konkreten baupraktischen Anschluss des Outputs aufzeigen.
+
+\chapter{Schlussworte}
+\label{kapitel:schlussworte}
+Fazit und Ausblick.
+
+\makeappendices
+
+% \SemioCellList — shared bullet-list cell formatter for the appendix tables.
+% Duplicated from zwischenbericht.tex (not shared via a macro package): the
+% Zwischenbericht still needs its own copy for Bauteilbörsen and Typologie,
+% which stay there. \SemioCellListInline is not duplicated — zero uses
+% repo-wide.
+\ExplSyntaxOn
+\ProvideDocumentCommand \SemioCellList { O{;} m }
+  {
+    \seq_set_split:Nnn \l_tmpa_seq {#1} {#2}
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \int_incr:N \l_tmpa_int
+        \int_compare:nNnT \l_tmpa_int > 1 { \par \noindent }
+        \hangindent=0.8em \hangafter=1
+        \textcolor{semio-chrome-border-normal}{\textendash}~%
+        \tl_trim_spaces:n {##1}%
+      }
+  }
+\ExplSyntaxOff
+
+\appendixinput[P]{Projekte}{📎️anhang/🏗️projekte}
+\SemioNavShort{Eingangsmodell}% LR-navshort
+\appendixinput[EM]{Eingangsmodell für Vorbemessung und Ökobilanz}{../📎️anhang/📥️eingangsmodell}
+\appendixinput[SK]{Systemkarte Skalierung der Wiederverwendung}{../📎️anhang/📈️skalierung}
+\appendixinput[NM]{Nachweismatrix dokumentierter Plattformfunktionen}{../📎️anhang/🧾️nachweismatrix}
+\appendixinput[IR]{Integrationsreife der Wiederverwendungsplattformen}{../📎️anhang/🔗️integrationsreife}
+\appendixinput[AN]{Akteursnetz der Bauteil-Wiederverwendung in Europa}{../📎️anhang/👥️akteursnetz}
+
+\appendixchapter[V]{Verzeichnisse}
+\listofappendices
+\listofglossaries
+\listofabbreviations
+\SemioReferences
+
+\end{document}

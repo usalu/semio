@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "appends-an-aluminium-alloy",
-              "directoryName": "🧪️appends-an-aluminium-alloy"
+              "directoryName": "🪙️appends-an-aluminium-alloy"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "removes-the-unreferenced-aluminium-alloy",
-              "directoryName": "🧪️removes-the-unreferenced-aluminium-alloy"
+              "directoryName": "🚫️removes-the-unreferenced-aluminium-alloy"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "softens-the-steel-shear-modulus-in-place",
-              "directoryName": "🧪️softens-the-steel-shear-modulus-in-place"
+              "directoryName": "📉️softens-the-steel-shear-modulus-in-place"
             }
           ]
         }

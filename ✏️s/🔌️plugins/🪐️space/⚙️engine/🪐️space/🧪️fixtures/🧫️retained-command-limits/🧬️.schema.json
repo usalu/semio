@@ -214,11 +214,102 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "spawnApp"
+            },
+            "lanes": {
+              "const": [
+                "artifact",
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "openSpace"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "openInstance"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "importSpacePackPayload"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "setAppRegistrations"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       ],
       "items": false,
-      "minItems": 10,
-      "maxItems": 10
+      "minItems": 15,
+      "maxItems": 15
     },
     "routes": {
       "type": "array",
@@ -293,16 +384,16 @@
               "const": 40
             },
             "bounded": {
-              "const": 10
+              "const": 15
             },
             "migrated": {
-              "const": 10
+              "const": 15
             },
             "unique": {
               "const": true
             },
             "batch": {
-              "const": 30
+              "const": 25
             }
           },
           "additionalProperties": false

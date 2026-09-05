@@ -1,0 +1,19 @@
+{
+  "schema": "semio.vcs.native-codec-receipts/v1",
+  "pluginId": "vcs",
+  "packageId": "semio:vcs",
+  "packageVersion": "0.1.0",
+  "receipts": [
+    {
+      "factoryId": "vcs.vcs.v1",
+      "kind": "s.vcs.vcs",
+      "schema": "vcs.vcs",
+      "extension": "vcs",
+      "capability": "s.vcs.vcs.codec.document",
+      "protocolPath": "🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocolBytes": 331,
+      "protocolSha256": "e16083d1e963d571b44c3cc4eac8d5d3992aeecf606cd4a4a6b1095c101605d3"
+    }
+  ],
+  "hostile": ["missing", "duplicate", "foreign-package", "wrong-version", "bare-kind", "legacy-schema", "legacy-kind", "wrong-extension", "zero-hash"]
+}

@@ -11,12 +11,12 @@ use crate::artifacts::block2d::schema::mutations::text::Block2dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block2dMutation` to its binary command form.
-pub async fn encode_op(operation: &Block2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &Block2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Block2dMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Block2dMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Block2dMutation, protocol::ProtocolError> {
     Block2dMutation::decode_op(bytes)
 }
 

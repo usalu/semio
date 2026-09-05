@@ -2320,7 +2320,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
-    use crate::artifacts::cad::standards::v1::subsets::any::io::{cad_document_from_dwg, cad_working_scene_from_dwg, scene_from_spatial_payload};
+    use crate::artifacts::cad::standards::v1::subsets::any::io::scene_from_spatial_payload;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
         align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
         CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
@@ -2635,34 +2635,7 @@ mod tests {
         assert!(scene.building_objects.iter().all(|object| object.solid_handle.is_some()));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
-        let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
-        let outline = drawing.ensure_layer("outline");
-        let empty_layer = drawing.ensure_layer("empty");
-        let _ = empty_layer;
-        drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
-            layer: outline,
-            color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
-            geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
-        });
-        let working = cad_working_scene_from_dwg(&drawing);
-        assert_eq!(working.objects.len(), 1, "the empty layer must not contribute an object");
-        assert_eq!(working.objects[0].label, "outline");
-        let value = cad_document_from_dwg(&drawing).expect("cad document from dwg");
-        let scene: CadSnapshot = protocol::FromValue::from_value(value).expect("valid cad scene");
-        assert!(scene.shape_model.is_some(), "a real per-layer object must mint a shape-model child");
-    }
 
-    #[semio_framework_async_macros::async_test]
-    async fn cad_document_from_empty_dwg_mints_no_shape_model_child() {
-        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
-        let working = cad_working_scene_from_dwg(&drawing);
-        assert!(working.objects.is_empty());
-        let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
-        let scene: CadSnapshot = protocol::FromValue::from_value(value).expect("valid cad scene");
-        assert!(scene.shape_model.is_none(), "no layers means no real geometry to mint a child from");
-    }
 
     #[semio_framework_async_macros::async_test]
     async fn quad_panes_each_populate_distinct_objects() {

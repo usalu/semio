@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/directory/invite-capability-transfer.v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "capacity", "states", "transitions", "duplicateResult", "labels"],
+  "properties": {
+    "schema": { "const": "semio.directory.invite-capability-transfer.v1" },
+    "capacity": { "const": 1 },
+    "states": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "prefixItems": [
+        { "const": "available" },
+        { "const": "copying" },
+        { "const": "failed" },
+        { "const": "copied" },
+        { "const": "closed" }
+      ],
+      "items": false
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/$defs/transition" }
+    },
+    "duplicateResult": { "const": "reject-without-disclosure" },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "$ref": "#/$defs/labels" },
+        "de": { "$ref": "#/$defs/labels" }
+      }
+    }
+  },
+  "$defs": {
+    "labels": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "string", "minLength": 1, "maxLength": 160 }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "input", "to", "discloses", "erases"],
+      "properties": {
+        "from": { "enum": ["available", "copying", "failed"] },
+        "input": { "enum": ["request", "failed", "copied", "close"] },
+        "to": { "enum": ["copying", "failed", "copied", "closed"] },
+        "discloses": { "type": "boolean" },
+        "erases": { "type": "boolean" }
+      }
+    }
+  }
+}

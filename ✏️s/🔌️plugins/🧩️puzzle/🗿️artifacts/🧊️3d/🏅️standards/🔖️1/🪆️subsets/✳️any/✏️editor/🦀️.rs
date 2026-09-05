@@ -2530,8 +2530,8 @@ fn puzzle3d_action_uses_precompute(action: &str) -> bool {
 pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology", "setActiveExample", "setFillCount",
     "addTargetVolume",
-    "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
-    "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "toggleSun",
+    "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setFillCountStep", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
+    "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick", "toggleSun",
 ];
 const PUZZLE3D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.3d.fixture.tool-command.v1";
 
@@ -3977,14 +3977,20 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         let source = Self::source_len(command, interaction);
         let document = snapshot.typed();
         let scan = match Self::entity(command) {
-            "object" => document.objects.len(),
-            "vortex" => document.objects.len().checked_mul(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS)?,
-            "attraction" => document.attractions.len().checked_mul(2)?,
-            "reference" => document.references.len(),
-            "targetVolume" => document.target_volumes.len(),
+            "object" => document.objects.len().checked_add(1)?,
+            "vortex" => {
+                let mut vortices = 0usize;
+                for object in &document.objects {
+                    vortices = vortices.checked_add(object.vortices.len())?;
+                }
+                document.objects.len().checked_add(1)?.checked_add(vortices)?
+            }
+            "attraction" => document.attractions.len().checked_mul(2)?.checked_add(1)?,
+            "reference" => document.references.len().checked_add(1)?,
+            "targetVolume" => document.target_volumes.len().checked_add(1)?,
             _ => 0,
         };
-        let items = source.checked_add(scan)?;
+        let items = source.checked_add(scan)?.checked_add(1)?;
         (source <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -4224,8 +4230,15 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
 
     fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
         let document = snapshot.typed();
-        let object_vortices = document.objects.len().checked_mul(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT)?;
-        let items = document.objects.len().checked_mul(2)?.checked_add(object_vortices)?.checked_add(document.attractions.len())?;
+        let mut object_vortices = 0usize;
+        for object in &document.objects {
+            object_vortices = object_vortices.checked_add(object.vortices.len())?;
+        }
+        let object_stage = document.objects.len().checked_add(1)?;
+        let existing_attraction_stage = document.attractions.len().checked_add(1)?;
+        let candidate_dispatch_stage = document.objects.len().checked_add(1)?;
+        let candidate_scan_stage = object_vortices.checked_mul(2)?.checked_add(document.objects.len())?;
+        let items = object_stage.checked_add(existing_attraction_stage)?.checked_add(candidate_dispatch_stage)?.checked_add(candidate_scan_stage)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -4495,8 +4508,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
 
     fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
         let document = snapshot.typed();
-        let endpoint_scans = document.objects.len().checked_mul(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT)?.checked_mul(2)?;
-        let items = document.attractions.len().checked_add(endpoint_scans)?.checked_add(document.meta.kind_compatibility.len())?.checked_add(1)?;
+        let mut object_vortices = 0usize;
+        for object in &document.objects {
+            object_vortices = object_vortices.checked_add(object.vortices.len())?;
+        }
+        let endpoint_scan_stage = object_vortices.checked_add(document.objects.len())?.checked_add(1)?;
+        let items = document.attractions.len().checked_add(1)?.checked_add(endpoint_scan_stage)?.checked_add(endpoint_scan_stage)?.checked_add(document.meta.kind_compatibility.len())?.checked_add(2)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -5706,13 +5723,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
 
     fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
         let document = snapshot.typed();
-        let catalogs = document.meta.kind_catalogs.as_ref()?;
-        let target_scans = document.objects.len().checked_mul(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT)?;
-        let items = target_scans
-            .checked_add(catalogs.objects.len())?
-            .checked_add(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT.checked_mul(2)?)?
-            .checked_add(document.attractions.len())?
-            .checked_add(4)?;
+        document.meta.kind_catalogs.as_ref()?;
+        let mut object_vortices = 0usize;
+        for object in &document.objects {
+            object_vortices = object_vortices.checked_add(object.vortices.len())?;
+        }
+        let target_scan_stage = object_vortices.checked_add(document.objects.len())?.checked_add(1)?;
+        let kind_scan_stage = PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT.checked_mul(2)?.checked_add(2)?;
+        let items = target_scan_stage.checked_add(1)?.checked_add(kind_scan_stage)?.checked_add(document.attractions.len())?.checked_add(1)?.checked_add(3)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
@@ -6126,26 +6144,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                         });
                         emit.ui_scope = puzzle3d_fill_build_scope();
                     }
-                    // 🪣️ 26/09/02/PUZZLE-3D-END-TO-END wave S: these three used to set ONLY `ui_scope`,
-                    // discarding the real effect (`fillBuildTick`'s isolated `SpawnJob` + advanced
-                    // `fill_checkpoint`, `registerBrushMesh`'s real-GLB `engine.register_mesh`,
-                    // `suggestionsTick`'s brush-lane advance) that the legacy `handle_action_impl` path
-                    // actually produces for the SAME `(command, snapshot, config)` triple. Delegating to
-                    // `puzzle3d_retained_reduce` — the exact reducer `BoundedFirstStepCommandWork` already
-                    // uses for the 11 generic-fallback ids — reproduces that real `Emit` verbatim instead
-                    // of re-deriving it by hand: it special-cases `fillBuildTick` via
-                    // `fill_build_tick_cached` (falling back to a full resync `handle_action_impl` call
-                    // when the checkpoint fails to restore) and otherwise calls
-                    // `app.handle_action_impl(...)` directly, byte-for-byte what `ArtifactEditor::handle`
-                    // itself executes for `suggestionsTick`/`registerBrushMesh`.
                     "fillBuildTick" | "suggestionsTick" | "registerBrushMesh" => {
                         emit = puzzle3d_retained_reduce(command, snapshot, config, interaction, hover)?;
                     }
-                    // 🪣️ `setFillCountStep` has no dedicated arm in `build_tool_job` yet (see
-                    // `📓️wave-S-report.md`) — reproduces the exact fallback `handle()` runs today
-                    // (`✏️editor/🦀️.rs` `ArtifactEditor::handle`'s `matches!(…, "setFillCount" |
-                    // set_fill_count::STEP_ACTION_ID)` branch): restore the checkpoint, and only when
-                    // that fails, rebuild the full precompute scene from the document before stepping.
                     set_fill_count::STEP_ACTION_ID => {
                         emit = with_puzzle3d_app_for(config, |app| {
                             let mut precompute = app.precompute.borrow_mut();
@@ -6257,6 +6258,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle3dRetainedCom
         ArtifactToolPublicationContract { tool_id: "patchInspector", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setFillCountStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setTargetVolumeFlag", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
@@ -6267,10 +6269,13 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle3dRetainedCom
         ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "engagementControlSelect", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "fillBuildTick", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "hoverSuggestion", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "openVortexSuggestions", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "registerBrushMesh", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "relocateTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "selectSameKindSelection", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setBrushPlacementOverlapBudget", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -6295,6 +6300,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle3dRetainedCom
         ArtifactToolPublicationContract { tool_id: "setVortexKindWeight", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setVortexShow", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setVoxelDims", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "suggestionsTick", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::Config] },
     ];
 }
@@ -6742,8 +6748,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         tools: [
             "openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology", "setActiveExample", "setFillCount",
             "addTargetVolume",
-            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
-            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "toggleSun",
+            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setFillCountStep", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
+            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick", "toggleSun",
         ]
     }
 
@@ -6778,7 +6784,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "fillBuildTick"
             | "registerBrushMesh"
             | "setFillCount"
-            | "suggestionsTick" => Box::new(Puzzle3dPrecomputeCommandWork::new(tool_id)),
+            | "suggestionsTick"
+            | set_fill_count::STEP_ACTION_ID => Box::new(Puzzle3dPrecomputeCommandWork::new(tool_id)),
             "focusSelection" => Box::new(Puzzle3dFocusSelectionWork::default()),
             "relocateTargetVolume" => Box::new(Puzzle3dRelocateVolumeWork::default()),
             "setCamera"
@@ -7361,15 +7368,15 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("fillBuildTick", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("fillBuildTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("hoverSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("openAddObjectDialog", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("openVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("patchInspector", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("registerBrushMesh", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("registerBrushMesh", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("relocateTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -7379,7 +7386,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setChunkSize", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setFillCount", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job(set_fill_count::STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job(set_fill_count::STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -7404,7 +7411,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setVortexKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setVortexShow", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setVoxelDims", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("suggestionsTick", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("suggestionsTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("transformBegin", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("transformEnd", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -8064,6 +8071,213 @@ mod tests {
         }
     }
 
+    /// 🧮️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2: `Puzzle3dWorldRelocateWork::extent` used to charge
+    /// every object a flat `PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT` (64) regardless of its real vortex
+    /// count, so Nakagin's 180 objects (358 real vortex instances) computed `objects * 66 + attractions`
+    /// = 11,880 and faulted preflight with "puzzle command exceeds fixed semantic work capacity" before
+    /// `step()` ever ran. The rewritten bound counts the document's actual vortices instead.
+    #[test]
+    fn world_relocate_extent_fits_within_cap_for_nakagin() {
+        use crate::retained_command::PuzzleCommandWork;
+        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+        let interaction = protocol::InteractionState::default();
+        let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
+        let work = Puzzle3dWorldRelocateWork::default();
+        let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+        assert!(extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "worldRelocate extent {extent} must not exceed the fixed cap {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
+    }
+
+    /// 🔁️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2 (coordinator follow-up): the extent test above only
+    /// proves the bound is REALISTIC (fits under the cap) — it says nothing about whether the bound is
+    /// SOUND (real `step()` calls never outrun it). This drives the actual `CandidateVortex ⇄
+    /// PublishAttraction` cycle (the genuine ping-pong at editor `🦀️.rs` `Puzzle3dWorldRelocateStage::
+    /// CandidateVortex`/`PublishAttraction`) against a real Nakagin joint: object
+    /// `25b0dba0-8f81-423a-94a1-b911a6031010` ("Capsule With Balcony Backslash") is "relocated" to its
+    /// own current origin — a real, non-degenerate command, not a synthetic no-op — and its one vortex
+    /// (`…:link`, kind "door capsule right") sits, by the fixture's own real assembled geometry
+    /// (independently recomputed here with the same `quat_rotate_vector` Hamilton-product formula
+    /// `step()` uses), within `proximity_radius` (0.75, `default_proximity_radius()`) of four
+    /// "door tambour right" vortices already on neighbour object `5f0266bc-…`. That forces the
+    /// `PublishAttraction` loop-back more than once, closing the gap a trivial early-exit run leaves
+    /// open, and empirically exercises the `candidate_scan_stage`'s `object_vortices * 2` term this
+    /// ticket introduced.
+    #[test]
+    fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
+        use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+        let config = Puzzle3dConfig::default();
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "25b0dba0-8f81-423a-94a1-b911a6031010", "position": [-8.85, -2.8499999999999996, 7.7] })), None).expect("worldRelocate command decodes");
+        let mut work = Puzzle3dWorldRelocateWork::default();
+        let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+        let guard = extent.saturating_mul(4).saturating_add(1000);
+        let mut iterations = 0usize;
+        let emit = loop {
+            assert!(iterations <= guard, "worldRelocate step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
+            match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+                PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
+                PuzzleCommandWorkStep::Complete(emit) => break emit,
+            }
+        };
+        assert!(iterations <= extent, "worldRelocate step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
+        assert!(iterations > 100, "worldRelocate's CandidateObject/CandidateVortex stages unconditionally walk every real object and vortex, so a real Nakagin run must take hundreds of steps, not a trivial early exit; observed only {iterations} iterations");
+        assert!(
+            emit.artifact_mutations.len() >= 2,
+            "the relocated vortex sits within proximity_radius of a real neighbour already present in the Nakagin fixture, so PublishAttraction must fire at least once beyond the move itself; observed {} mutations",
+            emit.artifact_mutations.len()
+        );
+    }
+
+    /// 🧮️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2: `Puzzle3dCreateAttractionWork::extent` doubled the
+    /// same flat per-object 64-vortex charge across two endpoint scans, computing `objects * 128 + ...`
+    /// = 23,055 on Nakagin's 180 objects — nearly 6x the cap. The rewritten bound counts the document's
+    /// actual vortices instead of assuming every object carries the worst-case vortex count.
+    #[test]
+    fn create_attraction_extent_fits_within_cap_for_nakagin() {
+        use crate::retained_command::PuzzleCommandWork;
+        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+        let interaction = protocol::InteractionState::default();
+        let command = Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "nonexistent-a", "attracted": "nonexistent-b" })), None).expect("createAttraction command decodes");
+        let work = Puzzle3dCreateAttractionWork::default();
+        let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+        assert!(extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "createAttraction extent {extent} must not exceed the fixed cap {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
+    }
+
+    /// 🔁️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2 (coordinator follow-up): drives the real
+    /// `Attracting`/`Attracted` full-document vortex scans instead of only checking the bound fits
+    /// under the cap. `attracting`/`attracted` name a genuine compatible pair already present in the
+    /// Nakagin fixture — `25b0dba0-…:link` (kind "door capsule right", object index 27 in DSL
+    /// declaration order) and `5f0266bc-…:sl0_d0` (kind "door tambour right", object index 64) — which
+    /// `kind-compatibility` marks bidirectionally compatible, so `step()` runs every real stage
+    /// (`Existing → Attracting → Attracted → Compatibility → Publish`) to a genuine success instead of
+    /// one of the Work's several early-`Complete` short-circuits (duplicate/incompatible/empty-id).
+    #[test]
+    fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
+        use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+        let config = Puzzle3dConfig::default();
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        let command =
+            Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "25b0dba0-8f81-423a-94a1-b911a6031010:link", "attracted": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d0" })), None).expect("createAttraction command decodes");
+        let mut work = Puzzle3dCreateAttractionWork::default();
+        let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+        let guard = extent.saturating_mul(4).saturating_add(1000);
+        let mut iterations = 0usize;
+        let emit = loop {
+            assert!(iterations <= guard, "createAttraction step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
+            match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+                PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
+                PuzzleCommandWorkStep::Complete(emit) => break emit,
+            }
+        };
+        assert!(iterations <= extent, "createAttraction step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
+        assert!(iterations > 50, "createAttraction must scan real objects and vortices to find both endpoints, not take a trivial early exit; observed only {iterations} iterations");
+        assert_eq!(emit.artifact_mutations.len(), 1, "a real, compatible, non-duplicate attracting/attracted pair must reach Publish and emit exactly one connect_vortices mutation, not one of the early-Complete short-circuits; observed {}", emit.artifact_mutations.len());
+    }
+
+    /// 🧮️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2: `Puzzle3dAcceptSuggestionWork::extent`'s
+    /// `target_scans` term charged every scene object the same flat 64-vortex worst case
+    /// (`objects * 64`), computing 7,888+ on Nakagin's 180 objects. The rewritten bound counts the
+    /// document's actual vortices for the target scan while keeping the catalog-kind-cap terms
+    /// (`PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT`), which bound a real runtime-enforced invariant on
+    /// catalog kinds, not scene object instances.
+    #[test]
+    fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
+        use crate::retained_command::PuzzleCommandWork;
+        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+        let interaction = protocol::InteractionState::default();
+        let command = Puzzle3dCommand::from_action("acceptSuggestion", None, None).expect("acceptSuggestion command decodes");
+        let work = Puzzle3dAcceptSuggestionWork::default();
+        let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
+        assert!(extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "acceptSuggestion extent {extent} must not exceed the fixed cap {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
+    }
+
+    /// 🔁️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2 (coordinator follow-up): drives the real `Target`
+    /// scan (the term this ticket rewrote) plus the full `Candidate → Representation → Vortices →
+    /// ExistingAttractions → PublishObject → PublishAttraction → PublishResult` chain to a genuine
+    /// success, using a real Nakagin vortex (`25b0dba0-…:link`, object index 27 in DSL declaration
+    /// order) as `fullId` instead of the "no target requested" early-`Complete` short-circuit.
+    #[test]
+    fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
+        use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+        let config = Puzzle3dConfig::default();
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        let command = Puzzle3dCommand::from_action("acceptSuggestion", Some(json!({ "fullId": "25b0dba0-8f81-423a-94a1-b911a6031010:link" })), None).expect("acceptSuggestion command decodes");
+        let mut work = Puzzle3dAcceptSuggestionWork::default();
+        let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
+        let guard = extent.saturating_mul(4).saturating_add(1000);
+        let mut iterations = 0usize;
+        let emit = loop {
+            assert!(iterations <= guard, "acceptSuggestion step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
+            match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+                PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
+                PuzzleCommandWorkStep::Complete(emit) => break emit,
+            }
+        };
+        assert!(iterations <= extent, "acceptSuggestion step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
+        assert!(iterations > 20, "acceptSuggestion must scan real objects to find the requested target vortex, not take a trivial early exit; observed only {iterations} iterations");
+        assert_eq!(emit.artifact_mutations.len(), 2, "a real target vortex and a real catalog kind must reach PublishResult and emit exactly the created object plus its connecting attraction, not one of the early-Complete short-circuits; observed {}", emit.artifact_mutations.len());
+    }
+
+    /// 🧮️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2: `Puzzle3dPatchInspectorWork::extent`'s `"vortex"`
+    /// arm charged `objects * PUZZLE_COMMAND_DECODED_ITEMS` (objects * 512) regardless of real vortex
+    /// count, computing ~92,160 on Nakagin's 180 objects — a 512x-over-budget design error, not a
+    /// precision edge case. The rewritten bound counts the document's actual vortex instances plus one
+    /// `step()` per object, matching the `Vortices` stage's real per-object "owner advance" call.
+    #[test]
+    fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
+        use crate::retained_command::PuzzleCommandWork;
+        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+        let interaction = protocol::InteractionState::default();
+        let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex" })), None).expect("patchInspector command decodes");
+        let work = Puzzle3dPatchInspectorWork::default();
+        let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+        assert!(extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "patchInspector vortex extent {extent} must not exceed the fixed cap {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
+    }
+
+    /// 🔁️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2 (coordinator follow-up): the `Vortices` stage walks
+    /// every object and every real vortex UNCONDITIONALLY (selection only gates whether a visited
+    /// vortex is mutated, never whether it is visited), so this is a genuine full-document run by
+    /// construction, not a trivial early exit — selecting one real vortex
+    /// (`25b0dba0-…:link`) and setting `field: "hidden"` proves the walk both completes within its own
+    /// extent AND actually mutates the one entity that was selected out of the full scan.
+    ///
+    /// Writing this test surfaced a real off-by-one in `extent()`'s own `Selection` accounting: the
+    /// `Selection` stage's own exhaustion call (`source_id` returning `None`) is a real `step()` call
+    /// that returns `Progress` — a `+1` distinct from each entity arm's own terminal call (which
+    /// returns `Complete` instead, contributing zero to the `Progress` count `work_cursor` tracks). The
+    /// old `let items = source.checked_add(scan)?;` omitted that `Selection`-stage `+1` entirely; fixed
+    /// to `let items = source.checked_add(scan)?.checked_add(1)?;`, which this test's `iterations <=
+    /// extent` assertion is what actually catches — the extent-only test above could not have (it
+    /// never drives the real loop, so no test previously computed the true `Progress`-call count).
+    #[test]
+    fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
+        use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+        let config = Puzzle3dConfig::default();
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex", "field": "hidden", "value": true, "ids": ["25b0dba0-8f81-423a-94a1-b911a6031010:link"] })), None).expect("patchInspector command decodes");
+        let mut work = Puzzle3dPatchInspectorWork::default();
+        let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+        let guard = extent.saturating_mul(4).saturating_add(1000);
+        let mut iterations = 0usize;
+        let emit = loop {
+            assert!(iterations <= guard, "patchInspector step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
+            match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+                PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
+                PuzzleCommandWorkStep::Complete(emit) => break emit,
+            }
+        };
+        assert!(iterations <= extent, "patchInspector step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
+        assert!(iterations > 400, "patchInspector's Vortices stage unconditionally walks every object and every real vortex regardless of selection, so a real Nakagin run must take hundreds of steps, not a trivial early exit; observed only {iterations} iterations");
+        assert_eq!(emit.artifact_mutations.len(), 1, "exactly the one selected vortex must be patched out of the full unconditional scan; observed {} mutations", emit.artifact_mutations.len());
+    }
+
     /// 🧵️ ticket 26/09/02/PUZZLE-3D-END-TO-END: direct functional proof that the previously-dead
     /// `Puzzle3dSetActiveExampleWork` state machine actually walks its own stages across MULTIPLE
     /// bounded `step()` calls for a real fixture (not a single-shot reducer), accumulating exactly
@@ -8094,6 +8308,161 @@ mod tests {
         assert!(progress_steps > 1, "setActiveExample must require multiple bounded step() calls for the nakagin example, not a single-shot reducer; observed {progress_steps}");
         assert!(emit.artifact_mutations.len() > 1, "the completed emit must carry every incrementally-collected mutation, one per deleted/created item; observed {}", emit.artifact_mutations.len());
         assert_eq!(emit.config_mutations.len(), 1, "setActiveExample resets the runtime config exactly once, in the same completed emit");
+    }
+
+    /// 🪣️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S, fixture group 7: drives
+    /// `Puzzle3dPrecomputeCommandWork`'s own `step()` loop directly (not the full `dispatch()` path,
+    /// which never touches `build_tool_job`'s retained-Work machinery at all) and proves the
+    /// `"fillBuildTick"` completion now carries the SAME real effect the legacy
+    /// `fill_build_tick::fill_build_tick` (`🎮️commands/🪣️fill-build-tick/🦀️.rs`) produces via
+    /// `dispatch_puzzle3d_action` — an isolated `SpawnJob` plus the advanced `fill_checkpoint`
+    /// snapshot — instead of the old stub's bare `ui_scope`. Mirrors
+    /// `fill_build_tick_only_polls_and_enqueues_one_isolated_worker_job`'s exact starting state (no
+    /// object needed — the fill tool admits its planner job unconditionally on the first tick).
+    #[test]
+    fn fill_build_tick_work_spawns_the_isolated_planner_and_persists_the_checkpoint() {
+        use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+        let snapshot = Puzzle3dPlayApp::initial_snapshot();
+        let config = Puzzle3dConfig { active_tool_id: Some(fill_tool::TOOL_ID.to_string()), ..Default::default() };
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        let command = Puzzle3dCommand::from_action("fillBuildTick", None, None).expect("fillBuildTick command decodes");
+        let mut work = Puzzle3dPrecomputeCommandWork::new("fillBuildTick");
+        let emit = loop {
+            match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+                PuzzleCommandWorkStep::Progress { .. } => {}
+                PuzzleCommandWorkStep::Complete(emit) => break emit,
+            }
+        };
+        assert!(
+            matches!(emit.effects.as_slice(), [Effect::SpawnJob { kind, placement: semio_framework_plugin::kernel::JobPlacement::Isolated, .. }] if kind == crate::editor::puzzle3d::precompute::FILL_JOB_KIND),
+            "the real fillBuildTick completion must spawn the isolated fill planner job, not just flip ui_scope; got {:?}",
+            emit.effects
+        );
+        assert_eq!(emit.config_mutations.len(), 1, "the real fillBuildTick completion must persist the newly-admitted fill_checkpoint as a config Snapshot");
+    }
+
+    /// 🪣️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S: proves `"registerBrushMesh"` and
+    /// `"suggestionsTick"` now delegate to `puzzle3d_retained_reduce` (the same reducer
+    /// `BoundedFirstStepCommandWork` already uses for the 11 generic-fallback ids), which falls
+    /// through to the real `app.handle_action_impl(...)` for both — instead of the old stub's bare
+    /// `ui_scope: UiDirtyScope::None`/`puzzle3d_suggestions_tick_scope()` with zero mutations. Uses a
+    /// deterministically-undecodable `fill_checkpoint` (`decode_fill_envelope_request` rejects
+    /// anything not starting with the 8-byte `P3FILL04` magic — `⏳️precompute/🦀️.rs:138`, no
+    /// dependency on the process-global fill registry's live state) so `handle_action_impl`'s
+    /// trailing `&scene.runtime != config` diff (`✏️editor/🦀️.rs`, the `config_mutations` line right
+    /// before `dispatch_puzzle3d_action`'s call site) is guaranteed to see the checkpoint clear from
+    /// stale bytes to empty and therefore emit a real `Puzzle3dConfigMutation::Snapshot` — something
+    /// the old stub could never produce for either id.
+    #[test]
+    fn register_brush_mesh_and_suggestions_tick_work_clear_a_stale_checkpoint_via_real_dispatch() {
+        use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+        let snapshot = Puzzle3dPlayApp::initial_snapshot();
+        let config = Puzzle3dConfig { fill_checkpoint: vec![9, 9, 9, 9], ..Default::default() };
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        for (tool_id, args) in [("registerBrushMesh", Some(json!({ "url": "test.glb", "positions": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], "indices": [0, 1, 2] }))), ("suggestionsTick", None)] {
+            let command = Puzzle3dCommand::from_action(tool_id, args, None).expect("command decodes");
+            let mut work = Puzzle3dPrecomputeCommandWork::new(tool_id);
+            let emit = loop {
+                match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+                    PuzzleCommandWorkStep::Progress { .. } => {}
+                    PuzzleCommandWorkStep::Complete(emit) => break emit,
+                }
+            };
+            assert_eq!(emit.config_mutations.len(), 1, "{tool_id} must clear a stale fill_checkpoint via a real config Snapshot, matching handle_action_impl; the old stub emitted none");
+        }
+    }
+
+    /// 🪣️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S: `Puzzle3dEngagementRepeatWork`'s old Publish
+    /// stage only ever emitted `self.effect` (the `setFillCount` bump) with a bare `ui_scope: Full`.
+    /// `engagementRepeatLast` is a `document_action` (`puzzle3d_action_document_intent`), so real
+    /// `handle_action_impl` ALWAYS resets `fill_checkpoint` to empty for it regardless of the active
+    /// utility (the `document_action && action != "setFillCount"` branch, `✏️editor/🦀️.rs`) — proves
+    /// that real side effect now surfaces as a config `Snapshot`, alongside the `setFillCount` request
+    /// effect the old code already got right.
+    #[test]
+    fn engagement_repeat_last_work_clears_checkpoint_and_requests_more_fill() {
+        use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+        let snapshot = Puzzle3dPlayApp::initial_snapshot();
+        let config = Puzzle3dConfig { active_tool_id: Some(fill_tool::TOOL_ID.to_string()), fill_count: 3, fill_checkpoint: vec![9, 9, 9, 9], ..Default::default() };
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        let command = Puzzle3dCommand::from_action("engagementRepeatLast", None, None).expect("engagementRepeatLast command decodes");
+        let mut work = Puzzle3dEngagementRepeatWork::default();
+        let emit = loop {
+            match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+                PuzzleCommandWorkStep::Progress { .. } => {}
+                PuzzleCommandWorkStep::Complete(emit) => break emit,
+            }
+        };
+        assert!(matches!(emit.effects.as_slice(), [Effect::DispatchAction { action, .. }] if action == "setFillCount"), "engagementRepeatLast must still request one more fill unit while the fill utility is active; got {:?}", emit.effects);
+        assert_eq!(emit.config_mutations.len(), 1, "engagementRepeatLast is a document_action, so real handle_action_impl always clears a stale fill_checkpoint too; the old stub emitted none");
+    }
+
+    /// 🪣️ ticket 26/09/02/PUZZLE-3D-END-TO-END: `"setFillCountStep"` (`set_fill_count::STEP_ACTION_ID`)
+    /// routes to `Puzzle3dPrecomputeCommandWork` through `build_tool_job`. Constructed directly here to
+    /// prove the Work-side behaviour independently of that routing: without its own arm, the generic
+    /// `puzzle3d_retained_reduce` fallback would call `dispatch_puzzle3d_action`, whose match has no
+    /// `"setFillCountStep"` arm (falls to `_ => {}`), silently producing `Emit::default()` — exactly
+    /// the "compiles, dispatches, does nothing" failure this ticket exists to eliminate. A real,
+    /// synchronously-driven fill job (`drive_enqueued_fill_job_for_test`, `⏳️precompute/🦀️.rs:1885`)
+    /// is admitted first so `set_fill_count::step`'s own `precompute.restore_persisted_fill(...)`
+    /// guard can actually succeed — `set_fill_count::step` always emits a `SetFillAppliedCount`
+    /// config mutation plus a coalesce key once that guard passes, even for a zero-item chunk
+    /// (`🎮️commands/🧮️set-fill-count/🦀️.rs`), so this discriminates real dispatch from the silent
+    /// no-op without needing any placeable document content.
+    #[test]
+    fn set_fill_count_step_work_advances_a_real_admitted_fill_plan() {
+        use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+        let snapshot = Puzzle3dPlayApp::initial_snapshot();
+        let default_config = Puzzle3dConfig::default();
+        let active_utility = puzzle3d_scene_active_utility(&default_config, None);
+        let scene = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), default_config, &active_utility);
+        let mut precompute = Puzzle3dPrecomputeSession::new();
+        sync_precompute_session(&mut precompute, &scene);
+        assert!(precompute.enqueue_fill_job().is_some(), "a fresh session with no live job must admit a fill worker");
+        precompute.drive_enqueued_fill_job_for_test(64);
+        let checkpoint = precompute.fill_checkpoint_bytes();
+        assert!(!checkpoint.is_empty(), "a driven fill job must leave a restorable checkpoint token");
+        let config = Puzzle3dConfig { fill_checkpoint: checkpoint, fill_count: 0, fill_apply_generation: 0, fill_applied_count: 0, ..Default::default() };
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        let command = Puzzle3dCommand::from_action(set_fill_count::STEP_ACTION_ID, Some(json!({ "generation": 0, "target": 0 })), None).expect("setFillCountStep command decodes");
+        let mut work = Puzzle3dPrecomputeCommandWork::new(set_fill_count::STEP_ACTION_ID);
+        let emit = loop {
+            match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+                PuzzleCommandWorkStep::Progress { .. } => {}
+                PuzzleCommandWorkStep::Complete(emit) => break emit,
+            }
+        };
+        assert_eq!(emit.config_mutations.len(), 1, "a real setFillCountStep must persist the advanced applied-count checkpoint; the generic fallback would silently no-op instead");
+        assert!(emit.coalesce_key.is_some(), "setFillCountStep must coalesce its continuation, matching set_fill_count::step's real Emit");
+    }
+
+    /// 🪣️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S: `transformBegin`/`transformEnd` are left on
+    /// `NoopPuzzleCommandWork` (`🎮️commands/🧵️retained/🦀️.rs:98`) deliberately — see
+    /// `📓️wave-S-report.md` for the full source-backed argument. In short: `EditorApp<E>`
+    /// (`🧰️framework/…/🔌️plugin/🦀️.rs:27160`) stores no `E` instance at all, and
+    /// `with_puzzle3d_app_for` (`✏️editor/🦀️.rs:2168`) always builds a fresh
+    /// `Puzzle3dPlayApp::default()` restoring ONLY `fill_checkpoint` — `Puzzle3dConfig` has no field
+    /// for `transform_base`/`transform_scratch`/`transform_drag_active` (unlike `fill_checkpoint`,
+    /// which is bridged through the process-global `fill_envelope_registry`). So on every real
+    /// dispatch `transform_drag_active` starts `false`, `commit_transform`'s scratch is always `None`,
+    /// and `handle_action_impl` ITSELF returns bare `Emit::default()` for both actions — proven here
+    /// directly against `puzzle3d_retained_reduce` (the exact reducer the generic ids use), which
+    /// falls through to `app.handle_action_impl(...)` for both since neither is special-cased.
+    #[test]
+    fn transform_begin_and_end_real_dispatch_is_already_the_noop_the_work_emits() {
+        let snapshot = Puzzle3dPlayApp::initial_snapshot();
+        let config = Puzzle3dConfig::default();
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        for action in ["transformBegin", "transformEnd"] {
+            let command = Puzzle3dCommand::from_action(action, None, None).expect("command decodes");
+            let emit = puzzle3d_retained_reduce(&command, &snapshot, &config, &interaction, &hover).expect("real dispatch");
+            assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.effects.is_empty(), "{action}'s real handle_action_impl must be a true no-op given the current stateless-per-call architecture; got {:?}/{:?}/{:?}", emit.artifact_mutations.len(), emit.config_mutations.len(), emit.effects.len());
+        }
     }
 
     /// 🌉️ ticket 26/09/02/PUZZLE-3D-END-TO-END: exercises the wiring this ticket adds — the
@@ -8138,7 +8507,7 @@ mod tests {
     /// registry-less `testkit::app()` faults closed with `interactive-job.catalog-authority` before
     /// any dispatch is even attempted. Deliberately reads only the config-side slider measure, not
     /// the document — `fillBuildTick` (unmigrated; see its own blocker note in
-    /// `🧪️publication-authority/🔣️.json`) is what materializes actual fill objects, not this tool.
+    /// `🔏️publication-authority/🔣️.json`) is what materializes actual fill objects, not this tool.
     #[test]
     fn set_fill_count_dispatches_through_the_tool_job_path_and_updates_the_requested_count() {
         use semio_framework_plugin::PluginApp;

@@ -1,7 +1,7 @@
 /** 🧩️ Jack direct-mutation discriminated union. */
 import type { ChangeDataProperty } from "./🔧️change-data-property/🟦️.ts";
 import type { CreateEdge } from "./🌉️create-edge/🟦️.ts";
-import type { CreateNode } from "./🌱️create-node/🟦️.ts";
+import type { CreateNode } from "./➕️create-node/🟦️.ts";
 import type { DeleteEdge } from "./✂️delete-edge/🟦️.ts";
 import type { DeleteNode } from "./🗑️delete-node/🟦️.ts";
 import type { MoveNode } from "./📍️move-node/🟦️.ts";

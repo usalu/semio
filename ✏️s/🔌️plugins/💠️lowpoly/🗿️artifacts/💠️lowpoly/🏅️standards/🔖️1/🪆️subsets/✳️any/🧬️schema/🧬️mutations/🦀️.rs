@@ -66,7 +66,7 @@ pub enum LowpolyMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`LowpolyMutation`] variant, in declaration order — the exact
 /// vocabulary the `lowpoly-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `🧭️mutate-lowpoly-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `💠️mutate-lowpoly-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "create-object",

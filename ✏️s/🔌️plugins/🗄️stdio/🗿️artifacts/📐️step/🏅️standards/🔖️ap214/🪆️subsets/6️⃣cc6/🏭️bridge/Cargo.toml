@@ -17,4 +17,4 @@ path = "🦀️.rs"
 # 🔒️ TEST-ONLY IN EFFECT, PRODUCTION IN SUBSTANCE: the bridge links the real plugin so its answer comes
 # from production dispatch. It adds no dependency to the plugin itself — the edge points one way.
 [dependencies]
-semio-s-plugin-stdio = { path = "../../../../../../../📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-stdio = { path = "../../../../../../../📦️packages/🦀️rust", default-features = false, features = ["full-artifact-catalog"] }

@@ -136,7 +136,7 @@ pub const BREP_KERNEL_OPERATIONS: &[&str] = &[
     "curve_point", "curve_tangent", "curve_domain", "curve_curvature", "surface_point", "surface_normal", "curve_closest_parameter", "surface_closest_uv",
     "volume", "area", "length", "center_of_mass", "bounding_box", "distance", "closest_point", "classify_point", "validate",
     "vertex", "face_from_wire", "sew_faces", "heal_solid", "convert_to_nurbs", "deconstruct",
-    "export_step", "export_stl", "export_obj", "export_gltf", "import_step", "import_stl", "import_obj", "export_dwg", "import_dwg",
+    "export_step", "export_stl", "export_obj", "export_gltf", "import_step", "import_stl", "import_obj", "export_mesh", "import_mesh",
     "kind", "tessellate", "dispose", "retain", "registry_len", "solid_shells", "compound", "explode", "label",
 ];
 
@@ -254,8 +254,8 @@ const OPERATION_QUALITY: &[(&str, OpQuality)] = &[
     ("import_step", OpQuality::ExactAnalytic),
     ("import_stl", OpQuality::MeshDerivedBRep),
     ("import_obj", OpQuality::MeshDerivedBRep),
-    ("export_dwg", OpQuality::MeshDerivedBRep),
-    ("import_dwg", OpQuality::MeshDerivedBRep),
+    ("export_mesh", OpQuality::MeshDerivedBRep),
+    ("import_mesh", OpQuality::MeshDerivedBRep),
     ("kind", OpQuality::ExactAnalytic),
     ("tessellate", OpQuality::ExactAnalytic),
     ("dispose", OpQuality::ExactAnalytic),

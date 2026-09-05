@@ -203,11 +203,9 @@ fn flow_operation_fields(operation: u16) -> &'static [(&'static str, FlowArgumen
         2_588 => &[("method", Text), ("mode", Text)],
         2_593 => &[("mode", Text)],
         2_599 => &[("handle", Text), ("tolerance", Number)],
-        2_600 | 2_601 | 2_602 | 2_603 | 2_607 => &[("handle", Text)],
-        2_604 => &[("dataBase64", Text)],
+        2_600 | 2_601 | 2_602 | 2_607 => &[("handle", Text)],
         2_605 => &[("width", U32), ("height", U32), ("mask", Bytes), ("threshold", Number), ("simplifyEpsilon", Number)],
         2_606 => &[("aJson", Text), ("bJson", Text), ("operation", Text)],
-        2_608 => &[("meshJson", Text)],
         _ => &[],
     }
 }
@@ -4996,82 +4994,6 @@ impl FlowActionState for FlowAction2602 {
     }
 }
 
-struct FlowAction2603 {
-    program: FlowProgramState,
-}
-
-impl FlowActionState for FlowAction2603 {
-    fn operation(&self) -> u16 {
-        2_603
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_603),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(export_dwg_json(text(args, "handle")?).into_bytes()) };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_603),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
-
-struct FlowAction2604 {
-    program: FlowProgramState,
-}
-
-impl FlowActionState for FlowAction2604 {
-    fn operation(&self) -> u16 {
-        2_604
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_604),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(import_dwg_json(text(args, "dataBase64")?).into_bytes()) };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_604),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
-
 struct FlowAction2605 {
     program: FlowProgramState,
 }
@@ -5191,44 +5113,6 @@ impl FlowActionState for FlowAction2607 {
             }
             FlowProgramPhase::Encode => self.program.encode_step(),
             FlowProgramPhase::Publish => self.program.publish_step(domain, 2_607),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
-
-struct FlowAction2608 {
-    program: FlowProgramState,
-}
-
-impl FlowActionState for FlowAction2608 {
-    fn operation(&self) -> u16 {
-        2_608
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_608),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(dwg_encode_mesh(text(args, "meshJson")?).into_bytes()) };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_608),
             FlowProgramPhase::Complete => self.program.complete_step(),
             FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
         }
@@ -5418,12 +5302,9 @@ fn flow_action(operation: u16, arguments: &FlowArguments) -> Option<Box<dyn Flow
         2_600 => Some(Box::new(FlowAction2600 { program: FlowProgramState::new(arguments) })),
         2_601 => Some(Box::new(FlowAction2601 { program: FlowProgramState::new(arguments) })),
         2_602 => Some(Box::new(FlowAction2602 { program: FlowProgramState::new(arguments) })),
-        2_603 => Some(Box::new(FlowAction2603 { program: FlowProgramState::new(arguments) })),
-        2_604 => Some(Box::new(FlowAction2604 { program: FlowProgramState::new(arguments) })),
         2_605 => Some(Box::new(FlowAction2605 { program: FlowProgramState::new(arguments) })),
         2_606 => Some(Box::new(FlowAction2606 { program: FlowProgramState::new(arguments) })),
         2_607 => Some(Box::new(FlowAction2607 { program: FlowProgramState::new(arguments) })),
-        2_608 => Some(Box::new(FlowAction2608 { program: FlowProgramState::new(arguments) })),
         2_609 => Some(Box::new(FlowAction2609 { program: FlowProgramState::new(arguments) })),
         2_610 => Some(Box::new(FlowAction2610 { program: FlowProgramState::new(arguments) })),
         _ => None,
@@ -5618,19 +5499,6 @@ fn surface_abi_failure(code: SurfaceAbiErrorCode) -> FlowFailure {
     abi_failure(code)
 }
 
-fn dwg_encode_mesh(mesh_json: &str) -> String {
-    let Ok(mesh) = crate::os_pack::json::from_json_str::<semio_framework::MeshData>(mesh_json) else {
-        return json!({ "error": "invalid mesh json" }).to_string();
-    };
-    let drawing = semio_s_plugin_stdio::artifacts::dwg::mesh_to_dwg_drawing(&mesh);
-    match semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing) {
-        Ok(bytes) => {
-            use base64::Engine;
-            json!({ "dwg": base64::engine::general_purpose::STANDARD.encode(bytes) }).to_string()
-        }
-        Err(error) => json!({ "error": error }).to_string(),
-    }
-}
 
 //#endregion 🔖️ReactiveFeatures
 
@@ -5830,10 +5698,11 @@ mod domain_laws {
 
     #[test]
     fn every_schema_feature_has_a_distinct_action_binding() {
-        let actions: Vec<u16> = (2_504..=2_610)
+        let expected: Vec<u16> = (2_504..=2_610).filter(|operation| !matches!(operation, 2_603 | 2_604 | 2_608)).collect();
+        let actions: Vec<u16> = expected.iter().copied()
             .map(|operation| flow_action(operation, &FlowArguments::preflight(operation, Vec::new()).unwrap_or_else(|_| FlowArguments { payload: Vec::new(), spans: [FlowArgumentSpan::EMPTY; 8], count: 0 })).unwrap().operation())
             .collect();
-        assert_eq!(actions, (2_504..=2_610).collect::<Vec<_>>());
+        assert_eq!(actions, expected);
     }
 
     #[test]

@@ -1,0 +1,19 @@
+{
+  "schema": "semio.directory.invite-capability-transfer.v1",
+  "capacity": 1,
+  "states": ["available", "copying", "failed", "copied", "closed"],
+  "transitions": [
+    { "from": "available", "input": "request", "to": "copying", "discloses": true, "erases": false },
+    { "from": "copying", "input": "failed", "to": "failed", "discloses": false, "erases": false },
+    { "from": "failed", "input": "request", "to": "copying", "discloses": true, "erases": false },
+    { "from": "copying", "input": "copied", "to": "copied", "discloses": false, "erases": true },
+    { "from": "available", "input": "close", "to": "closed", "discloses": false, "erases": true },
+    { "from": "copying", "input": "close", "to": "closed", "discloses": false, "erases": true },
+    { "from": "failed", "input": "close", "to": "closed", "discloses": false, "erases": true }
+  ],
+  "duplicateResult": "reject-without-disclosure",
+  "labels": {
+    "en": ["The invitation link is ready to copy.", "Copying the invitation link…", "Clipboard unavailable or denied. Try copying again."],
+    "de": ["Der Einladungslink kann kopiert werden.", "Einladungslink wird kopiert…", "Zwischenablage nicht verfügbar oder abgelehnt. Erneut versuchen."]
+  }
+}

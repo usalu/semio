@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "addVortex")]
 pub struct AddVortex {}
 
-pub async fn handle(_payload: &AddVortex, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
+pub fn handle(_payload: &AddVortex, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     let vortex_kinds = crate::artifacts::block3d::vortex_kinds_of(doc.snapshot);
     let Some(vortex_kind_id) = vortex_kinds.first().map(|kind| kind.id.clone()) else {
         return Ok(Emit::default());

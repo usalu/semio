@@ -12,9 +12,11 @@
     "nativeArguments",
     "capturedOutput",
     "activeLease",
+    "stageEnvironment",
     "cases"
   ],
   "properties": {
+    "stageEnvironment": { "const": { "buildStack": "8388608", "nativeStack": "268435456", "sharedValue": "preserved" } },
     "nativeArguments": { "const": ["--exact", "--test-threads=1", "--show-output"] },
     "capturedOutput": { "const": "[DEBUG] retained native owner reached its terminal witness" },
     "activeLease": {

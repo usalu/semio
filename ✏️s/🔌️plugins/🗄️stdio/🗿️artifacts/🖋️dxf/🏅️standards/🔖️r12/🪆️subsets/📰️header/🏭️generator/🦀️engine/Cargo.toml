@@ -1,0 +1,20 @@
+# 🧭️ Own workspace root: linked by `../📜️script.ts` (`cargo build --manifest-path`), never joins the
+# repository's root workspace, whose root manifest is a shared, contended file.
+#
+# Builds this subset's `third-party-generated` fixtures with the SAME registered reference crate
+# (`dxf` 0.6) named in `../../🔮️oracle/🔣️.json`'s `dxf-crate-r12-mutate` oracle — never with this
+# repository's own DXF codec. See `../📜️script.ts` for the generation contract.
+[workspace]
+
+[package]
+name = "dxf-r12-any-fixture-generator"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "generate"
+path = "src/main.rs"
+
+[dependencies]
+dxf = "0.6"

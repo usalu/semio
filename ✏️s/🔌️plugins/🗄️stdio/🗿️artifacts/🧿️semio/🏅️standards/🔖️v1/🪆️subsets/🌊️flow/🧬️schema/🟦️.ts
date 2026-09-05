@@ -1,4 +1,4 @@
-/** 🧬️ SemioFlowArtifact schema — real facet mirror of `🧬️schema/🦀️component.rs`; that Rust
+/** 🧬️ SemioFlowArtifact schema — real facet mirror of `🧬️schema/🦀️.rs`; that Rust
  * file is the source of truth (mirrors `SemioFlowSnapshot` field for field). */
 export interface SemioPoint2 {
   x: number;

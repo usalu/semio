@@ -12110,3 +12110,60 @@ fn schema_facets_reject_imported_byte_shadow_state() {
         }
     }
 }
+
+/// 📐️ Renders a DWG drawing back to flat SVG markup (lines and closed polygons), for the raster import path.
+pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+    let width = (drawing.extmax[0] - drawing.extmin[0]).max(1.0).ceil() as u32;
+    let height = (drawing.extmax[1] - drawing.extmin[1]).max(1.0).ceil() as u32;
+    let mut paths = String::new();
+    for entity in &drawing.entities {
+        if let DwgGeometry::LwPolyline { vertices, closed, .. } = &entity.geometry {
+            if vertices.is_empty() {
+                continue;
+            }
+            let mut d = format!("M {} {}", vertices[0][0] - drawing.extmin[0], drawing.extmax[1] - vertices[0][1]);
+            for v in &vertices[1..] {
+                d.push_str(&format!(" L {} {}", v[0] - drawing.extmin[0], drawing.extmax[1] - v[1]));
+            }
+            if *closed {
+                d.push_str(" Z");
+            }
+            paths.push_str(&format!("<path d=\"{d}\" fill=\"none\" stroke=\"black\" stroke-width=\"1\"/>"));
+        }
+    }
+    let svg = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">{paths}</svg>");
+    Ok((svg, width, height))
+}
+
+/// 📏️ Encodes layered planar polylines supplied by an artifact I/O conversion.
+pub fn polylines_to_dwg_bytes<'a>(polylines: impl IntoIterator<Item = (&'a str, &'a [[f64; 2]], bool)>) -> Result<Vec<u8>, String> {
+    let mut drawing = DwgDrawing::default();
+    drawing.ensure_layer("0");
+    for (name, vertices, closed) in polylines {
+        let layer = drawing.ensure_layer(name);
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed, elevation: 0.0, vertices: vertices.to_vec(), bulges: vec![0.0; vertices.len()] } });
+    }
+    dwg_to_bytes(&drawing)
+}
+
+#[cfg(test)]
+mod polyline_io_tests {
+    use super::*;
+
+    #[test]
+    fn artifact_polyline_io_round_trips_layers_vertices_and_closure() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/📏️polyline-io/🔣️.json")).unwrap();
+        let paths: Vec<(String, Vec<[f64; 2]>, bool)> = fixture["polylines"].as_array().unwrap().iter().map(|path| (path["layer"].as_str().unwrap().into(), serde_json::from_value(path["vertices"].clone()).unwrap(), path["closed"].as_bool().unwrap())).collect();
+        let bytes = polylines_to_dwg_bytes(paths.iter().map(|(layer, vertices, closed)| (layer.as_str(), vertices.as_slice(), *closed))).unwrap();
+        let drawing = dwg_from_bytes(&bytes).unwrap();
+        assert_eq!(drawing.entities.len(), paths.len());
+        for (entity, (layer, vertices, closed)) in drawing.entities.iter().zip(&paths) {
+            assert_eq!(&drawing.layers[entity.layer].name, layer);
+            assert!(matches!(&entity.geometry, DwgGeometry::LwPolyline { vertices: actual, closed: closure, .. } if actual == vertices && closure == closed));
+        }
+        let (svg, width, height) = dwg_drawing_to_svg(&drawing).unwrap();
+        assert!(svg.contains("<path"));
+        assert!(width > 0 && height > 0);
+        println!("[DEBUG] Artifact polyline I/O: {} bytes, {} layers, {} entities", bytes.len(), drawing.layers.len(), drawing.entities.len());
+    }
+}

@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "session", "space", "members", "invites", "vectors", "cursorCases", "hostiles"],
+  "properties": {
+    "schema": { "const": "semio.hub.directory-space-administration-page/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windowRows", "pageBytes", "cursorBytes", "safeInteger"],
+      "properties": {
+        "windowRows": { "const": 64 },
+        "pageBytes": { "const": 49152 },
+        "cursorBytes": { "const": 1024 },
+        "safeInteger": { "const": 9007199254740991 }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "userId", "authorizationGeneration", "expiresAt", "spaceId", "bindingSha256"],
+      "properties": {
+        "sessionId": { "const": "session-admin-01" },
+        "userId": { "const": "user-admin-01" },
+        "authorizationGeneration": { "const": 5 },
+        "expiresAt": { "const": 4102444800000 },
+        "spaceId": { "const": "space-admin-01" },
+        "bindingSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "visibility", "ownerUserId", "memberCount", "documentCount", "activeConnections", "createdAtMs", "updatedAtMs"],
+      "properties": {
+        "id": { "const": "space-admin-01" },
+        "name": { "type": "string" },
+        "kind": { "enum": ["atelier", "studio", "archive"] },
+        "visibility": { "enum": ["private", "public"] },
+        "ownerUserId": { "type": "string" },
+        "memberCount": { "type": "integer", "minimum": 0 },
+        "documentCount": { "type": "integer", "minimum": 0 },
+        "activeConnections": { "type": "integer", "minimum": 0 },
+        "createdAtMs": { "type": "integer", "minimum": 0 },
+        "updatedAtMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "members": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["userId", "email", "displayName", "role", "owner"],
+        "properties": {
+          "userId": { "type": "string", "minLength": 1 },
+          "email": { "type": "string" },
+          "displayName": { "type": "string" },
+          "role": { "enum": ["author", "spectator"] },
+          "owner": { "type": "boolean" }
+        }
+      }
+    },
+    "invites": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["inviteId", "role", "createdAtMs", "expiresAtMs", "revoked", "accepted"],
+        "properties": {
+          "inviteId": { "type": "string", "minLength": 1 },
+          "role": { "enum": ["author", "spectator"] },
+          "createdAtMs": { "type": "integer", "minimum": 0 },
+          "expiresAtMs": { "type": "integer", "minimum": 0 },
+          "revoked": { "type": "boolean" },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "access", "expected"],
+        "properties": {
+          "name": { "enum": ["author", "member", "public", "author-window-boundary"] },
+          "access": { "enum": ["author", "member", "public"] },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["hasMembers", "hasInvites", "hasCapabilities", "memberRows", "inviteRows"],
+            "properties": {
+              "hasMembers": { "type": "boolean" },
+              "hasInvites": { "type": "boolean" },
+              "hasCapabilities": { "type": "boolean" },
+              "memberRows": { "type": "integer", "minimum": 0, "maximum": 64 },
+              "inviteRows": { "type": "integer", "minimum": 0, "maximum": 64 }
+            }
+          }
+        }
+      }
+    },
+    "cursorCases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["query", "status", "reads"],
+        "properties": {
+          "query": { "type": "string" },
+          "status": { "enum": [200, 400] },
+          "reads": { "enum": [0, 1] }
+        }
+      }
+    },
+    "hostiles": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "enum": [
+          "receipt-substituted",
+          "trailing-whitespace",
+          "unknown-field",
+          "space-mismatch",
+          "member-order-reversed",
+          "invite-order-reversed",
+          "window-row-max-plus-one",
+          "page-byte-max-plus-one",
+          "invite-secret-field"
+        ]
+      }
+    }
+  }
+}

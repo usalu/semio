@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "addGrip")]
 pub struct AddGrip {}
 
-pub async fn handle(_payload: &AddGrip, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
+pub fn handle(_payload: &AddGrip, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
     let Some(grip_kind_id) = doc.snapshot.grip_kinds.first().map(|kind| kind.id.clone()) else {
         return Ok(Emit::default());
     };

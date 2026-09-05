@@ -244,33 +244,34 @@ pub fn capability_ledger() -> Result<CapabilityLedger, PluginAssemblyError> {
 //#endregion CapabilityLedger
 
 //#region SourceLoading
+#[cfg(feature = "full-artifact-catalog")]
 const SOURCES: [&str; 36] = [
     include_str!("../🗿️artifacts/💾️binary/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🔤️txt/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📰️xml/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🗜️deflate/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🎒️zip/🧬️schema/📜️artifact-definition.json"),
-    include_str!("../🗿️artifacts/🔣️json/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/🧾️json/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📊️csv/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📝️md/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🧊️gltf/🧬️schema/📜️artifact-definition.json"),
-    include_str!("../🗿️artifacts/🧊️obj/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/🗽️obj/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🔺️stl/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🧱️ply/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/☁️las/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📐️step/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🏗️ifc/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🖊️dwg/🧬️schema/📜️artifact-definition.json"),
-    include_str!("../🗿️artifacts/🖊️dxf/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/🖋️dxf/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🎨️svg/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📷️png/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📸️jpg/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🎞️gif/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🪟️bmp/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🖼️tiff/🧬️schema/📜️artifact-definition.json"),
-    include_str!("../🗿️artifacts/🌳️pdf/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/📖️pdf/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📜️docx/🧬️schema/📜️artifact-definition.json"),
-    include_str!("../🗿️artifacts/🎞️pptx/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/📽️pptx/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📕️xlsx/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/💬️bcf/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🧿️semio/🧬️schema/📜️artifact-definition.json"),
@@ -281,6 +282,18 @@ const SOURCES: [&str; 36] = [
     include_str!("../🗿️artifacts/🌦️epw/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/📑️tsv/🧬️schema/📜️artifact-definition.json"),
     include_str!("../🗿️artifacts/🌐️html/🧬️schema/📜️artifact-definition.json"),
+];
+
+#[cfg(all(feature = "home-io", not(feature = "full-artifact-catalog")))]
+const SOURCES: [&str; 8] = [
+    include_str!("../🗿️artifacts/💾️binary/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/🔤️txt/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/📰️xml/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/🗜️deflate/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/🎒️zip/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/🧾️json/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/📊️csv/🧬️schema/📜️artifact-definition.json"),
+    include_str!("../🗿️artifacts/📕️xlsx/🧬️schema/📜️artifact-definition.json"),
 ];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -347,28 +360,31 @@ fn runtime_claims(item: &RuntimeCapability) -> BTreeSet<(String, String)> {
 /// 🧷️ Maps exactly the schema leaves that declare a native executable.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecutableIdentity>, PluginAssemblyError> {
-    let services = match source.artifact.as_str() {
-        "gltf" => crate::artifacts::gltf::gltf_inference_services(),
-        _ => Vec::new(),
-    };
     let mut mappings = BTreeMap::new();
-    for service in services {
-        let id = service.metadata().inference_schema.to_owned();
-        if mappings.insert(id.clone(), service.executable_identity()).is_some() {
-            return Err(failure(format!("{} repeats executable mapping {id}", source.id)));
-        }
-    }
-    if source.artifact == "gltf" {
-        use protocol::SemanticMutation;
-        let registered: BTreeSet<&str> = source.mutations.iter().filter(|item| item.executable_registration).map(|item| item.id.as_str()).collect();
-        for descriptor in crate::artifacts::gltf::schema::mutations::GltfMutation::kinds() {
-            let id = format!("s.stdio.gltf.mutation.{}.v1", descriptor.kind);
-            if !registered.contains(id.as_str()) {
-                continue;
-            }
-            let identity = ArtifactExecutableIdentity::from_function_pointer(crate::artifacts::gltf::schema::mutations::apply_gltf_mutation as *const ());
-            if mappings.insert(id.clone(), identity).is_some() {
+    #[cfg(feature = "full-artifact-catalog")]
+    {
+        let services = match source.artifact.as_str() {
+            "gltf" => crate::artifacts::gltf::gltf_inference_services(),
+            _ => Vec::new(),
+        };
+        for service in services {
+            let id = service.metadata().inference_schema.to_owned();
+            if mappings.insert(id.clone(), service.executable_identity()).is_some() {
                 return Err(failure(format!("{} repeats executable mapping {id}", source.id)));
+            }
+        }
+        if source.artifact == "gltf" {
+            use protocol::SemanticMutation;
+            let registered: BTreeSet<&str> = source.mutations.iter().filter(|item| item.executable_registration).map(|item| item.id.as_str()).collect();
+            for descriptor in crate::artifacts::gltf::schema::mutations::GltfMutation::kinds() {
+                let id = format!("s.stdio.gltf.mutation.{}.v1", descriptor.kind);
+                if !registered.contains(id.as_str()) {
+                    continue;
+                }
+                let identity = ArtifactExecutableIdentity::from_function_pointer(crate::artifacts::gltf::schema::mutations::apply_gltf_mutation as *const ());
+                if mappings.insert(id.clone(), identity).is_some() {
+                    return Err(failure(format!("{} repeats executable mapping {id}", source.id)));
+                }
             }
         }
     }
@@ -596,8 +612,9 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn validate_catalog(values: &[Source]) -> Result<(), PluginAssemblyError> {
-    if values.len() != 36 {
-        return Err(failure(format!("expected 36 artifact definitions, got {}", values.len())));
+    let expected = if cfg!(feature = "full-artifact-catalog") { 36 } else { 8 };
+    if values.len() != expected {
+        return Err(failure(format!("expected {expected} artifact definitions, got {}", values.len())));
     }
     let mut identities = BTreeSet::new();
     let mut directories = BTreeSet::new();
@@ -750,7 +767,7 @@ pub fn artifact_definitions() -> Result<Vec<ArtifactDefinition>, PluginAssemblyE
 /// 🧭️ Assembles every artifact root in schema-catalog order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>> {
-    BTreeMap::from([
+    let mut factories = BTreeMap::from([
         ("binary", crate::artifacts::binary::assembly as fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>),
         ("txt", crate::artifacts::txt::assembly),
         ("xml", crate::artifacts::xml::assembly),
@@ -758,7 +775,11 @@ fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Resu
         ("zip", crate::artifacts::zip::assembly),
         ("json", crate::artifacts::json::assembly),
         ("csv", crate::artifacts::csv::assembly),
-        ("md", crate::artifacts::md::assembly),
+        ("xlsx", crate::artifacts::xlsx::assembly),
+    ]);
+    #[cfg(feature = "full-artifact-catalog")]
+    factories.extend(BTreeMap::from([
+        ("md", crate::artifacts::md::assembly as fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>),
         ("gltf", crate::artifacts::gltf::assembly),
         ("obj", crate::artifacts::obj::assembly),
         ("stl", crate::artifacts::stl::assembly),
@@ -777,7 +798,6 @@ fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Resu
         ("pdf", crate::artifacts::pdf::assembly),
         ("docx", crate::artifacts::docx::assembly),
         ("pptx", crate::artifacts::pptx::assembly),
-        ("xlsx", crate::artifacts::xlsx::assembly),
         ("bcf", crate::artifacts::bcf::assembly),
         ("semio", crate::artifacts::semio::assembly),
         ("mp4", crate::artifacts::mp4::assembly),
@@ -787,7 +807,8 @@ fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Resu
         ("epw", crate::artifacts::epw::assembly),
         ("tsv", crate::artifacts::tsv::assembly),
         ("html", crate::artifacts::html::assembly),
-    ])
+    ]));
+    factories
 }
 
 /// 🧭️ Assembles every artifact root by its schema-owned artifact key.
@@ -848,6 +869,7 @@ pub fn format_descriptors() -> Result<Vec<FormatDescriptor>, PluginAssemblyError
 
 //#region NativeCodecFactoryReceipts
 /// 🪢 One native codec factory bound to exact descriptor and Cargo component identities.
+#[cfg(feature = "full-artifact-catalog")]
 #[derive(Clone)]
 pub struct NativeCodecFactoryReceipt {
     pub plugin_id: &'static str,
@@ -863,6 +885,7 @@ pub struct NativeCodecFactoryReceipt {
     pub factory: fn() -> store::ArtifactCodec,
 }
 
+#[cfg(feature = "full-artifact-catalog")]
 impl NativeCodecFactoryReceipt {
     /// 🔐 Rechecks the immutable factory result before a trusted loader can bind it.
     pub fn instantiate(&self) -> Result<store::ArtifactCodec, PluginAssemblyError> {
@@ -900,42 +923,63 @@ macro_rules! native_codec_factory {
     };
 }
 
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(ply_codec, ply, PlySnapshot, PlyMutation, STDIO_PLY_DOCUMENT_SCHEMA, "ply", "../🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(stl_codec, stl, StlSnapshot, StlMutation, STDIO_STL_DOCUMENT_SCHEMA, "stl", "../🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(las_codec, las, LasSnapshot, LasMutation, STDIO_LAS_DOCUMENT_SCHEMA, "las", "../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
-native_codec_factory!(dxf_codec, dxf, DxfSnapshot, DxfMutation, STDIO_DXF_DOCUMENT_SCHEMA, "dxf", "../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
+native_codec_factory!(dxf_codec, dxf, DxfSnapshot, DxfMutation, STDIO_DXF_DOCUMENT_SCHEMA, "dxf", "../🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(mp3_codec, mp3, Mp3Snapshot, Mp3Mutation, STDIO_MP3_DOCUMENT_SCHEMA, "mp3", "../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
-native_codec_factory!(xlsx_codec, xlsx, XlsxSnapshot, XlsxMutation, STDIO_XLSX_DOCUMENT_SCHEMA, "xlsx", "../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+native_codec_factory!(xlsx_codec, xlsx, XlsxSnapshot, XlsxMutation, STDIO_XLSX_DOCUMENT_SCHEMA, "xlsx", "../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(tiff_codec, tiff, TiffSnapshot, TiffMutation, STDIO_TIFF_DOCUMENT_SCHEMA, "tiff", "../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(jpg_codec, jpg, JpgSnapshot, JpgMutation, STDIO_JPG_DOCUMENT_SCHEMA, "jpg", "../🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(avi_codec, avi, AviSnapshot, AviMutation, STDIO_AVI_DOCUMENT_SCHEMA, "semio", "../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(png_codec, png, PngSnapshot, PngMutation, STDIO_PNG_DOCUMENT_SCHEMA, "png", "../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
 native_codec_factory!(csv_codec, csv, CsvSnapshot, CsvMutation, STDIO_CSV_DOCUMENT_SCHEMA, "csv", "../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(md_codec, md, MdSnapshot, MdMutation, STDIO_MD_DOCUMENT_SCHEMA, "md", "../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(docx_codec, docx, DocxSnapshot, DocxMutation, STDIO_DOCX_DOCUMENT_SCHEMA, "docx", "../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(mp4_codec, mp4, Mp4Snapshot, Mp4Mutation, STDIO_MP4_DOCUMENT_SCHEMA, "semio", "../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
-native_codec_factory!(json_codec, json, JsonSnapshot, JsonMutation, STDIO_JSON_DOCUMENT_SCHEMA, "json", "../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+native_codec_factory!(json_codec, json, JsonSnapshot, JsonMutation, STDIO_JSON_DOCUMENT_SCHEMA, "json", "../🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(gltf_codec, gltf, GltfSnapshot, GltfMutation, STDIO_GLTF_DOCUMENT_SCHEMA, "gltf", "../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
-native_codec_factory!(bcf_codec, bcf, BcfSnapshot, BcfMutation, STDIO_BCF_DOCUMENT_SCHEMA, "bcf", "../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
+native_codec_factory!(bcf_codec, bcf, BcfSnapshot, BcfMutation, STDIO_BCF_DOCUMENT_SCHEMA, "bcf", "../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
 native_codec_factory!(zip_codec, zip, ZipSnapshot, ZipMutation, STDIO_ZIP_DOCUMENT_SCHEMA, "zip", "../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
 native_codec_factory!(xml_codec, xml, XmlSnapshot, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA, "xml", "../🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
 native_codec_factory!(deflate_codec, deflate, DeflateSnapshot, DeflateMutation, STDIO_DEFLATE_DOCUMENT_SCHEMA, "zz", "../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
-native_codec_factory!(obj_codec, obj, ObjSnapshot, ObjMutation, STDIO_OBJ_DOCUMENT_SCHEMA, "obj", "../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️geometry/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
-native_codec_factory!(pptx_codec, pptx, PptxSnapshot, PptxMutation, STDIO_PPTX_DOCUMENT_SCHEMA, "pptx", "../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
+native_codec_factory!(obj_codec, obj, ObjSnapshot, ObjMutation, STDIO_OBJ_DOCUMENT_SCHEMA, "obj", "../🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
+native_codec_factory!(pptx_codec, pptx, PptxSnapshot, PptxMutation, STDIO_PPTX_DOCUMENT_SCHEMA, "pptx", "../🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(step_codec, step, StepSnapshot, StepMutation, STDIO_STEP_DOCUMENT_SCHEMA, "step", "../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(dwg_codec, dwg, DwgSnapshot, DwgMutation, STDIO_DWG_DOCUMENT_SCHEMA, "dwg", "../🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
+#[cfg(feature = "full-artifact-catalog")]
 native_codec_factory!(svg_codec, svg, SvgSnapshot, SvgMutation, STDIO_SVG_DOCUMENT_SCHEMA, "svg", "../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio");
 
+#[cfg(feature = "full-artifact-catalog")]
 fn pdf_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::of::<
         crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot,
         crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation,
     >(crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA);
     codec.extension = "pdf";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("../🗿️artifacts/🌳️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("../🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
 }
 
+#[cfg(feature = "full-artifact-catalog")]
 fn native_codec_factories() -> [NativeCodecFactory; 26] {
     [
         NativeCodecFactory { id: "stdio.native.ply.v1", artifact: "ply", kind: crate::artifacts::ply::artifact_kind, codec: ply_codec },
@@ -964,6 +1008,18 @@ fn native_codec_factories() -> [NativeCodecFactory; 26] {
         NativeCodecFactory { id: "stdio.native.step.v1", artifact: "step", kind: crate::artifacts::step::artifact_kind, codec: step_codec },
         NativeCodecFactory { id: "stdio.native.dwg.v1", artifact: "dwg", kind: crate::artifacts::dwg::artifact_kind, codec: dwg_codec },
         NativeCodecFactory { id: "stdio.native.svg.v1", artifact: "svg", kind: crate::artifacts::svg::artifact_kind, codec: svg_codec },
+    ]
+}
+
+#[cfg(all(feature = "home-io", not(feature = "full-artifact-catalog")))]
+fn native_codec_factories() -> [NativeCodecFactory; 6] {
+    [
+        NativeCodecFactory { id: "stdio.native.xlsx.v1", artifact: "xlsx", kind: crate::artifacts::xlsx::artifact_kind, codec: xlsx_codec },
+        NativeCodecFactory { id: "stdio.native.csv.v1", artifact: "csv", kind: crate::artifacts::csv::artifact_kind, codec: csv_codec },
+        NativeCodecFactory { id: "stdio.native.json.v1", artifact: "json", kind: crate::artifacts::json::artifact_kind, codec: json_codec },
+        NativeCodecFactory { id: "stdio.native.zip.v1", artifact: "zip", kind: crate::artifacts::zip::artifact_kind, codec: zip_codec },
+        NativeCodecFactory { id: "stdio.native.xml.v1", artifact: "xml", kind: crate::artifacts::xml::artifact_kind, codec: xml_codec },
+        NativeCodecFactory { id: "stdio.native.deflate.v1", artifact: "deflate", kind: crate::artifacts::deflate::artifact_kind, codec: deflate_codec },
     ]
 }
 
@@ -1023,6 +1079,7 @@ pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKind
     native_codec_factories().into_iter().map(|factory| (factory.kind)()).collect()
 }
 
+#[cfg(feature = "full-artifact-catalog")]
 fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt]) -> Result<(), PluginAssemblyError> {
     let provider: NativeOpenableProviderSourceV1 = pack::from_json_str(include_str!("🧬️schema/📜️native-codec-factories.json"))
         .map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
@@ -1057,6 +1114,7 @@ fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt]) -
 }
 
 /// 🧷 Emits receipts only when schema data explicitly authorizes the exact native factory.
+#[cfg(feature = "full-artifact-catalog")]
 pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
     let values = sources()?;
     validate_catalog(&values)?;

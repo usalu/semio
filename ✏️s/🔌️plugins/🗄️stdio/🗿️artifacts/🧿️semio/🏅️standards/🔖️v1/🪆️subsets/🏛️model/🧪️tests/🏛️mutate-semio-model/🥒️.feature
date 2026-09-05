@@ -12,7 +12,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   (`../../🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
   `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/🧬️mutations/📝️text/📖️component.grammar.semio`,
   the committed `(before, mutation, after)` vectors in this case's own `🧫️fixtures/`, and the semio
-  envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing
+  envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`), importing nothing
   from and transliterating nothing of the Rust it judges. It is registered as the oracle
   `semio-model-python-independent` in `…/🏛️model/🔮️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
@@ -55,9 +55,9 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   A sparse keyed diff that retains survivors where they stand and appends newcomers cannot express
   that, and this parameter is what caught it: the subject answered `[site, storey]` where the named
   snapshot says `[storey, site]`, so applying a snapshot did not make the document equal to that
-  snapshot. Fixed at the cause in `…/🏛️model/🧬️schema/🔺️diff/🦀️component.rs`, whose `between_named` now
+  snapshot. Fixed at the cause in `…/🏛️model/🧬️schema/🔺️diff/🦀️.rs`, whose `between_named` now
   degrades to a full replacement whenever the sparse triple cannot reproduce the target's key
-  sequence — the same guard `✳️flow` carries for the same defect. The parameter stays, so a
+  sequence — the same guard `🌊️flow` carries for the same defect. The parameter stays, so a
   regression is red again.
 
   The remaining parameters are chosen against the model's own shape, so a plausible wrong codec
@@ -156,24 +156,24 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   Scenario Outline: Apply and undo <id> on its committed specification vector over the real demo building
     Given the committed specification fixtures for the <id> kind
       | role     | fixture                     |
-      | before   | local://<id>/⬅️before/🔣️.json   |
-      | mutation | local://<id>/🦠️mutation/🔣️.json |
-      | after    | local://<id>/➡️after/🔣️.json    |
+      | before   | local://<fixture>/⬅️before/🔣️.json   |
+      | mutation | local://<fixture>/🦠️mutation/🔣️.json |
+      | after    | local://<fixture>/➡️after/🔣️.json    |
     When both implementations apply the committed mutation to the committed before-snapshot and undo it again
     Then each reaches the committed after-snapshot, each returns to the before-snapshot, and the two agree
     Examples:
-      | id                  |
-      | no-mutation         |
-      | set-snapshot        |
-      | insert-spatial-node |
-      | remove-spatial-node |
-      | set-spatial-node    |
-      | insert-element      |
-      | remove-element      |
-      | set-element         |
-      | insert-relation     |
-      | remove-relation     |
-      | set-relation        |
+      | id | fixture |
+      | no-mutation | ⏸️no-mutation |
+      | set-snapshot | 📸️set-snapshot |
+      | insert-spatial-node | 🏗️insert-spatial-node |
+      | remove-spatial-node | 🕳️remove-spatial-node |
+      | set-spatial-node | 🧭set-spatial-node |
+      | insert-element | 🧱insert-element |
+      | remove-element | 🔨remove-element |
+      | set-element | 🎛️set-element |
+      | insert-relation | 🪢insert-relation |
+      | remove-relation | ✂️remove-relation |
+      | set-relation | 🔧️set-relation |
 
   @id-identity-round-trip
   @level-long

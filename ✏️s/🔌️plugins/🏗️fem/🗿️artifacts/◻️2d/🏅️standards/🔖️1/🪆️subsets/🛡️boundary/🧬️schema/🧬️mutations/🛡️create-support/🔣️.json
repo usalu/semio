@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support",
   "semanticKind": "create-support",
   "displayName": "Create Support",
-  "emoji": "🌱🛡️",
+  "emoji": "🛡️",
   "aggregateVariant": "CreateSupport",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-support",

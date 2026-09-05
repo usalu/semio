@@ -1,7 +1,7 @@
 //! 📚️ Example "building" for `stdio.semio.model` — the first real, non-hex-scaffold fixture for
 //! this subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's model pilot).
 //! `PRIMARY_TEXT` is the genuine `SemioModelSnapshot::print_dsl` output for
-//! `snapshot::demo_semio_model_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/📸️snapshot/
+//! `snapshot::demo_semio_model_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/
 //! 🦀️.rs`) — asserted byte-identical to it by that subset's own `fixture_honesty_law`
 //! (`🎹️composer/🦀️.rs`), so this fixture can never silently drift back to a fake.
 

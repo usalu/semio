@@ -1,0 +1,66 @@
+{
+  "schema": "semio.db.wal.open-rejection/v1",
+  "acquisition": [
+    {
+      "stage": "before-acquire",
+      "cause": "original-open-error",
+      "owner": "none",
+      "sameDocumentAcquire": "available"
+    },
+    {
+      "stage": "caller-acquired-open-failure",
+      "cause": "original-open-error",
+      "owner": "exact-writer-permit",
+      "sameDocumentAcquire": "conflict"
+    },
+    {
+      "stage": "self-acquiring-open-failure",
+      "cause": "original-open-error",
+      "owner": "exact-writer-release",
+      "sameDocumentAcquire": "conflict"
+    }
+  ],
+  "explicitClose": [
+    {
+      "attempt": 1,
+      "outcome": "fault",
+      "openCause": "original-open-error",
+      "closeCause": "writer-close-error",
+      "owner": "same-exact-writer-release",
+      "sameDocumentAcquire": "conflict"
+    },
+    {
+      "attempt": 2,
+      "outcome": "fault",
+      "openCause": "original-open-error",
+      "closeCause": "writer-close-error",
+      "owner": "same-exact-writer-release",
+      "sameDocumentAcquire": "conflict"
+    },
+    {
+      "attempt": 3,
+      "outcome": "terminal",
+      "openCause": "original-open-error",
+      "owner": "none",
+      "sameDocumentAcquire": "available"
+    }
+  ],
+  "droppedRejection": {
+    "behavior": "transfer",
+    "location": "backend-release-cell",
+    "panics": false,
+    "guard": "backend-retained",
+    "sameDocumentAcquire": "conflict",
+    "terminalClaim": false
+  },
+  "enginePropagation": {
+    "variants": [
+      "before-wal",
+      "wal-open-rejected",
+      "wal-close-rejected"
+    ],
+    "flattenedToDbError": false,
+    "authorityReadyOwnsRejection": true,
+    "databaseMountOwnsRejection": true
+  }
+}

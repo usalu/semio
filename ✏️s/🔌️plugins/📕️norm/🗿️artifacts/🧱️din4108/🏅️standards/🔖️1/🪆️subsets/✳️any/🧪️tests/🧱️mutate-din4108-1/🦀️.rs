@@ -1,7 +1,7 @@
 //! 🦀️ DIN 4108 exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
 //! no-oracle decision `din4108-1-mutation-semantics` is gone from
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`, because a reference now
+//! `../../🔣️oracle.json`, because a reference now
 //! exists to compare against: `s.norm.din4108` is a
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
@@ -35,9 +35,9 @@
 //! unreachable from here. The subset's own production code therefore exports the bridges
 //! (`decode_din4108_snapshot_json`/`encode_din4108_snapshot_json`,
 //! `decode_din4108_dsl`/`encode_din4108_dsl`, `decode_din4108_pack`/`encode_din4108_pack` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`;
+//! `../../🧬️schema/📸️snapshot/🦀️.rs`;
 //! `decode_din4108_mutation_json`, `apply_din4108_mutation`, `inverse_din4108_mutation` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`), whose
+//! `../../🧬️schema/🧬️mutations/🦀️.rs`), whose
 //! signatures name only reachable types. This side reaches the committed vectors through
 //! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
 //! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
@@ -56,7 +56,7 @@ use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `Din4108Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) —
+/// 🏷️ Mirrors `Din4108Mutation::KINDS` (`../../🧬️schema/🧬️mutations/🦀️.rs`) —
 /// duplicated, not imported, because the oracle-only build must not link the subject crate. The
 /// contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
@@ -100,136 +100,136 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-category" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/🎯️outcome/🔣️.json"),
         ),
         "change-climate" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/🎯️outcome/🔣️.json"),
         ),
         "change-airtightness-n50" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/🎯️outcome/🔣️.json"),
         ),
         "change-psi-times-l-sum" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/🎯️outcome/🔣️.json"),
         ),
         "change-rh-int" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/🎯️outcome/🔣️.json"),
         ),
         "change-catalog-id" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/🎯️outcome/🔣️.json"),
         ),
         "change-material-id" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/🎯️outcome/🔣️.json"),
         ),
         "change-airtightness-class" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/🎯️outcome/🔣️.json"),
         ),
         "change-t-int-c" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/🎯️outcome/🔣️.json"),
         ),
         "change-solar-absorptance" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/🎯️outcome/🔣️.json"),
         ),
         "change-irradiance-wm2" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/🎯️outcome/🔣️.json"),
         ),
         "change-moisture-mu-exterior" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/🎯️outcome/🔣️.json"),
         ),
         "change-moisture-mu-interior" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/🎯️outcome/🔣️.json"),
         ),
         "change-envelope-area-m2" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/🎯️outcome/🔣️.json"),
         ),
         "change-bb2-details-conform" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/🎯️outcome/🔣️.json"),
         ),
         "change-application-type" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/🎯️outcome/🔣️.json"),
         ),
         "change-declared-application-class" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/🎯️outcome/🔣️.json"),
         ),
         "insert-layer" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/🎯️outcome/🔣️.json"),
         ),
         "remove-layer" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/🎯️outcome/🔣️.json"),
         ),
         "reorder-layers" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/🎯️outcome/🔣️.json"),
         ),
         "change-layer-thickness" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/🎯️outcome/🔣️.json"),
         ),
         "change-layer-lambda" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/🎯️outcome/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-din4108-1: no committed fixture is registered for kind {other:?}"),
     }

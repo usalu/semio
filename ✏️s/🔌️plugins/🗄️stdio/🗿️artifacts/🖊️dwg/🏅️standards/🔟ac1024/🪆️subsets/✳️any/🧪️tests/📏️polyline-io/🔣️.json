@@ -1,0 +1,40 @@
+{
+  "polylines": [
+    {
+      "layer": "walls",
+      "vertices": [
+        [
+          1,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          1,
+          5
+        ]
+      ],
+      "closed": true
+    },
+    {
+      "layer": "guides",
+      "vertices": [
+        [
+          0,
+          0
+        ],
+        [
+          10,
+          10
+        ]
+      ],
+      "closed": false
+    }
+  ]
+}

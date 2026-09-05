@@ -158,7 +158,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -169,7 +169,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -180,7 +180,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -191,7 +191,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -202,7 +202,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -213,7 +213,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -224,7 +224,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -235,7 +235,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -246,7 +246,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         },
@@ -257,7 +257,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🧪️direct-behavior"
+              "directoryName": "🎯️direct-behavior"
             }
           ]
         }
@@ -721,7 +721,7 @@
   "comparisonPipelines": [
     {
       "id": "jpg-jfif-1-01-image-compare-v1",
-      "description": "Reads two JPEG documents with an independent jpeg-jfif-codec projection (dimensions, colour type, raster digest, xmp/exif/iptc/iccProfile presence+digest) and compares them structurally. GATING for the four mutation kinds this reader can witness (`insert-other-segment`, `remove-other-segment`, `replace-pixels`, `change-re-encode-quality`); registered as a freestanding pipeline rather than wired into the existing `semantic-jpg-mutate-v1` profile's own `pipeline` field, since that profile is already the live comparison for the reclassified `image-jpeg-jfif-1-01-mutate` (`cross-semio-implementation`) oracle's own scenario (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🪁️mutate-jpg-jfif-1-01/🥒️.feature`, tags `@oracle-image-jpeg-jfif-1-01-mutate @comparison-semantic-jpg-mutate-v1`) — retargeting that field would have silently redirected an existing, already-registered comparison this ticket was told to leave untouched.",
+      "description": "Reads two JPEG documents with an independent jpeg-jfif-codec projection (dimensions, colour type, raster digest, xmp/exif/iptc/iccProfile presence+digest) and compares them structurally. GATING for the four mutation kinds this reader can witness (`insert-other-segment`, `remove-other-segment`, `replace-pixels`, `change-re-encode-quality`); registered as a freestanding pipeline rather than wired into the existing `semantic-jpg-mutate-v1` profile's own `pipeline` field, since that profile is already the live comparison for the reclassified `image-jpeg-jfif-1-01-mutate` (`cross-semio-implementation`) oracle's own scenario (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/📸️mutate-jpg-jfif-1-01/🥒️.feature`, tags `@oracle-image-jpeg-jfif-1-01-mutate @comparison-semantic-jpg-mutate-v1`) — retargeting that field would have silently redirected an existing, already-registered comparison this ticket was told to leave untouched.",
       "stages": [
         {
           "probe": "jpg-import",

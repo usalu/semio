@@ -2,7 +2,7 @@
 
 #[test]
 fn dsl_asset_parses_and_round_trips() {
-    let text = include_str!("../🖼️assets/🧪️dream/🗣️.dsl.semio");
+    let text = include_str!("../🖼️assets/🌙️dream/🗣️.dsl.semio");
     assert!(text.len() > 64, "dsl fixture must carry real payload");
     let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
     assert_eq!(projection.parts.len(), 2880);
@@ -12,7 +12,7 @@ fn dsl_asset_parses_and_round_trips() {
 
 #[test]
 fn flatten_matches_golden_poses_to_1e4() {
-    let text = include_str!("../🖼️assets/🧪️dream/🗣️.dsl.semio");
+    let text = include_str!("../🖼️assets/🌙️dream/🗣️.dsl.semio");
     let mut projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
     crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot_inplace(&mut projection);
     let golden: serde_json::Map<String, serde_json::Value> = serde_json::from_str(include_str!("../🖼️assets/🔣️.json")).expect("golden json");
@@ -56,7 +56,7 @@ fn inference_default_law() {
 fn inference_determinism_law() {
     use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
     use protocol::Inference;
-    let text = include_str!("../🖼️assets/🧪️dream/🗣️.dsl.semio");
+    let text = include_str!("../🖼️assets/🌙️dream/🗣️.dsl.semio");
     let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
     assert_eq!(Puzzle5dInference::infer(&projection), Puzzle5dInference::infer(&projection));
 }

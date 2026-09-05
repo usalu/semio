@@ -1,11 +1,12 @@
 {
   "schema": "semio.hub.directory-home-browser-process-fixture/v1",
-  "limits": { "journeyMs": 120000, "stepMs": 10000, "responseBytes": 65536, "appliedEvents": 256 },
+  "limits": { "journeyMs": 120000, "stepMs": 30000, "responseBytes": 65536, "appliedEvents": 256 },
+  "spaceGuest": { "target": "wasm32-wasip2", "package": "semio-s-plugin-space", "nativeFeature": "os-host-full", "forbiddenPackages": ["ring", "cc", "tokio"] },
   "profiles": {
     "a": { "profileId": "directory-browser-a", "subject": "directory-browser-process-a", "displayName": "Directory Browser A" },
     "b": { "profileId": "directory-browser-b", "subject": "directory-browser-process-b", "displayName": "Directory Browser B" }
   },
-  "home": { "pluginId": "s", "appId": "s.home@1/*#editor", "actionId": "applyDirectoryEventPage", "moduleDirectory": "🪐️s" },
+  "home": { "pluginId": "s", "appId": "s.space.home@1/*#editor", "actionId": "applyDirectoryEventPage", "moduleDirectory": "🪐️s" },
   "pages": {
     "initial": { "epoch": 1, "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "generation": 1, "after": 0, "through": 3, "hasMore": false, "receipt": "1111111111111111111111111111111111111111111111111111111111111111", "eventIds": ["event-1", "event-3"] },
     "gap": { "epoch": 1, "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "generation": 1, "after": 3, "through": 5, "hasMore": false, "receipt": "2222222222222222222222222222222222222222222222222222222222222222", "eventIds": ["event-5"] },

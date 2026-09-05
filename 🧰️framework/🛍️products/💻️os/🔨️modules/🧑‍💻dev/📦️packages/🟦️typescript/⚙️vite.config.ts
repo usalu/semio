@@ -6,10 +6,11 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
-import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleStaticDirectoryNames } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { isHostPluginFilter } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
+import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleStaticDirectoryNames } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioPluginHotSwapVitePlugin, semioProductionTestBoundaryVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioPluginHotSwapVitePlugin, semioProductionTestBoundaryVitePlugin } from "./🔌️vite-plugins.ts";
 import { defaultExtensionInstallRoot, semioExtensionStoreVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
 
@@ -60,7 +61,7 @@ const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-
 /** @emoji 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
  * (the "s" studio hub can open any app, so it needs every app's dev-time asset routes available), else
  * just the resolved variant's own `assets` row. */
-const resolvedPlaygroundAssets = isHostPluginFilter(plugin) ? PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.assets) : (PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin)?.assets ?? []);
+const resolvedPlaygroundAssets = isHostPlaygroundFilter(plugin) ? PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.assets) : (PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin)?.assets ?? []);
 
 /** @emoji 🔌️ The wasm plugin crate(s) a production build's `dist/🔌️plugin-modules/` needs to actually ship
  * — the "s" studio hub can open any app so it needs every built plugin crate; a single-variant build
@@ -74,7 +75,7 @@ const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.varian
 // `resolvedPluginId` names. Omitting it meant `dist/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js` was never
 // copied and every single-variant production build 404s the shard worker at first plugin activation.
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
-const pluginModuleDirNames = moduleStaticDirectoryNames(resolvedPluginId, isHostPluginFilter(plugin));
+const pluginModuleDirNames = moduleStaticDirectoryNames(resolvedPluginId, isHostPlaygroundFilter(plugin));
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
 
 export default defineConfig({
@@ -146,6 +147,10 @@ export default defineConfig({
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
     playgroundFlowWasmDevStubPlugin(repoRoot),
+    semioDescriptorRouteGuardVitePlugin([
+      { route: MODULE_PLUGIN_ROUTE, root: pluginModulesDir, directoryNames: new Set(PLUGIN_BUILD_TARGETS.filter((target) => target.role === "plugin").map((target) => moduleDirectoryName(target.pluginId))) },
+      { route: MODULE_EXTENSION_ROUTE, root: installedExtensionsDir, directoryNames: new Set(EXTENSION_TARGETS.map((target) => moduleDirectoryName(target.pluginId))) },
+    ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     semioPluginHotSwapVitePlugin(),

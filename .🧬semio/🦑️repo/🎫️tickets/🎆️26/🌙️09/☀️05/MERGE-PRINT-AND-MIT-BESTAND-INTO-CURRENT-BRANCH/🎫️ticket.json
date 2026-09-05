@@ -1,0 +1,11 @@
+{
+  "title": "Merge Print and Mit Bestand Into Current Branch",
+  "emoji": "🔀️",
+  "status": "closed",
+  "description": "Merge temp/merge/print and temp/merge/mit-bestand into the latest shared working branch, preserving current architecture and concurrent edits; reconcile content and command changes; validate runtime and document provenance.",
+  "summary": "Integrated temp/merge print and mit-bestand snapshots into the current shared working tree, preserving current architecture and concurrent semantic renames. Added visualization styles/catalog/gallery, compiler-safe staging, three reports with shared appendices and bibliography closure, actor validation/rendering, Nx and VS Code commands, and 687 byte-identical research intake files. Fixed imported package, font, text-rendering, reference and subprocess-budget issues. Uncached source tests, all 12 standard template PDFs, all three report PDFs, distribution/API themes, PDF text checks and API repeatability passed. Final report logs have no undefined references. Generated ticket outputs removed; source snapshots and Markdown audits retained. No modifying Git operations used. See the ticket completion and validation reports.",
+  "goal": "🎯consistentrepohistory",
+  "sessions": [
+    "⚪803a7a5f7b04480ea06167b4e15e6165"
+  ]
+}

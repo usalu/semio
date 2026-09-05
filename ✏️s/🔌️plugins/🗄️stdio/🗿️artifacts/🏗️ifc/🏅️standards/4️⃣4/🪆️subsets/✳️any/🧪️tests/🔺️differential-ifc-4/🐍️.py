@@ -1,6 +1,6 @@
 """🐍️ IfcOpenShell differential ORACLE for stdio.ifc 4/✳️any — a real SECOND PRODUCER.
 
-Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. The sibling case `../🦋️mutate-ifc-4` registers
+Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. The sibling case `../🏗️mutate-ifc-4` registers
 `ruststep` 0.4, which parses the ISO 10303-21 grammar and has no writer at all, so every scenario
 there is honestly typed `@mode-property`/`@mode-round-trip` — a second READER, never a second
 producer. This case closes that gap for the seven mutation kinds a schema-bound implementation can
@@ -41,11 +41,11 @@ exact fixture:
   confirmed here: `#16976` disappears from `#16991`'s member aggregate. `IfcMutation::RemoveEntity`
   deliberately does NOT cascade. Two implementations of two different verbs are not a differential.
 
-Those four keep their `ruststep`-backed scenarios in `../🦋️mutate-ifc-4` unchanged. The removal
+Those four keep their `ruststep`-backed scenarios in `../🏗️mutate-ifc-4` unchanged. The removal
 primitive IS used here, but only as the inverse of `insert-entity`, and only behind an explicit
 `get_total_inverses(...) == 0` guard, so the cascading path is never silently taken.
 
-@see ../🦋️mutate-ifc-4/component.feature — the exhaustive eleven-kind case this one does not replace.
+@see ../🏗️mutate-ifc-4/component.feature — the exhaustive eleven-kind case this one does not replace.
 @see ../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🔣️oracle.json — this oracle's registration.
 """
 
@@ -631,7 +631,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
     instead is that the document was genuinely parsed into a typed model: IfcOpenShell's own count
     of materialized `entity_instance` objects must equal the entity count the from-scratch text
     reader finds in the bytes it wrote — two independent counts of the same model, which a byte copy
-    could not report. The sibling `../🐸️mutate-ifc-2x3` fixture, exported by a different tool, is
+    could not report. The sibling `../🧱️mutate-ifc-2x3` fixture, exported by a different tool, is
     where the same code path does visibly reformat (193 915 bytes in, 188 288 out)."""
     path = mutable_input(ctx)
     model = open_model(path)

@@ -64,7 +64,7 @@
           "scenarios": [
             {
               "id": "keeps-a-node-property-at-the-value-it-already-holds",
-              "directoryName": "📖️keeps-a-node-property-at-the-value-it-already-holds"
+              "directoryName": "🏷️keeps-a-node-property-at-the-value-it-already-holds"
             }
           ]
         },
@@ -81,8 +81,8 @@
         },
         {
           "mutationId": "create-node",
-          "sourceMutationDirectoryName": "🌱️create-node",
-          "mutationDirectoryName": "🌱️create-node",
+          "sourceMutationDirectoryName": "➕️create-node",
+          "mutationDirectoryName": "➕️create-node",
           "scenarios": [
             {
               "id": "rejects-a-node-id-the-scene-already-holds",
@@ -119,7 +119,7 @@
           "scenarios": [
             {
               "id": "keeps-a-node-at-the-point-it-already-occupies",
-              "directoryName": "📖️keeps-a-node-at-the-point-it-already-occupies"
+              "directoryName": "📍️keeps-a-node-at-the-point-it-already-occupies"
             }
           ]
         },
@@ -130,7 +130,7 @@
           "scenarios": [
             {
               "id": "keeps-an-edge-without-the-property-it-never-had",
-              "directoryName": "🟢️keeps-an-edge-without-the-property-it-never-had"
+              "directoryName": "🧹️keeps-an-edge-without-the-property-it-never-had"
             }
           ]
         },
@@ -141,7 +141,7 @@
           "scenarios": [
             {
               "id": "keeps-the-name-a-node-already-carries",
-              "directoryName": "📖️keeps-the-name-a-node-already-carries"
+              "directoryName": "✏️keeps-the-name-a-node-already-carries"
             }
           ]
         }

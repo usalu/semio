@@ -358,17 +358,7 @@ pub async fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot
 }
 //#endregion 🔖️MediaExport
 
-//#region 🔖️MediaImport
-/// 📥️ Tier C DWG import for `2d.shooting`: the format has no wall/obstacle concept, so this always
-/// returns the default studio fixture — never errors, including for a structurally empty `DwgDrawing`.
-/// The camera is session-only runtime state now (never a document field — see `ShootingConfig::camera`
-/// in the app's `🦀️config.rs`), and `register_dwg_import_handler`'s callback signature
-/// (`&DwgDrawing -> Result<Value, String>`) has no channel back into that runtime state, so this no
-/// longer reframes the camera to the drawing extent (dropped, not moved — see the ticket notes).
-pub async fn shooting_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
-    Ok(dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&default_snapshot())))
-}
-//#endregion 🔖️MediaImport
+
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.shooting.shooting` — twenty handcrafted schema leaves.
@@ -581,22 +571,7 @@ mod tests {
     /// 🎥️ The camera used to be reframed to the DWG extent here; now that it's session-only runtime
     /// state (never a document field), the import hook has no channel back into it — this asserts the
     /// surviving intent: import still succeeds and stays schema-valid for a non-trivial extent.
-    #[semio_framework_async_macros::async_test]
-    async fn dwg_import_stays_schema_valid_for_a_non_trivial_extent() {
-        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..Default::default() };
-        let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors");
-        let snapshot: ShootingSnapshot = serde_json::from_value(document).expect("schema-valid snapshot");
-        assert_eq!(snapshot.schema, SHOOTING_DOCUMENT_SCHEMA);
-        assert!(!snapshot.shots.is_empty());
-    }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dwg_import_never_errors_on_empty_drawing() {
-        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
-        let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors on empty drawing");
-        let snapshot: ShootingSnapshot = serde_json::from_value(document).expect("schema-valid fixture");
-        assert_eq!(snapshot.schema, SHOOTING_DOCUMENT_SCHEMA);
-    }
 
     #[semio_framework_async_macros::async_test]
     async fn transparent_background_predicate_covers_empty_and_literal_transparent() {

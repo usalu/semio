@@ -1,12 +1,12 @@
 //! 📏 GLTF proportion indicators.
 
-#[path = "🧪️aspect-ratios/🦀️.rs"]
+#[path = "🖼️aspect-ratios/🦀️.rs"]
 pub mod aspect_ratios;
-#[path = "🟫️elongation/🦀️.rs"]
+#[path = "↔️elongation/🦀️.rs"]
 pub mod elongation;
-#[path = "🔮️flatness/🦀️.rs"]
+#[path = "📃️flatness/🦀️.rs"]
 pub mod flatness;
-#[path = "🌾️slenderness/🦀️.rs"]
+#[path = "📏️slenderness/🦀️.rs"]
 pub mod slenderness;
 
 use super::super::modules::measurement_contracts::*;

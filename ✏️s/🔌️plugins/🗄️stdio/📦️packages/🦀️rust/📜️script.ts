@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readSync, realpathSync, renameSync, rmSync, statSync, truncateSync, writeFileSync, writeSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { decodePackValue, encodePackValue } from "../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -626,9 +626,143 @@ function stdioWalkText(directory: string, files: string[] = []): string[] {
     if (entry.isDirectory() && ["target", "node_modules", "🗑️generated"].includes(entry.name)) continue;
     const path = join(directory, entry.name);
     if (entry.isDirectory()) stdioWalkText(path, files);
-    else if (/[.](?:rs|ts|json|feature|semio)$/u.test(entry.name) || ["Cargo.toml", "package.json"].includes(entry.name)) files.push(path);
+    else if (/[.](?:rs|ts|js|json|feature|semio)$/u.test(entry.name) || ["Cargo.toml", "package.json"].includes(entry.name)) files.push(path);
   }
   return files;
+}
+
+/** 🖊️ Checks codec ownership against an independent JSON Schema oracle and the framework source tree. */
+async function runDwgArtifactOwnership(root: string, repoRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const fixtureRoot = join(root, "🧫️fixtures/🖊️dwg-artifact-ownership");
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { path: string; allowed: boolean }[]; forbiddenFrameworkPatterns: string[] };
+  const validate = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const ownsCodec = (path: string): boolean => {
+    const parts = path.split("/");
+    return parts[0] === "✏️s" && parts[1] === "🔌️plugins" && Boolean(parts[2]) && Boolean(parts[4]) && parts[3] === "🗿️artifacts" && (parts[4] === "🖊️dwg" || parts.slice(5).includes("🚪️io"));
+  };
+  for (const test of fixture.cases) {
+    assert.equal(ownsCodec(test.path), test.allowed, test.path);
+    assert.equal(validate(test.path), test.allowed, `AJV ownership oracle: ${test.path}`);
+  }
+  const forbidden = fixture.forbiddenFrameworkPatterns.map((pattern) => new RegExp(pattern, "u"));
+  const sources = ["🧰️framework", "✏️s/🔨️modules"].flatMap((directory) => stdioWalkText(join(repoRoot, directory)));
+  const failures = sources.filter((path) => /[.](?:rs|ts|js|json)$|Cargo[.]toml$/u.test(path) && !["/🧩️extension-modules/", "/🔌️plugin-modules/", "/📤️distribution/"].some((directory) => path.split(sep).join("/").includes(directory))).flatMap((path) => {
+    const source = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gmu, "");
+    return forbidden.some((pattern) => pattern.test(source)) ? [relative(repoRoot, path)] : [];
+  });
+  assert.deepEqual(failures, [], "DWG codecs escaped artifact I/O ownership");
+  const misplaced = stdioWalkText(join(repoRoot, "✏️s/🔌️plugins")).filter((path) => /[.](?:rs|ts)$/u.test(path) && path.split(sep).join("/").includes("/🗿️artifacts/") && !ownsCodec(relative(repoRoot, path).split(sep).join("/"))).filter((path) => {
+    const source = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gmu, "");
+    return /(?:semio_s_plugin_stdio|crate)::artifacts::dwg::|\bDwg(?:Drawing|Geometry|Entity|Color|Importer|Exporter)\b|\b(?:export|import)_dwg(?:_sync)?\b/u.test(source);
+  }).map((path) => relative(repoRoot, path));
+  assert.deepEqual(misplaced, [], "Other artifact facets contain DWG codecs");
+  console.log(`stdio-dwg-artifact-ownership: cases=${fixture.cases.length} AJV=1 framework=clean modules=clean artifact-facets=clean`);
+}
+
+type HomeIoSurfaceFixture = {
+  readonly schema: "semio.stdio.home-io-surface/v1";
+  readonly features: { readonly homeIo: "home-io"; readonly fullArtifactCatalog: "full-artifact-catalog"; readonly spaceGuest: "space-guest" };
+  readonly directArtifacts: readonly ["csv", "json", "xlsx", "zip"];
+  readonly sharedCodecs: readonly ["binary", "deflate", "txt", "xml"];
+  readonly fullArtifactCount: 36;
+};
+
+function cargoTomlFiles(directory: string, files: string[] = []): string[] {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && [".git", ".nx", ".🧬semio", "node_modules", "target", "🗑️generated"].includes(entry.name)) continue;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) cargoTomlFiles(path, files);
+    else if (entry.name === "Cargo.toml") files.push(path);
+  }
+  return files;
+}
+
+/** 🏠️ Proves Space selects only the four Home I/O families plus their exact shared codec closure. */
+class HomeIoSurfaceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runDwgArtifactOwnership(this.root, this.repoRoot);
+    const mode = segments[0] ?? "source";
+    if (mode !== "source" && mode !== "native") throw new Error("home-io-surface expects source|native");
+    const { default: assert } = await import("node:assert/strict");
+    const fixtureRoot = join(this.root, "🧫️fixtures/🏠️home-io-surface");
+    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as HomeIoSurfaceFixture;
+    const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+    const ajv = new Ajv2020({ strict: true });
+    const validate = ajv.compile(schema);
+    assert(validate(fixture), ajv.errorsText(validate.errors));
+    const manifest = readFileSync(join(this.root, "Cargo.toml"), "utf8");
+    assert.match(manifest, /default\s*=\s*\["plugin-root"\]/u);
+    assert.match(manifest, /plugin-root\s*=\s*\["full-artifact-catalog"\]/u);
+    assert.match(manifest, /full-artifact-catalog\s*=\s*\[\]/u);
+    assert.match(manifest, /home-io\s*=\s*\[\]/u);
+    const root = readFileSync(join(this.root, "🦀️.rs"), "utf8");
+    assert.match(root, /#\[cfg\(not\(any\(feature = "full-artifact-catalog", feature = "home-io"\)\)\)\]\s+compile_error!\("stdio requires a home-io or full-artifact-catalog surface"\);/u);
+    const selected = [...fixture.directArtifacts, ...fixture.sharedCodecs].sort();
+    const moduleRows = [...root.matchAll(/#\[cfg\(([^\n]+)\)\]\s+pub mod ([a-z0-9_]+) \{/gu)].map((match) => ({ cfg: match[1]!, artifact: match[2]! }));
+    for (const artifact of selected) assert(moduleRows.some((row) => row.artifact === artifact && row.cfg === 'any(feature = "full-artifact-catalog", feature = "home-io")'), `${artifact} is not in the exact Home I/O closure`);
+    const allArtifacts = [...root.matchAll(/^    pub mod ([a-z0-9_]+) \{/gmu)].map((match) => match[1]!).slice(0, fixture.fullArtifactCount);
+    assert.equal(new Set(allArtifacts).size, fixture.fullArtifactCount);
+    for (const artifact of allArtifacts.filter((value) => !selected.includes(value))) assert(moduleRows.some((row) => row.artifact === artifact && row.cfg === 'feature = "full-artifact-catalog"'), `${artifact} escaped the full-catalog gate`);
+    assert.match(root, /#\[cfg\(feature = "full-artifact-catalog"\)\]\s+#\[path = "\.\.\/\.\.\/🦀️\.rs"\]\s+pub mod plugin;/u);
+    assert.match(root, /#\[cfg\(feature = "full-artifact-catalog"\)\]\s+#\[path = "\."\]\s+pub mod editor \{/u);
+    assert.match(root, /#\[cfg\(feature = "full-artifact-catalog"\)\]\s+#\[path = "\."\]\s+pub mod viewer \{/u);
+    for (const path of [
+      resolve(this.root, "../../🗿️artifacts/💾️binary/🦀️.rs"),
+      resolve(this.root, "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🦀️.rs"),
+      resolve(this.root, "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🦀️.rs"),
+      resolve(this.root, "../../🗿️artifacts/🔤️txt/🦀️.rs"),
+      resolve(this.root, "../../🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🦀️.rs"),
+      resolve(this.root, "../../🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🦀️.rs"),
+    ]) assert.match(readFileSync(path, "utf8"), /#\[cfg\(feature = "full-artifact-catalog"\)\]\s+pub fn (?:artifact|standard|subset)\(/u, `${relative(this.repoRoot, path)} leaked its plugin declaration into Home I/O`);
+    const spaceManifestPath = resolve(this.root, "../../../🪐️space/📦️packages/🦀️rust/Cargo.toml");
+    const spaceManifest = readFileSync(spaceManifestPath, "utf8");
+    assert.match(spaceManifest, /semio-s-plugin-stdio\s*=\s*\{[^\n]*default-features\s*=\s*false[^\n]*features\s*=\s*\["home-io"\][^\n]*\}/u);
+    assert.match(spaceManifest, new RegExp(`semio-framework-os\\s*=\\s*\\{[^\\n]*features\\s*=\\s*\\["${fixture.features.spaceGuest}"\\][^\\n]*\\}`, "u"));
+    const consumers = cargoTomlFiles(this.repoRoot).filter((path) => path !== join(this.root, "Cargo.toml") && readFileSync(path, "utf8").includes("semio-s-plugin-stdio = {"));
+    assert(consumers.includes(spaceManifestPath));
+    const hubManifestPath = resolve(this.repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml");
+    const gisManifestPath = resolve(this.root, "../../../🌍️gis/📦️packages/🦀️rust/Cargo.toml");
+    const osHostManifestPath = resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml");
+    assert(consumers.includes(hubManifestPath));
+    assert(consumers.includes(gisManifestPath));
+    for (const path of consumers.filter((value) => value !== spaceManifestPath)) {
+      const source = readFileSync(path, "utf8");
+      const directFull = /semio-s-plugin-stdio\s*=\s*\{[^\n]*features\s*=\s*\["full-artifact-catalog"\][^\n]*\}/u.test(source);
+      const forwardedFull = source.includes('"semio-s-plugin-stdio/full-artifact-catalog"');
+      if (path === hubManifestPath) {
+        assert.match(source, /native-artifact-execution\s*=\s*\[[^\n]*"dep:semio-s-plugin-stdio"[^\n]*"semio-s-plugin-stdio\/full-artifact-catalog"[^\n]*"dep:semio-s-plugin-gis"[^\n]*"dep:semio-s-plugin-vcs"[^\n]*\]/u);
+        assert.match(source, /semio-s-plugin-stdio\s*=\s*\{[^\n]*default-features\s*=\s*false[^\n]*optional\s*=\s*true[^\n]*\}/u);
+        assert.match(source, /semio-s-plugin-gis\s*=\s*\{[^\n]*default-features\s*=\s*false[^\n]*optional\s*=\s*true[^\n]*\}/u);
+        assert.match(source, /semio-s-plugin-vcs\s*=\s*\{[^\n]*default-features\s*=\s*false[^\n]*optional\s*=\s*true[^\n]*\}/u);
+        assert(!directFull, "headless Hub dependency directly selected the full Stdio catalog");
+        assert(forwardedFull, "native Hub provider stopped forwarding the full Stdio catalog");
+        continue;
+      }
+      if (path === gisManifestPath) assert(directFull, "GIS stopped retaining its complete Stdio codec dependency");
+      assert(directFull || forwardedFull, `${relative(this.repoRoot, path)} did not retain the full Stdio catalog`);
+    }
+    const osHostManifest = readFileSync(osHostManifestPath, "utf8");
+    assert.match(osHostManifest, new RegExp(`^${fixture.features.spaceGuest}\\s*=\\s*\\[\\]$`, "mu"));
+    assert.match(osHostManifest, new RegExp(`^os-host-full\\s*=\\s*\\["${fixture.features.spaceGuest}",\\s*"dep:zip",\\s*"semio-framework-os-kernel/sync"\\]$`, "mu"));
+    assert(!consumers.includes(osHostManifestPath), "OS host must not select domain artifact codecs");
+    assert(!osHostManifest.includes("semio-s-plugin-stdio"), "OS host depends on Stdio");
+    const osHostRoot = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
+    for (const module of ["host", "backbone", "instance", "workflow", "registry"]) assert.match(osHostRoot, new RegExp(`#\\[cfg\\(any\\(feature = "os-host-full", feature = "${fixture.features.spaceGuest}"\\)\\)\\]\\s+pub mod ${module} \\{`, "u"));
+    const spaceRoot = resolve(this.root, "../../../🪐️space");
+    const productionRefs = stdioWalkText(spaceRoot)
+      .filter((path) => path.endsWith(".rs") && path.includes("/🗿️artifacts/🏠️home/") && !path.includes("/🧪️tests/"))
+      .flatMap((path) => [...readFileSync(path, "utf8").matchAll(/semio_s_plugin_stdio::artifacts::([a-z0-9_]+)/gu)].map((match) => match[1]!));
+    assert(productionRefs.every((artifact) => fixture.directArtifacts.includes(artifact as HomeIoSurfaceFixture["directArtifacts"][number]) || artifact === "txt"));
+    console.log(`stdio-home-io-surface-oracle: AJV=1 direct=${fixture.directArtifacts.length} shared=${fixture.sharedCodecs.length} full=${fixture.fullArtifactCount} consumers=${consumers.length}`);
+    if (mode === "native") {
+      const options = { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: buildBudgetMs() };
+      runCmd("cargo", ["check", "-p", PACKAGE_NAME, "--lib", "--target", "wasm32-wasip2", "--no-default-features", "--features", fixture.features.homeIo, "--message-format=short"], options);
+      runCmd("cargo", ["check", "-p", "semio-s-plugin-space", "--lib", "--target", "wasm32-wasip2", "--message-format=short"], options);
+    }
+  }
 }
 
 class TestScript extends BundleScript {
@@ -815,6 +949,6 @@ class CatalogRootScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("build-wasm-release", BuildWasmReleaseScript).register("describe", DescribeScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("build-wasm-release", BuildWasmReleaseScript).register("describe", DescribeScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

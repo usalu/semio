@@ -34,19 +34,19 @@ pub struct Block5dInference {
 }
 
 impl protocol::Inference<Block5dSnapshot> for Block5dInference {
-    async fn infer(snapshot: &Block5dSnapshot) -> Self {
+    fn infer(snapshot: &Block5dSnapshot) -> Self {
         Self { bounds: compute_block5d_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Block5dSnapshot> for Block5dInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.block.block5d.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.block.block5d.inference.bounds", reads: &["grips"] }]
     }
 }
@@ -63,7 +63,7 @@ impl ArtifactInferrer for crate::artifacts::block5d::standards::v1::subsets::any
 /// 🌉️ Maps this `PartKind` definition into the `s/plugin/puzzle` 5d catalog shape
 /// (`Puzzle5dKindCatalogs`: `parts`/`grips`/`fasteners`/`ropes`), the seam puzzle imports through its
 /// `Kit×Type` media port. Block owns no fastener/rope-kind rows, so those arrays stay empty here.
-pub async fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
+pub fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
     let vec3 = |v: [f64; 3]| array(v.iter().map(|c| Value::from(*c)));
     let grips: Vec<Value> = definition
         .grips
@@ -122,11 +122,11 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn grip(id: &str, position: [f64; 3], radius_3d: f64) -> Block5dGripTemplate {
+    fn grip(id: &str, position: [f64; 3], radius_3d: f64) -> Block5dGripTemplate {
         Block5dGripTemplate { id: id.into(), grip_kind: "rope".into(), angle: 0.0, radius_2d: 0.0, position, direction: [0.0, 1.0, 0.0], radius_3d }
     }
 
-    async fn snapshot_with_grips(grips: Vec<Block5dGripTemplate>) -> Block5dSnapshot {
+    fn snapshot_with_grips(grips: Vec<Block5dGripTemplate>) -> Block5dSnapshot {
         Block5dSnapshot { part_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() }, grips, ..Block5dSnapshot::default() }
     }
     //#endregion 🧸️Fixtures

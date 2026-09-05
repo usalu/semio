@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge",
   "semanticKind": "create-edge",
   "displayName": "Create Edge",
-  "emoji": "🔗️",
+  "emoji": "🌉️",
   "aggregateVariant": "CreateEdge",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-edge",

@@ -54,31 +54,31 @@ pub struct Block3dVortexKindExtra {
 /// 🔀️ `Block3dVortexKind` → the shared `SemioKitType` half of the composed catalog child. `category`
 /// is a fixed constant (`Block3dVortexKind` has no grouping concept of its own) — never round-tripped
 /// through `vortex_kind_extra`, so this stays lossless without needing a shadow field.
-pub async fn kit_type_from_vortex_kind(kind: &Block3dVortexKind) -> SemioKitType {
+pub fn kit_type_from_vortex_kind(kind: &Block3dVortexKind) -> SemioKitType {
     SemioKitType { id: kind.id.clone(), name: kind.name.clone(), category: "vortex-kind".into() }
 }
 
 /// 🔀️ `Block3dVortexKind` → the block3d-owned overflow half (`vortex_kind_extra`) the composed kit
 /// type cannot carry. Lossless together with `kit_type_from_vortex_kind`: every `Block3dVortexKind`
 /// field lands in exactly one of the two halves.
-pub async fn vortex_kind_extra_from_vortex_kind(kind: &Block3dVortexKind) -> Block3dVortexKindExtra {
+pub fn vortex_kind_extra_from_vortex_kind(kind: &Block3dVortexKind) -> Block3dVortexKindExtra {
     Block3dVortexKindExtra { id: kind.id.clone(), name: kind.name.clone(), label: kind.label.clone(), color: kind.color.clone(), default_cable_kind: kind.default_cable_kind.clone() }
 }
 
 /// 🔀️ Inverse of the split above — reassembles one full `Block3dVortexKind` from its two composed
 /// halves.
-pub async fn vortex_kind_from_parts(kit_type: &SemioKitType, extra: &Block3dVortexKindExtra) -> Block3dVortexKind {
+pub fn vortex_kind_from_parts(kit_type: &SemioKitType, extra: &Block3dVortexKindExtra) -> Block3dVortexKind {
     Block3dVortexKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone(), color: extra.color.clone(), default_cable_kind: extra.default_cable_kind.clone() }
 }
 
 /// 🔀️ The full vortex-kinds list's shared half, as a fresh (design-less, link-less) `SemioKitSnapshot`
 /// — content-addressed by `catalog_child_handle` below, never embedded inline in `Block3dSnapshot`.
-pub async fn catalog_snapshot_from_vortex_kinds(kinds: &[Block3dVortexKind]) -> SemioKitSnapshot {
+pub fn catalog_snapshot_from_vortex_kinds(kinds: &[Block3dVortexKind]) -> SemioKitSnapshot {
     SemioKitSnapshot { types: kinds.iter().map(kit_type_from_vortex_kind).collect(), ..SemioKitSnapshot::default() }
 }
 
 /// 🔀️ The full vortex-kinds list's block3d-owned overflow half.
-pub async fn vortex_kind_extra_list_from_vortex_kinds(kinds: &[Block3dVortexKind]) -> Vec<Block3dVortexKindExtra> {
+pub fn vortex_kind_extra_list_from_vortex_kinds(kinds: &[Block3dVortexKind]) -> Vec<Block3dVortexKindExtra> {
     kinds.iter().map(vortex_kind_extra_from_vortex_kind).collect()
 }
 
@@ -86,7 +86,7 @@ pub async fn vortex_kind_extra_list_from_vortex_kinds(kinds: &[Block3dVortexKind
 /// block3d-owned overflow half, id-joined. A `SemioKitType` with no matching `Block3dVortexKindExtra`
 /// (composed-child content the working-scene cache hasn't seen yet — see `vortex_kinds_of`'s doc
 /// comment) is silently dropped rather than fabricated with placeholder label/color.
-pub async fn vortex_kinds_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[Block3dVortexKindExtra]) -> Vec<Block3dVortexKind> {
+pub fn vortex_kinds_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[Block3dVortexKindExtra]) -> Vec<Block3dVortexKind> {
     let extra_by_id: std::collections::HashMap<&str, &Block3dVortexKindExtra> = extra.iter().map(|e| (e.id.as_str(), e)).collect();
     catalog.types.iter().filter_map(|kit_type| extra_by_id.get(kit_type.id.as_str()).map(|extra| vortex_kind_from_parts(kit_type, extra))).collect()
 }
@@ -95,7 +95,7 @@ pub async fn vortex_kinds_from_catalog_and_extra(catalog: &SemioKitSnapshot, ext
 /// deterministic JSON of the derived `SemioKitType` list so peers replaying the same vortex-kinds
 /// converge on the same `child_id` (never a random/incrementing id), mirroring `sourcing`'s
 /// `catalog_child_handle`.
-pub async fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::ArtifactChild<SemioKitSnapshot> {
+pub fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::ArtifactChild<SemioKitSnapshot> {
     use std::hash::{Hash, Hasher};
     let catalog = catalog_snapshot_from_vortex_kinds(kinds);
     let canonical = dsl::os_pack::json::to_json_string(&catalog.types);
@@ -110,13 +110,13 @@ pub async fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::Artifac
 /// 👁️ The one accessor every render/export/inference/mutation-diff call site funnels through to read
 /// the full reassembled vortex-kinds catalogue, given the composed child handle and the overflow list
 /// directly (works for both `Block3dSnapshot` and `Block3dArtifact`, which mirror these two fields).
-pub async fn vortex_kinds_of_parts(catalog: &store::ArtifactChild<SemioKitSnapshot>, extra: &[Block3dVortexKindExtra]) -> Vec<Block3dVortexKind> {
+pub fn vortex_kinds_of_parts(catalog: &store::ArtifactChild<SemioKitSnapshot>, extra: &[Block3dVortexKindExtra]) -> Vec<Block3dVortexKind> {
     let _ = catalog;
     extra.iter().map(|row| Block3dVortexKind { id: row.id.clone(), name: row.name.clone(), label: row.label.clone(), color: row.color.clone(), default_cable_kind: row.default_cable_kind.clone() }).collect()
 }
 
 /// 👁️ `vortex_kinds_of_parts` specialized to `Block3dSnapshot`.
-pub async fn vortex_kinds_of(snapshot: &Block3dSnapshot) -> Vec<Block3dVortexKind> {
+pub fn vortex_kinds_of(snapshot: &Block3dSnapshot) -> Vec<Block3dVortexKind> {
     vortex_kinds_of_parts(&snapshot.catalog, &snapshot.vortex_kind_extra)
 }
 
@@ -124,14 +124,14 @@ pub async fn vortex_kinds_of(snapshot: &Block3dSnapshot) -> Vec<Block3dVortexKin
 /// kinds catalogue: mints a fresh content-addressed `catalog` handle, seeds the working-scene cache,
 /// and writes the overflow half — given the composed child handle and overflow list directly (works
 /// for both `Block3dSnapshot` and `Block3dArtifact`).
-pub async fn set_vortex_kinds_parts(catalog: &mut store::ArtifactChild<SemioKitSnapshot>, extra: &mut Vec<Block3dVortexKindExtra>, kinds: Vec<Block3dVortexKind>) {
+pub fn set_vortex_kinds_parts(catalog: &mut store::ArtifactChild<SemioKitSnapshot>, extra: &mut Vec<Block3dVortexKindExtra>, kinds: Vec<Block3dVortexKind>) {
     let handle = catalog_child_handle(&kinds);
     *catalog = handle;
     *extra = vortex_kind_extra_list_from_vortex_kinds(&kinds);
 }
 
 /// ✍️ `set_vortex_kinds_parts` specialized to `Block3dSnapshot`.
-pub async fn set_vortex_kinds(snapshot: &mut Block3dSnapshot, kinds: Vec<Block3dVortexKind>) {
+pub fn set_vortex_kinds(snapshot: &mut Block3dSnapshot, kinds: Vec<Block3dVortexKind>) {
     set_vortex_kinds_parts(&mut snapshot.catalog, &mut snapshot.vortex_kind_extra, kinds);
 }
 
@@ -139,7 +139,7 @@ pub async fn set_vortex_kinds(snapshot: &mut Block3dSnapshot, kinds: Vec<Block3d
 /// writing any snapshot fields — for fixture loaders that parse the persisted snapshot from DSL text
 /// (which never embeds child content) but still need the SAME content-addressed handle's catalog
 /// resolvable immediately after loading.
-pub async fn validate_vortex_kind_catalog(kinds: &[Block3dVortexKind]) {
+pub fn validate_vortex_kind_catalog(kinds: &[Block3dVortexKind]) {
     let _ = catalog_child_handle(kinds);
 }
 //#endregion 🔖️VortexKindCatalogComposition
@@ -191,21 +191,21 @@ pub struct Block3dWindowView {
     pub active_utility: String,
 }
 
-async fn default_arrangement() -> String {
+fn default_arrangement() -> String {
     "overlap".into()
 }
 
-async fn default_spacing() -> f64 {
+fn default_spacing() -> f64 {
     8.0
 }
 
-async fn default_active_utility() -> String {
+fn default_active_utility() -> String {
     crate::editor::block3d::BLOCK3D_UTILITY_SELECT.into()
 }
 
 impl Block3dWindowView {
     /// 🪟 Builds a default view record for one window id.
-    pub async fn for_window(window_id: impl Into<String>) -> Self {
+    pub fn for_window(window_id: impl Into<String>) -> Self {
         Self { window_id: window_id.into(), representation_ids: Vec::new(), arrangement: default_arrangement(), spacing: default_spacing(), active_utility: default_active_utility() }
     }
 }
@@ -243,8 +243,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: BLOCK_3D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
-        import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"],
+        import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"],
     }
 }
 
@@ -280,7 +280,7 @@ mod tests {
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) — now registers via
 /// `ArtifactEditor::app_schema()` returning `crate::editor::block3d::config::schema::app_schema_descriptor()`
 /// (ticket W1c), so `.setup()` is gone from `🧱️block/🦀️.rs` entirely.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -294,6 +294,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
         ("s.block.block3d.composer.format-3", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.block.block3d.composer.format-4", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
         ("s.block.block3d.composer.format-5", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.block.block3d.composer.format-6", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
         ("s.block.block3d.grammar.1", "grammar", "block.block3d", &[("grammar", "block.block3d")], None),
         ("s.block.block3d.grammar.2", "grammar", "block.block3d.op", &[("grammar", "block.block3d.op")], None),
         ("s.block.block3d.grammar.3", "grammar", "block.block3d.diff", &[("grammar", "block.block3d.diff")], None),

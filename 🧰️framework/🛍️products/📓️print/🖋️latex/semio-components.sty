@@ -11,6 +11,17 @@
 
 \ExplSyntaxOn
 
+\bool_new:N \g_semio_cover_geometry_bool
+\bool_gset_false:N \g_semio_cover_geometry_bool
+
+\cs_new_protected:Npn \semio_cover_geometry_restore: {
+  \bool_if:NT \g_semio_cover_geometry_bool {
+    \clearpage
+    \restoregeometry
+    \bool_gset_false:N \g_semio_cover_geometry_bool
+  }
+}
+
 \bool_new:N \l_semio_cover@meta@row_bool
 \bool_new:N \l_semio_cover@institution@row_bool
 \bool_new:N \l_semio_is_zwischenbericht_bool
@@ -35,20 +46,52 @@
   \group_end:
 }
 
+\ExplSyntaxOff
+% Cover-address sections. \AddressOrg{…} renders the organisation lines inside a
+% fixed-height box (\semio@cover@address@orglines line-slots tall) so the
+% following \AddressPeople{…} block starts at the SAME vertical level in every
+% address tile — regardless of how many lines the organisation part wraps to.
+\newcommand{\semio@cover@address@orglines}{5}
+\newcommand{\AddressOrg}[1]{%
+  \parbox[t][\dimexpr\semio@cover@address@orglines\baselineskip\relax][t]{\linewidth}{%
+    \raggedright #1%
+  }\par
+}
+\newcommand{\AddressPeople}[1]{%
+  \vspace{0.4\baselineskip}%
+  \raggedright #1\par
+}
+\ExplSyntaxOn
+
 %region PageNumbering
 \cs_new_protected:Npn \semio_frontmatter_begin: {
   \renewcommand{\thepage}{\roman{page}}
   \use:c { semio@chrome@heading@set } { \SemioFrontmatterTitle }
 }
 
+% 📄 Recto-clear: for print binding every mainmatter/appendix start is forced
+% onto a recto page, inserting a blank verso. Digital-only deliverables don't
+% want those interior blanks — \SemioOpenAny{true} reduces this to a plain
+% \clearpage (default stays recto so print workflows are unchanged).
+\bool_new:N \g_semio_open_any_bool
+\bool_gset_false:N \g_semio_open_any_bool
+\NewDocumentCommand{\SemioOpenAny}{m}{
+  \str_if_eq:nnTF {#1} {true}
+    { \bool_gset_true:N \g_semio_open_any_bool }
+    { \bool_gset_false:N \g_semio_open_any_bool }
+}
+
 \cs_new_protected:Npn \semio_clear_to_recto: {
   \clearpage
-  \legacy_if:nT { @twoside } {
-    \int_if_even:nT { \value{page} } { \null\thispagestyle{empty}\newpage }
+  \bool_if:NF \g_semio_open_any_bool {
+    \legacy_if:nT { @twoside } {
+      \int_if_even:nT { \value{page} } { \null\thispagestyle{empty}\newpage }
+    }
   }
 }
 
 \cs_new_protected:Npn \semio_mainmatter_begin: {
+  \semio_cover_geometry_restore:
   \semio_clear_to_recto:
   \setcounter{page}{1}
   \renewcommand{\thepage}{\arabic{page}}
@@ -59,13 +102,26 @@
 
 \newcounter{semio@shippedpages}
 \AddToHook{shipout/before}{\stepcounter{semio@shippedpages}}
+% 📄 Signature padding: for print binding the document is padded with trailing
+% empty pages up to a multiple of four. Digital-only deliverables don't want
+% those blanks — \SemioSignaturePadding{false} disables the padding at the
+% source (default stays true so print workflows are unchanged).
+\bool_new:N \g_semio_signature_padding_bool
+\bool_gset_true:N \g_semio_signature_padding_bool
+\NewDocumentCommand{\SemioSignaturePadding}{m}{
+  \str_if_eq:nnTF {#1} {false}
+    { \bool_gset_false:N \g_semio_signature_padding_bool }
+    { \bool_gset_true:N \g_semio_signature_padding_bool }
+}
 \AddToHook{enddocument}{
   \clearpage
   \legacy_if:nT { @twoside } {
-    \bool_while_do:nn { \int_compare_p:nNn { \int_mod:nn { \value{semio@shippedpages} + 1 } { 4 } } > { 0 } } {
-      \null\thispagestyle{empty}\clearpage
+    \bool_if:NT \g_semio_signature_padding_bool {
+      \bool_while_do:nn { \int_compare_p:nNn { \int_mod:nn { \value{semio@shippedpages} + 1 } { 4 } } > { 0 } } {
+        \null\thispagestyle{empty}\clearpage
+      }
+      \null\thispagestyle{empty}
     }
-    \null\thispagestyle{empty}
   }
 }
 %endregion PageNumbering
@@ -90,9 +146,10 @@
   \semio_frontmatter_begin:
   \clearpage
   \newgeometry{left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm}
-  \begin{titlepage}
+  \thispagestyle{empty}
+  \bool_gset_true:N \g_semio_cover_geometry_bool
     \semio_theme_apply:
-    \setlength{\semio@window@gap}{4pt}
+    \setlength{\parskip}{0pt}
     \bool_set_false:N \l_semio_cover@meta@row_bool
     \tl_if_empty:NF \l_semio_aktenzeichen_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \tl_if_empty:NF \l_semio_foerderzeitraum_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
@@ -100,15 +157,20 @@
     \bool_set_false:N \l_semio_cover@institution@row_bool
     \tl_if_empty:NF \l_semio_antragstellendeinstitution_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
     \tl_if_empty:NF \l_semio_kooperationspartner_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
-    \tl_set:Nn \l_semio_cover_institution_weight_tl { 3.3 }
-    \tl_set:Nn \l_semio_cover_logo_weight_tl { 5.2 }
-    \begin{WindowArrangement}[height=\textheight]
+    % 🏛️ Institution and logo weights. The address block holds the same four to
+    % six lines in every report kind, but the default cover carries two rows the
+    % zwischenbericht cover omits (DOI, Beschreibung), so it needs a larger share
+    % to give those lines the same absolute height. At the previous default of
+    % 3.3 the address block ran into the logo row.
+    \tl_set:Nn \l_semio_cover_institution_weight_tl { 7 }
+    \tl_set:Nn \l_semio_cover_logo_weight_tl { 5 }
+    \begin{WindowArrangement}[height=\dimexpr\textheight-1.2cm\relax]
       \begin{WindowColumn}
         \cs_if_exist:cTF { zukunftbau@type } {
           \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
             \bool_set_true:N \l_semio_is_zwischenbericht_bool
-            \tl_set:Nn \l_semio_cover_institution_weight_tl { 4 }
-            \tl_set:Nn \l_semio_cover_logo_weight_tl { 6.5 }
+            \tl_set:Nn \l_semio_cover_institution_weight_tl { 6 }
+            \tl_set:Nn \l_semio_cover_logo_weight_tl { 4 }
             \seq_set_split:Nnx \l_semio_title_seq { --- } { \@title }
             \tl_set:Nx \l_semio_clean_title_tl { \seq_item:Nn \l_semio_title_seq { 2 } }
             \tl_trim_spaces:N \l_semio_clean_title_tl
@@ -129,14 +191,15 @@
                 }
               \end{WindowRow}
             }
-            \WindowItem[1.15]{
+            \WindowItem[2.3]{
               \begin{Window}[title={Untertitel}, anchor=center, text-size=fit]
                 \SemioSans \tl_use:N \l_semio_subtitle_tl
               \end{Window}
             }
           } {
             \bool_set_false:N \l_semio_is_zwischenbericht_bool
-            \WindowItem[1.8]{
+            % 🏷️ Siehe unten: 1.8 schnitt die dritte Untertitelzeile ab.
+            \WindowItem[2.4]{
               \begin{Window}[title={Titel}, anchor=center, text-size=fit]
                 \SemioSans \@title
                 \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
@@ -147,7 +210,9 @@
           }
         } {
           \bool_set_false:N \l_semio_is_zwischenbericht_bool
-          \WindowItem[1.8]{
+          % 🏷️ Holds title plus a subtitle that runs to three lines; at 1.8 the
+          % last line was clipped by the window frame.
+          \WindowItem[2.4]{
             \begin{Window}[title={Titel}, anchor=center, text-size=fit]
               \SemioSans \@title
               \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
@@ -157,14 +222,14 @@
           }
         }
         \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
-          \WindowItem[10.8]{
-            \begin{Window}[title=Arbeitsprobe, anchor=center]
+          \WindowItem[10.3]{
+            \begin{Window}[title=Arbeitsprobe, anchor=s]
               \begin{minipage}[c]{\linewidth}
                 \centering
                 \includegraphics[
                   width=\linewidth,
                   height=\dimexpr\l_semio_window_pending_height_dim-\semio@chrome@titlebar@height
-                    -\semio@chrome@padding-\semio@chrome@padding
+                    -\semio@window@bodypad-\semio@window@bodypad
                     -\semio@stroke@hairline-\semio@stroke@hairline
                   \relax,
                   keepaspectratio,
@@ -175,21 +240,29 @@
         }
         \bool_if:NT \l_semio_cover@meta@row_bool {
           \WindowItem[1.05]{
+            % 🪟 Each meta window is tied to its own field: a Forschungsbericht has no
+            % Berichtszeitraum, and an unconditional row left an empty titled panel.
             \begin{WindowRow}
-              \WindowItem{
-                \begin{Window}[title=Aktenzeichen, anchor=center, text-size=fit]
-                  \SemioSans \tl_use:N \l_semio_aktenzeichen_tl
-                \end{Window}
+              \tl_if_empty:NF \l_semio_aktenzeichen_tl {
+                \WindowItem{
+                  \begin{Window}[title=Aktenzeichen, anchor=center, text-size=fit]
+                    \SemioSans \tl_use:N \l_semio_aktenzeichen_tl
+                  \end{Window}
+                }
               }
-              \WindowItem{
-                \begin{Window}[title=Förderzeitraum, anchor=center, text-size=fit]
-                  \SemioSans \tl_use:N \l_semio_foerderzeitraum_tl
-                \end{Window}
+              \tl_if_empty:NF \l_semio_foerderzeitraum_tl {
+                \WindowItem{
+                  \begin{Window}[title=Förderzeitraum, anchor=center, text-size=fit]
+                    \SemioSans \tl_use:N \l_semio_foerderzeitraum_tl
+                  \end{Window}
+                }
               }
-              \WindowItem{
-                \begin{Window}[title=Berichtszeitraum, anchor=center, text-size=fit]
-                  \SemioSans \tl_use:N \l_semio_berichtszeitraum_tl
-                \end{Window}
+              \tl_if_empty:NF \l_semio_berichtszeitraum_tl {
+                \WindowItem{
+                  \begin{Window}[title=Berichtszeitraum, anchor=center, text-size=fit]
+                    \SemioSans \tl_use:N \l_semio_berichtszeitraum_tl
+                  \end{Window}
+                }
               }
             \end{WindowRow}
           }
@@ -214,42 +287,46 @@
           \WindowItem[\tl_use:N \l_semio_cover_institution_weight_tl]{
             \begin{WindowRow}
               \WindowItem{
-                \begin{Window}[title=Antragstellende~Institution, anchor=center, text-size=fit]
+                \begin{Window}[title=Antragstellende~Institution, anchor=nw, text-size=fit]
                   \semio_cover_address:n { \tl_use:N \l_semio_antragstellendeinstitution_tl }
                 \end{Window}
               }
               \WindowItem{
-                \begin{Window}[title=Kooperationspartner, anchor=center, text-size=fit]
+                \begin{Window}[title=Kooperationspartner, anchor=nw, text-size=fit]
                   \semio_cover_address:n { \tl_use:N \l_semio_kooperationspartner_tl }
                 \end{Window}
               }
             \end{WindowRow}
           }
         }
+        % LR-cover-logos: funder logos stay on page 1 with everything else. Their
+        % weight is kept small so the Arbeitsprobe image above can take the
+        % maximum remaining height (largest possible image while all cover
+        % windows stay together on one page).
         \WindowItem[\tl_use:N \l_semio_cover_logo_weight_tl]{
           \begin{WindowRow}
             \WindowItem{
               \begin{Window}[title=BMWSB, anchor=center]
-                \semio@logo@slot[\linewidth]{\semio@cover@bundesministerium@logo}
+                \semio@logo@fit[\linewidth]{2.7cm}{\semio@cover@bundesministerium@logo}
               \end{Window}
             }
             \WindowItem{
               \begin{Window}[title=BBSR, anchor=center]
-                \semio@logo@slot[0.82\linewidth]{\semio@cover@bbsr@logo}
+                \semio@logo@fit[0.82\linewidth]{2.7cm}{\semio@cover@bbsr@logo}
               \end{Window}
             }
             \WindowItem{
               \begin{Window}[title=Zukunft~Bau, anchor=center]
-                \semio@logo@slot[\linewidth]{\semio@cover@zukunftbau@logo}
+                \semio@logo@fit[\linewidth]{2.7cm}{\semio@cover@zukunftbau@logo}
               \end{Window}
             }
           \end{WindowRow}
         }
       \end{WindowColumn}
     \end{WindowArrangement}
-  \end{titlepage}
-  \clearpage
-  \restoregeometry
+  % Cover must occupy page 1 alone; Inhaltsverzeichnis starts on the next page
+  % with restored body geometry (not the cover's tight 1.5cm margins).
+  \semio_cover_geometry_restore:
 }
 
 \NewDocumentCommand{\maketableofcontents}{o}{%
@@ -257,15 +334,21 @@
   \tableofcontents
 }
 
+% 🏛️ Förderhinweis im von Anlage 8 „Berichtswesen" wörtlich vorgeschriebenen
+% Wortlaut. Definiert unter \ExplSyntaxOff, weil dort der Leerzeichen-Catcode 9
+% jedes Wort zusammenkleben würde ("DiesesProjektwurdegefördert…").
+% @see https://www.zukunftbau.de/programme/forschungsfoerderung
+\ExplSyntaxOff
 \NewDocumentCommand{\makefundingacknowledgement}{}{%
-  \chapter*{Förderhinweis}
+  \@ifundefined{chapter}{\section*{Förderhinweis}}{\chapter*{Förderhinweis}}%
   \begin{Blockquote}
-    Dieses Projekt wurde gefördert vom Bundesinstitut für Bau-, Stadt- und Raumforschung (BBSR) im Rahmen des Forschungsprogramms Zukunft Bau
+    Dieses Projekt wurde gefördert vom Bundesinstitut für Bau-, Stadt- und Raumforschung im Auftrag des Bundesministeriums für Wohnen, Stadtentwicklung und Bauwesen aus Mitteln der Zukunft Bau Forschungsförderung.
   \end{Blockquote}
   \begin{Blockquote}
-    The project was funded by the German Federal Institute for Research on Building, Urban Affairs and Spatial Development (BBSR) within the research programme Zukunft Bau
+    The project was funded by the German Federal Institute for Research on Building, Urban Affairs, and Spatial Development on behalf of the Federal Ministry for Housing, Urban Development, and Building through the research funding programme Zukunft Bau Forschungsförderung.
   \end{Blockquote}
 }
+\ExplSyntaxOn
 
 \NewDocumentCommand{\makeworkpackages}{m}{%
   \section*{Arbeitspaketzuordnung}
@@ -276,11 +359,11 @@
 }
 
 %region Appendices
-% 📎️ An appendix is a document attached to the main report, behaving like a
+% 📎 An appendix is a document attached to the main report, behaving like a
 % chapter: numbered A, B, C…, labeled Anhang/Appendix, chip-styled, TOC-listed
-% and cross-referenceable via \appendixref (🖋️semio-core.sty). Its structural
+% and cross-referenceable via \appendixref (semio-core.sty). Its structural
 % level (chapter/section/part) is resolved once, on the first call, from
-% appendix-level (see \semio_appendix_level_resolve: in 🖋️semio-core.sty).
+% appendix-level (see \semio_appendix_level_resolve: in semio-core.sty).
 %
 % 🏷️ Every appendix — and every chapter within one, via \appendixsection —
 % may declare its own semantic prefix instead of the automatic A, B, C…
@@ -316,7 +399,7 @@
 }
 
 \cs_new_protected:Npn \semio_appendix_identifier_claim:nn #1#2 {
-  % 🩹️ \msg_error's args are grabbed literally (n-type) — a deferred macro
+  % 🩹 \msg_error's args are grabbed literally (n-type) — a deferred macro
   % reference like \tl_use:N\l_tmpb_tl prints as its own *name*, not its
   % content (msg_error stringifies rather than executes). \msg_error itself
   % is a protected function, so \exp_args:Nx\use:n{...} safely fully-expands

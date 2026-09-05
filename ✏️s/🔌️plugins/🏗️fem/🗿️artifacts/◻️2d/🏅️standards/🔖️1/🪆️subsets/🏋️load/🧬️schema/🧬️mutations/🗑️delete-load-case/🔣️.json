@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case",
   "semanticKind": "delete-load-case",
   "displayName": "Delete Load Case",
-  "emoji": "🗑📋️",
+  "emoji": "🗑️",
   "aggregateVariant": "DeleteLoadCase",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-load-case",

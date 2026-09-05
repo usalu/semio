@@ -41,7 +41,7 @@ impl Default for VcsSnapshot {
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Renders a [`VcsSnapshot`] as this facet's own camelCase JSON projection — the comparison
-/// surface `🌲️mutate-vcs-1`'s scenarios are measured through, and the same shape the committed
+/// surface `🌿️mutate-vcs-1`'s scenarios are measured through, and the same shape the committed
 /// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
 /// specification vectors are written in.
 ///
@@ -52,7 +52,7 @@ pub fn encode_vcs_snapshot_json(snapshot: &VcsSnapshot) -> String {
 }
 
 /// 📥️ The inverse of [`encode_vcs_snapshot_json`] — decodes those committed specification vectors
-/// into real [`VcsSnapshot`] values, so `🌲️mutate-vcs-1`'s adapter reads the committed fixture rather
+/// into real [`VcsSnapshot`] values, so `🌿️mutate-vcs-1`'s adapter reads the committed fixture rather
 /// than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter is
 /// impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_vcs_snapshot_json(text: &str) -> Result<VcsSnapshot, String> {
@@ -61,7 +61,7 @@ pub fn decode_vcs_snapshot_json(text: &str) -> Result<VcsSnapshot, String> {
 
 /// 📝️ Parses `.vcs.dsl.semio` text into a [`VcsSnapshot`] — a named, non-async pass-through of this
 /// type's own `store::ArtifactDsl` impl (`../../🚪️io/📸️snapshot/📝️text/🦀️.rs`), whose trait
-/// and error type are both unnameable outside this crate, so `🌲️mutate-vcs-1`'s `identity-round-trip`
+/// and error type are both unnameable outside this crate, so `🌿️mutate-vcs-1`'s `identity-round-trip`
 /// scenario reaches the real committed artifact (`../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`)
 /// through this instead.
 pub fn parse_vcs_dsl(text: &str) -> Result<VcsSnapshot, String> {

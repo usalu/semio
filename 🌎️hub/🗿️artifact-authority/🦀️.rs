@@ -562,6 +562,7 @@ pub mod adapters;
 #[path = "🔏️trusted-catalog/🦀️.rs"]
 pub mod trusted_catalog;
 
+#[cfg(feature = "native-artifact-execution")]
 #[path = "📇️native-openable-provider/🦀️.rs"]
 pub mod native_openable_provider;
 

@@ -2,7 +2,7 @@
 /** 🏭️ Process TypeScript package source verifier. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runCmd, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region 🔖️RetainedRouteAudit
 //#region 🔖️Model
@@ -124,6 +124,8 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
 //#region 🔖️Command
 class TestScript extends BundleScript {
   async run(): Promise<void> {
+    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+
     const pluginRoot = resolve(this.root, "../..");
     const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/⚖️retained-route-laws.json")).json() as Fixture;
     const schema = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/📐️retained-route-schema.json")).json();

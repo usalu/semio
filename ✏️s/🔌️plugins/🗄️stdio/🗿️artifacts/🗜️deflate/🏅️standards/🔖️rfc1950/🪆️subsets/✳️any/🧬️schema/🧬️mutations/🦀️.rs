@@ -223,6 +223,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🐼️raises-the-flevel-hint-and-extends-the-payload/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/📈️raises-the-flevel-hint-and-extends-the-payload/🦀️.rs"]
 mod set_snapshot_raises_the_flevel_hint_and_extends_the_payload;
 //#endregion 🧪️FixtureCases

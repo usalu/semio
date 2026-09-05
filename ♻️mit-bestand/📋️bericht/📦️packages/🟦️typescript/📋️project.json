@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/mit-bestand-bericht",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -22,6 +22,58 @@
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts latex",
         "forwardAllArgs": true
+      }
+    },
+    "build-zwischenbericht": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build zwischenbericht",
+        "forwardAllArgs": true
+      }
+    },
+    "build-forschungsbericht": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build forschungsbericht",
+        "forwardAllArgs": true
+      }
+    },
+    "build-kompaktbericht": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build kompaktbericht",
+        "forwardAllArgs": true
+      }
+    },
+    "akteursnetz-validate": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts akteursnetz validate",
+        "forwardAllArgs": true
+      }
+    },
+    "akteursnetz-render": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts akteursnetz render",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test"
       }
     }
   }

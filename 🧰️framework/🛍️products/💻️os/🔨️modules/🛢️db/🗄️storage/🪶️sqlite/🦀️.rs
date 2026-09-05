@@ -7,8 +7,9 @@ mod sqlite_storage {
     use crate::db_ids::{check_len, ArtifactId, DbError};
     use crate::db_storage::{
         close_db_io_backend, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected,
-        DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+        DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbIoWriterReleaseStep, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, WalWriterPermit, DB_IO_PAGE_BYTES,
     };
+    use crate::db_storage::writer::{WalFileWriterGuard, WalWriterGuard, WalWriterTable};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
     use semio_framework_async::WorkerPool;
@@ -73,6 +74,14 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         i64::try_from(value).map_err(|_| DbError::LimitExceeded(what))
     }
 
+    fn decode_wal_segment_state(sealed: i64) -> Result<WalSegmentState, DbError> {
+        match sealed {
+            0 => Ok(WalSegmentState::Active),
+            1 => Ok(WalSegmentState::Sealed),
+            value => Err(DbError::Corrupt(format!("SQLite WAL sealed flag is {value}"))),
+        }
+    }
+
     fn init_connection(connection: &Connection) -> Result<(), DbError> {
         connection.pragma_update(None, "journal_mode", "WAL").map_err(sqlite_err)?;
         connection.pragma_update(None, "synchronous", "FULL").map_err(sqlite_err)?;
@@ -80,10 +89,33 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         connection.execute_batch(SCHEMA).map_err(sqlite_err)
     }
 
+    enum SqliteWalWriterGuard {
+        Local,
+        Physical(WalFileWriterGuard),
+    }
+
+    impl WalWriterGuard for SqliteWalWriterGuard {
+        fn close_step(&mut self) -> Result<bool, DbError> {
+            match self {
+                Self::Local => Ok(false),
+                Self::Physical(guard) => guard.close_step(),
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            match self {
+                Self::Local => true,
+                Self::Physical(guard) => guard.terminal_is_empty(),
+            }
+        }
+    }
+
     struct SqliteDbIoExecutor {
         connection: Mutex<Option<Connection>>,
         path: DbIoText,
         in_memory: bool,
+        canonical_database: Mutex<Option<DbIoText>>,
+        writers: Mutex<Option<Box<WalWriterTable<SqliteWalWriterGuard>>>>,
         payload_hashes: [Mutex<Option<(u64, semio_framework_hash::Hasher)>>; SQLITE_OPERATION_OWNERS],
         backend_close_cursor: std::sync::atomic::AtomicUsize,
         backend_terminal: std::sync::atomic::AtomicBool,
@@ -95,6 +127,8 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                 connection: Mutex::new(None),
                 path,
                 in_memory,
+                canonical_database: Mutex::new(None),
+                writers: Mutex::new(Some(Box::new(WalWriterTable::unbound()))),
                 payload_hashes: [const { Mutex::new(None) }; SQLITE_OPERATION_OWNERS],
                 backend_close_cursor: std::sync::atomic::AtomicUsize::new(0),
                 backend_terminal: std::sync::atomic::AtomicBool::new(false),
@@ -103,6 +137,19 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
         fn operation(operation: u64) -> Result<i64, DbError> {
             to_sql_i64(operation, "sqlite DB I/O operation")
+        }
+
+        fn physical_writer_sidecar(&self, document: &DbIoText) -> Result<std::path::PathBuf, DbError> {
+            let canonical = self.canonical_database.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let canonical = canonical.as_ref().ok_or_else(|| DbError::Closed)?;
+            let path = std::path::Path::new(canonical.as_str());
+            let parent = path.parent().ok_or_else(|| DbError::InvalidArgument("canonical SQLite database has no parent".to_string()))?;
+            let directory = parent.join(".semio-wal-writer");
+            let mut hash = semio_framework_hash::Sha256::new();
+            hash.update(canonical.as_str().as_bytes());
+            hash.update(&[0]);
+            hash.update(document.as_str().as_bytes());
+            Ok(directory.join(format!("{}.lock", semio_framework_hash::hex_lower(&hash.finalize()))))
         }
 
         fn ensure_write_stage(connection: &Connection, operation: i64) -> Result<(), DbError> {
@@ -181,8 +228,42 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
     //#region 🔖️Executor
     impl DbIoTaskExecutor for SqliteDbIoExecutor {
+        fn supports_writer_authority(&self) -> bool { true }
+
+        fn bind_writer_control(&mut self, control: DbIoBackendControl) -> Result<(), DbError> {
+            let mut owner = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            owner.as_deref_mut().ok_or(DbError::Closed)?.bind(control)
+        }
+
+        fn writer_release_step(&self, _context: &mut std::task::Context<'_>) -> Result<DbIoWriterReleaseStep, DbError> {
+            self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().map_or(Ok(DbIoWriterReleaseStep::Idle), WalWriterTable::release_requested_step)
+        }
+
+        fn pin_writer_operation(&self, operation: u64, task: &DbIoTask) -> Result<(), DbError> {
+            let Some((key, backend, document)) = task.writer_stamp() else { return Ok(()) };
+            self.writers
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .as_deref_mut()
+                .ok_or(DbError::Closed)?
+                .pin_operation(key, backend, document, operation)
+                .map(|_| ())
+        }
+
+        fn finish_writer_operation(&self, operation: u64, task: &DbIoTask) -> Result<(), DbError> {
+            let Some((key, backend, document)) = task.writer_stamp() else { return Ok(()) };
+            if let Some(table) = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut() {
+                table.finish_operation_if_pinned(key, backend, document, operation)?;
+            }
+            Ok(())
+        }
+
         fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
             self
+        }
+
+        fn owner_backing_bytes(&self) -> u64 {
+            (std::mem::size_of::<Self>() + std::mem::size_of::<WalWriterTable<SqliteWalWriterGuard>>()) as u64
         }
 
         fn drive_async(self: Box<Self>, _operation: u64, task: DbIoTask) -> DbIoAsyncDriverFuture {
@@ -211,6 +292,11 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                         Connection::open(path).map_err(sqlite_err)?
                     };
                     init_connection(&connection)?;
+                    if !self.in_memory {
+                        let canonical = std::fs::canonicalize(self.path.as_str()).map_err(|error| DbError::Io(error.to_string()))?;
+                        let canonical = canonical.to_str().ok_or_else(|| DbError::InvalidArgument("canonical SQLite path is not UTF-8".to_string()))?;
+                        *self.canonical_database.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DbIoText::try_from_str(canonical)?);
+                    }
                     *owner = Some(connection);
                 }
                 return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)));
@@ -222,6 +308,19 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             let connection = owner.as_mut().ok_or(DbError::Closed)?;
             let sql_operation = Self::operation(operation)?;
             match task {
+                DbIoTask::WalWriterAcquire { document, .. } => {
+                    let mut writers = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    let table = writers.as_deref_mut().ok_or(DbError::Closed)?;
+                    let permit = table.acquire_with(document, || match self.in_memory {
+                        true => Ok(SqliteWalWriterGuard::Local),
+                        false => {
+                            let path = self.physical_writer_sidecar(document)?;
+                            std::fs::create_dir_all(path.parent().expect("SQLite writer sidecar has a parent")).map_err(|error| DbError::Io(error.to_string()))?;
+                            WalFileWriterGuard::try_acquire(&path).map(SqliteWalWriterGuard::Physical)
+                        }
+                    })?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::WalWriter(permit))))
+                }
                 DbIoTask::WalCreate { document, index, .. } => {
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
                     let changed = connection.execute("INSERT OR IGNORE INTO wal_segment (document, segment_index, bytes, sealed) VALUES (?1, ?2, x'', 0)", params![document.as_str(), index]).map_err(sqlite_err)?;
@@ -237,10 +336,10 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
                     let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
                     let sealed: Option<i64> = transaction.query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
-                    match sealed {
+                    match sealed.map(decode_wal_segment_state).transpose()? {
                         None => return Err(DbError::NotFound(format!("WAL segment {index} not found"))),
-                        Some(1) => return Err(DbError::InvalidArgument("cannot append to sealed WAL segment".to_string())),
-                        _ => {}
+                        Some(WalSegmentState::Sealed) => return Err(DbError::InvalidArgument("cannot append to sealed WAL segment".to_string())),
+                        Some(WalSegmentState::Active) => {}
                     }
                     transaction.execute(WAL_APPEND_STAGE_SQL, params![document.as_str(), index, sql_operation]).map_err(sqlite_err)?;
                     let length: i64 = transaction.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).map_err(sqlite_err)?;
@@ -288,6 +387,12 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     let length: Option<i64> = connection.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(length.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))? as u64))))
                 }
+                DbIoTask::WalState { document, index, .. } => {
+                    let index = to_sql_i64(*index, "sqlite WAL index")?;
+                    let sealed: Option<i64> = connection.query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
+                    let state = decode_wal_segment_state(sealed.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))?)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::WalSegmentState(state))))
+                }
                 DbIoTask::WalList { document, output, .. } => Self::list_step(connection, "SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC LIMIT 1 OFFSET ?2", document, output),
                 DbIoTask::WalTruncate { document, index, new_len, .. } => {
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
@@ -295,7 +400,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     let current: Option<(i64, i64)> =
                         connection.query_row("SELECT length(bytes), sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
                     let (current, sealed) = current.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))?;
-                    if sealed != 0 || new_len > current {
+                    if decode_wal_segment_state(sealed)? == WalSegmentState::Sealed || new_len > current {
                         return Err(DbError::InvalidArgument("invalid sealed or growing WAL truncation".to_string()));
                     }
                     connection.execute("UPDATE wal_segment SET bytes = substr(bytes, 1, ?3) WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index, new_len]).map_err(sqlite_err)?;
@@ -515,6 +620,15 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         }
 
         fn close_backend_step(&mut self, _context: &mut std::task::Context<'_>) -> Result<bool, DbError> {
+            {
+                let mut owner = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if let Some(table) = owner.as_deref_mut() {
+                    if table.close_step()? { return Ok(false); }
+                    if !table.terminal_is_empty() { return Err(DbError::Internal("SQLite WAL writer table returned a false terminal witness".to_string())); }
+                    owner.take();
+                    return Ok(false);
+                }
+            }
             let cursor = self.backend_close_cursor.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             if cursor < self.payload_hashes.len() {
                 self.payload_hashes[cursor].lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
@@ -524,13 +638,19 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                 self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
                 return Ok(false);
             }
+            if cursor == self.payload_hashes.len() + 1 {
+                self.canonical_database.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                return Ok(false);
+            }
             self.backend_terminal.store(true, std::sync::atomic::Ordering::Release);
             Ok(true)
         }
 
         fn backend_terminal_is_empty(&self) -> bool {
             self.backend_terminal.load(std::sync::atomic::Ordering::Acquire)
+                && self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
                 && self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+                && self.canonical_database.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
                 && self.payload_hashes.iter().all(|owner| owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none())
         }
     }
@@ -588,6 +708,13 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         }
     }
 
+    fn wal_writer(result: DbIoResult) -> Result<WalWriterPermit, DbError> {
+        match result {
+            DbIoResult::WalWriter(writer) => Ok(writer),
+            _ => Err(result_fault("WAL writer")),
+        }
+    }
+
     impl SqliteStorage {
         async fn open_owned(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbError> {
             let executor = Box::new(SqliteDbIoExecutor::new(path.clone(), in_memory));
@@ -631,21 +758,25 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     }
 
     impl WalStorage for SqliteStorage {
-        async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalCreate { backend: self.control, document: document_text(document)?, index }).await?)
+        async fn acquire_writer(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError> {
+            wal_writer(execute(self.pool.as_ref(), DbIoTask::WalWriterAcquire { backend: self.control, document: document_text(document)? }).await?)
         }
 
-        async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
+        async fn create_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalCreate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
+        }
+
+        async fn append(&self, writer: &WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite WAL append")?;
-            length(execute(self.pool.as_ref(), DbIoTask::WalAppend { backend: self.control, document: document_text(document)?, index, input: bytes }).await?)
+            length(execute(self.pool.as_ref(), DbIoTask::WalAppend { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, input: bytes }).await?)
         }
 
-        async fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalSync { backend: self.control, document: document_text(document)?, index, class }).await?)
+        async fn sync(&self, writer: &WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalSync { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, class }).await?)
         }
 
-        async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalSeal { backend: self.control, document: document_text(document)?, index }).await?)
+        async fn seal(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalSeal { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
         }
 
         async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
@@ -657,16 +788,23 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             length(execute(self.pool.as_ref(), DbIoTask::WalLength { backend: self.control, document: document_text(document)?, index }).await?)
         }
 
+        async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::WalState { backend: self.control, document: document_text(document)?, index }).await? {
+                DbIoResult::WalSegmentState(state) => Ok(state),
+                _ => Err(DbError::Internal("SQLite executor returned a non-WAL-state result".to_string())),
+            }
+        }
+
         async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
             list(execute(self.pool.as_ref(), DbIoTask::WalList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
 
-        async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalTruncate { backend: self.control, document: document_text(document)?, index, new_len }).await?)
+        async fn truncate_tail(&self, writer: &WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalTruncate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, new_len }).await?)
         }
 
-        async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalDelete { backend: self.control, document: document_text(document)?, index }).await?)
+        async fn delete_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalDelete { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
         }
     }
 
@@ -859,13 +997,110 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         async fn typed_lane_is_lossless_at_page_boundary_and_zero() {
             let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
             let document: ArtifactId = "typed-sqlite".into();
-            storage.create_segment(&document, 0).await.unwrap();
+            let writer = storage.acquire_writer(&document).await.unwrap();
+            storage.create_segment(&writer, 0).await.unwrap();
             let bytes = vec![0x5a; DB_IO_PAGE_BYTES + 1];
-            assert_eq!(storage.append(&document, 0, pages(&bytes).await).await.unwrap(), bytes.len() as u64);
+            assert_eq!(storage.append(&writer, 0, pages(&bytes).await).await.unwrap(), bytes.len() as u64);
             assert_eq!(storage.read(&document, 0, ByteRange { offset: 0, len: bytes.len() as u64 }).await.unwrap(), bytes);
             let hash = storage.put(pages(&[]).await).await.unwrap();
             assert_eq!(storage.get(&hash).await.unwrap(), b"");
+            writer.release().await.unwrap();
             storage.close().await.unwrap();
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn wal_segment_state_observes_active_sealed_and_missing_rows() {
+            let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+            let document: ArtifactId = "typed-sqlite-state".into();
+            let writer = storage.acquire_writer(&document).await.unwrap();
+            storage.create_segment(&writer, 0).await.unwrap();
+            assert_eq!(storage.segment_state(&document, 0).await.unwrap(), WalSegmentState::Active);
+            storage.seal(&writer, 0).await.unwrap();
+            assert_eq!(storage.segment_state(&document, 0).await.unwrap(), WalSegmentState::Sealed);
+            assert!(matches!(storage.segment_state(&document, 99).await, Err(DbError::NotFound(_))));
+            writer.release().await.unwrap();
+            storage.close().await.unwrap();
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn sqlite_wal_writer_real_database_alias_and_crash_are_exclusive() {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔐️writer/🧪️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
+            let child_mode = std::env::var("SEMIO_SQLITE_WRITER_CHILD_MODE").ok();
+            let child_path = std::env::var_os("SEMIO_SQLITE_WRITER_CHILD_PATH").map(std::path::PathBuf::from);
+            if let (Some(mode), Some(path)) = (child_mode, child_path) {
+                let storage = SqliteStorage::open(crate::db_storage::db_io_test_pool(), &path).await.unwrap();
+                let document: ArtifactId = "sqlite-writer-alias".into();
+                let sentinel = std::env::var_os("SEMIO_SQLITE_WRITER_CHILD_SENTINEL").unwrap();
+                match mode.as_str() {
+                    "conflict" => {
+                        assert!(matches!(storage.acquire_writer(&document).await, Err(DbError::Conflict(_))));
+                        std::fs::write(sentinel, format!("{}:conflict", std::process::id())).unwrap();
+                        storage.close().await.unwrap();
+                    }
+                    "crash" => {
+                        let _writer = storage.acquire_writer(&document).await.unwrap();
+                        std::fs::write(sentinel, format!("{}:acquired", std::process::id())).unwrap();
+                        std::process::exit(0);
+                    }
+                    _ => panic!("unknown SQLite writer child mode"),
+                }
+                return;
+            }
+
+            assert_eq!(fixture["mutations"], serde_json::json!(["create", "append", "sync", "seal", "truncateTail", "delete"]));
+            let cases = fixture["cases"].as_array().unwrap();
+            assert!(cases.iter().any(|row| row["backend"] == "sqlite" && row["name"] == "canonical-alias-conflict" && row["expect"] == "conflictThenAcquire"));
+            assert!(cases.iter().any(|row| row["backend"] == "sqlite" && row["name"] == "crash-releases-sidecar" && row["expect"] == "reacquire"));
+
+            let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
+            let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+            let root = base.join(format!("sqlite-writer-{}-{nonce}", std::process::id()));
+            std::fs::create_dir_all(&root).unwrap();
+            let database = root.join("writer.sqlite3");
+            let alias = root.join(".").join("writer.sqlite3");
+            let storage = SqliteStorage::open(crate::db_storage::db_io_test_pool(), &database).await.unwrap();
+            let contender = SqliteStorage::open(crate::db_storage::db_io_test_pool(), &alias).await.unwrap();
+            let document: ArtifactId = "sqlite-writer-alias".into();
+            let writer = storage.acquire_writer(&document).await.unwrap();
+            assert!(matches!(contender.acquire_writer(&document).await, Err(DbError::Conflict(_))));
+
+            let executable = std::env::current_exe().unwrap();
+            let conflict_sentinel = root.join("conflict.txt");
+            let conflict = std::process::Command::new(&executable)
+                .args(["db_storage_sqlite::sqlite_storage::tests::sqlite_wal_writer_real_database_alias_and_crash_are_exclusive", "--exact", "--test-threads=1"])
+                .env("SEMIO_SQLITE_WRITER_CHILD_MODE", "conflict")
+                .env("SEMIO_SQLITE_WRITER_CHILD_PATH", &alias)
+                .env("SEMIO_SQLITE_WRITER_CHILD_SENTINEL", &conflict_sentinel)
+                .status()
+                .unwrap();
+            assert!(conflict.success());
+            assert!(std::fs::read_to_string(&conflict_sentinel).unwrap().ends_with(":conflict"));
+            writer.release().await.unwrap();
+
+            let next = contender.acquire_writer(&document).await.unwrap();
+            next.release().await.unwrap();
+            let crash_sentinel = root.join("crash.txt");
+            let crash = std::process::Command::new(&executable)
+                .args(["db_storage_sqlite::sqlite_storage::tests::sqlite_wal_writer_real_database_alias_and_crash_are_exclusive", "--exact", "--test-threads=1"])
+                .env("SEMIO_SQLITE_WRITER_CHILD_MODE", "crash")
+                .env("SEMIO_SQLITE_WRITER_CHILD_PATH", &database)
+                .env("SEMIO_SQLITE_WRITER_CHILD_SENTINEL", &crash_sentinel)
+                .status()
+                .unwrap();
+            assert!(crash.success());
+            assert!(std::fs::read_to_string(&crash_sentinel).unwrap().ends_with(":acquired"));
+            let after_crash = storage.acquire_writer(&document).await.unwrap();
+            after_crash.release().await.unwrap();
+            contender.close().await.unwrap();
+            storage.close().await.unwrap();
+            eprintln!("[DEBUG] physical SQLite aliases and a separate process shared one stable writer sidecar; terminal close and process exit each permitted exact reacquisition");
+        }
+
+        #[test]
+        fn wal_segment_state_decoder_rejects_non_boolean_storage_values() {
+            assert_eq!(decode_wal_segment_state(0).unwrap(), WalSegmentState::Active);
+            assert_eq!(decode_wal_segment_state(1).unwrap(), WalSegmentState::Sealed);
+            assert!(matches!(decode_wal_segment_state(2), Err(DbError::Corrupt(_))));
         }
 
         #[semio_framework_async_macros::async_test]

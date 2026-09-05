@@ -1,0 +1,61 @@
+# Terra Hub Presence Normalization Adversarial Audit
+
+Read-only current-tree audit, 2026-09-05. No product source was edited; no build, native law, browser, or socket process was run.
+
+## Result
+
+The new Hub normalization path has the right primary security shape. An authenticated document socket reaches `refresh_document_presence` only while `socket_live_authority` holds all relevant subject/audience binding gates ([`🚀️bin.rs:1428`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1428), [`:3630-3644`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:3630)). That authority revalidates the session/share/membership and the retained plan/catalog/descriptor/checkpoint before each ingress ([`:2099-2107`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2099), [`:2998-3038`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2998)). Membership removal, self-revocation, share revocation, and admin user-session revocation serialize their durable change and ledger invalidation on the same binding locks ([`:4001-4045`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:4001), [`:5159-5178`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:5159), [`:5715-5751`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:5715)). I found no post-revocation publication race in that design.
+
+At ingress the Hub exact-bounded-decodes the raw peer, reconstructs every identity field from the matching live slot, retains only the five allowed ephemerals, canonical-encodes it, bounds/re-decodes it, and only then reaches the TTL/publication mutation ([`🚀️bin.rs:1592-1607`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1592), [`:1610-1647`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1610)). Thus malformed input and an authority-expanded peer over 4 KiB do not refresh TTL, alter the roster, fan out, or write directory state. Reconnect is also correctly linearized: the global publication gate serializes replacement, and every mutate/remove checks the exact `socket_live_id` ([`:1578-1588`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1578), [`:1614-1644`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1614), [`:1668-1681`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1668)).
+
+The retained roster is bounded at 64 actors, 4,096 bytes per peer, and 262,144 aggregate bytes before a `ServerFrame::Presence` is emitted ([`:1547-1574`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1547)); the shared codec rejects unknown flags, noncanonical varints, hostile collection counts, non-finite view values, trailing bytes, and inputs over the entry ceiling ([`📡️wire/🦀️.rs:2162-2194`](../../../../../../../../🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs:2162)).
+
+## Actionable Findings
+
+### P1 — Directory projection still uses the caller route surface for the non-plan carrier
+
+`PresenceLeaseSlot` retains both `surface` (the URL query) and the plan authority’s optional `document_surface` ([`🚀️bin.rs:429-440`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:429), [`:3560-3565`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:3560)). Canonical peer bytes correctly use only `document_surface` ([`:1594-1602`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1594)). But `presence_snapshot` sends the separately retained URL `slot.surface` to the directory stream ([`:1549-1553`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:1549)).
+
+The public document socket-grant route is plan-only today ([`:6415-6421`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:6415)); the non-plan issuer is test-only ([`:2596-2613`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2596)). So this is not a current production caller-controlled surface leak. It is nevertheless a split authority inside the exact normalization corpus, which explicitly supports a `non-plan-has-no-surface` peer. Before any non-plan carrier is exposed, directory projection must either omit such an actor or make `DirectoryPresenceActor.surface` optional and set it only from `document_surface`; it must never promote the route query. Add a plan-backed law that observes the directory stream and proves its surface equals the plan surface, plus a non-plan test-only law that proves no route-query surface is projected.
+
+### P1 — The proposed browser presence envelope needs scoped ownership, not document-id lookup
+
+The worker is already scope-capable: its state map uses `documentRuntimeKeyV1({ kind: "hub", spaceId, documentId })` ([`🧵️backbone-worker.ts:284-303`](../../../../../../../../🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:284)), and the existing test suite explicitly holds same document ids in two spaces. Its emitted generic event has only `documentId`, including presence ([`:1632-1645`](../../../../../../../../🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1632)). The Shell then keys open session owners, socket waiters, and heartbeat coalescers by the same document id ([`🏛️ShellHost/🟦️.tsx:1621-1623`](../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1621), [`:1788-1799`](../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1788), [`:3886-3912`](../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:3886), [`:4738-4781`](../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4738)). A second `{space B, document X}` overwrites `{space A, document X}`; a comparison after `get(documentId)` can fail closed, but it still drops A’s legitimate presence and `closeDocument(documentId)` can tear down B.
+
+The refined browser seam is correct only if it uses the existing runtime key throughout:
+
+1. Extend only the private generic **Presence event envelope** with a validated Hub `scope` and `surfaceId`. Keep `ArtifactEvent`/`PresencePeer` unchanged. `scope` must be copied from the state’s hub binding, and `surfaceId` only from the `requestDocumentSocketAuthority` result after `documentOpenPlanAuthority` succeeds ([`🧵️backbone-worker.ts:751-778`](../../../../../../../../🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:751)); never use `requestedSurfaceId`, installed-target caller data, route URL, or `peer.surface` as the authority source.
+2. Retain it only after the matching `Session` actor check; clear it on current socket close ([`:1202-1270`](../../../../../../../../🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1202), [`:1655-1672`](../../../../../../../../🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1655)). On close emit the same-scope empty host roster, never a generic document-id empty roster.
+3. Key Shell ownership, presence state, trigger, close, and waiter state with `documentRuntimeKeyV1` for Hub documents (and the existing local key for local documents), or retain the exact `DocumentScope` in every entry and look it up through that key. A `documentId`-only map is not safe.
+4. Decode the new metadata as a bounded exact `DocumentScope`/surface type—not `String(parsed.field)` as the current generic worker decoder does ([`💻️os/🟦️.ts:689-703`](../../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts:689)). Only then filter incoming normalized peers by `peer.surface === verifiedSurfaceId`. Missing metadata/surface means an empty footer, not an unfiltered roster.
+5. Keep this projection host-only. The current `presencePeersJson` is written into plugin view state ([`🏛️ShellHost/🟦️.tsx:1794-1799`](../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1794)); the new normalized footer should not make ephemeral socket state plugin-owned or persisted.
+
+First browser law: open the same `documentId` in spaces A and B with distinct verified surfaces; send a valid normalized roster for each; assert neither footer sees the other, A close clears only A, and an unscoped/mismatched-surface envelope yields an empty roster. The existing worker scope-isolation law around [`🧵️backbone-worker.ts:3785-3804`](../../../../../../../../🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3785) is the correct seed.
+
+### P2 — Neutral normalization source oracle has a timestamp range bug
+
+The fixture schema admits `connectedAtMs` through `9_007_199_254_740_991`, matching the shared codec’s safe-integer limit. But `provePresenceNormalizationFixture` encodes every varint through `encodeU32` and rejects values above `0xffff_ffff` ([`📜️script.ts:6964-6968`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/📜️script.ts:6964)). The real TypeScript decoder and Rust codec accept the full safe range ([`📡️replication/🟦️.ts:417-425`](../../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts:417), [`📡️wire/🦀️.rs:2165-2174`](../../../../../../../../🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs:2165)).
+
+Use an exact safe-integer U64 LEB128 encoder in the independent Bun oracle and add a positive vector at `4_294_967_296` (and preferably the maximum safe integer) whose normalized bytes are exact. The current corpus happens to use small dates, so its passing source check would not cover the declared contract.
+
+### P2 — Native socket law needs a deterministic rejection drain and plan-backed reconnect composition
+
+`presence_normalization_socket_overwrites_identity_and_rejects_without_refresh` is a useful plan-backed live route test ([`🚀️bin.rs:9797-9857`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:9797)). It manually installs the test catalog and exchanges a real plan grant ([`:9803-9811`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:9803)); it does not claim component retrieval or activation. That scope is appropriate.
+
+Two coverage changes are still needed:
+
+- The test batches hostile sends then treats a 100 ms lack of a frame as proof of no mutation ([`:9841-9851`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:9841)). It has no FIFO completion marker: a slow server could process a hostile frame after the assertion. Follow the hostile set with a known different valid ephemeral and wait for its exact normalized roster; then assert the rejected vectors neither refreshed TTL nor added interim publication/directory activity. Include the two presently skipped authority-expanded-over-limit vectors.
+- `presence_lease_reconnect_rejects_old_live_refresh_and_close` uses the test-only non-plan issuer ([`:9859-9893`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:9859)). Add the same replacement/old-close race with two independently exchanged plan grants, exact `?surface=<plan surface>`, and a second observer. It should prove that only the new plan-backed normalized peer remains, the old socket cannot revive/delete it, and the directory projection has no label or caller surface.
+
+## Confirmed Non-findings
+
+- There is no directory label allocation to suppress: `DirectoryPresenceActor` contains only actor, optional user id, surface, and color ([`directory schema:2011-2022`](../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:2011)). The display label remains only in normalized peer bytes.
+- Rejected raw bytes and normalized output over-limit bytes do not reach `refresh_presence`, so there is no malformed-input TTL revival/publication path in the current implementation.
+- The plan-backed native law is a socket admission/normalization law only. Its `TestDocumentOpenCatalog` is deliberately in-memory; it is not evidence of protected execution-target download, browser module activation, WGPU rendering, or a two-user journey.
+
+## Exact Existing Gates
+
+- Source oracle: `os-hub:presence-normalization-source-check` in [`📋️project.json:105-121`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/📋️project.json:105).
+- Selected native laws: `presence_normalization_matches_neutral_authority_and_no_effect_rejections` and `presence_normalization_socket_overwrites_identity_and_rejects_without_refresh`, registered by [`📜️script.ts:7031-7052`](../../../../../../../../🌎️hub/📦️packages/🦀️rust/📜️script.ts:7031).
+
+Neither was run for this audit.

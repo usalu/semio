@@ -18,7 +18,7 @@
         }
       },
       {
-        "directory": "📦️size/🌳️axis-aligned-bounds",
+        "directory": "📦️size/↔️axis-aligned-bounds",
         "id": "s.stdio.gltf.inference.axis-aligned-bounds.v1",
         "kind": "inference",
         "responsibility": "Atomic axis-aligned-bounds glTF geometric inference.",
@@ -33,7 +33,7 @@
         }
       },
       {
-        "directory": "📦️size/🌹️oriented-bounds",
+        "directory": "📦️size/🧭️oriented-bounds",
         "id": "s.stdio.gltf.inference.oriented-bounds.v1",
         "kind": "inference",
         "responsibility": "Atomic oriented-bounds glTF geometric inference.",
@@ -63,7 +63,7 @@
         }
       },
       {
-        "directory": "📦️size/🐯️characteristic-length",
+        "directory": "📦️size/🔗️characteristic-length",
         "id": "s.stdio.gltf.inference.characteristic-length.v1",
         "kind": "inference",
         "responsibility": "Atomic characteristic-length glTF geometric inference.",
@@ -78,7 +78,7 @@
         }
       },
       {
-        "directory": "📦️size/🖨️footprint-area",
+        "directory": "📦️size/🦶️footprint-area",
         "id": "s.stdio.gltf.inference.footprint-area.v1",
         "kind": "inference",
         "responsibility": "Atomic footprint-area glTF geometric inference.",
@@ -108,7 +108,7 @@
         }
       },
       {
-        "directory": "🧱️area-volume/🖱️surface-area",
+        "directory": "🧱️area-volume/🧥️surface-area",
         "id": "s.stdio.gltf.inference.surface-area.v1",
         "kind": "inference",
         "responsibility": "Atomic surface-area glTF geometric inference.",
@@ -123,7 +123,7 @@
         }
       },
       {
-        "directory": "🧱️area-volume/🐨️total-area",
+        "directory": "🧱️area-volume/🧮️total-area",
         "id": "s.stdio.gltf.inference.total-area.v1",
         "kind": "inference",
         "responsibility": "Atomic total-area glTF geometric inference.",
@@ -138,7 +138,7 @@
         }
       },
       {
-        "directory": "🧱️area-volume/🍐️exposed-area",
+        "directory": "🧱️area-volume/☀️exposed-area",
         "id": "s.stdio.gltf.inference.exposed-area.v1",
         "kind": "inference",
         "responsibility": "Atomic exposed-area glTF geometric inference.",
@@ -153,7 +153,7 @@
         }
       },
       {
-        "directory": "🧱️area-volume/🦅️contact-area",
+        "directory": "🧱️area-volume/🤝️contact-area",
         "id": "s.stdio.gltf.inference.contact-area.v1",
         "kind": "inference",
         "responsibility": "Atomic contact-area glTF geometric inference.",
@@ -168,7 +168,7 @@
         }
       },
       {
-        "directory": "🧱️area-volume/🟫️volume",
+        "directory": "🧱️area-volume/📦️volume",
         "id": "s.stdio.gltf.inference.volume.v1",
         "kind": "inference",
         "responsibility": "Atomic volume glTF geometric inference.",
@@ -183,7 +183,7 @@
         }
       },
       {
-        "directory": "🧱️area-volume/🐯️enclosed-volume",
+        "directory": "🧱️area-volume/📥️enclosed-volume",
         "id": "s.stdio.gltf.inference.enclosed-volume.v1",
         "kind": "inference",
         "responsibility": "Atomic enclosed-volume glTF geometric inference.",
@@ -213,7 +213,7 @@
         }
       },
       {
-        "directory": "🧱️area-volume/⚪️void-volume",
+        "directory": "🧱️area-volume/🕳️void-volume",
         "id": "s.stdio.gltf.inference.void-volume.v1",
         "kind": "inference",
         "responsibility": "Atomic void-volume glTF geometric inference.",
@@ -228,7 +228,7 @@
         }
       },
       {
-        "directory": "⚪️compactness/⚓️compactness",
+        "directory": "🗜️compactness/🗜️compactness",
         "id": "s.stdio.gltf.inference.compactness.v1",
         "kind": "inference",
         "responsibility": "Atomic compactness glTF geometric inference.",
@@ -243,7 +243,7 @@
         }
       },
       {
-        "directory": "⚪️compactness/🖱️surface-to-volume-ratio",
+        "directory": "🗜️compactness/➗️surface-to-volume-ratio",
         "id": "s.stdio.gltf.inference.surface-to-volume-ratio.v1",
         "kind": "inference",
         "responsibility": "Atomic surface-to-volume-ratio glTF geometric inference.",
@@ -258,7 +258,7 @@
         }
       },
       {
-        "directory": "⚪️compactness/🪁️sphericity",
+        "directory": "🗜️compactness/🌐️sphericity",
         "id": "s.stdio.gltf.inference.sphericity.v1",
         "kind": "inference",
         "responsibility": "Atomic sphericity glTF geometric inference.",
@@ -273,7 +273,7 @@
         }
       },
       {
-        "directory": "⚪️compactness/🚪️compactness-index",
+        "directory": "🗜️compactness/🔢️compactness-index",
         "id": "s.stdio.gltf.inference.compactness-index.v1",
         "kind": "inference",
         "responsibility": "Atomic compactness-index glTF geometric inference.",
@@ -288,7 +288,7 @@
         }
       },
       {
-        "directory": "⚪️compactness/🟤️hull-fill-ratio",
+        "directory": "🗜️compactness/🫙️hull-fill-ratio",
         "id": "s.stdio.gltf.inference.hull-fill-ratio.v1",
         "kind": "inference",
         "responsibility": "Atomic hull-fill-ratio glTF geometric inference.",
@@ -303,7 +303,7 @@
         }
       },
       {
-        "directory": "📏️proportion/🧪️aspect-ratios",
+        "directory": "📏️proportion/🖼️aspect-ratios",
         "id": "s.stdio.gltf.inference.aspect-ratios.v1",
         "kind": "inference",
         "responsibility": "Atomic aspect-ratios glTF geometric inference.",
@@ -318,7 +318,7 @@
         }
       },
       {
-        "directory": "📏️proportion/🌾️slenderness",
+        "directory": "📏️proportion/📏️slenderness",
         "id": "s.stdio.gltf.inference.slenderness.v1",
         "kind": "inference",
         "responsibility": "Atomic slenderness glTF geometric inference.",
@@ -333,7 +333,7 @@
         }
       },
       {
-        "directory": "📏️proportion/🔮️flatness",
+        "directory": "📏️proportion/📃️flatness",
         "id": "s.stdio.gltf.inference.flatness.v1",
         "kind": "inference",
         "responsibility": "Atomic flatness glTF geometric inference.",
@@ -348,7 +348,7 @@
         }
       },
       {
-        "directory": "📏️proportion/🟫️elongation",
+        "directory": "📏️proportion/↔️elongation",
         "id": "s.stdio.gltf.inference.elongation.v1",
         "kind": "inference",
         "responsibility": "Atomic elongation glTF geometric inference.",
@@ -363,7 +363,7 @@
         }
       },
       {
-        "directory": "⚖️mass-distribution/🐞️centroid",
+        "directory": "⚖️mass-distribution/🎯️centroid",
         "id": "s.stdio.gltf.inference.centroid.v1",
         "kind": "inference",
         "responsibility": "Atomic centroid glTF geometric inference.",
@@ -378,7 +378,7 @@
         }
       },
       {
-        "directory": "⚖️mass-distribution/🟥️principal-frame",
+        "directory": "⚖️mass-distribution/🖼️principal-frame",
         "id": "s.stdio.gltf.inference.principal-frame.v1",
         "kind": "inference",
         "responsibility": "Atomic principal-frame glTF geometric inference.",
@@ -408,7 +408,7 @@
         }
       },
       {
-        "directory": "⚖️mass-distribution/🍐️moments-of-inertia",
+        "directory": "⚖️mass-distribution/🌀️moments-of-inertia",
         "id": "s.stdio.gltf.inference.moments-of-inertia.v1",
         "kind": "inference",
         "responsibility": "Atomic moments-of-inertia glTF geometric inference.",
@@ -423,7 +423,7 @@
         }
       },
       {
-        "directory": "⚖️mass-distribution/🐧️inertia-tensor",
+        "directory": "⚖️mass-distribution/🧮️inertia-tensor",
         "id": "s.stdio.gltf.inference.inertia-tensor.v1",
         "kind": "inference",
         "responsibility": "Atomic inertia-tensor glTF geometric inference.",
@@ -438,7 +438,7 @@
         }
       },
       {
-        "directory": "🌀️curvature/🐝️mean-curvature",
+        "directory": "🌀️curvature/🌀️mean-curvature",
         "id": "s.stdio.gltf.inference.mean-curvature.v1",
         "kind": "inference",
         "responsibility": "Atomic mean-curvature glTF geometric inference.",
@@ -453,7 +453,7 @@
         }
       },
       {
-        "directory": "🌀️curvature/🟪️gaussian-curvature",
+        "directory": "🌀️curvature/🧮️gaussian-curvature",
         "id": "s.stdio.gltf.inference.gaussian-curvature.v1",
         "kind": "inference",
         "responsibility": "Atomic gaussian-curvature glTF geometric inference.",
@@ -468,7 +468,7 @@
         }
       },
       {
-        "directory": "🌀️curvature/🟥️curvature-histogram",
+        "directory": "🌀️curvature/📊️curvature-histogram",
         "id": "s.stdio.gltf.inference.curvature-histogram.v1",
         "kind": "inference",
         "responsibility": "Atomic curvature-histogram glTF geometric inference.",
@@ -483,7 +483,7 @@
         }
       },
       {
-        "directory": "🌀️curvature/🐨️sharp-feature-proportion",
+        "directory": "🌀️curvature/🗡️sharp-feature-proportion",
         "id": "s.stdio.gltf.inference.sharp-feature-proportion.v1",
         "kind": "inference",
         "responsibility": "Atomic sharp-feature-proportion glTF geometric inference.",
@@ -498,7 +498,7 @@
         }
       },
       {
-        "directory": "↕️thickness/🦋️mean-thickness",
+        "directory": "↕️thickness/⚖️mean-thickness",
         "id": "s.stdio.gltf.inference.mean-thickness.v1",
         "kind": "inference",
         "responsibility": "Atomic mean-thickness glTF geometric inference.",
@@ -513,7 +513,7 @@
         }
       },
       {
-        "directory": "↕️thickness/⚪️minimum-thickness",
+        "directory": "↕️thickness/📉️minimum-thickness",
         "id": "s.stdio.gltf.inference.minimum-thickness.v1",
         "kind": "inference",
         "responsibility": "Atomic minimum-thickness glTF geometric inference.",
@@ -528,7 +528,7 @@
         }
       },
       {
-        "directory": "↕️thickness/🟤️thickness-variability",
+        "directory": "↕️thickness/↔️thickness-variability",
         "id": "s.stdio.gltf.inference.thickness-variability.v1",
         "kind": "inference",
         "responsibility": "Atomic thickness-variability glTF geometric inference.",
@@ -543,7 +543,7 @@
         }
       },
       {
-        "directory": "↕️thickness/🛰️thickness-distribution",
+        "directory": "↕️thickness/📊️thickness-distribution",
         "id": "s.stdio.gltf.inference.thickness-distribution.v1",
         "kind": "inference",
         "responsibility": "Atomic thickness-distribution glTF geometric inference.",
@@ -558,7 +558,7 @@
         }
       },
       {
-        "directory": "🕳️concavity/🟨️convex-hull-gap",
+        "directory": "🕳️concavity/📏️convex-hull-gap",
         "id": "s.stdio.gltf.inference.convex-hull-gap.v1",
         "kind": "inference",
         "responsibility": "Atomic convex-hull-gap glTF geometric inference.",
@@ -573,7 +573,7 @@
         }
       },
       {
-        "directory": "🕳️concavity/⚪️reentrant-area",
+        "directory": "🕳️concavity/🪣️reentrant-area",
         "id": "s.stdio.gltf.inference.reentrant-area.v1",
         "kind": "inference",
         "responsibility": "Atomic reentrant-area glTF geometric inference.",
@@ -588,7 +588,7 @@
         }
       },
       {
-        "directory": "🕳️concavity/🪻️reentrant-volume",
+        "directory": "🕳️concavity/📦️reentrant-volume",
         "id": "s.stdio.gltf.inference.reentrant-volume.v1",
         "kind": "inference",
         "responsibility": "Atomic reentrant-volume glTF geometric inference.",
@@ -603,7 +603,7 @@
         }
       },
       {
-        "directory": "🕳️concavity/🚪️concavity-index",
+        "directory": "🕳️concavity/🔢️concavity-index",
         "id": "s.stdio.gltf.inference.concavity-index.v1",
         "kind": "inference",
         "responsibility": "Atomic concavity-index glTF geometric inference.",
@@ -618,7 +618,7 @@
         }
       },
       {
-        "directory": "↔️clearance/🌾️minimum-distance-to-neighbors",
+        "directory": "↔️clearance/📏️minimum-distance-to-neighbors",
         "id": "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1",
         "kind": "inference",
         "responsibility": "Atomic minimum-distance-to-neighbors glTF geometric inference.",
@@ -633,7 +633,7 @@
         }
       },
       {
-        "directory": "↔️clearance/🦁️clearance-distribution",
+        "directory": "↔️clearance/📊️clearance-distribution",
         "id": "s.stdio.gltf.inference.clearance-distribution.v1",
         "kind": "inference",
         "responsibility": "Atomic clearance-distribution glTF geometric inference.",
@@ -648,7 +648,7 @@
         }
       },
       {
-        "directory": "↔️clearance/🟡️interference-volume",
+        "directory": "↔️clearance/🚧️interference-volume",
         "id": "s.stdio.gltf.inference.interference-volume.v1",
         "kind": "inference",
         "responsibility": "Atomic interference-volume glTF geometric inference.",
@@ -663,7 +663,7 @@
         }
       },
       {
-        "directory": "↔️clearance/🌹️overlap-volume",
+        "directory": "↔️clearance/🫂️overlap-volume",
         "id": "s.stdio.gltf.inference.overlap-volume.v1",
         "kind": "inference",
         "responsibility": "Atomic overlap-volume glTF geometric inference.",
@@ -693,7 +693,7 @@
         }
       },
       {
-        "directory": "🤝️adjacency/🌳️contact-graph-degree",
+        "directory": "🤝️adjacency/🌐️contact-graph-degree",
         "id": "s.stdio.gltf.inference.contact-graph-degree.v1",
         "kind": "inference",
         "responsibility": "Atomic contact-graph-degree glTF geometric inference.",
@@ -723,7 +723,7 @@
         }
       },
       {
-        "directory": "🧭️orientation/🚪️main-axis-direction",
+        "directory": "🧭️orientation/➡️main-axis-direction",
         "id": "s.stdio.gltf.inference.main-axis-direction.v1",
         "kind": "inference",
         "responsibility": "Atomic main-axis-direction glTF geometric inference.",
@@ -753,7 +753,7 @@
         }
       },
       {
-        "directory": "🧭️orientation/🌻️orientation-consistency",
+        "directory": "🧭️orientation/🧲️orientation-consistency",
         "id": "s.stdio.gltf.inference.orientation-consistency.v1",
         "kind": "inference",
         "responsibility": "Atomic orientation-consistency glTF geometric inference.",
@@ -768,7 +768,7 @@
         }
       },
       {
-        "directory": "🪞️symmetry/🌴️reflection-symmetry-score",
+        "directory": "🪞️symmetry/⚖️reflection-symmetry-score",
         "id": "s.stdio.gltf.inference.reflection-symmetry-score.v1",
         "kind": "inference",
         "responsibility": "Atomic reflection-symmetry-score glTF geometric inference.",
@@ -783,7 +783,7 @@
         }
       },
       {
-        "directory": "🪞️symmetry/🌻️rotational-symmetry-score",
+        "directory": "🪞️symmetry/🔄️rotational-symmetry-score",
         "id": "s.stdio.gltf.inference.rotational-symmetry-score.v1",
         "kind": "inference",
         "responsibility": "Atomic rotational-symmetry-score glTF geometric inference.",
@@ -798,7 +798,7 @@
         }
       },
       {
-        "directory": "🪞️symmetry/🐞️reflection-symmetries",
+        "directory": "🪞️symmetry/🪞️reflection-symmetries",
         "id": "s.stdio.gltf.inference.reflection-symmetries.v1",
         "kind": "inference",
         "responsibility": "Atomic reflection-symmetries glTF geometric inference.",
@@ -813,7 +813,7 @@
         }
       },
       {
-        "directory": "🪞️symmetry/🐯️rotational-symmetries",
+        "directory": "🪞️symmetry/🔁️rotational-symmetries",
         "id": "s.stdio.gltf.inference.rotational-symmetries.v1",
         "kind": "inference",
         "responsibility": "Atomic rotational-symmetries glTF geometric inference.",
@@ -828,7 +828,7 @@
         }
       },
       {
-        "directory": "🪞️symmetry/🐸️repetition-ratio",
+        "directory": "🪞️symmetry/🔂️repetition-ratio",
         "id": "s.stdio.gltf.inference.repetition-ratio.v1",
         "kind": "inference",
         "responsibility": "Atomic repetition-ratio glTF geometric inference.",
@@ -843,7 +843,7 @@
         }
       },
       {
-        "directory": "🪞️symmetry/🍊️modularity-ratio",
+        "directory": "🪞️symmetry/🧩️modularity-ratio",
         "id": "s.stdio.gltf.inference.modularity-ratio.v1",
         "kind": "inference",
         "responsibility": "Atomic modularity-ratio glTF geometric inference.",
@@ -858,7 +858,7 @@
         }
       },
       {
-        "directory": "🌊️roughness/🟫️deviation-from-ideal",
+        "directory": "🌊️roughness/🎯️deviation-from-ideal",
         "id": "s.stdio.gltf.inference.deviation-from-ideal.v1",
         "kind": "inference",
         "responsibility": "Atomic deviation-from-ideal glTF geometric inference.",
@@ -873,7 +873,7 @@
         }
       },
       {
-        "directory": "🌊️roughness/🍎️deviation-from-smoothed-geometry",
+        "directory": "🌊️roughness/🧽️deviation-from-smoothed-geometry",
         "id": "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1",
         "kind": "inference",
         "responsibility": "Atomic deviation-from-smoothed-geometry glTF geometric inference.",
@@ -888,7 +888,7 @@
         }
       },
       {
-        "directory": "🌊️roughness/🎨️normal-variation",
+        "directory": "🌊️roughness/🧭️normal-variation",
         "id": "s.stdio.gltf.inference.normal-variation.v1",
         "kind": "inference",
         "responsibility": "Atomic normal-variation glTF geometric inference.",
@@ -903,7 +903,7 @@
         }
       },
       {
-        "directory": "🌊️roughness/🖱️surface-waviness",
+        "directory": "🌊️roughness/🌊️surface-waviness",
         "id": "s.stdio.gltf.inference.surface-waviness.v1",
         "kind": "inference",
         "responsibility": "Atomic surface-waviness glTF geometric inference.",
@@ -918,7 +918,7 @@
         }
       },
       {
-        "directory": "🌊️roughness/🦊️irregularity",
+        "directory": "🌊️roughness/🪨️irregularity",
         "id": "s.stdio.gltf.inference.irregularity.v1",
         "kind": "inference",
         "responsibility": "Atomic irregularity glTF geometric inference.",
@@ -933,7 +933,7 @@
         }
       },
       {
-        "directory": "🕸️topology/🐼️holes",
+        "directory": "🕸️topology/🕳️holes",
         "id": "s.stdio.gltf.inference.holes.v1",
         "kind": "inference",
         "responsibility": "Atomic holes glTF geometric inference.",
@@ -948,7 +948,7 @@
         }
       },
       {
-        "directory": "🕸️topology/🐙️handles",
+        "directory": "🕸️topology/🥯️handles",
         "id": "s.stdio.gltf.inference.handles.v1",
         "kind": "inference",
         "responsibility": "Atomic handles glTF geometric inference.",
@@ -963,7 +963,7 @@
         }
       },
       {
-        "directory": "🕸️topology/🎈️boundary-loops",
+        "directory": "🕸️topology/➰️boundary-loops",
         "id": "s.stdio.gltf.inference.boundary-loops.v1",
         "kind": "inference",
         "responsibility": "Atomic boundary-loops glTF geometric inference.",
@@ -978,7 +978,7 @@
         }
       },
       {
-        "directory": "🕸️topology/🪄️euler-characteristic",
+        "directory": "🕸️topology/🧮️euler-characteristic",
         "id": "s.stdio.gltf.inference.euler-characteristic.v1",
         "kind": "inference",
         "responsibility": "Atomic euler-characteristic glTF geometric inference.",
@@ -993,7 +993,7 @@
         }
       },
       {
-        "directory": "🕸️topology/🐨️genus",
+        "directory": "🕸️topology/🔢️genus",
         "id": "s.stdio.gltf.inference.genus.v1",
         "kind": "inference",
         "responsibility": "Atomic genus glTF geometric inference.",

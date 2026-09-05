@@ -39,7 +39,7 @@
         "responsibility": "Graphics Interchange Format artifact definition."
       },
       {
-        "directory": "🎞️pptx",
+        "directory": "📽️pptx",
         "id": "s.stdio.pptx",
         "kind": "artifact",
         "responsibility": "PowerPoint Presentation artifact definition."
@@ -159,7 +159,7 @@
         "responsibility": "Waveform Audio artifact definition."
       },
       {
-        "directory": "🔣️json",
+        "directory": "🧾️json",
         "id": "s.stdio.json",
         "kind": "artifact",
         "responsibility": "JavaScript Object Notation artifact definition."
@@ -171,7 +171,7 @@
         "responsibility": "Drawing artifact definition."
       },
       {
-        "directory": "🖊️dxf",
+        "directory": "🖋️dxf",
         "id": "s.stdio.dxf",
         "kind": "artifact",
         "responsibility": "Drawing Exchange Format artifact definition."

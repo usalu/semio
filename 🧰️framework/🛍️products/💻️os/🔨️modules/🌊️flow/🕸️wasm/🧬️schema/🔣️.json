@@ -187,12 +187,9 @@
     "renderDrawingScene": 2600,
     "exportDrawingSvg": 2601,
     "exportDrawingPdf": 2602,
-    "exportDrawingDwg": 2603,
-    "importDrawingDwg": 2604,
     "traceDrawingBitmap": 2605,
     "booleanDrawingSegments": 2606,
     "dispose": 2607,
-    "dwgEncodeMeshJson": 2608,
     "documentJson": 2609,
     "synchronizeDocumentJson": 2610
   },
@@ -945,18 +942,6 @@
         "type": "utf8"
       }
     ],
-    "exportDrawingDwg": [
-      {
-        "name": "handle",
-        "type": "utf8"
-      }
-    ],
-    "importDrawingDwg": [
-      {
-        "name": "dataBase64",
-        "type": "utf8"
-      }
-    ],
     "traceDrawingBitmap": [
       {
         "name": "width",
@@ -996,12 +981,6 @@
     "dispose": [
       {
         "name": "handle",
-        "type": "utf8"
-      }
-    ],
-    "dwgEncodeMeshJson": [
-      {
-        "name": "meshJson",
         "type": "utf8"
       }
     ],

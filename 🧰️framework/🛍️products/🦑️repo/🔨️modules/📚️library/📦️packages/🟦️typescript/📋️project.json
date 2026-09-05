@@ -195,6 +195,13 @@
         "command": "bun ./📜️script.ts test historical-document-evidence"
       }
     },
+    "test-cargo-target-discovery-skip": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test cargo-target-discovery-skip"
+      }
+    },
     "test-registry-catalog-gitlink-boundary": {
       "executor": "nx:run-commands",
       "options": {

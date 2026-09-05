@@ -109,7 +109,7 @@ pub fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &Se
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `🌊️mutate-semio-flow` test adapter, whose `inverse-<kind>`
 /// scenarios need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_flow_mutation`] alone cannot. Same shape as `✳️kit`'s
+/// [`apply_semio_flow_mutation`] alone cannot. Same shape as `🧰️kit`'s
 /// `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {

@@ -3,12 +3,20 @@
 
 \RequirePackage{array}
 \RequirePackage{colortbl}
-\RequirePackage{hhline}
+\RequirePackage{etoolbox}
 \RequirePackage{longtable}
 \RequirePackage{expl3}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
-
+% Fallback defs (semio-tokens.sty is generated and does not carry these);
+% \providecommand is idempotent if semio-window.sty already defined them.
+\providecommand{\semio@spacing@table@outer}{0.85em}
+\providecommand{\semio@spacing@par}{0.5em}
+% LR-cellpad: horizontal inset between cell content and every column boundary
+% (outer borders and internal separators alike). ~1.5?2x the former values
+% (short 0.4em / long 0.2em). Column widths are reduced to absorb it, so the
+% table's total width is unchanged. One token drives short and long tables.
+\providecommand{\semio@table@hpad}{0.55em}
 \ExplSyntaxOn
 \seq_new:N \l_semio_table_row_seq
 \cs_new_protected:Npn \semio_table_header_row:n #1 {
@@ -24,7 +32,7 @@
   \semio_table_header_row:n {#1}
   \\
   \semio@table@row@sep
-  \global\semio@table@row@startedfalse
+  \noalign{\global\semio@table@row@startedfalse}
 }
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
   \int_zero:N \l_tmpa_int
@@ -71,11 +79,35 @@
   }%
 }
 
+% ?? TOC cell linking to the section anchor (label #1) when it resolves, else
+% the content #2 plain. Any \textcolor inside #2 overrides hyperref's colorlinks
+% tint, so number/title keep their own hue while still being clickable.
+\newcommand{\semio@toc@link}[2]{%
+  \ifcsname r@#1\endcsname
+    \hyperref[#1]{#2}%
+  \else
+    #2%
+  \fi
+}
+% ?? TOC page cell: links the page number to the section anchor (label #1); the
+% number is left uncoloured so it takes the semio-primary link colour like the
+% glossary, or renders "--" when the ref is unresolved.
+\newcommand{\semio@toc@page@link}[1]{%
+  \ifcsname r@#1\endcsname
+    \hyperref[#1]{\getpagerefnumber{#1}}%
+  \else
+    --%
+  \fi
+}
+
+% ?? The number cell also carries this line's own anchor (\semio@tocline@anchor,
+% semio-core.sty), so the hierarchy key chip printed next to the heading itself
+% can jump back here. Placed after \cellcolor, which colortbl requires first.
 \newcommand{\SemioTableTocRow}[3]{%
   \SemioTableRow{%
-    \cellcolor{semio-chrome-canvas}\semio@toc@number{#1} &
-    \cellcolor{semio-chrome-canvas}#2 &
-    \cellcolor{semio-chrome-canvas}\semio@table@register@page{#3}
+    \cellcolor{semio-chrome-canvas}\semio@tocline@anchor{#1}\semio@toc@link{#3}{\mbox{\semio@toc@number{#1}}} &
+    \cellcolor{semio-chrome-canvas}\semio@toc@link{#3}{\textcolor{semio-chrome-text-normal}{#2}} &
+    \cellcolor{semio-chrome-canvas}\semio@toc@page@link{#3}
   }%
 }
 
@@ -83,14 +115,16 @@
 \newlength{\semio@table@body@height}
 \newif\ifsemio@table@row@started
 \newcount\semio@table@long@mode
+\newcount\semio@table@long@part
+\newif\ifsemio@table@long@pageparts
 
-% 🔤️ Adjustable table body text size, mirroring the window `text-size`
-% keyval (🖋️semio-window.sty) so `\begin{Table}[text-size=8pt]` and
+% ?? Adjustable table body text size, mirroring the window `text-size`
+% keyval (semio-window.sty) so `\begin{Table}[text-size=8pt]` and
 % `\SemioTableLong[text-size=8pt]{...}` both work. Precedence: an explicit
 % table-local size wins over an enclosing window's `text-size`, which wins
 % over the fixed chrome body size. \l_semio_window_textsize_*  is only
-% *referenced* here, not declared — 🖋️semio-window.sty loads after
-% 🖋️semio-table.sty, but this body only runs at document time, long after
+% *referenced* here, not declared ? semio-window.sty loads after
+% semio-table.sty, but this body only runs at document time, long after
 % both packages are loaded.
 \ExplSyntaxOn
 \dim_new:N \l_semio_table_textsize_dim
@@ -103,7 +137,7 @@
   },
   key .tl_set:N = \l_semio_table_key_tl,
 }
-% Named the plain (legacy) way, not \semio_table_keys_set:n — these get
+% Named the plain (legacy) way, not \semio_table_keys_set:n ? these get
 % called from \SemioTableLong's body, which is a plain \newcommand written
 % where `_`/`:` are ordinary (non-letter) characters, so an expl3-style name
 % would not tokenize as one control word there (see the identical rationale
@@ -140,115 +174,399 @@
   \global\semio@table@row@startedfalse
   \arrayrulecolor{semio-chrome-border-normal}%
   \setlength{\arrayrulewidth}{\semio@stroke@hairline}%
-  \setlength{\tabcolsep}{\semio@spacing@single}%
-  \setlength{\extrarowheight}{\semio@spacing@single}%
+  % ?? Roomier cells: horizontal via \tabcolsep (colspecs subtract \tabcolsep,
+  % so table width is preserved). Vertical padding is NOT done here with
+  % \extrarowheight/\arraystretch (those are top-heavy and content-dependent);
+  % it is handled symmetrically per cell by the \semio@cell@struttop /
+  % \semio@cell@strutbot pair baked into the T/U/m columns, so top gap = bottom
+  % gap in every cell and the value is identical across all table types. Hence
+  % \extrarowheight is zeroed and \arraystretch is 1 here. \parskip is
+  % neutralised so a multi-line cell doesn't inherit the body paragraph gap.
+  % Horizontal inset is baked into column widths (-2\semio@table@hpad); zero
+  % \tabcolsep so adjacent \cellcolor cells abut with no cream seam between them.
+  \setlength{\semio@table@long@cellpad}{\semio@table@hpad}%
+  \setlength{\tabcolsep}{0pt}%
+  \setlength{\extrarowheight}{\z@}%
   \renewcommand{\arraystretch}{1}%
+  \setlength{\parskip}{\z@}%
 }
 
-\newcommand{\semio@table@colspec@two}{@{}T{\dimexpr0.5\linewidth-\tabcolsep\relax}T{\dimexpr0.5\linewidth-\tabcolsep\relax}@{}}
-
-\newcommand{\semio@table@colspec@three}{@{}T{\dimexpr0.34\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
+% LR-cellpad: columns split \linewidth evenly and carry their text inset inside
+% the cell (\semio@cell@inset); \tabcolsep is zero so canvas \cellcolor regions
+% touch with no inter-column cream seam.
+\newcommand{\semio@table@colspec@two}{T{\dimexpr0.5\linewidth\relax}T{\dimexpr0.5\linewidth\relax}}
 
 \newlength{\semio@table@long@inner@w}
 \newbox\semio@table@long@pad@box
+% Per-column inner padding for long tables (each column gets this much air on
+% both sides ? 2? between adjacent columns). Column p-widths are reduced by
+% 2? this, so the total still equals \semio@table@long@inner@w (no overflow).
+\newlength{\semio@table@long@cellpad}
+
+% When true, the table paints its own L/R \vrule borders and inner width
+% reserves 2\times\arrayrulewidth for them. When false (windowed short tables),
+% the enclosing tcolorbox frame owns the sides ? subtracting those hairlines
+% would leave a page-coloured gutter inside the frame.
+\newif\ifsemio@table@owns@sides
+\semio@table@owns@sidestrue
 
 \newcommand{\semio@table@long@inner@w@set}{%
   \setbox\semio@table@long@pad@box=\hbox{\hspace{\semio@chrome@padding}}%
-  \setlength{\semio@table@long@inner@w}{%
-    \dimexpr\linewidth-2\wd\semio@table@long@pad@box-2\arrayrulewidth\relax
-  }%
+  \ifsemio@table@owns@sides
+    \setlength{\semio@table@long@inner@w}{%
+      \dimexpr\linewidth-2\wd\semio@table@long@pad@box-2\arrayrulewidth\relax
+    }%
+  \else
+    \setlength{\semio@table@long@inner@w}{%
+      \dimexpr\linewidth-2\wd\semio@table@long@pad@box\relax
+    }%
+  \fi
+  \setlength{\semio@table@long@cellpad}{\semio@table@hpad}%
 }
 
 \newcommand{\semio@table@setup@long}{%
   \semio@table@setup
   \setlength{\tabcolsep}{0pt}%
-  \setlength{\extrarowheight}{\semio@spacing@single}%
+  % Vertical padding comes from the symmetric cell struts (same as short
+  % tables) ? no separate \extrarowheight here, so long/short match exactly.
 }
 
-\newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.78\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.10\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
-
-\newcommand{\semio@table@colspec@glossary@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
-
-\newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.12\linewidth-\tabcolsep\relax}T{\dimexpr0.78\linewidth-\tabcolsep\relax}U{\dimexpr0.10\linewidth-2\tabcolsep\relax}@{}}
-
-\newcommand{\semio@table@colspec@glossary}{@{}T{\dimexpr0.22\linewidth-\tabcolsep\relax}T{\dimexpr0.56\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
-
-\newcolumntype{T}[1]{%
-  >{\raggedright\arraybackslash\hspace{0pt}}%
-  p{#1}%
+% Continuous canvas fill at the outer chrome inset. Cell text inset lives inside
+% each cell (\semio@cell@inset in the cellfill), so interior \semio@table@padcp
+% is empty and adjacent \cellcolor regions abut.
+% The outer chrome slots MUST be canvas-coloured \vrule pads ? plain \hspace
+% leaves a page-coloured strip between the last cell's \cellcolor and the
+% border (measured ~1.5pt = \semio@chrome@padding on every table type).
+\newcommand{\semio@table@padcp}{}
+\newcommand{\semio@table@padendL}{{\color{semio-chrome-canvas}\vrule width \semio@chrome@padding}}
+\newcommand{\semio@table@padendR}{{\color{semio-chrome-canvas}\vrule width \semio@chrome@padding}}
+% Outer table side rules as @{} inserts (not preamble | tokens). Array | rules
+% intersect \hhline and paint short horizontal ticks on every vertical at row
+% boundaries; border-colored \vrule inserts do not. Omitted when the enclosing
+% window frame already owns the sides (\ifsemio@table@owns@sidesfalse).
+% Ungrouped coloured \vrule (not {\color...\vrule} and not \vline): braces
+% pack the rule to natural height on tall m-rows; colortbl's \vline can do
+% the same via \color@begingroup. A stretchable \vrule with colour set via
+% \color before it fills the row box; padend/cellfill restore their own
+% colours immediately after.
+\newcommand{\semio@table@border@L}{%
+  \ifsemio@table@owns@sides
+    \color{semio-chrome-border-normal}\vrule width\arrayrulewidth
+    \color{semio-chrome-text-normal}%
+  \fi
+}
+\newcommand{\semio@table@border@R}{%
+  \ifsemio@table@owns@sides
+    \color{semio-chrome-border-normal}\vrule width\arrayrulewidth
+    \color{semio-chrome-text-normal}%
+  \fi
+}
+% Chrome-row right edge: width phantom only (no ink). A full-height border@R
+% here becomes a vertical stem in the air on title-only chrome (TOC / glossary
+% ? no number chip). When a number chip exists it already paints its own right
+% wall via the muted open cap; body rows supply border@R below the baseline.
+\newcommand{\semio@table@border@R@chrome}{%
+  \vrule width\arrayrulewidth height\z@ depth\z@
+}
+% Chrome-row left edge: same phantom. A live border@L behind the title chip
+% hid a 1-device-pixel inset of the chip's own left stroke (outer L looked flush
+% because border@L ink was continuous, but the chip top-left corner sat inside
+% ? tiny gap/jog). Body rows still paint \semio@table@border@L; the muted chip
+% paints L only in the chrome band, pulled onto the same x.
+\newcommand{\semio@table@border@L@chrome}{%
+  \vrule width\arrayrulewidth height\z@ depth\z@
 }
 
-\newcolumntype{U}[1]{%
-  >{\raggedleft\arraybackslash\hspace{0pt}}%
-  p{#1}%
-}
+\newcommand{\semio@table@colspec@register@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.12\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.78\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.10\semio@table@long@inner@w\relax}<{\semio@register@lastclose}@{\semio@table@padendR}@{\semio@table@border@R}}
 
-\newcommand{\semio@table@header@cell}[1]{%
+\newcommand{\semio@table@colspec@glossary@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.22\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.56\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.22\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}@{\semio@table@border@R}}
+
+% ?? Symmetric vertical cell padding. Cells are vertically centred (m-columns);
+% every cell also carries an invisible strut pair that reserves \semio@table@vtop
+% above its first line and \semio@table@vbot below its last line. One pair of
+% tokens drives EVERY table (short, long, register, glossary, project), so the
+% padding is identical everywhere; values are em-relative so they track each
+% table's text-size.
+%
+% Why a top value ? bottom value: an m-column centres the whole cell box on the
+% math axis, and a text line box is ascender-heavy (cap ? 0.7em up, descender
+% ? 0.2em down). Making \vtop about 0.66em larger than \vbot cancels that skew,
+% so the *visible* top margin (top rule ? cap) equals the *visible* bottom
+% margin (baseline/descender ? bottom rule). Both are then tuned to ? the
+% horizontal inset (\semio@table@hpad + frame gap ? 5.5pt at the 9.6pt chrome
+% body size) ? text sits the same distance from all four cell borders. Measured
+% on the rendered PDF: cap?toprule ? 5.8pt, matching the ?5.5pt side inset.
+\providecommand{\semio@table@vtop}{1.78em}
+\providecommand{\semio@table@vbot}{1.12em}
+% Exception: the register/TOC listing (Inhaltsverzeichnis) opts into HALF the
+% vertical padding ? it is a dense, single-line index where the full data-table
+% air reads as too loose. These are applied by locally \renewcommand-ing
+% \semio@table@vtop/@vbot to these values around ONLY the main TOC render (see
+% \semio_window_toc_render: in semio-window.sty); every other table, including
+% the appendix list and glossaries, keeps the full padding. Kept symmetric the
+% same way (vtop-vbot ? 0.7em cancels the ascender-heavy line box): measured
+% cap?toprule ? 2.9pt, ? half of the standard 5.8pt.
+\providecommand{\semio@table@vtop@toc}{1.40em}
+\providecommand{\semio@table@vbot@toc}{0.70em}
+% Top strut: zero-width rule that only sets the first line's height (no depth,
+% so interline spacing in multi-line cells is untouched).
+\newcommand{\semio@cell@struttop}{\rule[\z@]{\z@}{\semio@table@vtop}}
+% Bottom strut: zero-width rule that only sets the last line's depth. LaTeX's
+% \rule[raise]{width}{height} expands to a \vrule of height (height+raise) and
+% depth (-raise), so the height argument MUST equal the raise magnitude, not
+% \z@. With height=\z@ the vrule got a NEGATIVE height and contributed no
+% reliable depth; m-columns then \vcenter-ed an ascender-only box and every
+% single-line row (Huerden, Ueberblick, ...) read as top-heavy with a large empty
+% band under the text. Height=vbot yields height 0 / depth vbot -- a pure depth
+% strut, the mirror of \semio@cell@struttop. The leading zero glue is the
+% counterpart of the one in \semio@cell@pre / the cellfills: TeX hyphenates a
+% run of letters only when it is BOTH preceded and followed by glue, and this
+% strut is a \rule that would otherwise butt straight against the cell's last
+% word, so a single-word cell ("Faserzement", "Pfostenelement") never
+% hyphenated and ran over the column edge. Discardable at a line break, zero
+% width on the last line, so it changes nothing else.
+\newcommand{\semio@cell@strutbot}{\hspace{0pt}\rule[-\semio@table@vbot]{\z@}{\semio@table@vbot}}
+% Last-column closer for the register colspec (below). Kept as a named
+% indirection so a future register table could close its right-aligned page
+% column differently without editing the colspec.
+\newcommand{\semio@register@lastclose}{\semio@cell@strutbot}
+% ?? Horizontal cell inset, one cellpad on BOTH edges of EVERY line. Column
+% widths are the full fraction of the table's inner width and the interior pads
+% are empty (\semio@table@padcp), so the inset has to come from the paragraph
+% shape rather than from glue in the cell's token stream: an \hspace at the start
+% of a cell indents only its first line and one at the end only its last, which
+% leaves every wrapped line flush against both column edges ? a long word then
+% sits directly beside the neighbouring column's text and reads as if it left the
+% table. \advance (not =) keeps the fil component \raggedright / \raggedleft put
+% into the skip it stretches, so the alignment those set is preserved and the
+% wrap width shrinks by exactly 2 cellpad on every line.
+\newcommand{\semio@cell@inset}{%
+  \advance\leftskip\semio@table@long@cellpad\relax
+  \advance\rightskip\semio@table@long@cellpad\relax
+}
+% Unified cell openers: alignment + top strut + no-indent glue. The matching
+% bottom strut goes in the column's <{} slot.
+% ?? Hyphenation: the \hspace{0pt} glue MUST come *after* \semio@cell@struttop,
+% not before it. TeX only hyphenates a run of letters that is immediately
+% preceded by glue; \semio@cell@struttop is a \rule, so with the glue before it
+% the first word of the cell sits directly after a rule and never hyphenates ?
+% a long compound ("Beschaffungsschritte", "Mitgliedschaft") then overflows a
+% narrow column and collides with the next one. Emitting the strut first and the
+% zero glue last restores the "word preceded by glue" precondition (see the
+% Hyphenation Safety note in semio-core.sty). The strut still sets the first
+% line's height either way; the glue is zero-width, so nothing shifts visually.
+\newcommand{\semio@cell@pre}{\cellcolor{semio-chrome-canvas}\raggedright\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
+\newcommand{\semio@table@long@cellfill}{%
   \cellcolor{semio-chrome-canvas}%
+  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}%
+}
+\let\semio@table@long@cellfill@first\semio@table@long@cellfill
+\newcommand{\semio@table@long@cellfillR}{%
+  \cellcolor{semio-chrome-canvas}%
+  \raggedleft\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}%
+}
+\newcolumntype{T}[1]{%
+  >{\semio@table@long@cellfill}%
+  m{#1}%
+  <{\semio@cell@strutbot}%
+}
+
+% No \cellcolor here: the column's >{\semio@table@long@cellfill} (or
+% \semio@cell@pre) already paints the canvas. A second \cellcolor after
+% \semio@cell@struttop was collapsing the header row's top strut, so column
+% labels sat ~3.5pt under the chip baseline while body rows kept the full
+% ~7.5pt air (measured on Huerden / BB.M.a vs body).
+\newcommand{\semio@table@header@cell}[1]{%
   \SemioSans\semio@table@fontsize@apply
   \semio@text@emphasized{\bfseries #1}%
 }
 
+\newcommand{\semio@table@short@hhline@current}{}
+\newif\ifsemio@table@window@rules
+% Row separator. Side \vrule segments live only inside row boxes and do not
+% extend through \noalign — the join band must therefore carry border ink at
+% the L/R x-positions or cream shows through as a notch at every row.
+%
+% owns@sides mid-rule is a single picture-frame hbox: L stub | inner hairline |
+% R stub. The stubs span only the join band (no +3pt climb into the row
+% above). Full-width \hrule + overlapping upward pillars double-painted the
+% outer L/R x and read as stacked "tiny" segments / jogs at fractional PDF
+% zoom; an earlier hbox+extra-pillar pass also stacked a second hairline under
+% longtable \endhead reinsertion — keep ONE hbox, no follow-up pillar pass.
+%
+% Windowed short tables: the tcolorbox leftrule/rightrule is the sole
+% continuous outer edge. Mid-rules stay exactly \linewidth so they meet the
+% INNER face of that frame.
+\newcommand{\semio@table@rule@band}{%
+  \hbox to \linewidth{%
+    \vrule width\arrayrulewidth height\arrayrulewidth depth\z@
+    \rule{\dimexpr\linewidth-2\arrayrulewidth\relax}{\arrayrulewidth}%
+    \vrule width\arrayrulewidth height\arrayrulewidth depth\z@
+  }%
+}
+\newcommand{\semio@table@rule}{%
+  \noalign{%
+    \begingroup
+      \color{semio-chrome-border-normal}%
+      \ifsemio@table@owns@sides
+        \semio@table@rule@band
+      \else
+        \hrule height\arrayrulewidth width\linewidth
+      \fi
+    \endgroup
+  }%
+}
 \newcommand{\semio@table@row@sep}{%
-  \noalign{\hrule height\arrayrulewidth width\linewidth}%
+  \semio@table@rule
 }
 
 %region LongTableHeader
+% Canvas-fill switch for fully-canvas long tables (register/glossary and
+% \SemioTableLong). When set, the header's first cell (a \multicolumn) uses the
+% same canvas \vrule pads and geometry as the body columns, so the header row
+% fills seamlessly too.
+\newif\ifsemio@table@headerfill
+\semio@table@headerfillfalse
 \newcommand{\semio@table@long@header@left@cell}[2]{%
-  \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr#1\semio@table@long@inner@w\relax}@{}}{%
-    \semio@table@header@cell{#2}%
-  }%
+  \ifsemio@table@headerfill
+    % Structurally identical to a body col-1: canvas edge fill + width-2cellpad +
+    % two canvas pads bridging to col-2, so the header title aligns with the body
+    % cells AND the fill is continuous.
+    \multicolumn{1}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr#1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{%
+      \semio@table@header@cell{#2}%
+    }%
+  \else
+    \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{}}{%
+      \semio@table@header@cell{#2}%
+    }%
+  \fi
 }
 
 \newcommand{\semio@table@long@header@repeat@three}[4]{%
   \semio@table@long@header@left@cell{#1}{#2} &
   \semio@table@header@cell{#3} &
   \semio@table@header@cell{#4} \\
-  \hhline{|---|}
-  \global\semio@table@row@startedfalse
+  \semio@table@long@hhline@current
+  % Reset in \noalign: a bare \global assignment here sits *between* the \hhline
+  % and \endfirsthead outside any row, so array's row scanner reads it as the
+  % start of a new cell ? opening an empty, strut-height phantom row (a cream
+  % band, unfilled by the header cellcolor) between the header and the first
+  % entry. \noalign executes it on the row boundary without starting that row.
+  \noalign{\global\semio@table@row@startedfalse}%
 }
 
 \newcommand{\semio@table@long@header@continuation@three}[4]{%
   \semio@table@long@header@left@cell{#1}{#2} &
   \semio@table@header@cell{#3} &
   \semio@table@header@cell{#4} \\
-  \hhline{|---|}
-  \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
-  \global\semio@table@row@startedfalse
+  \semio@table@long@hhline@current
+  % head->body transition: no negative pull (a -\semio@table@body@height skip
+  % here pulled the first body row up over the header row, hiding it). The
+  % row-started reset shares the \noalign so it, too, cannot open a phantom row.
+  \noalign{\vskip\z@\global\semio@table@row@startedfalse}%
 }
 
-\newif\ifsemio@table@long@title@number
+\newcommand{\semio@table@long@title@chrome@prepare}{}
 
-\newcommand{\semio@table@long@title@chrome@prepare}{%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{\semio@window@header@title}}}%
-  \edef\semio@table@long@title@number{\semio@window@header@number}%
-  \ifx\semio@table@long@title@number\@empty
-    \semio@table@long@title@numberfalse
-    \setlength{\semio@window@gap@w}{\dimexpr\linewidth-\wd\semio@window@tab@box\relax}%
-  \else
-    \semio@table@long@title@numbertrue
-    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{\semio@table@long@title@number}}%
-    \setlength{\semio@window@gap@w}{%
-      \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-    }%
-  \fi
+\newcommand{\semio@table@long@title@chrome@row@render}[2]{%
+  % 🩹 Chrome spans the full table width with flush muted chips (no side
+  % border slots, no shrink, no hairline pull). Body rows keep @{\border@L};
+  % chip L then shares that same outer x. Phantom-L + hspace* pull still left a
+  % ~0.5pt inset at the chip top-left (measured dark Zugang).
+  \multicolumn{#1}{@{}l@{}}{%
+    \begingroup
+      \semio@window@header@flushtrue
+      #2%
+      \semio@window@header@flushfalse
+    \endgroup
+  }%
+  \\%
+  % Weld the next row onto the chip baseline. Without this pull, longtable /
+  % tabular leaves a cream/page gap under the chips. Cancel only the \\ strut
+  % (\extrarowheight + \dp\@arstrutbox). Do NOT also pull \lineskip or an
+  % extra hairline ? that overlaps into the next row and eats project-band
+  % toppad / cell struttop.
+  \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
 }
 
 \newcommand{\semio@table@long@title@chrome@row}[1]{%
-  \multicolumn{#1}{@{}l@{}}{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-border-normal}%
-      \ifsemio@table@long@title@number\usebox{\semio@window@ctrl@box}\fi
-    }%
+  \semio@table@long@title@chrome@row@render{#1}{\semio@window@header@invoke}%
+}
+
+\newcommand{\semio@table@long@title@chrome@row@pageparts}[1]{%
+  \semio@table@long@title@chrome@row@render{#1}{%
+    \semio@window@header@muted{}{\semio@window@header@title}%
   }%
-  \\%
-  \noalign{\vskip\dimexpr-\dp\@arstrutbox-\arrayrulewidth\relax}%
 }
 
 \newcommand{\semio@table@long@continuation@chrome}[1]{%
   \semio@table@long@title@chrome@row{#1}%
 }
+
+%region LongTablePageParts
+% 🧩 longtable stores its head as a box and copies that same box onto every
+% page, so a hierarchy chip inside the stored head can never advance from :1 to
+% :2. Store a title-only chrome row in \LT@head to reserve the exact repeated
+% head height, then overlay the numbered cap live whenever longtable inserts that
+% box. The page-part counter advances once per physical table page while the
+% register key remains unsuffixed.
+\newcommand{\semio@table@long@part@number}{%
+  \ifnum\semio@table@long@part=1\relax
+    \semio@window@header@number@page1
+  \else
+    \semio@window@header@number:\the\semio@table@long@part
+  \fi
+}
+
+\newsavebox{\semio@table@long@part@chip@box}
+\newcommand{\semio@table@long@part@overlay}{%
+  \begingroup
+    \sbox{\semio@table@long@part@chip@box}{%
+      \semio@heading@cap@muted@open{\semio@table@long@part@number}%
+    }%
+    \nointerlineskip
+    \hbox to 0pt{%
+      \hbox to \linewidth{%
+        \hfil
+        \raisebox{-\height}[0pt][0pt]{\usebox{\semio@table@long@part@chip@box}}%
+      }%
+      \hss
+    }%
+    \nointerlineskip
+  \endgroup
+}
+
+\newcommand{\semio@table@long@head@copy}{%
+  \ifnum\semio@table@long@mode>0\relax
+    \ifsemio@table@long@pageparts
+      \global\advance\semio@table@long@part\@ne
+      \semio@table@long@part@overlay
+    \fi
+  \fi
+  \copy\LT@head
+}
+
+\newcommand{\semio@table@long@parts@record}{%
+  \ifsemio@table@long@pageparts
+    \ifcsname semio@window@break@record\endcsname
+      \semio@window@break@record{\the\semio@table@long@part}%
+    \fi
+  \fi
+}
+
+\newcommand{\semio@table@long@pageparts@patch}{%
+  \patchcmd{\LT@start}
+    {\copy\LT@head}
+    {\semio@table@long@head@copy}
+    {}{\PackageError{semio-table}{Unable to patch longtable first page head}{}}%
+  \patchcmd{\LT@output}
+    {\copy\LT@head\nobreak}
+    {\semio@table@long@head@copy\nobreak}
+    {}{\PackageError{semio-table}{Unable to patch longtable continuation head}{}}%
+}
+
+\AtBeginDocument{\semio@table@long@pageparts@patch}
+%endregion LongTablePageParts
 
 \newcommand{\semio@register@table@header@long@repeat}{%
   \semio@table@long@header@continuation@three
@@ -282,6 +600,7 @@
 
 \newcommand{\semio@table@long@render}[5]{%
   \global\semio@table@long@mode=1\relax
+  \global\semio@table@long@part=0\relax
   \global\semio@table@row@startedfalse
   \begingroup
   \ifvmode\else\par\fi
@@ -289,32 +608,46 @@
   \semio@table@fontsize@apply
   \semio@table@setup@long
   \color{semio-chrome-text-normal}%
+  % Longtable has no enclosing tcolorbox frame ? it owns its side borders.
+  \semio@table@owns@sidestrue
   \semio@table@long@inner@w@set
   \semio@table@long@title@chrome@prepare
-  \nointerlineskip
+  \ifvmode\nointerlineskip\fi
   \raggedright
-  \setlength{\LTpre}{0pt}%
-  \setlength{\LTpost}{0pt}%
+  \setlength{\LTpre}{\semio@spacing@table@outer}%
+  \setlength{\LTpost}{\semio@spacing@table@outer}%
   \setlength{\LTleft}{0pt}%
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
+  % Do not call \endfirsthead. An empty \endfirsthead stores a non-void
+  % empty \LT@firsthead, so page 1 ships that blank box and skips \LT@head
+  % (measured: Abkuerzungen after Glossar lost chrome/header; cream gap +
+  % pillar stubs between Test-Case and AP). With firsthead left void,
+  % longtable uses \LT@head on page 1 and every continuation — one chrome,
+  % one column-header (filling BOTH firsthead and head doubled Marktplaetze
+  % chips ~48pt apart).
+  \global\setbox\LT@firsthead=\box\voidb@x
   \begin{longtable}{#1}%
-  #2%
-  \endfirsthead
-  \semio@table@long@continuation@chrome{#5}%
+  \semio@table@long@title@chrome@row@pageparts{#5}%
   #3%
   \endhead
-  \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
+  \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
   #4%
   \end{longtable}%
+  \semio@table@long@parts@record
   \endgroup
   \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse
 }
 
+\let\semio@table@long@hhline@current\semio@table@rule
+% \\* keeps the trailing mid-rule with its row. A plain \\ can page-break
+% between the row and the \noalign rule; the orphaned rule then lands on the
+% next page immediately under \endhead's own mid-rule and reads as a double
+% hairline (measured 1.5pt on TOC continuations).
 \newcommand{\semio@table@row@long}[1]{%
-  #1\\
-  \hline
+  #1\\*%
+  \semio@table@rule
 }
 
 \newcommand{\semio@table@row@short}[1]{%
@@ -333,13 +666,13 @@
   \fi
 }
 
-% 🩹️ \semio@table@setup stays *before* \begingroup (not moved inside,
+% ?? \semio@table@setup stays *before* \begingroup (not moved inside,
 % alongside the font-size apply, the way \semio@table@long@render orders it)
-% — moving it inside reproducibly threw a "Misplaced \omit" from deep inside
+% ? moving it inside reproducibly threw a "Misplaced \omit" from deep inside
 % hhline, but only under the zukunftbau `zwischenbericht` type (its
 % `\SemioSetup{appendix-level=part}` chain, confirmed via bisection: neither
 % \semio@table@fontsize@apply itself, nor `appendix-level=part` alone on a
-% plain `semio` document, reproduce it — only this exact combination of
+% plain `semio` document, reproduce it ? only this exact combination of
 % class + relocated group boundary does). Left where it was, \tabcolsep/
 % \extrarowheight/etc keep resolving against the *ambient* font rather than
 % a custom `text-size`, a smaller, tolerable inconsistency versus a hard
@@ -356,6 +689,7 @@
   #2%
   \end{tabular}%
   \global\semio@table@row@startedfalse
+  \global\semio@table@window@rulesfalse
   \endgroup
 }
 
@@ -363,32 +697,32 @@
   \expandafter\semio@table@render\expandafter{\semio@table@colspec@two}{#1}%
 }
 
-\newcommand{\SemioTableThree}[1]{%
-  \expandafter\semio@table@render\expandafter{\semio@table@colspec@three}{#1}%
-}
-
 \newcommand{\SemioTableRegister}[1]{%
+  \global\semio@table@headerfilltrue
+  \gdef\semio@table@long@column@count{3}%
+  \semio@table@long@rules@gset@register
   \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@register@long}{\semio@register@table@header}{\semio@register@table@header@long@repeat}{#1}{3}%
+  \global\semio@table@headerfillfalse
 }
 
 %region GenericLongTable
-% 📎️ Generic multi-page table + avatar band row, for report appendices (e.g. a
+% ?? Generic multi-page table + avatar band row, for report appendices (e.g. a
 % project catalogue) that need more columns or rows than the register/
-% reference/glossary long tables above hardcode. Mirrors their structure —
-% \semio@table@long@render underneath — but takes the colspec and header row
+% reference/glossary long tables above hardcode. Mirrors their structure ?
+% \semio@table@long@render underneath ? but takes the colspec and header row
 % as plain arguments instead of a fixed three-column shape.
 \ExplSyntaxOn
 
-% 🩹️ The colspec and header are built here, inside the package, from plain
-% arguments — never from hand-written strings containing `\semio@...` names.
+% ?? The colspec and header are built here, inside the package, from plain
+% arguments ? never from hand-written strings containing `\semio@...` names.
 % Those names are only valid where `@` is catcode-11 (package files); a
 % report's own content file (\input after \begin{document}) does not have
 % that, so building them in the caller's source would silently break.
 % Keeping composition inside the package is the fix, not a `\makeatletter`
 % workaround at every call site.
 %
-% 🩹️ The finished head is copied into a plain (non-expl3) macro and that bare
-% macro *name* — not its pre-expanded value — is what reaches
+% ?? The finished head is copied into a plain (non-expl3) macro and that bare
+% macro *name* ? not its pre-expanded value ? is what reaches
 % \semio@table@long@render, exactly like \SemioTableRegister passes
 % \semio@register@table@header. longtable re-invokes the head macro itself on
 % every page break; if a body row uses \multicolumn (as band rows do),
@@ -402,13 +736,21 @@
 \newcommand{\semio@table@long@head@continuation@current}{}
 
 \cs_new_protected:Npn \semio_table_long_colspec_build:n #1 {
-  \tl_set:Nn \l_semio_table_long_colspec_tl { | @ { \hspace{\semio@chrome@padding} } @ { } }
+  \tl_set:Nn \l_semio_table_long_colspec_tl { @{\semio@table@border@L}@{\semio@table@padendL} }
+  \int_zero:N \l_tmpa_int
   \clist_map_inline:nn {#1} {
-    \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-      >{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr##1\semio@table@long@inner@w\relax}@{}
+    \int_compare:nNnTF \l_tmpa_int = \c_zero_int {
+      \tl_put_right:Nn \l_semio_table_long_colspec_tl {
+        >{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
+      }
+    } {
+      \tl_put_right:Nn \l_semio_table_long_colspec_tl {
+        @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
+      }
     }
+    \int_incr:N \l_tmpa_int
   }
-  \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { \hspace{\semio@chrome@padding} } | }
+  \tl_put_right:Nn \l_semio_table_long_colspec_tl { @{\semio@table@padendR}@{\semio@table@border@R} }
 }
 
 \cs_new_protected:Npn \semio_table_long_header_build:nn #1#2 {
@@ -428,23 +770,32 @@
     }
     \int_incr:N \l_tmpa_int
   }
+  % ?? No \exp_not:N here: \tl_put_right:Nn already stores its argument verbatim,
+  % so the marker would survive into the head itself. TeX peeks past the \\ for
+  % \noalign with an expanding read, and a \noexpand-shielded macro reads as an
+  % ordinary token there ? the row opens first and the rule macro then runs inside
+  % a cell ("Misplaced \noalign" / "Misplaced \omit" for the \hhline it replaced).
   \tl_put_right:Nn \l_semio_table_long_head_tl {
     \\
+    \semio@table@long@hhline@current
   }
-  \tl_put_right:Nx \l_semio_table_long_head_tl {
-    \exp_not:N \hhline { | \prg_replicate:nn { \seq_count:N \l_semio_table_row_seq } { - } | }
-  }
-  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\global\semio@table@row@startedfalse}
+  % ?? The row-started reset MUST ride inside \noalign, exactly like
+  % \semio@table@long@header@repeat@three does it. A bare \global sitting
+  % between the header's \hhline and \endfirsthead/\endhead is outside any row,
+  % so array's row scanner reads it as the start of a new cell and opens an
+  % empty strut-height phantom row ? a cream band for a plain column, or a dark
+  % notch here because the \SemioProject colspec's first column carries
+  % \cellcolor{semio-chrome-canvas} in its >{...} prefix. \noalign runs the
+  % assignment on the row boundary without opening that row, so the column-header
+  % rule sits flush on the first body row (no gap) with an unbroken fill.
+  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse}}
   \tl_put_right:Nn \l_semio_table_long_head_tl {
-    \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
+    \noalign{\vskip\z@\global\semio@table@row@startedfalse}% head->body transition (no negative pull) + row-started reset, both on the row boundary so neither opens a phantom band
   }
-  \tl_put_right:Nn \l_semio_table_long_head_tl {
-    \global\semio@table@row@startedfalse
-  }
-  % 🩹️ Not \tl_gset_eq:NN: that \let-aliases \semio@table@long@head@current to
+  % ?? Not \tl_gset_eq:NN: that \let-aliases \semio@table@long@head@current to
   % an expl3 tl variable, which l3 always defines as a non-\long macro. A
   % \long macro (as \newcommand produces) is what longtable's own head-repeat
-  % machinery expects when a body row uses \multicolumn — anything else
+  % machinery expects when a body row uses \multicolumn ? anything else
   % throws "Misplaced \omit" the next time the header repeats. The triple
   % \expandafter copies the tl's current tokens verbatim (one level, so
   % \hhline/\semio@table@header@cell inside stay unevaluated) into a fresh
@@ -452,34 +803,109 @@
   \global\long\expandafter\def\expandafter\semio@table@long@head@continuation@current\expandafter{\l_semio_table_long_head_tl}
 }
 
+\ExplSyntaxOff
+
 \newcommand{\semio@table@long@colspec@current}{}
 \newcommand{\semio@table@long@column@count}{3}
 
-% Named the plain (legacy) way, not \semio_table_long_prepare:nn — this gets
-% called from \SemioTableLong's body below, which is a plain \newcommand
-% written where `_`/`:` are ordinary (non-letter) characters, so an expl3-
-% style name would not tokenize as one control word there.
+\newcommand{\semio@table@long@rules@fractions}{}
+\let\semio@table@long@rules@invoke\semio@table@rule
+\let\semio@table@long@hhline@current\semio@table@rule
+
+\ExplSyntaxOn
+\cs_new_protected:Npn \semio_table_long_rules_fractions_set:n #1 {
+  \def \semio@table@long@rules@fractions {#1}
+}
+
+\cs_new_protected:Npn \semio@table@long@rules@gset_clist:n #1 {
+  \semio_table_long_rules_fractions_set:n {#1}
+  \global \let \semio@table@long@hhline@current \semio@table@long@rules@invoke
+}
+
 \cs_new_protected:Npn \semio@table@long@prepare #1#2 {
   \semio_table_long_colspec_build:n {#1}
-  \semio_table_long_header_build:nn {#1} {#2}
   \cs_gset:Npx \semio@table@long@column@count { \clist_count:n {#1} }
-  % Same \long-macro-by-bare-name treatment as the head (see above) — a
+  \semio@table@long@rules@gset_clist:n {#1}
+  \semio_table_long_header_build:nn {#1} {#2}
+  % Same \long-macro-by-bare-name treatment as the head (see above) ? a
   % colspec flattened straight into the argument list via \exp_args:NV
   % throws the identical "Misplaced \omit" once a body row uses \multicolumn.
   \global\long\expandafter\def\expandafter\semio@table@long@colspec@current\expandafter{\l_semio_table_long_colspec_tl}
 }
-\ExplSyntaxOff
+\cs_new_protected:Npn \semio_table_long_rules_gset_register: {
+  \def \semio@table@long@rules@fractions { 0.12 , 0.78 , 0.10 }
+  \global \let \semio@table@long@hhline@current \semio@table@long@rules@invoke
+}
+\cs_new_protected:Npn \semio_table_long_rules_gset_glossary: {
+  \def \semio@table@long@rules@fractions { 0.22 , 0.56 , 0.22 }
+  \global \let \semio@table@long@hhline@current \semio@table@long@rules@invoke
+}
+\cs_new_protected:Npn \semio_table_long_rules_gset_project: {
+  \def \semio@table@long@rules@fractions { 0.15 , 0.13 , 0.09 , 0.11 , 0.14 , 0.12 , 0.13 , 0.13 }
+  \global \let \semio@table@long@hhline@current \semio@table@long@rules@invoke
+}
 
-% 🩹️ \semio@table@long@prepare (above) only fills the two "current" macros;
+%region WindowShortTable
+% Short \begin{Table}+\SemioTable tables use the same border / padendL / padcp
+% geometry as \SemioTableLong so cell text inset matches BB.M.a-style long tables.
+\tl_new:N \l_semio_table_window_colspec_tl
+\newcommand{\semio@table@window@colspec@current}{}
+\cs_new_protected:Npn \semio_table_window_tabular_open: {
+  \expandafter \semio@table@begin@tabular \expandafter { \semio@table@window@colspec@current }
+}
+\cs_new_protected:Npn \semio_table_window_colspec_build:n #1 {
+  \tl_set:Nn \l_semio_table_window_colspec_tl { @{\semio@table@border@L}@{\semio@table@padendL} }
+  \int_zero:N \l_tmpa_int
+  \clist_map_inline:nn {#1} {
+    \int_compare:nNnTF \l_tmpa_int = \c_zero_int {
+      \tl_put_right:Nn \l_semio_table_window_colspec_tl {
+        >{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
+      }
+    } {
+      \tl_put_right:Nn \l_semio_table_window_colspec_tl {
+        @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
+      }
+    }
+    \int_incr:N \l_tmpa_int
+  }
+  \tl_put_right:Nn \l_semio_table_window_colspec_tl { @{\semio@table@padendR}@{\semio@table@border@R} }
+}
+\cs_new_protected:Npn \semio@table@window@rules@gset_clist:n #1 {
+  \semio_table_long_rules_fractions_set:n {#1}
+  \global \let \semio@table@short@hhline@current \semio@table@long@rules@invoke
+}
+\cs_new_protected:Npn \semio_table_window_prepare:n #1 {
+  % Window frame paints continuous L/R/bottom; table only supplies row rules.
+  \semio@table@owns@sidesfalse
+  \semio@table@long@inner@w@set
+  \semio_table_window_colspec_build:n {#1}
+  \semio@table@window@rules@gset_clist:n {#1}
+  \global\long\expandafter\def\expandafter\semio@table@window@colspec@current\expandafter{\l_semio_table_window_colspec_tl}
+  \tex_global:D \semio@table@window@rulestrue
+}
+\ExplSyntaxOff
+%endregion WindowShortTable
+
+\newcommand{\semio@table@long@rules@gset@register}{%
+  \csname semio_table_long_rules_gset_register:\endcsname
+}
+\newcommand{\semio@table@long@rules@gset@glossary}{%
+  \csname semio_table_long_rules_gset_glossary:\endcsname
+}
+\newcommand{\semio@table@long@rules@gset@project}{%
+  \csname semio_table_long_rules_gset_project:\endcsname
+}
+
+% ?? \semio@table@long@prepare (above) only fills the two "current" macros;
 % the actual \semio@table@long@render call is plain TeX so the colspec can be
 % expanded into the argument list the same way \SemioTableRegister does it
-% (\expandafter{\semio@table@colspec@register@long}) — passing it as a bare
+% (\expandafter{\semio@table@colspec@register@long}) ? passing it as a bare
 % macro reference like the head hits "Illegal pream-token", because array's
 % preamble parser (unlike longtable's head/repeathead slots) never expands
 % macro names on its own.
 %
-% 🩹️ The leading [key=val] (e.g. [text-size=8pt]) uses the *kernel's* own
-% \newcommand[n][default] optional-argument support, not xparse/ltcmd — that
+% ?? The leading [key=val] (e.g. [text-size=8pt]) uses the *kernel's* own
+% \newcommand[n][default] optional-argument support, not xparse/ltcmd ? that
 % mechanism (\@protected@testopt/\@testopt/\@ifnextchar[) peeks for the `[`
 % at the call site, at the main vertical list, before \begin{longtable} ever
 % opens; the remaining 5 mandatory parameters are still grabbed by a plain
@@ -490,22 +916,26 @@
   \semio@table@keys@set{#1}%
   \semio@table@long@prepare{#3}{#4}%
   \semio@table@long@open{#2}%
+  \global\semio@table@long@pagepartstrue
+  \global\semio@table@headerfilltrue
   \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@continuation@current}{#5}{\semio@table@long@column@count}%
+  \global\semio@table@headerfillfalse
+  \global\semio@table@long@pagepartsfalse
   \semio@table@long@close
   \semio@table@keys@reset
 }
 
-% 🩹️ Plain \newcommand, not \NewDocumentCommand/xparse: xparse's argument
-% grabbing — even for all-mandatory arguments — breaks the same "Misplaced
+% ?? Plain \newcommand, not \NewDocumentCommand/xparse: xparse's argument
+% grabbing ? even for all-mandatory arguments ? breaks the same "Misplaced
 % \omit" way once this macro's expansion contains \multicolumn (band rows
 % span every column) inside this longtable. Plain TeX argument grabbing
 % doesn't have that problem. For the same reason the image is mandatory
 % (pass {} when a row has none) rather than an optional argument, and its
-% \SemioImage call is unconditional — wrapping it in a conditional (\ifx,
+% \SemioImage call is unconditional ? wrapping it in a conditional (\ifx,
 % \tl_if_blank:nF, anything) reintroduces the same break even when the
 % conditional's branches never touch \multicolumn at all; every project row
 % in practice has an image, so this isn't a real limitation. A nested \\ for
-% the title/meta line break has the same problem — colortbl's redefinition
+% the title/meta line break has the same problem ? colortbl's redefinition
 % of \\ inside a \multicolumn cell conflicts with the table's own \\; use
 % \newline instead, which stays a plain TeX primitive.
 \newcommand{\SemioTableBandRow}[4]{%
@@ -515,7 +945,7 @@
     \raisebox{-0.15\height}{\includegraphics[height=\dimexpr 2\semio@table@body@height\relax,keepaspectratio]{#1}}\hspace{\semio@chrome@padding}%
     \textbf{#3}\newline#4
   }%
-  \\*\hline
+  \\*\semio@table@rule
 }
 %endregion GenericLongTable
 
@@ -581,7 +1011,11 @@
 \ExplSyntaxOff
 
 \newcommand{\semio@table@termlist}[2]{%
+  \global\semio@table@headerfilltrue
+  \gdef\semio@table@long@column@count{3}%
+  \semio@table@long@rules@gset@glossary
   \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@glossary@long}{\csname semio@#1@table@header\endcsname}{\csname semio@#1@table@header@long@repeat\endcsname}{#2}{3}%
+  \global\semio@table@headerfillfalse
 }
 
 \newcommand{\SemioTableGlossary}[1]{\semio@table@termlist{glossary}{#1}}
@@ -589,10 +1023,13 @@
 
 \newcommand{\semio@table@begin@tabular}[1]{\begin{tabular}{#1}}
 
-% 🩹️ Same as \semio@table@render above: \semio@table@setup stays outside
-% \begingroup, not relocated next to the font-size apply — see that comment
+% ?? Same as \semio@table@render above: \semio@table@setup stays outside
+% \begingroup, not relocated next to the font-size apply ? see that comment
 % for why (a reproducible "Misplaced \omit" under zukunftbau's
 % `zwischenbericht` type).
+% The argument is always a comma list of column width fractions of the window's
+% inner width (e.g. `0.07,0.38,0.18,0.37`); \semio_table_window_prepare:n turns it
+% into the border/padendL/padcp colspec and the matching segmented row rules.
 \newcommand{\SemioTableBegin}[1]{%
   \ExplSyntaxOff
   \semio@table@require@window
@@ -601,28 +1038,13 @@
   \SemioSans
   \semio@table@fontsize@apply
   \color{semio-chrome-text-normal}%
-  \def\semio@table@spec{#1}%
-  \ifx\semio@table@spec\semio@table@spec@ll
-    \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@two}%
-  \else
-    \ifx\semio@table@spec\semio@table@spec@lll
-      \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@three}%
-    \else
-      \ifx\semio@table@spec\semio@table@spec@nrp
-        \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@register}%
-      \else
-        \begin{tabular}{@{}#1@{}}%
-      \fi
-    \fi
-  \fi
+  \csname semio_table_window_prepare:n\endcsname {#1}%
+  \csname semio_table_window_tabular_open:\endcsname
 }
-
-\def\semio@table@spec@ll{ll}
-\def\semio@table@spec@lll{lll}
-\def\semio@table@spec@nrp{nrp}
 
 \newcommand{\SemioTableEnd}{%
   \end{tabular}%
+  \global\semio@table@window@rulesfalse
   \endgroup
 }
 
@@ -631,3 +1053,405 @@
 }{%
   \SemioTableEnd
 }
+
+%region ProjectCatalogue
+% ??? Unified project-profile card ? used ONLY by anhang/projekte.tex. Collapses
+% the former quadruple (\subsection heading + Photo[Bild] + Table[Allgemein] +
+% \SemioTableLong[Bauteile]) into ONE bordered longtable per project:
+%   ? title-chrome row  : project name (left) + P.K.x key (right)
+%   ? overview band row : photo spanning cols 1?2, metadata spanning cols 3?6
+%   ? component section : the six Bauteile columns + rows
+% Reuses the shared \semio@table@long@render underneath (one continuous border,
+% page-break header repeat). The title chrome is driven from the *section* key
+% (\thesubsection ? P.K.x), NOT from \begin{Table}'s `semiotable` counter, so no
+% "Tabelle: P.K.x.b/c" number tabs are emitted. This region calls the shared
+% primitives and defines only \semio@project@? / \SemioProject? names; it
+% redefines nothing, so every other table in the report is untouched.
+
+\newlength{\semio@project@bandheight}
+\setlength{\semio@project@bandheight}{26mm}
+\newif\ifsemio@project@extendedmeta
+\semio@project@extendedmetafalse
+% The Forschungsbericht opts into the eight-value project contract explicitly.
+% The Zwischenbericht keeps its current six-value cards and 26 mm overview band.
+\newcommand{\SemioProjectEightMetadata}{%
+  \semio@project@extendedmetatrue
+  \setlength{\semio@project@bandheight}{30mm}%
+}
+% Half the residual top/bottom packing mismatch outside the photo box, so
+% cellpad top+bottom pads still read visually even (same idea as text cells'
+% asymmetric \semio@table@vtop/@vbot strut pair).
+\newcommand{\semio@project@photo@vbias}{\dimexpr0.35\semio@table@long@cellpad+0.2pt\relax}
+% Photo / meta widths match the shared padend geometry (net chrome+cellpad each
+% edge, same as \semio@table@padendL/R). Photo spans cols 1?2:
+%   padendL + (0.28?inner ? 2?cellpad) + padcp  =  chrome + 0.28?inner
+% Meta spans cols 3?8:
+%   (0.72?inner ? cellpad) + padendR  =  chrome + 0.72?inner
+% so band + body share one \linewidth card with no right-edge cream/page gap.
+\newcommand{\semio@project@photow}{\dimexpr0.28\semio@table@long@inner@w\relax}
+\newcommand{\semio@project@metaw}{\dimexpr0.72\semio@table@long@inner@w\relax}
+
+% Continuous-fill colspec for the component section. Same pad primitives as every
+% other canvas-filled long table (\semio@table@padcp / padendL / padendR): interior
+% gaps get one cellpad-wide canvas rule from each side; outer edges net
+% chrome+cellpad so the fill reaches the border and the card is exactly
+% \linewidth (matching \semio@table@rule and the P.K.x title tab). The older
+% project-only "net chrome" edge pads left a page-coloured strip inside the right
+% border because body width was 2?cellpad short of \linewidth while the band
+% multicolumns were full width.
+\newcommand{\semio@project@padcp}{\semio@table@padcp}
+\newcommand{\semio@project@padendL}{\semio@table@padendL}
+\newcommand{\semio@project@padendR}{\semio@table@padendR}
+% Data cells are vertically centred (m) with the same symmetric strut padding as
+% every other table; the top strut rides in the cell-fill prefix, the bottom
+% strut in each column's <{} slot.
+\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
+\newcommand{\semio@project@colspec}{%
+@{\semio@table@border@L}@{\semio@project@padendL}>{\semio@project@cellfill}m{\dimexpr0.15\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.09\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.11\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.14\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.12\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padendR}@{\semio@table@border@R}%
+}
+
+% Cover-crop a project photo into an exact width?height box (no frame), reusing
+% the window package's CSS object-fit:cover primitive.
+\ExplSyntaxOn
+\cs_new_protected:Npn \semio_project_photo:nnn #1#2#3 {
+  \group_begin:
+    \dim_set:Nn \l_semio_image_target_w_dim {#2}
+    \dim_set:Nn \l_semio_image_target_h_dim {#3}
+    \tl_set:Nn \l_semio_image_fit_tl { cover }
+    \tl_gset:cn { semio@window@halign } { center }
+    \tl_gset:cn { semio@window@valign } { center }
+    \semio_image_typeset_cover:n {#1}
+  \group_end:
+}
+\cs_new_eq:NN \SemioProjectPhoto \semio_project_photo:nnn
+\ExplSyntaxOff
+
+% Silent-but-registered project heading: steps the subsection counter (? P.K.x),
+% writes the TOC/running-header/register entries and the \label, but draws no
+% visible heading bar (the name is shown once, in the table's title-chrome row).
+% Only the two visual chip renderers are blanked (inside a group); the hierarchy
+% path ? consumed by the register ? is re-established explicitly afterwards.
+\newcommand{\SemioProjectHeadingSilent}[2]{%
+  \begingroup
+    \long\def\semio@heading@pair@outline##1##2##3##4##5{}%
+    \long\def\semio@heading@title@end@outline##1##2##3{}%
+    \long\def\semio@heading@pair##1##2##3##4##5{}%
+    \long\def\semio@heading@title@end##1##2##3{}%
+    \subsection{#1}\label{#2}%
+  \endgroup
+  \@ifundefined{semio@hierarchy@path@set}{}{\semio@hierarchy@path@set{\thesubsection}}%
+}
+
+% Split the packed "ort & land & jahr & typ & status & quelle" metadata arg.
+\def\semio@project@splitmeta#1&#2&#3&#4&#5&#6\relax{%
+  \def\semio@project@ort{#1}\def\semio@project@land{#2}\def\semio@project@jahr{#3}%
+  \def\semio@project@typ{#4}\def\semio@project@status{#5}\def\semio@project@quelle{#6}%
+}
+
+% Extended Forschungsbericht contract:
+% Stadt & Land & Jahr & Objekttyp & Projektcharakter & Projektphase &
+% ReUse-Realisierung & Quellen.
+\def\semio@project@splitmeta@eight#1&#2&#3&#4&#5&#6&#7&#8\relax{%
+  \def\semio@project@ort{#1}\def\semio@project@land{#2}\def\semio@project@jahr{#3}%
+  \def\semio@project@objekttyp{#4}\def\semio@project@charakter{#5}%
+  \def\semio@project@phase{#6}\def\semio@project@realisierung{#7}%
+  \def\semio@project@quelle{#8}%
+}
+
+% Metadata subgrid (right of the photo): labelled fields, muted label / normal
+% value. Ort/Stadt and Land are separate rows.
+\newcommand{\semio@project@meta}[6]{%
+  \begingroup
+  \setlength{\extrarowheight}{0pt}%
+  % Row pitch is INTENTIONALLY denser than the component body: that section uses
+  % the airy symmetric-strut model (\semio@table@vtop/@vbot), but the band is a
+  % compact 7-row key?value list where full strut air would balloon the 26mm band.
+  % \arraystretch 1.2 is the deliberate compact rhythm; kept as a literal because
+  % the strut tokens don't apply to this plain l l tabular.
+  \renewcommand{\arraystretch}{1.2}%
+  % Labels use the SAME synthetic-bold face as the component column headers. Anta
+  % ships Regular only, so \bfseries is a no-op here; the headers get their weight
+  % from the \SemioSansBold family (fontspec FakeBold, see semio-window.sty, where
+  % \semio@table@header@cell is redefined to \SemioSansBold\semio@table@fontsize@apply).
+  % Mirror that exactly in the label column so labels and headers share one face
+  % and size. Values stay regular weight in the muted text colour.
+  % Label?value gap sourced from the shared cell-pad token (2?\semio@table@long@cellpad
+  % = the same width as every inter-column gap in the component body) instead of a
+  % literal 1.2em, so it tracks the system's spacing. Purely horizontal ? the value
+  % column shifts, the band height is unchanged.
+  \begin{tabular}[t]{@{}>{\SemioSansBold\semio@table@fontsize@apply\color{semio-chrome-foreground}}l@{\hspace{2\semio@table@long@cellpad}}>{\color{semio-chrome-text-normal}}l@{}}
+    Stadt & #1\tabularnewline
+    Land & #2\tabularnewline
+    Jahr & #3\tabularnewline
+    Typ & #4\tabularnewline
+    Status & #5\tabularnewline
+    Quelle & #6\tabularnewline
+  \end{tabular}%
+  \endgroup
+}
+
+\newcommand{\semio@project@meta@eight}[8]{%
+  \begingroup
+  \setlength{\extrarowheight}{0pt}%
+  \renewcommand{\arraystretch}{1.05}%
+  \begin{tabular}[t]{@{}>{\SemioSansBold\semio@table@fontsize@apply\color{semio-chrome-foreground}}l@{\hspace{2\semio@table@long@cellpad}}>{\color{semio-chrome-text-normal}}l@{}}
+    Stadt & #1\tabularnewline
+    Land & #2\tabularnewline
+    Jahr & #3\tabularnewline
+    Objekttyp & #4\tabularnewline
+    Projektcharakter & #5\tabularnewline
+    Projektphase & #6\tabularnewline
+    ReUse-Realisierung & #7\tabularnewline
+    Quellen & #8\tabularnewline
+  \end{tabular}%
+  \endgroup
+}
+
+% Overview band row: photo multicolumn (cols 1?2) + metadata multicolumn (cols
+% 3?8). Same padendL / padcp / padendR primitives as the component colspec, so the
+% band is exactly \linewidth and the right-edge fill meets the border with no
+% page-coloured strip (the old chrome-only bandpad left that gap when body pads
+% moved to net chrome+cellpad).
+%
+% Photo: \semio@table@long@cellpad on all four sides (matches cell-text inset;
+% left gap unchanged). Meta: toppad \semio@window@bodypad + \semio@cell@inset so
+% Stadt stays in the Menge column. Both cells are \vtop-wrapped.
+\newcommand{\semio@project@overview@band}[7]{%
+  \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
+    \cellcolor{semio-chrome-canvas}%
+    % Photo inset matches cell text: \semio@table@long@cellpad on every side.
+    % Left gap is already that pad — keep it. Equal top/bottom cellpads alone
+    % still look uneven because row packing below the photo box is larger than
+    % above (~array strut); \semio@project@photo@vbias shifts the photo down
+    % inside the band (larger top pad, smaller bottom pad, same photo height)
+    % so the visible gaps match without touching the meta cell (Stadt / Menge).
+    \vtop{%
+      \color{semio-chrome-canvas}%
+      \hrule height\dimexpr\semio@table@long@cellpad+\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
+      \nointerlineskip
+      \hbox{%
+        \hspace{\semio@table@long@cellpad}%
+        \IfFileExists{#1}{%
+          \SemioProjectPhoto{#1}{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax}%
+        }{%
+          \parbox[c][\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax][c]{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{%
+            \centering\SemioSans\itshape\fontsize{8pt}{10pt}\selectfont\color{semio-chrome-text-normal}Kein freigegebenes Bild%
+          }%
+        }%
+      }%
+      \nointerlineskip
+      \hrule height\dimexpr\semio@table@long@cellpad-\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
+    }%
+  }%
+  &
+  \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\semio@project@padendR}@{\semio@table@border@R}}{%
+    \cellcolor{semio-chrome-canvas}%
+    \vtop{%
+      \color{semio-chrome-canvas}%
+      \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
+      \nointerlineskip
+      \hbox{%
+        \begin{minipage}[t]{\linewidth}%
+          \semio@cell@inset
+          \semio@project@meta{#2}{#3}{#4}{#5}{#6}{#7}%
+        \end{minipage}%
+      }%
+    }%
+  }%
+  \\*\semio@table@rule
+}
+
+\newcommand{\semio@project@overview@band@eight}[9]{%
+  \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
+    \cellcolor{semio-chrome-canvas}%
+    \vtop{%
+      \color{semio-chrome-canvas}%
+      \hrule height\dimexpr\semio@table@long@cellpad+\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
+      \nointerlineskip
+      \hbox{%
+        \hspace{\semio@table@long@cellpad}%
+        \IfFileExists{#1}{%
+          \SemioProjectPhoto{#1}{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax}%
+        }{%
+          \parbox[c][\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax][c]{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{%
+            \centering\SemioSans\itshape\fontsize{8pt}{10pt}\selectfont\color{semio-chrome-text-normal}Kein freigegebenes Bild%
+          }%
+        }%
+      }%
+      \nointerlineskip
+      \hrule height\dimexpr\semio@table@long@cellpad-\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
+    }%
+  }%
+  &
+  \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\semio@project@padendR}@{\semio@table@border@R}}{%
+    \cellcolor{semio-chrome-canvas}%
+    \vtop{%
+      \color{semio-chrome-canvas}%
+      \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
+      \nointerlineskip
+      \hbox{%
+        \begin{minipage}[t]{\linewidth}%
+          \semio@cell@inset
+          \semio@project@meta@eight{#2}{#3}{#4}{#5}{#6}{#7}{#8}{#9}%
+        \end{minipage}%
+      }%
+    }%
+  }%
+  \\*\semio@table@rule
+}
+
+\newcommand{\semio@project@headrow}{%
+  \semio@table@header@cell{Bauteil} &
+  \semio@table@header@cell{Neue Nutzung} &
+  \semio@table@header@cell{Menge} &
+  \semio@table@header@cell{Material} &
+  \semio@table@header@cell{Quelle} &
+  \semio@table@header@cell{Herkunftsweg} &
+  \semio@table@header@cell{Herkunft $\rightarrow$ Ziel} &
+  \semio@table@header@cell{Verfahren}\\
+  \semio@table@long@hhline@current
+  \noalign{\global\semio@table@row@startedfalse}%
+}
+
+\newcommand{\semio@project@headrow@eight}{%
+  \semio@table@header@cell{Bauteil} &
+  \semio@table@header@cell{Neue Funktion} &
+  \semio@table@header@cell{Menge} &
+  \semio@table@header@cell{Material} &
+  \semio@table@header@cell{Spender} &
+  \semio@table@header@cell{Herkunftsweg} &
+  \semio@table@header@cell{System\hspace{0pt}ebene vorher $\rightarrow$ nachher} &
+  \semio@table@header@cell{Prozess}\\
+  \semio@table@long@hhline@current
+  \noalign{\global\semio@table@row@startedfalse}%
+}
+
+% Non-breaking card render. A project card is at most ~8 component rows tall, so
+% it always fits within one text column and never needs longtable's page-break /
+% repeated-header machinery. Rendering it as a plain \tabular (an unbreakable box)
+% means a card that does not fit in the space left on the page is carried to the
+% next page AS ONE UNIT, at the inter-card glue. That removes the orphaned, EMPTY
+% continuation head longtable stamps whenever \SemioCardKeep's soft \needspace
+% break pushes a card after \begin{longtable} has already claimed the current page
+% (the "two tables, one empty" artifact: a bare title + column-header band floats
+% above the real card). Same setup, colspec, title chrome, band, header and rows
+% as the longtable render ? only the outer container and the now-unnecessary
+% firsthead/endhead slots differ.
+\newcommand{\semio@project@render}[3]{% #1 colspec  #2 firsthead(band+header)  #3 rows
+  \global\semio@table@long@mode=1\relax
+  \global\semio@table@row@startedfalse
+  \global\semio@table@headerfilltrue
+  \gdef\semio@table@long@column@count{8}%
+  \semio@table@long@rules@gset@project
+  \par\addvspace{\semio@spacing@table@outer}%
+  \begingroup
+  \SemioSans
+  \semio@table@fontsize@apply
+  \semio@table@setup@long
+  \color{semio-chrome-text-normal}%
+  % Bare tabular card ? no tcolorbox frame; side \vrule borders stay on.
+  \semio@table@owns@sidestrue
+  \semio@table@long@inner@w@set
+  \semio@table@long@title@chrome@prepare
+  \ifvmode\nointerlineskip\fi
+  \raggedright
+  \noindent
+  \begin{tabular}{#1}%
+  \semio@table@long@continuation@chrome{8}%
+  #2%
+  \noalign{\vskip\z@}%
+  #3%
+  \end{tabular}%
+  \endgroup
+  \par\addvspace{\semio@spacing@table@outer}%
+  \global\semio@table@long@mode=0\relax
+  \global\semio@table@row@startedfalse
+  \global\semio@table@headerfillfalse
+}
+
+\newcommand{\semio@project@long@render@call}[2]{%
+  \semio@project@render{#1}{\semio@project@firsthead}{#2}%
+}
+
+% ?? The card's key chip is the project's hierarchy key, and
+% \SemioProjectHeadingSilent has just registered a TOC line for it ? so it links
+% back there like every other hierarchy key chip. This number reaches the title
+% chrome raw rather than through \semio_kind_chip_number:nn, so both the link and
+% the colour are attached here: the explicit \textcolor restates the muted tone
+% \semio@heading@cap@muted@core applies anyway, which hyperref's colorlinks would
+% otherwise override. Robust, because the key is carried to the chrome row
+% through a \protected@edef and a further \edef before it is ever typeset.
+\NewDocumentCommand \semio@project@key@chip { m } {%
+  \semio@tocline@link{#1}{\textcolor{semio-chrome-text-normal}{#1}}%
+}
+
+% Legacy: Stadt & Land & Jahr & Typ & Status & Quelle.
+% Extended mode: Stadt & Land & Jahr & Objekttyp & Projektcharakter &
+% Projektphase & ReUse-Realisierung & Quellen.
+\newcommand{\SemioProject}[5]{%
+  \SemioCardKeep
+  \SemioProjectHeadingSilent{#1}{#2}%
+  \protected@edef\semio@project@key{\semio@project@key@chip{\thesubsection}}%
+  \gdef\semio@window@header@title{#1}%
+  \expandafter\semio@window@header@number@set\expandafter{\semio@project@key}%
+  \ifsemio@project@extendedmeta
+    \semio@table@long@prepare{0.15,0.13,0.09,0.11,0.14,0.12,0.13,0.13}{Bauteil & Neue Funktion & Menge & Material & Spender & Herkunftsweg & Systemebene vorher $\rightarrow$ nachher & Prozess}%
+    \semio@project@splitmeta@eight#4\relax
+  \else
+    \semio@table@long@prepare{0.15,0.13,0.09,0.11,0.14,0.12,0.13,0.13}{Bauteil & Neue Nutzung & Menge & Material & Quelle & Herkunftsweg & Herkunft $\rightarrow$ Ziel & Verfahren}%
+    \semio@project@splitmeta#4\relax
+  \fi
+  % Cards with no documented components render band-only: the component column
+  % header is dropped so no orphan header floats above an empty section.
+  \def\semio@project@rows@arg{#5}%
+  \ifx\semio@project@rows@arg\@empty
+    \ifsemio@project@extendedmeta
+      \long\def\semio@project@firsthead{%
+        \semio@project@overview@band@eight{#3}%
+          {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+          {\semio@project@objekttyp}{\semio@project@charakter}{\semio@project@phase}%
+          {\semio@project@realisierung}{\semio@project@quelle}%
+      }%
+    \else
+      \long\def\semio@project@firsthead{%
+        \semio@project@overview@band{#3}%
+          {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+          {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
+      }%
+    \fi
+  \else
+    \ifsemio@project@extendedmeta
+      \long\def\semio@project@firsthead{%
+        \semio@project@overview@band@eight{#3}%
+          {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+          {\semio@project@objekttyp}{\semio@project@charakter}{\semio@project@phase}%
+          {\semio@project@realisierung}{\semio@project@quelle}%
+        \semio@project@headrow@eight
+      }%
+    \else
+      \long\def\semio@project@firsthead{%
+        \semio@project@overview@band{#3}%
+          {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+          {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
+        \semio@project@headrow
+      }%
+    \fi
+  \fi
+  \ifsemio@project@extendedmeta
+    \long\def\semio@project@head{\semio@project@headrow@eight}%
+  \else
+    \long\def\semio@project@head{\semio@project@headrow}%
+  \fi
+  % Render with the project colspec (continuous canvas via \columncolor overhangs)
+  % instead of the default one, so the fill runs through the whole table ? header
+  % and every row ? with no cream gaps between columns.
+  \expandafter\semio@project@long@render@call\expandafter{\semio@project@colspec}{#5}%
+}
+%endregion ProjectCatalogue

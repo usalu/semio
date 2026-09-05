@@ -4,7 +4,7 @@ use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexTemplate};
 use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVorticesDelta, Block3dVorticesPatch, Block3dVorticesPatchEntry};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ChangeVortexLabel, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &super::ChangeVortexLabel, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     let Some(existing) = base.vortices.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "vortex", payload.id), vec![payload.id.clone()]);
     };

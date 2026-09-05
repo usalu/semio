@@ -58,7 +58,7 @@ const RECIPES: readonly Recipe[] = [
   { id: "insert-palette-entry-applied", directoryName: "📥️insert-palette-entry-applied", mutation: "insert-palette-entry", notes: "A new colour is inserted into the palette table at index 2; the 16-entry index buffer is left byte-identical, matching this subset's own semantics that a palette edit changes the table and leaves the picture alone." },
   { id: "remove-palette-entry-applied", directoryName: "📤️remove-palette-entry-applied", mutation: "remove-palette-entry", notes: "The unreferenced spare palette entry (index 5, colour [0,0,0]) is removed; the index buffer is left byte-identical." },
   { id: "replace-palette-entry-applied", directoryName: "🎨️replace-palette-entry-applied", mutation: "replace-palette-entry", notes: "The unreferenced spare palette entry (index 5) is replaced with a new colour; the index buffer is left byte-identical." },
-  { id: "replace-pixel-data-applied", directoryName: "🧮️replace-pixel-data-applied", mutation: "replace-pixel-data", notes: "A direct-colour 4x4 BMP's entire pixel array is replaced with a different solid RGB fill." },
+  { id: "replace-pixel-data-applied", directoryName: "🔲️replace-pixel-data-applied", mutation: "replace-pixel-data", notes: "A direct-colour 4x4 BMP's entire pixel array is replaced with a different solid RGB fill." },
 ];
 //#endregion 🧬️Contract
 

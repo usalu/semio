@@ -28,7 +28,7 @@ pub fn plugin() -> Result<Plugin<CadApps>, semio_framework_plugin::PluginAssembl
         .version("0.1.0")
         .package_id("semio:cad")
         .artifact(crate::artifacts::cad::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .host_media_handler(HostMediaHandlerDeclaration::mesh_dwg_bridge("s.cad.host-media.mesh-dwg", crate::artifacts::cad::artifact_kind(), crate::artifacts::cad::CAD_DOCUMENT_SCHEMA, crate::artifacts::cad::io::cad_document_from_mesh)?)
+        .host_media_handler(HostMediaHandlerDeclaration::mesh_import("s.cad.host-media.mesh-import", crate::artifacts::cad::artifact_kind(), crate::artifacts::cad::CAD_DOCUMENT_SCHEMA, crate::artifacts::cad::io::cad_document_from_mesh)?)
         .editor::<crate::editor::cad::CadPlayApp>(crate::editor::cad::create_cad_app())
         .editor_mutation_roster::<crate::editor::cad::CadPlayApp>()
         .viewer::<crate::viewer::cad::CadViewer>(crate::viewer::cad::create_cad_viewer())

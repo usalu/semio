@@ -2,9 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["receipt", "hostile", "lifecycle", "labels"],
+  "required": ["receipt", "identities", "hostile", "lifecycle", "labels"],
   "properties": {
     "receipt": { "$ref": "#/$defs/receipt" },
+    "identities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["a", "b"],
+      "properties": {
+        "a": { "$ref": "#/$defs/identity" },
+        "b": { "$ref": "#/$defs/identity" }
+      }
+    },
     "hostile": {
       "type": "array",
       "minItems": 6,
@@ -40,6 +49,15 @@
     }
   },
   "$defs": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "displayName"],
+      "properties": {
+        "userId": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000-\\u001f\\u007f ](?:[^\\u0000-\\u001f\\u007f]*[^\\u0000-\\u001f\\u007f ])?$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000-\\u001f\\u007f ](?:[^\\u0000-\\u001f\\u007f]*[^\\u0000-\\u001f\\u007f ])?$" }
+      }
+    },
     "receipt": {
       "type": "object",
       "additionalProperties": false,

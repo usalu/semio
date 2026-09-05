@@ -10,7 +10,7 @@ import "../../🧪️tests/📋️mutation-inventory/🎫️ticket-role-routing/
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { basename, dirname, join, posix, relative, resolve, sep } from "node:path";
+import { basename, dirname, join, posix, relative, resolve, sep, win32 } from "node:path";
 import { parseArgs } from "node:util";
 import { nextestArtifactLocation, partitionNextestExecutionFilters } from "./🟦️.ts";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
@@ -40,7 +40,7 @@ import Ajv from "ajv";
 import toml from "@iarna/toml";
 import fastGlob from "fast-glob";
 import { registryCompilerInputDependencies, registryStaticImports, type RegistryCompilerInputRole } from "../../🔍️discovery/🟦️.ts";
-import { pathEmojiStatuteFindings, semanticDirectoryKindId, semanticOwnedInputFileSnapshot } from "../../🔍️discovery/🟦️.ts";
+import { leadingEmojiIdentity, pathEmojiStatuteFindings, semanticDirectoryKindId, semanticOwnedInputFileSnapshot } from "../../🔍️discovery/🟦️.ts";
 import { MUTATION_STRUCTURAL_POLICY_KINDS, inspectMutationRootReachability, inventoryMutationTaxonomy, newScaffoldMutationTree, planMutationTaxonomy, policyMutationStructuralBreaches, runMutationTaxonomyCli, validateJsonSchemaSubset } from "../../../../../../../📜️script.ts";
 
 describe("current JCO destination authority", () => {
@@ -773,6 +773,41 @@ describe("active ticket clean protection", () => {
   });
 });
 //#endregion 🛡️ActiveTicketCleanProtection
+
+//#region 🪟️WindowsCheckoutTicketPaths
+describe("Windows checkout ticket paths", () => {
+  test("rejects Windows-illegal components and keeps ticket files below the legacy path limit", { timeout: 15_000 }, async () => {
+    const { cleanIsWindowsIllegalName } = await import("../../../../../../../📜️script.ts");
+    const root = findRepoRoot(import.meta.dir);
+    const fixturePath = join(import.meta.dir, "../../🧪️tests/🪟️windows-checkout-paths/🧫️fixture");
+    const fixture = JSON.parse(readFileSync(join(fixturePath, "🔣️.json"), "utf8")) as {
+      version: number;
+      checkout: { root: string; maxPathUnits: number; ticketRoot: string };
+      components: { name: string; illegal: boolean }[];
+    };
+    const schema = JSON.parse(readFileSync(join(fixturePath, "🧬️fixture.schema.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(schema);
+    expect(validate(fixture)).toBe(true);
+    expect(validate({ ...fixture, version: 2 })).toBe(false);
+    for (const component of fixture.components) expect(cleanIsWindowsIllegalName(component.name), JSON.stringify(component.name)).toBe(component.illegal);
+    const gitPaths = (args: string[]): string[] => {
+      const result = spawnSync("git", args, { cwd: root, maxBuffer: 16 * 1024 * 1024 });
+      expect(result.status).toBe(0);
+      return result.stdout.toString("utf8").split("\0").filter((path) => path.startsWith(`${fixture.checkout.ticketRoot}/`));
+    };
+    const tracked = gitPaths(["ls-files", "-z", "--", fixture.checkout.ticketRoot]);
+    const untracked = gitPaths(["ls-files", "-z", "--others", "--exclude-standard", "--", fixture.checkout.ticketRoot]);
+    const paths = [...new Set([...tracked, ...untracked])];
+    expect(paths.length).toBeGreaterThan(0);
+    const untrackedPaths = new Set(untracked);
+    const oversize = paths.filter((path) =>
+      win32.join(fixture.checkout.root, path).length > fixture.checkout.maxPathUnits
+      && (untrackedPaths.has(path) || existsSync(join(root, path))),
+    );
+    expect(oversize).toEqual([]);
+  });
+});
+//#endregion 🪟️WindowsCheckoutTicketPaths
 
 //#region 🔗️RegistryCompilerImports
 describe("registryCompilerImports", () => {
@@ -2053,6 +2088,21 @@ describe("playground static sites", () => {
     expect(cadEnv.SEMIO_RENDERER).toBe("wgpu");
     expect(cadEnv.SEMIO_PLUGIN).toBe("cad");
     expect(cadEnv.S_OS_PORT).toBe("6020");
+  });
+
+  test("frameworkOsPlaygroundDevEnv derives the port from an explicit renderer override", () => {
+    const catalog = loadFrameworkOsPlaygroundCatalog();
+    const row = catalog.find((entry) => entry.variant === "s")!;
+    const servedEnv = frameworkOsPlaygroundDevEnv(catalog, "s", { SEMIO_RENDERER: "react", SKIP_PLUGIN_BUILD: "1", SKIP_ENGINE_BUILD: "1" }, {});
+    expect(servedEnv.SEMIO_RENDERER).toBe("react");
+    expect(servedEnv.SKIP_PLUGIN_BUILD).toBe("1");
+    expect(servedEnv.SKIP_ENGINE_BUILD).toBe("1");
+    expect(servedEnv.S_OS_PORT).toBe(String(row.ports.react));
+    expect(servedEnv.S_OS_PORT).not.toBe(String(row.ports.wgpu));
+    const pinnedEnv = frameworkOsPlaygroundDevEnv(catalog, "s", { SEMIO_RENDERER: "react", S_OS_PORT: "6074" }, { S_OS_PORT: "6099" });
+    expect(pinnedEnv.S_OS_PORT).toBe("6074");
+    const inheritedEnv = frameworkOsPlaygroundDevEnv(catalog, "s", { SEMIO_RENDERER: "react" }, { S_OS_PORT: "6099" });
+    expect(inheritedEnv.S_OS_PORT).toBe("6099");
   });
 
   test("assigns a unique port per dev and test slot", () => {
@@ -4169,8 +4219,59 @@ function drawSourceScenarioPreimage(destinationPath: string): string {
   return createHash("sha256").update(drawSourceScenarioContent(member.content, projection)).digest("hex");
 }
 
+const CAD_PROJECTION_CURRENT_ONLY_SOURCES = [
+  "🏢️aec.building/🎬️actions/⬆️placeCeilingFrom2PointsAndHeight.json",
+  "🏢️aec.building/🎬️actions/🏛️placeColumnFrom2PointsAndHeight.json",
+  "🏢️aec.building/🎬️actions/🏠️placeRoofFrom2PointsAndHeight.json",
+  "🏢️aec.building/🎬️actions/🚧️placeWallFrom2PointsAndHeight.json",
+  "🏢️aec.building/🎬️actions/🚪️placeDoorFrom2PointsAndHeight.json",
+  "🏢️aec.building/🎬️actions/🧱️placeSlabFrom2PointsAndHeight.json",
+  "🏢️aec.building/🎬️actions/🪜️placeStairFrom2PointsAndHeight.json",
+  "🏢️aec.building/🎬️actions/🪟️placeWindowFrom2PointsAndHeight.json",
+  "🏢️aec.building/🎬️actions/🪨️placeFoundationFrom2PointsAndHeight.json",
+  "🏢️aec.building/🕹️interactions/⬆️placeCeiling.json",
+  "🏢️aec.building/🕹️interactions/🏛️placeColumn.json",
+  "🏢️aec.building/🕹️interactions/🏠️placeRoof.json",
+  "🏢️aec.building/🕹️interactions/🚧️placeRailing.json",
+  "🏢️aec.building/🕹️interactions/🚪️placeDoor.json",
+  "🏢️aec.building/🕹️interactions/🛡️placeWall.json",
+  "🏢️aec.building/🕹️interactions/🧱️placeSlab.json",
+  "🏢️aec.building/🕹️interactions/🪜️placeStair.json",
+  "🏢️aec.building/🕹️interactions/🪟️placeWindow.json",
+  "🏢️aec.building/🕹️interactions/🪨️placeFoundation.json",
+  "🏢️aec.building/🕹️interactions/🪵️placeBeam.json",
+] as const;
+
+/** 🧵️ Binds frozen CAD scenario identities while accounting for every current-only placement member. */
+function cadProjectionLiveSources(projection: ArtifactProjectionGoldenEntry, paths = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json"))): ReadonlyMap<string, string> {
+  if (projection.contractId !== "artifact-example-model-catalog-v1") throw new Error("CAD source bindings require the exact catalog projection");
+  const identity = (path: string): string => path.split("/").map((segment) => leadingEmojiIdentity(segment).rest).join("/");
+  const current = new Map<string, string>();
+  for (const path of paths) {
+    const key = identity(path);
+    if (current.has(key)) throw new Error(`Duplicate current CAD source identity: ${key}`);
+    current.set(key, `${projection.sourceRoot}/${path}`);
+  }
+  const bound = new Map<string, string>();
+  for (const { sourcePath } of projection.mappings) {
+    if (!sourcePath.startsWith(`${projection.sourceRoot}/`)) throw new Error("CAD scenario source is outside its exact root");
+    const key = identity(sourcePath.slice(projection.sourceRoot.length + 1)), path = current.get(key);
+    if (!path || bound.has(sourcePath)) throw new Error(`Missing or duplicate CAD scenario source identity: ${key}`);
+    bound.set(sourcePath, path);
+    current.delete(key);
+  }
+  for (const path of CAD_PROJECTION_CURRENT_ONLY_SOURCES) {
+    const key = identity(path);
+    if (current.get(key) !== `${projection.sourceRoot}/${path}`) throw new Error(`Missing exact current-only CAD source: ${path}`);
+    current.delete(key);
+  }
+  if (current.size > 0) throw new Error("Current CAD source census contains unbound members");
+  return bound;
+}
+
 function projectionAuthorityNodes(projection: ArtifactProjectionGoldenEntry, source: "live" | "authored-draw" = "live", readLive: (path: string) => string = (path) => readFileSync(join(getWorkspaceRoot(), path), "utf8")): SemanticProjectionAuthorityNode[] {
   if (source === "authored-draw" && projection.contractId !== "artifact-editor-command-bundle-v1") throw new Error("Authored Draw inputs cannot supply another projection");
+  const liveSources = source === "live" && projection.contractId === "artifact-example-model-catalog-v1" ? cadProjectionLiveSources(projection) : undefined;
   const directories = new Set<string>([projection.sourceRoot]);
   const files = projection.mappings.map(({ sourcePath }) => {
     let owner = sourcePath.slice(0, sourcePath.lastIndexOf("/"));
@@ -4181,7 +4282,7 @@ function projectionAuthorityNodes(projection: ArtifactProjectionGoldenEntry, sou
     }
     const member = source === "authored-draw" ? DRAW_SOURCE_SCENARIO.members.find(({ path }) => `${projection.sourceRoot}/${path}` === sourcePath) : undefined;
     if (source === "authored-draw" && !member) throw new Error(`Authored Draw input does not own ${sourcePath}`);
-    return { path: sourcePath, nodeKind: "file" as const, content: member ? drawSourceScenarioContent(member.content, projection) : readLive(sourcePath) };
+    return { path: sourcePath, nodeKind: "file" as const, content: member ? drawSourceScenarioContent(member.content, projection) : readLive(liveSources ? liveSources.get(sourcePath)! : sourcePath) };
   });
   return [...[...directories].sort(projectionByteSort).map((path) => ({ path, nodeKind: "directory" as const })), ...files];
 }
@@ -4696,7 +4797,7 @@ describe("artifact path projection authority", () => {
     const platformBoundary = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json"))
       .map((path) => `${projection.sourceRoot}/${path}`)
       .sort(projectionByteSort);
-    expect(platformBoundary).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
+    expect(platformBoundary).toEqual([...cadProjectionLiveSources(projection).values(), ...CAD_PROJECTION_CURRENT_ONLY_SOURCES.map((path) => `${projection.sourceRoot}/${path}`)].sort(projectionByteSort));
     expect(result.problems).toEqual([]);
     expect(result.mappings).toEqual(projection.mappings);
     expect(result.destinationRoot).toBe(projection.destinationRoot);
@@ -4706,6 +4807,31 @@ describe("artifact path projection authority", () => {
     expect(result.maxPathBytes).toBe(237);
     expect(projection.modelCatalog?.models).toHaveLength(9);
     expect(projection.modelCatalog?.categoryRules.map(({ count }) => count).reduce((sum, count) => sum + count, 0)).toBe(200);
+  });
+
+  test("CAD frozen scenario bindings read exact current bytes and reject missing, duplicate, or extra identities", () => {
+    const projection = projectionGolden("artifact-example-model-catalog-v1");
+    const paths = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json"));
+    const bindings = cadProjectionLiveSources(projection, paths), reads: string[] = [];
+    const nodes = projectionAuthorityNodes(projection, "live", (path) => {
+      reads.push(path);
+      return readFileSync(join(getWorkspaceRoot(), path), "utf8");
+    }).filter(({ nodeKind }) => nodeKind === "file");
+    expect(nodes).toHaveLength(209);
+    const currentOnly = new Set<string>(CAD_PROJECTION_CURRENT_ONLY_SOURCES);
+    expect(paths).toHaveLength(229);
+    expect(reads.sort(projectionByteSort)).toEqual(paths.filter((path) => !currentOnly.has(path)).map((path) => `${projection.sourceRoot}/${path}`).sort(projectionByteSort));
+    for (const node of nodes) expect(node.content).toBe(readFileSync(join(getWorkspaceRoot(), bindings.get(node.path)!), "utf8"));
+    for (const path of currentOnly) {
+      const content = JSON.parse(readFileSync(join(getWorkspaceRoot(), projection.sourceRoot, path), "utf8"));
+      expect(content.schema).toBe(path.includes("/🎬️actions/") ? "spatial.action" : "spatial.interaction");
+      expect(content.id.length).toBeGreaterThan(0);
+      expect(content.version).toBe("1.0.0");
+    }
+    expect(() => cadProjectionLiveSources(projection, paths.slice(1))).toThrow("Missing");
+    expect(() => cadProjectionLiveSources(projection, [...paths, paths[0]!])).toThrow("Duplicate");
+    expect(() => cadProjectionLiveSources(projection, [...paths, "🧪️unknown/🔣️modelDefinition.json"])).toThrow("unbound");
+    expect(createHash("sha256").update(projection.mappings.map(({ sourcePath, destinationPath }) => `${sourcePath}\0${destinationPath}`).join("\n")).digest("hex")).toBe(projection.mappingDigest);
   });
 
   test("artifact-example-model-catalog-projection fails closed for invalid authority and path states", () => {

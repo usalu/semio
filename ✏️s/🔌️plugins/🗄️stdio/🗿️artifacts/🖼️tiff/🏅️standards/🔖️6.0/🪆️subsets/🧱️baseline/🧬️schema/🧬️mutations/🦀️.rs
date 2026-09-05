@@ -54,7 +54,7 @@
 //! verbatim.
 //!
 //! The catalog `tiff-6-0-baseline` (`../../🔣️oracle.json`) is therefore declared and
-//! claimed by `🌳️mutate-tiff-6-0-baseline`, and that case measures this vocabulary where its axes
+//! claimed by `🧱️mutate-tiff-6-0-baseline`, and that case measures this vocabulary where its axes
 //! actually live: on the DECODED SNAPSHOT, against [`check_tiff_baseline_conformance`]'s verdict.
 //! Each kind must move its own axis and raise its own diagnostic; each inverse must restore the
 //! snapshot exactly. The case states in as many words that it makes no byte-level claim for those
@@ -108,7 +108,7 @@ pub enum TiffBaselineMutation {
 
 /// 🏷️ Kebab-case spelling of every `TiffBaselineMutation` variant, in declaration order — the
 /// vocabulary the `tiff-6-0-baseline` mutation catalog (`../../🔣️oracle.json`) declares
-/// and `🌳️mutate-tiff-6-0-baseline` measures itself against.
+/// and `🧱️mutate-tiff-6-0-baseline` measures itself against.
 /// `kinds_match_enum_variants_in_declaration_order` below keeps the two honest against the enum,
 /// and `kinds_match_the_committed_catalog` against the manifest.
 pub const KINDS: &[&str] = &["set-snapshot", "set-compression", "set-photometric-interpretation", "set-bits-per-sample", "insert-tile-tags", "remove-tile-tags", "set-strip-offsets", "remove-strip-offsets"];
@@ -116,7 +116,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-compression", "set-photometric
 crate::impl_serde_op_codec!(TiffBaselineMutation, "tiff-baseline-mutation");
 
 //#region 🌉️ConformanceProjection
-/// 👁️ The comparison surface `🌳️mutate-tiff-6-0-baseline` measures this vocabulary through: the five
+/// 👁️ The comparison surface `🧱️mutate-tiff-6-0-baseline` measures this vocabulary through: the five
 /// Baseline TIFF axes as they stand on IFD 0 of the DECODED snapshot, plus
 /// [`check_tiff_baseline_conformance`]'s verdict over them. It carries no pixels and no other tag on
 /// purpose — this is a conformance-class vocabulary, and a Baseline class is a property of five
@@ -369,7 +369,7 @@ mod tests {
     }
 
     /// 🏷️ [`KINDS`] against the committed catalog. The framework never parses Rust, so without this
-    /// the manifest could keep measuring `🌳️mutate-tiff-6-0-baseline` against a vocabulary this subset
+    /// the manifest could keep measuring `🧱️mutate-tiff-6-0-baseline` against a vocabulary this subset
     /// no longer has — which is exactly the gap that left this vocabulary with no catalog at all
     /// until the completeness gate learned to see an unregistered one.
     #[test]

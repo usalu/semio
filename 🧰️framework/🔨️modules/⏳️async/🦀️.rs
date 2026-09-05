@@ -1446,6 +1446,11 @@ where
 /// completion remains the future-polling executor's job (packet R2/P1b), built ON TOP of this pool.
 pub type Job = Box<dyn FnOnce() + Send + 'static>;
 
+#[path = "🔔️maintenance/🦀️.rs"]
+mod maintenance;
+pub use maintenance::{WorkerMaintenanceCallback, WorkerMaintenanceError, WorkerMaintenanceRequest, WorkerMaintenanceStep, WorkerMaintenanceTicket, WORKER_MAINTENANCE_CAPACITY};
+use maintenance::{PoolWork, WorkerMaintenanceRegistry};
+
 /// 🚦️ Exact finite admission bound for every worker/lane queue. Queue storage is reserved once
 /// when the process pool is constructed; a submitted step never grows or relocates the deque.
 pub const WORKER_JOBS_PER_LANE: usize = 1_024;
@@ -1527,6 +1532,7 @@ mod native_pool {
 
     struct PoolInner {
         workers: Vec<WorkerLocal>,
+        maintenance: WorkerMaintenanceRegistry,
         shutdown: std::sync::atomic::AtomicBool,
         next_submit: AtomicUsize,
         idle: (Mutex<()>, Condvar),
@@ -1597,14 +1603,14 @@ mod native_pool {
     /// is serviced every single scan while lower-weight lanes accrue deficit proportionally slower
     /// and are serviced roughly every `UNIT_COST / weight` scans. One selection completes at most
     /// `UNIT_COST` rounds before returning idle, so eligible queued work never parks merely to accrue deficit.
-    fn select_and_pop<'a>(inner: &'a PoolInner, my_index: usize, cursor: &mut usize, deficits: &mut [i64; LANE_COUNT]) -> Option<(Lane, Job, Option<LowPriorityPermit<'a>>)> {
+    fn select_and_pop<'a>(inner: &'a PoolInner, my_index: usize, cursor: &mut usize, deficits: &mut [i64; LANE_COUNT]) -> Option<(Lane, PoolWork, Option<LowPriorityPermit<'a>>)> {
         const UNIT_COST: i64 = Lane::Interactive.weight() as i64;
         let my = &inner.workers[my_index];
         for _ in 0..LANE_COUNT * UNIT_COST as usize {
             let lane = Lane::ALL[*cursor];
             *cursor = (*cursor + 1) % LANE_COUNT;
             let mut queue = my.queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner);
-            if queue.is_empty() {
+            if queue.is_empty() && !inner.maintenance.has_pending(Some(lane)) {
                 deficits[lane.index()] = 0;
                 continue;
             }
@@ -1618,9 +1624,10 @@ mod native_pool {
                 } else {
                     None
                 };
-                deficits[lane.index()] -= UNIT_COST;
-                let job = queue.pop_front().expect("WorkerPool: queue observed non-empty then empty under its own lock");
-                return Some((lane, job, low_priority_permit));
+                if let Some(work) = inner.maintenance.select(lane, &mut queue) {
+                    deficits[lane.index()] -= UNIT_COST;
+                    return Some((lane, work, low_priority_permit));
+                }
             }
         }
         None
@@ -1630,7 +1637,7 @@ mod native_pool {
     /// the first non-empty lane, in [`Lane::ALL`] order, respecting the same admission-control gate
     /// as [`select_and_pop`]. Stealing always pops from the FRONT (same end the owner pops from) so
     /// a stolen job is still the oldest one queued for that lane on that worker.
-    fn steal(inner: &PoolInner, my_index: usize) -> Option<(Lane, Job, Option<LowPriorityPermit<'_>>)> {
+    fn steal(inner: &PoolInner, my_index: usize) -> Option<(Lane, PoolWork, Option<LowPriorityPermit<'_>>)> {
         let worker_count = inner.workers.len();
         for offset in 1..worker_count {
             let victim = (my_index + offset) % worker_count;
@@ -1648,7 +1655,7 @@ mod native_pool {
                     None
                 };
                 if let Some(job) = queue.pop_front() {
-                    return Some((lane, job, low_priority_permit));
+                    return Some((lane, PoolWork::Job(job), low_priority_permit));
                 }
             }
         }
@@ -1666,7 +1673,7 @@ mod native_pool {
                 Some((_lane, job, low_priority_permit)) => {
                     inner.trace_workers.worker_started();
                     let permit = inner.ledger.checkout(1).expect("WorkerPool: internal permit invariant violated — checked out more than worker_count concurrently");
-                    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(job));
+                    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| job.run(&inner.maintenance)));
                     drop(permit);
                     inner.trace_workers.worker_finished();
                     drop(low_priority_permit);
@@ -1696,6 +1703,7 @@ mod native_pool {
             let worker_count = worker_count_for(config.process_kind, config.cores).max(1);
             let inner = Arc::new(PoolInner {
                 workers: (0..worker_count).map(|_| WorkerLocal::new()).collect(),
+                maintenance: WorkerMaintenanceRegistry::new(),
                 shutdown: std::sync::atomic::AtomicBool::new(false),
                 next_submit: AtomicUsize::new(0),
                 idle: (Mutex::new(()), Condvar::new()),
@@ -1723,6 +1731,25 @@ mod native_pool {
             if let Err(error) = self.try_submit(lane, job) {
                 panic!("WorkerPool: mandatory submission failed closed: {:?}", error.kind());
             }
+        }
+
+        /// 🔔️ Installs a fixed callback slot before any owner can request retirement.
+        pub fn install_maintenance_hook(&self, lane: Lane, callback: WorkerMaintenanceCallback, context: [u64; 2]) -> Result<WorkerMaintenanceTicket, WorkerMaintenanceError> {
+            if self.is_shutdown() { return Err(WorkerMaintenanceError::Shutdown); }
+            self.inner.maintenance.install(lane, callback, context)
+        }
+
+        /// 📣️ Coalesces an exact wake without a queued closure or task allocation.
+        pub fn request_maintenance(&self, ticket: WorkerMaintenanceTicket) -> Result<WorkerMaintenanceRequest, WorkerMaintenanceError> {
+            if self.is_shutdown() { return Err(WorkerMaintenanceError::Shutdown); }
+            let result = self.inner.maintenance.request(ticket)?;
+            self.inner.notify_idle();
+            Ok(result)
+        }
+
+        /// 🧹️ Fences future requests and removes only an idle exact callback slot.
+        pub fn remove_maintenance_hook(&self, ticket: WorkerMaintenanceTicket) -> Result<bool, WorkerMaintenanceError> {
+            self.inner.maintenance.remove(ticket)
         }
 
         /// 🚦️ Attempts one hard-bounded admission without waiting for queue ownership. Failure
@@ -1827,6 +1854,7 @@ mod native_pool {
         /// blocks until all in-flight jobs finish. Not called automatically on drop (a cloned
         /// handle dropping must never tear down siblings' pool).
         pub fn shutdown(&self) {
+            self.inner.maintenance.shutdown();
             self.inner.shutdown.store(true, Ordering::SeqCst);
             self.inner.wheel.fire_due(u64::MAX);
             self.inner.notify_idle();
@@ -1840,6 +1868,105 @@ mod native_pool {
     #[cfg(test)]
     mod tests {
         use super::*;
+
+        #[test]
+        fn worker_maintenance_native_idle_wake_uses_no_queued_job() {
+            static STEPS: AtomicUsize = AtomicUsize::new(0);
+            fn step(context: [u64; 2]) -> WorkerMaintenanceStep {
+                assert_eq!(context, [31, 41]);
+                if STEPS.fetch_add(1, Ordering::SeqCst) == 0 { WorkerMaintenanceStep::More } else { WorkerMaintenanceStep::Idle }
+            }
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+            STEPS.store(0, Ordering::SeqCst);
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            let ticket = pool.install_maintenance_hook(Lane::Io, step, [31, 41]).unwrap();
+            assert_eq!(pool.request_maintenance(ticket), Ok(WorkerMaintenanceRequest::Requested));
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while STEPS.load(Ordering::SeqCst) != fixture["idleWake"]["steps"].as_u64().unwrap() as usize {
+                assert!(Instant::now() < deadline, "idle native worker did not service maintenance without ingress");
+                std::thread::yield_now();
+            }
+            while !pool.remove_maintenance_hook(ticket).unwrap() {
+                assert!(Instant::now() < deadline, "native hook did not retain then retire its running callback");
+                std::thread::yield_now();
+            }
+            assert_eq!(pool.request_maintenance(ticket), Err(WorkerMaintenanceError::Stale));
+            let queued = pool.inner.workers.iter().flat_map(|worker| &worker.queues).map(|queue| queue.lock().unwrap().len()).sum::<usize>();
+            assert_eq!(queued, fixture["idleWake"]["queuedJobs"].as_u64().unwrap() as usize);
+            pool.shutdown();
+            assert_eq!(pool.occupancy(), 0);
+            assert_eq!(pool.install_maintenance_hook(Lane::Io, step, [31, 41]), Err(WorkerMaintenanceError::Shutdown));
+            eprintln!("[DEBUG] native idle worker serviced two preallocated Io maintenance turns without any queued job or subsequent task ingress");
+        }
+
+        #[test]
+        fn worker_maintenance_native_running_close_and_shutdown_keep_exact_invocation() {
+            static ENTERED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+            static RELEASE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+            fn blocked(_: [u64; 2]) -> WorkerMaintenanceStep {
+                ENTERED.store(true, Ordering::SeqCst);
+                let deadline = Instant::now() + Duration::from_secs(5);
+                while !RELEASE.load(Ordering::SeqCst) { assert!(Instant::now() < deadline); std::thread::yield_now(); }
+                WorkerMaintenanceStep::More
+            }
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+            for shutdown in [false, true] {
+                ENTERED.store(false, Ordering::SeqCst);
+                RELEASE.store(false, Ordering::SeqCst);
+                let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+                let ticket = pool.install_maintenance_hook(Lane::Io, blocked, [0; 2]).unwrap();
+                pool.request_maintenance(ticket).unwrap();
+                let deadline = Instant::now() + Duration::from_secs(5);
+                while !ENTERED.load(Ordering::SeqCst) { assert!(Instant::now() < deadline); std::thread::yield_now(); }
+                if shutdown {
+                    assert_eq!(pool.request_maintenance(ticket), Ok(WorkerMaintenanceRequest::Requested));
+                    let closing = pool.clone();
+                    let thread = std::thread::spawn(move || closing.shutdown());
+                    while !pool.is_shutdown() { assert!(Instant::now() < deadline); std::thread::yield_now(); }
+                    RELEASE.store(true, Ordering::SeqCst);
+                    thread.join().unwrap();
+                    assert_eq!(pool.inner.maintenance.has_pending(None), fixture["runningClose"]["shutdownRearms"].as_bool().unwrap());
+                    assert_eq!(pool.remove_maintenance_hook(ticket).unwrap(), fixture["runningClose"]["secondRemoveTerminal"].as_bool().unwrap());
+                } else {
+                    assert_eq!(pool.remove_maintenance_hook(ticket).unwrap(), fixture["runningClose"]["firstRemoveTerminal"].as_bool().unwrap());
+                    assert_eq!(pool.request_maintenance(ticket), Err(WorkerMaintenanceError::Closed));
+                    RELEASE.store(true, Ordering::SeqCst);
+                    while !pool.remove_maintenance_hook(ticket).unwrap() { assert!(Instant::now() < deadline); std::thread::yield_now(); }
+                    assert_eq!(pool.request_maintenance(ticket), Err(WorkerMaintenanceError::Stale));
+                    pool.shutdown();
+                }
+                assert_eq!(pool.occupancy(), 0);
+            }
+            eprintln!("[DEBUG] native running hook retained the exact second-remove witness and shutdown prevented More or concurrent wake from rearming");
+        }
+
+        #[test]
+        fn worker_maintenance_native_interleaves_io_jobs_and_rotating_hooks() {
+            static ORDER: Mutex<Vec<u64>> = Mutex::new(Vec::new());
+            fn hook(context: [u64; 2]) -> WorkerMaintenanceStep { ORDER.lock().unwrap().push(context[0]); WorkerMaintenanceStep::Idle }
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+            ORDER.lock().unwrap().clear();
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            let (started_tx, started_rx) = std::sync::mpsc::channel();
+            let (release_tx, release_rx) = std::sync::mpsc::channel();
+            pool.submit(Lane::Interactive, Box::new(move || { started_tx.send(()).unwrap(); release_rx.recv_timeout(Duration::from_secs(5)).unwrap(); }));
+            started_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+            let mut tickets = Vec::new();
+            for value in fixture["competingWork"]["hooks"].as_array().unwrap() {
+                let ticket = pool.install_maintenance_hook(Lane::Io, hook, [value.as_u64().unwrap(), 0]).unwrap();
+                pool.request_maintenance(ticket).unwrap();
+                tickets.push(ticket);
+            }
+            for value in fixture["competingWork"]["jobs"].as_array().unwrap() { let value = value.as_u64().unwrap(); pool.submit(Lane::Io, Box::new(move || ORDER.lock().unwrap().push(value))); }
+            release_tx.send(()).unwrap();
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while ORDER.lock().unwrap().len() < 4 { assert!(Instant::now() < deadline); std::thread::yield_now(); }
+            for ticket in tickets { while !pool.remove_maintenance_hook(ticket).unwrap() { assert!(Instant::now() < deadline); std::thread::yield_now(); } }
+            pool.shutdown();
+            assert_eq!(serde_json::to_value(&*ORDER.lock().unwrap()).unwrap(), fixture["competingWork"]["order"]);
+            assert_eq!(pool.occupancy(), 0);
+            eprintln!("[DEBUG] native Io DRR alternated actual queued jobs with two rotating fixed hooks after interactive work released the worker");
+        }
 
         #[test]
         fn native_drr_finishes_eligible_deficit_frontier_before_idle() {
@@ -1861,7 +1988,7 @@ mod native_pool {
                 let (selected, job, permit) = select_and_pop(&pool.inner, 0, &mut cursor, &mut deficits).expect("eligible queued work must accrue deficit before idle parking");
                 assert_eq!(selected, lane);
                 assert_eq!(deficits[lane.index()], case["deficits"].as_array().unwrap().last().unwrap().as_i64().unwrap());
-                job();
+                job.run(&pool.inner.maintenance);
                 drop(permit);
                 assert!(select_and_pop(&pool.inner, 0, &mut cursor, &mut deficits).is_none());
             }
@@ -1903,23 +2030,24 @@ mod wasm_pool {
             SchedulerState { queues: std::array::from_fn(|_| admitted_job_queue()), cursor: 0, deficits: [0; LANE_COUNT], selections: 0, no_selection: 0, selected_by_lane: [0; LANE_COUNT] }
         }
 
-        fn select_and_pop(&mut self) -> Option<(Lane, Job)> {
+        fn select_and_pop(&mut self, maintenance: &WorkerMaintenanceRegistry) -> Option<(Lane, PoolWork)> {
             const UNIT_COST: i64 = Lane::Interactive.weight() as i64;
             for _ in 0..LANE_COUNT {
                 let lane = Lane::ALL[self.cursor];
                 self.cursor = (self.cursor + 1) % LANE_COUNT;
                 let queue = &mut self.queues[lane.index()];
-                if queue.is_empty() {
+                if queue.is_empty() && !maintenance.has_pending(Some(lane)) {
                     self.deficits[lane.index()] = 0;
                     continue;
                 }
                 self.deficits[lane.index()] += lane.weight() as i64;
                 if self.deficits[lane.index()] >= UNIT_COST {
-                    self.deficits[lane.index()] -= UNIT_COST;
-                    let job = queue.pop_front().expect("WorkerPool: queue observed non-empty then empty");
-                    self.selections = self.selections.saturating_add(1);
-                    self.selected_by_lane[lane.index()] = self.selected_by_lane[lane.index()].saturating_add(1);
-                    return Some((lane, job));
+                    if let Some(work) = maintenance.select(lane, queue) {
+                        self.deficits[lane.index()] -= UNIT_COST;
+                        self.selections = self.selections.saturating_add(1);
+                        self.selected_by_lane[lane.index()] = self.selected_by_lane[lane.index()].saturating_add(1);
+                        return Some((lane, work));
+                    }
                 }
             }
             self.no_selection = self.no_selection.saturating_add(1);
@@ -1933,6 +2061,7 @@ mod wasm_pool {
 
     struct PoolInner {
         state: Mutex<SchedulerState>,
+        maintenance: WorkerMaintenanceRegistry,
         wheel: TimerWheel,
         now_ms: std::sync::atomic::AtomicU64,
         pump_calls: std::sync::atomic::AtomicU64,
@@ -1964,6 +2093,7 @@ mod wasm_pool {
         pub fn new(config: WorkerPoolConfig) -> WorkerPool {
             let inner = Arc::new(PoolInner {
                 state: Mutex::new(SchedulerState::new()),
+                maintenance: WorkerMaintenanceRegistry::new(),
                 wheel: TimerWheel::new(),
                 now_ms: std::sync::atomic::AtomicU64::new(0),
                 pump_calls: std::sync::atomic::AtomicU64::new(0),
@@ -1972,6 +2102,23 @@ mod wasm_pool {
                 trace_workers: semio_framework_trace::WorkerCounters::new(),
             });
             WorkerPool { inner, interactive_reserve: config.interactive_reserve }
+        }
+
+        /// 🔔️ Installs the same fixed callback authority used by native pool workers.
+        pub fn install_maintenance_hook(&self, lane: Lane, callback: WorkerMaintenanceCallback, context: [u64; 2]) -> Result<WorkerMaintenanceTicket, WorkerMaintenanceError> {
+            if self.is_shutdown() { return Err(WorkerMaintenanceError::Shutdown); }
+            self.inner.maintenance.install(lane, callback, context)
+        }
+
+        /// 📣️ Coalesces exact work for the next host-driven pump without allocating a job.
+        pub fn request_maintenance(&self, ticket: WorkerMaintenanceTicket) -> Result<WorkerMaintenanceRequest, WorkerMaintenanceError> {
+            if self.is_shutdown() { return Err(WorkerMaintenanceError::Shutdown); }
+            self.inner.maintenance.request(ticket)
+        }
+
+        /// 🧹️ Retains the callback until no exact invocation is running.
+        pub fn remove_maintenance_hook(&self, ticket: WorkerMaintenanceTicket) -> Result<bool, WorkerMaintenanceError> {
+            self.inner.maintenance.remove(ticket)
         }
 
         pub fn submit(&self, lane: Lane, job: Job) {
@@ -2067,6 +2214,7 @@ mod wasm_pool {
 
         /// 🛑️ Marks the cooperative pool stopped and releases every retained timed callback.
         pub fn shutdown(&self) {
+            self.inner.maintenance.shutdown();
             self.inner.shutdown.store(true, Ordering::SeqCst);
             self.inner.wheel.fire_due(u64::MAX);
             let _ = self.interactive_reserve;
@@ -2087,12 +2235,12 @@ mod wasm_pool {
             self.inner.wheel.fire_due_batch(monotonic_now_ms, TIMER_ACTIONS_PER_POOL_TURN);
             let picked = {
                 let mut state = self.inner.state.lock().unwrap_or_else(PoisonError::into_inner);
-                state.select_and_pop()
+                state.select_and_pop(&self.inner.maintenance)
             };
             if let Some((_lane, job)) = picked {
                 self.inner.trace_workers.worker_started();
                 let permit = self.inner.ledger.checkout(1).expect("WorkerPool: internal permit invariant violated on wasm pump");
-                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(job));
+                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| job.run(&self.inner.maintenance)));
                 drop(permit);
                 self.inner.trace_workers.worker_finished();
             }
@@ -2114,12 +2262,68 @@ mod wasm_pool {
         }
 
         pub fn has_pending_work(&self) -> bool {
-            self.inner.state.lock().unwrap_or_else(PoisonError::into_inner).has_pending()
+            self.inner.state.lock().unwrap_or_else(PoisonError::into_inner).has_pending() || self.inner.maintenance.has_pending(None)
         }
     }
 
     #[cfg(test)]
     mod cooperative_tests {
+        #[test]
+        fn worker_maintenance_cooperative_wake_obeys_pump_and_drr() {
+            use super::*;
+            static STEPS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+            fn step(context: [u64; 2]) -> WorkerMaintenanceStep {
+                assert_eq!(context, [51, 61]);
+                if STEPS.fetch_add(1, Ordering::SeqCst) == 0 { WorkerMaintenanceStep::More } else { WorkerMaintenanceStep::Idle }
+            }
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+            STEPS.store(0, Ordering::SeqCst);
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            let ticket = pool.install_maintenance_hook(Lane::Io, step, [51, 61]).unwrap();
+            assert_eq!(pool.request_maintenance(ticket), Ok(WorkerMaintenanceRequest::Requested));
+            assert_eq!(pool.request_maintenance(ticket), Ok(WorkerMaintenanceRequest::Coalesced));
+            assert_eq!(STEPS.load(Ordering::SeqCst), 0);
+            for now in 0..fixture["idleWake"]["cooperativePumpsAtMost"].as_u64().unwrap() {
+                let before = STEPS.load(Ordering::SeqCst);
+                if !pool.pump(now) { break; }
+                assert!(STEPS.load(Ordering::SeqCst) <= before + 1);
+            }
+            assert_eq!(STEPS.load(Ordering::SeqCst), fixture["idleWake"]["steps"].as_u64().unwrap() as usize);
+            let snapshot = pool.try_cooperative_snapshot().unwrap();
+            assert_eq!(snapshot.queued_by_lane.iter().sum::<usize>(), 0);
+            assert_eq!(snapshot.selected_by_lane[Lane::Io.index()], 2);
+            assert!(!pool.has_pending_work());
+            assert!(pool.remove_maintenance_hook(ticket).unwrap());
+            pool.shutdown();
+            assert_eq!(pool.occupancy(), 0);
+            assert_eq!(pool.request_maintenance(ticket), Err(WorkerMaintenanceError::Shutdown));
+            eprintln!("[DEBUG] cooperative maintenance waited for host pumps, used Io DRR and one work permit, coalesced duplicate wakes, and consumed no queued closure");
+        }
+
+        #[test]
+        fn worker_maintenance_cooperative_interleaves_io_jobs_and_rotating_hooks() {
+            use super::*;
+            static ORDER: Mutex<Vec<u64>> = Mutex::new(Vec::new());
+            fn hook(context: [u64; 2]) -> WorkerMaintenanceStep { ORDER.lock().unwrap().push(context[0]); WorkerMaintenanceStep::Idle }
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+            ORDER.lock().unwrap().clear();
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            let mut tickets = Vec::new();
+            for value in fixture["competingWork"]["hooks"].as_array().unwrap() {
+                let ticket = pool.install_maintenance_hook(Lane::Io, hook, [value.as_u64().unwrap(), 0]).unwrap();
+                pool.request_maintenance(ticket).unwrap();
+                tickets.push(ticket);
+            }
+            for value in fixture["competingWork"]["jobs"].as_array().unwrap() { let value = value.as_u64().unwrap(); pool.submit(Lane::Io, Box::new(move || ORDER.lock().unwrap().push(value))); }
+            for now in 0..fixture["idleWake"]["cooperativePumpsAtMost"].as_u64().unwrap() { if !pool.pump(now) { break; } }
+            assert!(!pool.has_pending_work());
+            assert_eq!(serde_json::to_value(&*ORDER.lock().unwrap()).unwrap(), fixture["competingWork"]["order"]);
+            for ticket in tickets { assert!(pool.remove_maintenance_hook(ticket).unwrap()); }
+            pool.shutdown();
+            assert_eq!(pool.occupancy(), 0);
+            eprintln!("[DEBUG] cooperative Io DRR matched the same alternating job/hook order and returned every worker permit");
+        }
+
         include!("🤝️cooperative/🦀️.rs");
     }
 }

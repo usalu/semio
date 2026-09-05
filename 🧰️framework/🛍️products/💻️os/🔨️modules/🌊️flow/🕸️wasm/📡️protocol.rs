@@ -311,7 +311,7 @@ impl<D: FlowDomain> FlowBridge<D> {
             return Err(AbiPortRejection { code: AbiErrorCode::LimitExceeded, message: returned() });
         }
         let code = request.operation.get();
-        if !(FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).contains(&code) {
+        if !(FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).contains(&code) || matches!(code, 2_603 | 2_604 | 2_608) {
             return Err(AbiPortRejection { code: AbiErrorCode::UnknownOperation, message: returned() });
         }
         if code == FLOW_OPERATION_OPEN {
@@ -759,10 +759,10 @@ mod tests {
     #[test]
     fn schema_and_fixtures_publish_every_operation_and_fixed_law() {
         assert!(FLOW_ABI_SCHEMA.contains("\"open\": 2500"));
-        assert!(FLOW_ABI_SCHEMA.contains("\"dwgEncodeMeshJson\": 2608"));
+        assert!(FLOW_ABI_SCHEMA.contains("\"renderDrawingScene\": 2600"));
         assert!(FLOW_ABI_SCHEMA.contains("\"documentJson\": 2609"));
         assert!(FLOW_ABI_SCHEMA.contains("\"synchronizeDocumentJson\": 2610"));
-        for operation in FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST {
+        for operation in (FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).filter(|operation| !matches!(operation, 2_603 | 2_604 | 2_608)) {
             assert!(FLOW_ABI_SCHEMA.contains(&format!(": {operation}")));
         }
         assert!(FLOW_ABI_LIMITS.contains("request_bytes\t1048576\t1048577"));

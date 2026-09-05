@@ -1,19 +1,17 @@
 //! 🔍️ Block 2D play app panel — the inspector: the node kind's identity fields plus a handle count.
 
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::editor::block2d::{block2d_action, ui_value_map, ui_value_text};
 use crate::editor::block2d::terminology::Block2dLabels;
-use semio_framework_plugin::{
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use crate::editor::block2d::{block2d_action, ui_label, ui_text, ui_value_map, ui_value_text};
+use semio_framework_plugin::plugin_app_close_prelude::{field, input, Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const BLOCK2D_BODY_INSPECTOR: &str = "block2d.play.inspector";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -25,46 +23,43 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &'static str) -> UiNode {
-    UiNode::Field(UiFieldNode {
-        presence: UiPresence::default(),
-        id: id.into(),
-        label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            presence: UiPresence::default(),
-            id: format!("{id}.input"),
-            input_kind: "text".into(),
-            value: value.into(),
-            placeholder: None,
-            commit: Some("blur".into()),
-            on_change: block2d_action("patchNodeKind", Some(ui_value_map([("field", ui_value_text(field).expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        menu: None,
-    })
+fn admission(stage: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new("ui.fixed-capacity", stage)
 }
 
-pub async fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "block2d-play-inspector".into(),
-        label: labels.summary.into(),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        fields: vec![
-            text_field("block2d-play-inspector.name", labels.name, &definition.node_kind.name, "name"),
-            text_field("block2d-play-inspector.label", labels.label, &definition.node_kind.label, "label"),
-            text_field("block2d-play-inspector.variant", labels.variant, definition.node_kind.variant.as_deref().unwrap_or(""), "variant"),
-            text_field("block2d-play-inspector.description", labels.description, &definition.node_kind.description, "description"),
-            ui_inspector_readonly_field("block2d-play-inspector.handle-count", labels.handles, definition.handles.len().to_string()),
-        ],
-    }])
+/// ✍️ One editable identity field: a `blur`-committed text control bound to `patchNodeKind` with the
+/// document field name as its only argument (the React interpreter merges `{ value }` at commit).
+fn text_field(id: &str, label: &str, value: &str, document_field: &str) -> UiAssemblyResult<BuiltNode> {
+    let (action, args) = block2d_action("patchNodeKind", Some(ui_value_map([("field", ui_value_text(document_field)?)])?))?;
+    let control = input(InputKind::Text).value(ui_text(value)?).commit(ui_text("blur")?).try_id(format!("{id}.input")).map_err(|_| admission("block2d inspector control id admission failed"))?;
+    let control = match args {
+        Some(args) => control.try_on_with(Trigger::Change, action, args),
+        None => control.try_on(Trigger::Change, action),
+    }
+    .map_err(|_| admission("block2d inspector control binding admission failed"))?
+    .try_build()
+    .map_err(|_| admission("block2d inspector control admission failed"))?;
+    field(ui_label(label)?)
+        .try_id(id)
+        .map_err(|_| admission("block2d inspector field id admission failed"))?
+        .try_child(control)
+        .map_err(|_| admission("block2d inspector field child admission failed"))?
+        .try_build()
+        .map_err(|_| admission("block2d inspector field admission failed"))
+}
+
+pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiAssemblyResult<BuiltNode> {
+    let mut fields = UiFixedList::<BuiltNode>::default();
+    for node in [
+        text_field("block2d-play-inspector.name", labels.name.as_str(), &definition.node_kind.name, "name")?,
+        text_field("block2d-play-inspector.label", labels.label.as_str(), &definition.node_kind.label, "label")?,
+        text_field("block2d-play-inspector.variant", labels.variant.as_str(), definition.node_kind.variant.as_deref().unwrap_or(""), "variant")?,
+        text_field("block2d-play-inspector.description", labels.description.as_str(), &definition.node_kind.description, "description")?,
+        tree_item("block2d-play-inspector.handle-count", format!("{}: {}", labels.handles.as_str(), definition.handles.len()))?,
+    ] {
+        fields.try_push(node).map_err(|_| admission("block2d inspector fields admission failed"))?;
+    }
+    PanelTreeBuilder::new("block2d-play-inspector")?.section("block2d-play-inspector.summary", Some(ui_label(labels.summary.as_str())?), true, fields)?.build()
 }
 //#endregion 🔖️Render
 

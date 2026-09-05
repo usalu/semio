@@ -40,8 +40,20 @@ After the implementation, the independent AJV/Bun oracle passed:
 gis-map-create-region-group-check: checks=22 clean; atomic durable publication not claimed
 ```
 
-The same source gate passed through Nx. The exact native law is registered as `artifacts::gismap::standards::v1::subsets::any::schema::inferences::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image`; its final receipt is pending in the active compile at the time of this checkpoint.
+The same source gate passed through Nx. The exact native law is registered as `artifacts::gismap::standards::v1::subsets::any::schema::inferences::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image`.
 
-## Remaining Boundary
+The September 5 native attempt completed **RED before the selected test ran**. The exact-law build at `🗑️generated/gis-map-create-region-group-exact/exact-cargo-laws-2hMTLS/00` failed compiling `semio-s-plugin-stdio`: 131 errors, with a missing XML protocol include and 10 mutation-owner authority failures causing 120 downstream trait-bound errors. No native pass or typed runtime behavior is claimed. Those diagnostics are being checked against the concurrently changing worktree before a rerun.
+
+## Image Membership Follow-up
+
+Read-only review found misleading helper documentation: a supplied typed image member is preserved, rather than cleared. This is now documented explicitly. Preserving the handle avoids silently discarding artifact membership; the current image-free proposal scope continues to deny that snapshot without mutating it.
+
+The neutral corpus now has four actual membership scenarios: accepted image-free input, forged drawing identity, forged value identity, and a supplied image passed through the derived-children helper. AJV and the independent JavaScript predicate agree on all four. The native law consumes the same corpus, creates a real typed image handle, checks preservation through derivation, verifies rejection reasons, and asserts unchanged input snapshots. The native additions have not yet run.
+
+TDD: the registered Nx source target first failed with `GIS Map native law does not consume membership cases`; after adding the native corpus consumer it passed with **26 checks**. The ordinary root `bun nx` wrapper was temporarily blocked by an unrelated `schema/🌍️change-annex` taxonomy collision. The same registered task was executed through `bun x --no-install nx`, still using Bun and Nx, without changing or disabling taxonomy validation.
+
+## Remaining Durable Boundary
 
 The next MAP packet must open the stable child members through the verified selected member factory, attach their live stores and generations, then feed this work into a prepared durable group visibility transaction. No caller may advertise this planning result as committed or atomic before the durable parent-plus-child receipt exists.
+
+The exact Map work requires **three** participants (parent, drawing, value). A two-member kernel pilot does not establish atomic execution of this proposal. See `📓️terra-map-durable-group-current-frontier.md` for the current port/WAL/read-root gaps and proposed crash/recovery laws.

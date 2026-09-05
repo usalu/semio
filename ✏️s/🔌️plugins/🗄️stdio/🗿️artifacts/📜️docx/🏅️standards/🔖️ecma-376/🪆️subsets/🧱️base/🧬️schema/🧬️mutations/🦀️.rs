@@ -37,7 +37,7 @@ use std::collections::HashMap;
 /// reusing `DocxDiff`'s `pub(crate)` grammar primitives (`hex_encode`/`enc_block`/`enc_style`/
 /// `split_top_level`/...).
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "➕insert-block/🦀️.rs"]
 pub mod insert_block;
@@ -1265,7 +1265,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🟤️set-snapshot/🧪️tests/🌳️bolds-the-tower-run-of-the-opening-paragraph/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🅱️bolds-the-tower-run-of-the-opening-paragraph/🦀️.rs"]
     mod tests_set_snapshot_bolds_the_tower_run_of_the_opening_paragraph;
 }
 //#endregion 🧪️FixtureTests

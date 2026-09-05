@@ -12,7 +12,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   `.../📸️snapshot/💾️binary/📡️component.protocol.semio`,
   `.../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, the committed schema mirror
   `.../🧬️mutations/🟦️component.ts` for the three `DocBlockPath` segment tags, and the semio
-  envelope in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing
+  envelope in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`), importing nothing
   from and transliterating nothing of the Rust it judges. It is registered as the oracle
   `semio-document-python-independent` in `.../📑️document/🔮️oracle/🔣️.json`; the recorded
   no-oracle decision it replaces is gone, because there is now a reference to compare against.
@@ -128,29 +128,29 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed specification vector local://🧫️<id>/🦠️mutation/🔣️.json for the <id> kind
+    Given the committed specification vector local://<fixture>/🦠️mutation/🔣️.json for the <id> kind
     When both implementations apply the vector's mutation to its before-snapshot
     Then each reaches the committed after-snapshot and the two agree
     Examples:
-      | id                  |
-      | no-mutation         |
-      | set-snapshot        |
-      | insert-block        |
-      | remove-block        |
-      | set-block-content   |
-      | set-paragraph-style |
-      | set-heading-level   |
-      | set-list-ordered    |
-      | set-run-text        |
-      | set-run-style       |
-      | set-image-block     |
-      | insert-style        |
-      | remove-style        |
-      | set-style-name      |
-      | set-style-based-on  |
-      | insert-image        |
-      | remove-image        |
-      | set-image-bytes     |
+      | id | fixture |
+      | no-mutation | ⏸️no-mutation |
+      | set-snapshot | 📸️set-snapshot |
+      | insert-block | 🧱️insert-block |
+      | remove-block | 🪓️remove-block |
+      | set-block-content | 📦️set-block-content |
+      | set-paragraph-style | 🪶️set-paragraph-style |
+      | set-heading-level | 📐️set-heading-level |
+      | set-list-ordered | 🔢️set-list-ordered |
+      | set-run-text | 🧵️set-run-text |
+      | set-run-style | 🎨️set-run-style |
+      | set-image-block | 📷️set-image-block |
+      | insert-style | 🧶️insert-style |
+      | remove-style | 🧽️remove-style |
+      | set-style-name | 🏷️set-style-name |
+      | set-style-based-on | 🧬️set-style-based-on |
+      | insert-image | 🖼️insert-image |
+      | remove-image | 🪦️remove-image |
+      | set-image-bytes | 📀️set-image-bytes |
 
   @id-identity-round-trip
   @level-long
@@ -158,6 +158,6 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   Scenario: Re-emit both committed encodings of the real memo from the parsed snapshot
     Given the real committed memo asset://📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio
     And its committed binary twin asset://📚️examples/🗒️memo/🖼️assets/🎒️.pack.semio
-    And the committed specification vector local://🧫️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
+    And the committed specification vector local://⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the memo and on the digests of what they emitted

@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot",
   "semanticKind": "delete-slot",
   "displayName": "Delete Slot",
-  "emoji": "🗑️",
+  "emoji": "🕳️",
   "aggregateVariant": "DeleteSlot",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": null,

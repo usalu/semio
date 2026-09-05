@@ -32,7 +32,7 @@ use protocol::{OpBinary, OpText};
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.gif` (87a).
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "📐set-screen-size/🦀️.rs"]
 pub mod set_screen_size;
@@ -77,7 +77,7 @@ pub enum GifMutation {
 
 /// 🏷️ Wave 7 mutation-oracle catalog: the kebab-case spelling of every `GifMutation` variant, in
 /// declaration order — what `../../🔣️oracle.json`'s `mutationCatalogs[].kinds` and
-/// `../../../../../../🧪️tests/🔮️mutate-gif-87a/🥒️.feature`'s `@id-mutate`/`@id-inverse` row
+/// `../../../../../../🧪️tests/🖼️mutate-gif-87a/🥒️.feature`'s `@id-mutate`/`@id-inverse` row
 /// ids are measured against. `kinds_match_enum_variants_and_manifest_catalog` below is what keeps
 /// this list honest against the enum — the framework never parses Rust, so nothing else notices if
 /// this list and the enum drift apart.
@@ -379,7 +379,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🟤️set-snapshot/🧪️tests/🖼️repaints-the-right-pixel-of-the-single-image/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🖼️repaints-the-right-pixel-of-the-single-image/🦀️.rs"]
     mod tests_set_snapshot_repaints_the_right_pixel_of_the_single_image;
 }
 //#endregion 🧪️FixtureTests

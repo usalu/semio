@@ -43,6 +43,20 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
       }
     },
+    "normalized-presence-rows-source-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts normalized-presence-rows-source-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
+    "normalized-presence-rows-native-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts normalized-presence-rows-native-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+      }
+    },
     "test-browser-worker": {
       "executor": "nx:run-commands",
       "options": {

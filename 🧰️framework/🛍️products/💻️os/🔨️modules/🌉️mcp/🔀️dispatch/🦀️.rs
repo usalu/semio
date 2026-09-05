@@ -418,6 +418,20 @@ impl ActionAdapter {
         Self { channel: Mutex::new(channel), handles, idempotency, audit, policy, client, invocation_counter: AtomicU64::new(0) }
     }
 
+    //#region 💡️Inference
+    /// ⚖️ The one shared decision layer this adapter already owns — handed out (never copied) so a
+    /// facet outside the mutation protocol enforces the SAME granted-scope set against the SAME
+    /// `HandleTable`, rather than standing up a second, disjoint policy engine of its own.
+    pub fn policy(&self) -> &PolicyEngine {
+        &self.policy
+    }
+
+    /// 🎫️ The one shared handle table, for a facet that mints or resolves session-owned handles.
+    pub fn handles(&self) -> &Arc<HandleTable> {
+        &self.handles
+    }
+    //#endregion 💡️Inference
+
     fn next_invocation_id(&self) -> String {
         format!("inv_{}", self.invocation_counter.fetch_add(1, Ordering::Relaxed))
     }

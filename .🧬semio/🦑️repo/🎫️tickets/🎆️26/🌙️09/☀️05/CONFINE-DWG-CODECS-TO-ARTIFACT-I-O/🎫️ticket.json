@@ -1,0 +1,11 @@
+{
+  "title": "Confine DWG Codecs to Artifact I/O",
+  "emoji": "🖊️",
+  "status": "closed",
+  "description": "Remove DWG-specific framework APIs and native-dwg-codec dependency; preserve conversion behavior under DWG artifacts and artifact I/O, with ownership regression checks.",
+  "summary": "Confined DWG codecs to the DWG artifact and consuming artifact I/O. Removed native-dwg-codec and framework DWG APIs; genericized mesh interfaces, rewired artifact conversions and Flow bindings, moved misplaced schema/editor helpers and tests, and added ownership regression checks. Ownership/AJV, declarations, source gates, syntax checks, and focused usvg-to-DWG runtime passed. Full browser run hit the existing WASM trap; native crate tests did not complete dependency compilation. Details in 📓️ownership.md; generated outputs removed.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪ee7cddc57c464f4c9b848bef06b7725b"
+  ]
+}

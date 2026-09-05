@@ -32,7 +32,7 @@ pub enum AssemblyMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`AssemblyMutation`] variant, in declaration order — the exact
 /// vocabulary the `assembly-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `🐸️mutate-assembly-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `🧩️mutate-assembly-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &["create-slot", "delete-slot", "create-rule", "delete-rule", "change-weight", "remove-weight", "connect-slots", "disconnect-slots", "change-seed"];
 //#endregion 🏷️Kinds

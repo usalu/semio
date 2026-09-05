@@ -345,9 +345,6 @@ pub fn out_obj() -> ChannelSpec {
     ChannelSpec::named("O", "Obj", "obj", "ObjExport")
 }
 
-pub fn out_dwg() -> ChannelSpec {
-    ChannelSpec::named("D", "Dwg", "dwg", "DwgExport")
-}
 
 #[allow(
     clippy::too_many_arguments,

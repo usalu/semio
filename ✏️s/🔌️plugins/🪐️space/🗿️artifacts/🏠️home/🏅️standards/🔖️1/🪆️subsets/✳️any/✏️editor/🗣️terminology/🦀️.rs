@@ -20,6 +20,8 @@ app_labels! {
         action_rename: native_en "rename", native_de "umbenennen", reuse_en "rename", reuse_de "umbenennen";
         action_share: native_en "share", native_de "teilen", reuse_en "share", reuse_de "teilen";
         action_delete: native_en "delete", native_de "löschen", reuse_en "delete", reuse_de "löschen";
+        // 🏛️ Author-only administration pane (members, roles, invites) — see `row_actions`.
+        action_manage: native_en "manage", native_de "verwalten", reuse_en "manage", reuse_de "verwalten";
     }
 }
 //#endregion 🔖️Terminology

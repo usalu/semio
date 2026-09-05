@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+      "allowed": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "allowed": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
+      "allowed": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️.rs",
+      "allowed": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧬️schema/🦀️.rs",
+      "allowed": false
+    },
+    {
+      "path": "✏️s/🔌️plugins//🗿️artifacts/🖊️dwg/🦀️.rs",
+      "allowed": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🖊️dwg/🦀️.rs",
+      "allowed": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🧬️schema/🦀️.rs",
+      "allowed": true
+    }
+  ],
+  "forbiddenFrameworkPatterns": [
+    "native-dwg-codec",
+    "semio_s_plugin_stdio::artifacts::dwg",
+    "\\b(?:svg_to_dwg_bytes|dwg_drawing_to_svg|register_mesh_dwg_\\w+|export_dwg\\w*|import_dwg\\w*|dwg_encode_mesh|engine_segment_to_dwg|dwg_segment_to_engine|out_dwg|exportDwg|importDwg|DrawingDwgExportPort|exportDrawingDwg|importDrawingDwg|dwgEncodeMeshJson)\\b",
+    "MeshDwg|mesh_dwg|mesh-dwg"
+  ]
+}

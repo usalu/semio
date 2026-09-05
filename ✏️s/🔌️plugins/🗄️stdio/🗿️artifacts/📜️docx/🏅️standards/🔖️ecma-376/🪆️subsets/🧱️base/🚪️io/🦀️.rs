@@ -63,7 +63,7 @@ pub const REL_TYPE_STYLES: &str = "http://schemas.openxmlformats.org/officeDocum
 /// styles relationship and never the transitional one, so a writer that recognizes only
 /// [`REL_TYPE_STYLES`] concludes the package has no styles relationship and appends a second,
 /// transitional-typed one beside the strict one it just failed to see — real package corruption,
-/// caught by `🦁️mutate-docx-ecma-376-strict`'s differential rows the moment that case first ran a
+/// caught by `📏️mutate-docx-ecma-376-strict`'s differential rows the moment that case first ran a
 /// subject half.
 pub const STRICT_REL_TYPE_STYLES: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships/styles";
 //#endregion 🔖️Constants

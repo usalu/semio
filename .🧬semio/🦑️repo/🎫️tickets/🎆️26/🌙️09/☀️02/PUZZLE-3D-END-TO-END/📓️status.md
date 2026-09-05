@@ -797,3 +797,179 @@ application's process was not taken unilaterally; it is the user's call.
 `setFillCount` migrated, four registry sync points verified on disk. Remaining functional gap:
 `fillBuildTick` needs the live app threaded into `PuzzleCommandWork::step` — all three alternative
 wirings tested and shown to fail, one of them silently.
+
+---
+
+# Session 2026-09-05 (semio-1d)
+
+## What landed
+
+**The interactive-job migration is done for everything that can honestly be migrated today.**
+Puzzle3d went from **8 Migrated / 59 BatchOnlyPendingRewrite** to **57 admitted routes / 8 held back**
+(65 total). Verified by grep against source and by a real run of the publication-authority oracle, not
+by agent report.
+
+The 8 held back, each with a real and distinct reason:
+
+| id | reason |
+|---|---|
+| `fillBuildTick`, `suggestionsTick`, `registerBrushMesh`, `engagementRepeatLast`, `transformBegin`, `transformEnd` | wave S — semantic completions (in flight at time of writing) |
+| `setFillCountStep` | no `build_tool_job` arm; generic reducer's default arm is `_ => {}` — would migrate into a **silent** no-op |
+| `setFixtureJson` | whole-fixture argument (~129KB Nakagin) vs the shared 8,192-byte wire cap |
+
+## The correction that unblocked the wave
+
+The 2026-09-03 note concluded `fillBuildTick` needed a `PuzzleCommandWork::step` signature change
+across 2d/3d/5d because `fill_build_tick_cached` "deliberately does not spawn". Read today, it does:
+it pushes `Effect::SpawnJob { kind: FILL_JOB_KIND, placement: Isolated }` and persists the advanced
+checkpoint. There is **no live app instance** in this design — `with_puzzle3d_app_for` builds a fresh
+`Puzzle3dPlayApp::default()` per call and restores from `config.fill_checkpoint`, which `step()`
+already receives. Local change, no cross-dimension churn. See `📓️findings-2026-09-05.md` §"Correction".
+
+## New permanent tooling
+
+`publication-authority-audit` now takes an optional owner name, so puzzle3d can be verified while
+puzzle2d's fixture is desynced by another session. Unscoped behaviour is unchanged (still audits every
+owner, still fails on Puzzle2d). Registered as an nx target in puzzle-js `📋️project.json` and as
+`📦️audit🧩️puzzle🛂️publication-authority` in `.vscode/🧩️launch.seed.jsonc`; regeneration into
+`.vscode/launch.json` confirmed.
+
+```bash
+bun nx run @semio-tech/puzzle-js:publication-authority-audit -- Puzzle3dPlayApp
+```
+
+## Verification status — read this before trusting anything above
+
+**Nothing is compiler-verified.** `semio-s-plugin-puzzle` depends directly on `semio-s-plugin-stdio`
+(`cargo tree -i`), and stdio is mid-migration under two separate owners:
+- the `✳️base` → `🧱️base` emoji rename (ticket 26/04/08), directories first and references after;
+- the serde → `ToValue`/`FromValue` conversion, which a peer measured at 225 errors with real E0277
+  trait bounds.
+
+What IS verified today:
+- `rustfmt --edition 2021 --emit stdout` on the edited editor file: **exit 0** — it parses.
+- `publication-authority-audit Puzzle3dPlayApp`: **passes**, 57 admitted, hostile-mutation battery
+  rejected, Ajv schema valid.
+- The fixture JSON parses and its group route counts sum to 65.
+
+## Build discipline learned here — do not repeat the loop
+
+A `cargo check` on stdio ran **43 minutes at 1.3% CPU** and was already invalidated when killed: the
+mount gate moved 4 → 14 mid-compile because the owner edited the tree underneath it. **Compiling a
+crate while its owner is actively renaming it cannot finish.** With the box at load 126-137 and 52
+cargo processes, a doomed build also starves the owner you are waiting on.
+
+Current approach: park builds; watch two cheap signals together — mount gate at zero AND no stdio
+`.rs` modified in 5 minutes — for three consecutive polls, then spend ONE build.
+
+**That gate is necessary but not sufficient**: it only sees the rename class. The serde/E0277 class is
+invisible to it. Zero on the gate does not mean stdio compiles.
+
+## Known dead-on-Nakagin actions (not a regression, not delivered either)
+
+`worldRelocate` extent = `objects × 66 + attractions` against `PUZZLE_COMMAND_WORK_ITEMS = 4_096`, so
+it dies above **62 objects**. Nakagin has **180** object instances (recounted from the DSL; an audit
+reported 121). Concrete-forest has **1**, and `default_fixture()` boots concrete-forest — so the app
+starts fine and these fail only after switching example. Same class: `createAttraction`,
+`acceptSuggestion`, `patchInspector`. Fix is tightening the bound (the `× 64` vortices-per-object
+assumption), not raising the cap.
+
+## Final migration state (2026-09-05, after wave F)
+
+**62 of 65 routes admitted.** Session start was 6 migrated / 61 dead.
+
+Verified by a real run of `publication-authority-audit Puzzle3dPlayApp` (exit 0, 62 ids in `admitted=`),
+plus `rustfmt --edition 2021 --emit stdout` exit 0 on the editor file. Source declarations read
+64 `Migrated` / 3 `BatchOnlyPendingRewrite`.
+
+### The 3 held back, each for a proven structural reason — not "not done yet"
+
+| id | reason | evidence |
+|---|---|---|
+| `transformBegin`, `transformEnd` | genuine no-ops today | `EditorApp<E>` holds no `E` instance and `Puzzle3dConfig` has no field bridging the gumball scratch session the way `fill_checkpoint` bridges fill state, so `handle_action_impl` returns `Emit::default()`. `NoopPuzzleCommandWork` already matches reality exactly; migrating them would be cosmetic. |
+| `setFixtureJson` | payload cannot fit the transport | argument is a whole fixture (~129KB Nakagin) against the shared 8,192-byte `PUZZLE_COMMAND_RAW_BYTES` cap; rejected at dispatch with `ToolDispatchError::RawWireLimit`. Needs a chunked wire path, not a wiring change. |
+
+### Wave F closed a handover gap worth noting
+
+Waves S and E ran with disjoint write-locks on one file — S owned the `Work` bodies, E owned the
+registration lists. S gave `fillBuildTick`, `suggestionsTick`, `registerBrushMesh` and
+`engagementRepeatLast` real completions (delegating to `puzzle3d_retained_reduce`), but could not
+register them; E's follow-up pass only picked up `setFillCountStep`. **Four working implementations sat
+declared `BatchOnlyPendingRewrite` and therefore dead at the UI.** Write-lock partitioning prevents
+collisions but silently creates seams; the seam needs its own closing pass.
+
+### Wave F also caught the lane trap
+
+All four sat in a fixture group declared `["HostOnly"]` — accurate when their completions were empty
+stubs, wrong once they emitted real mutations. Traced per route and corrected to `["Config"]`:
+
+- `fillBuildTick` — `fill_build_tick_cached` returns `config_mutations` + `effects`, never artifact
+  mutations (`🎮️commands/🪣️fill-build-tick/🦀️.rs:35-53`).
+- `registerBrushMesh` / `suggestionsTick` — absent from `puzzle3d_action_document_intent`
+  (`✏️editor/🦀️.rs:443-468`) so artifact mutations are unconditionally empty; present in
+  `puzzle3d_action_uses_precompute`, so a fill-checkpoint diff yields config mutations.
+- `engagementRepeatLast` — a `document_action`, so it unconditionally clears `fill_checkpoint`
+  (config mutation), but never touches `scene.fixture`, so artifact mutations stay empty.
+
+Declaring `HostOnly` while emitting config mutations trips the runtime gate at
+`🔌️plugin/🦀️.rs:22897-22904`. Caught before it shipped.
+
+### Path note
+
+The publication-authority fixture now lives at `✏️s/🔌️plugins/🧩️puzzle/🔏️publication-authority/🔣️.json`
+(`🔏️`, not `🧪️`) — renamed by the emoji-enforcement wave during this session.
+
+## ✅️ COMPILER VERIFICATION ACHIEVED — 2026-09-05 15:58
+
+`cargo check -p semio-s-plugin-puzzle --lib` (isolated `target-p3d-e2e`, `RUSTC_WRAPPER=""`):
+
+```
+Finished `dev` profile [unoptimized] target(s) in 76m 50s
+errors = 0
+puzzle warnings = 277   (3d: 129, 5d: 114)
+stdio warnings  = 1479
+```
+
+The warning counts are the proof this was a real type-check rather than an abort during module
+expansion — the discriminator that exposed two false "clean" readings earlier in this ticket.
+
+**Everything this session changed in puzzle3d compiles**: 62 migrated routes, wave S's `Work`
+completions delegating to `puzzle3d_retained_reduce`, the four tightened `extent()` bounds, the
+`Puzzle3dPatchInspectorWork` off-by-one fix, and 35 test declarations.
+
+### The last blocker, and why fixing it was in scope
+
+The prior attempt reached puzzle's crate with **4 errors, all in puzzle5d** — never 3d:
+
+```
+🗿️artifacts/🖐️5d/…/✏️editor/🦀️.rs:2244, 2324, 2604, 3861
+error[E0004]: non-exhaustive patterns: `Ok(PluginCloseStep::AwaitingInput { .. })` not covered
+```
+
+The framework added a `PluginCloseStep::AwaitingInput` variant; 5d's four `close_step` matches predated
+it. Not this ticket's code — but it blocked the whole crate, hence the wasm build, hence `dev 3d`.
+
+Ownership checked before touching it: 5d's editor had not been modified in 13 hours, so no live owner.
+The treatment was not invented — the framework's own code already handles this variant at
+`🔌️plugin/🦀️.rs:13730` and `:14250` as:
+
+```rust
+Ok(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) | Err(_) => …::Blocked,
+```
+
+Applied verbatim to all four sites.
+
+**Process note:** the first patch asserted 3 occurrences (guessed from a `head -3` of monitor output)
+and correctly refused to apply. Pulling the real flagged line numbers from the log showed **4**. Same
+falsely-confident-from-truncated-output family as the rest of this ticket's traps; the assertion caught it.
+
+### Storybook livelock — diagnosed and cleared
+
+`iframe.html` never appeared despite ~80 minutes of apparent progress. Cause was not a slow build:
+**three concurrent `storybook build` processes** (25 min, 23 min, 11 min old) were writing to and
+cleaning the same `--output-dir`, each destroying the others' work. A subagent that had reported
+completion still held a live process re-launching them.
+
+Ancestry was traced before killing anything (`ps -o ppid` chain to PID 3405) and confirmed to be this
+session, not a peer — with nine sessions on this box, killing by name alone would eventually destroy
+someone else's work. Clearing them dropped load from **517 → 67**.

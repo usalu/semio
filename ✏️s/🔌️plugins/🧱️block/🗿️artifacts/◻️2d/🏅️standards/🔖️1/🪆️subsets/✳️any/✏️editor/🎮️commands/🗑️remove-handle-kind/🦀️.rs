@@ -12,6 +12,6 @@ pub struct RemoveHandleKind {
     pub id: String,
 }
 
-pub async fn handle(payload: &RemoveHandleKind, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveHandleKind, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![crate::artifacts::block2d::mutations::delete_handle_kind(payload.id.clone())]))
 }

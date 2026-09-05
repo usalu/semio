@@ -65,7 +65,7 @@ pub enum Puzzle2dMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Puzzle2dMutation`] variant, in declaration order — the exact
 /// vocabulary the `puzzle-2d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `🐧️mutate-puzzle-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `◻️mutate-puzzle-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "create-node",

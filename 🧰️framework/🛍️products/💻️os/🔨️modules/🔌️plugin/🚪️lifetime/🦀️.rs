@@ -26,9 +26,9 @@ impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
     /// 🧾️ Verifies app and worker-session emptiness, not quarantine absence or a generic idle turn.
     pub fn is_retired(&self) -> Result<bool, Fault> {
         let Some(state) = self.admitted.as_ref() else { return Ok(false) };
-        match state.status.load(Ordering::SeqCst) {
-            RUNTIME_CLOSE_FAULT => return Err(plugin_internal_fault("captured app close faulted before terminal ownership")),
-            RUNTIME_CLOSE_COMPLETE => {},
+        match RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)) {
+            RuntimeCloseStatus::Fault(cause) => return Err(runtime_cleanup_fault("close", cause, self.instance_id, state.last_callback_elapsed_us.load(Ordering::SeqCst))),
+            RuntimeCloseStatus::Complete => {},
             _ => return Ok(false),
         }
         let cell = match state.cell.try_lock() {

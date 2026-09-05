@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "document", "commands", "commitEnds", "cuts", "lifecycle", "fragmentCopies"],
+  "properties": {
+    "schema": { "const": "wal-tail-only-recovery-v1" },
+    "document": { "const": "d" },
+    "commands": { "const": ["a", "b"] },
+    "commitEnds": { "const": [129, 258, 387] },
+    "fragmentCopies": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["offset", "length", "crc32c"],
+        "properties": {
+          "offset": { "type": "integer", "minimum": 0, "maximum": 16384 },
+          "length": { "type": "integer", "minimum": 1, "maximum": 32787 },
+          "crc32c": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+        }
+      }
+    },
+    "cuts": {
+      "type": "array", "minItems": 18, "maxItems": 18,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["cut", "trustedEnd", "recoveredEnd", "nextTxId"],
+        "properties": {
+          "cut": { "type": "integer", "minimum": 0, "maximum": 387 },
+          "trustedEnd": { "enum": [0, 32, 129, 258, 387] },
+          "recoveredEnd": { "enum": [129, 258, 387] },
+          "nextTxId": { "enum": [1, 2, 3] }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "array", "minItems": 18, "maxItems": 18,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "accepted"],
+        "properties": {
+          "name": { "enum": ["missing", "highest-sealed", "successor-empty", "successor-partial", "successor-header", "compacted-clean", "compacted-empty", "compacted-header", "sealed-torn", "sealed-empty", "earlier-active", "corrupt-crc", "partial-header-mismatch", "wrong-document", "wrong-chain", "index-gap", "exhausted-tx", "exhausted-segment"] },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

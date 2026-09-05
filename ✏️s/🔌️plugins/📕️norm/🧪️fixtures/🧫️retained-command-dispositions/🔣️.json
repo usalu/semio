@@ -1,28 +1,41 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "schemaVersion": 1,
-  "publicationContracts": [],
+  "schemaVersion": 2,
+  "factory": {
+    "type": "NormBoundedCommandJobFactory",
+    "payloadSchema": "norm.tool-command.v1",
+    "maximumRawBytes": 8192,
+    "shared": true
+  },
+  "publicationContracts": [
+    { "toolId": "setSnapshot", "lanes": ["Artifact"] },
+    { "toolId": "evaluate", "lanes": ["HostOnly"] },
+    { "toolId": "setSelectedCheckIndex", "lanes": ["Config"] }
+  ],
   "routes": [
     {
       "id": "setSnapshot",
       "emittedLanes": ["artifact"],
-      "execution": "resumable",
-      "admission": "batchOnlyPendingRewrite",
-      "blocker": "Whole-document DSL parsing and semantic diffing need a persistent byte/item cursor plus exact artifact Store preparation authority."
+      "publicationLanes": ["Artifact"],
+      "execution": "bounded",
+      "admission": "migrated",
+      "reducer": "🎮️commands/📤️set-snapshot — XMutation::from_snapshot bundled as one described edit"
     },
     {
       "id": "evaluate",
       "emittedLanes": [],
-      "execution": "placeholder",
-      "admission": "batchOnlyPendingRewrite",
-      "blocker": "The current reducer is an inert placeholder, so it has no honest retained completion to publish."
+      "publicationLanes": ["HostOnly"],
+      "execution": "bounded",
+      "admission": "migrated",
+      "reducer": "🎮️commands/🧮️evaluate — the report is derived on every read, so the reducer emits nothing"
     },
     {
       "id": "setSelectedCheckIndex",
       "emittedLanes": ["config"],
+      "publicationLanes": ["Config"],
       "execution": "bounded",
-      "admission": "batchOnlyPendingRewrite",
-      "blocker": "The exact Config Store one-item preparation factory is absent from every Norm editor owner."
+      "admission": "migrated",
+      "reducer": "🎮️commands/☑️selected-check — NormConfigMutation::ChangeSelectedCheckIndex"
     }
   ],
   "apps": [
@@ -46,8 +59,8 @@
     "apps": 15,
     "routesPerApp": 3,
     "identities": 45,
-    "retained": 0,
-    "batchOnlyPendingRewrite": 45
+    "retained": 45,
+    "batchOnlyPendingRewrite": 0
   },
   "oracle": {
     "library": "serde_json",

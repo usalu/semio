@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "switches-the-active-pane-to-the-building-model",
-              "directoryName": "🧪️switches-the-active-pane-to-the-building-model"
+              "directoryName": "🏗️switches-the-active-pane-to-the-building-model"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "hides-the-shape-reference",
-              "directoryName": "🧪️hides-the-shape-reference"
+              "directoryName": "🙈️hides-the-shape-reference"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "unlocks-the-shape-reference",
-              "directoryName": "🧪️unlocks-the-shape-reference"
+              "directoryName": "🔓️unlocks-the-shape-reference"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "widens-the-shape-reference-plane",
-              "directoryName": "🧪️widens-the-shape-reference-plane"
+              "directoryName": "↔️widens-the-shape-reference-plane"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "rehandles-the-occupied-building-slot",
-              "directoryName": "🧪️rehandles-the-occupied-building-slot"
+              "directoryName": "🏢️rehandles-the-occupied-building-slot"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "appends-drawing-2",
-              "directoryName": "🧪️appends-drawing-2"
+              "directoryName": "📐️appends-drawing-2"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "rehandles-the-occupied-energy-slot",
-              "directoryName": "🧪️rehandles-the-occupied-energy-slot"
+              "directoryName": "⚡️rehandles-the-occupied-energy-slot"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "appends-node-3",
-              "directoryName": "🧪️appends-node-3"
+              "directoryName": "🌱️appends-node-3"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "rehandles-the-occupied-shape-slot",
-              "directoryName": "🧪️rehandles-the-occupied-shape-slot"
+              "directoryName": "🧱️rehandles-the-occupied-shape-slot"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "rehandles-the-occupied-structure-classic-slot",
-              "directoryName": "🧪️rehandles-the-occupied-structure-classic-slot"
+              "directoryName": "🏛️rehandles-the-occupied-structure-classic-slot"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "vacates-the-building-slot",
-              "directoryName": "🧪️vacates-the-building-slot"
+              "directoryName": "🏚️vacates-the-building-slot"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "removes-drawing-1",
-              "directoryName": "🧪️removes-drawing-1"
+              "directoryName": "🚫️removes-drawing-1"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "vacates-the-energy-slot",
-              "directoryName": "🧪️vacates-the-energy-slot"
+              "directoryName": "🔌️vacates-the-energy-slot"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "removes-node-2",
-              "directoryName": "🧪️removes-node-2"
+              "directoryName": "🚫️removes-node-2"
             }
           ]
         },
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "vacates-the-shape-slot",
-              "directoryName": "🧪️vacates-the-shape-slot"
+              "directoryName": "🕳️vacates-the-shape-slot"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "vacates-the-structure-classic-slot",
-              "directoryName": "🧪️vacates-the-structure-classic-slot"
+              "directoryName": "🏚️vacates-the-structure-classic-slot"
             }
           ]
         },
@@ -241,7 +241,7 @@
           "scenarios": [
             {
               "id": "moves-the-shape-reference-off-origin",
-              "directoryName": "🧪️moves-the-shape-reference-off-origin"
+              "directoryName": "📍️moves-the-shape-reference-off-origin"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "relabels-the-root-node",
-              "directoryName": "🧪️relabels-the-root-node"
+              "directoryName": "🔤️relabels-the-root-node"
             }
           ]
         },
@@ -263,7 +263,7 @@
           "scenarios": [
             {
               "id": "reattaches-the-shape-reference-to-a-new-plan",
-              "directoryName": "🧪️reattaches-the-shape-reference-to-a-new-plan"
+              "directoryName": "🖼️reattaches-the-shape-reference-to-a-new-plan"
             }
           ]
         },
@@ -274,7 +274,7 @@
           "scenarios": [
             {
               "id": "swaps-the-shape-reference-list",
-              "directoryName": "🧪️swaps-the-shape-reference-list"
+              "directoryName": "🔄️swaps-the-shape-reference-list"
             }
           ]
         }

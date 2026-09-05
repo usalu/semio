@@ -304,6 +304,18 @@ export type UiTranslationSchema = {
       readonly subtractive: UiLabelValue;
       readonly invertive: UiLabelValue;
     };
+    /** 🩺️ Accessible status vocabulary for a window whose body stayed empty because its plugin
+     * instance faulted — one entry per `WindowFaultClass`, so the shell names the discriminated
+     * cause the plugin runtime already put in `Fault.code` instead of rendering a blank surface. */
+    readonly windowFault: {
+      readonly title: UiLabelValue;
+      readonly abiMismatch: UiLabelValue;
+      readonly interactiveCeiling: UiLabelValue;
+      readonly clock: UiLabelValue;
+      readonly pluginInternal: UiLabelValue;
+      readonly installFailed: UiLabelValue;
+      readonly unknown: UiLabelValue;
+    };
     readonly common: {
       readonly mixedValues: UiLabelValue;
       readonly name: UiLabelValue;

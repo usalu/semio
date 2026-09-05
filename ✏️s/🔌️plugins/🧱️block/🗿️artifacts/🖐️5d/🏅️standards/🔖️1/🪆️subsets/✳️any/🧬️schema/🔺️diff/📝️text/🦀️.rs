@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Apply
-async fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added: &[T], patched: &[(String, Option<T>)], reordered: &Option<Vec<String>>, id_of: impl Fn(&T) -> &str) -> protocol::MutationApplyResult<Vec<T>> {
+fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added: &[T], patched: &[(String, Option<T>)], reordered: &Option<Vec<String>>, id_of: impl Fn(&T) -> &str) -> protocol::MutationApplyResult<Vec<T>> {
     let mut next = items.to_vec();
     let mut seen = std::collections::HashSet::new();
     for id in removed {
@@ -77,7 +77,7 @@ macro_rules! apply_delta {
 
 impl Block5dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &Block5dArtifact) -> protocol::MutationApplyResult<Block5dArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &Block5dArtifact) -> protocol::MutationApplyResult<Block5dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -134,7 +134,7 @@ impl Block5dDiff {
 }
 
 impl MutationDiff<Block5dSnapshot> for Block5dDiff {
-    async fn apply(&self, snapshot: &Block5dSnapshot) -> protocol::MutationApplyResult<Block5dSnapshot> {
+    fn apply(&self, snapshot: &Block5dSnapshot) -> protocol::MutationApplyResult<Block5dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -182,7 +182,7 @@ impl MutationDiff<Block5dSnapshot> for Block5dDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -204,7 +204,7 @@ impl MutationDiff<Block5dSnapshot> for Block5dDiff {
         take!(meta);
         take!(selected_ids);
         take!(locale);
-        async fn absorb_col<D>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
+        fn absorb_col<D>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
             if let Some(src) = incoming {
                 match target {
                     Some(dst) => merge(dst, src),
@@ -262,11 +262,11 @@ impl Block5dHasId for BlockAttribute {
         &self.key
     }
 }
-pub(crate) async fn block5d_index_of<T: Block5dHasId>(items: &[T], id: &str) -> Option<usize> {
+pub(crate) fn block5d_index_of<T: Block5dHasId>(items: &[T], id: &str) -> Option<usize> {
     items.iter().position(|item| item.id() == id)
 }
 
-pub async fn diff_set_representation(index: usize, item: BlockRepresentation, base: &Block5dSnapshot) -> Block5dDiff {
+pub fn diff_set_representation(index: usize, item: BlockRepresentation, base: &Block5dSnapshot) -> Block5dDiff {
     let mut delta = Block5dRepresentationsDelta { added: vec![item.clone()], ..Default::default() };
     if block5d_index_of(&base.representations, &item.id).is_none() {
         let mut order: Vec<_> = base.representations.iter().map(|e| e.id.clone()).collect();
@@ -275,10 +275,10 @@ pub async fn diff_set_representation(index: usize, item: BlockRepresentation, ba
     }
     Block5dDiff { representations: Some(delta), ..Default::default() }
 }
-pub async fn diff_remove_representation(id: String) -> Block5dDiff {
+pub fn diff_remove_representation(id: String) -> Block5dDiff {
     Block5dDiff { representations: Some(Block5dRepresentationsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-pub async fn diff_set_grip_kind(index: usize, item: Block5dGripKind, base: &Block5dSnapshot) -> Block5dDiff {
+pub fn diff_set_grip_kind(index: usize, item: Block5dGripKind, base: &Block5dSnapshot) -> Block5dDiff {
     let mut delta = Block5dGripKindsDelta { added: vec![item.clone()], ..Default::default() };
     if block5d_index_of(&base.grip_kinds, &item.id).is_none() {
         let mut order: Vec<_> = base.grip_kinds.iter().map(|e| e.id.clone()).collect();
@@ -287,10 +287,10 @@ pub async fn diff_set_grip_kind(index: usize, item: Block5dGripKind, base: &Bloc
     }
     Block5dDiff { grip_kinds: Some(delta), ..Default::default() }
 }
-pub async fn diff_remove_grip_kind(id: String) -> Block5dDiff {
+pub fn diff_remove_grip_kind(id: String) -> Block5dDiff {
     Block5dDiff { grip_kinds: Some(Block5dGripKindsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-pub async fn diff_set_grip(index: usize, item: Block5dGripTemplate, base: &Block5dSnapshot) -> Block5dDiff {
+pub fn diff_set_grip(index: usize, item: Block5dGripTemplate, base: &Block5dSnapshot) -> Block5dDiff {
     let mut delta = Block5dGripsDelta { added: vec![item.clone()], ..Default::default() };
     if block5d_index_of(&base.grips, &item.id).is_none() {
         let mut order: Vec<_> = base.grips.iter().map(|e| e.id.clone()).collect();
@@ -299,10 +299,10 @@ pub async fn diff_set_grip(index: usize, item: Block5dGripTemplate, base: &Block
     }
     Block5dDiff { grips: Some(delta), ..Default::default() }
 }
-pub async fn diff_remove_grip(id: String) -> Block5dDiff {
+pub fn diff_remove_grip(id: String) -> Block5dDiff {
     Block5dDiff { grips: Some(Block5dGripsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-pub async fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, base: &Block5dSnapshot) -> Block5dDiff {
+pub fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityRule, base: &Block5dSnapshot) -> Block5dDiff {
     let mut delta = Block5dCompatibilityDelta { added: vec![rule.clone()], ..Default::default() };
     if block5d_index_of(&base.compatibility, &rule.id).is_none() {
         let mut order: Vec<_> = base.compatibility.iter().map(|e| e.id.clone()).collect();
@@ -311,10 +311,10 @@ pub async fn diff_set_compatibility_rule(index: usize, rule: BlockCompatibilityR
     }
     Block5dDiff { compatibility: Some(delta), ..Default::default() }
 }
-pub async fn diff_remove_compatibility_rule(id: String) -> Block5dDiff {
+pub fn diff_remove_compatibility_rule(id: String) -> Block5dDiff {
     Block5dDiff { compatibility: Some(Block5dCompatibilityDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
-pub async fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block5dSnapshot) -> Block5dDiff {
+pub fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &Block5dSnapshot) -> Block5dDiff {
     let mut delta = Block5dAttributesDelta { added: vec![attribute.clone()], ..Default::default() };
     if block5d_index_of(&base.attributes, &attribute.key).is_none() {
         let mut order: Vec<_> = base.attributes.iter().map(|e| e.key.clone()).collect();
@@ -323,10 +323,10 @@ pub async fn diff_set_attribute(index: usize, attribute: BlockAttribute, base: &
     }
     Block5dDiff { attributes: Some(delta), ..Default::default() }
 }
-pub async fn diff_remove_attribute(key: String) -> Block5dDiff {
+pub fn diff_remove_attribute(key: String) -> Block5dDiff {
     Block5dDiff { attributes: Some(Block5dAttributesDelta { removed: vec![key], ..Default::default() }), ..Default::default() }
 }
-pub async fn diff_set_snapshot(snapshot: Block5dSnapshot) -> Block5dDiff {
+pub fn diff_set_snapshot(snapshot: Block5dSnapshot) -> Block5dDiff {
     Block5dDiff { artifact: Some(Box::new(Block5dArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️DiffHelpers

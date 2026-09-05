@@ -81,9 +81,9 @@ export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition 
       interactions: [],
       ordered: false,
       logos: [
-        { src: demonstratorLogoUrl("🏢️bmwsb.png"), darkSrc: demonstratorLogoUrl("🌃️bmwsb-dark.png"), alt: "Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen", href: "https://www.bmwsb.bund.de" },
-        { src: demonstratorLogoUrl("🏛️bbsr.png"), darkSrc: demonstratorLogoUrl("🌙️bbsr-dark.png"), alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
-        { src: demonstratorLogoUrl("🔮️zukunft-bau.png"), darkSrc: demonstratorLogoUrl("🌌️zukunft-bau-dark.png"), alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
+        { src: demonstratorLogoUrl("🏢️bmwsb/☀️logo.png"), darkSrc: demonstratorLogoUrl("🏢️bmwsb/🌙️logo-dark.png"), alt: "Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen", href: "https://www.bmwsb.bund.de" },
+        { src: demonstratorLogoUrl("🏛️bbsr/☀️logo.png"), darkSrc: demonstratorLogoUrl("🏛️bbsr/🌙️logo-dark.png"), alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
+        { src: demonstratorLogoUrl("🔮️zukunft-bau/☀️logo.png"), darkSrc: demonstratorLogoUrl("🔮️zukunft-bau/🌙️logo-dark.png"), alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
       ],
       demonstrations: [],
     },

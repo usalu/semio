@@ -113,7 +113,7 @@
       "comparisonProfiles": [
         "semantic-step-v1"
       ],
-      "rationale": "📖️ F1 (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). Mirrors the sibling `steputils-step-ap214-base-mutate-reader` entry registered for `base`, scoped to `cc6`'s own `step-ap214-cc6-mutate` capability — this subset shares the exact same real committed fixture (`shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`) and entity vocabulary as `base`, just filtered to this conformance class. steputils 0.1 (mozman, MIT) both READS (`p21.readfile`) and WRITES (`StepFile.save`) real ISO 10303-21 Part-21 text — verified directly this session by round-tripping this subset's own fixture and diffing the result: a real parse into typed `Entity`/`ParameterList`/`Reference`/`Keyword` objects, re-serialized through steputils' own writer, never through this repository's `ruststep`-adjacent or production STEP writer. Used here as the generator for every `fixtureManifests[]` entry below this rationale registers: `before` is this fixture round-tripped unmodified, `after` is the same load with exactly one raw entity/header edit applied through steputils' own object model before saving — so both sides of every diff are genuinely produced by an independent third-party parser+writer, never predicted by this repository's own StepMutation/StepDiff implementation."
+      "rationale": "📖️ F1 (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). Mirrors the sibling `steputils-step-ap214-base-mutate-reader` entry registered for `base`, scoped to `cc6`'s own `step-ap214-cc6-mutate` capability — this subset shares the exact same real committed fixture (`shared://🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`) and entity vocabulary as `base`, just filtered to this conformance class. steputils 0.1 (mozman, MIT) both READS (`p21.readfile`) and WRITES (`StepFile.save`) real ISO 10303-21 Part-21 text — verified directly this session by round-tripping this subset's own fixture and diffing the result: a real parse into typed `Entity`/`ParameterList`/`Reference`/`Keyword` objects, re-serialized through steputils' own writer, never through this repository's `ruststep`-adjacent or production STEP writer. Used here as the generator for every `fixtureManifests[]` entry below this rationale registers: `before` is this fixture round-tripped unmodified, `after` is the same load with exactly one raw entity/header edit applied through steputils' own object model before saving — so both sides of every diff are genuinely produced by an independent third-party parser+writer, never predicted by this repository's own StepMutation/StepDiff implementation."
     }
   ],
   "noOracleDecisions": [],
@@ -890,8 +890,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔬️cut-bore-scale-1e3/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c88a265fb5982d96cd7fae52d17013ff47749fb6b73ab70e7318858b15fa9c52",
-          "bytes": 552
+          "sha256": "sha256:4481839a811f6db4a3bc9fe59deed8e4755f7012dfb6ba8392a35cbfe7edddba",
+          "bytes": 559
         }
       ],
       "generator": {
@@ -966,8 +966,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🕳️cut-bored-box-through/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:bfecac592fc47a140f5f7c7041cd1b04cb248c1cefe62bccbc55326cdc9d332a",
-          "bytes": 545
+          "sha256": "sha256:9203569cc6c2b900f2c010f9aa0f964b6bcd87e0628ba4f464d07f83e9e9fec4",
+          "bytes": 552
         }
       ],
       "generator": {
@@ -1042,8 +1042,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧵️cut-box-across-cylinder-seam/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4c4a2ff21a6a23a3ce49e7760bc880d4ddc7f7deb2621730099f42156ea4deaa",
-          "bytes": 584
+          "sha256": "sha256:c7321b9790c480ca46b489725539d37392da2b2fc63aa953c8514e16417d2791",
+          "bytes": 591
         }
       ],
       "generator": {
@@ -1118,8 +1118,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌐️cut-box-across-sphere-pole/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:88bb78588e64e898a6b90e4a47d2d986b4999344fe2e8502f5b7e054088e098b",
-          "bytes": 575
+          "sha256": "sha256:ca508997ede704f5cc7fe127c38e895fbc6dd02ae45de836c6c3df3e3022c04b",
+          "bytes": 582
         }
       ],
       "generator": {
@@ -1201,8 +1201,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔗️cut-chain-order-b-then-c/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4bdd4b4613e3fc8ac8dfc651676a962907bf27b7579a85bacb745606182b504e",
-          "bytes": 548
+          "sha256": "sha256:a5a938def8115caaa546d3e6235a4f4e612e94fe078e7816e9fc34ae40fab706",
+          "bytes": 555
         }
       ],
       "generator": {
@@ -1284,8 +1284,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/⛓️cut-chain-order-c-then-b/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4bdd4b4613e3fc8ac8dfc651676a962907bf27b7579a85bacb745606182b504e",
-          "bytes": 548
+          "sha256": "sha256:a5a938def8115caaa546d3e6235a4f4e612e94fe078e7816e9fc34ae40fab706",
+          "bytes": 555
         }
       ],
       "generator": {
@@ -1353,8 +1353,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔟cut-chain-ten-sequential/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3321bf6fe169893e3a9270df0f63c5abdb922ed59d75bdeb76cfdc623402831c",
-          "bytes": 549
+          "sha256": "sha256:51a15173c573aaa3febdc6a96441b71ee9f0ffdc96b48785f2abc53f2775c372",
+          "bytes": 556
         }
       ],
       "generator": {
@@ -1429,8 +1429,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪞️cut-coincident-faces/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:9adbbd8e7a603d6887447c7c92f91332219505735cee163ab3cb20cf3fcee054",
-          "bytes": 520
+          "sha256": "sha256:5f1f310b85a590dde6a036dd158c17c236eef1490aa29e89e85a6c42abafc0e9",
+          "bytes": 527
         }
       ],
       "generator": {
@@ -1505,8 +1505,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🫧️cut-compound-spheres-from-block/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4fa40e1cf8799925942a911000ea2cabd3170f2e4f8e92b117a019b4725d8ace",
-          "bytes": 549
+          "sha256": "sha256:fef7462bd37568329e852df390acfd2e7798e0493aab55d827485ea082ad0903",
+          "bytes": 556
         }
       ],
       "generator": {
@@ -1581,8 +1581,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🍦️cut-cone-from-cylinder/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c96a88fb376d9a51a7fa79f35d9934c9239285c0b67aeb3607a6d3e598e68aeb",
-          "bytes": 580
+          "sha256": "sha256:6fccddbb1baafcbb32dde8a81e500869c598a2eeb60e532c45aa7775887f5173",
+          "bytes": 587
         }
       ],
       "generator": {
@@ -1657,8 +1657,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📥️cut-contained-operand/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:fa9168d62af0477c7a24caa7bfa5fe7a2c38894ed004378564eb7eb2b3c8398a",
-          "bytes": 531
+          "sha256": "sha256:c08c8d77fdc39d12a0f6829248e35e664b0ad296683ffaf7ecf89d581bb945f9",
+          "bytes": 538
         }
       ],
       "generator": {
@@ -1733,8 +1733,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📐️cut-coplanar-face-cutter/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:519e961f660adad340e92f4ae81aea18cc3fede5767850b735605537f8d156d4",
-          "bytes": 533
+          "sha256": "sha256:a814d41cf4cfafbebbb5d0f25a97bb2c791ae04fe59342a38e96a5068638c92f",
+          "bytes": 540
         }
       ],
       "generator": {
@@ -1809,8 +1809,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📴️cut-disconnected-result/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:39359ca68d7fb1b384c1b3ba7b0eba9c19e2f72f5f550740a0ba8c2fe5221087",
-          "bytes": 531
+          "sha256": "sha256:294d4b31675551e2e8775c1ce7ce563f0f1fb395e974418b334469fa6eac18f1",
+          "bytes": 538
         }
       ],
       "generator": {
@@ -1885,8 +1885,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/↔️cut-disjoint-operands/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:f741d8f916b92933752d8ff3ca56fbeba1fa552e4b6438afcb7c42214bb025a5",
-          "bytes": 526
+          "sha256": "sha256:de6720cca3d485c59a0cb40c6a8e4c2bd71669ae6693a53aea2f235ab84d3714",
+          "bytes": 533
         }
       ],
       "generator": {
@@ -1961,8 +1961,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📏️cut-edge-touching-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:f741d8f916b92933752d8ff3ca56fbeba1fa552e4b6438afcb7c42214bb025a5",
-          "bytes": 526
+          "sha256": "sha256:de6720cca3d485c59a0cb40c6a8e4c2bd71669ae6693a53aea2f235ab84d3714",
+          "bytes": 533
         }
       ],
       "generator": {
@@ -2037,8 +2037,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🟫️cut-face-touching-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:f741d8f916b92933752d8ff3ca56fbeba1fa552e4b6438afcb7c42214bb025a5",
-          "bytes": 526
+          "sha256": "sha256:de6720cca3d485c59a0cb40c6a8e4c2bd71669ae6693a53aea2f235ab84d3714",
+          "bytes": 533
         }
       ],
       "generator": {
@@ -2113,8 +2113,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🥟️cut-filleted-boss-pocket/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:0f3cddd334c7fd41a24f8a1b7fc2fb62f52d9087d28069d006b66d51678baaec",
-          "bytes": 549
+          "sha256": "sha256:88ef73101a0da9db5a2bbb6ad7509fcc00b53ea5db9f9695946fbb05070bfa39",
+          "bytes": 556
         }
       ],
       "generator": {
@@ -2251,8 +2251,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧬️cut-helical-coil-groove/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a9191d13bbbc62ce7ef003b54fa3c925b955f31d4537058de944d31e09d6227e",
-          "bytes": 558
+          "sha256": "sha256:9765d0f3cb9175efe229db0e8b8a0c51c35aa7ffef81ee1e77f1560150b22ee9",
+          "bytes": 565
         }
       ],
       "generator": {
@@ -2327,8 +2327,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📊️cut-high-aspect-ratio-bore/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:212100f5160729444d1207f558ed70c0171492e90dcead8173db4bcae45a42a7",
-          "bytes": 549
+          "sha256": "sha256:9d70218ff3deca97afbda88081cf1faf3e36bf65ca6c44375daabcde7136036f",
+          "bytes": 556
         }
       ],
       "generator": {
@@ -2465,8 +2465,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🗺️cut-large-coordinate-bore/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:bcf874626bee8d7072347bd9185918cfc3d5053b618186e6e4eb5217cb963df1",
-          "bytes": 560
+          "sha256": "sha256:fc56828a49a68deca8e32441b921fcd2eba98ff2aa86512ee3c6037bdcdd983e",
+          "bytes": 567
         }
       ],
       "generator": {
@@ -2541,8 +2541,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌪️cut-lofted-funnel-from-block/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:e757da2048b88b67158b951f2a5fcc46cbb7dd40700a59c8e1f5c4800efce2e3",
-          "bytes": 550
+          "sha256": "sha256:53136ad315ec1bfc52048b37cf240dba380e064629bd35d2b6c0ff27c4583424",
+          "bytes": 557
         }
       ],
       "generator": {
@@ -2617,8 +2617,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔎️cut-micro-scale-bore/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:0ef0f3b5fe8dba3a96a9a85b990e6522bdd328a088e940c59e3502cc60fa04eb",
-          "bytes": 555
+          "sha256": "sha256:2d6721bd9188bc77462e2fc3245655c2ac09e3b31aee74a6d2f88f0490e643dd",
+          "bytes": 562
         }
       ],
       "generator": {
@@ -2693,8 +2693,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🚰️cut-narrow-channel/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:50564ca6cd4ad3a41add255b87729842b9f44645cbb92b5011d302e0379ac33e",
-          "bytes": 548
+          "sha256": "sha256:7049102ff7a3587e40241f9387678e50e8b178535f85839af825e9064827c439",
+          "bytes": 555
         }
       ],
       "generator": {
@@ -2769,8 +2769,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/👫️cut-nearly-identical-operands/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b75107212cc37ab2986071c885fb16c5fee4e90bb2b1f28084d39caf91348f62",
-          "bytes": 557
+          "sha256": "sha256:3bd9c2aa59b95a7fb30521a5da0ad69e698da183d2f1d63f71b9e90a3e811054",
+          "bytes": 564
         }
       ],
       "generator": {
@@ -2907,8 +2907,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/💍️cut-partial-revolved-ring-groove/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:bba7aef7a239f7a216833a39d338206c373c919bef64d95da38f649f08c48339",
-          "bytes": 561
+          "sha256": "sha256:b8dd7d167aff6d5eecebcb4fdb9840c942487f9b47184a60fe1bc3d211c032be",
+          "bytes": 568
         }
       ],
       "generator": {
@@ -2983,8 +2983,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🛡️cut-pentagon-prism-from-block/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:6d367bd2c07d0d6ce674110ee59099027999caff775373a17c743d5aea3f8a27",
-          "bytes": 544
+          "sha256": "sha256:9e13eee6441fd1975f294680e0bf0eb9bfedbc20ec789c70ee51c1e3c690f726",
+          "bytes": 551
         }
       ],
       "generator": {
@@ -3059,8 +3059,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/♻️cut-self-intersecting-tool/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a3f911294eceda15a906a4fad9a449153d76e67f283341593422b845aee4e78f",
-          "bytes": 534
+          "sha256": "sha256:57f54e4a8089d4ee8dddf67d6098eebdc62291490115df4672ce3488cff60197",
+          "bytes": 541
         }
       ],
       "generator": {
@@ -3135,8 +3135,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪃️cut-skewed-bore/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:6b053d215f2d8a091aa6ceec8fe61269652f73ce4b6156e208fa0e46b6199f9b",
-          "bytes": 574
+          "sha256": "sha256:aa232ef02679aab23fcfa6972ab8f6620b3d39e636683414966a4af6a312e394",
+          "bytes": 581
         }
       ],
       "generator": {
@@ -3211,8 +3211,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪡️cut-sliver-intersection/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:1b3b680b2c971d8814693e5a5abbc288652d2e5a50815971c9b3b1a7ca137403",
-          "bytes": 530
+          "sha256": "sha256:408c0838e345e7a69073152955a1758fee43e56e27ef5305bb3be8ecf2b7409a",
+          "bytes": 537
         }
       ],
       "generator": {
@@ -3287,8 +3287,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/⚽️cut-sphere-from-box/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:11f9cd7f6fd7db5eb72a7dab956e94847a574463d7a9eb2bbfed3c8c500ca1e1",
-          "bytes": 547
+          "sha256": "sha256:a0c0d3f64c932ca5ca3e84ddb690c1ea1a9abe5a364a7e2362f8a32a8faaec2e",
+          "bytes": 554
         }
       ],
       "generator": {
@@ -3363,8 +3363,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/〰️cut-spline-bounded-pocket/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:393e862975e6197153b70640663eed690635a250191013ae03e734394dfda2e4",
-          "bytes": 550
+          "sha256": "sha256:8f62de9fc7c340bf11636d0f2c4da5c14f43d1c6040ada3504fa2b8534542e3c",
+          "bytes": 557
         }
       ],
       "generator": {
@@ -3439,8 +3439,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🟢️cut-tangent-cylinder-epsilon-above/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b68ae0330dcf6268d233f1511e931eacf04deb3c3336b25ac781f7ad80c50850",
-          "bytes": 560
+          "sha256": "sha256:e1ea50895936c0b63f3cde3a38c0510eb503f4adef788806d5cecfca2be39389",
+          "bytes": 567
         }
       ],
       "generator": {
@@ -3515,8 +3515,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔴️cut-tangent-cylinder-epsilon-below/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:02981060ffa90e5b2ab58d51cf5364e835808cd06e210a0e8c76ce560d5c8c8b",
-          "bytes": 527
+          "sha256": "sha256:ece41e963afdcf81e6055a113a8442c4078ee7400520d1cc284853f88884453d",
+          "bytes": 534
         }
       ],
       "generator": {
@@ -3591,8 +3591,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🎯️cut-tangent-cylinder-exact/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:da33578a382cc2bc42c2660964dd9b64d16a19042511ae7ca88686e6bc4c05e9",
-          "bytes": 530
+          "sha256": "sha256:ccf4f7c43804ae1561d370cad5c2ca2d101cdb37091aae52321952e043197117",
+          "bytes": 537
         }
       ],
       "generator": {
@@ -3667,8 +3667,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪩️cut-tangential-sphere-contact/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:02981060ffa90e5b2ab58d51cf5364e835808cd06e210a0e8c76ce560d5c8c8b",
-          "bytes": 527
+          "sha256": "sha256:ece41e963afdcf81e6055a113a8442c4078ee7400520d1cc284853f88884453d",
+          "bytes": 534
         }
       ],
       "generator": {
@@ -3743,8 +3743,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧱️cut-thin-wall-shell/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:f7b90be3ebe92fe6644cb6e7dabf912be386a3746154111546e7ac28f934e20d",
-          "bytes": 545
+          "sha256": "sha256:84cc255b8bf18367ab9a476e4a5e1a7441e14ee4fcff5dcf2e451902e0e729e2",
+          "bytes": 552
         }
       ],
       "generator": {
@@ -3819,8 +3819,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📦️cut-through-shelled-box/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:bca66b707e05b4f5efe9eb8ace9868104bf4fb3802d482df73f16890eedbca5f",
-          "bytes": 549
+          "sha256": "sha256:532d5efa8c0d3e4038dde3e5259aa40c48344ab10a71c60a418e1b7dff3da98b",
+          "bytes": 556
         }
       ],
       "generator": {
@@ -3895,8 +3895,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔭️cut-tiny-bore-far-from-origin/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b9cdc51fc4eb7f36107ac2dc0a87253955a21cfab2f8150826a60ab6e956562c",
-          "bytes": 559
+          "sha256": "sha256:9f263eaae237fa3fa846bb0362e7fe7bd9d4eef05131d6629b3707bedaeced44",
+          "bytes": 566
         }
       ],
       "generator": {
@@ -3971,8 +3971,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🦠️cut-tiny-edge-below-tolerance/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:1b3b680b2c971d8814693e5a5abbc288652d2e5a50815971c9b3b1a7ca137403",
-          "bytes": 530
+          "sha256": "sha256:408c0838e345e7a69073152955a1758fee43e56e27ef5305bb3be8ecf2b7409a",
+          "bytes": 537
         }
       ],
       "generator": {
@@ -4047,8 +4047,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🍩️cut-torus-groove-from-cylinder/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:e92cb3532a97c2c88f1a2751a35f699a56ad0f642f5713e49568716b85dbddd6",
-          "bytes": 591
+          "sha256": "sha256:a140bebfb68a4446fc0d5499892b27d16f2ea414044fdf270eacf76c6d0489ff",
+          "bytes": 598
         }
       ],
       "generator": {
@@ -4123,8 +4123,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/1️⃣cut-unit-boundary-slot/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:896e66ba702d4ee4e87d8e091646d86b40731fe7325d9e975793d31220acf29f",
-          "bytes": 550
+          "sha256": "sha256:2bb3248aa610d85602d388786879ee188b9cfb67c0c59de046bb7506dc5faa21",
+          "bytes": 557
         }
       ],
       "generator": {
@@ -4199,8 +4199,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/✅️cut-valid-no-op/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:7060fc4b1c923082089a9661b446bc8187f1ca1d0eb6ef05a04e31d622c1462d",
-          "bytes": 514
+          "sha256": "sha256:c358348d9ae73fdf36664409f6c295c1692780a5a59b1a2464281b1cc05eb388",
+          "bytes": 521
         }
       ],
       "generator": {
@@ -4275,8 +4275,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📍️cut-vertex-touching-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:f741d8f916b92933752d8ff3ca56fbeba1fa552e4b6438afcb7c42214bb025a5",
-          "bytes": 526
+          "sha256": "sha256:de6720cca3d485c59a0cb40c6a8e4c2bd71669ae6693a53aea2f235ab84d3714",
+          "bytes": 533
         }
       ],
       "generator": {
@@ -4351,8 +4351,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧀️cut-wedge-from-block/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:89ff5e9c7a2f4b37b70d0e9e2195cb2f0f259ab82f920f6167ec7f08d3da1a17",
-          "bytes": 554
+          "sha256": "sha256:354b7da74b07cdb796c3fa7877d7c2622d4a9a09ecbb011181e0d8490512d1e5",
+          "bytes": 561
         }
       ],
       "generator": {
@@ -4427,8 +4427,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/✂️cutall-many-cutters/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4a47e5122e3ba1f465009ca58dd6b71112ef447462e2166bd8d5f1d79764c4e0",
-          "bytes": 549
+          "sha256": "sha256:5289dab910e496c0b75d47c13124f27715f8141393fc586941fb7787508f60b5",
+          "bytes": 556
         }
       ],
       "generator": {
@@ -4503,8 +4503,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪚️fuse-chamfered-boss-to-block/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:6977640566bd6f59685b1be8bc4496fba1cd1c639f90ac39d645a995acd6af90",
-          "bytes": 557
+          "sha256": "sha256:b8dc2b03c036dd9d93cb4949fa72625027378a235cc3c23fa68be2156ef5891c",
+          "bytes": 564
         }
       ],
       "generator": {
@@ -4579,8 +4579,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/⬆️fuse-coaxial-cylinders-epsilon-above/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:774e56194a8dbdf0428e9979236097983514fd48ebc477baefaff1589746b619",
-          "bytes": 563
+          "sha256": "sha256:701d16676fc14d2158cc7515585f91128ab60cb54ad24e941f90255a5b7efc7b",
+          "bytes": 570
         }
       ],
       "generator": {
@@ -4655,8 +4655,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/⬇️fuse-coaxial-cylinders-epsilon-below/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:0fffed5a5602c8a09fca0f96ff74a276f9c29e63ee7fec085a3524ff18aa4034",
-          "bytes": 557
+          "sha256": "sha256:450a40af7842e90f3a995032d657c9accb7effd362d3c97ba0ead5b6d3e2c744",
+          "bytes": 564
         }
       ],
       "generator": {
@@ -4731,8 +4731,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🎚️fuse-coaxial-cylinders-exact/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:e373d18f1b1fdf0e9b1a0fb77e56ff2fcbccc1577ace143e2bdcaa8125a46092",
-          "bytes": 555
+          "sha256": "sha256:a38c02884f0f46216fc7859c5377807d95f22e0f80b550f9de1450d8d8886d48",
+          "bytes": 562
         }
       ],
       "generator": {
@@ -4807,8 +4807,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🤝️fuse-coincident-faces/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b5b4b59da698f45a7bb2dcbbc87e9f5ebfa766465e01b037f3c38671834c3d67",
-          "bytes": 531
+          "sha256": "sha256:16e613d044c9db9405442ba4928b71f9e2229001a29f331d3105c0da30e3e341",
+          "bytes": 538
         }
       ],
       "generator": {
@@ -4883,8 +4883,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🫂️fuse-contained-operand/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:02981060ffa90e5b2ab58d51cf5364e835808cd06e210a0e8c76ce560d5c8c8b",
-          "bytes": 527
+          "sha256": "sha256:ece41e963afdcf81e6055a113a8442c4078ee7400520d1cc284853f88884453d",
+          "bytes": 534
         }
       ],
       "generator": {
@@ -4959,8 +4959,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧲️fuse-coplanar-cutter-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:d92d2005abf91ad3cbef2a0bad31a8a5f4a9a3bb442eb31efa9133a6e999884d",
-          "bytes": 542
+          "sha256": "sha256:139df1bbf428a0c1ec10ef00fc47041f9b42a17ed69d42b84cdf6e02dc02a129",
+          "bytes": 549
         }
       ],
       "generator": {
@@ -5035,8 +5035,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔼️fuse-coplanar-partial-face-epsilon-above/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:26ae6e8175b530399e009812d3a3837628ce602594e2efbff176374d85c7d7fc",
-          "bytes": 539
+          "sha256": "sha256:873231a1394c8deb60187ba45c536e01da2054963f6493bf4d1c958392168965",
+          "bytes": 546
         }
       ],
       "generator": {
@@ -5111,8 +5111,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔽️fuse-coplanar-partial-face-epsilon-below/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:9d5cc51716b219ba4a414397beb8ae36dbf7cee99ac81fc52778d78bc5d63165",
-          "bytes": 540
+          "sha256": "sha256:3d45aebf31db8e4b3a2b1793e723c609cd5b69f667cd7ed895998cb0f061f065",
+          "bytes": 547
         }
       ],
       "generator": {
@@ -5187,8 +5187,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🟰️fuse-coplanar-partial-face-exact/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a09dfaeef37c8d77f411ed52a922890e33c11bd9ddb2374501a3444a140f7a3a",
-          "bytes": 532
+          "sha256": "sha256:b8df54ed25c5fc69767089072838cfaa57cd35a6df8e91ce13a3be161284d5c8",
+          "bytes": 539
         }
       ],
       "generator": {
@@ -5263,8 +5263,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/❌️fuse-cylinder-cross/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:90158b55e9067f64bd700aa7d97664fa2847d05998e6487131a00228d10bfdda",
-          "bytes": 557
+          "sha256": "sha256:bc9a9d2069fecf3cdc06fc298684e01bbc6d1eb16d7396d22a51fa6428e15bfb",
+          "bytes": 564
         }
       ],
       "generator": {
@@ -5339,8 +5339,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🏝️fuse-disjoint-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:0df41663f0035b6124c4a09c6bdf991b8c5181788e5500de9c765456cf14ab10",
-          "bytes": 534
+          "sha256": "sha256:4c54c65c5af30aa5e93df6499ce8c42d1fec1d33e283a17ff87233f057f38d74",
+          "bytes": 541
         }
       ],
       "generator": {
@@ -5415,8 +5415,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧩️fuse-disjoint-result/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4247cb4bd52f758f778adf5628ca8f2dda71521e9b4ab2051f7e931173a318b9",
-          "bytes": 539
+          "sha256": "sha256:158e85b3e2edb17fd2c3b0d5588f0a0e0e95b834da70a395564c5a434e791676",
+          "bytes": 546
         }
       ],
       "generator": {
@@ -5491,8 +5491,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔄️fuse-double-rotated-skewed-box/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:13c4e8924dc43537abfa55a3cbf9de35e68904b1e7f56e1a8e90f20fd5e6d56a",
-          "bytes": 581
+          "sha256": "sha256:8d5854551eef7fd675829326302d95b8c5691a18bc4a326d3161d208c9fcdb6d",
+          "bytes": 588
         }
       ],
       "generator": {
@@ -5567,8 +5567,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/↗️fuse-edge-on-face-epsilon-above/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:e9423dc4c294a53fd1f8f2ca29aaf8be101db80ffac0babe4062a92e17af9b10",
-          "bytes": 550
+          "sha256": "sha256:561c2074b09c6daa2e82c37aaa0dd67da32f6cf031340af4043636c0cb010c52",
+          "bytes": 557
         }
       ],
       "generator": {
@@ -5643,8 +5643,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/↘️fuse-edge-on-face-epsilon-below/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4b9aa277f68b610157f8d840032dc7a25eed51bccb3c8b8d363c60f2ef90bac5",
-          "bytes": 550
+          "sha256": "sha256:3d85f7eaad0a02232fff8f7388d1496bf240a1fdb65d66a537557ff2e4d4eb10",
+          "bytes": 557
         }
       ],
       "generator": {
@@ -5719,8 +5719,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📌️fuse-edge-on-face-exact/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:bd03c38dd762a957b692a68b6db151de07167de5bab0dc4a7fcfbc12fd1e2e81",
-          "bytes": 553
+          "sha256": "sha256:95d38eb9eab6ba73a7a9f097da53f43c203d12b99d7cc11c1f07c9aa227ba944",
+          "bytes": 560
         }
       ],
       "generator": {
@@ -5795,8 +5795,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧷️fuse-edge-touching-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:534ed386ab08d076fb692a13c8d8d2c769343625fa4576e5525abef6af508981",
-          "bytes": 533
+          "sha256": "sha256:893ef904ebbd068987d128e20aaea3681977f669a3a5ac0549b720d93c84f0f8",
+          "bytes": 540
         }
       ],
       "generator": {
@@ -5871,8 +5871,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪢️fuse-face-touching-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:bd4633ff7a6dbf582ef03b31dd3f0478fd871806b6fd74d4bb069dd915054560",
-          "bytes": 533
+          "sha256": "sha256:d0cf7179785f63b7b095d619317e8a3ad6cd3a36af907404fee3bad7e27116b1",
+          "bytes": 540
         }
       ],
       "generator": {
@@ -5947,8 +5947,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧑‍🤝‍🧑fuse-identical-operands/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:48024525e9741e9ada21e4da4f08d646453d00cd0d2e744dd42d618b752eecf0",
-          "bytes": 530
+          "sha256": "sha256:bfc174692e9482c613fc73417a997877f3a332b24247f331abfe8cbe16855a89",
+          "bytes": 537
         }
       ],
       "generator": {
@@ -6023,8 +6023,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/📉️fuse-near-coplanar-faces-1e-9-radians/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:48ec9058fd7c300c05534fc71aee1366fa6efea34cce1697d74de322a3f257ed",
-          "bytes": 541
+          "sha256": "sha256:9287fda2397e181f09a4f4ad5dad8c6d4530eacf25b3e2c100bcb81656dd519e",
+          "bytes": 548
         }
       ],
       "generator": {
@@ -6099,8 +6099,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/👬️fuse-nearly-identical-operands/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4c1c7a3f94514f6cb42bfcd5a6d174c5b0262a17db31b918ce3c6153194a953c",
-          "bytes": 546
+          "sha256": "sha256:399f6fc39b093cd55fa4ec0f6f61f47e39224b947b1d68ad29fa7a169b1e3342",
+          "bytes": 553
         }
       ],
       "generator": {
@@ -6175,8 +6175,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪆️fuse-nested-void-in-void/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:ce3db42af037ba76a12747c705e8c90297467b1539cdbdd52525f9b7f6b3eb63",
-          "bytes": 533
+          "sha256": "sha256:ac7fb9cdfc0dc2c5a0ce4075b1e415dbdaa0daa2cbc6c6263b5bd450a4385d47",
+          "bytes": 540
         }
       ],
       "generator": {
@@ -6251,8 +6251,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🕸️fuse-nonmanifold-vertex-compound/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:6ce79417d12c10ebc9e3fa5de543d46bd563f9fc263b9c7441346e34d48c030b",
-          "bytes": 535
+          "sha256": "sha256:80d6426be7d44c5f7e44d7d475cff619684fc84f56724ed7d6f5514487c1a449",
+          "bytes": 542
         }
       ],
       "generator": {
@@ -6327,8 +6327,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌓️fuse-partial-overlap-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:0857d7a1a315dc51c2bb5c1ef6a7a46752f42526049133faf2c7ed38390e6b8d",
-          "bytes": 518
+          "sha256": "sha256:e13aaadaf6d34a6d8a04a5bbeb74c9688ea619285ab41519ca97f471a966a5a5",
+          "bytes": 525
         }
       ],
       "generator": {
@@ -6403,8 +6403,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/☀️fuse-sphere-tangent-plane-epsilon-above/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:305be2db09f1bcd95b24bf52140de8409154fbc4a04a8afb91ac9da1668aaa71",
-          "bytes": 559
+          "sha256": "sha256:e84927557912d8595d472050780d8f4ec3dc7b9943b7774f23033b7bb8af4a5d",
+          "bytes": 566
         }
       ],
       "generator": {
@@ -6479,8 +6479,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌑️fuse-sphere-tangent-plane-epsilon-below/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a6da575151a4293f35223dfa486e51a931753a3b0ac19005570f63ac4e89dfc2",
-          "bytes": 551
+          "sha256": "sha256:523197a964a8638e12ab89530b6f2dd49ef9cba8e63a9cd11a869d33f5d362ea",
+          "bytes": 558
         }
       ],
       "generator": {
@@ -6555,8 +6555,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌗️fuse-sphere-tangent-plane-exact/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:219451c9f9f19809ab3490400eb6d99893a32e6ad8235662813e38a441dcf25a",
-          "bytes": 551
+          "sha256": "sha256:8f9bb65461814cecdf9c16c200a3804546b3c49cf8bdc4443f9d715785df64b0",
+          "bytes": 558
         }
       ],
       "generator": {
@@ -6631,8 +6631,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🦴️fuse-swept-rib-to-block/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b7baeaa43a00237acbaf25759f1d6552298532a9d1f9639e3814c80c409735fc",
-          "bytes": 611
+          "sha256": "sha256:9f278b31cadc97a23b2ade6091876dee8301921ff8958564f17475d73e8d4f01",
+          "bytes": 618
         }
       ],
       "generator": {
@@ -6707,8 +6707,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🫶️fuse-tangential-sphere-contact/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:5ac727099ef2b19a731516ff40944b5340afd29de3e0f5dc5e7506c1fe4d8336",
-          "bytes": 551
+          "sha256": "sha256:4a32a1e83a7446b0d6ba814dbf7d1bd71dddd9c56c9db2803f2e372076590e8b",
+          "bytes": 558
         }
       ],
       "generator": {
@@ -6783,8 +6783,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🦪️fuse-thickened-shell-into-block/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:cb3dcbc126be130f12bcbdc224831a91cd1d5f109fd33a5ec89d9186ba1b842f",
-          "bytes": 554
+          "sha256": "sha256:55794a16d637f9aaebba8ff29da29bd59749fe4fb90efe9b65b86a364abfda41",
+          "bytes": 561
         }
       ],
       "generator": {
@@ -6859,8 +6859,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔐️fuse-torus-torus-interlock/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:d56c117b18f36762da4d20e4629146a79121b67ce04e665841d96a71dbad1787",
-          "bytes": 598
+          "sha256": "sha256:8e783f153db29328034d24e9b3059aba10a647abe60db5d1e12c096add5034d0",
+          "bytes": 605
         }
       ],
       "generator": {
@@ -6935,8 +6935,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🤏️fuse-vertex-touching-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b7d425e83275ff95464677715c1bf53c0ecea1669f8f704ad0c09b0b359b234e",
-          "bytes": 532
+          "sha256": "sha256:e26204b4e19af74f65b4332fa72fa01e65a11e51f297f3bd58cba3331d02ae9d",
+          "bytes": 539
         }
       ],
       "generator": {
@@ -7011,8 +7011,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/👆️fuse-vertex-touching-boxes-epsilon-above/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:6ed348e1fb574a4391dc13f8d7f8c9c04b0f049708f5e5c4c4be6a8578ab453d",
-          "bytes": 547
+          "sha256": "sha256:229fb27f79f5e4363be65d97946c681acd9cfbf004b557a28feeae3c72cf6d9f",
+          "bytes": 554
         }
       ],
       "generator": {
@@ -7087,8 +7087,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/👇️fuse-vertex-touching-boxes-epsilon-below/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:9887535bd56a33f2b2353cc80d12032bb667aba493f7f3c547dda88adb8f09c7",
-          "bytes": 557
+          "sha256": "sha256:e64aa57791113808970bacebafed36720d3a645993a16977e230c42389951bab",
+          "bytes": 564
         }
       ],
       "generator": {
@@ -7163,8 +7163,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/☝️fuse-vertex-touching-boxes-exact/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b7d425e83275ff95464677715c1bf53c0ecea1669f8f704ad0c09b0b359b234e",
-          "bytes": 532
+          "sha256": "sha256:e26204b4e19af74f65b4332fa72fa01e65a11e51f297f3bd58cba3331d02ae9d",
+          "bytes": 539
         }
       ],
       "generator": {
@@ -7239,8 +7239,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🎭️intersect-coincident-faces/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:5ea20cc81dd94383d09645b052f832769577d8e063b44f83b2b0831110557161",
-          "bytes": 525
+          "sha256": "sha256:68a8378828733a63c21c319bfa245bf337738cd92a96d290b8dfd0e8c4afc22c",
+          "bytes": 532
         }
       ],
       "generator": {
@@ -7315,8 +7315,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪺️intersect-contained-operand/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a72ad779449dd4ce7ead9dfff5b9659f92c1a302cc997cd0e808e95d8eaedc27",
-          "bytes": 543
+          "sha256": "sha256:38cebe48bf4c5e9fb048ceda68e53d894f289bd5dfec38f6b17d6cfff51d536d",
+          "bytes": 550
         }
       ],
       "generator": {
@@ -7391,8 +7391,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧭️intersect-coplanar-cutter-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:39b664ccc03445462451bdfc4ec84b6d39c97f728951c885b989b1ba93735fe8",
-          "bytes": 530
+          "sha256": "sha256:a0cda374de71ad0c6205ebd295f75a62d2820245a61e79ea8fcd440777bb5dde",
+          "bytes": 537
         }
       ],
       "generator": {
@@ -7777,8 +7777,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/👥️intersect-identical-operands/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:48024525e9741e9ada21e4da4f08d646453d00cd0d2e744dd42d618b752eecf0",
-          "bytes": 530
+          "sha256": "sha256:bfc174692e9482c613fc73417a997877f3a332b24247f331abfe8cbe16855a89",
+          "bytes": 537
         }
       ],
       "generator": {
@@ -7853,8 +7853,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/👤️intersect-nearly-identical-operands/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:df41cbb8e1d6cb3ae30aa18e1315ca0ad4c4893f6984f90787d81fe88fbe1f47",
-          "bytes": 543
+          "sha256": "sha256:3433140d492c99ee5dc4f988a76ef82d35813be38fd359947215a96785785a46",
+          "bytes": 550
         }
       ],
       "generator": {
@@ -7929,8 +7929,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔀️intersect-overlapping-boxes/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:0a1423fac907eec5ab1c6e6b34a55bd2c0e68f310aee34a525dfa29d043cfcc8",
-          "bytes": 541
+          "sha256": "sha256:843d24a05aef09d81b23c91c6e11ed0b1832822a733f864cc94e7aa27b74ad11",
+          "bytes": 548
         }
       ],
       "generator": {
@@ -8005,8 +8005,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔍️intersect-sphere-sphere-lens/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:79642d6419cf9d03647d6be50e4a73f35c7690d0d673ffe9f5970a7625001555",
-          "bytes": 591
+          "sha256": "sha256:5c0b5e950bc5e495846d45469a449e2ab4624861ae104b5753e075347434d76a",
+          "bytes": 598
         }
       ],
       "generator": {
@@ -8081,8 +8081,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/💥️intersect-splits-into-several-bodies/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:902ecbae621583579f5aac40642e5b2304cb16ae6663158aaf089aff9f4c21ae",
-          "bytes": 519
+          "sha256": "sha256:99602486cfb10cb6d4b8ff68ca320232ad8a4618809c246bcbe8433fb9177d0b",
+          "bytes": 526
         }
       ],
       "generator": {
@@ -8274,8 +8274,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧮️mechanical-block-fifteen-cuts/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:4a7ce7fb5507a8245fc6982d0eba2a055c1afa7d73a1c5567c929460409cea15",
-          "bytes": 549
+          "sha256": "sha256:6d15225cee23305c9fcd08ab25f52799c94524d2f9b27fb7a274c13d3167d69c",
+          "bytes": 556
         }
       ],
       "generator": {
@@ -8343,8 +8343,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌬️mechanical-enclosure-boss-vented/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:63921e906f4cabbf1e8439cd4de1ddfc2e447454fa78c209bd47aaa2cc0acde7",
-          "bytes": 586
+          "sha256": "sha256:764e25adf6844461a701989b29827431d9c51f2eae13c2359d0f6ab61f1a5772",
+          "bytes": 593
         }
       ],
       "generator": {
@@ -8412,8 +8412,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪝️mechanical-filleted-bracket/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b509c2aa635d5daa0edb46093e31821e93fc54c7fe209c10ffae0e6632b1982c",
-          "bytes": 562
+          "sha256": "sha256:ac5203add70c2ae1f2d42d08f55c9f6cbb5f538b9d4aac9eb300a503a38f85c4",
+          "bytes": 569
         }
       ],
       "generator": {
@@ -8481,8 +8481,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🧰️mechanical-fixture-plate/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:35f49928e6e85c40c8285c7edce1fe5419ed3dc32f075a6e3b44b2f564886d3c",
-          "bytes": 548
+          "sha256": "sha256:1ec86ecbbfa5f7a5d79ea2b3fe5dd416866ced1334f4eba62593027c98659cc6",
+          "bytes": 555
         }
       ],
       "generator": {
@@ -8550,8 +8550,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪛️mechanical-fixture-plate-slotted/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:8f5b56c4e1603195bc2bd3ada3e811a9f579964b263df92e14ba896a1d6487e2",
-          "bytes": 549
+          "sha256": "sha256:39d80eb25431da7186dd5b50456dbc0e685004f27d36e22ca982e80ea5d42e81",
+          "bytes": 556
         }
       ],
       "generator": {
@@ -8619,8 +8619,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/⚙️mechanical-gearbox-cover/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3129c7d840cd13c5b69930e214d4ef83c8b959bd80e68df9ceee3272cda4e322",
-          "bytes": 589
+          "sha256": "sha256:12973c1b77b10eb55b245e992f2841afb438125da8d432286cd81fa987889f4d",
+          "bytes": 596
         }
       ],
       "generator": {
@@ -8688,8 +8688,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌡️mechanical-heatsink-fins/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:1c24710acbbb09013a532f600afbb5bd4cfe482ceca26779dd934f9a9cb21639",
-          "bytes": 541
+          "sha256": "sha256:d3baf728605ccd89a402e26aed972211dd3d3767eecb37ec93ebdfa7c7a9171a",
+          "bytes": 548
         }
       ],
       "generator": {
@@ -8757,8 +8757,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🏠️mechanical-housing-threaded-boss/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:41beaa2b51181c1e8f398b4e60afaefa1587ebcdf2ac7d365718300dde2d81fc",
-          "bytes": 626
+          "sha256": "sha256:b610645d0f603ab758a45ec13a01610b1310e97f859ffd1fca126b0685ee478d",
+          "bytes": 633
         }
       ],
       "generator": {
@@ -8826,8 +8826,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🪟️mechanical-lightening-bracket-grid/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:dd521e6e4b18f5c7f4dbca3e554b7ef32a2ac5855f917bec591d5233be1efd79",
-          "bytes": 582
+          "sha256": "sha256:f8c88c1c4eccc23d7c137f7c496fac8d712a82a4f89be7c5b3ed4236fea829b7",
+          "bytes": 589
         }
       ],
       "generator": {
@@ -8895,8 +8895,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🔧️mechanical-multi-union-trim-drilled/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b3258819405232387a7dddba4e88a5f66b11840d2d4c0ab8d9764ead90fb2505",
-          "bytes": 547
+          "sha256": "sha256:e37d1f1fe0cb7e2f957b94211a431d457cf5dabbcd71fa26850daa55405766ae",
+          "bytes": 554
         }
       ],
       "generator": {
@@ -8964,8 +8964,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌀️mechanical-nested-shell-channels/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a72834741283980b45da436ffbb5a555e2ac464d4cd0740e6f6f5ec02b677f4b",
-          "bytes": 563
+          "sha256": "sha256:e25119e089cf1610254efca8d5ca88b7f36584d41eb7b72cf755786c8acf88e6",
+          "bytes": 570
         }
       ],
       "generator": {
@@ -9033,8 +9033,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🚿️mechanical-pipe-manifold/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:25311ce488764f7f40563d9bd16de6d2cf553ef3932a18b71d30a968184fe8ca",
-          "bytes": 562
+          "sha256": "sha256:b41783f778bb76629da8326d037674cf7140df16d55953da212b2f593a4acb35",
+          "bytes": 569
         }
       ],
       "generator": {
@@ -9102,8 +9102,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🌿️mechanical-pipe-manifold-reducer-branch/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:043b42a4dd0d999d3f8dde9f68f3edbc450b6e2346a5d7973b68457fffdd09b0",
-          "bytes": 594
+          "sha256": "sha256:57fe22fcfaf5eed2880409dac7df7c14e4f909b53dd4f52b50c4df8cc516a850",
+          "bytes": 601
         }
       ],
       "generator": {
@@ -9171,8 +9171,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🩻️mechanical-ribbed-enclosure/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:2aa2e88ed56d4ca7e65d0f5748f257b5a4532c142d34be4468f48c33df8bcc01",
-          "bytes": 536
+          "sha256": "sha256:17f3b5ae1db9596cf07e64b9cf386323fc30c6942b8560606c71fb3a1a21aee0",
+          "bytes": 543
         }
       ],
       "generator": {
@@ -9240,8 +9240,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🦾️mechanical-skewed-bracket-gusseted/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:d48cc0784372c78536b4fb5fed1588e30ead9551bd13f7cb168ed0d41795f1af",
-          "bytes": 585
+          "sha256": "sha256:689513fc16252e20f5a8ab9b1ec93f3044aa59111ca56815af04174c35a74f28",
+          "bytes": 592
         }
       ],
       "generator": {
@@ -9309,8 +9309,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🎛️mechanical-valve-body/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:742d96dc7dea2ef0783cdaf13aa74ce4fc67bed756ffcfff2f18246f8b85e317",
-          "bytes": 561
+          "sha256": "sha256:27c6bbd62f7ac3cd89306234fb2d4c5e42824556dc479c2a4baf7bbdceaae7a8",
+          "bytes": 568
         }
       ],
       "generator": {
@@ -9385,8 +9385,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🥚️reject-ellipse-structured-error/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:35f2d6670af9ad6708d77ca4930e07f9415527beb6d138b78fa912bd71b37ac3",
-          "bytes": 529
+          "sha256": "sha256:9dd2766623fea5fbdd57d687830ee7f6f72bc8557df73db0935445a8071e1eaf",
+          "bytes": 536
         }
       ],
       "generator": {
@@ -9461,8 +9461,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/⛔️reject-negative-box-width/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c6be0ee0eef8150c0851fdcc47a2a6293c80d13ca394bca898b7f5f43b536655",
-          "bytes": 518
+          "sha256": "sha256:e676a4c7488d184cc94d16886dc6bfcc998d53e894f0d5d81db50a87aad68194",
+          "bytes": 525
         }
       ],
       "generator": {
@@ -9537,8 +9537,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/🚫️reject-open-shell-fuse/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3fa7ab29372c649563099de63d783165f834ac153c33df8214f09889a79a4ad7",
-          "bytes": 541
+          "sha256": "sha256:40ca4e0842633ebb00d17cd81dd9d69017278c4a59920e36001d8a31b6a2fa9e",
+          "bytes": 548
         }
       ],
       "generator": {
@@ -9613,8 +9613,8 @@
           "role": "expected-measurements",
           "path": "../🧫️fixtures/0️⃣reject-zero-height-cylinder/📊️expected.metrics.json",
           "mediaType": "application/json",
-          "sha256": "sha256:107b306467f029febc8bdf1828afc9eabff6566ed724d2d9b177000e8ab21442",
-          "bytes": 531
+          "sha256": "sha256:a9e9327325ba2d6d18847cd5fa802e97b8ccc7b920b9727a0a658c31ed9c5441",
+          "bytes": 538
         }
       ],
       "generator": {
@@ -9659,9 +9659,9 @@
       "files": [
         {
           "role": "operand-a-step",
-          "path": "../🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "../🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "mediaType": "model/step",
-          "sha256": "sha256:d2c110c0a2bf64ac3bccaf9ac9bebc072c72c1a57d32814ca79e8ca257957cce",
+          "sha256": "sha256:d53c56233f84726e438e595072aabf20a19f6760d69f644a30f1ba226b3eeb12",
           "bytes": 79984
         }
       ],
@@ -9759,7 +9759,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -9810,7 +9810,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -9861,7 +9861,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },

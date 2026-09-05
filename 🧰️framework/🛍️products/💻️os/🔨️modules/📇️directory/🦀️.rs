@@ -6,7 +6,7 @@
 //! never touches `spaces` itself (per the decider laws, it "only feeds member display data"). See
 //! `🧬️schema/🦀️component.rs` for the wire types folded over here, and `🟦️.ts` for the
 //! byte-identical TypeScript twin (parity asserted over the golden fixture
-//! `🧫️fixtures/📇️directory/🧾️events.json` in both `🧪️Tests` regions).
+//! `🧫️fixtures/📇️directory/⚡️events.json` in both `🧪️Tests` regions).
 
 // 🧭️ Resolves relative to THIS file's own physical directory (📇️directory/), independent of how
 // this file itself got mounted into the crate from 🦀️.rs — see 🔣️taxonomy.json's
@@ -26,12 +26,12 @@ pub mod identity;
 use std::collections::BTreeMap;
 
 pub use schema::{
-    descriptor_digest_encoding_v1, descriptor_digest_v1, hex_lower, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1,
+    descriptor_digest_encoding_v1, descriptor_digest_v1, directory_command_sha256, hex_lower, mint_directory_command_request_id, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1,
     AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, CheckpointId, ConnectionView, DescriptorDigestError, DirectoryActor,
-    DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageErrorV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentFrontier, DocumentOpenArtifactV1, DocumentOpenCatalogV1,
+    DirectoryActorKind, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectoryConnectionPhase, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageErrorV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1, DocumentFrontier, DocumentOpenArtifactV1, DocumentOpenCatalogV1,
     DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1,
     DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentOwner, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, Hlc, InviteView, MemberSpaceViewV1, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactBlob, PublishedArtifactCheckpoint, RebootstrapRequired,
-    DESCRIPTOR_DIGEST_V1_DOMAIN, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
+    lease_fields_from_plan_v1, same_lease_fields_v1, DESCRIPTOR_DIGEST_V1_DOMAIN, DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS, DIRECTORY_COMMAND_REQUEST_ID_LEN, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
 };
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
 
@@ -177,7 +177,7 @@ mod tests {
         struct Fixture {
             events: Vec<DirectoryEvent>,
         }
-        let raw = include_str!("../../🧫️fixtures/📇️directory/🧾️events.json");
+        let raw = include_str!("../../🧫️fixtures/📇️directory/⚡️events.json");
         crate::os_pack::json::from_json_str::<Fixture>(raw).expect("fixture decodes").events
     }
 

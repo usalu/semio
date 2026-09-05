@@ -106,7 +106,7 @@ function committedFixtureRoot(id: string): string {
  *  applies `["applied"]` per the real dispatch (`../🧬️schema/🧬️mutations/🦀️.rs:288`,
  *  `MutationOutcome::new(...)` uniform for all 21 kinds, no per-kind rejection branch) EXCEPT
  *  `set-snapshot`, which also reaches a documented `no-op` warn path on an identical replacement
- *  (`../🧬️schema/🧬️mutations/🟤️set-snapshot/🦀️.rs:19`) — exercised by its own `-no-op` recipe,
+ *  (`../🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs:19`) — exercised by its own `-no-op` recipe,
  *  same convention as `no-mutation-no-op`. */
 const READER_RECIPES: readonly ReaderRecipe[] = [
   { id: "no-mutation-no-op", mutation: "no-mutation", outcome: "no-op", notes: "Identity — before and after bytes are the same document; no-mutation's diff is unconditionally a no-op." },

@@ -68,6 +68,7 @@
     "syncCardKind": null,
     "syncDraftPath": "",
     "syncStatusByDocument": {},
+    "inferencePortByDocument": {},
     "mergePolicy": "manual",
     "conflicts": [
       {
@@ -153,6 +154,7 @@
       "syncCardKind": null,
       "syncDraftPath": "",
       "syncStatusByDocument": {},
+      "inferencePortByDocument": {},
       "mergePolicy": "manual",
       "conflicts": [
         {

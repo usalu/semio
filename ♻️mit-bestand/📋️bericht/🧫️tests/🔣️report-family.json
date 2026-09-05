@@ -1,0 +1,21 @@
+{
+  "documents": [
+    {
+      "id": "zwischenbericht",
+      "path": "📋️zwischenbericht/📋️zwischenbericht.tex"
+    },
+    {
+      "id": "forschungsbericht",
+      "path": "📑️forschungsbericht/📑️forschungsbericht.tex"
+    },
+    {
+      "id": "kompaktbericht",
+      "path": "📝️kompaktbericht/📝️kompaktbericht.tex"
+    }
+  ],
+  "actorNetwork": {
+    "nodes": 798,
+    "edges": 444,
+    "programs": 14
+  }
+}

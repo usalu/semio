@@ -4,16 +4,19 @@
 //! `📚️examples` children — `crate::editor::block3d`/`crate::viewer::block3d` stay mounted at the
 //! plugin's top-level `editor`/`viewer` modules, not here.
 //!
-//! ⚠️ DEVIATION — see `◻️2d`'s sibling subset-root file for the full rationale (identical here):
-//! `entries: &[]`, real `native` codec, `io_declaration()` local rather than `io::io()`. Real gap:
-//! zip/txt/png/json/stl/obj import+export (12 typed impls) stay unregistered on the `io_mechanism`
-//! channel, recommended as dedicated follow-up.
+//! 🚪️ `io: io::io()` matches the `🗒️note`/`🖍️draw`/`🔱️trinity` template exactly: the local
+//! `io_declaration()` this file used to carry (with `entries: &[]` and a DEVIATION note explaining
+//! that the six foreign formats stayed unregistered on the `io_mechanism` channel) is gone — ticket
+//! 26/09/05/BLOCK-PLUGIN-END-TO-END, W3 hand-authored the twelve typed
+//! `Serializer<Block3dSnapshot>`/`Deserializer<Block3dSnapshot>` leaves that gap called for and relocated the
+//! declaration into `🚪️io/🦀️.rs` as `io()`. See that file's own module doc for the per-format
+//! fidelity table.
 
-use crate::artifacts::block3d::standards::v1::subsets::any::schema;
-use crate::artifacts::block3d::{Block3dMutation, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
+use crate::artifacts::block3d::standards::v1::subsets::any::{io, schema};
+use crate::artifacts::block3d::BLOCK3D_DIALECT;
 use crate::editor::block3d as editor;
 use crate::viewer::block3d as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
+use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
@@ -27,29 +30,12 @@ fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInfere
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::block3d_artifact_inference_descriptor()]).as_slice()
 }
 
-/// 🚪️ See `◻️2d`'s sibling file's module doc for why this is not `io::io()`. `pilot_languages()`
-/// indices are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order —
-/// the same role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
-fn io_declaration() -> IoDeclaration {
-    let langs = crate::artifacts::block3d::pilot_languages();
-    IoDeclaration {
-        native: NativeCodecs {
-            snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
-            diff: LanguagePair { text: Some(&langs[2]), binary: None },
-            mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
-            inferences: None,
-            codec: store::ArtifactCodec::of::<Block3dSnapshot, Block3dMutation>(BLOCK_3D_SCHEMA.to_string()),
-        },
-        entries: &[],
-    }
-}
-
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
 pub fn subset() -> SubsetDeclaration<crate::BlockApps> {
     SubsetDeclaration {
         dialect: BLOCK3D_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::block3d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
-        io: io_declaration(),
+        io: io::io(),
         viewer: viewer_surface::<viewer::Block3dViewer, crate::BlockApps>(viewer::create_block3d_viewer()),
         editor: editor_surface::<editor::Block3dPlayApp, crate::BlockApps>(editor::create_block3d_app()),
         examples: examples(),

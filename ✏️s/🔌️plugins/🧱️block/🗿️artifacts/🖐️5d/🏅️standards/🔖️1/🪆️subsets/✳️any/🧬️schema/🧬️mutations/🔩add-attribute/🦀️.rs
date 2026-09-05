@@ -19,23 +19,23 @@ pub struct AddAttribute {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn add_attribute(attribute: BlockAttribute) -> Block5dMutation {
+pub fn add_attribute(attribute: BlockAttribute) -> Block5dMutation {
     Block5dMutation::AddAttribute(AddAttribute { attribute })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "attribute", kind: "add-attribute", record: "AddedAttribute" };
 
-    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add attribute \"{}\"", self.attribute.key)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.attribute.key.clone()]
     }
 }

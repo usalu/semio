@@ -583,7 +583,7 @@ fn is_whitespace_text(node: &HtmlNode) -> bool {
 /// Reading them literally is what this parser used to do, and it put every path index inside `<html>`
 /// one place off from every other HTML5 implementation's: `[2]` addressed a whitespace text node here
 /// where `html5ever`, every browser, and this subset's own mutation oracle all address `<body>`.
-/// Found by `../../../../../🧪️tests/🟠️mutate-html-5`'s parity phase the first time it ran
+/// Found by `../../../../../🧪️tests/🌐️mutate-html-5`'s parity phase the first time it ran
 /// (ticket 26/08/23/END-TO-END-TESTING-REFACTOR), where all seven path-addressed kinds were refused
 /// with `mutation.apply.conflicting-target` — "element diff targets a non-element node".
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -677,7 +677,7 @@ pub fn parse_html_document(text: &str) -> Result<HtmlSnapshot, TextError> {
 /// inert in HTML: WHATWG §13.2.6.4.22 "after after body" processes it with the "in body" rules, so a
 /// trailing newline re-enters `<body>`'s last text node on the very next read by any conformant
 /// parser. Emitting one made `write` → `html5ever::parse` grow a newline inside `body` on every
-/// cycle (found by `🟠️mutate-html-5`'s `set-snapshot` parity row, ticket
+/// cycle (found by `🌐️mutate-html-5`'s `set-snapshot` parity row, ticket
 /// 26/08/23/END-TO-END-TESTING-REFACTOR); [`parse_html_document`] carries that whitespace into the
 /// model instead, where it round-trips as the real text node it is.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -69,7 +69,7 @@ use protocol::OpText;
 /// wire tag (`"brep"`, `"mesh"`, …) is unchanged — the catalog, the feature files and every
 /// committed fixture still speak the bare noun.
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧱apply-brep/🦀️.rs"]
 pub mod apply_brep;
@@ -208,7 +208,7 @@ pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) ->
 /// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/📋️contract-freeze.md` §C2)
 /// makes `Info`/`Warning` ADVISORY: they ride along with a diff that WAS applied in full, and the
 /// contract's own worked example is `.info("mutation.cascade", …)` — which `🧊️brep`'s
-/// `delete-vertex` and `✳️graph`'s `delete-node` both raise on every well-formed body, naming the
+/// `delete-vertex` and `🕸️graph`'s `delete-node` both raise on every well-formed body, naming the
 /// edges the deletion also had to remove. A caller that reads "any message" as "rejected" therefore
 /// reports a refusal that never happened and fails a scenario the codec answered correctly.
 ///
@@ -969,10 +969,10 @@ mod tests {
 //#endregion 🔖️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `🟤️set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "🟤️set-snapshot/🧪️tests/🦅️replaces-the-envelope-wrapping-a-value-subset/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/✉️replaces-the-envelope-wrapping-a-value-subset/🦀️.rs"]
 mod set_snapshot_replaces_the_envelope_wrapping_a_value_subset;
 //#endregion 🧪️FixtureCases

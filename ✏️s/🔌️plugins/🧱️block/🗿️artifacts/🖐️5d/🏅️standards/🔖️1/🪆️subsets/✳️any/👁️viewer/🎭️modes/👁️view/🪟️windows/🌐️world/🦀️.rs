@@ -11,7 +11,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 // curated `pub use app::{ … };` re-export list (unlike `ArtifactViewer`/`Viewer`/`ViewEmit`, whose
 // Gap 1 already closed) — only reachable through `app::`. Flagged in this packet's migration report.
 use semio_framework_plugin::app::{MeshView, MeshWindowKit, WindowKit};
-use semio_framework_plugin::{world3d_camera_projection_json, world3d_meshes_json_from_kinds, world3d_meshes_json_from_urls, world3d_selection_json, UiNode, WindowKindDefinition, WorldProjectionConfig};
+use semio_framework_plugin::{world3d_camera_projection_json, world3d_meshes_json_from_kinds, world3d_meshes_json_from_urls, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
 
 //#region 🔖️Constants
 /// 👁️ `MeshWindowKit::KIND_ID` — frozen id/body-key pair (contract §2.6): `"framework.window.mesh"`.
@@ -26,18 +26,18 @@ const BLOCK5D_VIEW_FALLBACK_MESH_KIND: &str = "box";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::block5d::create_block5d_viewer`. Read-only
 /// (`window_kind()`, not `editable_window_kind()`) — a viewer never emits the `set-vertex` mutation.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `Block5dSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
+/// 👁️ Pure `Block5dSnapshot -> BuiltNode` read: default camera (a viewer has no persisted per-session
 /// camera — `Config = NoConfig`), no selection/gumball overlay. Real per-representation mesh urls
 /// render as real meshes (`world3d_meshes_json_from_urls`); a part kind with no representation mesh
 /// url yet falls back to the same placeholder box the editor's own world window implicitly assumes
 /// when describing "mesh: —" (documented simplification, not a regression).
-pub async fn render(document: &Block5dSnapshot) -> UiNode {
+pub fn render(document: &Block5dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera_json = world3d_camera_projection_json([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], None, 1.0, &WorldProjectionConfig::default());
     let urls: Vec<String> = document.representations.iter().filter_map(|representation| representation.mesh_url.clone()).collect();
     let meshes_json = if urls.is_empty() { world3d_meshes_json_from_kinds(&[BLOCK5D_VIEW_FALLBACK_MESH_KIND.to_string()]) } else { world3d_meshes_json_from_urls(&urls) };

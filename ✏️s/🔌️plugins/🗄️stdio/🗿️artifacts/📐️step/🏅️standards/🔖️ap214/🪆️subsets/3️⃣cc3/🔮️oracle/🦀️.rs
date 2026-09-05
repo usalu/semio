@@ -236,7 +236,7 @@ mod tests {
     use super::*;
 
     fn fixture() -> Vec<u8> {
-        include_bytes!("../../../../../🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp").to_vec()
+        include_bytes!("../🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp").to_vec()
     }
 
     fn object(entries: Vec<(&str, Json)>) -> Json {
@@ -350,7 +350,7 @@ mod tests {
     fn kinds_match_the_catalog_and_the_vocabulary() {
         let manifest = include_str!("🔣️.json");
         let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️.rs");
-        let feature = include_str!("../../../../../🧪️tests/🌵️mutate-step-ap214-cc3/🥒️.feature");
+        let feature = include_str!("../🧪️tests/3️⃣mutate-step-ap214-cc3/🥒️.feature");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the catalog is missing kind {kind:?}");
             assert!(vocabulary.contains(&format!("\"{kind}\"")), "StepCc3Mutation::KINDS is missing {kind:?}");

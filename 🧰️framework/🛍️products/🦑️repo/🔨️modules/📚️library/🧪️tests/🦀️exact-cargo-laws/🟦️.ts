@@ -90,6 +90,8 @@ for (const row of fixture.cases) {
         expect(options.maxOutputBytes).toBeGreaterThan(0);
         expect(options.stdoutPath.startsWith(root)).toBe(true);
         expect(options.env.CARGO_TARGET_DIR).toBe(join(root, "cargo-target"));
+        expect(options.env.SEMIO_STAGE_ENV_LAW).toBe(fixture.stageEnvironment.sharedValue);
+        expect(options.env.RUST_MIN_STACK).toBe(command === "cargo" ? fixture.stageEnvironment.buildStack : fixture.stageEnvironment.nativeStack);
         if (command === "cargo") {
           builds++;
           expect(args.filter(arg => arg === "--no-run")).toHaveLength(1);
@@ -117,8 +119,8 @@ for (const row of fixture.cases) {
     let assertions = 0;
     let outcome = "denied";
     try {
-      const env = { ...process.env, CARGO_TARGET_DIR: row.mutation === "outside-cargo-target" ? resolve(root.slice(0, root.lastIndexOf("🗑️generated")), "outside-target") : undefined };
-      const receipts = await runExactCargoLaws({ cwd: root, artifactDir: root, env, groups: [{ package: fixture.package, target: fixture.target, laws: fixture.laws }], cancelled: () => cancelled }, port);
+      const env = { ...process.env, RUST_MIN_STACK: fixture.stageEnvironment.buildStack, SEMIO_STAGE_ENV_LAW: fixture.stageEnvironment.sharedValue, CARGO_TARGET_DIR: row.mutation === "outside-cargo-target" ? resolve(root.slice(0, root.lastIndexOf("🗑️generated")), "outside-target") : undefined };
+      const receipts = await runExactCargoLaws({ cwd: root, artifactDir: root, env, nativeEnv: { RUST_MIN_STACK: fixture.stageEnvironment.nativeStack }, groups: [{ package: fixture.package, target: fixture.target, laws: fixture.laws }], cancelled: () => cancelled }, port);
       assertions = receipts.reduce((sum, receipt) => sum + receipt.assertions, 0);
       expect(receipts[0]?.laws).toEqual(fixture.laws);
       expect(receipts[0]?.sha256).toBe(fixture.executableSha256);

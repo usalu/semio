@@ -1,6 +1,6 @@
 # WGPU Directory Bootstrap Retained-Home ACK Implementation
 
-Status: source implementation and registered language-neutral proof are green; native and real two-session process proof remain pending the shared Rust execution lease.
+Status: source implementation and registered language-neutral proof are green. The former document-socket and stdio taxonomy blockers are repaired. The superseded orphan native build was deliberately cancelled after exact process-tree verification; no current-tree native verdict is claimed. The real two-session process proof is owned by the coordinated Home process packet.
 
 ## Implemented boundary
 
@@ -35,7 +35,7 @@ Registered native selectors:
 2. `shell::command_registry_tests::directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss`
 3. `shell::command_registry_tests::directory_home_terminal_receipt_rejects_unknown_fields_and_nonreceipt_effects`
 
-The laws use a fake canonical page transport that records exact request URLs and original page bytes, an explicit delayed terminal Config-receipt boundary, all five forged ACKs, retained Home/visible-app separation, matching rejection retry, live dirty wake, rebootstrap, stale-epoch denial, and one-use destruction authority.
+The laws use a fake canonical page transport that records exact request URLs and original page bytes, a fake retained Home bridge that derives the terminal receipt from the exact published page, all five forged ACKs, retained Home/visible-app separation, matching rejection retry, and one-use destruction authority. Page two is not even requested until page one's terminal receipt is accepted. The controller law also drives a real acknowledged stream through unscoped close code 4401, proves the terminal stream cannot reconnect, advances to epoch 9 at raw cursor zero, denies the pre-terminal receipt, coalesces duplicate live wakeups, cancels both pending page and Home-publication tasks, removes their receivers, and proves both late senders have no surviving ACK path.
 
 ## Permanent gates
 
@@ -48,13 +48,20 @@ A process target is deliberately not registered yet: the acceptance process law 
 ## Evidence
 
 - Initial registered canonical Nx source session `23561`: 30 checks, exit 0.
-- Final registered canonical Nx source session `e21b50`: 32 checks including terminal-close fencing, exit 0.
+- Strengthened registered canonical Nx source session `09c87d`: 33 checks, exit 0.
+- Final registered canonical Nx source completion `b76a3a`: 39 checks including exact delayed page ordering, live-wake coalescing, late publication denial, real native-runner cancellation, and terminal-close fencing past every reconnect deadline, exit 0.
 - Shared OS-kernel neutral bootstrap oracle remains green at 11 checks after the trace extension.
-- Concurrent canonical plugin-registry generation included both ordered WGPU launch entries; registered freshness session `54523` exits 0.
+- Coordinated plugin-registry generation refreshed 59 plugin crates, 60 playgrounds, and 45 framework packages; generated launch contains the WGPU source/native gates at lines 4062/4069 and retains `SEMIO_BUILD_BUDGET_MS: 86400000` at line 4076. The direct registered Nx freshness command `NX_ISOLATE_PLUGINS=false bun x nx run @semio-tech/plugin-registry:check-generated --skip-nx-cache` then returned `plugin registry generated catalog and launch bytes are fresh.`
 - Fixture schema, fixture, and WGPU `project.json` parse successfully.
 - Focused source diff passes `git diff --check`.
-- Native selectors are staged but have not executed. No native assertion or WGPU process behavior is claimed yet.
+- The first exact native attempt, receipt `exact-cargo-laws-taCqig/00`, was killed by the repository's 20-minute build budget after compiling 43 cold dependencies; its `build.json` records `status: null`, `signal: SIGKILL`, and `reason: timeout`, so it is not a compiler or law verdict.
+- The cache-preserving replacement receipt `exact-cargo-laws-Mw4OqK/00` ran with the permanent launch budget of 86,400,000 ms and reached OS-kernel compilation. Its terminal `build.json` records `status: 101`, `signal: null`, and `reason: exit`. All seven parsed compiler errors are in the concurrently owned document-socket surface taxonomy: five E0425 references to removed `DocumentSocketSurfaceExpectationV1`, one E0560 use of removed `DocumentSocketExpectationV1.surface`, and one E0599 use of removed `DocumentSocketAuthorityV1.matches_surface`. The WGPU crate emitted no diagnostic and none of the three laws reached discovery, so this receipt is an upstream blocker rather than a WGPU verdict.
+- The cache-preserving receipt `wgpu-directory-retained-home-exact/exact-cargo-laws-27xmIe/00` terminated RED before law discovery after about 1 hour 40 minutes. Its two errors were generated stdio registry includes for nonexistent `🌳️pdf` paths; current registry source was already concurrently repaired to the real existing `📖️pdf` paths when the receipt was inspected. This is an upstream frozen-snapshot build failure, not a retained-Home law verdict.
+- The immediate cache-preserving rerun `wgpu-directory-retained-home-exact/exact-cargo-laws-MwnzEe/00` was orphaned by the fleet reset. Its receipt contains only `build.stdout`/`build.stderr`, no terminal `build.json` or law receipt, and its process no longer exists; no verdict is claimed.
+- After re-auditing the process table and receipt, the registered gate was restarted against the preserved target and repaired then-current tree as `wgpu-directory-retained-home-exact/exact-cargo-laws-gSGgcg/00`, with an 86,400,000 ms inner build budget. The outer repo launcher nevertheless retained its default 14,400,000 ms command budget and terminated with `spawnSync node ETIMEDOUT`, exit 1. The receipt still has only `build.stdout`/`build.stderr`, no terminal `build.json` or law receipt. Cargo PID 28150 was orphaned to PPID 1 with Stdio rustc child PID 36825. Once the current preview and Store tree superseded that snapshot, the exact process group was verified (`PGID 28150`, dedicated `wgpu-directory-retained-home-sol-target`) and gracefully terminated with `SIGTERM`; both exact PIDs then disappeared. This is a cancelled, unqualified attempt, not a Cargo failure or native-law verdict. The seed now also sets `SEMIO_TEST_ORCHESTRATION_BUDGET_MS=86700000` and `SEMIO_CMD_BUDGET_MS=86700000`; coordinated plugin-registry generation and `check-generated --skip-nx-cache` both exited 0, and generated launch line 4076 preserves all three budgets.
+- A fresh current-tree registered source rerun remains green at 39 checks. The cancelled orphan's last Cargo diagnostics were warnings only, but source moved after its snapshot, so it could not qualify the current tree.
+- After the shared GIS inference page gained an optional floating-point preview, the WGPU test page constructor was updated with `preview: None`; the remaining WGPU status constructor uses `..Default`, and no WGPU equality-derived type embeds the status DTO. The current-tree registered source gate remains green at 39 checks after that parity edit. The already-running native process predates this edit and therefore cannot qualify the new source snapshot even if it eventually terminates green.
 
 ## Honest remaining boundary
 
-The real native laws, all-feature compilation, and the two-session real process timing law remain required before this packet is green. The previously completed hub event-page packet also remains source-green/native-process-pending under the same shared Rust execution constraint.
+A current-tree exact native attempt and the two-session real process timing law remain required before this packet is fully green.

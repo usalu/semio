@@ -19,12 +19,12 @@
       "vectors": [
         {
           "mutationId": "create-layer",
-          "sourceMutationDirectoryName": "🌱create-layer",
-          "mutationDirectoryName": "🌱create-layer",
+          "sourceMutationDirectoryName": "➕️create-layer",
+          "mutationDirectoryName": "➕️create-layer",
           "scenarios": [
             {
               "id": "appends-shape-b-at-the-root",
-              "directoryName": "🍋️appends-shape-b-at-the-root"
+              "directoryName": "➕️appends-shape-b-at-the-root"
             }
           ]
         },
@@ -41,8 +41,8 @@
         },
         {
           "mutationId": "duplicate-layer",
-          "sourceMutationDirectoryName": "🧬️duplicate-layer",
-          "mutationDirectoryName": "🧬️duplicate-layer",
+          "sourceMutationDirectoryName": "📋️duplicate-layer",
+          "mutationDirectoryName": "📋️duplicate-layer",
           "scenarios": [
             {
               "id": "rejects-a-missing-source-layer",
@@ -57,7 +57,7 @@
           "scenarios": [
             {
               "id": "moves-shape-a-above-shape-b",
-              "directoryName": "🍎️moves-shape-a-above-shape-b"
+              "directoryName": "⬆️moves-shape-a-above-shape-b"
             }
           ]
         }
@@ -80,7 +80,7 @@
         {
           "id": "create-layer",
           "capability": "drawing-1-structure-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🌱create-layer/🦠️mutation/🦀️.rs#CreateLayer",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➕️create-layer/🦠️mutation/🦀️.rs#CreateLayer",
           "outcomes": [
             "applied",
             "rejected"
@@ -112,7 +112,7 @@
         {
           "id": "duplicate-layer",
           "capability": "drawing-1-structure-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧬️duplicate-layer/🔣️.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📋️duplicate-layer/🔣️.schema.json",
           "outcomes": [
             "applied",
             "rejected"

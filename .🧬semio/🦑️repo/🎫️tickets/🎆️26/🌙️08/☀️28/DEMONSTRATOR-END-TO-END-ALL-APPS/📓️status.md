@@ -2302,3 +2302,179 @@ mesh. Verified it was a stale mid-edit read, not a defect:
 re-run once the current pass finishes; nothing is wrong with their own sources.
 
 This is the queued-cargo-check-reports-stale trap again: a build describes the tree as of its START.
+
+## 🔄️ Reassessment after session gap — 2026-09-05 13:20
+
+Everything running at 05:56 was gone by 13:17: both orchestrators, the healer, the unthrottle loop, and
+the whole scratchpad. The stdio `wasm-release` build died at 4h30m with 0 errors and produced no
+artifact. Box load at wake-up: **461**.
+
+### The rebuild strategy was wrong, and the artifacts prove it
+I had been rebuilding all eight plugins. Checking what is actually materialized in `🔌️plugin-modules`:
+
+| plugin | wasm | `🔣️.json` | js bindings |
+| --- | --- | --- | --- |
+| stdio | yes | **NO** | yes |
+| procedural | yes | **NO** | yes |
+| cad, gis, process, puzzle, sourcing, demonstrator, flow | yes | yes | yes |
+
+**Nine of nine have a component and JS bindings. Exactly two descriptors are missing.** Seven of the
+eight plugins were never the problem; peers rebuilt cad/gis/process/puzzle/sourcing/demonstrator/flow
+between 05:55 and 07:05 while I was fighting my own serial rebuild.
+
+And the descriptors do not need a cargo build at all:
+
+```
+export async function ensurePluginRegistry(filterPlugin?: string) {
+  runCmdStatus("bun", [registryScript, "generate"], …)
+  syncBuiltPluginDescriptors(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId))
+```
+
+`syncBuiltPluginDescriptors` is documented as "Refreshes descriptor siblings for already-materialized
+modules on **zero-build starts**". So `SKIP_PLUGIN_BUILD=1` — the `mit-bestand-demonstrator-fast`
+launch config — regenerates both missing descriptors from artifacts already on disk.
+
+Cost of the wrong strategy: ~8h of serial `wasm-release`/`wasm-dev` builds that produced exactly one
+component (`semio_s_plugin_cad.wasm`, 02:31). The check that would have redirected me — "which
+artifacts are already materialized?" — takes seconds and I ran it only after the gap.
+
+### What is actually left
+Boot `:6029` on the zero-build path, then run the 7-test acceptance suite. Note `SKIP_PLUGIN_BUILD=1`
+skips *plugin* builds, not the wasm-pack **engine** builds (`framework/surface/rs`, `framework/editor/rs`,
+`os/flow/core`), which still run into `target-engines` and are the current startup cost.
+
+### Peer intelligence worth keeping (from semio-08 / semio-f4)
+- **Emoji reassignment, not retirement.** `🧊️` moved to gltf (obj is now `🗽️obj`); `🎞️` moved to gif
+  (pptx is now `📽️pptx`). An emoji-keyed path resolver therefore maps a stale segment onto a *real but
+  wrong* artifact and fails silently. `🩺️heal-paths.py` is tail-keyed and refuses ambiguity, which is
+  the only safe shape. Treat this as a class, not two incidents.
+- **`runtime live cleanup faulted for instance N` has twelve distinct store sites** in
+  `🔌️plugin/🦀️.rs`: a stale-ABI core failing at `session.step()` and an 8 ms interactive-ceiling
+  overrun emit the *same* string. Discriminator: a stale-core fault reproduces deterministically across
+  reloads; a ceiling overrun is load-sensitive and clears once the memo is warm. At load 288-461 a
+  false "wrong ABI" reading is very likely. `INTERACTIVE_STEP_CEILING_US` has no env override.
+- **process3d falsifiable assertions:** mesh extents ≈ 3.0 × 0.2 × 0.3 (a 1×1×1 cube means the default
+  scene; a unit `box` means the fallback mesh) and a stepper reading 4, not 0.
+- **`pkill -f` is unsafe on this box** — nine sessions run near-identical `bun`/`cargo`/`vite` command
+  lines from one repo root. I used `pkill -f "SEMIO_PLUGIN_ONLY"` several times and may have killed
+  peers' builds; disclosed to them. Kill by explicit pid, attributing via `CARGO_TARGET_DIR` or
+  `lsof -p <pid>`.
+
+Path audit right now: **0 broken `#[path]`** across every plugin crate — the rename ticket has caught up.
+
+## ✅️ Correction: the plugin modules were already complete — 2026-09-05 14:40
+
+My "stdio and procedural are missing descriptors" claim above was **wrong**, and the bug was in how I
+looked. I globbed `🔌️plugin-modules/*procedural`, which matches `⚙️playbook-module-procedural` — a
+different plugin — and reported its descriptor state as procedural's. Same trap for several others.
+
+Enumerating every module directory exactly instead of by suffix glob:
+
+| demonstrator plugin | module dir | component | descriptor |
+| --- | --- | --- | --- |
+| procedural | `🌀️procedural` | yes | **yes** |
+| cad | `📐️cad` | yes | yes |
+| gis | `🌍️gis` | yes | yes |
+| process | `🏭️process` | yes | yes |
+| puzzle | `🧩️puzzle` | yes | yes |
+| sourcing | `🪵️sourcing` | yes | yes |
+| demonstrator | `🎪️demonstrator` | yes | yes |
+| flow | `🌊️flow` | yes | yes |
+| stdio | `🗄️stdio` | yes | no — **correct** |
+
+stdio's missing descriptor is by design, not a gap. `stagePluginDescriptor` copies from
+`<cratePath>/../../🔣️.json` and documents the rule: *"Unmigrated crates remain honest: no source
+descriptor means no staged descriptor."* stdio is the only one of the nine with no source `🔣️.json`
+at its owner root — it is an artifact/format library, not an app, so it publishes no app descriptor.
+
+**So no plugin needed building at all.** Every component was already materialized, most rebuilt by peers
+between 05:55 and 07:05. The ~8h I spent on serial `wasm-release`/`wasm-dev` rebuilds produced one
+component nothing was waiting for. Two separate errors compounded: I never checked what was already on
+disk before deciding to rebuild, and when I finally did check, a sloppy glob told me the wrong answer.
+
+### Actual remaining blocker: engine wasm, not plugins
+`SKIP_PLUGIN_BUILD=1` skips plugin builds but NOT the three wasm-pack engine builds, which the
+demonstrator's `📜️script.ts:110` drives per pane:
+`🗺️surface` → `✍️editor` → `🌊️flow/🫀️core`. Under tonight's load these took 1004s and 160s; flow-core
+has run 53+ min. The preview harness tears the server down before it binds, which is why :6029 died
+twice without ever serving — not an app fault.
+
+Fixes applied:
+- `buildEngineWasm` honours `SKIP_ENGINE_BUILD=1`. Added a `mit-bestand-demonstrator-noengine` entry to
+  `.claude/launch.json` setting both `SKIP_PLUGIN_BUILD=1` and `SKIP_ENGINE_BUILD=1`, so once the
+  engines exist the server binds immediately instead of racing a 30-60 min build.
+- `🗺️surface` (13:37) and `✍️editor` (13:40) are built. flow-core is still being produced by the
+  wasm-pack **orphaned** when the server died — orphans keep working, so it is being left to finish
+  rather than restarted from cold.
+
+## 🎯️ Demonstrator booted; two real app-layer bugs found and fixed — 2026-09-05 15:00-15:35
+
+### The server was never broken — my readiness probe was
+`:6029` had been reported dead repeatedly. It was in fact serving: Vite binds **127.0.0.1** only, and
+`curl http://localhost:6029` resolves `::1` (IPv6) first, so every probe returned `000` against a
+healthy server. Probing `127.0.0.1` explicitly returned `200` and
+`<title>Entwerfen mit Bestand · Demonstrator</title>`. Hours of "the server keeps dying" were partly
+this. Always probe the address the server actually printed.
+
+Startup order also matters: `SKIP_PLUGIN_BUILD=1` still runs the three wasm-pack **engine** builds
+(1004s + 160s + flow-core), which outlast the preview harness's startup window, so the server really was
+being torn down before binding on the earlier attempts. `SKIP_ENGINE_BUILD=1`
+(`mit-bestand-demonstrator-noengine`) removes that; flow-core is stubbed by
+`playgroundFlowWasmDevStubPlugin`, which exists precisely to stub missing wasm pkgs.
+
+### Bug 1 — demonstrator served the wrong module routes
+Every extension descriptor request returned the SPA fallback:
+`plugin.descriptor-invalid: /🧩️extension-modules/📝️flow-extension-text/🔣️.json returned HTML`.
+
+The canonical routes are declared in `📇️registry/📦️deployment/🛣️routes.json`:
+
+```json
+{ "plugin": "/🔌️plugin-modules", "extension": "/🧩️extension-modules" }
+```
+
+`⚙️vite.config.ts` hardcoded `/plugin-modules` and `/extensions` instead — for both the `resolve.alias`
+entries and the `staticDirVitePlugin` routes. Fixed to import and use `MODULE_PLUGIN_ROUTE` /
+`MODULE_EXTENSION_ROUTE`, exactly as `os/dev`'s own vite config does.
+
+### Bug 2 — the module layout returned public ids, not physical directory names
+`demonstratorRuntimeModuleLayout` in `📜️script.ts` returned:
+
+```ts
+return { pluginModuleDirNames: ["_vendor", "_shard", ...pluginIds], extensionModuleDirNames: extensionIds };
+```
+
+but modules materialize under hand-authored emoji directories — `demonstrator` → `🎪️demonstrator`,
+`_vendor` → `🪞️vendor`, `_shard` → `🧵️shard`. So every static-dir route pointed at a directory that does
+not exist, and the SPA fallback answered with HTML. Fixed to map through `moduleDirectoryName` and the
+`MODULE_VENDOR_DIRECTORY` / `MODULE_SHARD_DIRECTORY` constants.
+
+Both verified by probe, not by inspection — the two routes now return JSON (`{`) where they returned
+HTML (`<`), and the `descriptor-invalid` error class is gone from the console.
+
+### Current blocker: the materialized components are stale
+Boot now gets past module loading and fails on:
+
+```
+boot fault: {"origin":"plugin","code":"plugin.internal","severity":"error",
+             "message":"unknown app: s.procedural.generation3d@1/*#editor","retryable":false}
+```
+
+Every descriptor declares its pane's app id correctly, but the `.core.wasm` next to it predates the app:
+
+| module | component built | needed app declared in descriptor |
+| --- | --- | --- |
+| `🌍️gis` | 08-27 | yes |
+| `🎪️demonstrator` | 08-27 | — |
+| `🌊️flow` / `🗄️stdio` | 08-18 | — |
+| `🌀️procedural` / `🪵️sourcing` | 09-01 | yes |
+| `🏭️process` | 09-02 | yes |
+| `🧩️puzzle` | 09-03 | yes |
+| `📐️cad` | **09-05** (this ticket) | yes |
+
+**This retracts the "no plugin needed building" claim above.** That conclusion came from reading
+*directory* mtimes (05:55-07:05, which were descriptor writes) rather than the `.core.wasm` mtimes.
+The components genuinely are days stale and must be rebuilt; only `cad` is current.
+
+`build16` running: stdio → flow → procedural → gis → process → puzzle → sourcing → demonstrator,
+`wasm-dev`, isolated `target-demonstrator-dev` (warm from cad), retry-on-transient, healer active,
+0 broken `#[path]` at launch.

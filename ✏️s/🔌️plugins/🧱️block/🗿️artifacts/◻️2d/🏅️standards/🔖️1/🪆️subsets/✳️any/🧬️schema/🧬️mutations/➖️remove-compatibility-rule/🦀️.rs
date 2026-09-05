@@ -17,23 +17,23 @@ pub struct RemoveCompatibilityRule {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn remove_compatibility_rule(id: String) -> Block2dMutation {
+pub fn remove_compatibility_rule(id: String) -> Block2dMutation {
     Block2dMutation::RemoveCompatibilityRule(RemoveCompatibilityRule { id })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RemoveCompatibilityRule {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "compatibility-rule", kind: "remove-compatibility-rule", record: "RemovedCompatibilityRule" };
 
-    async fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Remove compatibility rule \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

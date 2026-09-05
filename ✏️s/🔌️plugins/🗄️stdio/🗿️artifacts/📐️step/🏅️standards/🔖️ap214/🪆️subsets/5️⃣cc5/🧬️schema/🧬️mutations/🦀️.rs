@@ -50,7 +50,7 @@ pub use crate::artifacts::step::standards::v_ap214::subsets::base::schema::mutat
 const CLASS: &str = "ISO 10303-214 CC5 (faceted B-Rep)";
 
 //#region 🔖️Leaves
-#[path = "📋set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🏷️set-file-schema/🦀️.rs"]
 pub mod set_file_schema;

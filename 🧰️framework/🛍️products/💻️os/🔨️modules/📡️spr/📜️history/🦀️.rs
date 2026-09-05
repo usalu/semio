@@ -1468,7 +1468,7 @@ async fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), 
 /// `crate::os_spr::format::parse_commit_payload` (public since that crate's own follow-up review pass)
 /// so `VerificationLevel::Full`'s chain recompute doesn't need this crate's own byte-offset copy.
 async fn parse_commit_fields(payload: &[u8]) -> Result<(u64, [u8; 32]), ProtocolError> {
-    let commit = crate::os_spr::format::parse_commit_payload(payload).await?;
+    let commit = crate::os_spr::format::parse_commit_payload(payload)?;
     Ok((commit.commit_seq, commit.chain_hash))
 }
 

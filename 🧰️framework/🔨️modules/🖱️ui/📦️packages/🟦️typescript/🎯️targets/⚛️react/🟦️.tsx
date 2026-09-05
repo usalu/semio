@@ -2655,6 +2655,15 @@ export const uiChromeTranslationBundles = {
           subtractive: { label: { normal: "Subtraktiv", beginner: "Subtraktiv" } },
           invertive: { label: { normal: "Invertierend", beginner: "Invertierend" } },
         },
+        windowFault: {
+          title: { label: { normal: "Fenster reagiert nicht", beginner: "Fenster reagiert nicht" } },
+          abiMismatch: { label: { normal: "Plugin-Modul passt nicht zur Host-Schnittstelle", beginner: "Das Plugin ist veraltet und passt nicht mehr zum Programm" } },
+          interactiveCeiling: { label: { normal: "Plugin-Schritt hat die interaktive Zeitgrenze überschritten", beginner: "Das Plugin hat für einen Schritt zu lange gebraucht" } },
+          clock: { label: { normal: "Keine monotone Uhr verfügbar", beginner: "Die Zeitmessung des Systems steht nicht zur Verfügung" } },
+          pluginInternal: { label: { normal: "Interner Plugin-Laufzeitfehler", beginner: "Im Plugin ist ein interner Fehler aufgetreten" } },
+          installFailed: { label: { normal: "Plugin konnte nicht installiert werden", beginner: "Das Plugin liess sich nicht laden" } },
+          unknown: { label: { normal: "Unbekannte Fehlerursache", beginner: "Die Ursache ist unbekannt" } },
+        },
         common: {
           mixedValues: {
             label: {
@@ -3471,6 +3480,15 @@ export const uiChromeTranslationBundles = {
           additive: { label: { normal: "Additive", beginner: "Additive" } },
           subtractive: { label: { normal: "Subtractive", beginner: "Subtractive" } },
           invertive: { label: { normal: "Invertive", beginner: "Invertive" } },
+        },
+        windowFault: {
+          title: { label: { normal: "Window is not responding", beginner: "Window is not responding" } },
+          abiMismatch: { label: { normal: "Plugin module does not match the host interface", beginner: "This plugin is out of date and no longer fits the program" } },
+          interactiveCeiling: { label: { normal: "Plugin step overran the interactive time ceiling", beginner: "The plugin took too long for one step" } },
+          clock: { label: { normal: "No monotonic clock available", beginner: "The system clock reading is unavailable" } },
+          pluginInternal: { label: { normal: "Internal plugin runtime fault", beginner: "Something went wrong inside the plugin" } },
+          installFailed: { label: { normal: "Plugin failed to install", beginner: "The plugin could not be loaded" } },
+          unknown: { label: { normal: "Unknown fault cause", beginner: "The cause is unknown" } },
         },
         common: {
           mixedValues: {

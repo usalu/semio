@@ -12,7 +12,7 @@
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
 use crate::artifacts::gismap::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
-use crate::editor::gis2d::commands::{example, features, locale, shell, view};
+use crate::editor::gis2d::commands::{example, features, inference, locale, shell, view};
 use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::modes::edit;
 use crate::editor::gis2d::modes::edit::windows::map;
@@ -235,12 +235,14 @@ semio_framework_plugin::app_commands! {
         "setLayerStrokeScale" as "layer-stroke-scale" => set_layer_stroke_scale::SetLayerStrokeScale,
         "setLocale" as "locale" => set_locale::SetLocale,
         "openSource" as "open-source" => open_source::OpenSource,
+        "proposeBoundsRegion" as "propose-bounds-region" => propose_bounds_region::ProposeBoundsRegion,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier.
 use example::set_active_example;
 use features::{patch_positions, patch_route, patch_routes};
+use inference::propose_bounds_region;
 use locale::set_locale;
 use shell::open_source;
 use view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
@@ -271,6 +273,7 @@ const GIS2D_RETAINED_TOOL_IDS: &[&str] = &[
     "setLayerStrokeScale",
     "openSource",
     "setLocale",
+    "proposeBoundsRegion",
 ];
 const GIS2D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.map.tool-command.v1";
 const GIS2D_RETAINED_RAW_BYTES: usize = 8_192;
@@ -291,6 +294,7 @@ const GIS2D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
     ArtifactToolPublicationContract { tool_id: "setLayerStrokeScale", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "openSource", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "proposeBoundsRegion", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 fn gis2d_retained_contract() -> ToolExecutionContract {
@@ -612,6 +616,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: [
             "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "setLocale",
+            "proposeBoundsRegion",
         ]
     }
 
@@ -793,6 +798,7 @@ impl ArtifactEditor for Gis2dPlayApp {
             "setLayerStrokeScale" => Ok(Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default(), value: f64_arg(&["value"]).unwrap_or(1.0) })),
             "setLocale" => Ok(Gis2dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
             "openSource" => Ok(Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default() })),
+            "proposeBoundsRegion" => Ok(Gis2dCommand::ProposeBoundsRegion(propose_bounds_region::ProposeBoundsRegion {})),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -908,6 +914,10 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
             .action_with(ActionDefinition { category: Some("open".into()), ..ActionDefinition::bounded_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell) })
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
+            // 💡️ Shell action — asks the host to open its own ephemeral inference port and offer a
+            // reviewable bounds region. It never writes the document; only the hub's server-stamped
+            // approval command can.
+            .action_with(ActionDefinition { category: Some("inference".into()), ..ActionDefinition::bounded_catalog("proposeBoundsRegion", LocalizedLabel::native("Propose Bounds Region", "Begrenzungsregion vorschlagen"), ActionKind::Shell) })
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchPositions", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchRoutes", InteractiveJobClassification::Migrated)
@@ -922,6 +932,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setLayerStrokeScale", InteractiveJobClassification::Migrated)
             .action_interactive_job("openSource", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("proposeBoundsRegion", InteractiveJobClassification::Migrated)
             // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![
@@ -1118,13 +1129,14 @@ mod tests {
             Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 }),
             Gis2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: "p1".into() }),
+            Gis2dCommand::ProposeBoundsRegion(propose_bounds_region::ProposeBoundsRegion {}),
         ]
     }
 
     /// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
     /// manifest action id. Pinned so a reordered/renamed row is caught here, not in production.
     const WIRE_KEYWORDS: &[&str] =
-        &["active-example", "patch-positions", "patch-routes", "patch-route", "toggle-layer-visibility", "fit-world", "camera", "render-mode", "vector-style", "lod-mode", "focus-feature", "layer-stroke-scale", "locale", "open-source"];
+        &["active-example", "patch-positions", "patch-routes", "patch-route", "toggle-layer-visibility", "fit-world", "camera", "render-mode", "vector-style", "lod-mode", "focus-feature", "layer-stroke-scale", "locale", "open-source", "propose-bounds-region"];
 
     #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {
@@ -1134,7 +1146,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 14, "every Gis2dCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 15, "every Gis2dCommand row must be covered by every_command()");
     }
 
     #[test]
@@ -1144,6 +1156,7 @@ mod tests {
         assert_eq!(GIS2D_RETAINED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "setActiveExample").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config][..]));
         assert_eq!(GIS2D_RETAINED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "setCamera").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::Config][..]));
         assert_eq!(GIS2D_RETAINED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "openSource").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::HostOnly][..]));
+        assert_eq!(GIS2D_RETAINED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "proposeBoundsRegion").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::HostOnly][..]));
     }
 
     #[semio_framework_async_macros::async_test]

@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/hub/directory-command-receipt-v1.json",
+  "title": "Directory Command Receipt Transport Vectors",
+  "description": "Language-agnostic vectors for the closed DirectoryCommandRequestV1/DirectoryCommandReceiptV1 wire: canonical bytes, SHA-256 digests, the secret-result redaction rule, byte ceilings, and the browser/native transport traces.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "requests", "receipts", "rejectedRequests", "rejectedReceipts", "transport"],
+  "properties": {
+    "schema": { "const": "semio.hub.directory-command-receipt/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestBytes", "receiptBytes", "maxEvents", "inviteTokenBytes", "requestIdLen"],
+      "properties": {
+        "requestBytes": { "const": 8192 },
+        "receiptBytes": { "const": 65536 },
+        "maxEvents": { "const": 4 },
+        "inviteTokenBytes": { "const": 256 },
+        "requestIdLen": { "const": 32 }
+      }
+    },
+    "requests": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "requestId", "command", "canonical", "canonicalBytes", "commandSha256"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "requestId": { "type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$" },
+          "command": { "type": "object", "properties": { "kind": { "type": "string", "minLength": 1 } }, "required": ["kind"] },
+          "canonical": { "type": "string", "minLength": 1 },
+          "canonicalBytes": { "type": "integer", "minimum": 1, "maximum": 8192 },
+          "commandSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "receipts": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "requestName", "outcome", "canonical", "canonicalBytes", "receiptSha256", "receipt"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "requestName": { "type": "string", "minLength": 1 },
+          "outcome": { "enum": ["accepted", "previously-accepted", "secret-undeliverable"] },
+          "canonical": { "type": "string", "minLength": 1 },
+          "canonicalBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+          "receiptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "receipt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["schema", "requestId", "commandSha256", "outcome", "events", "result", "receiptSha256"],
+            "properties": {
+              "schema": { "const": "semio.directory.command-receipt.v1" },
+              "requestId": { "type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$" },
+              "commandSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "outcome": { "enum": ["accepted", "previously-accepted", "secret-undeliverable"] },
+              "events": { "type": "array", "maxItems": 4, "items": { "type": "object", "properties": { "seq": { "type": "integer", "minimum": 1 }, "id": { "type": "string" }, "hlc": { "type": "object" }, "actor": { "type": "object" }, "spaceId": { "type": "string" }, "userId": { "type": "string" }, "body": { "type": "object" }, "recordedAtMs": { "type": "integer" } }, "required": ["seq", "id", "hlc", "actor", "body", "recordedAtMs"] } },
+              "result": {
+                "type": "object",
+                "properties": { "kind": { "type": "string", "minLength": 1 }, "inviteToken": { "type": "string" } },
+                "required": ["kind"],
+                "oneOf": [
+                  { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "none" } } },
+                  { "type": "object", "additionalProperties": false, "required": ["kind", "inviteToken"], "properties": { "kind": { "const": "invite" }, "inviteToken": { "type": "string", "minLength": 1, "maxLength": 256 } } }
+                ]
+              },
+              "receiptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        }
+      }
+    },
+    "rejectedRequests": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "source", "code"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "code": { "enum": ["invalid", "too-large"] }
+        }
+      }
+    },
+    "rejectedReceipts": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "requestName", "source", "code"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "requestName": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "code": { "enum": ["invalid", "too-large"] }
+        }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capacity", "statusCodes", "transientCodes", "terminalCodes", "traces"],
+      "properties": {
+        "capacity": { "const": 64 },
+        "statusCodes": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "code"],
+            "properties": { "status": { "type": "integer", "minimum": 100, "maximum": 599 }, "code": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "transientCodes": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 1 } },
+        "terminalCodes": { "type": "array", "minItems": 9, "items": { "type": "string", "minLength": 1 } },
+        "traces": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "expected"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "attempts": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["status"], "properties": { "status": { "type": "integer" } } } },
+              "submit": { "type": "integer", "minimum": 1 },
+              "close": { "type": "boolean" },
+              "cancel": { "type": "boolean" },
+              "replaceSession": { "type": "boolean" },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "attempts": { "type": "integer", "minimum": 0 },
+                  "terminal": { "type": ["string", "null"] },
+                  "pending": { "type": "integer", "minimum": 0 },
+                  "queued": { "type": "integer", "minimum": 0 },
+                  "byteIdenticalRequests": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

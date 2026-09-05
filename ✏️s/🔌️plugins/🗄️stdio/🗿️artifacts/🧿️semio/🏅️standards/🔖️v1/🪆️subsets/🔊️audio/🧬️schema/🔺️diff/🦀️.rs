@@ -624,8 +624,8 @@ impl DiffCodec for SemioAudioDiff {
     /// `enc_indexed_triple`-based text `print_diff` already produces) — independently-delimited
     /// segments rather than one bare trailing `bytes` because there can be 0-4 of them (chaining a
     /// `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a second `if`-guard on a field
-    /// that was itself only conditionally decoded hard-errors `eval_cond` — see `✳️flow`'s/
-    /// `✳️image`'s pilot reports).
+    /// that was itself only conditionally decoded hard-errors `eval_cond` — see `🌊️flow`'s/
+    /// `🖼️image`'s pilot reports).
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;

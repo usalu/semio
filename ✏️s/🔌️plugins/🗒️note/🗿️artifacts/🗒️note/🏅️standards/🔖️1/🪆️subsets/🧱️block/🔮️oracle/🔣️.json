@@ -56,7 +56,7 @@
           "scenarios": [
             {
               "id": "hides-the-image-block",
-              "directoryName": "🖼️hides-the-image-block"
+              "directoryName": "🙈️hides-the-image-block"
             }
           ]
         },
@@ -67,7 +67,7 @@
           "scenarios": [
             {
               "id": "inserts-a-photo-block-at-root-index-2",
-              "directoryName": "🧩️inserts-a-photo-block-at-root-index-2"
+              "directoryName": "📷️inserts-a-photo-block-at-root-index-2"
             }
           ]
         },
@@ -78,18 +78,18 @@
           "scenarios": [
             {
               "id": "removes-the-math-block",
-              "directoryName": "🧩️removes-the-math-block"
+              "directoryName": "➖️removes-the-math-block"
             }
           ]
         },
         {
           "mutationId": "delete-blocks",
-          "sourceMutationDirectoryName": "🧺️delete-blocks",
-          "mutationDirectoryName": "🧺️delete-blocks",
+          "sourceMutationDirectoryName": "🧹️delete-blocks",
+          "mutationDirectoryName": "🧹️delete-blocks",
           "scenarios": [
             {
               "id": "removes-the-ink-and-image-blocks",
-              "directoryName": "🖼️removes-the-ink-and-image-blocks"
+              "directoryName": "🗑️removes-the-ink-and-image-blocks"
             }
           ]
         },
@@ -100,18 +100,18 @@
           "scenarios": [
             {
               "id": "nudges-ink-and-the-whole-group-subtree",
-              "directoryName": "🌳️nudges-ink-and-the-whole-group-subtree"
+              "directoryName": "🤏️nudges-ink-and-the-whole-group-subtree"
             }
           ]
         },
         {
           "mutationId": "duplicate-block",
-          "sourceMutationDirectoryName": "🎯️duplicate-block",
-          "mutationDirectoryName": "🎯️duplicate-block",
+          "sourceMutationDirectoryName": "📋️duplicate-block",
+          "mutationDirectoryName": "📋️duplicate-block",
           "scenarios": [
             {
               "id": "copies-the-math-block-right-after-its-source",
-              "directoryName": "🧩️copies-the-math-block-right-after-its-source"
+              "directoryName": "📋️copies-the-math-block-right-after-its-source"
             }
           ]
         },
@@ -122,7 +122,7 @@
           "scenarios": [
             {
               "id": "copies-ink-and-table-with-shifting-indices",
-              "directoryName": "📌️copies-ink-and-table-with-shifting-indices"
+              "directoryName": "👥️copies-ink-and-table-with-shifting-indices"
             }
           ]
         },
@@ -133,7 +133,7 @@
           "scenarios": [
             {
               "id": "repositions-the-math-block",
-              "directoryName": "🧩️repositions-the-math-block"
+              "directoryName": "📍️repositions-the-math-block"
             }
           ]
         },
@@ -144,7 +144,7 @@
           "scenarios": [
             {
               "id": "reparents-ink-into-the-callout-group",
-              "directoryName": "🟩️reparents-ink-into-the-callout-group"
+              "directoryName": "📥️reparents-ink-into-the-callout-group"
             }
           ]
         },
@@ -155,7 +155,7 @@
           "scenarios": [
             {
               "id": "renames-the-table-block",
-              "directoryName": "🧩️renames-the-table-block"
+              "directoryName": "🏷️renames-the-table-block"
             }
           ]
         },
@@ -166,7 +166,7 @@
           "scenarios": [
             {
               "id": "enlarges-the-image-block",
-              "directoryName": "🖼️enlarges-the-image-block"
+              "directoryName": "📐️enlarges-the-image-block"
             }
           ]
         }

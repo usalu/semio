@@ -30,7 +30,9 @@ path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️su
 # `default-features = false`; only its own component build keeps `plugin-root`.
 [features]
 default = ["plugin-root"]
-plugin-root = []
+plugin-root = ["full-artifact-catalog"]
+full-artifact-catalog = []
+home-io = []
 
 [dependencies]
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }

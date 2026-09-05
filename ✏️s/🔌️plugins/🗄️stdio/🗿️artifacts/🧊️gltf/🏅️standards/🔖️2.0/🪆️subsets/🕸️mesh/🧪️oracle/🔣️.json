@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "binds-position-inside-the-first-morph-target",
-              "directoryName": "🧪️binds-position-inside-the-first-morph-target"
+              "directoryName": "🔗️binds-position-inside-the-first-morph-target"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "binds-texcoord-0-to-the-second-accessor",
-              "directoryName": "🧪️binds-texcoord-0-to-the-second-accessor"
+              "directoryName": "📍️binds-texcoord-0-to-the-second-accessor"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "binds-the-scalar-index-accessor-to-the-primitive",
-              "directoryName": "🧪️binds-the-scalar-index-accessor-to-the-primitive"
+              "directoryName": "🔢️binds-the-scalar-index-accessor-to-the-primitive"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "binds-the-steel-material-to-the-primitive",
-              "directoryName": "🧪️binds-the-steel-material-to-the-primitive"
+              "directoryName": "🔗️binds-the-steel-material-to-the-primitive"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "attaches-an-unlit-extension-object-to-the-mesh",
-              "directoryName": "🧪️attaches-an-unlit-extension-object-to-the-mesh"
+              "directoryName": "🔌️attaches-an-unlit-extension-object-to-the-mesh"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "attaches-an-author-extras-object-to-the-mesh",
-              "directoryName": "🧪️attaches-an-author-extras-object-to-the-mesh"
+              "directoryName": "✍️attaches-an-author-extras-object-to-the-mesh"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter",
-              "directoryName": "🧪️sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter"
+              "directoryName": "⚖️sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter"
             }
           ]
         },
@@ -93,7 +93,7 @@
           "scenarios": [
             {
               "id": "renames-the-hull-mesh-to-deck",
-              "directoryName": "🧪️renames-the-hull-mesh-to-deck"
+              "directoryName": "✏️renames-the-hull-mesh-to-deck"
             }
           ]
         },
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "attaches-a-draco-extension-object-to-the-primitive",
-              "directoryName": "🧪️attaches-a-draco-extension-object-to-the-primitive"
+              "directoryName": "🔌️attaches-a-draco-extension-object-to-the-primitive"
             }
           ]
         },
@@ -115,7 +115,7 @@
           "scenarios": [
             {
               "id": "attaches-a-lod-extras-object-to-the-primitive",
-              "directoryName": "🧪️attaches-a-lod-extras-object-to-the-primitive"
+              "directoryName": "📝️attaches-a-lod-extras-object-to-the-primitive"
             }
           ]
         },
@@ -126,7 +126,7 @@
           "scenarios": [
             {
               "id": "switches-primitive-from-triangles-to-triangle-strip",
-              "directoryName": "🧪️switches-primitive-from-triangles-to-triangle-strip"
+              "directoryName": "📐️switches-the-primitive-from-implicit-triangles-to-triangle-strip"
             }
           ]
         },
@@ -137,7 +137,7 @@
           "scenarios": [
             {
               "id": "inserts-a-scalar-index-accessor-ahead-of-the-position-accessor",
-              "directoryName": "🧪️inserts-a-scalar-index-accessor-ahead-of-the-position-accessor"
+              "directoryName": "🔢️inserts-a-scalar-index-accessor-ahead-of-the-position-accessor"
             }
           ]
         },
@@ -148,7 +148,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-mesh-ahead-of-the-hull-mesh",
-              "directoryName": "🧪️inserts-an-empty-mesh-ahead-of-the-hull-mesh"
+              "directoryName": "🕸️inserts-an-empty-mesh-ahead-of-the-hull-mesh"
             }
           ]
         },
@@ -159,7 +159,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-morph-target-ahead-of-the-existing-one",
-              "directoryName": "🧪️inserts-an-empty-morph-target-ahead-of-the-existing-one"
+              "directoryName": "🧬️inserts-an-empty-morph-target-ahead-of-the-existing-one"
             }
           ]
         },
@@ -170,7 +170,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-primitive-ahead-of-the-position-primitive",
-              "directoryName": "🧪️inserts-an-empty-primitive-ahead-of-the-position-primitive"
+              "directoryName": "🔺️inserts-an-empty-primitive-ahead-of-the-position-primitive"
             }
           ]
         },
@@ -181,7 +181,7 @@
           "scenarios": [
             {
               "id": "removes-the-index-accessor-and-renumbers-the-position-attribute",
-              "directoryName": "🧪️removes-the-index-accessor-and-renumbers-the-position-attribute"
+              "directoryName": "🗑️removes-the-index-accessor-and-renumbers-the-position-attribute"
             }
           ]
         },
@@ -192,7 +192,7 @@
           "scenarios": [
             {
               "id": "removes-the-hull-mesh-and-renumbers-the-node-binding",
-              "directoryName": "🧪️removes-the-hull-mesh-and-renumbers-the-node-binding"
+              "directoryName": "🔗️removes-the-hull-mesh-and-renumbers-the-node-binding"
             }
           ]
         },
@@ -203,7 +203,7 @@
           "scenarios": [
             {
               "id": "removes-the-first-of-two-morph-targets",
-              "directoryName": "🧪️removes-the-first-of-two-morph-targets"
+              "directoryName": "🚫️removes-the-first-of-two-morph-targets"
             }
           ]
         },
@@ -214,7 +214,7 @@
           "scenarios": [
             {
               "id": "removes-the-trailing-empty-primitive",
-              "directoryName": "🧪️removes-the-trailing-empty-primitive"
+              "directoryName": "🚫️removes-the-trailing-empty-primitive"
             }
           ]
         },
@@ -225,7 +225,7 @@
           "scenarios": [
             {
               "id": "swaps-the-position-and-texcoord-accessors",
-              "directoryName": "🧪️swaps-the-position-and-texcoord-accessors"
+              "directoryName": "🚚️swaps-the-position-and-texcoord-accessors"
             }
           ]
         },
@@ -236,7 +236,7 @@
           "scenarios": [
             {
               "id": "swaps-the-hull-and-deck-meshes",
-              "directoryName": "🧪️swaps-the-hull-and-deck-meshes"
+              "directoryName": "🚚️swaps-the-hull-and-deck-meshes"
             }
           ]
         },
@@ -247,7 +247,7 @@
           "scenarios": [
             {
               "id": "swaps-the-two-morph-targets",
-              "directoryName": "🧪️swaps-the-two-morph-targets"
+              "directoryName": "🚚️swaps-the-two-morph-targets"
             }
           ]
         },
@@ -258,7 +258,7 @@
           "scenarios": [
             {
               "id": "moves-position-behind-normal-inside-the-morph-target",
-              "directoryName": "🧪️moves-position-behind-normal-inside-the-morph-target"
+              "directoryName": "🚚️moves-position-behind-normal-inside-the-morph-target"
             }
           ]
         },
@@ -269,7 +269,7 @@
           "scenarios": [
             {
               "id": "moves-the-position-primitive-behind-the-strip-primitive",
-              "directoryName": "🧪️moves-the-position-primitive-behind-the-strip-primitive"
+              "directoryName": "🚚️moves-the-position-primitive-behind-the-strip-primitive"
             }
           ]
         },
@@ -280,7 +280,7 @@
           "scenarios": [
             {
               "id": "moves-position-behind-normal-in-the-attribute-map",
-              "directoryName": "🧪️moves-position-behind-normal-in-the-attribute-map"
+              "directoryName": "🗺️moves-position-behind-normal-in-the-attribute-map"
             }
           ]
         },
@@ -291,7 +291,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-accessors-and-remaps-both-attributes",
-              "directoryName": "🧪️flips-the-two-accessors-and-remaps-both-attributes"
+              "directoryName": "🔀️flips-the-two-accessors-and-remaps-both-attributes"
             }
           ]
         },
@@ -302,7 +302,7 @@
           "scenarios": [
             {
               "id": "flips-the-hull-and-deck-meshes",
-              "directoryName": "🧪️flips-the-hull-and-deck-meshes"
+              "directoryName": "🔀️flips-the-hull-and-deck-meshes"
             }
           ]
         },
@@ -313,7 +313,7 @@
           "scenarios": [
             {
               "id": "orders-normal-before-position-in-morph-target",
-              "directoryName": "🧪️orders-normal-before-position-in-morph-target"
+              "directoryName": "🔀️flips-normal-ahead-of-position-inside-the-morph-target"
             }
           ]
         },
@@ -324,7 +324,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-morph-targets",
-              "directoryName": "🧪️flips-the-two-morph-targets"
+              "directoryName": "🔀️flips-the-two-morph-targets"
             }
           ]
         },
@@ -335,7 +335,7 @@
           "scenarios": [
             {
               "id": "flips-normal-ahead-of-position-in-the-attribute-map",
-              "directoryName": "🧪️flips-normal-ahead-of-position-in-the-attribute-map"
+              "directoryName": "🗺️flips-normal-ahead-of-position-in-the-attribute-map"
             }
           ]
         },
@@ -346,7 +346,7 @@
           "scenarios": [
             {
               "id": "flips-the-strip-primitive-ahead-of-the-position-primitive",
-              "directoryName": "🧪️flips-the-strip-primitive-ahead-of-the-position-primitive"
+              "directoryName": "🔀️flips-the-strip-primitive-ahead-of-the-position-primitive"
             }
           ]
         },
@@ -357,7 +357,7 @@
           "scenarios": [
             {
               "id": "unbinds-normal-from-the-first-morph-target",
-              "directoryName": "🧪️unbinds-normal-from-the-first-morph-target"
+              "directoryName": "🔗️unbinds-normal-from-the-first-morph-target"
             }
           ]
         },
@@ -368,7 +368,7 @@
           "scenarios": [
             {
               "id": "unbinds-normal-from-the-primitive",
-              "directoryName": "🧪️unbinds-normal-from-the-primitive"
+              "directoryName": "🔗️unbinds-normal-from-the-primitive"
             }
           ]
         },
@@ -379,7 +379,7 @@
           "scenarios": [
             {
               "id": "returns-the-primitive-to-non-indexed-drawing",
-              "directoryName": "🧪️returns-the-primitive-to-non-indexed-drawing"
+              "directoryName": "✂️returns-the-primitive-to-non-indexed-drawing"
             }
           ]
         },
@@ -390,7 +390,7 @@
           "scenarios": [
             {
               "id": "returns-the-primitive-to-the-default-material",
-              "directoryName": "🧪️returns-the-primitive-to-the-default-material"
+              "directoryName": "✂️returns-the-primitive-to-the-default-material"
             }
           ]
         }

@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "raises-the-height-answer-in-generation-1",
-              "directoryName": "🧪️raises-the-height-answer-in-generation-1"
+              "directoryName": "📏️raises-the-height-answer-in-generation-1"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "restamps-the-fixture-schema",
-              "directoryName": "🧪️restamps-the-fixture-schema"
+              "directoryName": "🏷️restamps-the-fixture-schema"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "drops-the-note-a-layout-entry",
-              "directoryName": "🧪️drops-the-note-a-layout-entry"
+              "directoryName": "🧹️drops-the-note-a-layout-entry"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "joins-note-b-to-note-c-at-index-1",
-              "directoryName": "🧪️joins-note-b-to-note-c-at-index-1"
+              "directoryName": "🔗️joins-note-b-to-note-c-at-index-1"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "appends-generation-2-and-selects-it",
-              "directoryName": "🧪️appends-generation-2-and-selects-it"
+              "directoryName": "🌱️appends-generation-2-and-selects-it"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "inserts-note-c-at-index-2",
-              "directoryName": "🧪️inserts-note-c-at-index-2"
+              "directoryName": "📝️inserts-note-c-at-index-2"
             }
           ]
         },
@@ -130,8 +130,8 @@
           "mutationDirectoryName": "➖delete-generation",
           "scenarios": [
             {
-              "id": "removes-generation-2-and-selects-generation-1",
-              "directoryName": "🧪️removes-generation-2-and-selects-generation-1"
+              "id": "removes-the-selected-generation-2-and-falls-back-to-generation-1",
+              "directoryName": "🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "removes-note-a-and-flags-the-dangling-synapse",
-              "directoryName": "🧪️removes-note-a-and-flags-the-dangling-synapse"
+              "directoryName": "🚫️removes-note-a-and-flags-the-dangling-synapse"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "severs-link-ab-leaving-both-notes",
-              "directoryName": "🧪️severs-link-ab-leaving-both-notes"
+              "directoryName": "✂️severs-link-ab-leaving-both-notes"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "repositions-note-a-on-the-canvas",
-              "directoryName": "🧪️repositions-note-a-on-the-canvas"
+              "directoryName": "📍️repositions-note-a-on-the-canvas"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "retitles-generation-1",
-              "directoryName": "🧪️retitles-generation-1"
+              "directoryName": "🏷️retitles-generation-1"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "repoints-link-ab-onto-the-alt-port",
-              "directoryName": "🧪️repoints-link-ab-onto-the-alt-port"
+              "directoryName": "🔗️repoints-link-ab-onto-the-alt-port"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "rewrites-the-note-b-body-in-place",
-              "directoryName": "🧪️rewrites-the-note-b-body-in-place"
+              "directoryName": "✍️rewrites-the-note-b-body-in-place"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "pans-and-zooms-the-graph-camera",
-              "directoryName": "🧪️pans-and-zooms-the-graph-camera"
+              "directoryName": "📷️pans-and-zooms-the-graph-camera"
             }
           ]
         }

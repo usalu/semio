@@ -575,32 +575,42 @@ function coordinateRoleKey(dialect: ArtifactDialect, role: AppRole): string {
  * `AppRouter`/`AppRouterState` — `💻️os/🔌️plugin/🖥️host/🦀️.rs:1723-1857` — in
  * `📓️w1-d-report.md`). `(dialect, role) -> AppRef[]`, built from every loaded manifest: the owner
  * plugin's entry first, then the rest sorted `pluginId` then `appId` ascending. A duplicate
- * `AppRef` or an unauthorized cross-plugin contribution fails {@link AppRouter.build} outright —
- * an `AppRouter` therefore never exists in an invalid state.
+ * `AppRef` or an unauthorized cross-plugin contribution excludes THAT plugin — all of its surfaces,
+ * never a partial registration — and records one typed {@link Fault} under its plugin id
+ * ({@link AppRouter.pluginFaults}); every other plugin still routes. An `AppRouter` therefore never
+ * exists in an invalid state and one malformed manifest can no longer make every app unroutable
+ * (ticket 26/09/05/S-END-TO-END lane H — `demonstrator` shipped surfaces for `s.cad.cad@1/*` with no
+ * declared `cad` dependency and took the whole shell's routing down with it).
  */
 export class AppRouter {
   private readonly entriesByCoordinateRole: ReadonlyMap<string, readonly AppRef[]>;
   private readonly dialectsByCoordinate: ReadonlyMap<string, ArtifactDialect>;
   private readonly ownerByArtifactKind: ReadonlyMap<string, string>;
+  private readonly faultByPluginId: ReadonlyMap<string, Fault>;
 
-  private constructor(entriesByCoordinateRole: ReadonlyMap<string, readonly AppRef[]>, dialectsByCoordinate: ReadonlyMap<string, ArtifactDialect>, ownerByArtifactKind: ReadonlyMap<string, string>) {
+  private constructor(entriesByCoordinateRole: ReadonlyMap<string, readonly AppRef[]>, dialectsByCoordinate: ReadonlyMap<string, ArtifactDialect>, ownerByArtifactKind: ReadonlyMap<string, string>, faultByPluginId: ReadonlyMap<string, Fault>) {
     this.entriesByCoordinateRole = entriesByCoordinateRole;
     this.dialectsByCoordinate = dialectsByCoordinate;
     this.ownerByArtifactKind = ownerByArtifactKind;
+    this.faultByPluginId = faultByPluginId;
   }
 
-  /** 🏗️ Builds the router. Loaded manifests are ordered dependency-first before ownership is
-   * claimed, matching the Rust host's resolved plugin load order even when browser workers finish
-   * nondeterministically. Dependencies not loaded yet are ignored for this transient rebuild; the
-   * router is rebuilt again as each plugin arrives. Within that order, first its own
-   * `artifactKinds` claim any still-unclaimed kind, then each app claims its dialect's
-   * `artifactKind` if still unclaimed. Throws {@link SemioFaultError} with
-   * `"surface.contribution-not-permitted"` (checked first) or `"surface.conflict"` (checked
-   * second) per app — same order as Rust `register_manifest` (`🦀️.rs:1755-1785`). */
+  /** 🏗️ Builds the router — total, never throws. Loaded manifests are ordered dependency-first
+   * before ownership is claimed, matching the Rust host's resolved plugin load order even when
+   * browser workers finish nondeterministically. Dependencies not loaded yet are ignored for this
+   * transient rebuild; the router is rebuilt again as each plugin arrives. Within that order, first
+   * its own `artifactKinds` claim any still-unclaimed kind, then each app claims its dialect's
+   * `artifactKind` if still unclaimed. A manifest breaching `"surface.contribution-not-permitted"`
+   * (checked first) or `"surface.conflict"` (checked second — same order as Rust
+   * `register_manifest`) contributes NO surface at all and one fault under its plugin id instead;
+   * its `artifactKinds` ownership claims survive, exactly like Rust `unregister_plugin`, so a later
+   * contributor never silently inherits an excluded plugin's kind. Vectors:
+   * `🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json` (shared with the Rust twin). */
   static build(manifests: readonly AppRouterManifest[]): AppRouter {
     const ownerByArtifactKind = new Map<string, string>();
     const seenRefs = new Set<string>();
     const grouped = new Map<string, { readonly dialect: ArtifactDialect; readonly role: AppRole; readonly entries: AppRef[] }>();
+    const faultByPluginId = new Map<string, Fault>();
     const loadedIds = new Set(manifests.map((manifest) => manifest.pluginId));
     const dependencyNodes = manifests.map((manifest) => ({
       pluginId: manifest.pluginId,
@@ -614,6 +624,9 @@ export class AppRouter {
         if (!ownerByArtifactKind.has(kind.id)) ownerByArtifactKind.set(kind.id, manifest.pluginId);
       }
 
+      const staged: { readonly key: string; readonly dialect: ArtifactDialect; readonly role: AppRole; readonly ref: AppRef; readonly refKey: string }[] = [];
+      const stagedRefKeys = new Set<string>();
+      let fault: Fault | undefined;
       for (const raw of manifest.apps) {
         const surface = readManifestAppSurface(raw);
         if (!surface) continue;
@@ -623,35 +636,36 @@ export class AppRouter {
           owner = manifest.pluginId;
           ownerByArtifactKind.set(surface.dialect.artifactKind, owner);
         }
-        if (owner !== manifest.pluginId) {
-          const permitted = (manifest.dependencies ?? []).some((dependency) => dependency.pluginId === owner);
-          if (!permitted) {
-            throw new SemioFaultError(
-              surfaceFault(
-                SURFACE_FAULT_CODES.ContributionNotPermitted,
-                `plugin ${JSON.stringify(manifest.pluginId)} contributes a surface for ${JSON.stringify(dialectCoordinate(surface.dialect))} without depending on owner ${JSON.stringify(owner)}`,
-                { pluginId: manifest.pluginId },
-              ),
-            );
-          }
+        if (owner !== manifest.pluginId && !(manifest.dependencies ?? []).some((dependency) => dependency.pluginId === owner)) {
+          fault = surfaceFault(
+            SURFACE_FAULT_CODES.ContributionNotPermitted,
+            `plugin ${JSON.stringify(manifest.pluginId)} contributes a surface for ${JSON.stringify(dialectCoordinate(surface.dialect))} without depending on owner ${JSON.stringify(owner)}`,
+            { pluginId: manifest.pluginId, appId: surface.appId },
+          );
+          break;
         }
 
         const ref: AppRef = { pluginId: manifest.pluginId, appId: surface.appId };
         const refKey = `${ref.pluginId} ${ref.appId}`;
-        if (seenRefs.has(refKey)) {
-          throw new SemioFaultError(
-            surfaceFault(SURFACE_FAULT_CODES.Conflict, `AppRef {pluginId: ${JSON.stringify(ref.pluginId)}, appId: ${JSON.stringify(ref.appId)}} registered twice`, { pluginId: ref.pluginId, appId: ref.appId }),
-          );
+        if (seenRefs.has(refKey) || stagedRefKeys.has(refKey)) {
+          fault = surfaceFault(SURFACE_FAULT_CODES.Conflict, `AppRef {pluginId: ${JSON.stringify(ref.pluginId)}, appId: ${JSON.stringify(ref.appId)}} registered twice`, { pluginId: ref.pluginId, appId: ref.appId });
+          break;
         }
-        seenRefs.add(refKey);
-
-        const key = coordinateRoleKey(surface.dialect, surface.role);
-        let group = grouped.get(key);
+        stagedRefKeys.add(refKey);
+        staged.push({ key: coordinateRoleKey(surface.dialect, surface.role), dialect: surface.dialect, role: surface.role, ref, refKey });
+      }
+      if (fault) {
+        faultByPluginId.set(manifest.pluginId, fault);
+        continue;
+      }
+      for (const entry of staged) {
+        seenRefs.add(entry.refKey);
+        let group = grouped.get(entry.key);
         if (!group) {
-          group = { dialect: surface.dialect, role: surface.role, entries: [] };
-          grouped.set(key, group);
+          group = { dialect: entry.dialect, role: entry.role, entries: [] };
+          grouped.set(entry.key, group);
         }
-        group.entries.push(ref);
+        group.entries.push(entry.ref);
       }
     }
 
@@ -664,7 +678,19 @@ export class AppRouter {
       entriesByCoordinateRole.set(key, ordered);
       dialectsByCoordinate.set(dialectCoordinate(group.dialect), group.dialect);
     }
-    return new AppRouter(entriesByCoordinateRole, dialectsByCoordinate, ownerByArtifactKind);
+    return new AppRouter(entriesByCoordinateRole, dialectsByCoordinate, ownerByArtifactKind, faultByPluginId);
+  }
+
+  /** 🧯️ Every excluded plugin's fault, sorted by plugin id — mirrors Rust `AppRouter::plugin_faults`.
+   * Empty for a clean catalogue; a shell surfaces these on the plugin's own status so an excluded
+   * plugin is never silently dropped. */
+  pluginFaults(): readonly Fault[] {
+    return [...this.faultByPluginId.keys()].sort().map((pluginId) => this.faultByPluginId.get(pluginId)!);
+  }
+
+  /** 🧯️ The fault that excluded `pluginId` from this router, or `undefined` when it routes. */
+  faultFor(pluginId: string): Fault | undefined {
+    return this.faultByPluginId.get(pluginId);
   }
 
   /** 📋️ Every registered surface for `(dialect, role)`, owner first — empty when none registered. */
@@ -724,6 +750,28 @@ if (import.meta.vitest) {
         { pluginId: "cad", appId: "s.cad.cad@1/*#editor" },
         { pluginId: "demonstrator", appId: "s.cad.cad@1/*#editor" },
       ]);
+      expect(router.pluginFaults()).toEqual([]);
+    });
+
+    it("isolates a breaching plugin per the shared fixture instead of failing every route", async () => {
+      type Fixture = Readonly<{
+        manifests: readonly AppRouterManifest[];
+        expectedOwners: readonly { readonly artifactKind: string; readonly pluginId: string }[];
+        expectedRoutes: readonly { readonly dialect: ArtifactDialect; readonly role: AppRole; readonly entries: readonly AppRef[] }[];
+        expectedFaults: readonly { readonly pluginId: string; readonly code: string; readonly origin: string; readonly severity: string }[];
+      }>;
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixture = JSON.parse(await readFile(join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json"), "utf8")) as Fixture;
+      const router = AppRouter.build(fixture.manifests);
+      for (const owner of fixture.expectedOwners) expect(router.ownerPluginId(owner.artifactKind), owner.artifactKind).toBe(owner.pluginId);
+      for (const route of fixture.expectedRoutes) expect(router.entriesFor(route.dialect, route.role), `${dialectCoordinate(route.dialect)}#${route.role}`).toEqual(route.entries);
+      expect(router.pluginFaults().map((fault) => ({ pluginId: fault.scope.pluginId, code: fault.code, origin: fault.origin, severity: fault.severity }))).toEqual(
+        fixture.expectedFaults.map((fault) => ({ pluginId: fault.pluginId, code: fault.code, origin: fault.origin, severity: fault.severity })),
+      );
+      for (const fault of fixture.expectedFaults) expect(router.faultFor(fault.pluginId)?.code, fault.pluginId).toBe(fault.code);
+      expect(router.faultFor("cad")).toBeUndefined();
     });
   });
 }
@@ -1336,7 +1384,17 @@ export type Effect =
   | { readonly requestCapability: { readonly req: number; readonly capability: unknown } }
   | { readonly releaseCapability: { readonly id: unknown } }
   | { readonly subscribe: { readonly topic: string } }
-  | { readonly unsubscribe: { readonly topic: string } };
+  | { readonly unsubscribe: { readonly topic: string } }
+  /** @emoji 💡️ Asks the shell to open its own host-owned ephemeral inference port for the active
+   * document and offer one reviewable proposal. It carries no document id, space id, idempotency
+   * key, receipt or credential: the shell owns the scope, mints the request identity, holds every
+   * lifecycle state, and alone decides whether the document's execution-target lease permits the
+   * port to start. Nothing it starts is ever persisted into the document. */
+  | { readonly requestInferenceProposal: { readonly kind: InferenceProposalKind } };
+
+/** 💡️ The closed set of host-owned inference proposals a program may ask its shell to open — an
+ * intent, never a job description: no model, provider, prompt, budget or transport is nameable. */
+export type InferenceProposalKind = "gis-map-bounds-region";
 
 /**
  * @emoji 🐢️ Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually

@@ -64,7 +64,7 @@
           "scenarios": [
             {
               "id": "retitles-the-caption-binding",
-              "directoryName": "🔗️retitles-the-caption-binding"
+              "directoryName": "🏷️retitles-the-caption-binding"
             }
           ]
         },
@@ -75,7 +75,7 @@
           "scenarios": [
             {
               "id": "nudges-the-capsule-var-off-the-shaft",
-              "directoryName": "🌷️nudges-the-capsule-var-off-the-shaft"
+              "directoryName": "📍️nudges-the-capsule-var-off-the-shaft"
             }
           ]
         },
@@ -86,29 +86,29 @@
           "scenarios": [
             {
               "id": "swaps-in-a-two-node-before-graph",
-              "directoryName": "🌳️swaps-in-a-two-node-before-graph"
+              "directoryName": "🕸️swaps-in-a-two-node-before-graph"
             }
           ]
         },
         {
           "mutationId": "edit-lhs",
-          "sourceMutationDirectoryName": "🔍️edit-lhs",
-          "mutationDirectoryName": "🔍️edit-lhs",
+          "sourceMutationDirectoryName": "👈️edit-lhs",
+          "mutationDirectoryName": "👈️edit-lhs",
           "scenarios": [
             {
               "id": "narrows-the-lhs-pattern-to-a-shaft-neighbour",
-              "directoryName": "🟠️narrows-the-lhs-pattern-to-a-shaft-neighbour"
+              "directoryName": "👈️narrows-the-lhs-pattern-to-a-shaft-neighbour"
             }
           ]
         },
         {
           "mutationId": "edit-rhs",
-          "sourceMutationDirectoryName": "🎯️edit-rhs",
-          "mutationDirectoryName": "🎯️edit-rhs",
+          "sourceMutationDirectoryName": "👉️edit-rhs",
+          "mutationDirectoryName": "👉️edit-rhs",
           "scenarios": [
             {
               "id": "rewrites-the-rhs-to-set-a-second-property",
-              "directoryName": "🦊️rewrites-the-rhs-to-set-a-second-property"
+              "directoryName": "👉️rewrites-the-rhs-to-set-a-second-property"
             }
           ]
         },
@@ -119,7 +119,7 @@
           "scenarios": [
             {
               "id": "drops-the-repeat-binding",
-              "directoryName": "🔗️drops-the-repeat-binding"
+              "directoryName": "✂️drops-the-repeat-binding"
             }
           ]
         },

@@ -13,10 +13,19 @@ from pathlib import Path
 from pptx import Presentation
 from pptx.util import Inches
 
-ROOT = Path("/Users/ueli/Documents/semio")
-SUBSET = ROOT / "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base"
+ROOT = Path(__file__).resolve().parents[7]
+FIXTURE_DIRECTORIES = {
+    "insert-slide": "➕️insert-slide-applied",
+    "remove-slide": "➖️remove-slide-applied",
+    "move-slide": "🔀️move-slide-applied",
+    "insert-shape": "🔷️insert-shape-applied",
+    "remove-shape": "🔶️remove-shape-applied",
+    "set-shape-position": "📐️set-shape-position-applied",
+    "set-shape-text": "✍️set-shape-text-applied",
+}
+SUBSET = ROOT / "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base"
 FIXTURES = SUBSET / "🧫️fixtures"
-ORACLE_JSON = SUBSET / "🧪️oracle/🔣️.json"
+ORACLE_JSON = SUBSET / "🔮️oracle/🔣️.json"
 READER_ORACLE_ID = "python-pptx-pptx-ecma-376-mutate-reader"
 PPTX_VERSION = "1.0.2"
 
@@ -110,10 +119,10 @@ def main() -> None:
 
     manifests = []
     for mutation_id, before_bytes, after_bytes, note in entries:
-        case_dir = FIXTURES / f"{mutation_id}-applied"
+        case_dir = FIXTURES / FIXTURE_DIRECTORIES[mutation_id]
         case_dir.mkdir(parents=True, exist_ok=True)
-        (case_dir / "before.pptx").write_bytes(before_bytes)
-        (case_dir / "after.pptx").write_bytes(after_bytes)
+        (case_dir / "⬅️before.pptx").write_bytes(before_bytes)
+        (case_dir / "➡️after.pptx").write_bytes(after_bytes)
 
         manifests.append({
             "schema": "semio.repository-test.fixture/v2",
@@ -124,8 +133,8 @@ def main() -> None:
             "outcome": "applied",
             "units": {"length": "unitless", "angle": "degree"},
             "files": [
-                {"role": "expected-before-pptx", "path": f"../🧫️fixtures/{mutation_id}-applied/before.pptx", "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "sha256": sha256_of(before_bytes), "bytes": len(before_bytes)},
-                {"role": "expected-after-pptx", "path": f"../🧫️fixtures/{mutation_id}-applied/after.pptx", "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "sha256": sha256_of(after_bytes), "bytes": len(after_bytes)},
+                {"role": "expected-before-pptx", "path": f"../🧫️fixtures/{FIXTURE_DIRECTORIES[mutation_id]}/⬅️before.pptx", "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "sha256": sha256_of(before_bytes), "bytes": len(before_bytes)},
+                {"role": "expected-after-pptx", "path": f"../🧫️fixtures/{FIXTURE_DIRECTORIES[mutation_id]}/➡️after.pptx", "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "sha256": sha256_of(after_bytes), "bytes": len(after_bytes)},
             ],
             "generator": {
                 "oracle": READER_ORACLE_ID,

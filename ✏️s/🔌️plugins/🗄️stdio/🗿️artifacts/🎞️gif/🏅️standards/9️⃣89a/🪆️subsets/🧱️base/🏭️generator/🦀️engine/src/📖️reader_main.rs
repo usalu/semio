@@ -306,7 +306,7 @@ fn recipe(id: &str) -> Option<(GifDoc, GifDoc)> {
             Some((base, after))
         }
         // 🧭️ The one recipe exercising `set-snapshot`'s documented no-op branch
-        // (`../../../🧬️schema/🧬️mutations/🟤️set-snapshot/🦀️.rs:19` — `base == snapshot` warns
+        // (`../../../🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs:19` — `base == snapshot` warns
         // `mutation.no-op` and returns `GifDiff::default()`): the replacement is byte-for-byte the
         // same document, so before and after are identical, same convention as `no-mutation-no-op`.
         "set-snapshot-no-op" => Some((base.clone(), base)),

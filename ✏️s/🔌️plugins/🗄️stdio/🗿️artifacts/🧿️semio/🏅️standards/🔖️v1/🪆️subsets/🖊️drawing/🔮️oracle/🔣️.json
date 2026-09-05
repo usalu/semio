@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-drawing-mutation-semantics` decision's survey still stands on its merits: `usvg`/`resvg` model SVG, which has no counterpart for this subset's anonymous recursive `DrawNode` tree addressed by a structural `NodePath` and none at all for the four hierarchy verbs, while `lyon`/`kurbo` model path geometry alone and could adjudicate at most `replace-path`. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-drawing/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, the recursive node tree and all seventeen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✳️base/📚️examples/🖍️sketch` artifact byte for byte in both encodings — one document that exhibits every node tag and every segment tag including the arc — and it reaches all seventeen committed after-snapshots. The SVG fixtures are still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `mouse.svg` and `qr-code.svg` were read once by an independent `xml.etree` reader plus a path-data scanner written from the SVG 1.1 §8.3 grammar — never our own svg bridge — to derive the real three-layer, 1 006-node drawing both implementations now mutate.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-drawing-mutate`'s external-oracle requirement for its 17-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-drawing-mutation-semantics` decision's survey still stands on its merits: `usvg`/`resvg` model SVG, which has no counterpart for this subset's anonymous recursive `DrawNode` tree addressed by a structural `NodePath` and none at all for the four hierarchy verbs, while `lyon`/`kurbo` model path geometry alone and could adjudicate at most `replace-path`. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-drawing/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, the recursive node tree and all seventeen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✉️base/📚️examples/🖍️sketch` artifact byte for byte in both encodings — one document that exhibits every node tag and every segment tag including the arc — and it reaches all seventeen committed after-snapshots. The SVG fixtures are still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `mouse.svg` and `qr-code.svg` were read once by an independent `xml.etree` reader plus a path-data scanner written from the SVG 1.1 §8.3 grammar — never our own svg bridge — to derive the real three-layer, 1 006-node drawing both implementations now mutate.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-drawing-mutate`'s external-oracle requirement for its 17-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -180,7 +180,7 @@
           "scenarios": [
             {
               "id": "recolours-the-primary-styles-stroke-to-translucent-white",
-              "directoryName": "🧪️recolours-the-primary-styles-stroke-to-translucent-white"
+              "directoryName": "🎨️recolours-the-primary-styles-stroke-to-translucent-white"
             }
           ]
         },
@@ -191,7 +191,7 @@
           "scenarios": [
             {
               "id": "thickens-the-primary-styles-stroke",
-              "directoryName": "🧪️thickens-the-primary-styles-stroke"
+              "directoryName": "📐️thickens-the-primary-styles-stroke"
             }
           ]
         },
@@ -202,7 +202,7 @@
           "scenarios": [
             {
               "id": "inserts-a-second-layer-above-the-base-layer",
-              "directoryName": "🧪️inserts-a-second-layer-above-the-base-layer"
+              "directoryName": "🪜️inserts-a-second-layer-above-the-base-layer"
             }
           ]
         },
@@ -213,7 +213,7 @@
           "scenarios": [
             {
               "id": "appends-a-caption-text-node-to-the-layer-root",
-              "directoryName": "🧪️appends-a-caption-text-node-to-the-layer-root"
+              "directoryName": "🔤️appends-a-caption-text-node-to-the-layer-root"
             }
           ]
         },
@@ -224,7 +224,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-layer-and-keeps-the-overlay",
-              "directoryName": "🧪️removes-the-leading-layer-and-keeps-the-overlay"
+              "directoryName": "🚫️removes-the-leading-layer-and-keeps-the-overlay"
             }
           ]
         },
@@ -235,7 +235,7 @@
           "scenarios": [
             {
               "id": "removes-the-text-node-from-the-layer-root",
-              "directoryName": "🧪️removes-the-text-node-from-the-layer-root"
+              "directoryName": "🚫️removes-the-text-node-from-the-layer-root"
             }
           ]
         },
@@ -246,7 +246,7 @@
           "scenarios": [
             {
               "id": "drags-the-text-node-and-the-nested-group-by-the-same-offset",
-              "directoryName": "🧪️drags-the-text-node-and-the-nested-group-by-the-same-offset"
+              "directoryName": "🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset"
             }
           ]
         },
@@ -257,7 +257,7 @@
           "scenarios": [
             {
               "id": "flattens-an-identity-nested-group-into-its-leaves",
-              "directoryName": "🧪️flattens-an-identity-nested-group-into-its-leaves"
+              "directoryName": "🫓️flattens-an-identity-nested-group-into-its-leaves"
             }
           ]
         },
@@ -268,7 +268,7 @@
           "scenarios": [
             {
               "id": "groups-the-two-leading-children-into-a-new-group",
-              "directoryName": "🧪️groups-the-two-leading-children-into-a-new-group"
+              "directoryName": "🧷️groups-the-two-leading-children-into-a-new-group"
             }
           ]
         },
@@ -279,7 +279,7 @@
           "scenarios": [
             {
               "id": "moves-the-text-node-to-a-new-origin",
-              "directoryName": "🧪️moves-the-text-node-to-a-new-origin"
+              "directoryName": "📍️moves-the-text-node-to-a-new-origin"
             }
           ]
         },
@@ -290,7 +290,7 @@
           "scenarios": [
             {
               "id": "moves-the-leading-path-node-to-the-end-of-the-layer-root",
-              "directoryName": "🧪️moves-the-leading-path-node-to-the-end-of-the-layer-root"
+              "directoryName": "🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root"
             }
           ]
         },
@@ -301,7 +301,7 @@
           "scenarios": [
             {
               "id": "repaints-the-primary-styles-fill-from-red-to-blue",
-              "directoryName": "🧪️repaints-the-primary-styles-fill-from-red-to-blue"
+              "directoryName": "🎨️repaints-the-primary-styles-fill-from-red-to-blue"
             }
           ]
         },
@@ -312,7 +312,7 @@
           "scenarios": [
             {
               "id": "swaps-the-open-path-for-a-closed-triangle",
-              "directoryName": "🧪️swaps-the-open-path-for-a-closed-triangle"
+              "directoryName": "🔺️swaps-the-open-path-for-a-closed-triangle"
             }
           ]
         },
@@ -323,7 +323,7 @@
           "scenarios": [
             {
               "id": "rotates-the-nested-group-a-half-turn-about-z",
-              "directoryName": "🧪️rotates-the-nested-group-a-half-turn-about-z"
+              "directoryName": "🔄️rotates-the-nested-group-a-half-turn-about-z"
             }
           ]
         },
@@ -334,7 +334,7 @@
           "scenarios": [
             {
               "id": "scales-the-nested-group-non-uniformly",
-              "directoryName": "🧪️scales-the-nested-group-non-uniformly"
+              "directoryName": "📏️scales-the-nested-group-non-uniformly"
             }
           ]
         },
@@ -345,7 +345,7 @@
           "scenarios": [
             {
               "id": "restores-the-captured-hierarchy-over-the-flat-group",
-              "directoryName": "🧪️restores-the-captured-hierarchy-over-the-flat-group"
+              "directoryName": "🎈️restores-the-captured-hierarchy-over-the-flat-group"
             }
           ]
         },
@@ -356,7 +356,7 @@
           "scenarios": [
             {
               "id": "dissolves-the-nested-group-into-its-parent",
-              "directoryName": "🧪️dissolves-the-nested-group-into-its-parent"
+              "directoryName": "💫️dissolves-the-nested-group-into-its-parent"
             }
           ]
         }

@@ -13,8 +13,8 @@
 import type { SetLayerVisible } from "../../../🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🦠️mutation/🟦️.ts";
 import type { SetLayerLocked } from "../../../🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🦠️mutation/🟦️.ts";
 import type { SetLayerOpacity } from "../../../🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🟦️.ts";
-import type { SetLayerBlendMode } from "../../../🎨️style/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🦠️mutation/🟦️.ts";
-import type { DuplicateLayer } from "../../../🧱️structure/🧬️schema/🧬️mutations/🧬️duplicate-layer/🦠️mutation/🟦️.ts";
+import type { SetLayerBlendMode } from "../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🦠️mutation/🟦️.ts";
+import type { DuplicateLayer } from "../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🦠️mutation/🟦️.ts";
 import type { ReorderLayer } from "../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🦠️mutation/🟦️.ts";
 import type { DrawingLayerNode } from "../🟦️.ts";
 
@@ -51,7 +51,7 @@ export type FillStyle =
   | { kind: "linearGradient"; x1: number; y1: number; x2: number; y2: number; stops: GradientStop[] }
   | { kind: "radialGradient"; cx: number; cy: number; r: number; stops: GradientStop[] };
 
-/** 🔁 Mirrors Rust `ReplaceLayerFill` (`🔁replace-layer-fill/🦠️mutation/🦀️.rs`). */
+/** 🔁 Mirrors Rust `ReplaceLayerFill` (`🎨️replace-layer-fill/🦠️mutation/🦀️.rs`). */
 export interface ReplaceLayerFill {
   layerId: string;
   fill?: FillStyle;
@@ -66,7 +66,7 @@ export interface StrokeStyle {
   dash?: number[];
 }
 
-/** ♻️ Mirrors Rust `ReplaceLayerStroke` (`♻️replace-layer-stroke/🦠️mutation/🦀️.rs`). */
+/** ♻️ Mirrors Rust `ReplaceLayerStroke` (`🖊️replace-layer-stroke/🦠️mutation/🦀️.rs`). */
 export interface ReplaceLayerStroke {
   layerId: string;
   stroke?: StrokeStyle;
@@ -84,13 +84,13 @@ export interface DrawingTraceParams {
   simplifyEpsilon: number;
 }
 
-/** 🔧 Mirrors Rust `UpdateLayerTraceParams` (`🔧update-layer-trace-params/🦠️mutation/🦀️.rs`). */
+/** 🔧 Mirrors Rust `UpdateLayerTraceParams` (`🔍️update-layer-trace-params/🦠️mutation/🦀️.rs`). */
 export interface UpdateLayerTraceParams {
   layerId: string;
   params: DrawingTraceParams;
 }
 
-/** 🌱 Mirrors Rust `CreateLayer` (`🌱create-layer/🦠️mutation/🦀️.rs`). */
+/** 🌱 Mirrors Rust `CreateLayer` (`➕️create-layer/🦠️mutation/🦀️.rs`). */
 export interface CreateLayer {
   parentId?: string;
   index?: number;

@@ -61,7 +61,7 @@ cell-items = cell {"," cell}*
 cell = "[" block-items? "]"
 
 # `document::DocBlock` value grammar — copied verbatim from `document`'s own real snapshot grammar
-# (`../../../../✳️document/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`), `row`/`cell`
+# (`../../../../📑️document/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`), `row`/`cell`
 # renamed `doc-row`/`doc-cell` to avoid the name collision with this file's own `row`/`cell` above.
 block = "P" "[" option-hex "," "[" run-items? "]" "]" | "H" "[" INT "," option-hex "," "[" run-items? "]" "]" | "L" "[" bool "," "[" list-item-items? "]" "]" | "T" "[" "[" doc-row-items? "]" "]" | "C" "[" option-hex "," hex "]" | "Q" "[" "[" block-items? "]" "]" | "I" "[" hex "," hex "," option-num "," option-num "]" | "B" "[" "]"
 block-items = block {"," block}*

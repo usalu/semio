@@ -274,8 +274,6 @@ pub trait DrawingKernel {
     fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError>;
     fn export_svg(&self, handle: &DrawingHandle) -> Result<String, semio_framework_2d::DrawingError>;
     fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError>;
-    fn export_dwg(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError>;
-    fn import_dwg(&mut self, data: &[u8]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Export
 
     // #region Core
@@ -486,139 +484,9 @@ impl DrawingStore {
         Ok(serialize_pdf(&scene))
     }
 
-    pub fn export_dwg_sync(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
-        let scene = self.flatten_scene_sync(handle)?;
-        let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
-        let layer = drawing.ensure_layer("0");
-        for node in &scene.nodes {
-            if node.opacity <= 0.0 {
-                continue;
-            }
-            if let DrawingNode::Circle { cx, cy, r } = &node.node {
-                let center = affine_apply_point(node.transform, [*cx, *cy]);
-                drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
-                    layer,
-                    color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
-                    geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::Circle { center: [center[0], center[1], 0.0], radius: r * node.transform.0[0].abs(), normal: [0.0, 0.0, 1.0] },
-                });
-                continue;
-            }
-            if let DrawingNode::Text { x, y, content, size } = &node.node {
-                let at = affine_apply_point(node.transform, [*x, *y]);
-                drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
-                    layer,
-                    color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
-                    geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::Text { at: [at[0], at[1], 0.0], height: *size, rotation: 0.0, content: content.clone() },
-                });
-                continue;
-            }
-            if let Some(segments) = scene_node_world_segments(node) {
-                let dwg_segments: Vec<semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment> = segments.iter().map(engine_segment_to_dwg).collect();
-                let mut sub = semio_s_plugin_stdio::artifacts::dwg::paths_to_dwg_drawing(&[dwg_segments]);
-                drawing.entities.append(&mut sub.entities);
-            }
-        }
-        semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing).map_err(semio_framework_2d::DrawingError::InvalidInput)
-    }
 
-    pub fn import_dwg_sync(&mut self, data: &[u8]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(data).map_err(semio_framework_2d::DrawingError::InvalidInput)?;
-        let mut children = Vec::new();
-        for path in semio_s_plugin_stdio::artifacts::dwg::dwg_drawing_to_paths(&drawing) {
-            let segments: Vec<semio_framework_2d::PathSegment> = path.iter().map(dwg_segment_to_engine).collect();
-            if segments.len() < 2 {
-                continue;
-            }
-            children.push(self.register(DrawingKind::Path, DrawingNode::Path { segments })?);
-        }
-        for entity in &drawing.entities {
-            if let semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::Text { at, height, content, .. } = &entity.geometry {
-                children.push(self.register(DrawingKind::Text, DrawingNode::Text { x: at[0], y: at[1], content: content.clone(), size: *height })?);
-            }
-        }
-        if children.is_empty() {
-            return self.register(DrawingKind::Path, DrawingNode::Path { segments: vec![semio_framework_2d::PathSegment::Move { to: [0.0, 0.0] }, semio_framework_2d::PathSegment::Line { to: [0.0, 0.0] }] });
-        }
-        if children.len() == 1 {
-            return Ok(children.into_iter().next().expect("children.len() == 1 checked above"));
-        }
-        self.register(DrawingKind::Group, DrawingNode::Group { children: children.iter().map(|h| h.as_str().to_string()).collect() })
-    }
 }
 // #endregion 🔖️Store
-
-fn affine_apply_point(m: Affine2D, p: semio_framework_2d::Vec2) -> semio_framework_2d::Vec2 {
-    let a = m.0;
-    [a[0] * p[0] + a[2] * p[1] + a[4], a[1] * p[0] + a[3] * p[1] + a[5]]
-}
-
-fn scene_node_world_segments(node: &SceneNode) -> Option<Vec<semio_framework_2d::PathSegment>> {
-    use semio_framework_2d::PathSegment;
-    let segments = match &node.node {
-        DrawingNode::Path { segments } => segments.clone(),
-        DrawingNode::Line { x1, y1, x2, y2 } => vec![PathSegment::Move { to: [*x1, *y1] }, PathSegment::Line { to: [*x2, *y2] }],
-        DrawingNode::Polygon { points } => {
-            if points.is_empty() {
-                return None;
-            }
-            let mut segments = vec![PathSegment::Move { to: points[0] }];
-            for p in &points[1..] {
-                segments.push(PathSegment::Line { to: *p });
-            }
-            segments.push(PathSegment::Close);
-            segments
-        }
-        DrawingNode::Rect { x, y, width, height } => {
-            vec![PathSegment::Move { to: [*x, *y] }, PathSegment::Line { to: [*x + *width, *y] }, PathSegment::Line { to: [*x + *width, *y + *height] }, PathSegment::Line { to: [*x, *y + *height] }, PathSegment::Close]
-        }
-        DrawingNode::Ellipse { cx, cy, rx, ry } => vec![
-            PathSegment::Move { to: [*cx + *rx, *cy] },
-            PathSegment::Arc { rx: *rx, ry: *ry, rotation: 0.0, large_arc: true, sweep: true, to: [*cx - *rx, *cy] },
-            PathSegment::Arc { rx: *rx, ry: *ry, rotation: 0.0, large_arc: true, sweep: true, to: [*cx + *rx, *cy] },
-            PathSegment::Close,
-        ],
-        DrawingNode::Circle { .. } | DrawingNode::Text { .. } | DrawingNode::Group { .. } => return None,
-    };
-    Some(
-        segments
-            .into_iter()
-            .map(|segment| match segment {
-                PathSegment::Move { to } => PathSegment::Move { to: affine_apply_point(node.transform, to) },
-                PathSegment::Line { to } => PathSegment::Line { to: affine_apply_point(node.transform, to) },
-                PathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: affine_apply_point(node.transform, ctrl), to: affine_apply_point(node.transform, to) },
-                PathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: affine_apply_point(node.transform, ctrl1), ctrl2: affine_apply_point(node.transform, ctrl2), to: affine_apply_point(node.transform, to) },
-                PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to: affine_apply_point(node.transform, to) },
-                PathSegment::Close => PathSegment::Close,
-            })
-            .collect(),
-    )
-}
-
-fn engine_segment_to_dwg(segment: &semio_framework_2d::PathSegment) -> semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment {
-    use semio_framework_2d::PathSegment;
-    use semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment;
-    match segment {
-        PathSegment::Move { to } => DwgPathSegment::Move { to: *to },
-        PathSegment::Line { to } => DwgPathSegment::Line { to: *to },
-        PathSegment::Quad { ctrl, to } => DwgPathSegment::Quad { ctrl: *ctrl, to: *to },
-        PathSegment::Cubic { ctrl1, ctrl2, to } => DwgPathSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
-        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => DwgPathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
-        PathSegment::Close => DwgPathSegment::Close,
-    }
-}
-
-fn dwg_segment_to_engine(segment: &semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment) -> semio_framework_2d::PathSegment {
-    use semio_framework_2d::PathSegment;
-    use semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment;
-    match segment {
-        DwgPathSegment::Move { to } => PathSegment::Move { to: *to },
-        DwgPathSegment::Line { to } => PathSegment::Line { to: *to },
-        DwgPathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: *ctrl, to: *to },
-        DwgPathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
-        DwgPathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
-        DwgPathSegment::Close => PathSegment::Close,
-    }
-}
 
 // #region 🔖️Geometry
 fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<semio_framework_2d::PathSegment> {
@@ -969,13 +837,6 @@ impl DrawingKernel for DrawingStore {
         self.export_pdf_sync(handle)
     }
 
-    fn export_dwg(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
-        self.export_dwg_sync(handle)
-    }
-
-    fn import_dwg(&mut self, data: &[u8]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        self.import_dwg_sync(data)
-    }
 
     fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, semio_framework_2d::DrawingError> {
         Ok(self.entry(handle)?.kind)
@@ -1104,35 +965,6 @@ pub fn export_pdf_json(handle: &str) -> String {
         .unwrap_or_else(json_kernel_unavailable)
 }
 
-/// 📐️ Exports a drawing handle as base64 DWG JSON wrapper.
-pub fn export_dwg_json(handle: &str) -> String {
-    drawing_kernel()
-        .lock()
-        .ok()
-        .map(|store| {
-            let drawing = DrawingHandle(handle.to_string());
-            match store.export_dwg(&drawing) {
-                Ok(dwg) => json_field("dwg", drawing_base64_encode(&dwg)),
-                Err(error) => json_error(error),
-            }
-        })
-        .unwrap_or_else(json_kernel_unavailable)
-}
-
-/// 📐️ Imports a base64 DWG payload into the in-process draw kernel, returning the new drawing handle JSON wrapper.
-pub fn import_dwg_json(data_base64: &str) -> String {
-    let Ok(bytes) = drawing_base64_decode(data_base64) else {
-        return json_error("invalid base64 dwg payload");
-    };
-    drawing_kernel()
-        .lock()
-        .ok()
-        .map(|mut store| match store.import_dwg(&bytes) {
-            Ok(handle) => json_field("handle", handle.as_str()),
-            Err(error) => json_error(error),
-        })
-        .unwrap_or_else(json_kernel_unavailable)
-}
 
 /// 🗑️ Disposes a drawing handle owned by the in-process draw kernel.
 pub fn dispose_drawing(handle: &str) {
@@ -1198,34 +1030,7 @@ fn drawing_base64_encode(data: &[u8]) -> String {
     out
 }
 
-fn drawing_base64_decode(data: &str) -> Result<Vec<u8>, DrawingKernelError> {
-    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut lookup = [255u8; 256];
-    for (index, &byte) in TABLE.iter().enumerate() {
-        lookup[byte as usize] = index as u8;
-    }
-    let cleaned: Vec<u8> = data.bytes().filter(|byte| *byte != b'=' && !byte.is_ascii_whitespace()).collect();
-    let mut out = Vec::with_capacity(cleaned.len() * 3 / 4);
-    for chunk in cleaned.chunks(4) {
-        let mut values = [0u8; 4];
-        for (index, &byte) in chunk.iter().enumerate() {
-            let value = lookup[byte as usize];
-            if value == 255 {
-                return Err(DrawingKernelError::Invalid("invalid base64 character".to_string()));
-            }
-            values[index] = value;
-        }
-        let triple = ((values[0] as u32) << 18) | ((values[1] as u32) << 12) | ((values[2] as u32) << 6) | (values[3] as u32);
-        out.push((triple >> 16) as u8);
-        if chunk.len() > 2 {
-            out.push((triple >> 8) as u8);
-        }
-        if chunk.len() > 3 {
-            out.push(triple as u8);
-        }
-    }
-    Ok(out)
-}
+
 // #endregion 🖍️DrawingKernel
 
 // #region 🔖️Tests
@@ -1260,20 +1065,6 @@ mod drawing_kernel_tests {
         assert_eq!(scene.nodes.len(), 2);
     }
 
-    #[test]
-    fn dwg_export_import_round_trips_a_group() {
-        let mut store = DrawingStore::new();
-        let rect = store.rect_path(0.0, 0.0, 5.0, 5.0).unwrap();
-        let circle = store.circle(10.0, 10.0, 3.0).unwrap();
-        let group = store.group(&[rect, circle]).unwrap();
-
-        let bytes = store.export_dwg_sync(&group).expect("export dwg");
-        assert!(!bytes.is_empty());
-
-        let imported = store.import_dwg_sync(&bytes).expect("import dwg");
-        let scene = store.flatten_scene_sync(&imported).expect("flatten imported scene");
-        assert!(!scene.nodes.is_empty());
-    }
 
     // #region Geometry primitives export
     #[test]
@@ -1594,37 +1385,7 @@ mod drawing_kernel_tests {
     }
     // #endregion Registry lifecycle
 
-    // #region DWG export/import branches
-    #[test]
-    fn export_dwg_includes_circle_and_text_entities() {
-        let mut store = DrawingStore::new();
-        let circle = store.circle(5.0, 5.0, 3.0).unwrap();
-        let text = store.text(0.0, 0.0, "hi", 5.0).unwrap();
-        let group = store.group(&[circle, text]).unwrap();
-        let bytes = store.export_dwg_sync(&group).expect("export dwg");
-        let imported = store.import_dwg_sync(&bytes).expect("import dwg");
-        let scene = store.flatten_scene_sync(&imported).expect("flatten imported scene");
-        assert_eq!(scene.nodes.len(), 2);
-    }
 
-    #[test]
-    fn import_dwg_of_single_path_skips_group_wrapper() {
-        let mut store = DrawingStore::new();
-        let rect = store.rect_path(0.0, 0.0, 5.0, 5.0).unwrap();
-        let bytes = store.export_dwg_sync(&rect).expect("export dwg");
-        let imported = store.import_dwg_sync(&bytes).expect("import dwg");
-        assert_eq!(store.kind(&imported).unwrap(), DrawingKind::Path);
-    }
-
-    #[test]
-    fn import_dwg_of_empty_drawing_returns_degenerate_path() {
-        let mut store = DrawingStore::new();
-        let empty = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
-        let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&empty).expect("encode empty dwg");
-        let imported = store.import_dwg_sync(&bytes).expect("import empty dwg");
-        assert_eq!(store.kind(&imported).unwrap(), DrawingKind::Path);
-    }
-    // #endregion DWG export/import branches
 
     // #region Scene bounds
     #[test]

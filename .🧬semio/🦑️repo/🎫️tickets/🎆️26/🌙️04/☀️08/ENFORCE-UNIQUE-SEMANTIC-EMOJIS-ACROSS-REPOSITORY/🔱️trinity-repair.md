@@ -1,31 +1,21 @@
-# Trinity Plugin Emoji Repair
+# Trinity Semantic Emoji Review
 
-## Scope
+Read both local instruction files, all 15 mutation payload schemas and committed mutation inputs, and the complete directory identity set. Initial payload baseline: 71 immutable JSON fixtures, sorted SHA-256 `ea8663b2cf4b6c49077b5e88dfb7d47926ec3d289f2ab476ed9353fa420590b3`.
 
-Owned tree: `✏️s/🔌️plugins/🔱️trinity`, including both `♻️rewriting` and `🔌️jack`, their package mounts, oracle catalogs, and exact central registrations.
+Handpicked operations are `➕️create-node`, `👈️edit-lhs` and `👉️edit-rhs`. The bridge for creating an edge remains meaningful, while its descriptor must agree with physical `🌉️create-edge`. Existing deletion, coordinate, property and parameter operation identities remain domain-appropriate and sibling-distinct.
 
-The initial strict audit covered 740 files, 523 directories, and 1,244 governed entries. It found 53 breaches: 52 sibling-emoji collisions and one presentation-form error. Every physical identity was reviewed and moved explicitly; no automatic emoji selection, rename planner, migration script, or modifying Git operation was used.
+Handpicked fixture identities: `🧹️keeps-an-edge-without-the-property-it-never-had`, `🏷️keeps-a-node-property-at-the-value-it-already-holds` (the unchanged label), `📍️keeps-a-node-at-the-point-it-already-occupies`, `✏️keeps-the-name-a-node-already-carries`, `👉️rewrites-the-rhs-to-set-a-second-property`, `👈️narrows-the-lhs-pattern-to-a-shaft-neighbour`, `📍️nudges-the-capsule-var-off-the-shaft`, `🕸️swaps-in-a-two-node-before-graph`, `✂️drops-the-repeat-binding`, and `🏷️retitles-the-caption-binding`. The four explicit Jack rejection cases and existing layout-clearing case retain their meaningful identities.
 
-The complete Rewriting command repair is `🧹️reorganize`, `🗣️set-locale`, `🔬️set-lod-mode`, `🖥️set-viewport`, `➕️add-rule-clause-command`, `🗑️delete-rule-clause`, `🕸️node-graph-edit`, `🩹️patch-nodes`, `♻️reset-rule`, `👈️set-lhs-json`, `🎛️set-parameter`, and `👉️set-rhs-json`.
-
-The complete Jack command repair is `📝️editor-engagement-input`, `🌐️graph-engagement-input`, `📊️results-engagement-input`, `🗣️set-locale`, `🔬️set-lod-mode`, `🖥️set-viewport`, `✏️text-edit`, `🖱️text-select`, `✨️format-document`, `📚️load-example-query`, `💡️request-completions`, `▶️run-query`, `🎯️set-active-example`, `🗑️delete-selection`, `🩹️patch-nodes`, `🧭️reorganize`, and `🧫️set-fixture-json`.
-
-All nine editor window option authorities now use `☑️options`, while their sibling configuration authorities remain `🎚️config`. Both subset-local contributions are `🔮️oracle`. All 15 mutation payload sidecars are `🧬️.schema.json`. Jack's wire runtime is `🛜️wire-runtime`, its flat-position inference is the correctly presented `🎛️flat-position`, and its create-edge mutation owner is `🌉️create-edge`, distinct from the sibling GraphQL authority `🔗️.graphql`.
-
-The 15 oracle scenario `directoryName` values were reconciled individually with the existing physical semantic identities: Rewriting uses `🔗️retitles-the-caption-binding`, `🌷️nudges-the-capsule-var-off-the-shaft`, `🌳️swaps-in-a-two-node-before-graph`, `🟠️narrows-the-lhs-pattern-to-a-shaft-neighbour`, `🦊️rewrites-the-rhs-to-set-a-second-property`, `🔗️drops-the-repeat-binding`, and `📐️clears-the-shaft-layout-point`; Jack uses its four `🚫️rejects-…` scenarios, three `📖️keeps-…` scenarios, and `🟢️keeps-an-edge-without-the-property-it-never-had`.
+Aggregate suites take `🔌️mutate-jack-1` and `♻️mutate-rewrite-1`. The architectural copied fixture takes `🏢️nakagin-ground-floor`. Production parsing initially finds 47 scenarios and 45 unresolved bare-case asset URI references across the two features; four other asset/local fixture references already resolve.
 
 ## Verification
 
-- Final strict scoped audit: 740 files, 523 directories, 1,244 governed entries; missing, generic, presentation, spacing, duplicate, multiple, reserved-emoji, and oracle findings are all zero.
-- `validateTaxonomy(loadCatalogTaxonomy())` returns `[]` after two exact oracle registrations and 20 previously absent command registrations. Five command identities already existed exactly and were not duplicated.
-- All 230 non-dot Rust `#[path]` package mounts resolve.
-- Both oracle manifests, all 15 mutation owners, all 15 scenario directories, and all 15 payload schemas resolve.
-- A stale-reference check finds none of the former local command, oracle, schema-sidecar, runtime, inference, or create-edge paths.
-- `bun nx run @semio-tech/trinity-plugin:test-quick`: exited 1 in the shared Mesh artifact, before a Trinity-specific test result. The compiler repeatedly reports `MutationLeaf source authority failed: descriptor owner does not exactly match source owner`, followed by `E0277` for Mesh mutation leaves such as `CreateMesh`, `DeleteMesh`, `CreatePrimitive`, `DeletePrimitive`, material, texture, and vertex mutations. This is outside the owned Trinity tree; the scoped Trinity audit, mounts, catalogs, fixtures, and taxonomy checks above remain independently clean.
+All 16 explicit moves and exact owned reference patches are complete. Gherkin outline fixture columns now include their reviewed physical emoji, so actual `parseFeature`, `fixtureUrisIn` and `resolveFixtures` resolve all 49 fixture URIs across the two features and 47 expanded scenarios. Three stale whole-building selectors in each of the Rust and Python rewrite adapters now match the existing exact `local://🔣️.snapshot.json` URI. This repair changes only fixture selection, not algorithms, expected outcomes or payloads.
 
-## Exact Central Overrides
+Executed the actual repository Python `Context` and both existing independent adapters against committed bytes: Rewriting passes 22/22 scenarios and Jack passes 24/25. The remaining Jack `spec-vector-create-node` is a pre-existing documented contradiction: it declares rejection for a duplicate node, but its committed before-scene has no nodes, making the given create-node mutation applicable. The test, rejected expectation and original bytes remain intact; it is not counted as passing.
 
-```json
-"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle",
-"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any": "🔮️oracle"
-```
+All 142 JSON files parse; 71 mutation fixture payload hashes remain byte-identical to the baseline. All 604 Rust literal path/include mounts resolve after the coordinated Stdio `📖️pdf` mirror handoff. Strict loaded-catalog validation returns `[]` after 17 reviewed test names, three schema names and one fixture name were inserted. Scoped statute audit covers 740 files, 523 directories and 1,244 governed entries, with all eight finding categories zero.
+
+The four existing Jack/Rewriting demo tests first failed on removed `🧪️artifact.ts` imports. Each exact import now uses `bun:test`, and the existing package test router executes the real four suites instead of printing a success marker. Uncached `@semio-tech/trinity-js:test` passes all four tests and four assertions. No native Cargo build was started.
+
+Narrow launch entries for the existing Mathematical, Trinity and root-owned Block test targets were added to both live launch configuration and its source seed, following the previously restored Draw/Shooting/Note/Procedural group. The TypeScript JSONC parser accepts both files, and all seven exact test commands occur once per file. No whole-file regeneration, generated migration or modifying Git operation was used.

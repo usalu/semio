@@ -647,7 +647,7 @@ pub fn module_registry() -> Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_extension_sdk::{boolean_segments_json, build_manifest_json, dispose_drawing, export_dwg_json, export_pdf_json, export_svg_json, import_dwg_json, render_scene_json, retain_drawing_handles, trace_bitmap_json};
+    use flow_extension_sdk::{boolean_segments_json, build_manifest_json, dispose_drawing, export_pdf_json, export_svg_json, render_scene_json, retain_drawing_handles, trace_bitmap_json};
 
     fn number_dictionary(value: f64) -> Dictionary {
         Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
@@ -690,28 +690,6 @@ mod tests {
         assert!(json.contains("draw.drawing"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dwg_export_import_round_trips_a_rect() {
-        let _guard = kernel_read_guard();
-        let mut reg = Registry::new();
-        register(&mut reg);
-        let input = Dictionary::new()
-            .insert("x", Value::Dictionary(number_dictionary(0.0)))
-            .insert("y", Value::Dictionary(number_dictionary(0.0)))
-            .insert("width", Value::Dictionary(number_dictionary(5.0)))
-            .insert("height", Value::Dictionary(number_dictionary(5.0)));
-        let out = reg.dispatch("draw.shape.rect", &input).unwrap();
-        let handle = out.get("draw.drawing").and_then(|v| v.as_dictionary()).and_then(|d| d.get("handle")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap();
-
-        let export_json = pack::json::parse(&export_dwg_json(handle)).unwrap();
-        let data = export_json.get("dwg").and_then(|v| v.as_str()).expect("dwg base64");
-        assert!(!data.is_empty());
-
-        let import_json = pack::json::parse(&import_dwg_json(data)).unwrap();
-        let imported_handle = import_json.get("handle").and_then(|v| v.as_str()).expect("imported handle");
-        let scene_json = render_scene_json(imported_handle);
-        assert!(scene_json.contains("nodes"));
-    }
 
     #[semio_framework_async_macros::async_test]
     async fn render_scene_json_returns_nodes() {
@@ -982,11 +960,6 @@ mod tests {
         assert!(json.get("error").is_some());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn import_dwg_json_rejects_invalid_base64() {
-        let json = pack::json::parse(&import_dwg_json("not-@@-base64!!")).unwrap();
-        assert!(json.get("error").and_then(|v| v.as_str()).unwrap_or_default().contains("base64"));
-    }
 
     #[semio_framework_async_macros::async_test]
     async fn dispose_drawing_removes_the_handle() {

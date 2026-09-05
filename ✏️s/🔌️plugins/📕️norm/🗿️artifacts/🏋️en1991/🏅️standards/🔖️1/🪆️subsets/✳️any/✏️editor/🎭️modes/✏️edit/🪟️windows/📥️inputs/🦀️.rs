@@ -35,7 +35,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn renders_the_document_as_json() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         assert!(testkit::render(&mut app, BODY_INPUTS).contains(':'), "the inputs body renders the document json");
     }
 }

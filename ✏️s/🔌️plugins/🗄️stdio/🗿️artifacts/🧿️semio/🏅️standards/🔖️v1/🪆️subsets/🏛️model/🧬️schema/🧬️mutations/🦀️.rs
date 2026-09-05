@@ -494,6 +494,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🎞️slides-the-wall-and-attaches-a-fire-rating-pset/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔥️slides-the-wall-and-attaches-a-fire-rating-pset/🦀️.rs"]
 mod set_snapshot_slides_the_wall_and_attaches_a_fire_rating_pset;
 //#endregion 🧪️FixtureCases

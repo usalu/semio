@@ -5,7 +5,7 @@ use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::diff::Block5dDiff;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ChangePartKindIcon, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &super::ChangePartKindIcon, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if payload.new_icon == base.part_kind.icon {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Part kind icon is unchanged.");
     }

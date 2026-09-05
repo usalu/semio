@@ -23,7 +23,7 @@
 //! schema change well outside this vocabulary.
 //!
 //! @see ../../🔣️oracle.json — the catalog `KINDS` below must match exactly.
-//! @see ../../../../../../🧪️tests/🌿️mutate-zip-2-0-iso21320/🥒️.feature — the case that exercises it.
+//! @see ../../../../../../🧪️tests/🔀️mutate-zip-2-0-iso21320/🥒️.feature — the case that exercises it.
 
 use crate::artifacts::zip::schema::diff::{self, ZipDiff};
 use crate::artifacts::zip::schema::snapshot::ZipEntry;

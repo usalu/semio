@@ -23,18 +23,18 @@
           "scenarios": [
             {
               "id": "union-to-subtract",
-              "directoryName": "🎈️union-to-subtract"
+              "directoryName": "➖️union-to-subtract"
             }
           ]
         },
         {
           "mutationId": "update-layer-trace-params",
-          "sourceMutationDirectoryName": "🔧update-layer-trace-params",
-          "mutationDirectoryName": "🔧update-layer-trace-params",
+          "sourceMutationDirectoryName": "🔍️update-layer-trace-params",
+          "mutationDirectoryName": "🔍️update-layer-trace-params",
           "scenarios": [
             {
               "id": "sharpens-the-trace",
-              "directoryName": "🟢️sharpens-the-trace"
+              "directoryName": "🔍️sharpens-the-trace"
             }
           ]
         },
@@ -45,7 +45,7 @@
           "scenarios": [
             {
               "id": "translates-and-scales-shape-a",
-              "directoryName": "🔴️translates-and-scales-shape-a"
+              "directoryName": "📐️translates-and-scales-shape-a"
             }
           ]
         }
@@ -135,7 +135,7 @@
         {
           "id": "update-layer-trace-params",
           "capability": "drawing-1-transform-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔧update-layer-trace-params/🔣️.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",

@@ -19,32 +19,32 @@
     },
     "packages": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
+      "minItems": 3,
+      "maxItems": 3,
       "items": {
         "$ref": "#/$defs/package"
       }
     },
     "profiles": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
+      "minItems": 4,
+      "maxItems": 4,
       "items": {
         "$ref": "#/$defs/profile"
       }
     },
     "availableProviders": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
+      "minItems": 3,
+      "maxItems": 3,
       "items": {
         "$ref": "#/$defs/provider"
       }
     },
     "cases": {
       "type": "array",
-      "minItems": 19,
-      "maxItems": 19,
+      "minItems": 23,
+      "maxItems": 23,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -65,7 +65,9 @@
           "profileId": {
             "enum": [
               "native-stdio-v1",
-              "native-stdio-vcs-v1"
+              "native-stdio-vcs-v1",
+              "native-stdio-gis-v1",
+              "native-stdio-gis-vcs-v1"
             ]
           },
           "mutation": {
@@ -98,11 +100,12 @@
           },
           "expectedCalls": {
             "type": "array",
-            "maxItems": 2,
+            "maxItems": 3,
             "uniqueItems": true,
             "items": {
               "enum": [
                 "semio:stdio",
+                "semio:gis",
                 "semio:vcs"
               ]
             }
@@ -110,7 +113,7 @@
           "expectedReceiptCount": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 27
+            "maximum": 29
           }
         }
       }
@@ -195,13 +198,15 @@
         "id": {
           "enum": [
             "native-stdio-v1",
-            "native-stdio-vcs-v1"
+            "native-stdio-vcs-v1",
+            "native-stdio-gis-v1",
+            "native-stdio-gis-vcs-v1"
           ]
         },
         "roots": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 2,
+          "maxItems": 3,
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/identity"

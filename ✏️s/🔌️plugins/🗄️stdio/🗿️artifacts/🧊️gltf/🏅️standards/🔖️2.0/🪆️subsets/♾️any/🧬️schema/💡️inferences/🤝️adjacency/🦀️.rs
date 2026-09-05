@@ -2,7 +2,7 @@
 
 #[path = "🧩️connected-components/🦀️.rs"]
 pub mod connected_components;
-#[path = "🌳️contact-graph-degree/🦀️.rs"]
+#[path = "🌐️contact-graph-degree/🦀️.rs"]
 pub mod contact_graph_degree;
 #[path = "🔢️number-of-contacts/🦀️.rs"]
 pub mod number_of_contacts;

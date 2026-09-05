@@ -1,6 +1,6 @@
 //! ⚡️ Semio drawing artifact — hand-rolled `OpText` for `SemioDrawingMutation`. `#[derive(dsl::
 //! Mutations)]` only generates `Mutation`/`SemanticMutation` (see `../🦀️.rs`) — the
-//! wire-text codec stays handcrafted here, one keyword per semantic verb, `✳️text`'s own
+//! wire-text codec stays handcrafted here, one keyword per semantic verb, `🔤️text`'s own
 //! `keyword:arg1,arg2,...` grammar convention (hex/bracket-encoded values, reusing the sibling
 //! `📸️snapshot` facet's own real primitives rather than re-deriving a second copy).
 

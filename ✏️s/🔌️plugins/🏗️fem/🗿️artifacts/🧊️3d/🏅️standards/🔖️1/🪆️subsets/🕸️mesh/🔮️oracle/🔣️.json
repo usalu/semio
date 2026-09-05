@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "appends-a-diagonal-bracing-bar",
-              "directoryName": "🧪️appends-a-diagonal-bracing-bar"
+              "directoryName": "➖️appends-a-diagonal-bracing-bar"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "appends-the-column-head-node-n3",
-              "directoryName": "🧪️appends-the-column-head-node-n3"
+              "directoryName": "📍️appends-the-column-head-node-n3"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "appends-a-square-hollow-profile",
-              "directoryName": "🧪️appends-a-square-hollow-profile"
+              "directoryName": "🔳️appends-a-square-hollow-profile"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "appends-an-extruded-roof-slab",
-              "directoryName": "🧪️appends-an-extruded-roof-slab"
+              "directoryName": "🏠️appends-an-extruded-roof-slab"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "removes-the-bracing-bar-and-leaves-the-frame",
-              "directoryName": "🧪️removes-the-bracing-bar-and-leaves-the-frame"
+              "directoryName": "🚫️removes-the-bracing-bar-and-leaves-the-frame"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "removes-the-column-head-node-under-a-live-frame",
-              "directoryName": "🧪️removes-the-column-head-node-under-a-live-frame"
+              "directoryName": "🚫️removes-the-column-head-node-under-a-live-frame"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "removes-the-spare-square-hollow-profile",
-              "directoryName": "🧪️removes-the-spare-square-hollow-profile"
+              "directoryName": "🚫️removes-the-spare-square-hollow-profile"
             }
           ]
         },
@@ -93,7 +93,7 @@
           "scenarios": [
             {
               "id": "removes-the-roof-slab-and-keeps-its-material",
-              "directoryName": "🧪️removes-the-roof-slab-and-keeps-its-material"
+              "directoryName": "🚫️removes-the-roof-slab-and-keeps-its-material"
             }
           ]
         },
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "rolls-the-column-about-its-own-axis",
-              "directoryName": "🧪️rolls-the-column-about-its-own-axis"
+              "directoryName": "🔄️rolls-the-column-about-its-own-axis"
             }
           ]
         },
@@ -115,7 +115,7 @@
           "scenarios": [
             {
               "id": "raises-the-torsion-constant-of-hea200",
-              "directoryName": "🧪️raises-the-torsion-constant-of-hea200"
+              "directoryName": "🌀️raises-the-torsion-constant-of-hea200"
             }
           ]
         },
@@ -126,7 +126,7 @@
           "scenarios": [
             {
               "id": "thickens-the-slab-and-adds-a-mesh-layer",
-              "directoryName": "🧪️thickens-the-slab-and-adds-a-mesh-layer"
+              "directoryName": "📚️thickens-the-slab-and-adds-a-mesh-layer"
             }
           ]
         }

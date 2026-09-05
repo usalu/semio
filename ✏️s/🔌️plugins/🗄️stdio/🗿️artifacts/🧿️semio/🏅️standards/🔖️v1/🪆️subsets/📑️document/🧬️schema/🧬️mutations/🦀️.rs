@@ -135,7 +135,7 @@ fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumentDiff 
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧱insert-block/🦀️.rs"]
 pub mod insert_block;
@@ -157,17 +157,17 @@ pub mod set_run_style;
 pub mod set_image_block;
 #[path = "🧶insert-style/🦀️.rs"]
 pub mod insert_style;
-#[path = "🪥remove-style/🦀️.rs"]
+#[path = "🧽️remove-style/🦀️.rs"]
 pub mod remove_style;
 #[path = "🏷️set-style-name/🦀️.rs"]
 pub mod set_style_name;
 #[path = "🧬️set-style-based-on/🦀️.rs"]
 pub mod set_style_based_on;
-#[path = "📸insert-image/🦀️.rs"]
+#[path = "🖼️insert-image/🦀️.rs"]
 pub mod insert_image;
 #[path = "🪦remove-image/🦀️.rs"]
 pub mod remove_image;
-#[path = "🧮set-image-bytes/🦀️.rs"]
+#[path = "📀️set-image-bytes/🦀️.rs"]
 pub mod set_image_bytes;
 //#endregion 🔖️Leaves
 
@@ -252,7 +252,7 @@ pub fn apply_semio_document_mutation(snapshot: &mut SemioDocumentSnapshot, mutat
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `📃️mutate-semio-document` test adapter, whose `inverse-<kind>`
 /// scenarios need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_document_mutation`] alone cannot. Same shape as `✳️kit`'s
+/// [`apply_semio_document_mutation`] alone cannot. Same shape as `🧰️kit`'s
 /// `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_document_mutation(mutation: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
@@ -1212,10 +1212,10 @@ mod tests {
 //#endregion 🔖️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `🟤️set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "🟤️set-snapshot/🧪️tests/📋️bolds-the-body-paragraph-and-finalizes-its-copy/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/📋️bolds-the-body-paragraph-and-finalizes-its-copy/🦀️.rs"]
 mod set_snapshot_bolds_the_body_paragraph_and_finalizes_its_copy;
 //#endregion 🧪️FixtureCases

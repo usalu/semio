@@ -36,7 +36,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn renders_this_standards_catalogue_headline() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::app_with_registry();
         assert!(testkit::render(&mut app, BODY_CATALOGUE).contains("catalogue"));
     }
 }

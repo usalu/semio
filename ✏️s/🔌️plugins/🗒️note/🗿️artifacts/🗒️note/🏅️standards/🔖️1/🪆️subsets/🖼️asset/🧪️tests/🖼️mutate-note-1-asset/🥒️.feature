@@ -30,7 +30,7 @@ Feature: Apply every typed note document asset mutation twice — once in Rust, 
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id                    | vector                                                     |
-      | create-asset          | 🆕️create-asset/🧪️tests/🖼️adds-a-second-image-asset           |
+      | create-asset          | 🆕️create-asset/🧪️tests/➕️adds-a-second-image-asset           |
       | replace-asset-payload | 🔁️replace-asset-payload/🧪️tests/🔁️swaps-logo-payload-for-svg |
       | delete-asset          | 🗑️delete-asset/🧪️tests/🗑️removes-the-logo-asset              |
 
@@ -47,6 +47,6 @@ Feature: Apply every typed note document asset mutation twice — once in Rust, 
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id                    | vector                                                     |
-      | create-asset          | 🆕️create-asset/🧪️tests/🖼️adds-a-second-image-asset           |
+      | create-asset          | 🆕️create-asset/🧪️tests/➕️adds-a-second-image-asset           |
       | replace-asset-payload | 🔁️replace-asset-payload/🧪️tests/🔁️swaps-logo-payload-for-svg |
       | delete-asset          | 🗑️delete-asset/🧪️tests/🗑️removes-the-logo-asset              |

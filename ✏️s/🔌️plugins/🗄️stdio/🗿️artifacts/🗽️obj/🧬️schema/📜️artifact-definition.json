@@ -1,0 +1,225 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.obj",
+  "artifact": "obj",
+  "directory": "🗽️obj",
+  "dependencies": [
+    "s.stdio.txt"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.obj.standard.3-0",
+      "revision": "3-0",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.obj.standard.3-0.profile.any",
+      "standard": "s.stdio.obj.standard.3-0",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.obj.standard.3-0.dialect.source",
+      "standard": "s.stdio.obj.standard.3-0",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.obj.standard.3-0.representation.document",
+      "standard": "s.stdio.obj.standard.3-0",
+      "representation": "document",
+      "mimes": ["model/obj"],
+      "extensions": [".obj"],
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
+    }
+  ],
+  "codecs": [
+    { "id": "s.stdio.obj.standard.3-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.obj.standard.3-0.dialect.source", "to": "s.stdio.obj.standard.3-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.obj.v1", "artifact_kind": "stdio.obj", "document_schema": "stdio.obj", "extension": "obj", "pack_schema_hash": "c66960b9a3ae9b20cd6acc31c344d39b0f217b8d2423bb39082baa8c8bfba787", "runtime_capability_id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1" } }
+  ],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.obj.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.obj.localization.en",
+      "locale": "en",
+      "name": "Wavefront OBJ",
+      "description": "Wavefront OBJ artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.obj.localization.de",
+      "locale": "de",
+      "name": "Wavefront OBJ",
+      "description": "Wavefront OBJ-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.obj.conformance-suite.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.obj:obj|codec:stdio.obj",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.obj"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "9:stdio.obj:obj"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.composer.dialect-s-stdio-obj-3-0.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.obj@3.0/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.obj@3.0/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.grammar.grammar-stdio-obj-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.obj.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.obj.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.inference.schema-s-stdio-obj-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.obj.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.obj.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.standard.3-0.representation.mime-model-obj-extension-obj",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:model/obj|extension:.obj",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "model/obj"
+        },
+        {
+          "namespace": "extension",
+          "value": ".obj"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.obj.schema.schema-s-stdio-obj.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.obj",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.obj"
+        }
+      ]
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.obj.standard.3-0.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

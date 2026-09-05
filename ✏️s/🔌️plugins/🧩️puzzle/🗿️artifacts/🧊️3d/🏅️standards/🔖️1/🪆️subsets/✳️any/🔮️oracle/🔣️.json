@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "appends-vortex-3-to-object-b",
-              "directoryName": "🧪️appends-vortex-3-to-object-b"
+              "directoryName": "🌀️appends-vortex-3-to-object-b"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "architecture-to-engineering",
-              "directoryName": "🧪️architecture-to-engineering"
+              "directoryName": "⚙️architecture-to-engineering"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "fixed-to-derived",
-              "directoryName": "🧪️fixed-to-derived"
+              "directoryName": "⚓️fixed-to-derived"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "hides-object-a",
-              "directoryName": "🧪️hides-object-a"
+              "directoryName": "🙈️hides-object-a"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "reassigns-object-a-kind",
-              "directoryName": "🧪️reassigns-object-a-kind"
+              "directoryName": "🏷️reassigns-object-a-kind"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "locks-object-a",
-              "directoryName": "🧪️locks-object-a"
+              "directoryName": "🔒️locks-object-a"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "repoints-object-a-mesh",
-              "directoryName": "🧪️repoints-object-a-mesh"
+              "directoryName": "🕸️repoints-object-a-mesh"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "hides-reference-1",
-              "directoryName": "🧪️hides-reference-1"
+              "directoryName": "🙈️hides-reference-1"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "locks-reference-1",
-              "directoryName": "🧪️locks-reference-1"
+              "directoryName": "🔒️locks-reference-1"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "hides-volume-1",
-              "directoryName": "🧪️hides-volume-1"
+              "directoryName": "🙈️hides-volume-1"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "locks-volume-1",
-              "directoryName": "🧪️locks-volume-1"
+              "directoryName": "🔒️locks-volume-1"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "adds-vortex-kind-pair",
-              "directoryName": "🧪️adds-vortex-kind-pair"
+              "directoryName": "🤝️adds-vortex-kind-pair"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "adds-second-attraction",
-              "directoryName": "🧪️adds-second-attraction"
+              "directoryName": "🧲️adds-second-attraction"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "appends-object-c",
-              "directoryName": "🧪️appends-object-c"
+              "directoryName": "🌱️appends-object-c"
             }
           ]
         },
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "appends-reference-2",
-              "directoryName": "🧪️appends-reference-2"
+              "directoryName": "🖼️appends-reference-2"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "appends-volume-2",
-              "directoryName": "🧪️appends-volume-2"
+              "directoryName": "🧊️appends-volume-2"
             }
           ]
         },
@@ -241,7 +241,7 @@
           "scenarios": [
             {
               "id": "removes-object-a-and-severs-attraction",
-              "directoryName": "🧪️removes-object-a-and-severs-attraction"
+              "directoryName": "🚫️removes-object-a-and-severs-attraction"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "removes-reference-1",
-              "directoryName": "🧪️removes-reference-1"
+              "directoryName": "🚫️removes-reference-1"
             }
           ]
         },
@@ -263,7 +263,7 @@
           "scenarios": [
             {
               "id": "removes-volume-1",
-              "directoryName": "🧪️removes-volume-1"
+              "directoryName": "🚫️removes-volume-1"
             }
           ]
         },
@@ -274,7 +274,7 @@
           "scenarios": [
             {
               "id": "removes-vortex-kind-pair",
-              "directoryName": "🧪️removes-vortex-kind-pair"
+              "directoryName": "🚫️removes-vortex-kind-pair"
             }
           ]
         },
@@ -285,7 +285,7 @@
           "scenarios": [
             {
               "id": "removes-attraction-1",
-              "directoryName": "🧪️removes-attraction-1"
+              "directoryName": "🚫️removes-attraction-1"
             }
           ]
         },
@@ -296,7 +296,7 @@
           "scenarios": [
             {
               "id": "relabels-object-a",
-              "directoryName": "🧪️relabels-object-a"
+              "directoryName": "🔤️relabels-object-a"
             }
           ]
         },
@@ -307,7 +307,7 @@
           "scenarios": [
             {
               "id": "moves-object-a",
-              "directoryName": "🧪️moves-object-a"
+              "directoryName": "📍️moves-object-a"
             }
           ]
         },
@@ -318,7 +318,7 @@
           "scenarios": [
             {
               "id": "slides-reference-1",
-              "directoryName": "🧪️slides-reference-1"
+              "directoryName": "↔️slides-reference-1"
             }
           ]
         },
@@ -329,7 +329,7 @@
           "scenarios": [
             {
               "id": "lifts-volume-1",
-              "directoryName": "🧪️lifts-volume-1"
+              "directoryName": "⬆️lifts-volume-1"
             }
           ]
         },
@@ -340,7 +340,7 @@
           "scenarios": [
             {
               "id": "removes-vortex-2-and-severs-attraction",
-              "directoryName": "🧪️removes-vortex-2-and-severs-attraction"
+              "directoryName": "🚫️removes-vortex-2-and-severs-attraction"
             }
           ]
         },
@@ -351,7 +351,7 @@
           "scenarios": [
             {
               "id": "repositions-attraction-1",
-              "directoryName": "🧪️repositions-attraction-1"
+              "directoryName": "📍️repositions-attraction-1"
             }
           ]
         },
@@ -362,7 +362,7 @@
           "scenarios": [
             {
               "id": "installs-vortex-kind-catalog",
-              "directoryName": "🧪️installs-vortex-kind-catalog"
+              "directoryName": "📇️installs-vortex-kind-catalog"
             }
           ]
         },
@@ -373,7 +373,7 @@
           "scenarios": [
             {
               "id": "rekind-vortex-1-is-noop",
-              "directoryName": "🧪️rekind-vortex-1-is-noop"
+              "directoryName": "⏸️rekind-vortex-1-is-noop"
             }
           ]
         },
@@ -384,7 +384,7 @@
           "scenarios": [
             {
               "id": "repoints-reference-1-source",
-              "directoryName": "🧪️repoints-reference-1-source"
+              "directoryName": "🖇️repoints-reference-1-source"
             }
           ]
         },
@@ -395,7 +395,7 @@
           "scenarios": [
             {
               "id": "widens-reference-1",
-              "directoryName": "🧪️widens-reference-1"
+              "directoryName": "↔️widens-reference-1"
             }
           ]
         },
@@ -406,7 +406,7 @@
           "scenarios": [
             {
               "id": "half-turn-about-z",
-              "directoryName": "🧪️half-turn-about-z"
+              "directoryName": "🔄️half-turn-about-z"
             }
           ]
         },
@@ -417,7 +417,7 @@
           "scenarios": [
             {
               "id": "half-turn-about-z",
-              "directoryName": "🧪️half-turn-about-z"
+              "directoryName": "🔄️half-turn-about-z"
             }
           ]
         },
@@ -428,7 +428,7 @@
           "scenarios": [
             {
               "id": "uniform-to-per-axis",
-              "directoryName": "🧪️uniform-to-per-axis"
+              "directoryName": "📐️uniform-to-per-axis"
             }
           ]
         },
@@ -439,7 +439,7 @@
           "scenarios": [
             {
               "id": "per-axis-to-uniform",
-              "directoryName": "🧪️per-axis-to-uniform"
+              "directoryName": "📏️per-axis-to-uniform"
             }
           ]
         }

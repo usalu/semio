@@ -27,11 +27,11 @@ import {
   playgroundTestPort,
   playgroundTestPortString,
   type PlaygroundHostKind,
-} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 import type { PlaygroundAssetSpec } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset, type MeshDeliveryCatalog } from "../../🖼️assets/🥽️mesh/🟦️.ts";
 import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY } from "../../🖼️assets/🔍️resolver/🌐️delivery.ts";
-import faviconDelivery from "./🌐️favicon.json";
+import faviconDelivery from "./🌐️favicon.json" with { type: "json" };
 // #endregion 🔌️Adapters
 
 export type { PlaygroundAssetSpec };

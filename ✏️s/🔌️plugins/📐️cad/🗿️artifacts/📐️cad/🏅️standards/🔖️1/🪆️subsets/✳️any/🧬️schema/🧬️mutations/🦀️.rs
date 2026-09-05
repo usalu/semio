@@ -79,7 +79,7 @@ pub enum CadMutation {
 
 /// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
 /// vocabulary the `cad-1-any` mutation catalog (`../../🔣️oracle.json`) declares and the
-/// `🌻️mutate-cad-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `📐️mutate-cad-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "create-shape-model",

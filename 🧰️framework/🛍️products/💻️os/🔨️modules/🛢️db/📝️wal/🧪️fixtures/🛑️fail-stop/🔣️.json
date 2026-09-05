@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "short-append",
+      "fault": "shortAppend",
+      "keepBytes": 7,
+      "expectedError": "Corrupt",
+      "expectedPhysicalSuffix": "torn"
+    },
+    {
+      "name": "append-error",
+      "fault": "appendError",
+      "expectedError": "Io",
+      "expectedPhysicalSuffix": "absent"
+    },
+    {
+      "name": "sync-error",
+      "fault": "syncError",
+      "expectedError": "Io",
+      "expectedPhysicalSuffix": "complete"
+    },
+    {
+      "name": "successor-append-error",
+      "fault": "successorAppendError",
+      "expectedError": "Io",
+      "expectedPhysicalSuffix": "complete"
+    }
+  ],
+  "expectedSecondError": "Closed"
+}

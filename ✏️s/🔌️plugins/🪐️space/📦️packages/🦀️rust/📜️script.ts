@@ -170,6 +170,151 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
   }
 }
 
+/** 🪪️ Proves only the current Hub author identity receives Home administration affordances. */
+export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
+  const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any");
+  const controller = readFileSync(join(base, "✏️editor/🦀️.rs"), "utf8");
+  const editor = readFileSync(join(base, "✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  const viewer = readFileSync(join(base, "👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  const ownerScript = readFileSync(import.meta.filename, "utf8");
+  const osHost = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
+  const exact = (editorSource: string, viewerSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
+    && editorSource.includes('home_row_action(IconName::Users, labels.action_manage, "manageSpace", &row.id)')
+    && editorSource.includes('assert_eq!(buttons.len(), 5')
+    && editorSource.includes('manage_button["action"]["args"]["spaceId"]')
+    && editorSource.includes("spectator_and_unbound_hub_rows_only_carry_open")
+    && editorSource.includes("role: Some(crate::DirectorySpaceRole::Spectator)")
+    && editorSource.includes("role: None")
+    && viewerSource.includes('origin: "hub", role: None');
+  assert(controller.includes("fold_directory_events, manage_space, presence_heartbeat"), "Home controller does not import the manageSpace command module");
+  assert(exact(editor, viewer), "Home identity rows expose administration without current author authority");
+  for (const hostile of [
+    editor.replace("row.role == Some(crate::DirectorySpaceRole::Author)", 'row.origin == "hub"'),
+    editor.replace('assert_eq!(buttons.len(), 5', 'assert_eq!(buttons.len(), 4'),
+    editor.replace("role: Some(crate::DirectorySpaceRole::Spectator)", "role: Some(crate::DirectorySpaceRole::Author)"),
+  ]) assert.equal(exact(hostile, viewer), false);
+  for (const law of ["svg_path_extraction_preserves_transformed_geometry"]) {
+    assert(ownerScript.includes(`workflow::tests::${law}`), `Home native gate omitted ${law}`);
+    assert(osHost.includes(`fn ${law}()`), `OS host omitted ${law}`);
+  }
+  return 10;
+}
+
+class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-identity-rows-check accepts only --native");
+    if (segments[0] === "--native") {
+      const receipts = await runExactCargoLaws({
+        cwd: this.root,
+        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [
+          {
+            package: "semio-framework-plugin-host",
+            target: { kind: "lib" },
+            laws: ["component::imports::effect_conversion_tests::request_inference_proposal_preserves_the_closed_kind"],
+          },
+          {
+            package: "semio-framework-os",
+            target: { kind: "lib" },
+            laws: [
+              "workflow::tests::svg_path_extraction_preserves_transformed_geometry",
+            ],
+          },
+          {
+            package: "semio-s-plugin-space",
+            target: { kind: "lib" },
+            laws: [
+              "editor::home::modes::explore::windows::main::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
+              "editor::home::modes::explore::windows::main::tests::spectator_and_unbound_hub_rows_only_carry_open",
+              "viewer::home::modes::view::windows::main::tests::a_row_stamps_the_space_row_id",
+            ],
+          },
+        ],
+        progress(event) { console.log(`home-directory-identity-rows ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      console.log(`home-directory-identity-rows-native-receipts: ${JSON.stringify(receipts)}`);
+    }
+    console.log(`home-directory-identity-rows-check: checks=${homeDirectoryIdentityRowsOracle(this.repoRoot)} clean`);
+  }
+}
+
+/** 🧵️ Proves the three `🪐️space` app surfaces declare exactly the interactive-job dispositions their
+ * language-neutral fixtures declare, and reports the committed descriptor's drift against them. The
+ * descriptor is regenerated only by a full `wasm32-wasip2` build (`describe`), so a stale one is
+ * expected — what is NOT tolerated is a descriptor that carries `interactiveJob` and disagrees. */
+export function interactiveJobCatalogOracle(repoRoot: string): number {
+  const plugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
+  const surfaces = [
+    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), shape: "status" as const, factory: "SpaceCommandJobFactory" },
+    { appId: "s.space.home@1/*#editor", owner: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), source: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "disposition" as const, factory: "HomeRetainedCommandJobFactory" },
+    { appId: "s.space.space@1/*#editor", owner: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), source: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
+  ];
+  const descriptor = JSON.parse(readFileSync(join(plugin, "🔣️.json"), "utf8"));
+  let checks = 0;
+  let staleRows = 0;
+  for (const surface of surfaces) {
+    const fixtureRoot = join(surface.owner, "🧪️fixtures/🧫️retained-command-limits");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+    assert(new Ajv2020({ strict: false, allErrors: true }).compile(schema)(fixture), `${surface.appId} fixture violates its own schema`);
+    checks += 1;
+    const migrated: string[] = fixture.routes.filter((route: any) => (surface.shape === "status" ? route.status === "migrated" : route.disposition === "Migrated")).map((route: any) => route.id);
+    const lanes = new Map<string, string[]>(
+      surface.shape === "status" ? fixture.publicationContracts.map((entry: any) => [entry.toolId, entry.lanes]) : fixture.routes.map((route: any) => [route.id, route.lanes]),
+    );
+    assert.deepEqual([...migrated].sort(), [...new Set(migrated)].sort(), `${surface.appId} fixture repeats a migrated id`);
+    for (const id of migrated) assert((lanes.get(id) ?? []).length > 0, `${surface.appId}:${id} is migrated with no publication lane`);
+    checks += 1;
+    const source = readFileSync(surface.source, "utf8");
+    assert(source.includes(`factory_type: ${surface.factory},`), `${surface.appId} proof catalog declares no owned factory type`);
+    assert(source.includes(`controller: "${surface.appId}",`), `${surface.appId} proof catalog controller is not its runtime surface id`);
+    for (const id of migrated) {
+      assert(source.includes(`"${id}"`), `${surface.appId} source lost the migrated id ${id}`);
+      assert.equal(source.includes(`.action_interactive_job("${id}", InteractiveJobClassification::BatchOnlyPendingRewrite)`), false, `${surface.appId}:${id} is still declared batch-only in source`);
+    }
+    checks += 1;
+    const app = descriptor.manifest.apps.find((entry: any) => entry.id === surface.appId);
+    assert(app, `descriptor omits ${surface.appId}`);
+    const declared = new Map<string, string | undefined>();
+    for (const window of app.windowKinds ?? []) for (const action of window.actions ?? []) declared.set(action.id, action.semantics?.execution?.interactiveJob);
+    for (const command of app.commands ?? []) declared.set(command.id, command.semantics?.execution?.interactiveJob);
+    for (const id of migrated) {
+      const published = declared.get(id);
+      if (published === undefined) { staleRows += 1; continue; }
+      assert.equal(published, "migrated", `descriptor publishes ${surface.appId}:${id} as ${published}, source says migrated`);
+    }
+    checks += 1;
+  }
+  console.log(`interactive-job-catalog: descriptor rows without an interactiveJob disposition: ${staleRows} (regenerated by \`describe\` after a wasm build)`);
+  return checks;
+}
+
+class InteractiveJobCatalogCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("interactive-job-catalog-check accepts only --native");
+    if (segments[0] === "--native") {
+      const receipts = await runExactCargoLaws({
+        cwd: this.root,
+        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        groups: [{
+          package: "semio-s-plugin-space",
+          target: { kind: "lib" },
+          laws: [
+            "interactive_job_catalog_tests::studio_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory",
+            "interactive_job_catalog_tests::home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory",
+            "interactive_job_catalog_tests::space_index_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory",
+            "interactive_job_catalog_tests::tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against",
+            "interactive_job_catalog_tests::manifest_plugin_id_matches_the_cargo_component_package",
+          ],
+        }],
+        progress(event) { console.log(`interactive-job-catalog ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      });
+      console.log(`interactive-job-catalog-native-receipts: ${JSON.stringify(receipts)}`);
+    }
+    console.log(`interactive-job-catalog-check: checks=${interactiveJobCatalogOracle(this.repoRoot)} clean`);
+  }
+}
+
 /** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
  * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
  * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
@@ -179,6 +324,6 @@ class DescribeScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

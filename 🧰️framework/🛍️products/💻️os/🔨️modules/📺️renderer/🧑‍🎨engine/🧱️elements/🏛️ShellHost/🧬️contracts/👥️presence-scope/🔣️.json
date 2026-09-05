@@ -1,0 +1,45 @@
+{
+  "schema": "semio.shell.presence-scope-fixture.v1",
+  "documentId": "same-document",
+  "cases": [
+    {
+      "scope": { "spaceId": "space-a", "documentId": "same-document" },
+      "runtimeKey": "v1:7:13:space-asame-document",
+      "surface": "map@1/*#editor",
+      "peer": {
+        "actor": "actor-a",
+        "userId": "user-a",
+        "label": "Ada",
+        "role": "owner",
+        "connectedAtMs": 101,
+        "color": 2,
+        "surface": "map@1/*#editor",
+        "views": []
+      }
+    },
+    {
+      "scope": { "spaceId": "space-b", "documentId": "same-document" },
+      "runtimeKey": "v1:7:13:space-bsame-document",
+      "surface": "map@1/*#viewer",
+      "peer": {
+        "actor": "actor-b",
+        "userId": "user-b",
+        "label": "Berta",
+        "role": "viewer",
+        "connectedAtMs": 202,
+        "color": 5,
+        "surface": "map@1/*#viewer",
+        "views": []
+      }
+    }
+  ],
+  "close": {
+    "clearsRuntimeKey": "v1:7:13:space-asame-document",
+    "preservesRuntimeKey": "v1:7:13:space-bsame-document"
+  },
+  "routes": [
+    "actor://v1:7:13:space-asame-document",
+    "actor://v1:7:13:space-bsame-document"
+  ],
+  "rejected": ["missing-scope", "mismatched-scope", "missing-surface", "mismatched-surface"]
+}

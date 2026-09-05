@@ -17,20 +17,20 @@ pub struct ChangeMetaDescription {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_meta_description(new_description: String) -> Block5dMutation {
+pub fn change_meta_description(new_description: String) -> Block5dMutation {
     Block5dMutation::ChangeMetaDescription(ChangeMetaDescription { new_description })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeMetaDescription {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "meta", kind: "change-meta-description", record: "ChangedMetaDescription" };
 
-    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Change meta description".to_string()
     }
 }

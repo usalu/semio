@@ -7,7 +7,7 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")
 }
 pub const ICON: &str = "file";
-pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🧪️sphere-cut-with-torus/🗣️.dsl.semio");
+pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🍩️sphere-cut-with-torus/🗣️.dsl.semio");
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

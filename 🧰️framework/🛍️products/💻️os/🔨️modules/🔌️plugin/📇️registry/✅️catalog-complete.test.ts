@@ -1,5 +1,5 @@
 import { createHash, webcrypto } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, truncateSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
@@ -7,19 +7,23 @@ import { parseModuleDirectories, moduleDirectoryName, moduleIdForDirectoryName }
 import { pluginModuleUrl, extensionModuleUrl } from "./🤖️generated/🧩️plugins.ts";
 import { afterEach, describe, expect, it } from "vitest";
 import { encodePackValue } from "../../../🟦️.ts";
+import { emitOwnerDescriptorPairV1 } from "../🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 import {
   CATALOG_ARTIFACT_MAX_BYTES,
   CATALOG_COMMIT_MARKER_FILENAME,
   CATALOG_DEPENDENCY_MAX,
   CATALOG_NODE_MAX,
+  auditInteractiveJobClassificationDrift,
   auditPluginCatalogSources,
   createFreshCatalogCommitMarker,
   createFreshCatalogBuildVerifier,
   executeCatalogVerificationPlan,
   orderCatalogNodes,
   parseComponentPackageId,
+  rejectPlaceholderCatalogIdentity,
   sha256CatalogArtifact,
   validateCatalogDescriptorPair,
+  verifyDescriptorPairBytesV1,
   type CatalogVerificationNode,
   type PluginRegistryEntry,
 } from "./📜️script.ts";
@@ -306,6 +310,117 @@ describe("strict plugin catalog completion", () => {
     truncateSync(huge, CATALOG_ARTIFACT_MAX_BYTES + 1);
     expect(statSync(huge).size).toBe(CATALOG_ARTIFACT_MAX_BYTES + 1);
     expect(() => sha256CatalogArtifact(huge, hugeRoot)).toThrow(/exceeds/);
+  });
+
+  it("verifies one emitted owner pair against its exact raw/core bytes with a WebCrypto oracle", async () => {
+    const raw = new TextEncoder().encode("raw-component");
+    const core = new TextEncoder().encode("extracted-core");
+    const rawSha256 = await sha256(raw);
+    const coreWasmSha256 = await sha256(core);
+    expect(rawSha256).not.toBe(coreWasmSha256);
+    const { descriptor, bytes } = await syntheticDescriptor("parent", raw, core);
+    const json = new TextEncoder().encode(`${JSON.stringify(descriptor, null, 2)}\n`);
+    const pair = verifyDescriptorPairBytesV1(json, bytes, { wasmSha256: rawSha256, coreWasmSha256 });
+    expect(pair).toMatchObject({ pluginId: "parent", packageId: "semio:parent", role: "plugin", version: "1.0.0", execution: "isolated" });
+    expect(pair.hashes.wasmSha256).toBe(rawSha256);
+    expect(pair.hashes.coreWasmSha256).toBe(coreWasmSha256);
+    expect(pair.hashes.descriptorSha256).toBe(createHash("sha256").update(encodePackValue({ ...descriptor, hashes: { ...descriptor.hashes, descriptorSha256: "" } })).digest("hex"));
+    const swapped = await syntheticDescriptor("parent", core, raw);
+    expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(swapped.descriptor, null, 2)}\n`), swapped.bytes, { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/exact raw\/core artifacts/);
+    const divergent = structuredClone(descriptor);
+    divergent.manifest.label = "a different label";
+    expect(() => verifyDescriptorPairBytesV1(json, encodePackValue(divergent), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/JSON and pack forms disagree/);
+    const tampered = structuredClone(descriptor);
+    tampered.hashes.descriptorSha256 = await sha256(new TextEncoder().encode("not the self hash"));
+    expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(tampered, null, 2)}\n`), encodePackValue(tampered), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/self-hash mismatch/);
+    const trailing = new Uint8Array([...bytes, 0]);
+    expect(() => verifyDescriptorPairBytesV1(json, trailing, { wasmSha256: rawSha256, coreWasmSha256 })).toThrow();
+    for (const identity of [{ pluginId: "empty", version: "1.0.0" }, { pluginId: "cad-extension-spatial-shape", version: "0.0.0" }]) {
+      const placeholder = await syntheticDescriptor(identity.pluginId, raw, core);
+      placeholder.descriptor.manifest.version = identity.version;
+      placeholder.descriptor.hashes.descriptorSha256 = "";
+      placeholder.descriptor.hashes.descriptorSha256 = await sha256(encodePackValue(placeholder.descriptor));
+      const placeholderBytes = encodePackValue(placeholder.descriptor);
+      expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(placeholder.descriptor, null, 2)}\n`), placeholderBytes, { wasmSha256: rawSha256, coreWasmSha256 }), identity.pluginId).toThrow(/placeholder identity/);
+    }
+    expect(() => rejectPlaceholderCatalogIdentity("cad-extension-spatial-shape", "1.0.0")).not.toThrow();
+    const hosted = await syntheticDescriptor("host-extension-child", raw, core);
+    hosted.descriptor.role = "extension";
+    hosted.descriptor.manifest.dependencies = [{ pluginId: "host" }];
+    hosted.descriptor.hashes.descriptorSha256 = "";
+    hosted.descriptor.hashes.descriptorSha256 = await sha256(encodePackValue(hosted.descriptor));
+    expect(verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hosted.descriptor, null, 2)}\n`), encodePackValue(hosted.descriptor), { wasmSha256: rawSha256, coreWasmSha256 })).toMatchObject({ role: "extension", extends: "host" });
+    const hostless = structuredClone(hosted.descriptor);
+    hostless.manifest.dependencies = [];
+    hostless.hashes.descriptorSha256 = "";
+    hostless.hashes.descriptorSha256 = await sha256(encodePackValue(hostless));
+    expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostless, null, 2)}\n`), encodePackValue(hostless), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/extension host must be its first dependency/);
+  });
+
+  it("refuses every unusable emission input and never half-publishes an owner pair", async () => {
+    const repoRoot = temporaryRoot();
+    const artifactRoot = join(repoRoot, "target-emission");
+    const ownerRoot = join(repoRoot, "owner");
+    const outsideRoot = temporaryRoot();
+    for (const directory of [artifactRoot, ownerRoot]) mkdirSync(directory, { recursive: true });
+    const previousJson = `${JSON.stringify({ previous: true }, null, 2)}\n`;
+    const previousPack = encodePackValue({ previous: true });
+    writeFileSync(join(ownerRoot, "🔣️.json"), previousJson);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), previousPack);
+    const rawComponentPath = join(artifactRoot, "component.wasm");
+    const extractedCorePath = join(artifactRoot, "component.core.wasm");
+    writeFileSync(rawComponentPath, "raw-component");
+    writeFileSync(extractedCorePath, "extracted-core");
+    const outsideComponent = join(outsideRoot, "component.wasm");
+    writeFileSync(outsideComponent, "raw-component");
+    const emptyComponent = join(artifactRoot, "empty.wasm");
+    writeFileSync(emptyComponent, "");
+    const linkedComponent = join(artifactRoot, "linked.wasm");
+    symlinkSync(rawComponentPath, linkedComponent);
+    const twinComponent = join(artifactRoot, "twin.wasm");
+    writeFileSync(twinComponent, "raw-component");
+    const request = { rawComponentPath, extractedCorePath, ownerRoot, artifactRoot };
+    const cases: readonly [string, Parameters<typeof emitOwnerDescriptorPairV1>[1], Parameters<typeof emitOwnerDescriptorPairV1>[2], RegExp][] = [
+      ["outside the artifact root", { ...request, rawComponentPath: outsideComponent }, {}, /resolves outside the declared artifact root/],
+      ["an empty artifact", { ...request, rawComponentPath: emptyComponent }, {}, /regular non-symlink file/],
+      ["a symlinked artifact", { ...request, rawComponentPath: linkedComponent }, {}, /regular non-symlink file/],
+      ["a directory owner that is a file", { ...request, ownerRoot: rawComponentPath }, {}, /regular non-symlink directory/],
+      ["the same file twice", { ...request, extractedCorePath: rawComponentPath }, {}, /the same file/],
+      ["byte-identical raw and core", { ...request, extractedCorePath: twinComponent }, {}, /same SHA-256/],
+      ["a cancelled emission", request, { cancelled: () => true }, /cancelled at validate/],
+      ["an exhausted deadline", request, { deadlineMs: -1 }, /deadline of -1ms exceeded/],
+    ];
+    for (const [label, input, control, expected] of cases) {
+      expect(() => emitOwnerDescriptorPairV1(repoRoot, input, control), label).toThrow(expected);
+      expect(readFileSync(join(ownerRoot, "🔣️.json"), "utf8"), label).toBe(previousJson);
+      expect(readFileSync(join(ownerRoot, "🛂️.descriptor.semio")), label).toEqual(Buffer.from(previousPack));
+    }
+    const stages: string[] = [];
+    expect(() => emitOwnerDescriptorPairV1(repoRoot, request, { checkpoint: (stage) => { stages.push(stage); if (stages.length === 2) throw new Error("stopped after emit"); } })).toThrow(/stopped after emit/);
+    expect(stages).toEqual(["validate", "emit"]);
+    expect(readFileSync(join(ownerRoot, "🔣️.json"), "utf8")).toBe(previousJson);
+  });
+
+  it("reports only committed classifications that contradict the owner's own Rust", () => {
+    const ownerRoot = temporaryRoot();
+    const surface = join(ownerRoot, "🗿️artifacts", "✏️editor");
+    mkdirSync(surface, { recursive: true });
+    writeFileSync(join(surface, "🦀️.rs"), [
+      '.action_interactive_job("migratedAction", InteractiveJobClassification::Migrated)',
+      '.action_interactive_job("batchAction", semio_framework::InteractiveJobClassification::BatchOnlyPendingRewrite)',
+      '.action_interactive_job("perSurfaceAction", InteractiveJobClassification::Migrated)',
+    ].join("\n"));
+    mkdirSync(join(ownerRoot, "🧩️extensions"), { recursive: true });
+    writeFileSync(join(ownerRoot, "🧩️extensions", "🦀️.rs"), '.action_interactive_job("migratedAction", InteractiveJobClassification::Deleted)');
+    const viewer = join(ownerRoot, "🗿️artifacts", "👁️viewer");
+    mkdirSync(viewer, { recursive: true });
+    writeFileSync(join(viewer, "🦀️.rs"), '.action_interactive_job("perSurfaceAction", InteractiveJobClassification::BatchOnlyPendingRewrite)');
+    const action = (id: string, interactiveJob?: string) => ({ id, semantics: { execution: interactiveJob ? { interactiveJob } : {} } });
+    const descriptor = { manifest: { apps: [{ id: "s.owner.app@1/*#editor", windowKinds: [{ actions: [action("migratedAction", "batchOnlyPendingRewrite"), action("batchAction", "batchOnlyPendingRewrite"), action("perSurfaceAction", "migrated"), action("migratedAction"), action("frameworkAction", "migrated"), action("unclassifiedAction", "unclassified")] }] }] } };
+    const drift = auditInteractiveJobClassificationDrift("owner", ownerRoot, descriptor);
+    expect(drift).toHaveLength(1);
+    expect(drift[0]).toMatch(/s\.owner\.app@1\/\*#editor#migratedAction is committed as "batchOnlyPendingRewrite" but its Rust declares "migrated"/);
+    expect(auditInteractiveJobClassificationDrift("owner", join(ownerRoot, "absent"), descriptor)).toEqual([]);
   });
 
   it("independently enumerates the 59 real manifests and the known 19 missing source pairs", () => {

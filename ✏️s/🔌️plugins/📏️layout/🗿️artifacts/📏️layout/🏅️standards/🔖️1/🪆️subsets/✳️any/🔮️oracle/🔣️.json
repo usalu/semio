@@ -90,7 +90,7 @@
           "scenarios": [
             {
               "id": "attaches-a-data-fields-payload",
-              "directoryName": "⛵️attaches-a-data-fields-payload"
+              "directoryName": "🧾️attaches-a-data-fields-payload"
             }
           ]
         },
@@ -112,7 +112,7 @@
           "scenarios": [
             {
               "id": "repaints-the-rect-frame-fill",
-              "directoryName": "🍀️repaints-the-rect-frame-fill"
+              "directoryName": "🎨️repaints-the-rect-frame-fill"
             }
           ]
         },
@@ -123,7 +123,7 @@
           "scenarios": [
             {
               "id": "adds-a-stroke-to-the-rect-frame",
-              "directoryName": "🦅️adds-a-stroke-to-the-rect-frame"
+              "directoryName": "🖊️adds-a-stroke-to-the-rect-frame"
             }
           ]
         },
@@ -156,7 +156,7 @@
           "scenarios": [
             {
               "id": "lengthens-page-1",
-              "directoryName": "📃️lengthens-page-1"
+              "directoryName": "↕️lengthens-page-1"
             }
           ]
         },
@@ -167,7 +167,7 @@
           "scenarios": [
             {
               "id": "widens-page-1",
-              "directoryName": "📃️widens-page-1"
+              "directoryName": "↔️widens-page-1"
             }
           ]
         },
@@ -189,7 +189,7 @@
           "scenarios": [
             {
               "id": "inserts-a-rect-frame-at-index-1",
-              "directoryName": "🚪️inserts-a-rect-frame-at-index-1"
+              "directoryName": "🔲️inserts-a-rect-frame-at-index-1"
             }
           ]
         },
@@ -211,7 +211,7 @@
           "scenarios": [
             {
               "id": "appends-page-3",
-              "directoryName": "📃️appends-page-3"
+              "directoryName": "➕️appends-page-3"
             }
           ]
         },
@@ -222,7 +222,7 @@
           "scenarios": [
             {
               "id": "appends-story-3",
-              "directoryName": "🟤️appends-story-3"
+              "directoryName": "📖️appends-story-3"
             }
           ]
         },
@@ -277,7 +277,7 @@
           "scenarios": [
             {
               "id": "rewrites-story-1-body",
-              "directoryName": "🟦️rewrites-story-1-body"
+              "directoryName": "📝️rewrites-story-1-body"
             }
           ]
         },
@@ -288,7 +288,7 @@
           "scenarios": [
             {
               "id": "moves-the-rect-frame",
-              "directoryName": "🔵️moves-the-rect-frame"
+              "directoryName": "📍️moves-the-rect-frame"
             }
           ]
         },
@@ -299,7 +299,7 @@
           "scenarios": [
             {
               "id": "renames-the-document",
-              "directoryName": "📃️renames-the-document"
+              "directoryName": "🏷️renames-the-document"
             }
           ]
         },
@@ -310,7 +310,7 @@
           "scenarios": [
             {
               "id": "renames-page-1",
-              "directoryName": "📃️renames-page-1"
+              "directoryName": "🏷️renames-page-1"
             }
           ]
         },
@@ -321,7 +321,7 @@
           "scenarios": [
             {
               "id": "moves-page-1-behind-page-2",
-              "directoryName": "📃️moves-page-1-behind-page-2"
+              "directoryName": "🔀️moves-page-1-behind-page-2"
             }
           ]
         },
@@ -343,7 +343,7 @@
           "scenarios": [
             {
               "id": "splits-page-1-into-three-columns",
-              "directoryName": "📃️splits-page-1-into-three-columns"
+              "directoryName": "🏛️splits-page-1-into-three-columns"
             }
           ]
         },
@@ -354,7 +354,7 @@
           "scenarios": [
             {
               "id": "sets-asymmetric-margins-on-page-1",
-              "directoryName": "📃️sets-asymmetric-margins-on-page-1"
+              "directoryName": "📐️sets-asymmetric-margins-on-page-1"
             }
           ]
         }

@@ -22,20 +22,20 @@ pub struct UpdatePresentation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_presentation(new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>, new_color: Option<String>, new_icon_kind: Option<String>) -> Block2dMutation {
+pub fn update_presentation(new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>, new_color: Option<String>, new_icon_kind: Option<String>) -> Block2dMutation {
     Block2dMutation::UpdatePresentation(UpdatePresentation { new_shape, new_radius, new_width, new_height, new_color, new_icon_kind })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for UpdatePresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "presentation", kind: "update-presentation", record: "UpdatedPresentation" };
 
-    async fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+    fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Update presentation".to_string()
     }
 }

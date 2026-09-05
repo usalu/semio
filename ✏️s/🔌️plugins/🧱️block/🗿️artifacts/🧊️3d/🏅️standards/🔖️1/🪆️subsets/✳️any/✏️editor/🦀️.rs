@@ -25,14 +25,18 @@ use crate::editor::block3d::modes::edit::windows::world;
 use crate::editor::block3d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::block3d::terminology::block3d_labels;
 use crate::BlockCamera3d;
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionDescriptor, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft,
-    NoDraftMutation, UiNode, UtilityDefinition,
+    ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
+    ConfigView, DraftView, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, UtilityDefinition,
 };
 // 🚧️ SDK GAP: `Dialect`/`InteractionView` are still only reachable through the `app` submodule they're
 // declared in — not (yet) in `semio_framework_plugin`'s curated crate-root re-export list, unlike
 // `ArtifactEditor`/`Editor` above (closed by W0-F). Mirrors the sibling `👁️viewer`'s own gap note.
-use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
+use semio_framework::{
+    DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract,
+    ToolFactoryKey, ToolJobFactoryError, TopologyNode,
+};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use dsl::os_pack::json::Value;
 use std::collections::{BTreeMap, HashMap};
@@ -58,12 +62,22 @@ pub const BLOCK3D_GRANULARITY_SURFACE: &str = "surface";
 /// `block3d_io` and `Block3dPlayApp::export_media`.
 const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 
-/// 🎯️ An `ActionDescriptor` addressed at this surface — the single factory every taxonomy node's chrome
-/// (`📌️panels/*`, `☑️options/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
+/// 🎯️ The semantic-contract action binding addressed at this surface — the single factory every
+/// contract-built node (`📌️panels/*`) binds its `on_change`/item actions with.
 pub fn block3d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(BLOCK3D_PLAY_APP_ID).action(action, args)
 }
 
+/// 🪟️ Bridges window chrome (`☑️options/*`'s [`semio_framework_plugin::WindowMeasure`]s), which still
+/// carries the retained WGPU action descriptor rather than a contract action binding.
+pub fn block3d_window_action(action: &str, args: Option<dsl::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: BLOCK3D_PLAY_APP_ID.into(), action: action.into(), args }
+}
+
+/// 🏷️ Admits resolved block3d text into the semantic UI contract's fixed-capacity label.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d UI label admission failed"))
+}
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -120,7 +134,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 }
 
 
-async fn block3d_resolve_world_body(body_key: &str) -> (&str, String) {
+fn block3d_resolve_world_body(body_key: &str) -> (&str, String) {
     if body_key == world::BLOCK3D_BODY_WORLD || body_key.starts_with(&format!("{}:", world::BLOCK3D_BODY_WORLD)) {
         if let Some((_, window_id)) = body_key.split_once(':') {
             return (world::BLOCK3D_BODY_WORLD, window_id.to_string());
@@ -130,7 +144,7 @@ async fn block3d_resolve_world_body(body_key: &str) -> (&str, String) {
     (body_key, BLOCK3D_DEFAULT_WINDOW_ID.into())
 }
 
-async fn f64_vec3_field(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
+fn f64_vec3_field(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
     let array = args.and_then(|value| value.get(key))?.as_array()?;
     if array.len() < 3 {
         return None;
@@ -138,7 +152,7 @@ async fn f64_vec3_field(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
     Some([array[0].as_f64()?, array[1].as_f64()?, array[2].as_f64()?])
 }
 
-async fn window_id_from_args(args: Option<&Value>) -> String {
+fn window_id_from_args(args: Option<&Value>) -> String {
     args.and_then(|value| value.get("windowId").or_else(|| value.get("pane")).or_else(|| value.get("surfaceId"))).and_then(Value::as_str).map_or_else(|| BLOCK3D_DEFAULT_WINDOW_ID.into(), str::to_string)
 }
 //#endregion 🔖️Constants
@@ -147,21 +161,23 @@ async fn window_id_from_args(args: Option<&Value>) -> String {
 /// 🔌️ `Block3dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
 /// (`Kit×Type`, matching the `"3d.block"` artifact kind) plus the `"catalog:out"` port: the puzzle3d
 /// seam that gives `puzzle3d_catalog_fragment` a real caller (see `export_media` below).
-pub async fn block3d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo::from_document(
-        BLOCK_3D_SCHEMA,
-        MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-        semio_framework_plugin::ArtifactPresentation { id: "3d.block".into(), name: "Object Kind".into(), dimension: "3d".into(), component_kind: "block3d".into() },
+pub fn block3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework::io::resolve_ready(
+        semio_framework::io::resolve_ready(semio_framework_plugin::AppIo::from_document(
+            BLOCK_3D_SCHEMA,
+            MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+            semio_framework_plugin::ArtifactPresentation { id: "3d.block".into(), name: "Object Kind".into(), dimension: "3d".into(), component_kind: "block3d".into() },
+        ))
+        .with_ports(vec![semio_framework_plugin::MediaPortSpec {
+            id: "catalog:out".into(),
+            label: "Kit Catalog".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+            kind_id: Some("kit.catalog".into()),
+            required: false,
+            multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+        }]),
     )
-    .with_ports(vec![semio_framework_plugin::MediaPortSpec {
-        id: "catalog:out".into(),
-        label: "Kit Catalog".into(),
-        direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-        kind_id: Some("kit.catalog".into()),
-        required: false,
-        multiplicity: semio_framework_plugin::PortMultiplicity::Many,
-    }])
 }
 //#endregion 🔖️Io
 
@@ -200,6 +216,439 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedCommands
+/// 🧾️ Every block3d tool id, in `Block3dCommand` declaration order — a bijection with the enum's 23
+/// rows, with `BLOCK3D_PUBLICATION_CONTRACTS`, and with the `.action_interactive_job(…, Migrated)` set
+/// `create_block3d_app` declares (asserted by `retained_route_dispositions_are_exact_and_exhaustive`).
+/// `AppActionRegistry::tool_job_registration` enforces exactly that set equality at construction time:
+/// a row missing here, or an action left `Unclassified`, faults the whole app with
+/// `interactive-job.catalog-incomplete` instead of silently going dispatch-dead at the UI gate.
+const BLOCK3D_RETAINED_TOOL_IDS: &[&str] = &[
+    "patchObjectKind",
+    "addRepresentation",
+    "removeRepresentation",
+    "addVortexKind",
+    "removeVortexKind",
+    "addVortex",
+    "removeVortex",
+    "setActiveExample",
+    "edit",
+    "setActiveRepresentation",
+    "setWindowRepresentations",
+    "toggleWindowRepresentation",
+    "setWindowArrangement",
+    "setWindowSpacing",
+    "setActiveUtility",
+    "setBrushVortexKind",
+    "setBrushRadius",
+    "setBrushFlip",
+    "worldSurfaceHover",
+    "worldSurfaceLeave",
+    "worldSurfacePlace",
+    "setCamera",
+    "patchRepresentation",
+];
+const BLOCK3D_RETAINED_PAYLOAD_SCHEMA: &str = "block.3d.tool-command.v1";
+const BLOCK3D_RETAINED_RAW_BYTES: usize = 65_536;
+const BLOCK3D_RETAINED_WORK_ITEMS: usize = 4_096;
+/// 🎒️ Real bound for one Artifact-lane edit: `setActiveExample`/`edit` replay a whole example fixture
+/// (`📚️examples/*/🖼️assets/*/🗣️.dsl.semio`, ~1–2 KB of text) as the single largest document mutation any
+/// of the 23 tools emits, so 64 KiB is a real ceiling rather than a rubber stamp.
+const BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
+/// 🎒️ Real bound for one Config-lane edit: every `Block3dConfigMutation` inverse is a whole-config
+/// `Snapshot` row (`🎚️config/🦀️.rs`'s `Mutation::inverse`), whose largest member is the per-window
+/// `representation_ids` view — 256 KiB covers that without being unbounded.
+const BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 262_144;
+
+const BLOCK3D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "patchObjectKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addRepresentation", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeRepresentation", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addVortexKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeVortexKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addVortex", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeVortex", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "edit", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setActiveRepresentation", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setWindowRepresentations", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "toggleWindowRepresentation", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setWindowArrangement", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setWindowSpacing", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setBrushVortexKind", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setBrushRadius", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setBrushFlip", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "worldSurfaceHover", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "worldSurfaceLeave", lanes: &[ArtifactToolPublicationLane::Config] },
+    // 🖌️ The only two-lane row: `📍️place-vortex` emits the vortex-kind/vortex document mutations AND
+    // clears the brush preview in config in one `Emit`.
+    ArtifactToolPublicationContract { tool_id: "worldSurfacePlace", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "patchRepresentation", lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
+
+fn block3d_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(BLOCK3D_RETAINED_RAW_BYTES, 4_096, 1, 262_144, 7_500)
+}
+
+fn block3d_retained_extent(command: &Block3dCommand, snapshot: &Block3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    if !BLOCK3D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return None;
+    }
+    let collections = [snapshot.representations.len(), snapshot.vortex_kind_extra.len(), snapshot.vortices.len(), snapshot.compatibility.len(), snapshot.attributes.len(), snapshot.authors.len()];
+    let items = collections.into_iter().try_fold(1usize, |total, count| total.checked_add(count))?;
+    (items <= BLOCK3D_RETAINED_WORK_ITEMS).then_some(1)
+}
+
+fn block3d_retained_reduce(
+    command: &Block3dCommand,
+    snapshot: &Block3dSnapshot,
+    config: &Block3dConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<Block3dMutation, Block3dConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct Block3dRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Block3dRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: BLOCK3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for Block3dRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Block3dPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Block3dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        BLOCK3D_RETAINED_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        block3d_bounded_contract()
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > BLOCK3D_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Block3d retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Block3dRetainedCommandJobFactory {
+    type Owner = EditorApp<Block3dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = BLOCK3D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = BLOCK3D_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+/// 🧬️ Builds one `protocol::Edit<M>` for either lane's `advance()` — the artifact and config lanes
+/// differ only in `M` and their id prefix, so one generic helper replaces two copies of the same body.
+fn block3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("{prefix}-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+fn block3d_artifact_mutation_retained_bytes(mutation: &Block3dMutation) -> Result<usize, String> {
+    ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "block3d-artifact-mutation-encode-failed".to_string())
+}
+
+fn admit_block3d_artifact_mutation(mutation: &Block3dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = block3d_artifact_mutation_retained_bytes(mutation)?;
+    if retained_bytes > BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES {
+        return Err("block3d-artifact-mutation-envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+struct Block3dArtifactStorePreparationFactory;
+
+struct Block3dArtifactStorePreparation {
+    base: Option<store::SnapshotRead<Block3dSnapshot>>,
+    mutation: Option<Block3dMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Block3dSnapshot, Block3dMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Block3dSnapshot, Block3dMutation> for Block3dArtifactStorePreparationFactory {
+    fn preflight(&self, mutation: &Block3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("block3d-artifact-lane-or-description-envelope".into());
+        }
+        admit_block3d_artifact_mutation(mutation)
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Block3dSnapshot, Block3dMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Block3dSnapshot, Block3dMutation>> {
+        let retained_bytes = block3d_artifact_mutation_retained_bytes(&request.mutation).unwrap_or(BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES.saturating_add(1));
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || retained_bytes > BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Block3dArtifactStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> for Block3dArtifactStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "block3d-artifact-base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "block3d-artifact-mutation-owner-missing".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "block3d-artifact-authority-missing".to_string())?;
+        let edit = block3d_next_edit("block3d-artifact-retained", mutation, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Block3dSnapshot, Block3dMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Block3dSnapshot, Block3dMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("block3d-artifact-base-retirement-rejected".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+
+fn block3d_config_mutation_retained_bytes(mutation: &Block3dConfigMutation) -> Result<usize, String> {
+    ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "block3d-config-mutation-encode-failed".to_string())
+}
+
+fn admit_block3d_config_mutation(mutation: &Block3dConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = block3d_config_mutation_retained_bytes(mutation)?;
+    if retained_bytes > BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES {
+        return Err("block3d-config-mutation-envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+struct Block3dConfigStorePreparationFactory;
+
+struct Block3dConfigStorePreparation {
+    base: Option<store::SnapshotRead<Block3dConfig>>,
+    mutation: Option<Block3dConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Block3dConfig, Block3dConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Block3dConfig, Block3dConfigMutation> for Block3dConfigStorePreparationFactory {
+    fn preflight(&self, mutation: &Block3dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("block3d-config-lane-or-description-envelope".into());
+        }
+        admit_block3d_config_mutation(mutation)
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Block3dConfig, Block3dConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Block3dConfig, Block3dConfigMutation>> {
+        let retained_bytes = block3d_config_mutation_retained_bytes(&request.mutation).unwrap_or(BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES.saturating_add(1));
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || retained_bytes > BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Block3dConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation> for Block3dConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "block3d-config-base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "block3d-config-mutation-owner-missing".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "block3d-config-authority-missing".to_string())?;
+        let edit = block3d_next_edit("block3d-config-retained", mutation, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Block3dConfig, Block3dConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Block3dConfig, Block3dConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("block3d-config-base-retirement-rejected".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
+
 //#region 🔖️Block3dPlayApp
 /// 🧪️ B1: unit struct — every former `RefCell` field now lives in `crate::editor::block3d::config::
 /// Block3dConfig`, written through `Block3dConfigMutation`s.
@@ -223,22 +672,111 @@ impl ArtifactEditor for Block3dPlayApp {
     const DIALECT: Dialect = BLOCK3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
-    async fn initial_snapshot() -> Block3dSnapshot {
-        crate::artifacts::block3d::schema::empty_block3d_snapshot()
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Block3dArtifactStorePreparationFactory))
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    /// 📬️ Required by the Config publication lane: 12 of the 23 retained tools are config-only, and
+    /// `VcsArtifactApp` rejects any tool whose declared lane has no one-item preparation factory with
+    /// `interactive-job.publication-authority-missing`.
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Block3dConfigStorePreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Block3dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.block.block3d@1/*#editor",
+        document_schema: "block.3d",
+        factory: "Block3dRetainedCommandJobFactory",
+        factory_type: Block3dRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        tools: [
+            "patchObjectKind",
+            "addRepresentation",
+            "removeRepresentation",
+            "addVortexKind",
+            "removeVortexKind",
+            "addVortex",
+            "removeVortex",
+            "setActiveExample",
+            "edit",
+            "setActiveRepresentation",
+            "setWindowRepresentations",
+            "toggleWindowRepresentation",
+            "setWindowArrangement",
+            "setWindowSpacing",
+            "setActiveUtility",
+            "setBrushVortexKind",
+            "setBrushRadius",
+            "setBrushFlip",
+            "worldSurfaceHover",
+            "worldSurfaceLeave",
+            "worldSurfacePlace",
+            "setCamera",
+            "patchRepresentation"
+        ]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(Block3dRetainedCommandJobFactory::new(&controller_id))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !BLOCK3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || block3d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("block3d-retained-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, block3d_retained_reduce, block3d_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            Block3dCommand::command_id,
+            BLOCK3D_RETAINED_RAW_BYTES,
+            BLOCK3D_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    /// 🚀️ Boots on the `hexagonal-cut-concrete-forest-left` fixture instead of the empty document —
+    /// the `World3d` window renders `representations[].mesh_url`, so an empty boot document painted an
+    /// empty scene until a client dispatched `setActiveExample`. See `dsl::block3d_boot_snapshot`.
+    fn initial_snapshot() -> Block3dSnapshot {
+        crate::artifacts::block3d::dsl::block3d_boot_snapshot()
+    }
+
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(block3d_io())
     }
 
-    async fn command_id(command: &Block3dCommand) -> &'static str {
+    fn command_id(command: &Block3dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Block3dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.map(dsl::os_pack::json::from_dsl_value);
+        let args = args.as_ref();
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "patchObjectKind" => Ok(Block3dCommand::PatchObjectKind(patch_object_kind::PatchObjectKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
@@ -300,7 +838,7 @@ impl ArtifactEditor for Block3dPlayApp {
         }
     }
 
-    async fn handle(
+    fn handle(
         command: &Block3dCommand,
         doc: &ArtifactView<'_, Block3dSnapshot>,
         cfg: &ConfigView<'_, Block3dConfig>,
@@ -317,7 +855,7 @@ impl ArtifactEditor for Block3dPlayApp {
     /// declaring `Topology` rather than `Flat` lets `validate_state` prune stale selection/hover ids
     /// the moment a representation or vortex is removed — see `HierarchyProvider::Flat`'s doc comment
     /// on why `Flat` domains are never auto-pruned).
-    async fn interaction_topology(doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> InteractionTopology {
         let mut ordered: Vec<TopologyNode> = Vec::new();
         for representation in &doc.snapshot.representations {
             ordered.push(TopologyNode { id: format!("surface:{}", representation.id), granularity: BLOCK3D_GRANULARITY_SURFACE.into(), parent: None });
@@ -330,23 +868,24 @@ impl ArtifactEditor for Block3dPlayApp {
         InteractionTopology { domains }
     }
 
-    async fn window_measures(doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
         let labels = block3d_labels(cfg.snapshot);
         let mut measures = HashMap::new();
         measures.insert(BLOCK3D_DEFAULT_WINDOW_ID.into(), world::window_measures(doc.snapshot, cfg.snapshot, BLOCK3D_DEFAULT_WINDOW_ID, labels));
         measures
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = block3d_labels(cfg.snapshot);
         let active_representation_id = cfg.snapshot.active_representation_id.as_deref();
         let (base_body, window_id) = block3d_resolve_world_body(body_key);
-        match base_body {
-            world::BLOCK3D_BODY_WORLD => world::render(doc.snapshot, cfg.snapshot, &window_id),
-            document_panel::BLOCK3D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
-            inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        let node = match base_body {
+            world::BLOCK3D_BODY_WORLD => world::render(doc.snapshot, cfg.snapshot, &window_id)?,
+            document_panel::BLOCK3D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels)?,
+            inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d unknown-body label admission failed"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     /// 🌉️ The flagship seam: `puzzle3d_catalog_fragment`'s first real caller. Wraps the block-3d
@@ -356,7 +895,7 @@ impl ArtifactEditor for Block3dPlayApp {
     /// see `Block3dConfig::wanted_tags`'s doc — so this always resolves the active representation with
     /// an empty (all-tags) filter until that lands. Falls through to the default whole-document pack
     /// export for every other port (`"document:out"`).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, Block3dSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Block3dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
             // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"document:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
@@ -442,13 +981,51 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .view_action("worldSurfaceLeave", LocalizedLabel::native("Surface Leave", "Fläche verlassen"))
         .mutation("worldSurfacePlace", LocalizedLabel::native("Place Vortex", "Wirbel platzieren"))
         .mutation("patchRepresentation", LocalizedLabel::native("Patch Representation", "Darstellung bearbeiten"))
+        // 🎥️ `setCamera` was the one `Block3dCommand` row with no manifest action at all — reachable
+        // only through `dispatch_typed`/binary `OpBinary`, and rejected from the real UI path with
+        // `interactive-job.unknown-key`. It writes `Block3dConfig.camera`, never the document, so it is
+        // a view action like the other camera/window/brush rows.
+        .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+        // 🧵️ Grants UI execution authority to every one of this app's 23 command rows. `.mutation(…)`/
+        // `.view_action(…)` build their `ActionDefinition` through `ActionDefinition::bounded_catalog`,
+        // which — per its own doc — is "a catalog row WITHOUT granting UI execution authority": the
+        // classification stays `Unclassified` and `validate_ui_dispatch_classification` rejects every
+        // real `handle_action` dispatch with `interactive-job.not-ui-safe`. The `setActiveUtility` row
+        // is a documentary no-op: the framework auto-injects that action (because `.utility(…)` is
+        // declared) already classified `Migrated`, via `ActionDefinition::resumable_framework_catalog`,
+        // and the injection happens in `try_build_definition` — after this builder call has run — so
+        // there is nothing here for it to reclassify. It is kept so this list reads as the complete
+        // 23-row retained set that `BLOCK3D_RETAINED_TOOL_IDS` must equal.
+        .action_interactive_job("patchObjectKind", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addRepresentation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeRepresentation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addVortexKind", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeVortexKind", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addVortex", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeVortex", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_interactive_job("edit", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveRepresentation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setWindowRepresentations", InteractiveJobClassification::Migrated)
+        .action_interactive_job("toggleWindowRepresentation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setWindowArrangement", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setWindowSpacing", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setBrushVortexKind", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setBrushRadius", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setBrushFlip", InteractiveJobClassification::Migrated)
+        .action_interactive_job("worldSurfaceHover", InteractiveJobClassification::Migrated)
+        .action_interactive_job("worldSurfaceLeave", InteractiveJobClassification::Migrated)
+        .action_interactive_job("worldSurfacePlace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+        .action_interactive_job("patchRepresentation", InteractiveJobClassification::Migrated)
         .io(block3d_io())
         // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
         // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
         // `.workflow(...)` on this builder, so the old `BLOCK3D_EXAMPLE_CAPSULE`/`BLOCK3D_EXAMPLE_FOREST_LEFT`
         // app-level example registrations and the no-op `.workflow("block3d", …)` call are dropped here
         // (not silently: reported in this packet's migration report). The subset's own
-        // `📚️examples/🎬️hexagonal-cut-concrete-forest-left`/`🏢️nakagin-capsule` facets (artifact-level,
+        // `📚️examples/🌲️hexagonal-cut-concrete-forest-left`/`🏢️nakagin-capsule` facets (artifact-level,
         // pre-existing, untouched by this packet) and this surface's own `setActiveExample` command
         // (still real, still DSL-fixture-backed) are the modern, role-agnostic replacements for this.
         .build_definition()
@@ -468,30 +1045,30 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<Block3dPlayApp>` builds it.
     pub type Block3dApp = VcsArtifactApp<EditorApp<Block3dPlayApp>>;
 
-    pub async fn new_app() -> Block3dApp {
+    pub fn new_app() -> Block3dApp {
         sdk_new_app::<EditorApp<Block3dPlayApp>>()
     }
 
     /// ✏️ Adapts `create_block3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still expects —
     /// framework testkit gap, not modifiable here (`🧰️framework/**` is outside this packet's lease).
-    pub async fn block3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn block3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_block3d_app(), examples: Vec::new() }
     }
 
-    pub async fn app_with_registry() -> Block3dApp {
+    pub fn app_with_registry() -> Block3dApp {
         new_app_with_registry::<EditorApp<Block3dPlayApp>>(block3d_app_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut Block3dApp, command: Block3dCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut Block3dApp, command: Block3dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut Block3dApp, body_key: &str) -> String {
+    pub fn render(app: &mut Block3dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub async fn main_window_measures(app: &mut Block3dApp) -> Vec<semio_framework_plugin::WindowMeasure> {
+    pub fn main_window_measures(app: &mut Block3dApp) -> Vec<semio_framework_plugin::WindowMeasure> {
         app.window_measures().get(BLOCK3D_DEFAULT_WINDOW_ID).cloned().unwrap_or_default()
     }
 }
@@ -505,7 +1082,7 @@ mod tests {
     use testkit::{new_app, Block3dApp};
 
     //#region 🔖️CommandSurface
-    async fn every_command() -> Vec<Block3dCommand> {
+    fn every_command() -> Vec<Block3dCommand> {
         vec![
             Block3dCommand::PatchObjectKind(patch_object_kind::PatchObjectKind { field: "name".into(), value: "x".into() }),
             Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}),
@@ -562,6 +1139,53 @@ mod tests {
         let hex = |command: &Block3dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(protocol::OpText::print_op(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "leaveSurface");
         assert_eq!(hex(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "01130000");
+    }
+
+    /// ⚖️ LAW: every one of the 23 declared `Block3dCommand` rows is retained-owned by
+    /// `Block3dRetainedCommandJobFactory`, classified `Migrated` in the manifest, and carries an exact,
+    /// nonempty publication-lane contract. `AppActionRegistry::tool_job_registration` enforces the same
+    /// set equality at app construction (`interactive-job.catalog-incomplete`), and
+    /// `validate_ui_dispatch_classification` rejects anything not `Migrated` at the very first gate of
+    /// `handle_action` — this test pins both so a future command row that forgets its retained-tool-id,
+    /// its classification, or its lane contract fails here instead of going silently dispatch-dead.
+    /// Mirrors block5d's own retained-route discipline and generation3d's
+    /// `retained_route_dispositions_are_exact_and_exhaustive`.
+    #[semio_framework_async_macros::async_test]
+    async fn retained_route_dispositions_are_exact_and_exhaustive() {
+        use semio_framework::ToolExecutionShape;
+        assert_eq!(BLOCK3D_RETAINED_TOOL_IDS.len(), 23);
+        assert_eq!(<Block3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 23);
+        assert_eq!(BLOCK3D_PUBLICATION_CONTRACTS.len(), 23);
+        assert_eq!(block3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
+        let mut sorted_ids = BLOCK3D_RETAINED_TOOL_IDS.to_vec();
+        sorted_ids.sort_unstable();
+        sorted_ids.dedup();
+        assert_eq!(sorted_ids.len(), BLOCK3D_RETAINED_TOOL_IDS.len(), "duplicate retained tool ids in {BLOCK3D_RETAINED_TOOL_IDS:?}");
+        assert_eq!(Block3dRetainedCommandJobFactory::TOOL_IDS, BLOCK3D_RETAINED_TOOL_IDS);
+        for command in every_command() {
+            let tool_id = command.command_id();
+            assert!(BLOCK3D_RETAINED_TOOL_IDS.contains(&tool_id), "command {tool_id} is not owned by Block3dRetainedCommandJobFactory");
+            let contract = BLOCK3D_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == tool_id).unwrap_or_else(|| panic!("tool {tool_id} declares a publication contract"));
+            assert!(!contract.lanes.is_empty(), "tool {tool_id} declares a nonempty publication lane set");
+        }
+        // 🪟️ App-level actions are fanned onto every window kind by `try_build_definition`, so the
+        // world window carries the complete classified action set (`AppDefinition` has no app-level
+        // `actions` field of its own).
+        let definition = create_block3d_app();
+        let world_window = definition.window_kinds.iter().find(|window| window.id == world::BLOCK3D_WINDOW_WORLD).expect("world window declared");
+        for tool_id in BLOCK3D_RETAINED_TOOL_IDS {
+            let action = world_window.actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared by the manifest"));
+            assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "action {tool_id} must be UI-dispatchable");
+        }
+    }
+
+    /// ⚖️ LAW: the two lanes any block3d tool can publish into both have a real one-item preparation
+    /// factory — a Config-lane tool without `build_config_store_one_item_preparation_factory` is
+    /// rejected at dispatch with `interactive-job.publication-authority-missing`.
+    #[semio_framework_async_macros::async_test]
+    async fn both_declared_publication_lanes_have_a_preparation_factory() {
+        assert!(<Block3dPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some());
+        assert!(<Block3dPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
     }
 
     /// 🌉️ Every surface-declared action must bridge through `command_from_action` and round-trip
@@ -647,6 +1271,26 @@ mod tests {
     //#endregion 🔖️Manifest
 
     //#region 🔖️Behavior
+    /// ⚖️ LAW: the editor boots non-empty. `world_meshes_json` drops any representation whose
+    /// `mesh_url` is `None`, so a boot document must both carry representations and name their meshes
+    /// for the `World3d` window to paint anything before the first user action. The mesh url is
+    /// asserted on the scene's own compute facet rather than on the rendered body: the semantic
+    /// surface contract pack-encodes the scene into `SurfaceProps.doc.bytes`, so no scene string
+    /// survives into the rendered tree's JSON any more.
+    #[semio_framework_async_macros::async_test]
+    async fn the_editor_boots_with_a_renderable_world() {
+        let mut app: Block3dApp = new_app();
+        let snapshot = app.snapshot().expect("snapshot");
+        assert!(!snapshot.representations.is_empty(), "the boot document must carry at least one representation");
+        assert!(snapshot.representations.iter().all(|representation| representation.mesh_url.is_some()), "every boot representation must name a mesh url");
+        let visible: Vec<&crate::BlockRepresentation> = snapshot.representations.iter().collect();
+        assert!(
+            crate::editor::block3d::world::world_meshes_json(&snapshot, &visible).contains("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb"),
+            "the world scene must reference the boot document's mesh"
+        );
+        assert!(testkit::render(&mut app, world::BLOCK3D_BODY_WORLD).contains("\"type\":\"surface\""), "the world body must render a semantic scene surface");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn add_representation_then_set_active_then_render_world_shows_mesh() {
         let mut app: Block3dApp = new_app();
@@ -654,19 +1298,24 @@ mod tests {
         let representation_id = app.snapshot().expect("snapshot").representations[0].id.clone();
         testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some(representation_id) }));
         let json = testkit::render(&mut app, world::BLOCK3D_BODY_WORLD);
-        assert!(json.contains("\"type\":\"componentScene\""), "world body must render a 3d scene");
+        assert!(json.contains("\"type\":\"surface\""), "world body must render a scene surface");
+        assert!(json.contains("world-3d"), "the scene surface must declare the world-3d surface kind");
     }
 
+    /// 🚀️ Counted relative to the boot document (`initial_snapshot` now parses the
+    /// `hexagonal-cut-concrete-forest-left` fixture, which already ships vortex kinds and vortices)
+    /// rather than against a hard-coded 1/0.
     #[semio_framework_async_macros::async_test]
     async fn add_vortex_kind_then_add_vortex_then_remove_round_trips() {
         let mut app: Block3dApp = new_app();
+        let before = app.snapshot().expect("snapshot").vortices.len();
         testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
         testkit::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {}));
         let projection = app.snapshot().expect("snapshot");
-        assert_eq!(projection.vortices.len(), 1);
-        let vortex_id = projection.vortices[0].id.clone();
+        assert_eq!(projection.vortices.len(), before + 1);
+        let vortex_id = projection.vortices[before].id.clone();
         testkit::dispatch(&mut app, Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: vortex_id }));
-        assert_eq!(app.snapshot().expect("snapshot").vortices.len(), 0);
+        assert_eq!(app.snapshot().expect("snapshot").vortices.len(), before);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -675,18 +1324,25 @@ mod tests {
         testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.object_kind.id, "Capsule J");
-        assert_eq!(projection.representations.len(), 2);
+        // 🥽️ One representation, not two: the former `"1:500"` row named `/mesh/capsule_J.1to500.glb`,
+        // which no mesh delivery catalog ships, so `resolveMeshAsset` threw the instant the example
+        // loaded. There is no 1:500 `.glb` anywhere in the repo (only a Rhino `.3dm` source), so the
+        // row was removed from the fixture rather than repointed at an unrelated mesh.
+        assert_eq!(projection.representations.len(), 1);
+        assert_eq!(projection.representations[0].mesh_url.as_deref(), Some("/mesh/🧊️capsule_J.glb"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block3dApp = new_app();
+        let kinds = |app: &mut Block3dApp| crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len();
+        let before = kinds(&mut app);
         testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
-        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len(), 1);
+        assert_eq!(kinds(&mut app), before + 1);
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
-        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len(), 0);
+        assert_eq!(kinds(&mut app), before);
         app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
-        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len(), 1);
+        assert_eq!(kinds(&mut app), before + 1);
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `setSelection`/`selectVortex`/

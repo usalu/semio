@@ -12,7 +12,7 @@ Feature: Apply every registered glTF 2.0 asset/document mutation to a real-world
   `remove-used-extension`, `reorder-required-extensions`, `reorder-used-extensions`. Shard A6
   already scaffolded this catalog and its 14 committed `before.gltf`/`after.gltf` fixture pairs
   (`../../🧫️fixtures/<kind>-applied/`), each derived from the same `gltf-2-0-any-reader-oracle` base
-  document the artifact-root `🐞️mutate-gltf-2-0` case and the `🎥️camera`/`🦴️skin`/`🎞️animation` cases
+  document the artifact-root `🧊️mutate-gltf-2-0` case and the `🎥️camera`/`🦴️skin`/`🎞️animation` cases
   (shard F4) use — this case claims it. Every real leaf directory
   (`../../../♾️any/🧬️schema/🧬️mutations/✅️required-extension/➕️add/🦀️.rs`, among the exact
   registered domain/operation owners) stays physically owned by `♾️any`'s aggregate mutation root —

@@ -7,7 +7,7 @@
 
 // 📍 BRep fixture recipes — the `move-vertex` family: three DISTINCT consequences of moving one
 // vertex's position while every other vertex, edge and face stays put — mirroring this subset's own
-// oracle scenario `move-vertex/🦁️lifts-the-third-corner-off-the-base-plane` and then going past it into
+// oracle scenario `move-vertex/📍️lifts-the-third-corner-off-the-base-plane` and then going past it into
 // the two ways the same edit can go wrong.
 //
 //   1. a move that STAYS VALID — the rebuilt face or solid is exactly as legal as before.

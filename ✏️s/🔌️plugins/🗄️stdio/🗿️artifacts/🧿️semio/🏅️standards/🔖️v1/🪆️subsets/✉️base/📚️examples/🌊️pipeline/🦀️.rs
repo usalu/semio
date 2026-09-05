@@ -1,7 +1,7 @@
 //! 📚️ Example "pipeline" for `stdio.semio.flow` — the first real, non-hex-scaffold fixture for
 //! this subset (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION's flow pilot).
 //! `PRIMARY_TEXT` is the genuine `SemioFlowSnapshot::print_dsl` output for
-//! `snapshot::demo_flow_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/📸️snapshot/
+//! `snapshot::demo_flow_snapshot()` (`🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/
 //! 🦀️.rs`) — asserted byte-identical to it by that subset's own `fixture_honesty_law`
 //! (`🎹️composer/🦀️.rs`), so this fixture can never silently drift back to a fake.
 

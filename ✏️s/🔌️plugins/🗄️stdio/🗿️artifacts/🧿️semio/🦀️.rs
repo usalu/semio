@@ -1,5 +1,5 @@
 //! 🌐️ `stdio.semio` artifact root — the inbuilt semio semantic artifact (standard `v1`, 18
-//! schema-owning domain subsets + the `✳️base` envelope union). See the master plan's
+//! schema-owning domain subsets + the `✉️base` envelope union). See the master plan's
 //! "Architecture > The semio artifact" section.
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
@@ -42,7 +42,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️Register
-/// 🗂️ Registers all 19 of `v1`'s subsets' IO composers (18 domain subsets + `✳️base`
+/// 🗂️ Registers all 19 of `v1`'s subsets' IO composers (18 domain subsets + `✉️base`
 /// itself) — dissolved out of the former standard-level `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES). `semio` is one of stdio's 10
 /// deliberate imperative-`register()` artifacts (never converted to the `ArtifactDeclaration`

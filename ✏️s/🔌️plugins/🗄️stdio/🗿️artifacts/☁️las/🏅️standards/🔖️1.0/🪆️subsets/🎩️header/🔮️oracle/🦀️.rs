@@ -619,7 +619,7 @@ mod tests {
     /// 🧪️ A small in-memory LAS 1.0 buffer (2 VLRs, 3 points), built straight from `raw_doc::write`
     /// itself so these dispatch-logic unit tests need no committed file on disk — the real
     /// 8,448-point `🧫️fixtures/🧊️pattern-sphere.las` fixture is exercised by the gherkin-driven case
-    /// at `../../../../../../🧪️tests/🟦️mutate-las-1-0/🦀️.rs` through `ctx.copy_fixture`.
+    /// at `../../../../../../🧪️tests/🎩️mutate-las-1-0/🦀️.rs` through `ctx.copy_fixture`.
     fn fixture() -> Vec<u8> {
         let header = las::raw::Header {
             file_signature: las::raw::LASF,
@@ -755,7 +755,7 @@ mod tests {
     /// read/write round trip through the same functions is naturally byte-identical here — the real
     /// "not bit-identical" guarantee (the point-data-start-signature gap this file's top doc comment
     /// describes) is a property of the real committed 8,448-point fixture the case at
-    /// `../../../../../../🧪️tests/🟦️mutate-las-1-0/🦀️.rs` exercises, not of this module in
+    /// `../../../../../../🧪️tests/🎩️mutate-las-1-0/🦀️.rs` exercises, not of this module in
     /// isolation. This test instead asserts the weaker, always-true property: content survives.
     #[test]
     fn round_trip_preserves_content() {

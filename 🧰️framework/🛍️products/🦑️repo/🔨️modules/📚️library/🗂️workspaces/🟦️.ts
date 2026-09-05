@@ -9,8 +9,34 @@
 
 //#region 🔌️Adapters
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 //#endregion 🔌️Adapters
+
+//#region 🔎️WorkspaceRoot
+/** 🔎️Resolves monorepo root (directory containing root package.json named `workspace`). Owned here
+ * rather than in the repository library barrel so a consumer that only needs the root path never pulls
+ * the barrel (and its taxonomy discovery walk) into its module graph. */
+export function getWorkspaceRoot(): string {
+  const fromEnv = process.env.REPO_ROOT?.trim();
+  if (fromEnv) return resolve(fromEnv);
+  let dir = process.cwd();
+  for (let i = 0; i < 30; i++) {
+    const pkg = join(dir, "package.json");
+    if (existsSync(pkg)) {
+      try {
+        const j = JSON.parse(readFileSync(pkg, "utf8")) as { name?: string };
+        if (j.name === "workspace") return dir;
+      } catch {
+        /* ignore */
+      }
+    }
+    const up = dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  return process.cwd();
+}
+//#endregion 🔎️WorkspaceRoot
 
 //#region 🔣️Constants
 const MANIFEST_FILENAME = "package.json";

@@ -96,7 +96,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         // 🖊️ No `composer.dwg` here: generation3d owns the `s.stdio.dwg@ac1018/*` EXPORT claim
         // (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 — `ArtifactDefinitionRegistry` rejects
         // two artifacts in the same plugin exporting the identical literal dialect coordinate; generation3d
-        // has a real host-media DWG↔mesh bridge, `HostMediaHandlerDeclaration::mesh_dwg_bridge` in
+        // has a real host-media DWG↔mesh bridge, `HostMediaHandlerDeclaration::mesh_import` in
         // `../../🦀️.rs`, generation2d has none). Import still works: `derived_composition`'s
         // `Generation2dComposerComposition::reads()` still lists `DEP_DWG`, unaffected by this removal.
         .capability(

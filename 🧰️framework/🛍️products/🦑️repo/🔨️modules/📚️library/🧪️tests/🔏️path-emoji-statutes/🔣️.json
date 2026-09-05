@@ -492,16 +492,16 @@
     {
       "id": "norm-vdi3805-scaffold-roles-have-distinct-sibling-identities",
       "entries": [
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests", "nodeKind": "directory" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracle", "nodeKind": "directory" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🎚️config", "nodeKind": "directory" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/☑️options", "nodeKind": "directory" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config", "nodeKind": "directory" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/☑️options", "nodeKind": "directory" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🎚️config", "nodeKind": "directory" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/☑️options", "nodeKind": "directory" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞add-geometry-connection/🔣️.json", "nodeKind": "file" },
-        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐞add-geometry-connection/🧬️.schema.json", "nodeKind": "file" }
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracle", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🎚️config", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/☑️options", "nodeKind": "directory" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️add-geometry-connection/🔣️.json", "nodeKind": "file" },
+        { "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️add-geometry-connection/🧬️.schema.json", "nodeKind": "file" }
       ],
       "expected": []
     },
@@ -529,6 +529,43 @@
         { "path": ".github/workflows/build.yml", "nodeKind": "file", "reserved": true }
       ],
       "expected": []
+    },
+    {
+      "id": "country-flags-are-single-distinct-identities",
+      "entries": [
+        { "path": "countries/🇩🇪germany", "nodeKind": "directory" },
+        { "path": "countries/🇨🇭switzerland", "nodeKind": "directory" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "keycaps-are-single-distinct-identities",
+      "entries": [
+        { "path": "stages/1️⃣first", "nodeKind": "directory" },
+        { "path": "stages/2️⃣second.json", "nodeKind": "file" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "two-flags-remain-two-emojis",
+      "entries": [{ "path": "countries/🇩🇪🇨🇭combined", "nodeKind": "directory" }],
+      "expected": [{ "kind": "multiple", "path": "countries/🇩🇪🇨🇭combined", "emoji": "🇩🇪🇨🇭" }]
+    },
+    {
+      "id": "keycap-presentation-does-not-admit-ordinary-digits",
+      "entries": [
+        { "path": "stages/1first", "nodeKind": "directory" },
+        { "path": "stages/1⃣first", "nodeKind": "directory" }
+      ],
+      "expected": [
+        { "kind": "missing", "path": "stages/1first" },
+        { "kind": "presentation", "path": "stages/1⃣first", "emoji": "1⃣" }
+      ]
+    },
+    {
+      "id": "directional-arrow-requires-emoji-presentation",
+      "entries": [{ "path": "states/⬅before.json", "nodeKind": "file" }],
+      "expected": [{ "kind": "presentation", "path": "states/⬅before.json", "emoji": "⬅" }]
     },
     {
       "id": "missing-generic-presentation-and-spacing",

@@ -6,8 +6,12 @@ use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::editor::block3d::modes::edit::windows::world::options::{arrangement, brush, quick_representation, representations, spacing};
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::world::{visible_representations, world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json};
-use crate::editor::block3d::{BLOCK3D_PLAY_APP_ID, BLOCK3D_PLAY_SURFACE_ID};
-use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
+use crate::editor::block3d::BLOCK3D_PLAY_SURFACE_ID;
+use semio_framework_plugin::{world3d_scene_extended, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+// 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
+// (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
+// different types, so both are imported explicitly (flow's `🌊️main` window does the same).
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
 pub const BLOCK3D_WINDOW_WORLD: &str = "block3d-world";
@@ -18,7 +22,7 @@ pub const BLOCK3D_BODY_WORLD: &str = "block3d.play.world";
 /// 🧱️ Stitched into the app manifest by `crate::editor::block3d::create_block3d_app`. `options.measures`
 /// stays empty here on purpose: block3d's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: BLOCK3D_WINDOW_WORLD.into(),
         label: LocalizedLabel::native("Object Kind", "Objektart"),
@@ -38,7 +42,7 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// ☑️ The live chrome measures for this window, collected from its `☑️options/*` components.
-pub async fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> Vec<WindowMeasure> {
     vec![
         representations::measure(definition, config, window_id, labels),
         quick_representation::measure(definition, config, window_id, labels),
@@ -50,7 +54,7 @@ pub async fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfi
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str) -> UiNode {
+pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str) -> UiAssemblyResult<BuiltNode> {
     let view = block3d_window_view(config, window_id);
     let visible = visible_representations(definition, &view);
     let scene = world3d_scene_extended(
@@ -80,7 +84,7 @@ pub async fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window
         None,
         None,
     );
-    build_world_3d_scene(BLOCK3D_PLAY_SURFACE_ID, BLOCK3D_PLAY_APP_ID, scene)
+    semio_framework_plugin::scene_surface(BLOCK3D_PLAY_SURFACE_ID, ContractSurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 

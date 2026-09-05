@@ -9,7 +9,8 @@
 
 use crate::artifacts::block3d::{vortex_kinds_of, Block3dSnapshot};
 use crate::BlockRepresentation;
-use semio_framework_plugin::{build_world_3d_scene, world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, WindowKindDefinition, WorldProjectionConfig};
+use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
+use semio_framework_ui_contract::SurfaceKind;
 // 🚧️ SDK GAP: `MeshWindowKit`/`WindowKit` (contract §2.6) are only reachable through the `app`
 // submodule they're declared in — not (yet) in `semio_framework_plugin`'s curated crate-root
 // re-export list, mirroring the sibling editor module's own gap note about `Dialect`.
@@ -29,37 +30,34 @@ const BLOCK3D_VIEW_CONTROLLER_ID: &str = "block3d-view";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::block3d::create_block3d_viewer` — the
 /// shared, read-only `MeshWindowKit` window kind (contract §2.6).
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `Block3dSnapshot -> UiNode` read: real representations become meshes/instances (zero
+/// 👁️ Pure `Block3dSnapshot -> BuiltNode` read: real representations become meshes/instances (zero
 /// arrangement offset — a viewer has no persisted per-session window view, `Config = NoConfig`), real
 /// rim-vortex templates render at their document position/color, no brush preview, no selection.
-pub async fn render(document: &Block3dSnapshot) -> semio_framework_plugin::UiNode {
+pub fn render(document: &Block3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = &document.camera3d;
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &WorldProjectionConfig::default());
     let meshes_json = meshes_json(&document.representations);
     let instances_json = instances_json(document, &document.representations);
     let selection_json = world3d_selection_json("rectangle", &[], None);
     let vortices_json = vortices_json(document);
-    build_world_3d_scene(
-        SURFACE_ID,
-        BLOCK3D_VIEW_CONTROLLER_ID,
-        world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, Some(vortices_json), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None),
-    )
+    let scene = world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, Some(vortices_json), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
 }
 
 /// 👁️ Read-only twin of the editor `🌍️world` facet's `representation_mesh_id` — duplicated on purpose
 /// rather than imported through the sibling editor module, which `policyViewerPurityBreaches` forbids
 /// outright.
-async fn representation_mesh_id(representation: &BlockRepresentation) -> String {
+fn representation_mesh_id(representation: &BlockRepresentation) -> String {
     representation.mesh_url.as_deref().map_or_else(|| format!("block3d-rep-{}", representation.id), world3d_mesh_id_from_url)
 }
 
-async fn meshes_json(representations: &[BlockRepresentation]) -> String {
+fn meshes_json(representations: &[BlockRepresentation]) -> String {
     let meshes: Vec<Value> = representations
         .iter()
         .filter_map(|representation| {
@@ -70,7 +68,7 @@ async fn meshes_json(representations: &[BlockRepresentation]) -> String {
     to_string(&Value::from(meshes))
 }
 
-async fn instances_json(document: &Block3dSnapshot, representations: &[BlockRepresentation]) -> String {
+fn instances_json(document: &Block3dSnapshot, representations: &[BlockRepresentation]) -> String {
     let label = if document.object_kind.label.is_empty() { document.object_kind.name.clone() } else { document.object_kind.label.clone() };
     let instances: Vec<Value> = representations
         .iter()
@@ -89,11 +87,11 @@ async fn instances_json(document: &Block3dSnapshot, representations: &[BlockRepr
     to_string(&Value::from(instances))
 }
 
-async fn vortex_kind_color(document: &Block3dSnapshot, vortex_kind_id: &str) -> String {
+fn vortex_kind_color(document: &Block3dSnapshot, vortex_kind_id: &str) -> String {
     vortex_kinds_of(document).iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
 }
 
-async fn vortices_json(document: &Block3dSnapshot) -> String {
+fn vortices_json(document: &Block3dSnapshot) -> String {
     let vec3 = |v: [f64; 3]| Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>());
     let records: Vec<Value> = document
         .vortices
@@ -129,7 +127,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_empty_document() {
         let document = crate::artifacts::block3d::schema::empty_block3d_snapshot();
-        let _node = render(&document);
+        let node = render(&document).expect("the empty document must still assemble a scene surface");
+        assert!(matches!(node.component, semio_framework_plugin::Component::Surface(_)));
     }
 }
 //#endregion 🧪️Tests

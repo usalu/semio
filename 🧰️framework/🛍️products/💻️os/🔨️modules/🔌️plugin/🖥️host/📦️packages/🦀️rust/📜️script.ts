@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🖥️ Runs owned plugin-host checks and exact native test filters. */
-import { existsSync } from "node:fs";
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, orchestratorBudgetOpts, runBundleScriptMain, runCargo, runCmd, runProbe } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -14,6 +15,29 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);
+  }
+}
+
+const countOccurrences = (source: string, needle: string): number => source.split(needle).length - 1;
+
+/** 💡️ Verifies the closed inference-proposal intent is mapped by both host execution modes. */
+function assertInferenceProposalConversionSource(wit: string, synchronous: string, asynchronous: string): void {
+  assert.equal(countOccurrences(wit, "request-inference-proposal(request-inference-proposal-effect)"), 1);
+  assert.equal(countOccurrences(synchronous, "E::RequestInferenceProposal(inner) => Effect::RequestInferenceProposal"), 1);
+  assert.equal(countOccurrences(asynchronous, "E::RequestInferenceProposal(inner) => K::RequestInferenceProposal"), 1);
+  assert.equal(countOccurrences(synchronous, "wit_effects::InferenceProposalKind::GisMapBoundsRegion => semio_framework::kernel::InferenceProposalKind::GisMapBoundsRegion"), 1);
+  assert.equal(countOccurrences(asynchronous, "wit_effects::InferenceProposalKind::GisMapBoundsRegion => semio_framework::kernel::InferenceProposalKind::GisMapBoundsRegion"), 1);
+}
+
+class InferenceProposalConversionCheckScript extends BundleScript {
+  async run(_segments: string[]): Promise<void> {
+    const hostRoot = join(import.meta.dir, "..", "..");
+    const wit = readFileSync(join(hostRoot, "..", "🧬️schema", "📜️.wit"), "utf8");
+    const synchronous = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
+    const asynchronous = readFileSync(join(hostRoot, "📥️imports", "🦀️.rs"), "utf8");
+    assertInferenceProposalConversionSource(wit, synchronous, asynchronous);
+    assert.throws(() => assertInferenceProposalConversionSource(wit, synchronous, asynchronous.replace("E::RequestInferenceProposal(inner) => K::RequestInferenceProposal", "E::MissingInferenceProposal(inner) => K::RequestInferenceProposal")));
+    console.log("plugin-host-inference-proposal-conversion-source: wit=1 sync=1 async=1 mutation=1 passed");
   }
 }
 
@@ -69,6 +93,10 @@ class LifecycleCheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("lifecycle-check", LifecycleCheckScript);
+const router = new ScriptRouter(import.meta.dir)
+  .register("check", CheckScript)
+  .register("test", TestScript)
+  .register("inference-proposal-conversion-check", InferenceProposalConversionCheckScript)
+  .register("lifecycle-check", LifecycleCheckScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
 //#endregion 🎯️Tasks

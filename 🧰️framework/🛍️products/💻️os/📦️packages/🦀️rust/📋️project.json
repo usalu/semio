@@ -9,6 +9,62 @@
     "family:os-kernel"
   ],
   "targets": {
+    "durable-owned-group-decision-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts durable-owned-group-decision-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "durable-owned-group-decision-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts durable-owned-group-decision-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-committed-compaction-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts wal-committed-compaction-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-committed-compaction-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts wal-committed-compaction-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-committed-transactions-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts wal-committed-transactions-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-committed-transactions-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts wal-committed-transactions-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-writer-authority-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts wal-writer-authority-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-writer-authority-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts wal-writer-authority-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-capacity-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts wal-capacity-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-capacity-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts wal-capacity-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "wal-recovery-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wal-recovery-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "wal-recovery-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wal-recovery-check --native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
     "directory-event-page-contract-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -46,6 +102,23 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-bootstrap-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "wal-segment-state-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wal-segment-state-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "wal-segment-state-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wal-segment-state-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },

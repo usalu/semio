@@ -1,6 +1,6 @@
 //! 🚪️ note -> dwg — foreign `Serializer<NoteSnapshot>` (ticket
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Bridges through an SVG
-//! rendering, then `semio_framework_os::svg_to_dwg_bytes` — an indirect, geometry-approximating
+//! rendering, then artifact-owned DWG polyline encoding — an indirect, geometry-approximating
 //! path, so this hop is `IoFidelity::Lossy`.
 
 use crate::artifacts::note::NoteSnapshot;
@@ -18,7 +18,7 @@ impl Serializer<NoteSnapshot> for NoteIntoDwg {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
         let (svg, _w, _h) = crate::artifacts::note::io::note_document_to_svg(from).map_err(|error| IoError { message: format!("NoteIntoDwg: svg bridge: {error}"), diagnostics: Vec::new() })?;
-        let raw = semio_framework_os::svg_to_dwg_bytes(&svg).map_err(|error| IoError { message: format!("NoteIntoDwg: svg_to_dwg: {error}"), diagnostics: Vec::new() })?;
+        let raw = semio_framework_os::svg_to_polylines(&svg).and_then(|paths| semio_s_plugin_stdio::artifacts::dwg::polylines_to_dwg_bytes(paths.iter().map(|path| (path.layer.as_str(), path.vertices.as_slice(), path.closed)))).map_err(|error| IoError { message: format!("NoteIntoDwg: svg_to_dwg: {error}"), diagnostics: Vec::new() })?;
         let drawing = decode_dwg(&raw).map_err(|error| IoError { message: format!("NoteIntoDwg: decode: {error}"), diagnostics: Vec::new() })?;
         let bytes = encode_dwg(&drawing).map_err(|error| IoError { message: format!("NoteIntoDwg: encode: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))

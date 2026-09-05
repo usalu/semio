@@ -226,7 +226,7 @@
         {
           "id": "set-snapshot",
           "capability": "semio-v1-audio-mutate",
-          "payloadSchema": "🔣️.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied"
           ],

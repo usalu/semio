@@ -39,6 +39,30 @@
           ]
         },
         "responsibility": "Compiles one registered TeX template's light and dark representations to verified PDFs, including its panel-glass pass."
+      },
+      {
+        "directory": "📊️visualization-gallery",
+        "id": "framework.print.module.visualization-gallery",
+        "kind": "module",
+        "module": {
+          "productionConsumers": [
+            "framework.print.module.tectonic-template-compilation",
+            "framework.print.command.print-pipeline-verification"
+          ]
+        },
+        "responsibility": "Enumerates visualization documents and checks taxonomy coverage against the public chart catalog."
+      },
+      {
+        "directory": "📥️source-staging",
+        "id": "framework.print.module.source-staging",
+        "kind": "module",
+        "module": {
+          "productionConsumers": [
+            "framework.print.module.tectonic-template-compilation",
+            "mit-bestand.bericht"
+          ]
+        },
+        "responsibility": "Stages semantic source filenames and references for compiler-safe template and report builds."
       }
     ]
   }

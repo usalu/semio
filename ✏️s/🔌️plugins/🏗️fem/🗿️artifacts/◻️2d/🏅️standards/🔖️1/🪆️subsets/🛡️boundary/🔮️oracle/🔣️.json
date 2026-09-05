@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "adds-a-vertical-roller-at-node-n2",
-              "directoryName": "🧪️adds-a-vertical-roller-at-node-n2"
+              "directoryName": "🛞️adds-a-vertical-roller-at-node-n2"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "releases-the-roller-at-node-n2",
-              "directoryName": "🧪️releases-the-roller-at-node-n2"
+              "directoryName": "🔓️releases-the-roller-at-node-n2"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "upgrades-the-roller-at-n2-to-a-full-fixity",
-              "directoryName": "🧪️upgrades-the-roller-at-n2-to-a-full-fixity"
+              "directoryName": "🔒️upgrades-the-roller-at-n2-to-a-full-fixity"
             }
           ]
         }

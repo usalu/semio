@@ -88,7 +88,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/📅️appends-urgent-tag/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/🏷️appends-urgent-tag/🦀️.rs"]
                                     mod tests_appends_urgent_tag;
                                 }
                                 #[path = "."]
@@ -101,7 +101,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/📃️retitles-the-document/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/✏️retitles-the-document/🦀️.rs"]
                                     mod tests_retitles_the_document;
                                 }
                                 #[path = "."]
@@ -114,7 +114,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/🦊️rewrites-the-notes/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/📝️rewrites-the-notes/🦀️.rs"]
                                     mod tests_rewrites_the_notes;
                                 }
                                 #[path = "."]
@@ -140,7 +140,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/📅️detaches-the-review-tag/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/➖️detaches-the-review-tag/🦀️.rs"]
                                     mod tests_detaches_the_review_tag;
                                 }
                                 #[path = "."]
@@ -153,7 +153,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/🌳️draft-to-review/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/🔎️draft-to-review/🦀️.rs"]
                                     mod tests_draft_to_review;
                                 }
                             }
@@ -506,6 +506,8 @@ pub mod viewer {
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
+#[path = "../../📇️native-codecs/🦀️.rs"]
+pub mod native_codecs;
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::{plugin, VcsApps};

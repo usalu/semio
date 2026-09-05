@@ -1,5 +1,5 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = include_str!("../🖼️assets/🧪️hexagonal-cut-concrete-forest-right/🗣️.dsl.semio");
+    let text = include_str!("../🖼️assets/➡️hexagonal-cut-concrete-forest-right/🗣️.dsl.semio");
     assert!(text.len() > 8);
 }

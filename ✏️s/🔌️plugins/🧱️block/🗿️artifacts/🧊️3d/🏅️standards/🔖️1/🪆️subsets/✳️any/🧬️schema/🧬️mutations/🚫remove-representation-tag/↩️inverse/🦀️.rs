@@ -4,7 +4,7 @@ use crate::artifacts::block3d::Block3dSnapshot;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::RemoveRepresentationTag, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+pub fn inverse(payload: &super::RemoveRepresentationTag, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };

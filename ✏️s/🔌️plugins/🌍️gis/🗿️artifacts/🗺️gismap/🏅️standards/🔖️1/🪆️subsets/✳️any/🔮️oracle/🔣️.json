@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.gis.gismap` document and all twelve typed mutations, in Python, at `../../../../../🧪️tests/🦠️mutate-gismap-1/🐍️component.py`. It was written from `../🧬️schema/📸️snapshot/🔣️.json` (the document: three arrays of `{id, data}` with `data` declared opaque), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the twelve verbs and their positional argument lists) and the twelve committed `(before, mutation, after, diff, outcome)` vectors (the externally tagged wire form of each verb, and the three reorder displacements that pin MOVE rather than swap semantics). It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `geojson` and `geo` model a FeatureCollection, but a `MapFeature` is addressed by a stable `id` that GeoJSON leaves optional and un-unique, member ORDER is meaningful here and a FeatureCollection's is not, and a feature's payload is an untyped value this artifact never inspects — so `replace-<noun>-data` swaps a whole opaque value and no geometry library can adjudicate it. `gdal` was declined additionally as a system library with a C dependency. What a reference CAN adjudicate is the collection algebra, and that is exactly what this one implements. The `.dsl.semio` carrier layout has no prose document of its own and was DERIVED from the committed example's bytes (banner line, one `key=value` member per collection holding the hex of compact UTF-8 JSON, composed child handles as `[hex(childId),hex(target)]`); the derivation is pinned by `identity-round-trip`, which re-encodes the committed file byte for byte. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `gismap-1-mutate`'s external-oracle requirement for its 12-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 12 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "A second implementation of the `s.gis.gismap` document and all twelve typed mutations, in Python, at `../../../../../🧪️tests/🗺️mutate-gismap-1/🐍️component.py`. It was written from `../🧬️schema/📸️snapshot/🔣️.json` (the document: three arrays of `{id, data}` with `data` declared opaque), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the twelve verbs and their positional argument lists) and the twelve committed `(before, mutation, after, diff, outcome)` vectors (the externally tagged wire form of each verb, and the three reorder displacements that pin MOVE rather than swap semantics). It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `geojson` and `geo` model a FeatureCollection, but a `MapFeature` is addressed by a stable `id` that GeoJSON leaves optional and un-unique, member ORDER is meaningful here and a FeatureCollection's is not, and a feature's payload is an untyped value this artifact never inspects — so `replace-<noun>-data` swaps a whole opaque value and no geometry library can adjudicate it. `gdal` was declined additionally as a system library with a C dependency. What a reference CAN adjudicate is the collection algebra, and that is exactly what this one implements. The `.dsl.semio` carrier layout has no prose document of its own and was DERIVED from the committed example's bytes (banner line, one `key=value` member per collection holding the hex of compact UTF-8 JSON, composed child handles as `[hex(childId),hex(target)]`); the derivation is pinned by `identity-round-trip`, which re-encodes the committed file byte for byte. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `gismap-1-mutate`'s external-oracle requirement for its 12-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 12 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -64,7 +64,7 @@
           "scenarios": [
             {
               "id": "adds-lighthouse-position-after-harbor",
-              "directoryName": "🧪️adds-lighthouse-position-after-harbor"
+              "directoryName": "💡️adds-lighthouse-position-after-harbor"
             }
           ]
         },
@@ -75,7 +75,7 @@
           "scenarios": [
             {
               "id": "adds-old-town-region-after-harbor-district",
-              "directoryName": "🧪️adds-old-town-region-after-harbor-district"
+              "directoryName": "🏘️adds-old-town-region-after-harbor-district"
             }
           ]
         },
@@ -86,7 +86,7 @@
           "scenarios": [
             {
               "id": "adds-tram-route-after-ferry",
-              "directoryName": "🧪️adds-tram-route-after-ferry"
+              "directoryName": "🚋️adds-tram-route-after-ferry"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "scenarios": [
             {
               "id": "removes-lighthouse-position",
-              "directoryName": "🧪️removes-lighthouse-position"
+              "directoryName": "🚫️removes-lighthouse-position"
             }
           ]
         },
@@ -108,7 +108,7 @@
           "scenarios": [
             {
               "id": "removes-old-town-region",
-              "directoryName": "🧪️removes-old-town-region"
+              "directoryName": "🚫️removes-old-town-region"
             }
           ]
         },
@@ -119,7 +119,7 @@
           "scenarios": [
             {
               "id": "removes-tram-route",
-              "directoryName": "🧪️removes-tram-route"
+              "directoryName": "🚫️removes-tram-route"
             }
           ]
         },
@@ -130,7 +130,7 @@
           "scenarios": [
             {
               "id": "moves-harbor-position-to-end",
-              "directoryName": "🧪️moves-harbor-position-to-end"
+              "directoryName": "⚓️moves-harbor-position-to-end"
             }
           ]
         },
@@ -141,7 +141,7 @@
           "scenarios": [
             {
               "id": "moves-park-region-between-2-districts",
-              "directoryName": "🧪️moves-park-region-between-2-districts"
+              "directoryName": "🌳️moves-park-region-between-2-districts"
             }
           ]
         },
@@ -152,7 +152,7 @@
           "scenarios": [
             {
               "id": "moves-bus-route-to-front",
-              "directoryName": "🧪️moves-bus-route-to-front"
+              "directoryName": "🚌️moves-bus-route-to-front"
             }
           ]
         },
@@ -163,7 +163,7 @@
           "scenarios": [
             {
               "id": "rewrites-harbor-position-payload",
-              "directoryName": "🧪️rewrites-harbor-position-payload"
+              "directoryName": "⚓️rewrites-harbor-position-payload"
             }
           ]
         },
@@ -174,7 +174,7 @@
           "scenarios": [
             {
               "id": "rewrites-harbor-district-region-payload",
-              "directoryName": "🧪️rewrites-harbor-district-region-payload"
+              "directoryName": "🏘️rewrites-harbor-district-region-payload"
             }
           ]
         },
@@ -185,7 +185,7 @@
           "scenarios": [
             {
               "id": "rewrites-ferry-route-payload",
-              "directoryName": "🧪️rewrites-ferry-route-payload"
+              "directoryName": "⛴️rewrites-ferry-route-payload"
             }
           ]
         }

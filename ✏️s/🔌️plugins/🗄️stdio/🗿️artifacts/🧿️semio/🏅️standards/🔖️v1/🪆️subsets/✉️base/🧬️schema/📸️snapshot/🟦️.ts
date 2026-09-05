@@ -6,7 +6,7 @@
  * discriminated-union member carrying the literal `subset` tag plus a single lowerCamelCase field
  * embedding that subset's own snapshot type BY REFERENCE (never redeclaring its internals — see
  * that subset's own `📸️snapshot/🟦️.ts` for the real shape), the same discriminated-union
- * idiom already used repo-wide (e.g. ✳️presentation's `SlideShape`/`PlaceholderKind`). */
+ * idiom already used repo-wide (e.g. 📽️presentation's `SlideShape`/`PlaceholderKind`). */
 import type { SemioBrepSnapshot } from "../../../🧊️brep/🧬️schema/📸️snapshot/🟦️";
 import type { SemioMeshSnapshot } from "../../../🧊️brep/🧬️schema/📸️snapshot/🟦️";
 import type { SemioModelSnapshot } from "../../../🧊️brep/🧬️schema/📸️snapshot/🟦️";

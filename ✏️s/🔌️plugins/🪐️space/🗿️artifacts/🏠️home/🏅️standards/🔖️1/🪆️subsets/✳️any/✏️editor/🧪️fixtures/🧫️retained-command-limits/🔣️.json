@@ -25,21 +25,27 @@
     },
     {
       "id": "createStudio",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Creates and resolves studio catalog/draft/backbone owners through process-global ports without resumable external I/O."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "bindSpaceFile",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Binds a file-backed studio through blocking file/backbone work and process-global port ownership."
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
     },
     {
       "id": "importSpace",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Mixed request/import branches parse a whole document and publish external storage without retained decoding or cancellation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "openSpace",
@@ -59,9 +65,11 @@
     },
     {
       "id": "deleteVirtualFileSystemNode",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Traverses global catalog owners and performs external deletion without an app-owned resumable cursor."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "goHome",
@@ -97,12 +105,22 @@
     },
     {
       "id": "renameSpace",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "The dialog branch decodes and searches the whole directory read model; the shared command route has no bounded cursor."
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
     },
     {
       "id": "shareSpace",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "manageSpace",
       "disposition": "Migrated",
       "lanes": [
         "HostOnly"
@@ -119,9 +137,11 @@
     },
     {
       "id": "foldDirectoryEvents",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Parses the complete event JSON array and repeatedly clones/folds/serializes the directory model in one dispatch."
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
     },
     {
       "id": "presenceHeartbeat",

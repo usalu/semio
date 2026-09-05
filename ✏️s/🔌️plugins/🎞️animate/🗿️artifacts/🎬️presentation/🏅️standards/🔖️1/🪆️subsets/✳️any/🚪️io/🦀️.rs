@@ -81,14 +81,14 @@ pub fn animate_presentation_document_json_to_svg(value: &semio_framework_os_kern
 /// animate — there is no bridge anywhere in stdio/framework from the legacy
 /// `semio_s_plugin_stdio::artifacts::dwg::DwgDrawing` (11 geometry variants: Line/Point/Circle/Arc/Ellipse/LwPolyline/
 /// Spline/Text/Face3d/Polyline3d/PolyfaceMesh) to semio's `SemioDrawingSnapshot`/`DrawNode` tree.
-/// Hand-rolling that conversion here would duplicate `semio_framework_os::dwg_drawing_to_svg`'s
+/// Hand-rolling that conversion here would duplicate `semio_s_plugin_stdio::artifacts::dwg::dwg_drawing_to_svg`'s
 /// existing, correct, shared geometry logic for a hand-rolled struct — reported in
 /// `w5a--report.md`'s stdio_gaps rather than invented. The framework helpers stay (shared,
 /// non-duplicative utilities, not local ad-hoc codec code); the SVG they produce is still round-
 /// tripped through stdio's real SVG codec before rasterization, same as the title-card path.
 pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<dsl::DslValue, String> {
     use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
-    let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
+    let (svg, width, height) = semio_s_plugin_stdio::artifacts::dwg::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
     let frame = crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };

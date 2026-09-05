@@ -195,7 +195,7 @@
         "win32-x64"
       ],
       "homepage": "https://docs.rs/serde_json",
-      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-material's production diff appends a caller-supplied SemioMaterial to SemioMeshSnapshot::materials (an id-keyed append); create-material/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op. No computed field, no cross-reference.\n\n`SemioMeshSnapshot::materials` is an INLINE `Vec<SemioMaterial>` carrying its full content directly in this subset's own JSON export (`🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-material` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`✳️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `🔺️mesh/🏗️generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `create-material` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-mesh-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
+      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-material's production diff appends a caller-supplied SemioMaterial to SemioMeshSnapshot::materials (an id-keyed append); create-material/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op. No computed field, no cross-reference.\n\n`SemioMeshSnapshot::materials` is an INLINE `Vec<SemioMaterial>` carrying its full content directly in this subset's own JSON export (`🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-material` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`📑️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `🔺️mesh/🏗️generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `create-material` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-mesh-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
     }
   ],
   "comparisonProfiles": [
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "repaints-the-material-from-red-to-blue",
-              "directoryName": "🧪️repaints-the-material-from-red-to-blue"
+              "directoryName": "🔵️repaints-the-material-from-red-to-blue"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "raises-the-metallic-factor-to-fully-metallic",
-              "directoryName": "🧪️raises-the-metallic-factor-to-fully-metallic"
+              "directoryName": "🪙️raises-the-metallic-factor-to-fully-metallic"
             }
           ]
         },
@@ -241,7 +241,7 @@
           "scenarios": [
             {
               "id": "lowers-the-roughness-factor-to-a-quarter",
-              "directoryName": "🧪️lowers-the-roughness-factor-to-a-quarter"
+              "directoryName": "🧱️lowers-the-roughness-factor-to-a-quarter"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "retags-the-texture-as-jpeg-without-touching-its-bytes",
-              "directoryName": "🧪️retags-the-texture-as-jpeg-without-touching-its-bytes"
+              "directoryName": "🖼️retags-the-texture-as-jpeg-without-touching-its-bytes"
             }
           ]
         },
@@ -263,7 +263,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-material-at-the-end",
-              "directoryName": "🧪️adds-a-second-material-at-the-end"
+              "directoryName": "🎨️adds-a-second-material-at-the-end"
             }
           ]
         },
@@ -274,7 +274,7 @@
           "scenarios": [
             {
               "id": "adds-an-empty-second-mesh-at-the-end",
-              "directoryName": "🧪️adds-an-empty-second-mesh-at-the-end"
+              "directoryName": "🕸️adds-an-empty-second-mesh-at-the-end"
             }
           ]
         },
@@ -285,7 +285,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-primitive-inside-the-existing-mesh",
-              "directoryName": "🧪️adds-a-second-primitive-inside-the-existing-mesh"
+              "directoryName": "🔺️adds-a-second-primitive-inside-the-existing-mesh"
             }
           ]
         },
@@ -296,7 +296,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-texture-at-the-end",
-              "directoryName": "🧪️adds-a-second-texture-at-the-end"
+              "directoryName": "🖼️adds-a-second-texture-at-the-end"
             }
           ]
         },
@@ -307,7 +307,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-material-and-keeps-the-trailing-one",
-              "directoryName": "🧪️removes-the-leading-material-and-keeps-the-trailing-one"
+              "directoryName": "🚫️removes-the-leading-material-and-keeps-the-trailing-one"
             }
           ]
         },
@@ -318,7 +318,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-mesh-and-keeps-the-trailing-one",
-              "directoryName": "🧪️removes-the-leading-mesh-and-keeps-the-trailing-one"
+              "directoryName": "🚫️removes-the-leading-mesh-and-keeps-the-trailing-one"
             }
           ]
         },
@@ -329,7 +329,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-primitive-and-keeps-the-trailing-one",
-              "directoryName": "🧪️removes-the-leading-primitive-and-keeps-the-trailing-one"
+              "directoryName": "🚫️removes-the-leading-primitive-and-keeps-the-trailing-one"
             }
           ]
         },
@@ -340,7 +340,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-texture-and-keeps-the-trailing-one",
-              "directoryName": "🧪️removes-the-leading-texture-and-keeps-the-trailing-one"
+              "directoryName": "🚫️removes-the-leading-texture-and-keeps-the-trailing-one"
             }
           ]
         },
@@ -351,7 +351,7 @@
           "scenarios": [
             {
               "id": "lifts-the-third-vertex-of-the-triangle",
-              "directoryName": "🧪️lifts-the-third-vertex-of-the-triangle"
+              "directoryName": "🎯️lifts-the-third-vertex-of-the-triangle"
             }
           ]
         },
@@ -362,7 +362,7 @@
           "scenarios": [
             {
               "id": "swaps-the-triangle-for-a-textured-quad",
-              "directoryName": "🧪️swaps-the-triangle-for-a-textured-quad"
+              "directoryName": "🔲️swaps-the-triangle-for-a-textured-quad"
             }
           ]
         },
@@ -373,7 +373,7 @@
           "scenarios": [
             {
               "id": "swaps-the-texture-payload-without-retagging-its-mime",
-              "directoryName": "🧪️swaps-the-texture-payload-without-retagging-its-mime"
+              "directoryName": "📀️swaps-the-texture-payload-without-retagging-its-mime"
             }
           ]
         },
@@ -384,7 +384,7 @@
           "scenarios": [
             {
               "id": "binds-the-primitive-to-the-existing-material",
-              "directoryName": "🧪️binds-the-primitive-to-the-existing-material"
+              "directoryName": "🔗️binds-the-primitive-to-the-existing-material"
             }
           ]
         },
@@ -395,7 +395,7 @@
           "scenarios": [
             {
               "id": "switches-the-primitive-to-a-triangle-strip",
-              "directoryName": "🧪️switches-the-primitive-to-a-triangle-strip"
+              "directoryName": "🔀️switches-the-primitive-to-a-triangle-strip"
             }
           ]
         }

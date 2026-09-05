@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "maximumRecords",
+    "cases",
+    "historyProjection"
+  ],
+  "properties": {
+    "historyProjection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["commands", "expected", "rejections"],
+      "properties": {
+        "rejections": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["name", "records", "accepted"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 }, "accepted": { "const": false },
+              "records": {
+                "type": "array", "minItems": 2, "maxItems": 3,
+                "items": {
+                  "type": "object", "additionalProperties": false, "required": ["kind", "document"],
+                  "properties": { "kind": { "enum": ["command", "frontier"] }, "document": { "enum": ["current", "foreign"] } }
+                }
+              }
+            }
+          }
+        },
+        "commands": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["id", "path", "value"],
+            "properties": { "id": { "type": "string", "minLength": 1 }, "path": { "type": "string", "minLength": 1 }, "value": { "type": "string" } }
+          }
+        },
+        "expected": {
+          "type": "object", "additionalProperties": false, "required": ["entries", "operationIds", "headSeq", "commitSeq"],
+          "properties": {
+            "entries": { "const": 1 }, "operationIds": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } },
+            "headSeq": { "const": 2 }, "commitSeq": { "const": 1 }
+          }
+        }
+      }
+    },
+    "schema": {
+      "const": "semio.db.wal.committed-transactions/v1"
+    },
+    "maximumRecords": {
+      "const": 64
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 24,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "segments",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "segments": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "state",
+                "frames",
+                "physicalCommitsAfter"
+              ],
+              "properties": {
+                "state": {
+                  "enum": [
+                    "active",
+                    "sealed"
+                  ]
+                },
+                "frames": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 70,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "header",
+                          "begin",
+                          "commit",
+                          "abort",
+                          "command",
+                          "frontier",
+                          "snapshot",
+                          "cas"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]{0,19})$"
+                      },
+                      "count": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 65
+                      }
+                    }
+                  }
+                },
+                "physicalCommitsAfter": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 70,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 69
+                  }
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "accepted",
+              "transactions",
+              "nextTxId",
+              "recoverAbort",
+              "error"
+            ],
+            "properties": {
+              "accepted": {
+                "type": "boolean"
+              },
+              "transactions": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "kinds"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9][0-9]{0,19})$"
+                    },
+                    "kinds": {
+                      "type": "array",
+                      "maxItems": 64,
+                      "items": {
+                        "enum": [
+                          "command",
+                          "frontier",
+                          "snapshot",
+                          "cas"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "nextTxId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^(0|[1-9][0-9]{0,19})$"
+              },
+              "recoverAbort": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^(0|[1-9][0-9]{0,19})$"
+              },
+              "error": {
+                "enum": [
+                  "corrupt",
+                  "capacity",
+                  "sequence",
+                  null
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

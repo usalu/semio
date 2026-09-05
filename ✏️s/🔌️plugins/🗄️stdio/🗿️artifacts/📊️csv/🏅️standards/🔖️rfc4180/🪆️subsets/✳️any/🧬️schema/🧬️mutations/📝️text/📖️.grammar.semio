@@ -47,4 +47,4 @@ bit = "0" | "1"
 # macro's own backtracking (`Recognizer::match_macro_span` tries the largest token span first and
 # shrinks until `try_match` accepts) handles both, with no grammar-file workaround needed — same
 # mechanism as the sibling json artifact's
-# `../../../../../🔣️json/…/🧬️mutations/📝️text/📖️.grammar.semio`'s `hex` doc comment.
+# `../../../../../🧾️json/…/🧬️mutations/📝️text/📖️.grammar.semio`'s `hex` doc comment.

@@ -74,7 +74,7 @@ pub enum SemioAnimationMutation {
 }
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.animation`, in enum
-/// declaration order — what the `🍀️mutate-semio-animation` case's completeness gate counts against
+/// declaration order — what the `🎞️mutate-semio-animation` case's completeness gate counts against
 /// and what `../../🔮️oracle/🔣️.json`'s catalog repeats. Unlike its audio/video siblings
 /// this subset's wire keywords are the two-letter `OP_KEYWORDS` tags (`IT`, `KV`, …), so the two
 /// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
@@ -447,7 +447,7 @@ mod tests {
     /// position `variant_ordinal` assigns it, and every one of those names also appears in the
     /// committed oracle manifest's catalog. The bijection against `demo_mutation_cases` is what
     /// makes a newly added variant fail here instead of silently shrinking the vocabulary
-    /// `🍀️mutate-semio-animation` claims to cover.
+    /// `🎞️mutate-semio-animation` claims to cover.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
         assert_eq!(KINDS.len(), OP_KEYWORDS.len(), "KINDS must name exactly one kind per declared variant, same length as the op tag table");

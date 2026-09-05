@@ -50,7 +50,7 @@
       "comparisonProfiles": [
         "semantic-step-v1"
       ],
-      "rationale": "📖️ F1 (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). Mirrors the sibling `steputils-step-ap214-base-mutate-reader` entry registered for `base`, scoped to `cc2`'s own `step-ap214-cc2-mutate` capability — this subset shares the exact same real committed fixture (`shared://🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`) and entity vocabulary as `base`, just filtered to this conformance class. steputils 0.1 (mozman, MIT) both READS (`p21.readfile`) and WRITES (`StepFile.save`) real ISO 10303-21 Part-21 text — verified directly this session by round-tripping this subset's own fixture and diffing the result: a real parse into typed `Entity`/`ParameterList`/`Reference`/`Keyword` objects, re-serialized through steputils' own writer, never through this repository's `ruststep`-adjacent or production STEP writer. Used here as the generator for every `fixtureManifests[]` entry below this rationale registers: `before` is this fixture round-tripped unmodified, `after` is the same load with exactly one raw entity/header edit applied through steputils' own object model before saving — so both sides of every diff are genuinely produced by an independent third-party parser+writer, never predicted by this repository's own StepMutation/StepDiff implementation."
+      "rationale": "📖️ F1 (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). Mirrors the sibling `steputils-step-ap214-base-mutate-reader` entry registered for `base`, scoped to `cc2`'s own `step-ap214-cc2-mutate` capability — this subset shares the exact same real committed fixture (`shared://🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp`) and entity vocabulary as `base`, just filtered to this conformance class. steputils 0.1 (mozman, MIT) both READS (`p21.readfile`) and WRITES (`StepFile.save`) real ISO 10303-21 Part-21 text — verified directly this session by round-tripping this subset's own fixture and diffing the result: a real parse into typed `Entity`/`ParameterList`/`Reference`/`Keyword` objects, re-serialized through steputils' own writer, never through this repository's `ruststep`-adjacent or production STEP writer. Used here as the generator for every `fixtureManifests[]` entry below this rationale registers: `before` is this fixture round-tripped unmodified, `after` is the same load with exactly one raw entity/header edit applied through steputils' own object model before saving — so both sides of every diff are genuinely produced by an independent third-party parser+writer, never predicted by this repository's own StepMutation/StepDiff implementation."
     }
   ],
   "noOracleDecisions": [],
@@ -221,7 +221,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -272,7 +272,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -323,7 +323,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -374,7 +374,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
@@ -425,7 +425,7 @@
       "provenance": {
         "source": "generated",
         "license": "MIT (steputils)",
-        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+        "attribution": "Generated with steputils 0.1 (MIT, mozman) via a real parse+write round trip against this repository's own committed real-world fixture 🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },

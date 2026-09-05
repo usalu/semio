@@ -1,0 +1,42 @@
+dialect grammar
+grammar stdio.semio.table.snapshot
+extension semio
+start document
+
+# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM table wave. Real grammar for `SemioTableSnapshot::print_dsl`/
+# `parse_dsl` (📸️snapshot/🦀️.rs's `print_table_snapshot_body`/`parse_table_snapshot_body`)
+# — hand-rolled, mirroring `🔤️text`'s own hex/bracket-encoded value convention.
+#
+# `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
+# s.stdio.semio.table.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
+# `artifact-mark` below — before recognition, same convention every other semio subset's own
+# grammar uses).
+artifact-mark = "s.stdio.semio.table"
+document = artifact-mark schema-line columns-line rows-line
+
+schema-line = "schema" "=" hex
+
+columns-line = "columns" "=" "[" column-list? "]"
+column-list = column {"," column}*
+column = "[" hex "," cell-kind "]"
+cell-kind = "n" | "b" | "i" | "f" | "s" | "y"
+
+rows-line = "rows" "=" "[" row-list? "]"
+row-list = row {"," row}*
+row = "[" list-item* "]"
+
+# `value`/`list-item`/`map-item`/`bit` below are the `SemioValue` tagged-union grammar, reused
+# VERBATIM from `🔢️value`'s own `📸️snapshot/📝️text/📖️.grammar.semio` — this facet's row
+# cells are `Vec<SemioValue>`, encoded via that subset's own `enc_semio_value` (imported, not
+# re-derived, per this ticket's binding reuse mandate). `Z` (null, no payload) / `B[0|1]` /
+# `I[hex(lexeme)]` / `F[hex(lexeme)]` / `S[hex(value)]` / `Y[hex(bytes)]` / `L[v1,v2,...]` /
+# `M[hexkey1:v1,...]` / `R[hex(id)]`.
+value = "Z" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex "]" | "Y" "[" hex "]" | "L" "[" list-item* "]" | "M" "[" map-item* "]" | "R" "[" hex "]"
+list-item = value ","?
+map-item = hex ":" value ","?
+bit = "0" | "1"
+
+# `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
+# `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every hex-encoded `schema`/column
+# `name` routes through it. `Symbol::Ref`'s production→macro fallback resolves bare `hex`
+# automatically, with real backtracking.

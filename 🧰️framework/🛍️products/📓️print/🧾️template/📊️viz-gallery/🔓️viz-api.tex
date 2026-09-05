@@ -1,0 +1,60 @@
+\documentclass[type=report,theme=light,language=de]{semio}
+\title{Viz public API}
+\author{Semio}
+\date{\today}
+\begin{document}
+\chapter{Viz public API}
+\section{Tables, scales, and charts}
+\begin{VizFigure}[title={Table, row, scale, chart}, width=80, height=40]
+\SemioVizTable{api}{cat, val}
+\SemioVizRow{api}{A, 4}
+\SemioVizRow{api}{B, 7}
+\SemioVizRow{api}{C, 5}
+\SemioVizScale{apiy}{linear}{0, 10}{8, 32}
+\SemioVizScale{apisym}{symlog}{-10, 10}{8, 32}
+\SemioVizScale{apiq}{quantize}{0, 10}{8, 32}
+\SemioVizChartKind{apiprobe}{bar}{data=api, x=cat, y=val}
+\SemioVizChart{vertical-bar-chart}[data=api, x=cat, y=val]
+\end{VizFigure}
+\section{Marks and paths}
+\begin{VizFigure}[title={Mark and path}, width=80, height=40]
+\SemioVizMark{dot}[size=3.5, fill=semio-secondary]{20, 16}
+\SemioVizMark{square}[size=2.5, fill=semio-tertiary, draw=semio-primary]{40, 22}
+\SemioVizPath{polyline}[points={8,8; 28,30; 50,12; 72,24}, draw=semio-info]
+\end{VizFigure}
+\section{Layout, axis, grid, legend}
+\begin{VizFigure}[title={Layout, axis, grid, legend}, width=80, height=40]
+\SemioVizScale{apisym}{symlog}{-10, 10}{8, 32}
+\SemioVizScale{apiq}{quantize}{0, 10}{8, 32}
+\SemioVizLayout{dot}[data=demo, x=cat, y=val]
+\SemioVizAxis[orient=left, scale=apisym]
+\SemioVizAxis[orient=bottom, scale=apiq]
+\SemioVizGrid
+\SemioVizLegend[legend=gradient]
+\SemioVizDemo{dot}
+\end{VizFigure}
+\section{Sections, columns, and text marks}
+\begin{VizFigure}[title={Section, column, text}, width=100]
+\begin{VizSection}[title={A \ Section title}]
+\SemioVizLayout{grid}[data=demo, label=label, columns=5, boxheight=7]
+\end{VizSection}
+\begin{VizSection}[title={B \ Two columns}]
+\begin{VizColumn}[width=48, title={Left}]
+\SemioVizText{label}[width=40]{0,0}{Text mark inside a column.}
+\end{VizColumn}
+\begin{VizColumn}[width=48, title={Right}, note={Caption text before the chart.}]
+\SemioVizLayout{bar}[data=demo, label=label, value=value, orient=horizontal, labelwidth=20, frame=false, anchor=api-bar-end]
+\SemioVizNoteBelow{api-bar-end}{48}{Note positioned from the chart's own drawn extent.}
+\end{VizColumn}
+\end{VizSection}
+\end{VizFigure}
+\section{Text kinds}
+\begin{VizFigure}[title={Every text kind}, width=100, height=50]
+\SemioVizText{cell}[width=25]{20,10}{Cell text}
+\SemioVizText{module}[width=25]{65,10}{Module text}
+\SemioVizText{chip}[width=25]{20,25}{Chip text}
+\SemioVizText{label}[width=25]{50,25}{Label text}
+\SemioVizText{title}[width=25]{5,40}{Title text}
+\SemioVizText{value}[width=25]{80,40}{42}
+\end{VizFigure}
+\end{document}

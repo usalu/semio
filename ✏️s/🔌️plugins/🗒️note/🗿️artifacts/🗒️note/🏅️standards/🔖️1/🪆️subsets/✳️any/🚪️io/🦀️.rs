@@ -234,7 +234,7 @@ pub async fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u3
 //#region 🔖️MediaImport
 /// 🕳️ Not rewired onto the semio/drawing bridge (see `stdio_gaps` in the W5b ticket report): the
 /// drawing subset has no dwg-format io leaf yet (only svg/dxf/pdf), and routing through the
-/// framework's `dwg_drawing_to_svg` + `resolve_ready(io_dispatch(svg→drawing))` round trip would REGRESS this
+/// DWG artifact's `dwg_drawing_to_svg` + `resolve_ready(io_dispatch(svg→drawing))` round trip would REGRESS this
 /// path — `dwg_drawing_to_svg` only walks `LwPolyline` geometry (silently drops `Text` entities)
 /// and `DrawNode::Text` has no font-size field to carry DWG's `height`. `ink_block_from_points`/
 /// `text_block_from_dwg` below are real domain mappers over already-typed `DwgGeometry` fields

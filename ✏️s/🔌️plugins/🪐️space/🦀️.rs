@@ -482,6 +482,21 @@ pub struct HomeSpaceRow {
     pub members: String,
     pub updated: String,
     pub origin: &'static str,
+    /// 🛂️ The CALLING client's current membership role in this space, as folded from hub-confirmed
+    /// directory events — `None` for a space the caller is not a member of (a public row) and for
+    /// every local-only catalog row. The Home renderer hides author-only affordances on this and
+    /// never on `origin`; the authoritative capability still comes from the administration page.
+    pub role: Option<DirectorySpaceRole>,
+}
+
+/// 🛂️ The caller's role in one folded space, or `None` when they are not a current member.
+pub use store::os_directory::DirectorySpaceRole;
+
+fn caller_role(space: &store::os_directory::DirectorySpace, client_id: &str) -> Option<DirectorySpaceRole> {
+    if client_id.is_empty() {
+        return None;
+    }
+    space.members.iter().find(|member| member.user_id == client_id).map(|member| member.role)
 }
 
 async fn directory_kind_str(kind: store::os_directory::DirectorySpaceKind) -> &'static str {
@@ -518,7 +533,7 @@ async fn local_visibility_str(visibility: &SpaceVisibility) -> &'static str {
 /// (`origin: "local"`) — a hub row wins on an id collision (a space promoted from local to hub keeps
 /// its hub-confirmed data, never a stale local shadow). Contract §C0 row-id grammar for the e2e is
 /// `space:<id>`; callers building the table's `data-row-id` prepend that prefix to `HomeSpaceRow.id`.
-pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel) -> Vec<HomeSpaceRow> {
+pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel, client_id: &str) -> Vec<HomeSpaceRow> {
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
     for (id, space) in &directory.spaces {
@@ -531,6 +546,7 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
             members: space.view.member_count.to_string(),
             updated: space.view.updated_at_ms.to_string(),
             origin: "hub",
+            role: caller_role(space, client_id),
         });
     }
     for entry in list_all_space_catalog_entries().await {
@@ -547,11 +563,220 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
             members: "1".into(),
             updated: entry.updated_at.clone(),
             origin: "local",
+            // 🏠️ The local-only catalog is single-user by construction and carries no directory
+            // membership; a local row therefore never offers a directory-owned affordance.
+            role: None,
         });
     }
     rows
 }
 //#endregion 🔖️HomeSpaceRows
+
+//#region 🧵️RetainedStore
+/// 🧬️ Builds the single `protocol::Edit<M>` one retained publication step commits. Home, the space
+/// index and the studio differ only in `M`, the edit-id prefix and the byte ceiling, so one authority
+/// serves every lane of all three apps.
+fn space_retained_edit<M>(prefix: &'static str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("{prefix}-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+fn space_retained_mutation_bytes<M: ::protocol::OpBinary>(mutation: &M) -> Result<usize, String> {
+    ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "s.space.retained.mutation-encode".to_string())
+}
+
+fn admit_space_retained_mutation<M: ::protocol::OpBinary>(mutation: &M, maximum_bytes: usize) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = space_retained_mutation_bytes(mutation)?;
+    if retained_bytes > maximum_bytes {
+        return Err("s.space.retained.mutation-envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn prepare_space_retained_one_item<P, M>(base: &P, mutation: M, maximum_bytes: usize) -> Result<(P, Vec<M>, M), String>
+where
+    M: ::protocol::Mutation<P> + ::protocol::OpBinary,
+{
+    admit_space_retained_mutation(&mutation, maximum_bytes)?;
+    let inverse = ::protocol::Mutation::inverse(&mutation, base);
+    let diff = ::protocol::Mutation::diff(&mutation, base).into_parts().0;
+    let post = ::protocol::MutationDiff::apply(&diff, base).map_err(|_| "s.space.retained.diff-apply".to_string())?;
+    Ok((post, inverse, mutation))
+}
+
+/// 🏭️ The exact one-item Store preparation authority every migrated `🪐️space` tool needs: a
+/// publication lane a tool declares is refused at app construction
+/// (`interactive-job.publication-contract`) unless its lane factory exists.
+pub struct SpaceOneItemPreparationFactory<P, M> {
+    prefix: &'static str,
+    maximum_bytes: usize,
+    lane: std::marker::PhantomData<fn() -> (P, M)>,
+}
+
+impl<P, M> SpaceOneItemPreparationFactory<P, M> {
+    pub const fn new(prefix: &'static str, maximum_bytes: usize) -> Self {
+        Self { prefix, maximum_bytes, lane: std::marker::PhantomData }
+    }
+}
+
+struct SpaceOneItemPreparation<P, M> {
+    prefix: &'static str,
+    maximum_bytes: usize,
+    base: Option<store::SnapshotRead<P>>,
+    mutation: Option<M>,
+    description: Option<String>,
+    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for SpaceOneItemPreparationFactory<P, M>
+where
+    P: Send + Sync + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
+{
+    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("s.space.retained.lane-or-description-envelope".into());
+        }
+        admit_space_retained_mutation(mutation, self.maximum_bytes)
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+        let retained_bytes = space_retained_mutation_bytes(&request.mutation).unwrap_or(self.maximum_bytes.saturating_add(1));
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || retained_bytes > self.maximum_bytes
+        {
+            return Err(request);
+        }
+        Ok(Box::new(SpaceOneItemPreparation {
+            prefix: self.prefix,
+            maximum_bytes: self.maximum_bytes,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for SpaceOneItemPreparation<P, M>
+where
+    P: Send + Sync + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
+{
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        if grant.maximum_bytes < self.retained_bytes {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        let base = self.base.as_ref().ok_or_else(|| "s.space.retained.base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "s.space.retained.mutation-owner-missing".to_string())?;
+        let (post, inverse, forward) = prepare_space_retained_one_item(base.get(), mutation, self.maximum_bytes)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "s.space.retained.authority-missing".to_string())?;
+        let edit = space_retained_edit(self.prefix, forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("s.space.retained.base-retirement-rejected".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+
+/// 📬️ One lane's `Artifact`/`Config` store override, addressed by its edit-id prefix and byte ceiling.
+pub fn space_retained_store_preparation<P, M>(prefix: &'static str, maximum_bytes: usize) -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<P, M>>>
+where
+    P: Send + Sync + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
+{
+    Some(Arc::new(SpaceOneItemPreparationFactory::<P, M>::new(prefix, maximum_bytes)))
+}
+//#endregion 🧵️RetainedStore
 
 //#region 🔌️Registration
 /// 🗃️ Closed runtime app fleet for the home, space-index, and studio surfaces.
@@ -581,7 +806,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 // executor-bridge call site in this crate; the `space` artifact/editor/viewer calls below are
 // already sync (no bridge needed).
 pub fn plugin() -> Result<Plugin<SpaceApps>, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::<SpaceApps>::builder("space")
+    Plugin::<SpaceApps>::builder("s")
         .label("S Studio")
         .version("0.1.0")
         .package_id("semio:space")
@@ -668,3 +893,180 @@ mod space_index_projection_tests {
     }
 }
 //#endregion 🧪️SpaceIndexProjectionTests
+
+//#region 🧪️InteractiveJobCatalogTests
+#[cfg(test)]
+mod interactive_job_catalog_tests {
+    //! 🧵️ One walk over every app definition this plugin registers, proving that each id the
+    //! studio/home/space-index surfaces declare carries the disposition its language-neutral fixture
+    //! declares, and that every `Migrated` id is backed by an owned bounded tool-job factory whose
+    //! tool set, publication contract and execution contract are the exact ones the app's proof
+    //! catalog is joined against at construction time.
+    use super::*;
+    use semio_framework::InteractiveJobClassification;
+    use semio_framework_plugin::{ArtifactApp, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, EditorApp};
+    use std::collections::{BTreeMap, BTreeSet};
+
+    const STUDIO_FIXTURE: &str = include_str!("⚙️engine/🪐️space/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
+    const HOME_FIXTURE: &str = include_str!("🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
+    const SPACE_INDEX_FIXTURE: &str = include_str!("🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
+    const COMPONENT_MANIFEST: &str = include_str!("📦️packages/🦀️rust/Cargo.toml");
+
+    /// 🚦️ Every id the app declares on any surface an interactive dispatch can address, with the
+    /// disposition `validate_ui_dispatch_classification` will read for it.
+    fn declared_dispositions(definition: &semio_framework_plugin::AppDefinition) -> BTreeMap<String, InteractiveJobClassification> {
+        let mut declared = BTreeMap::new();
+        for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
+            declared.insert(action.id.clone(), action.semantics.execution.interactive_job);
+        }
+        for command in definition.commands.iter().chain(definition.modes.iter().flat_map(|mode| mode.commands.iter())) {
+            declared.insert(command.id.clone(), command.semantics.execution.interactive_job);
+        }
+        declared
+    }
+
+    /// 📜️ The `execution`/`status` fixture shape (studio, space index): ids whose status is
+    /// `migrated`, plus the tool ids whose sole publication lane is `hostOnly`.
+    fn migrated_and_host_only(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>) {
+        let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
+        let migrated = document
+            .get("routes")
+            .and_then(pack::JsonValue::as_array)
+            .expect("routes array")
+            .iter()
+            .filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("migrated"))
+            .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
+            .collect::<BTreeSet<_>>();
+        let host_only = document
+            .get("publicationContracts")
+            .and_then(pack::JsonValue::as_array)
+            .expect("publication contracts array")
+            .iter()
+            .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("hostOnly".into())]))
+            .filter_map(|contract| contract.get("toolId").and_then(pack::JsonValue::as_str).map(str::to_string))
+            .collect::<BTreeSet<_>>();
+        (migrated, host_only)
+    }
+
+    /// 📜️ The `disposition`/`lanes` fixture shape (home).
+    fn migrated_and_host_only_rows(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>) {
+        let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
+        let routes = document.get("routes").and_then(pack::JsonValue::as_array).expect("routes array");
+        let migrated = routes
+            .iter()
+            .filter(|route| route.get("disposition").and_then(pack::JsonValue::as_str) == Some("Migrated"))
+            .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
+            .collect::<BTreeSet<_>>();
+        let host_only = routes
+            .iter()
+            .filter(|route| route.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("HostOnly".into())]))
+            .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
+            .collect::<BTreeSet<_>>();
+        (migrated, host_only)
+    }
+
+    fn factory_tool_ids<F: ArtifactOwnedToolJobFactory>() -> BTreeSet<String> {
+        F::TOOL_IDS.iter().map(|id| (*id).to_string()).collect()
+    }
+
+    fn factory_host_only_ids<F: ArtifactOwnedToolJobFactory>() -> BTreeSet<String> {
+        F::PUBLICATION_CONTRACTS.iter().filter(|contract| contract.lanes == [ArtifactToolPublicationLane::HostOnly]).map(|contract| contract.tool_id.to_string()).collect()
+    }
+
+    fn factory_contract_ids<F: ArtifactOwnedToolJobFactory>() -> BTreeSet<String> {
+        F::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id.to_string()).collect()
+    }
+
+    fn migrated_ids(definition: &semio_framework_plugin::AppDefinition) -> BTreeSet<String> {
+        declared_dispositions(definition).into_iter().filter(|(_, disposition)| *disposition == InteractiveJobClassification::Migrated).map(|(id, _)| id).collect()
+    }
+
+    fn unclassified_ids(definition: &semio_framework_plugin::AppDefinition) -> BTreeSet<String> {
+        declared_dispositions(definition).into_iter().filter(|(_, disposition)| *disposition == InteractiveJobClassification::Unclassified).map(|(id, _)| id).collect()
+    }
+
+    /// 🧩️ Framework-injected ids (history, clipboard, interaction, tutorial) are dispatched through
+    /// `dispatch_framework_reserved_action`, never through an app-owned factory, so an app's own
+    /// proof catalog covers exactly the app-declared migrated ids.
+    fn app_owned(ids: BTreeSet<String>, owned: &BTreeSet<String>) -> BTreeSet<String> {
+        ids.into_iter().filter(|id| owned.contains(id)).collect()
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn studio_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
+        let definition = resolve_ready(crate::engine::space::create_space_app()).definition;
+        let (fixture_migrated, fixture_host_only) = migrated_and_host_only(STUDIO_FIXTURE);
+        let owned = factory_tool_ids::<crate::engine::space::SpaceCommandJobFactory>();
+        assert!(unclassified_ids(&definition).is_empty(), "an unclassified id aborts build_definition at runtime");
+        assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated, "the studio's migrated ids must equal its fixture's");
+        assert_eq!(owned, fixture_migrated, "the owned factory must claim exactly the migrated ids");
+        assert_eq!(factory_contract_ids::<crate::engine::space::SpaceCommandJobFactory>(), owned, "every claimed tool needs a publication contract");
+        assert_eq!(factory_host_only_ids::<crate::engine::space::SpaceCommandJobFactory>(), fixture_host_only);
+        assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
+        for tool in ["setAppRegistrations", "openSpace", "openInstance", "importSpacePackPayload", "spawnApp"] {
+            assert!(owned.contains(tool), "the shell dispatches {tool} on every studio session");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
+        let definition = resolve_ready(crate::editor::home::create_home_app());
+        let (fixture_migrated, fixture_host_only) = migrated_and_host_only_rows(HOME_FIXTURE);
+        let owned = factory_tool_ids::<crate::editor::home::HomeRetainedCommandJobFactory>();
+        assert!(unclassified_ids(&definition).is_empty());
+        assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated);
+        assert_eq!(owned, fixture_migrated);
+        assert_eq!(factory_contract_ids::<crate::editor::home::HomeRetainedCommandJobFactory>(), owned);
+        assert_eq!(factory_host_only_ids::<crate::editor::home::HomeRetainedCommandJobFactory>(), fixture_host_only);
+        assert_eq!(<EditorApp<crate::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
+        for tool in ["importSpace", "foldDirectoryEvents", "createStudio", "deleteVirtualFileSystemNode", "renameSpace", "bindSpaceFile"] {
+            assert!(owned.contains(tool), "Home's own rows and the shell dispatch {tool}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn space_index_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
+        let definition = crate::editor::space_index::create_space_index_editor();
+        let (fixture_migrated, fixture_host_only) = migrated_and_host_only(SPACE_INDEX_FIXTURE);
+        let owned = factory_tool_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>();
+        assert!(unclassified_ids(&definition).is_empty());
+        assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated);
+        assert_eq!(owned, fixture_migrated);
+        assert_eq!(factory_contract_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>(), owned);
+        assert_eq!(factory_host_only_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>(), fixture_host_only);
+        assert_eq!(<EditorApp<crate::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
+    }
+
+    /// 🧾️ `validate_tool_job_rows` joins each proof row's `controller_id`/`document_schema` against
+    /// the runtime surface app id and `A::DOCUMENT_SCHEMA`, and each row's contract against the
+    /// registered factory's — the proof macro can only take literals, so the literals are pinned here.
+    #[semio_framework_async_macros::async_test]
+    async fn tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against() {
+        assert_eq!(crate::engine::space::S_PLAY_APP_ID, "s.space.studio@1/*#editor");
+        assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA, "os.workflow");
+        assert_eq!(<crate::editor::home::HomeApp as ArtifactEditor>::DIALECT.artifact_kind, "s.space.home");
+        assert_eq!(<crate::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA, "s.home");
+        assert_eq!(<crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DIALECT.artifact_kind, "s.space.space");
+        assert_eq!(<crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA, "s.space");
+        assert_eq!(<crate::engine::space::SpaceCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::engine::space::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA);
+        assert_eq!(<crate::editor::home::HomeRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA);
+        assert_eq!(<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA);
+    }
+
+    /// 🪪️ The plugin id the manifest publishes must be the one the Cargo component package declares
+    /// (`[package.metadata.component] package = "<namespace>:<id>"`), read from the manifest itself —
+    /// a mismatch makes `describeBuiltPlugin` reject the built descriptor as an identity mismatch,
+    /// which is a 90-minute wasm build away from being noticed otherwise.
+    #[semio_framework_async_macros::async_test]
+    async fn manifest_plugin_id_matches_the_cargo_component_package() {
+        let declared = COMPONENT_MANIFEST
+            .lines()
+            .skip_while(|line| line.trim() != "[package.metadata.component]")
+            .find_map(|line| line.split_once('=').filter(|(key, _)| key.trim() == "package").map(|(_, value)| value.trim().trim_matches('"').to_string()))
+            .expect("[package.metadata.component] package");
+        let (namespace, id) = declared.split_once(':').expect("component package is <namespace>:<id>");
+        assert_eq!(namespace, "semio");
+        assert_eq!(crate::plugin().expect("plugin bundle").manifest.plugin_id, id);
+    }
+}
+//#endregion 🧪️InteractiveJobCatalogTests

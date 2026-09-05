@@ -1,0 +1,29 @@
+{
+  "schema": "semio.async.worker-maintenance/v1",
+  "capacity": 64,
+  "idleWake": { "nativeWithoutIngress": true, "cooperativePumpsAtMost": 64, "steps": 2, "queuedJobs": 0 },
+  "competingWork": { "jobs": [0, 1], "hooks": [10, 11], "order": [0, 10, 1, 11] },
+  "runningClose": { "firstRemoveTerminal": false, "secondRemoveTerminal": true, "shutdownRearms": false },
+  "lifecycle": [
+    { "action": "install", "owner": "a", "expected": "installed" },
+    { "action": "request", "owner": "a", "expected": "requested" },
+    { "action": "request", "owner": "a", "expected": "coalesced" },
+    { "action": "take", "owner": "a", "expected": "running" },
+    { "action": "remove", "owner": "a", "expected": "pending" },
+    { "action": "request", "owner": "a", "expected": "closed" },
+    { "action": "finish-more", "owner": "a", "expected": "idle" },
+    { "action": "remove", "owner": "a", "expected": "removed" },
+    { "action": "install", "owner": "b", "expected": "installed" },
+    { "action": "request", "owner": "a", "expected": "stale" },
+    { "action": "request", "owner": "b", "expected": "requested" },
+    { "action": "take", "owner": "b", "expected": "running" },
+    { "action": "request", "owner": "b", "expected": "requested" },
+    { "action": "finish-idle", "owner": "b", "expected": "requested" },
+    { "action": "take", "owner": "b", "expected": "running" },
+    { "action": "finish-fault", "owner": "b", "expected": "idle" },
+    { "action": "request", "owner": "b", "expected": "requested" },
+    { "action": "take", "owner": "b", "expected": "running" },
+    { "action": "finish-idle", "owner": "b", "expected": "idle" },
+    { "action": "remove", "owner": "b", "expected": "removed" }
+  ]
+}

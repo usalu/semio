@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node",
   "semanticKind": "create-node",
   "displayName": "Create Node",
-  "emoji": "🌱⚪️",
+  "emoji": "⚪️",
   "aggregateVariant": "CreateNode",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-node",

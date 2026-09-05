@@ -1,0 +1,11 @@
+{
+  "version": "semio.db.wal-writer-remote-guard.v1",
+  "mutations": ["create", "append", "sync", "seal", "truncateTail", "delete"],
+  "cases": [
+    { "backend": "sqlite", "name": "canonical-alias-conflict", "holderExit": "explicitClose", "expect": "conflictThenAcquire" },
+    { "backend": "sqlite", "name": "crash-releases-sidecar", "holderExit": "processExitWithoutRelease", "expect": "reacquire" },
+    { "backend": "postgres", "name": "session-advisory-conflict", "holderExit": "explicitClose", "expect": "conflictThenAcquire" },
+    { "backend": "postgres", "name": "session-crash-releases-lock", "holderExit": "processExitWithoutRelease", "expect": "reacquire" },
+    { "backend": "neo4j", "name": "no-fence-fails-before-inventory", "expect": "unavailableNoWalEffect" }
+  ]
+}

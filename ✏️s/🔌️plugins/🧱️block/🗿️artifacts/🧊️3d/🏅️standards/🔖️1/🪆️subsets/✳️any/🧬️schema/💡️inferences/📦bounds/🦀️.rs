@@ -31,7 +31,7 @@ pub struct Block3dBounds {
 /// 📦️ Computes `bounds` from a block3d snapshot — each rim vortex template contributes its
 /// `position` inflated by its own `radius` (the rim placement's physical footprint) to the
 /// running min/max; an empty vortex catalog yields `Block3dBounds::default()`.
-pub async fn compute_block3d_bounds(snapshot: &Block3dSnapshot) -> Block3dBounds {
+pub fn compute_block3d_bounds(snapshot: &Block3dSnapshot) -> Block3dBounds {
     let Some(first) = snapshot.vortices.first() else {
         return Block3dBounds::default();
     };
@@ -53,7 +53,7 @@ mod tests {
     use super::*;
     use crate::artifacts::block3d::Block3dVortexTemplate;
 
-    async fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
+    fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
         Block3dVortexTemplate { id: id.into(), vortex_kind: "door".into(), position, direction: [0.0, 1.0, 0.0], radius, label: None }
     }
 

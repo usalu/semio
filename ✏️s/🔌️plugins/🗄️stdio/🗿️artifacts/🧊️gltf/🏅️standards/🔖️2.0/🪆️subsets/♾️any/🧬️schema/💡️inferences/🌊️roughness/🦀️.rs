@@ -1,14 +1,14 @@
 //! 🌊 GLTF roughness indicators.
 
-#[path = "🟫️deviation-from-ideal/🦀️.rs"]
+#[path = "🎯️deviation-from-ideal/🦀️.rs"]
 pub mod deviation_from_ideal;
-#[path = "🍎️deviation-from-smoothed-geometry/🦀️.rs"]
+#[path = "🧽️deviation-from-smoothed-geometry/🦀️.rs"]
 pub mod deviation_from_smoothed_geometry;
-#[path = "🦊️irregularity/🦀️.rs"]
+#[path = "🪨️irregularity/🦀️.rs"]
 pub mod irregularity;
-#[path = "🎨️normal-variation/🦀️.rs"]
+#[path = "🧭️normal-variation/🦀️.rs"]
 pub mod normal_variation;
-#[path = "🖱️surface-waviness/🦀️.rs"]
+#[path = "🌊️surface-waviness/🦀️.rs"]
 pub mod surface_waviness;
 
 use super::super::modules::measurement_contracts::*;

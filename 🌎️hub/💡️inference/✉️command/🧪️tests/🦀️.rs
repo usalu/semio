@@ -36,10 +36,17 @@ fn inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_act
         protocol::encode_envelope(&command, &mut bytes);
         match change {
             "trailing" => bytes.push(0),
-            "truncated" => { bytes.pop(); }
+            "truncated" => {
+                bytes.pop();
+            }
             "oversize" => bytes.resize(COMMAND_MAX_BYTES + 1, 0),
-            "overlong-varint" => { bytes[0] |= 128; bytes.insert(1, 0); }
-            "overflow-varint" => { bytes.splice(..1, [255, 255, 255, 255, 255, 255, 255, 255, 255, 2]); }
+            "overlong-varint" => {
+                bytes[0] |= 128;
+                bytes.insert(1, 0);
+            }
+            "overflow-varint" => {
+                bytes.splice(..1, [255, 255, 255, 255, 255, 255, 255, 255, 255, 2]);
+            }
             "invalid-utf8" => bytes[1] = 255,
             _ => {}
         }

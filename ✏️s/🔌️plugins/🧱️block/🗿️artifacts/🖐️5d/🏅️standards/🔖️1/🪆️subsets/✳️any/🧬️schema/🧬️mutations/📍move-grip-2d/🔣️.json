@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-grip-2d",
-  "semanticKind": "move-grip-2d",
+  "semanticKind": "move-grip2d",
   "displayName": "Move Grip 2d",
   "emoji": "📍",
   "aggregateVariant": "MoveGrip2d",

@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "clamps-the-column-base-in-all-six-dofs",
-              "directoryName": "🧪️clamps-the-column-base-in-all-six-dofs"
+              "directoryName": "🔒️clamps-the-column-base-in-all-six-dofs"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "releases-the-pinned-node-n2",
-              "directoryName": "🧪️releases-the-pinned-node-n2"
+              "directoryName": "🔓️releases-the-pinned-node-n2"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "frees-the-three-rotations-at-the-column-base",
-              "directoryName": "🧪️frees-the-three-rotations-at-the-column-base"
+              "directoryName": "🔄️frees-the-three-rotations-at-the-column-base"
             }
           ]
         }

@@ -1,16 +1,16 @@
 //! 🪞 GLTF symmetry indicators.
 
-#[path = "🍊️modularity-ratio/🦀️.rs"]
+#[path = "🧩️modularity-ratio/🦀️.rs"]
 pub mod modularity_ratio;
-#[path = "🐞️reflection-symmetries/🦀️.rs"]
+#[path = "🪞️reflection-symmetries/🦀️.rs"]
 pub mod reflection_symmetries;
-#[path = "🌴️reflection-symmetry-score/🦀️.rs"]
+#[path = "⚖️reflection-symmetry-score/🦀️.rs"]
 pub mod reflection_symmetry_score;
-#[path = "🐸️repetition-ratio/🦀️.rs"]
+#[path = "🔂️repetition-ratio/🦀️.rs"]
 pub mod repetition_ratio;
-#[path = "🐯️rotational-symmetries/🦀️.rs"]
+#[path = "🔁️rotational-symmetries/🦀️.rs"]
 pub mod rotational_symmetries;
-#[path = "🌻️rotational-symmetry-score/🦀️.rs"]
+#[path = "🔄️rotational-symmetry-score/🦀️.rs"]
 pub mod rotational_symmetry_score;
 
 use super::super::modules::measurement_contracts::*;

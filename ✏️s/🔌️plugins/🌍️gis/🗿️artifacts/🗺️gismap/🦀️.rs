@@ -70,10 +70,11 @@ impl Patchable<MapFeaturePatch> for MapFeature {
 /// duplicated stdio type, just gis's own vocabulary; `drawing`/`value` are DERIVED composed children
 /// with stable admitted member identities. Their typed stores move content while the parent handles
 /// remain fixed; `gis_map_snapshot_with_derived_children` enforces those identities whenever the
-/// parent is constructed or changed. `image` is honestly always absent: gis
+/// parent is constructed or changed. New maps have no `image`: gis
 /// carries no raster basemap capability today (see `render_mode`'s app-level raster/vector TOGGLE,
 /// which selects a rendering STYLE of the same vector data, not a second raster document) — the slot
-/// exists, real and typed, for the day a basemap capture lands, not as a stub.
+/// exists as a typed member. A supplied image handle is preserved; image-free proposal planning
+/// rejects such a map without changing or dropping that member.
 pub type GisMapDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 pub type GisMapImageChild = store::ArtifactChild<SemioImageSnapshot>;
 pub type GisMapValueChild = store::ArtifactChild<SemioValueSnapshot>;
@@ -149,7 +150,8 @@ pub fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> String 
 
 /// 🔄️ Re-derives `drawing`/`value` from `document`'s CURRENT `positions`/`routes`/`regions` — the
 /// single call every constructor/mutator funnels through so the composed children never drift from
-/// what they actually describe (`image` stays `None`, honestly — see this region's own doc comment).
+/// what they actually describe. A supplied `image` handle is preserved verbatim; this helper never
+/// removes artifact membership or grants image mutation authority.
 /// Uses the same stable drawing/value coordinates as `GisMapSnapshot::default()`; content changes
 /// are expressed as typed child mutations and never by re-minting a child member.
 pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> GisMapSnapshot {
@@ -417,7 +419,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payload() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🗺️infer-gismap-1/🧫️fixtures/🔣️.json")).expect("language-neutral inference vectors");
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📐️infer-gismap-1/🧫️fixtures/🔣️.json")).expect("language-neutral inference vectors");
         assert_eq!(vectors["subjectSchema"], "../../../🧬️schema/💡️inferences/🔣️.json");
         assert_eq!(vectors["inferenceSchema"], "s.gis.gismap.inference");
         assert_eq!(vectors["schemaVersion"], 1);

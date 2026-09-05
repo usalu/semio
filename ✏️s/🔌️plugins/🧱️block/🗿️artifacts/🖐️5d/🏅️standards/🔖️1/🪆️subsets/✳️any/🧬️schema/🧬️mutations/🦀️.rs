@@ -77,7 +77,7 @@ pub enum Block5dMutation {
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Block5dMutation`] variant, in declaration order — the exact
 /// vocabulary the `block-5d-1-any` mutation catalog (`../../🔣️oracle.json`) declares and
-/// the `🧩️mutate-block-5d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// the `🧱️mutate-block-5d-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
     "rename-part-kind",
@@ -168,14 +168,14 @@ pub use super::update_part_2d::{update_part_2d, UpdatePart2d};
 pub use super::update_part_3d::{update_part_3d, UpdatePart3d};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub async fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block5dMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block5dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
 }
 
-pub async fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Vec<Block5dMutation> {
+pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Vec<Block5dMutation> {
     mutation.inverse(projection)
 }
 
@@ -190,7 +190,7 @@ mod tests {
     use protocol::MutationDiff;
     use protocol::SemanticMutation;
 
-    async fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
+    fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
@@ -202,7 +202,7 @@ mod tests {
         forward
     }
 
-    async fn seeded_snapshot() -> Block5dSnapshot {
+    fn seeded_snapshot() -> Block5dSnapshot {
         let mut base = empty_block5d_snapshot();
         base.representations.push(BlockRepresentation {
             id: "r0".into(),

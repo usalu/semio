@@ -19,7 +19,7 @@ use protocol::{Mutation, OpText};
 /// exactly one leaf payload and a unit variant wraps none (same consequence tiff's baseline
 /// migration reached — see `🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
 //#region 🔖️Leaves
-#[path = "🟤️set-snapshot/🦀️.rs"]
+#[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🗂️add-layer/🦀️.rs"]
 pub mod add_layer;
@@ -45,7 +45,7 @@ pub mod set_entity_geometry;
 pub mod add_block_entity;
 #[path = "✂️remove-block-entity/🦀️.rs"]
 pub mod remove_block_entity;
-#[path = "🏌️set-block-entity-layer/🦀️.rs"]
+#[path = "🧷️set-block-entity-layer/🦀️.rs"]
 pub mod set_block_entity_layer;
 #[path = "🔺set-block-entity-geometry/🦀️.rs"]
 pub mod set_block_entity_geometry;
@@ -107,16 +107,16 @@ pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &Semi
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
-/// `protocol` extern-crate item (the `🧭️mutate-semio-cad` test adapter, whose `inverse-<kind>`
+/// `protocol` extern-crate item (the `📐️mutate-semio-cad` test adapter, whose `inverse-<kind>`
 /// scenarios need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_cad_mutation`] alone cannot. Same shape as `✳️kit`'s `inverse_semio_kit_mutation`.
+/// [`apply_semio_cad_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {
     <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, base)
 }
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", ...}`) JSON
-/// projection — the shape `🧭️mutate-semio-cad`'s committed specification vectors carry in their
+/// projection — the shape `📐️mutate-semio-cad`'s committed specification vectors carry in their
 /// `mutation` member — into a real [`SemioCadMutation`]. A thin `pack::from_json_str` wrapper (over
 /// `ToValue`/`FromValue`, first-party, per this ticket's serde→value conversion), so the test adapter reads
 /// the committed vector instead of re-declaring it as a Rust literal beside it.
@@ -495,10 +495,10 @@ mod tests {
 //#endregion 🔖️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `🟤️set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "🟤️set-snapshot/🧪️tests/💎️dims-the-walls-layer-and-widens-the-circle/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/⭕️dims-the-walls-layer-and-widens-the-circle/🦀️.rs"]
 mod set_snapshot_dims_the_walls_layer_and_widens_the_circle;
 //#endregion 🧪️FixtureCases

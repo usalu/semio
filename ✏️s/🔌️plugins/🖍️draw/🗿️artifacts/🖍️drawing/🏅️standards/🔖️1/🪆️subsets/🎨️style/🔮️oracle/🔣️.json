@@ -19,34 +19,34 @@
       "vectors": [
         {
           "mutationId": "replace-layer-fill",
-          "sourceMutationDirectoryName": "🔁replace-layer-fill",
-          "mutationDirectoryName": "🔁replace-layer-fill",
+          "sourceMutationDirectoryName": "🎨️replace-layer-fill",
+          "mutationDirectoryName": "🎨️replace-layer-fill",
           "scenarios": [
             {
               "id": "solid-to-linear-gradient",
-              "directoryName": "🌾️solid-to-linear-gradient"
+              "directoryName": "🌈️solid-to-linear-gradient"
             }
           ]
         },
         {
           "mutationId": "replace-layer-stroke",
-          "sourceMutationDirectoryName": "♻️replace-layer-stroke",
-          "mutationDirectoryName": "♻️replace-layer-stroke",
+          "sourceMutationDirectoryName": "🖊️replace-layer-stroke",
+          "mutationDirectoryName": "🖊️replace-layer-stroke",
           "scenarios": [
             {
               "id": "adds-a-dashed-stroke",
-              "directoryName": "🟤️adds-a-dashed-stroke"
+              "directoryName": "🖊️adds-a-dashed-stroke"
             }
           ]
         },
         {
           "mutationId": "set-layer-blend-mode",
-          "sourceMutationDirectoryName": "🖌️set-layer-blend-mode",
-          "mutationDirectoryName": "🖌️set-layer-blend-mode",
+          "sourceMutationDirectoryName": "🌓️set-layer-blend-mode",
+          "mutationDirectoryName": "🌓️set-layer-blend-mode",
           "scenarios": [
             {
               "id": "normal-to-multiply",
-              "directoryName": "🐯️normal-to-multiply"
+              "directoryName": "✖️normal-to-multiply"
             }
           ]
         },
@@ -57,7 +57,7 @@
           "scenarios": [
             {
               "id": "dims-shape-a-to-half",
-              "directoryName": "🐼️dims-shape-a-to-half"
+              "directoryName": "🌫️dims-shape-a-to-half"
             }
           ]
         }
@@ -114,7 +114,7 @@
         {
           "id": "set-layer-blend-mode",
           "capability": "drawing-1-style-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🔣️.schema.json",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🔣️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -144,7 +144,7 @@
         {
           "id": "replace-layer-fill",
           "capability": "drawing-1-style-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔁replace-layer-fill/🦠️mutation/🦀️.rs#ReplaceLayerFill",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🎨️replace-layer-fill/🦠️mutation/🦀️.rs#ReplaceLayerFill",
           "outcomes": [
             "applied",
             "no-op",
@@ -178,7 +178,7 @@
         {
           "id": "replace-layer-stroke",
           "capability": "drawing-1-style-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/♻️replace-layer-stroke/🦠️mutation/🦀️.rs#ReplaceLayerStroke",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🦠️mutation/🦀️.rs#ReplaceLayerStroke",
           "outcomes": [
             "applied",
             "no-op",

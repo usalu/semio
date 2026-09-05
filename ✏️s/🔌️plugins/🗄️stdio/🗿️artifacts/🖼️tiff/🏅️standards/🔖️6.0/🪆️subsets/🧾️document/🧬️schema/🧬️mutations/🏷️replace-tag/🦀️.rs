@@ -80,8 +80,8 @@ pub fn contribute(base: &TiffSnapshot, ifd_index: usize, tag: u16, kind: TiffFie
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    serde_json::from_str(include_str!("🧪️tests/🟣️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-tag payload")
+    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-tag payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🟣️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

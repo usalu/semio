@@ -210,7 +210,7 @@ pub mod derived_composition {
 
         //#region 🔖️ConformanceLaws
         /// 🧪️ The 6 real-codec conformance-law tests (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-
-        /// REUSE-EVOLUTION's audio wave), mirroring `✳️flow`'s/`🔺️mesh`'s/`✳️image`'s own proven,
+        /// REUSE-EVOLUTION's audio wave), mirroring `🌊️flow`'s/`🔺️mesh`'s/`🖼️image`'s own proven,
         /// fully-verified template (`ws-codec-workflow-report.md`/`ws-codec-mesh-report.md`/
         /// `ws-codec-image-report.md`) — same 6 test names, same shape, only the facet modules and
         /// demo-case helpers differ.
@@ -304,8 +304,8 @@ pub mod derived_composition {
             /// pack twin — so the fixtures can never silently drift back to a fake.
             #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
-                const FIXTURE_DSL: &str = include_str!("../../✳️base/📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️base/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio");
+                const FIXTURE_DSL: &str = include_str!("../../✉️base/📚️examples/🎵️tone/🖼️assets/🗣️.dsl.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✉️base/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio");
 
                 let demo = snapshot::demo_audio_snapshot();
 

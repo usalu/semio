@@ -15,7 +15,7 @@
 //! `decode_semio_document_pack`/`encode_semio_document_pack` for the two carriers,
 //! `apply_semio_document_mutation`/`inverse_semio_document_mutation` for the vocabulary — over the
 //! real committed memo
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️base/📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio` and its
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio` and its
 //! committed binary twin, and projects through this subset's own JSON bridge for `ordered-json-v1`
 //! to compare against the Python side's.
 //!
@@ -77,7 +77,7 @@ mod subject {
     /// 🧫️ The SAME committed vector `../🦀️.rs::vector` reads, decoded into real values
     /// through this subset's own `serde_json` bridges rather than transcribed into Rust literals.
     fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
-        ctx.fixture_json(&format!("local://🦠️{kind}.json"))
+        ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("local://") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
     }
 
     fn snapshot_of(vector: &Json, name: &str) -> Result<SemioDocumentSnapshot, String> {

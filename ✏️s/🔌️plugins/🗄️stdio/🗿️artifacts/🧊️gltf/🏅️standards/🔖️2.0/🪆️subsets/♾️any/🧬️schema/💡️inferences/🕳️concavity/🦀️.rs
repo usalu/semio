@@ -1,12 +1,12 @@
 //! 🕳 GLTF concavity indicators.
 
-#[path = "🚪️concavity-index/🦀️.rs"]
+#[path = "🔢️concavity-index/🦀️.rs"]
 pub mod concavity_index;
-#[path = "🟨️convex-hull-gap/🦀️.rs"]
+#[path = "📏️convex-hull-gap/🦀️.rs"]
 pub mod convex_hull_gap;
-#[path = "⚪️reentrant-area/🦀️.rs"]
+#[path = "🪣️reentrant-area/🦀️.rs"]
 pub mod reentrant_area;
-#[path = "🪻️reentrant-volume/🦀️.rs"]
+#[path = "📦️reentrant-volume/🦀️.rs"]
 pub mod reentrant_volume;
 
 use super::super::modules::measurement_contracts::*;

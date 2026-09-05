@@ -25,11 +25,21 @@ from pathlib import Path
 import openpyxl
 
 ROOT = Path("/Users/ueli/Documents/semio")
-SUBSET = ROOT / "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base"
+SUBSET = ROOT / "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base"
 FIXTURES = SUBSET / "🧫️fixtures"
-ORACLE_JSON = SUBSET / "🧪️oracle/🔣️.json"
+ORACLE_JSON = SUBSET / "🔮️oracle/🔣️.json"
 READER_ORACLE_ID = "openpyxl-xlsx-ecma-376-mutate-reader"
 OPENPYXL_VERSION = "3.1.5"
+FIXTURE_DIRECTORIES = {
+    "insert-sheet": "➕️insert-sheet-applied",
+    "remove-sheet": "➖️remove-sheet-applied",
+    "rename-sheet": "🏷️rename-sheet-applied",
+    "set-cell": "✍️set-cell-applied",
+    "remove-cell": "🧽️remove-cell-applied",
+    "insert-shared-string": "📥️insert-shared-string-applied",
+    "remove-shared-string": "📤️remove-shared-string-applied",
+    "set-shared-string": "🔤️set-shared-string-applied",
+}
 
 
 def save(wb) -> bytes:
@@ -161,10 +171,11 @@ def main() -> None:
 
     manifests = []
     for mutation_id, klass, before_bytes, after_bytes, note in entries:
-        case_dir = FIXTURES / f"{mutation_id}-applied"
+        directory = FIXTURE_DIRECTORIES[mutation_id]
+        case_dir = FIXTURES / directory
         case_dir.mkdir(parents=True, exist_ok=True)
-        (case_dir / "before.xlsx").write_bytes(before_bytes)
-        (case_dir / "after.xlsx").write_bytes(after_bytes)
+        (case_dir / "⬅️before.xlsx").write_bytes(before_bytes)
+        (case_dir / "➡️after.xlsx").write_bytes(after_bytes)
 
         entry = {
             "schema": "semio.repository-test.fixture/v2",
@@ -175,8 +186,8 @@ def main() -> None:
             "outcome": "applied",
             "units": {"length": "unitless", "angle": "degree"},
             "files": [
-                {"role": "expected-before-xlsx", "path": f"../🧫️fixtures/{mutation_id}-applied/before.xlsx", "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sha256": sha256_of(before_bytes), "bytes": len(before_bytes)},
-                {"role": "expected-after-xlsx", "path": f"../🧫️fixtures/{mutation_id}-applied/after.xlsx", "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sha256": sha256_of(after_bytes), "bytes": len(after_bytes)},
+                {"role": "expected-before-xlsx", "path": f"../🧫️fixtures/{directory}/⬅️before.xlsx", "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sha256": sha256_of(before_bytes), "bytes": len(before_bytes)},
+                {"role": "expected-after-xlsx", "path": f"../🧫️fixtures/{directory}/➡️after.xlsx", "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sha256": sha256_of(after_bytes), "bytes": len(after_bytes)},
             ],
             "provenance": {
                 "source": "generated" if klass == "third-party-generated" else "authored",

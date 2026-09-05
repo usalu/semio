@@ -14,7 +14,7 @@ pub struct OpenInstance {
 /// 🕹️ Selection now only informs which node opens, not a `SetSelection` config mutation (the
 /// framework owns `graph`'s selection state now — ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-async fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub async fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let resolved_node_id = match payload.node_id.clone() {
         Some(node_id) => Some(node_id),
         None => crate::engine::space::primary_selected_node_id(selected, config).await,

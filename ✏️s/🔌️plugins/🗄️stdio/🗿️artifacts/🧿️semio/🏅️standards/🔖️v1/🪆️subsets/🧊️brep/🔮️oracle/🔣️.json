@@ -120,7 +120,7 @@
         "win32-x64"
       ],
       "homepage": "https://docs.rs/serde_json",
-      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-vertex's production diff appends a caller-supplied {id, point} to SemioBrepSnapshot::vertices (an id-keyed append); create-vertex/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op, never a duplicate. No computed field, no cross-reference.\n\n`SemioBrepSnapshot::vertices` is an INLINE `Vec<BrepVertex>` carrying its full content directly in this subset's own JSON export (`🧊️brep/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-vertex` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`✳️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `🧊️brep/🏗️generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `create-vertex` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-brep-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
+      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-vertex's production diff appends a caller-supplied {id, point} to SemioBrepSnapshot::vertices (an id-keyed append); create-vertex/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op, never a duplicate. No computed field, no cross-reference.\n\n`SemioBrepSnapshot::vertices` is an INLINE `Vec<BrepVertex>` carrying its full content directly in this subset's own JSON export (`🧊️brep/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-vertex` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`📑️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `🧊️brep/🏗️generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `create-vertex` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-brep-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
     }
   ],
   "mutationCatalogs": [
@@ -137,7 +137,7 @@
           "scenarios": [
             {
               "id": "adds-a-diagonal-edge-across-the-square",
-              "directoryName": "🧪️adds-a-diagonal-edge-across-the-square"
+              "directoryName": "📐️adds-a-diagonal-edge-across-the-square"
             }
           ]
         },
@@ -148,7 +148,7 @@
           "scenarios": [
             {
               "id": "adds-an-opposing-face-over-the-same-loop",
-              "directoryName": "🧪️adds-an-opposing-face-over-the-same-loop"
+              "directoryName": "🔷️adds-an-opposing-face-over-the-same-loop"
             }
           ]
         },
@@ -159,7 +159,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-shell-that-reuses-the-face-with-flipped-sense",
-              "directoryName": "🧪️adds-a-second-shell-that-reuses-the-face-with-flipped-sense"
+              "directoryName": "🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense"
             }
           ]
         },
@@ -170,7 +170,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-solid-that-treats-the-shell-as-a-void",
-              "directoryName": "🧪️adds-a-second-solid-that-treats-the-shell-as-a-void"
+              "directoryName": "🧊️adds-a-second-solid-that-treats-the-shell-as-a-void"
             }
           ]
         },
@@ -181,7 +181,7 @@
           "scenarios": [
             {
               "id": "adds-an-apex-vertex-above-the-square",
-              "directoryName": "🧪️adds-an-apex-vertex-above-the-square"
+              "directoryName": "🏔️adds-an-apex-vertex-above-the-square"
             }
           ]
         },
@@ -192,7 +192,7 @@
           "scenarios": [
             {
               "id": "removes-the-closing-edge-and-keeps-its-two-vertices",
-              "directoryName": "🧪️removes-the-closing-edge-and-keeps-its-two-vertices"
+              "directoryName": "🚫️removes-the-closing-edge-and-keeps-its-two-vertices"
             }
           ]
         },
@@ -203,7 +203,7 @@
           "scenarios": [
             {
               "id": "removes-the-only-face-and-leaves-its-loop-behind",
-              "directoryName": "🧪️removes-the-only-face-and-leaves-its-loop-behind"
+              "directoryName": "🚫️removes-the-only-face-and-leaves-its-loop-behind"
             }
           ]
         },
@@ -214,7 +214,7 @@
           "scenarios": [
             {
               "id": "removes-the-only-shell-and-leaves-its-faces-behind",
-              "directoryName": "🧪️removes-the-only-shell-and-leaves-its-faces-behind"
+              "directoryName": "🚫️removes-the-only-shell-and-leaves-its-faces-behind"
             }
           ]
         },
@@ -225,7 +225,7 @@
           "scenarios": [
             {
               "id": "removes-the-only-solid-and-leaves-its-shell-behind",
-              "directoryName": "🧪️removes-the-only-solid-and-leaves-its-shell-behind"
+              "directoryName": "🚫️removes-the-only-solid-and-leaves-its-shell-behind"
             }
           ]
         },
@@ -236,7 +236,7 @@
           "scenarios": [
             {
               "id": "removes-a-corner-vertex-and-cascades-into-its-two-incident-edges",
-              "directoryName": "🧪️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges"
+              "directoryName": "🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges"
             }
           ]
         },
@@ -247,7 +247,7 @@
           "scenarios": [
             {
               "id": "lifts-the-third-corner-off-the-base-plane",
-              "directoryName": "🧪️lifts-the-third-corner-off-the-base-plane"
+              "directoryName": "📍️lifts-the-third-corner-off-the-base-plane"
             }
           ]
         },
@@ -258,7 +258,7 @@
           "scenarios": [
             {
               "id": "swaps-the-first-edges-line-for-a-circular-arc",
-              "directoryName": "🧪️swaps-the-first-edges-line-for-a-circular-arc"
+              "directoryName": "➰️swaps-the-first-edges-line-for-a-circular-arc"
             }
           ]
         },
@@ -269,7 +269,7 @@
           "scenarios": [
             {
               "id": "swaps-the-faces-plane-for-a-cylinder",
-              "directoryName": "🧪️swaps-the-faces-plane-for-a-cylinder"
+              "directoryName": "🛢️swaps-the-faces-plane-for-a-cylinder"
             }
           ]
         }

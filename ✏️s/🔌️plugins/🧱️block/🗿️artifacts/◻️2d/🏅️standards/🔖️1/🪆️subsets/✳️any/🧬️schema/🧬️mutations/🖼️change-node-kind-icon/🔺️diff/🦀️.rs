@@ -5,7 +5,7 @@ use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::diff::Block2dDiff;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ChangeNodeKindIcon, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub fn diff(payload: &super::ChangeNodeKindIcon, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     if payload.new_icon == base.node_kind.icon {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Node kind icon is unchanged.");
     }

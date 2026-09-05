@@ -1,0 +1,358 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.object` is a semio-NATIVE format that no third party reads or writes, so the reference is a second IMPLEMENTATION in another language, written from this subset's own committed specification documents.",
+  "oracles": [
+    {
+      "id": "semio-object-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "semio-v1-object-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-object/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, the JSON projection and all nine verbs of `SemioObjectMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` for the record grammar, `…/📸️snapshot/💾️binary/📡️.protocol.semio` for the pack header and the sentence naming its transform-and-slots payload, `…/📸️snapshot/🔣️.json` for the projection, `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` for the nine verbs and their argument lists, `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs` for the semio envelope and `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs`'s `ArtifactRef::to_uri` for the child handle's dialect coordinate. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🎒️.pack.semio` byte for byte, which a misreading could not do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-object-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 9 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.stdio.semio",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "s.stdio.semio",
+              "reason": "No third-party library in any ecosystem reads or writes this repository's own document format, per this entry's own rationale; the ecosystem's package index was searched by name and by domain keywords with no match."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": ".dsl.semio; .pack.semio; ../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio; …/📸️snapshot/💾️binary/📡️.protocol.semio; …/📸️snapshot/🔣️.json; …/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs; 🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs; 🔒️dependencies.json; 🎒️.pack.semio",
+        "fixtureCoverage": {
+          "vectors": 9,
+          "capabilitiesCovered": [
+            "semio-v1-object-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-object",
+      "capability": "semio-v1-object-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "📦️object",
+      "vectors": [
+        {
+          "mutationId": "create-brep",
+          "sourceMutationDirectoryName": "🧱create-brep",
+          "mutationDirectoryName": "🧱create-brep",
+          "scenarios": [
+            {
+              "id": "attaches-a-brep-child-to-an-object-that-has-none",
+              "directoryName": "🧱️attaches-a-brep-child-to-an-object-that-has-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-mesh",
+          "sourceMutationDirectoryName": "🕸️create-mesh",
+          "mutationDirectoryName": "🕸️create-mesh",
+          "scenarios": [
+            {
+              "id": "attaches-a-mesh-child-to-an-object-that-has-none",
+              "directoryName": "🕸️attaches-a-mesh-child-to-an-object-that-has-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-properties",
+          "sourceMutationDirectoryName": "🏷️create-properties",
+          "mutationDirectoryName": "🏷️create-properties",
+          "scenarios": [
+            {
+              "id": "attaches-a-properties-child-to-an-object-that-has-none",
+              "directoryName": "🏷️attaches-a-properties-child-to-an-object-that-has-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-brep",
+          "sourceMutationDirectoryName": "💥delete-brep",
+          "mutationDirectoryName": "💥delete-brep",
+          "scenarios": [
+            {
+              "id": "detaches-the-brep-child-and-leaves-the-mesh-child-alone",
+              "directoryName": "💥️detaches-the-brep-child-and-leaves-the-mesh-child-alone"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-mesh",
+          "sourceMutationDirectoryName": "🧨delete-mesh",
+          "mutationDirectoryName": "🧨delete-mesh",
+          "scenarios": [
+            {
+              "id": "detaches-the-mesh-child-and-leaves-the-brep-child-alone",
+              "directoryName": "🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-properties",
+          "sourceMutationDirectoryName": "🚫delete-properties",
+          "mutationDirectoryName": "🚫delete-properties",
+          "scenarios": [
+            {
+              "id": "detaches-the-properties-child-and-leaves-the-mesh-child-alone",
+              "directoryName": "🚫️detaches-the-properties-child-and-leaves-the-mesh-child-alone"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-object",
+          "sourceMutationDirectoryName": "🚚move-object",
+          "mutationDirectoryName": "🚚move-object",
+          "scenarios": [
+            {
+              "id": "moves-the-object-to-a-new-translation",
+              "directoryName": "🚚️moves-the-object-to-a-new-translation"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-object",
+          "sourceMutationDirectoryName": "🔄rotate-object",
+          "mutationDirectoryName": "🔄rotate-object",
+          "scenarios": [
+            {
+              "id": "rotates-the-object-a-half-turn-about-z",
+              "directoryName": "🔄️rotates-the-object-a-half-turn-about-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-object",
+          "sourceMutationDirectoryName": "📏scale-object",
+          "mutationDirectoryName": "📏scale-object",
+          "scenarios": [
+            {
+              "id": "scales-the-object-non-uniformly",
+              "directoryName": "📏️scales-the-object-non-uniformly"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "move-object",
+        "rotate-object",
+        "scale-object",
+        "create-brep",
+        "delete-brep",
+        "create-mesh",
+        "delete-mesh",
+        "create-properties",
+        "delete-properties"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "object",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "📦️object",
+      "mutations": [
+        {
+          "id": "create-brep",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-brep",
+            "bridgeVersion": 1,
+            "variant": "CreateBrep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-mesh",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-mesh",
+            "bridgeVersion": 1,
+            "variant": "CreateMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-properties",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-properties",
+            "bridgeVersion": 1,
+            "variant": "CreateProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-brep",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-brep",
+            "bridgeVersion": 1,
+            "variant": "DeleteBrep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-mesh",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-mesh",
+            "bridgeVersion": 1,
+            "variant": "DeleteMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-properties",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-properties",
+            "bridgeVersion": 1,
+            "variant": "DeleteProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-object",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-object",
+            "bridgeVersion": 1,
+            "variant": "MoveObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rotate-object",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-object",
+            "bridgeVersion": 1,
+            "variant": "RotateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "scale-object",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-object",
+            "bridgeVersion": 1,
+            "variant": "ScaleObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

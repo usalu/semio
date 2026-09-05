@@ -130,7 +130,7 @@
         "win32-x64"
       ],
       "homepage": "https://docs.rs/serde_json",
-      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\nadd-layer's production diff (✳️cad/🧬️schema/🧬️mutations/🗂add-layer/🦀️.rs delegating into agg_diff) is NamedTripleDiff{added: vec![layer.clone()], removed: [], modified: []} on SemioCadSnapshot::layers, validated only for a non-duplicate `name` (validate_named_triple, ✳️base/🧬️schema/🧰️triples/🦀️.rs). No computed field, no cross-reference.\n\n`SemioCadSnapshot::layers` is an INLINE `Vec<CadLayer>` carrying its full content directly in this subset's own JSON export (`✳️cad/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `add-layer` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`✳️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `✳️cad/🏭generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `add-layer` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-cad-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
+      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\nadd-layer's production diff (📐️cad/🧬️schema/🧬️mutations/🗂add-layer/🦀️.rs delegating into agg_diff) is NamedTripleDiff{added: vec![layer.clone()], removed: [], modified: []} on SemioCadSnapshot::layers, validated only for a non-duplicate `name` (validate_named_triple, ✉️base/🧬️schema/🧰️triples/🦀️.rs). No computed field, no cross-reference.\n\n`SemioCadSnapshot::layers` is an INLINE `Vec<CadLayer>` carrying its full content directly in this subset's own JSON export (`📐️cad/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `add-layer` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`📑️document/🧪️oracle/🔣️.json`).\n\nThe reading tool is `📐️cad/🏭generator/🦀️json-engine` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `add-layer` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-cad-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
     }
   ],
   "probes": [
@@ -580,12 +580,12 @@
       "vectors": [
         {
           "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "🟤️set-snapshot",
-          "mutationDirectoryName": "🟤️set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
           "scenarios": [
             {
               "id": "dims-the-walls-layer-and-widens-the-circle",
-              "directoryName": "🧪️dims-the-walls-layer-and-widens-the-circle"
+              "directoryName": "⭕️dims-the-walls-layer-and-widens-the-circle"
             }
           ]
         }

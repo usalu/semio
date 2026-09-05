@@ -709,10 +709,10 @@ pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::Dwg
 
 /// ⚠️ See `scene_from_spatial_payload`'s doc comment — same documented gap for a `MeshImporter`
 /// (GLB) payload.
-// 🌉️ `_mesh` is unused (framework `MeshDwgDocumentImporter` registration in the crate root
+// 🌉️ `_mesh` is unused (framework `MeshDocumentImporter` registration in the crate root
 // `🦀️.rs` requires this exact shape). Return type is `dsl::os_pack::json::Value`, NOT `DslValue`:
 // this function is registered as
-// `MeshDwgDocumentImporter = fn(&MeshData) -> Result<dsl::os_pack::json::Value, String>`
+// `MeshDocumentImporter = fn(&MeshData) -> Result<dsl::os_pack::json::Value, String>`
 // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), a genuine framework-owned boundary
 // type out of this plugin's write scope. Bridged once, at this exact boundary, from a `DslValue`
 // built the normal way via `protocol::json::from_dsl_value`.
@@ -852,3 +852,38 @@ mod tests {
     //#endregion 🔖️SemioBrepBridge
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod dwg_import_tests {
+    use super::*;
+    use crate::artifacts::cad::CadSnapshot;
+    #[semio_framework_async_macros::async_test]
+    async fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
+        let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
+        let outline = drawing.ensure_layer("outline");
+        let empty_layer = drawing.ensure_layer("empty");
+        let _ = empty_layer;
+        drawing.entities.push(semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
+            layer: outline,
+            color: semio_s_plugin_stdio::artifacts::dwg::DwgColor::ByLayer,
+            geometry: semio_s_plugin_stdio::artifacts::dwg::DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] },
+        });
+        let working = cad_working_scene_from_dwg(&drawing);
+        assert_eq!(working.objects.len(), 1, "the empty layer must not contribute an object");
+        assert_eq!(working.objects[0].label, "outline");
+        let value = cad_document_from_dwg(&drawing).expect("cad document from dwg");
+        let scene: CadSnapshot = protocol::FromValue::from_value(value).expect("valid cad scene");
+        assert!(scene.shape_model.is_some(), "a real per-layer object must mint a shape-model child");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn cad_document_from_empty_dwg_mints_no_shape_model_child() {
+        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
+        let working = cad_working_scene_from_dwg(&drawing);
+        assert!(working.objects.is_empty());
+        let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
+        let scene: CadSnapshot = protocol::FromValue::from_value(value).expect("valid cad scene");
+        assert!(scene.shape_model.is_none(), "no layers means no real geometry to mint a child from");
+    }
+
+}

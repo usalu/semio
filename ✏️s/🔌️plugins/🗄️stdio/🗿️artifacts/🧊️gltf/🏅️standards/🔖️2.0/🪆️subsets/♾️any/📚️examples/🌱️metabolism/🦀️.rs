@@ -18,7 +18,7 @@ pub const ICON: &str = "cube";
 
 /// 🎒️ Real `.glb` fixture bytes — genuine glTF 2.0, KHR material extensions declared
 /// (`extensionsUsed`), 271 meshes/nodes, 1095 accessors, embedded BIN chunk buffer.
-pub const BASE_GLB_BYTES: &[u8] = include_bytes!("🖼️assets/🧪️base/🧊️.glb");
+pub const BASE_GLB_BYTES: &[u8] = include_bytes!("🖼️assets/🏙️base/🧊️.glb");
 
 /// 🧬️ Decodes [`BASE_GLB_BYTES`] via the real upgraded `.glb` container codec -- this is the
 /// canonical real snapshot every other consumer of this example (and the fixture tests) works

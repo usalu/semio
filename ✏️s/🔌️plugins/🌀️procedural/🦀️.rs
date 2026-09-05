@@ -255,8 +255,8 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::Plugin
         .routed_inference(crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::assembly_inference_metadata())
         .artifact(crate::artifacts::generation2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::generation3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .host_media_handler(HostMediaHandlerDeclaration::mesh_dwg_bridge(
-            "s.procedural.host-media.mesh-dwg",
+        .host_media_handler(HostMediaHandlerDeclaration::mesh_import(
+            "s.procedural.host-media.mesh-import",
             crate::artifacts::generation3d::artifact_kind(),
             crate::artifacts::generation3d::GENERATION_3D_SCHEMA,
             crate::editor::generation3d::generation3d_document_from_mesh,

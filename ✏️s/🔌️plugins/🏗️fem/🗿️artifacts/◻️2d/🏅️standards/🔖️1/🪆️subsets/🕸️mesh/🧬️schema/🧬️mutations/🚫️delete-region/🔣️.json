@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region",
   "semanticKind": "delete-region",
   "displayName": "Delete Region",
-  "emoji": "🗑🗺️",
+  "emoji": "🚫️",
   "aggregateVariant": "DeleteRegion",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "delete-region",

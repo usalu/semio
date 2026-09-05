@@ -1,5 +1,6 @@
 {
   "schema": "semio.repo.exact-cargo-laws/v1",
+  "stageEnvironment": { "buildStack": "8388608", "nativeStack": "268435456", "sharedValue": "preserved" },
   "package": "fixture-package",
   "target": {
     "kind": "test",

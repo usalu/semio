@@ -1,0 +1,423 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "controller",
+    "documentSchema",
+    "factory",
+    "limits",
+    "publicationContracts",
+    "routes",
+    "oracle"
+  ],
+  "properties": {
+    "controller": {
+      "const": "s-space-index"
+    },
+    "documentSchema": {
+      "const": "s.space"
+    },
+    "factory": {
+      "const": "SpaceIndexRetainedCommandJobFactory"
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "bounded"
+      ],
+      "properties": {
+        "bounded": {
+          "$ref": "#/$defs/contract"
+        }
+      },
+      "additionalProperties": false
+    },
+    "publicationContracts": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "createArtifact"
+            },
+            "lanes": {
+              "const": [
+                "artifact"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "deleteArtifact"
+            },
+            "lanes": {
+              "const": [
+                "artifact"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "renameArtifact"
+            },
+            "lanes": {
+              "const": [
+                "artifact"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "touchArtifact"
+            },
+            "lanes": {
+              "const": [
+                "artifact"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "requestDeleteArtifact"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "openArtifact"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "openArtifactWith"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "foldDirectoryEvents"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "presenceHeartbeat"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "inviteMember"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "removeMember"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "setVisibility"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "copyInviteLink"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "requestInviteMember"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "items": false,
+      "minItems": 14,
+      "maxItems": 14
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "execution",
+          "status",
+          "feature"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "execution": {
+            "enum": [
+              "bounded",
+              "batch"
+            ]
+          },
+          "status": {
+            "enum": [
+              "migrated",
+              "batch-only"
+            ]
+          },
+          "feature": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "required": [
+        "library",
+        "scope",
+        "ownedInterface",
+        "runtimeDependency",
+        "expected"
+      ],
+      "properties": {
+        "library": {
+          "const": "serde_json"
+        },
+        "scope": {
+          "const": "test-only-existing-dependency"
+        },
+        "ownedInterface": {
+          "const": "SpaceRetainedCatalogOracle"
+        },
+        "runtimeDependency": {
+          "const": false
+        },
+        "expected": {
+          "type": "object",
+          "required": [
+            "routes",
+            "bounded",
+            "batch",
+            "migrated",
+            "unique"
+          ],
+          "properties": {
+            "routes": {
+              "const": 14
+            },
+            "bounded": {
+              "const": 14
+            },
+            "migrated": {
+              "const": 14
+            },
+            "unique": {
+              "const": true
+            },
+            "batch": {
+              "const": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "contract": {
+      "type": "object",
+      "required": [
+        "maxRawBytes",
+        "maxDecodedItems",
+        "maxWorkUnitsPerStep",
+        "maxOutputBytes",
+        "maxStepMicros"
+      ],
+      "properties": {
+        "maxRawBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxDecodedItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxWorkUnitsPerStep": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxOutputBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxStepMicros": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7999
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -111,8 +111,8 @@ const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
     ("brep.io.importStep", "import_step"),
     ("brep.io.importStl", "import_stl"),
     ("brep.io.importObj", "import_obj"),
-    ("brep.io.exportDwg", "export_dwg"),
-    ("brep.io.importDwg", "import_dwg"),
+    ("brep.io.exportDwg", "export_mesh"),
+    ("brep.io.importDwg", "import_mesh"),
 ];
 
 /// 🙈️ `BrepKernel` methods this extension deliberately exposes NO node for, with why — checked by
@@ -807,7 +807,7 @@ impl Operator for ExportDwg {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
-            let data = kernel.export_dwg(&[geometry], deflection).map_err(map_kernel_error)?;
+            let data = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::dwg::export(kernel, &[geometry], deflection).map_err(map_kernel_error)?;
             Ok(channel_output("dwg", text_dictionary(encode_base64(&data))))
         })
     }
@@ -819,7 +819,7 @@ impl Operator for ImportDwg {
         with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
-            let handle = kernel.import_dwg(&data, tolerance).map_err(map_kernel_error)?;
+            let handle = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::dwg::import(kernel, &data, tolerance).map_err(map_kernel_error)?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
     }
@@ -1755,9 +1755,9 @@ pub async fn register(registry: &mut Registry) {
             "Export Dwg",
             "Dwg",
             "emoji:💾️",
-            &q("export_dwg", "Export DWG as base64"),
+            &q("export_mesh", "Export DWG as base64"),
             vec![geometry_channel("geometry", "brep.io.exportDwg"), number_channel("deflection", "brep.io.exportDwg", 0.1)],
-            vec![out_dwg()],
+            vec![ChannelSpec::named("D", "Dwg", "dwg", "DwgExport")],
             &["IO"],
         ),
         Box::new(ExportDwg),
@@ -1769,7 +1769,7 @@ pub async fn register(registry: &mut Registry) {
         "Import Dwg",
         "IDwg",
         "emoji:📂️",
-        &q("import_dwg", "Import DWG from base64"),
+        &q("import_mesh", "Import DWG from base64"),
         vec![ChannelSpec::requires("data", &["brep.io.importDwg"]), number_channel("tolerance", "brep.io.importDwg", 0.1)],
         out_geometry("ImportedGeometry"),
         &["IO"],

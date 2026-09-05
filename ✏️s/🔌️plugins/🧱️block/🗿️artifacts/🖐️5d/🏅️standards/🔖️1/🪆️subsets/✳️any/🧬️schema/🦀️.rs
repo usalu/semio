@@ -54,7 +54,7 @@ impl Default for Block5dArtifact {
 
 impl Block5dArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> Block5dSnapshot {
+    pub fn to_snapshot(&self) -> Block5dSnapshot {
         Block5dSnapshot {
             schema: self.schema.clone(),
             part_kind: self.part_kind.clone(),
@@ -73,7 +73,7 @@ impl Block5dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: Block5dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: Block5dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             part_kind: snapshot.part_kind,
@@ -94,7 +94,7 @@ impl Block5dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: Block5dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: Block5dSnapshot) {
         self.schema = snapshot.schema;
         self.part_kind = snapshot.part_kind;
         self.part_2d = snapshot.part_2d;
@@ -163,19 +163,19 @@ pub mod derived_construction {
         type Snapshot = Block5dSnapshot;
         type Mutation = Block5dMutation;
         type Diff = Block5dDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: Block5dSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Block5dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -183,12 +183,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -216,11 +216,11 @@ pub mod derived_analysis {
         type Parts = Block5dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block5d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Block5dParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -264,12 +264,25 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 /// 📸️ A fresh, empty `Block5dSnapshot` (all fields at their `Default`).
-pub async fn empty_block5d_snapshot() -> Block5dSnapshot {
+pub fn empty_block5d_snapshot() -> Block5dSnapshot {
     Block5dSnapshot::default()
 }
 
+/// 📄️ The block5d boot document — parsed from the bundled `hexagonal-cut-concrete-forest-left`
+/// example fixture (the same DSL text `setActiveExample` loads), falling back to the empty snapshot
+/// only when that fixture fails to parse. Shared by `Block5dPlayApp` and `Block5dViewer`.
+///
+/// 🪪️ The sibling `nakagin-capsule` fixture carries a mesh too, but booting on it would strand
+/// `part_kind.id` at `"Capsule J"` for the rest of the session: `Block5dMutation` deliberately has no
+/// id verb (see `🧬️mutations/🦀️.rs`'s `KINDS`), so `setActiveExample`'s whole-document load can never
+/// carry identity across examples. Booting on the same fixture the id assertions name keeps the boot
+/// document and its own identity consistent.
+pub fn default_block5d_snapshot() -> Block5dSnapshot {
+    super::snapshot::text::parse_dsl(super::snapshot::text::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block5d_snapshot())
+}
+
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
-pub async fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
+pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
     let ids: std::collections::HashSet<&str> = existing.collect();
     let mut i = ids.len();
     loop {
@@ -290,6 +303,19 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_definition_matches_default() {
         assert_eq!(empty_block5d_snapshot(), Block5dSnapshot::default());
+    }
+
+    /// 📄️ The boot document is a real part kind with a mesh, so the board window has a label to show
+    /// and the World3d window has a `mesh_url` to render before the first command.
+    #[semio_framework_async_macros::async_test]
+    async fn default_definition_boots_on_the_forest_left_example() {
+        let booted = default_block5d_snapshot();
+        assert_ne!(booted, empty_block5d_snapshot());
+        assert_eq!(booted.part_kind.id, "Hexagonal Cut Concrete Forest Left");
+        assert_eq!(booted.part_kind.label, "Hexagonal Cut Concrete Forest Left");
+        assert_eq!(booted.representations.first().and_then(|representation| representation.mesh_url.as_deref()), Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb"));
+        assert_eq!(booted.grip_kinds.len(), 1);
+        assert_eq!(booted.grips.len(), 1);
     }
 }
 //#endregion 🧪️Tests

@@ -4,10 +4,10 @@
   "factory": "SpaceCommandJobFactory",
   "limits": {
     "bounded": {
-      "maxRawBytes": 65536,
+      "maxRawBytes": 4194304,
       "maxDecodedItems": 64,
       "maxWorkUnitsPerStep": 1,
-      "maxOutputBytes": 262144,
+      "maxOutputBytes": 4194304,
       "maxStepMicros": 7500
     }
   },
@@ -71,6 +71,37 @@
       "lanes": [
         "hostOnly"
       ]
+    },
+    {
+      "toolId": "spawnApp",
+      "lanes": [
+        "artifact",
+        "config"
+      ]
+    },
+    {
+      "toolId": "openSpace",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "openInstance",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "importSpacePackPayload",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "setAppRegistrations",
+      "lanes": [
+        "hostOnly"
+      ]
     }
   ],
   "routes": [
@@ -94,9 +125,9 @@
     },
     {
       "id": "spawnApp",
-      "execution": "batch",
-      "status": "batch-only",
-      "feature": "resolve and clone registry app definitions through operation-owned state"
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "publish one node insertion through the installed artifact preparation factory and focus it"
     },
     {
       "id": "moveMediaNode",
@@ -274,21 +305,21 @@
     },
     {
       "id": "importSpacePackPayload",
-      "execution": "batch",
-      "status": "batch-only",
-      "feature": "decode and publish retained studio pack pages"
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "decode one bounded pack payload and hand the catalog port its import, publishing nothing"
     },
     {
       "id": "openSpace",
-      "execution": "batch",
-      "status": "batch-only",
-      "feature": "resolve and serialize a workflow through operation-owned state"
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "resolve one studio document and publish its session config through the installed config preparation factory"
     },
     {
       "id": "openInstance",
-      "execution": "batch",
-      "status": "batch-only",
-      "feature": "resolve interaction selection and locate one graph node"
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "resolve one graph node from the payload or the live selection and hand the host an open effect"
     },
     {
       "id": "closeFocusedInstance",
@@ -310,9 +341,9 @@
     },
     {
       "id": "setAppRegistrations",
-      "execution": "batch",
-      "status": "batch-only",
-      "feature": "decode registrations into instance-owned registry state"
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "fold the host's live app registration catalog into the guest registry, publishing nothing"
     }
   ],
   "oracle": {
@@ -322,9 +353,9 @@
     "runtimeDependency": false,
     "expected": {
       "routes": 40,
-      "bounded": 10,
-      "batch": 30,
-      "migrated": 10,
+      "bounded": 15,
+      "batch": 25,
+      "migrated": 15,
       "unique": true
     }
   }

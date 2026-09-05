@@ -1,0 +1,51 @@
+\label{anlage:integrationsreife}
+
+Diese Anlage bewertet dieselben elf Plattformen als maschinell anbindbare Datenquelle für das Bauteilportal. Sie ergänzt die Nachweismatrix (\appendixref{anlage:nachweismatrix}), die die dokumentierte Funktionsabdeckung führt, und die Systemkarte (\appendixref{anlage:skalierung}). Erhebung August~2026, ausschließlich öffentliche Quellen.
+
+\providecommand{\SemioEvid}[1]{\textcolor{semio-chrome-foreground}{#1}}
+\providecommand{\SemioWeak}[1]{\textcolor{semio-chrome-border-normal}{#1}}
+
+\SemioTableLong[text-size=7.2pt]{Integrationsreife \textperiodcentered\ Bewertung als anbindbare Datenquelle}{0.205,0.115,0.09,0.085,0.145,0.12,0.09,0.15}{Plattform & Archetyp & API & Export & Standards & Objektdaten & Lizenz & Reife}{%
+  \SemioTableRow{Madaster & Ressourcenkatalog & \SemioEvid{REST} & \SemioEvid{Bulk} & \SemioEvid{IFC\SemioSlash{}EPD\SemioSlash{}Pass} & \SemioEvid{IFC-3D + GWP} & \SemioWeak{unklar} & \SemioEvid{HOCH}}
+  \SemioTableRow{Cycle Up & Marktplatz & \SemioWeak{Partner} & \SemioWeak{unklar} & \SemioEvid{IFC} & \SemioEvid{IFC + GWP} & \SemioWeak{unklar} & \SemioEvid{MITTEL}}
+  \SemioTableRow{CCBuild & Vermittlungsplattform & \SemioWeak{Partner} & \SemioWeak{unklar} & \SemioWeak{unklar} & \SemioEvid{Maße + GWP} & \SemioWeak{unklar} & \SemioEvid{MITTEL}}
+  \SemioTableRow{Concular & Ressourcenkatalog & \SemioWeak{Partner} & \SemioWeak{unklar} & \SemioEvid{IFC\SemioSlash{}EPD\SemioSlash{}GRP} & \SemioEvid{IFC-3D + GWP} & \SemioWeak{unklar} & \SemioWeak{NIEDRIG}}
+  \SemioTableRow{Loopfront & Ressourcenkatalog & \SemioWeak{---} & \SemioEvid{Bulk} & \SemioWeak{---} & \SemioEvid{Maße + GWP} & \SemioWeak{unklar} & \SemioWeak{NIEDRIG}}
+  \SemioTableRow{Rotor DC & Depot-Shop & \SemioWeak{---} & \SemioWeak{unklar} & \SemioWeak{---} & \SemioEvid{Maße} & \SemioWeak{unklar} & \SemioWeak{NIEDRIG}}
+  \SemioTableRow{Rheaply & Ressourcenkatalog & \SemioWeak{---} & \SemioEvid{Bulk} & \SemioWeak{---} & \SemioWeak{---} & \SemioWeak{nein} & \SemioWeak{NIEDRIG}}
+  \SemioTableRow{SalvoWEB & Marktplatz & \SemioWeak{---} & \SemioWeak{---} & \SemioWeak{---} & \SemioEvid{Maße} & \SemioWeak{unklar} & \SemioWeak{NIEDRIG}}
+  \SemioTableRow{Opalis & Vermittlungsplattform & \SemioWeak{---} & \SemioWeak{---} & \SemioWeak{---} & \SemioWeak{---} & \SemioWeak{unklar} & \SemioWeak{NIEDRIG}}
+  \SemioTableRow{Bauteilnetz Deutschland & Vermittlungsplattform & \SemioWeak{---} & \SemioWeak{---} & \SemioWeak{---} & \SemioEvid{Maße} & \SemioWeak{unklar} & \SemioWeak{NIEDRIG}}
+  \SemioTableRow{Immobilien Basel-Stadt & Ressourcenkatalog & \SemioWeak{---} & \SemioWeak{---} & \SemioWeak{unklar} & \SemioWeak{unklar} & \SemioWeak{nein} & \SemioWeak{NIEDRIG}}
+}
+
+\noindent{\SemioSans\fontsize{7.2pt}{9pt}\selectfont\color{semio-chrome-text-normal}%
+Kriterien, Bewertungsstufen und Plattformkürzel siehe Leseschlüssel. „keine öffentliche API“ bedeutet nicht „keine API“ — bei Concular, Cycle Up, CCBuild und Rotor~DC ist eine Partner-\,/\,Direktanbindung aussichtsreich; Immobilien Basel-Stadt ist intern (kantonal) und als Datenquelle praktisch ausgeschlossen. Erhebung 08\,/\,2026, ausschließlich öffentliche Quellen.\par}
+
+\clearpage
+
+\appendixsection[L]{Leseschlüssel}
+
+\SemioTableLong{Integrationskriterien und Bewertung}{0.20,0.80}{Kriterium & Stufen und Abgrenzung}{%
+  \SemioTableRow{Archetyp & Angebotslogik gemäß Zwischenbericht: Depot-Shop, Marktplatz, Ressourcenkatalog oder Vermittlungsplattform.}
+  \SemioTableRow{API & REST \texttt{=} dokumentierte öffentliche Schnittstelle, unmittelbar anbindbar; Partner \texttt{=} nicht öffentlich dokumentiert, Anfrage nötig; \texttt{---} keine gefunden.}
+  \SemioTableRow{Export & Bulk \texttt{=} maschinenlesbarer Massendownload (JSON\SemioSlash{}CSV\SemioSlash{}IFC); unklar \texttt{=} nicht ausgewiesen; \texttt{---} keiner.}
+  \SemioTableRow{Standards & Unterstützte offene Schemata: IFC, EPD (ISO~22057), Pass\SemioSlash{}GRP (Materialpass\SemioSlash{}Gebäuderessourcenpass).}
+  \SemioTableRow{Objektdaten & Maschinenlesbare Geometrie und Leistungswerte je Bauteil (Eingang für die Generatoren): Maße, IFC-3D, GWP oder Statik.}
+  \SemioTableRow{Lizenz & Ingestion laut AGB\SemioSlash{}ToS: ja \texttt{=} ausdrücklich erlaubt; unklar \texttt{=} nicht ausgewiesen; nein \texttt{=} untersagt oder intern.}
+  \SemioTableRow{Reife & Gesamturteil der Anbindbarkeit: hoch \texttt{=} jetzt anbindbar (nur Madaster); mittel \texttt{=} über Partner-\,/\,Direktanfrage aussichtsreich (Concular, Cycle~Up, CCBuild); niedrig \texttt{=} derzeit nicht sinnvoll anbindbar.}
+}
+
+\SemioTableLong{Plattformkürzel}{0.25,0.75}{Kürzel & Plattform (Land, Quelle)}{%
+  \SemioTableRow{LF & Loopfront \textendash\ Norwegen; loopfront.com}
+  \SemioTableRow{MD & Madaster \textendash\ Niederlande; madaster.com}
+  \SemioTableRow{CC & Concular \textendash\ Deutschland; concular.de}
+  \SemioTableRow{CB & CCBuild \textendash\ Schweden; ccbuild.se}
+  \SemioTableRow{OP & Opalis \textendash\ Belgien; opalis.eu}
+  \SemioTableRow{SW & SalvoWEB \textendash\ Vereinigtes Königreich; salvoweb.com}
+  \SemioTableRow{RH & Rheaply \textendash\ USA; rheaply.com}
+  \SemioTableRow{IB & Immobilien Basel-Stadt \textendash\ Schweiz; bauteile-ibs.ch}
+  \SemioTableRow{CU & Cycle Up \textendash\ Frankreich; cycle-up.fr}
+  \SemioTableRow{RO & Rotor DC \textendash\ Belgien; rotordc.com}
+  \SemioTableRow{BN & Bauteilnetz Deutschland \textendash\ Deutschland; bauteilnetz.de}
+}

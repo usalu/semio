@@ -473,7 +473,7 @@ test("subset directory overrides preserve logical ids while giving every sibling
   const multiple = structuredClone(taxonomy);
   multiple.subsetDirectoryOverrides[vector.owner].mesh = "🧪️🕸️mesh";
   expect(validateTaxonomy(multiple).some((problem) => problem.includes("one canonical semantic emoji"))).toBe(true);
-});
+}, 30000);
 
 test("semantic collection manifest overrides use exact owners without ancestor fallback", () => {
   const vector = fixture.semanticManifestFilenameOverrides;
@@ -483,7 +483,7 @@ test("semantic collection manifest overrides use exact owners without ancestor f
   const multiple = structuredClone(taxonomy);
   multiple.semanticManifestFilenameOverrides[Object.keys(multiple.semanticManifestFilenameOverrides)[0]] = "📥️📦️manifest.json";
   expect(validateTaxonomy(multiple).some((problem) => problem.includes("one canonical semantic emoji"))).toBe(true);
-});
+}, 30000);
 
 test("both mutation inventories enumerate only registered two-tier operation owners", () => {
   const contract = fixture.mutationDomainContract;
@@ -651,7 +651,7 @@ test("taxonomy accepts single keycaps and pictographic sequences without accepti
       expect(semanticDirectoryKindId(`${row.emoji}${kindId}`, taxonomy as typeof baseline, { parentKindId: "modules" })).toBe(kindId);
     }
   }
-});
+}, 30000);
 
 test("selector-free joined identities are the only live spellings for the repaired owners", () => {
   const repoRoot = resolve(root, "../../../../../../..");

@@ -1,7 +1,7 @@
 //! 💡️ SemioMeshInference schema — the fourth schema family alongside snapshot/diff/mutations
 //! (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING, authored here
 //! by DKM per the standing exclusion: IIF's inference fan-out explicitly excludes `🧊️brep`/
-//! `✳️drawing`/`🔺️mesh` and defers them). Directory shape mirrors `🧬️mutations/`: this file is the
+//! `🖊️drawing`/`🔺️mesh` and defers them). Directory shape mirrors `🧬️mutations/`: this file is the
 //! family-root assembly (never mod's/includes the slug dirs directly — `🦀️.rs` is the sole
 //! mounting mechanism, same as mutations); each named inference gets its own `<emoji><slug>/` child
 //! (currently: `📦aabb/`).

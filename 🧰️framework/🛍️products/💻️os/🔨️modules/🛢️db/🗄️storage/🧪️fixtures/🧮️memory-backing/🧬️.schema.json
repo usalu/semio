@@ -2,10 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "maximumInlineBytes", "tables", "admission", "closeWhileAdmitted", "retry", "sequentialTasks"],
+  "required": ["schema", "maximumInlineBytes", "writerTable", "controllerCredit", "tables", "admission", "closeWhileAdmitted", "retry", "sequentialTasks"],
   "properties": {
     "schema": { "const": "semio.db.memory-backing/v1" },
     "maximumInlineBytes": { "const": 16384 },
+    "writerTable": {
+      "type": "object", "additionalProperties": false, "required": ["slots", "separateBox"],
+      "properties": { "slots": { "const": 32 }, "separateBox": { "const": true } }
+    },
+    "controllerCredit": {
+      "type": "object", "additionalProperties": false, "required": ["items", "controls", "bytesFormula"],
+      "properties": { "items": { "const": 1 }, "controls": { "const": 1 }, "bytesFormula": { "const": "wake-plus-two-usize" } }
+    },
     "closeWhileAdmitted": { "const": false },
     "sequentialTasks": { "const": 128 },
     "retry": {

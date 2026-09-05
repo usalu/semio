@@ -1,6 +1,8 @@
 {
   "schema": "semio.db.memory-backing/v1",
   "maximumInlineBytes": 16384,
+  "writerTable": { "slots": 32, "separateBox": true },
+  "controllerCredit": { "items": 1, "controls": 1, "bytesFormula": "wake-plus-two-usize" },
   "closeWhileAdmitted": false,
   "sequentialTasks": 128,
   "retry": { "maximumAttempts": 8, "timerDelayMs": 1, "terminalAfterQueueRelease": true },

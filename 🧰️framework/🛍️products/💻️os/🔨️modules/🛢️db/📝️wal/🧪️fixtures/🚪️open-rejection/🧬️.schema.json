@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.db.wal.open-rejection/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "acquisition", "explicitClose", "droppedRejection", "enginePropagation"],
+  "properties": {
+    "schema": { "const": "semio.db.wal.open-rejection/v1" },
+    "acquisition": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stage", "cause", "owner", "sameDocumentAcquire"],
+          "properties": {
+            "stage": { "const": "before-acquire" },
+            "cause": { "const": "original-open-error" },
+            "owner": { "const": "none" },
+            "sameDocumentAcquire": { "const": "available" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stage", "cause", "owner", "sameDocumentAcquire"],
+          "properties": {
+            "stage": { "const": "caller-acquired-open-failure" },
+            "cause": { "const": "original-open-error" },
+            "owner": { "const": "exact-writer-permit" },
+            "sameDocumentAcquire": { "const": "conflict" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stage", "cause", "owner", "sameDocumentAcquire"],
+          "properties": {
+            "stage": { "const": "self-acquiring-open-failure" },
+            "cause": { "const": "original-open-error" },
+            "owner": { "const": "exact-writer-release" },
+            "sameDocumentAcquire": { "const": "conflict" }
+          }
+        }
+      ],
+      "items": false
+    },
+    "explicitClose": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        { "$ref": "#/$defs/faultAttempt" },
+        { "$ref": "#/$defs/faultAttempt" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["attempt", "outcome", "openCause", "owner", "sameDocumentAcquire"],
+          "properties": {
+            "attempt": { "const": 3 },
+            "outcome": { "const": "terminal" },
+            "openCause": { "const": "original-open-error" },
+            "owner": { "const": "none" },
+            "sameDocumentAcquire": { "const": "available" }
+          }
+        }
+      ],
+      "items": false
+    },
+    "droppedRejection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["behavior", "location", "panics", "guard", "sameDocumentAcquire", "terminalClaim"],
+      "properties": {
+        "behavior": { "const": "transfer" },
+        "location": { "const": "backend-release-cell" },
+        "panics": { "const": false },
+        "guard": { "const": "backend-retained" },
+        "sameDocumentAcquire": { "const": "conflict" },
+        "terminalClaim": { "const": false }
+      }
+    },
+    "enginePropagation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["variants", "flattenedToDbError", "authorityReadyOwnsRejection", "databaseMountOwnsRejection"],
+      "properties": {
+        "variants": {
+          "const": ["before-wal", "wal-open-rejected", "wal-close-rejected"]
+        },
+        "flattenedToDbError": { "const": false },
+        "authorityReadyOwnsRejection": { "const": true },
+        "databaseMountOwnsRejection": { "const": true }
+      }
+    }
+  },
+  "$defs": {
+    "faultAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt", "outcome", "openCause", "closeCause", "owner", "sameDocumentAcquire"],
+      "properties": {
+        "attempt": { "type": "integer", "minimum": 1, "maximum": 2 },
+        "outcome": { "const": "fault" },
+        "openCause": { "const": "original-open-error" },
+        "closeCause": { "const": "writer-close-error" },
+        "owner": { "const": "same-exact-writer-release" },
+        "sameDocumentAcquire": { "const": "conflict" }
+      }
+    }
+  }
+}

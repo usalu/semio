@@ -3,7 +3,7 @@
   "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section",
   "semanticKind": "create-section",
   "displayName": "Create Section",
-  "emoji": "🌱",
+  "emoji": "📐️",
   "aggregateVariant": "CreateSection",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "create-section",

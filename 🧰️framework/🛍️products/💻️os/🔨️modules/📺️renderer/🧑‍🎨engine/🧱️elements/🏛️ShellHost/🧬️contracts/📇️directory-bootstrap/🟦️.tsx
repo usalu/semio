@@ -29,10 +29,20 @@ export type DirectoryHomeOwnerV1 = {
   app: AppDefinition;
   instanceId: number;
   viewState: ViewModel;
+  identity: DirectoryHomeIdentityV1;
+  ownsInstance: boolean;
+  opened: boolean;
+  closed: boolean;
   bootstrapEpoch: number;
   abort: AbortController;
+  detachInputAbort: () => void;
   pending: DirectoryBootstrapPendingV1 | null;
 };
+
+export type DirectoryHomeIdentityV1 = Readonly<{
+  userId: string;
+  displayName: string;
+}>;
 
 export type DirectoryBootstrapUiState =
   | Readonly<{ kind: "idle" }>
@@ -67,24 +77,77 @@ export function parseDirectoryProjectionReceiptV1(value: unknown): DirectoryProj
   return value as DirectoryProjectionReceiptV1;
 }
 
-/** 🪟️ Opens one non-visible landing-app instance before granting bootstrap ownership to the worker. */
+function actionAvailable(app: AppDefinition, actionId: string): boolean {
+  return app.windowKinds.some((window) => (window.actions ?? []).some((action) => action.id === actionId));
+}
+
+function identityField(value: string): boolean {
+  return value.length > 0 && value.length <= 256 && value.trim() === value && !/[\u0000-\u001f\u007f]/u.test(value);
+}
+
+function invocationTerminal(value: unknown): boolean {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const response = value as Readonly<Record<string, unknown>>;
+  if (!Array.isArray(response.mutations) || response.inverseGroup === null || typeof response.inverseGroup !== "object" || Array.isArray(response.inverseGroup)) return false;
+  const inverse = response.inverseGroup as Readonly<Record<string, unknown>>;
+  return typeof inverse.invocationId === "string" && Array.isArray(inverse.mutations) && Array.isArray(inverse.inverseMutations);
+}
+
+function directoryActionInvocation(owner: DirectoryHomeOwnerV1, actionId: string, args: Readonly<Record<string, unknown>>): string {
+  const windowInstanceId = owner.viewState.windowId ?? owner.app.windowKinds[0]!.id;
+  return JSON.stringify({
+    address: {
+      pluginId: owner.plugin.pluginId,
+      appId: owner.app.id,
+      modeId: owner.viewState.activeModeId,
+      windowKindId: owner.viewState.activeWindowKindId,
+      windowInstanceId,
+      actionId,
+    },
+    arguments: { ...args, windowId: windowInstanceId },
+  });
+}
+
+/** 🪪️ Binds Hub identity to the visible landing instance before granting bootstrap ownership. */
 export async function openDirectoryHomeOwnerV1(input: Readonly<{
   plugin: PluginWasmHandle;
   app: AppDefinition;
+  identity: DirectoryHomeIdentityV1;
+  instance?: Readonly<{ instanceId: number; viewState: ViewModel }>;
   baseUrl: string;
   bootstrapEpoch: number;
   locale: string;
   terminology: string;
+  signal?: AbortSignal;
+  beforeBootstrap?(owner: DirectoryHomeOwnerV1): Promise<void>;
   post(request: BackboneWorkerRequest): void;
 }>): Promise<DirectoryHomeOwnerV1> {
   if (!Number.isSafeInteger(input.bootstrapEpoch) || input.bootstrapEpoch < 1) throw new Error("directory-bootstrap.epoch-invalid");
-  if (!input.baseUrl || !input.locale || !input.terminology) throw new Error("directory-bootstrap.identity-incomplete");
-  if (!input.app.windowKinds.some((window) => (window.actions ?? []).some((action) => action.id === "applyDirectoryEventPage"))) throw new Error("directory-bootstrap.home-action-unavailable");
+  if (!input.baseUrl || !input.locale || !input.terminology || !identityField(input.identity.userId) || !identityField(input.identity.displayName)) throw new Error("directory-bootstrap.identity-incomplete");
+  if (!actionAvailable(input.app, "setClient") || !actionAvailable(input.app, "applyDirectoryEventPage")) throw new Error("directory-bootstrap.home-action-unavailable");
   const windowKindId = input.app.windowKinds[0]?.id;
   const modeId = input.app.defaultModeId ?? input.app.modes[0]?.id;
   if (!windowKindId || !modeId) throw new Error("directory-bootstrap.home-surface-incomplete");
-  const instanceId = await input.plugin.createApp(input.app.id);
+  const abort = new AbortController();
+  const cancelFromInput = () => abort.abort(input.signal?.reason ?? "directory-bootstrap-input-cancelled");
+  if (input.signal?.aborted) cancelFromInput();
+  else input.signal?.addEventListener("abort", cancelFromInput, { once: true });
+  const detachInputAbort = () => input.signal?.removeEventListener("abort", cancelFromInput);
+  if (abort.signal.aborted) {
+    detachInputAbort();
+    throw new Error("directory-bootstrap.stale-owner");
+  }
+  const ownsInstance = input.instance === undefined;
+  let instanceId: number;
+  try {
+    instanceId = input.instance?.instanceId ?? await input.plugin.createApp(input.app.id);
+  } catch (error) {
+    abort.abort("directory-bootstrap-instance-open-failed");
+    detachInputAbort();
+    throw error;
+  }
   const viewState: ViewModel = {
+    ...(input.instance?.viewState ?? {}),
     activeModeId: modeId,
     activeWindowKindId: windowKindId,
     windowId: windowKindId,
@@ -92,18 +155,51 @@ export async function openDirectoryHomeOwnerV1(input: Readonly<{
     locale: input.locale,
     terminology: input.terminology,
   };
-  const owner: DirectoryHomeOwnerV1 = { plugin: input.plugin, app: input.app, instanceId, viewState, bootstrapEpoch: input.bootstrapEpoch, abort: new AbortController(), pending: null };
-  input.post({ kind: "directory-bootstrap-open", baseUrl: input.baseUrl, after: 0, bootstrapEpoch: owner.bootstrapEpoch });
-  return owner;
+  const owner: DirectoryHomeOwnerV1 = {
+    plugin: input.plugin,
+    app: input.app,
+    instanceId,
+    viewState,
+    identity: input.identity,
+    ownsInstance,
+    opened: false,
+    closed: false,
+    bootstrapEpoch: input.bootstrapEpoch,
+    abort,
+    detachInputAbort,
+    pending: null,
+  };
+  try {
+    const response = await owner.plugin.handleAction(
+      owner.instanceId,
+      directoryActionInvocation(owner, "setClient", { clientId: input.identity.userId, clientName: input.identity.displayName }),
+      owner.viewState,
+    );
+    if (!invocationTerminal(response)) throw new Error("directory-bootstrap.identity-terminal-invalid");
+    if (owner.abort.signal.aborted) throw new Error("directory-bootstrap.stale-owner");
+    await input.beforeBootstrap?.(owner);
+    if (owner.abort.signal.aborted) throw new Error("directory-bootstrap.stale-owner");
+    input.post({ kind: "directory-bootstrap-open", baseUrl: input.baseUrl, after: 0, bootstrapEpoch: owner.bootstrapEpoch });
+    owner.opened = true;
+    return owner;
+  } catch (error) {
+    owner.closed = true;
+    owner.abort.abort("directory-bootstrap-owner-open-failed");
+    owner.detachInputAbort();
+    if (owner.ownsInstance) await owner.plugin.destroyApp(owner.instanceId).catch(() => {});
+    throw error;
+  }
 }
 
-/** 🧹️ Cancels the worker epoch before destroying the hidden plugin instance exactly once. */
+/** 🧹️ Cancels the worker epoch and destroys only a controller-owned plugin instance. */
 export async function closeDirectoryHomeOwnerV1(owner: DirectoryHomeOwnerV1, post: (request: BackboneWorkerRequest) => void): Promise<void> {
-  if (owner.abort.signal.aborted) return;
-  post({ kind: "directory-bootstrap-close", bootstrapEpoch: owner.bootstrapEpoch });
-  owner.abort.abort("directory-bootstrap-owner-closed");
+  if (owner.closed) return;
+  owner.closed = true;
+  if (owner.opened) post({ kind: "directory-bootstrap-close", bootstrapEpoch: owner.bootstrapEpoch });
+  if (!owner.abort.signal.aborted) owner.abort.abort("directory-bootstrap-owner-closed");
+  owner.detachInputAbort();
   owner.pending = null;
-  await owner.plugin.destroyApp(owner.instanceId).catch(() => {});
+  if (owner.ownsInstance) await owner.plugin.destroyApp(owner.instanceId).catch(() => {});
 }
 
 function receiptMatchesPage(receipt: DirectoryProjectionReceiptV1, page: DirectoryEventPageBootstrapV1): boolean {
@@ -114,18 +210,7 @@ function receiptMatchesPage(receipt: DirectoryProjectionReceiptV1, page: Directo
 }
 
 function directoryPageInvocation(owner: DirectoryHomeOwnerV1, canonicalJson: string): string {
-  const windowInstanceId = owner.viewState.windowId ?? owner.app.windowKinds[0]!.id;
-  return JSON.stringify({
-    address: {
-      pluginId: owner.plugin.pluginId,
-      appId: owner.app.id,
-      modeId: owner.viewState.activeModeId,
-      windowKindId: owner.viewState.activeWindowKindId,
-      windowInstanceId,
-      actionId: "applyDirectoryEventPage",
-    },
-    arguments: { pageJson: canonicalJson, windowId: windowInstanceId },
-  });
+  return directoryActionInvocation(owner, "applyDirectoryEventPage", { pageJson: canonicalJson });
 }
 
 /** ✅️ Applies one retained page and emits ACK only after the exact typed terminal receipt returns. */
@@ -133,6 +218,7 @@ export async function applyDirectoryEventPageBootstrapV1(
   owner: DirectoryHomeOwnerV1,
   page: DirectoryEventPageBootstrapV1,
   post: (request: BackboneWorkerRequest) => void,
+  beforeAcknowledge?: (owner: DirectoryHomeOwnerV1) => Promise<void>,
 ): Promise<DirectoryBootstrapApplyResult> {
   if (owner.abort.signal.aborted || page.bootstrapEpoch !== owner.bootstrapEpoch) return { state: { kind: "fault", code: "directory-bootstrap.stale-owner" } };
   if (owner.pending) return { state: { kind: "pending", throughSeqInclusive: owner.pending.throughSeqInclusive, cancellable: true } };
@@ -151,6 +237,8 @@ export async function applyDirectoryEventPageBootstrapV1(
       await closeDirectoryHomeOwnerV1(owner, post);
       return { state: { kind: "fault", code: "directory-bootstrap.receipt-mismatch" } };
     }
+    await beforeAcknowledge?.(owner);
+    if (owner.abort.signal.aborted || owner.pending?.receiptSha256 !== page.receiptSha256) return { state: { kind: "fault", code: "directory-bootstrap.cancelled" } };
     owner.pending = null;
     post({
       kind: "directory-bootstrap-ack",

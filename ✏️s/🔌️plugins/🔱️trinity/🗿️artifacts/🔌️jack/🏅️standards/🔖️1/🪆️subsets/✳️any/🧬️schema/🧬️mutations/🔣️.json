@@ -3,7 +3,7 @@
   "$id": "https://semio.tech/schema/s/trinity/jack/mutation.json",
   "title": "JackMutation",
   "oneOf": [
-    { "$ref": "./🌱️create-node/🧬️.schema.json" },
+    { "$ref": "./➕️create-node/🧬️.schema.json" },
     { "$ref": "./🗑️delete-node/🧬️.schema.json" },
     { "$ref": "./🌉️create-edge/🧬️.schema.json" },
     { "$ref": "./✂️delete-edge/🧬️.schema.json" },

@@ -302,20 +302,34 @@ const SPACE_BOUNDED_TOOL_IDS: &[&str] = &[
     "importSpacePack",
     "goHome",
     "navigateVirtualFileSystemNode",
+    "spawnApp",
+    "openSpace",
+    "openInstance",
+    "importSpacePackPayload",
+    "setAppRegistrations",
 ];
+/// 🧵️ Still batch-only, honestly: every id here is a workflow-graph or media edit the shell never
+/// dispatches on its own (no `🏛️ShellHost`/`🕸️NodeGraph` call site, verified by id), and each needs
+/// its own reducer/extent review before it can claim a bounded first step.
 const SPACE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
-    "patchParameter", "addParameter", "removeParameter", "spawnApp", "moveMediaNode", "connectMediaPorts", "disconnectMediaEdge",
+    "patchParameter", "addParameter", "removeParameter", "moveMediaNode", "connectMediaPorts", "disconnectMediaEdge",
     "removeAppInstance", "deleteSelection", "copyAppInstance", "duplicateAppInstance", "pasteAppInstance", "renameAppInstance",
     "patchMediaNodes", "patchAppInstances", "bindParameterField", "unbindParameterField", "reorganizeWorkflow", "workflowEngagementSubmit",
     "compiledDagEngagementSubmit", "nodeGraphEdit", "exportMedia", "importMedia", "importMediaPayload", "exportStudioPack", "exportStudioDsl",
-    "importSpacePackPayload", "openSpace", "openInstance", "setAppRegistrations",
 ];
 const SPACE_RETAINED_PAYLOAD_SCHEMA: &str = "os.workflow.space.tool-command.v1";
-const SPACE_BOUNDED_RAW_BYTES: usize = 65_536;
+/// 📦️ `setAppRegistrations` carries the whole live catalog as one JSON argument and
+/// `importSpacePackPayload` a whole base64 `.pack` data URL, so the studio's wire ceiling is sized for
+/// a catalog, not for a click.
+const SPACE_BOUNDED_RAW_BYTES: usize = 4 * 1024 * 1024;
 const SPACE_BOUNDED_WORK_ITEMS: usize = 1;
 
+/// 🧾️ The single contract this app's factory publishes AND its proof rows carry —
+/// `validate_tool_job_rows` joins the two by exact equality, so both sides must read it from here.
+const SPACE_BOUNDED_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
+
 fn space_bounded_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(SPACE_BOUNDED_RAW_BYTES, 64, SPACE_BOUNDED_WORK_ITEMS as u64, 262_144, 7_500)
+    ToolExecutionContract::bounded_first_step(SPACE_BOUNDED_RAW_BYTES, 64, SPACE_BOUNDED_WORK_ITEMS as u64, SPACE_BOUNDED_OUTPUT_BYTES, 7_500)
 }
 
 fn space_bounded_extent(command: &SpaceCommand, _snapshot: &WorkflowSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -327,17 +341,25 @@ fn space_bounded_reduce(
     snapshot: &WorkflowSnapshot,
     config: &SpaceConfig,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
 ) -> Result<Emit<WorkflowMutation, crate::engine::space::config::SpaceConfigMutation, NoDraftMutation>, Fault> {
     if !SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.route"), "the bounded Space reducer rejects document, registry, payload, and graph routes"));
     }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    // 🕹️ `openInstance` with no explicit node falls back to the live `graph` selection, which the
+    // macro-generated 3-arg `dispatch` cannot see — the retained path reads it off the same
+    // `InteractionState` `SpaceApp::handle` passes to `open_instance::apply`.
+    if let SpaceCommand::OpenInstance(payload) = command {
+        let selected = interaction.selection.get(S_PLAY_INTERACTION_DOMAIN).map_or_else(Vec::new, |selection| selection.ids.clone());
+        return Ok(crate::engine::space::engine::resolve_future(open_instance::open_with_selection(payload, &doc, config, &selected)));
+    }
+    command.dispatch(&doc, &ConfigView { snapshot: config })
 }
 
-struct SpaceCommandJobFactory {
+pub struct SpaceCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
@@ -400,14 +422,22 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFact
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "spawnApp", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePackPayload", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setAppRegistrations", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     ];
 }
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️ConfigStorePreparation
-const SPACE_CONFIG_MAXIMUM_BYTES: usize = 768;
-const SPACE_CONFIG_MAXIMUM_ITEMS: usize = 64;
-const SPACE_CONFIG_TEXT_BYTES: usize = 96;
+/// 📏️ Sized for a real session, not for a single toggle: `openSpace` publishes a space id, a focus
+/// reset, a clipboard reset and an active node in one turn, and a studio's clipboard/collapsed sets
+/// are node-id lists.
+const SPACE_CONFIG_MAXIMUM_BYTES: usize = 65_536;
+const SPACE_CONFIG_MAXIMUM_ITEMS: usize = 256;
+const SPACE_CONFIG_TEXT_BYTES: usize = 8_192;
 const SPACE_CONFIG_METADATA_BYTES: usize = 64;
 
 struct SpaceConfigPreparationFactory;
@@ -450,7 +480,9 @@ fn space_config_mutation_bytes(mutation: &SpaceConfigMutation) -> Result<usize, 
         SpaceConfigMutation::SetCamera { window_id, .. } => window_id.len(),
         SpaceConfigMutation::SetClient { client_id, client_name } => client_id.as_ref().map_or(0, String::len).saturating_add(client_name.as_ref().map_or(0, String::len)),
         SpaceConfigMutation::SetWorkflowEngagementInput { value } | SpaceConfigMutation::SetCompiledDagEngagementInput { value } => value.len(),
-        SpaceConfigMutation::SetFocusedNode { node_id: None } => 0,
+        SpaceConfigMutation::SetActiveNode { node_id } | SpaceConfigMutation::SetFocusedNode { node_id } => node_id.as_ref().map_or(0, String::len),
+        SpaceConfigMutation::SetSpaceId { space_id } => space_id.as_ref().map_or(0, String::len),
+        SpaceConfigMutation::SetClipboard { node_ids } => node_ids.iter().map(String::len).sum(),
         _ => return Err("Space Config preparation rejects a non-retained mutation".into()),
     };
     if bytes > SPACE_CONFIG_TEXT_BYTES { return Err("Space Config mutation exceeds its encoded text envelope".into()); }
@@ -475,7 +507,10 @@ fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Re
         }
         SpaceConfigMutation::SetWorkflowEngagementInput { value } => { post.workflow_engagement_input = value.clone(); SpaceConfigMutation::SetWorkflowEngagementInput { value: base.workflow_engagement_input.clone() } }
         SpaceConfigMutation::SetCompiledDagEngagementInput { value } => { post.compiled_dag_engagement_input = value.clone(); SpaceConfigMutation::SetCompiledDagEngagementInput { value: base.compiled_dag_engagement_input.clone() } }
-        SpaceConfigMutation::SetFocusedNode { node_id: None } => { post.focused_node_id = None; SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() } }
+        SpaceConfigMutation::SetFocusedNode { node_id } => { post.focused_node_id = node_id.clone(); SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() } }
+        SpaceConfigMutation::SetActiveNode { node_id } => { post.active_node_id = node_id.clone(); SpaceConfigMutation::SetActiveNode { node_id: base.active_node_id.clone() } }
+        SpaceConfigMutation::SetSpaceId { space_id } => { post.space_id = space_id.clone(); SpaceConfigMutation::SetSpaceId { space_id: base.space_id.clone() } }
+        SpaceConfigMutation::SetClipboard { node_ids } => { post.clipboard_node_ids = node_ids.clone(); SpaceConfigMutation::SetClipboard { node_ids: base.clipboard_node_ids.clone() } }
         _ => return Err("Space Config preparation rejects a non-retained mutation".into()),
     };
     space_config_bytes(&post)?;
@@ -597,25 +632,40 @@ impl ArtifactApp for SpaceApp {
     const APP_ID: &'static str = S_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = S_WORKFLOW_SCHEMA;
 
+    /// 🧾️ `controller:` is the runtime tool controller — the surface app id `tool_job_registration`
+    /// is called with, NOT the manifest's UI `controller_id` (`s-play`); `contract:` reads the one
+    /// `space_bounded_contract()` the factory itself publishes, so the exact-equality join in
+    /// `validate_tool_job_rows` can never drift. Both are pinned by
+    /// `interactive_job_catalog_tests::tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against`.
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: SpaceApp,
         owner_file: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs",
-        controller: "s-play",
+        controller: "s.space.studio@1/*#editor",
         document_schema: "os.workflow",
         factory: "SpaceCommandJobFactory",
         factory_type: SpaceCommandJobFactory,
-        tools: {
-            "setActivePanelTab" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "nodeGraphViewport" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "presenceHeartbeat" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "workflowEngagementInput" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "compiledDagEngagementInput" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "closeFocusedInstance" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "importSpacePack" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "goHome" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "navigateVirtualFileSystemNode" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-        }
+        contract: space_bounded_contract(),
+        tools: [
+            "setActivePanelTab",
+            "nodeGraphViewport",
+            "presenceHeartbeat",
+            "workflowEngagementInput",
+            "compiledDagEngagementInput",
+            "closeFocusedInstance",
+            "setActiveExample",
+            "importSpacePack",
+            "goHome",
+            "navigateVirtualFileSystemNode",
+            "spawnApp",
+            "openSpace",
+            "openInstance",
+            "importSpacePackPayload",
+            "setAppRegistrations",
+        ]
+    }
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        crate::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-studio-artifact-retained", SPACE_BOUNDED_OUTPUT_BYTES)
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
@@ -936,7 +986,7 @@ pub async fn create_space_app() -> App {
         .action_interactive_job("patchParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("addParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("removeParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("spawnApp", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("spawnApp", InteractiveJobClassification::Migrated).await
         .action_interactive_job("moveMediaNode", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("disconnectMediaEdge", InteractiveJobClassification::BatchOnlyPendingRewrite).await
@@ -966,13 +1016,13 @@ pub async fn create_space_app() -> App {
         .action_interactive_job("exportStudioPack", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("exportStudioDsl", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("importSpacePack", InteractiveJobClassification::Migrated).await
-        .action_interactive_job("importSpacePackPayload", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("openSpace", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("openInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("importSpacePackPayload", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("openSpace", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("openInstance", InteractiveJobClassification::Migrated).await
         .action_interactive_job("closeFocusedInstance", InteractiveJobClassification::Migrated).await
         .action_interactive_job("goHome", InteractiveJobClassification::Migrated).await
         .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated).await
-        .action_interactive_job("setAppRegistrations", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("setAppRegistrations", InteractiveJobClassification::Migrated).await
         // 📝️ Staged argument form for parameter creation (spawnApp/exportMedia stay context/registry-driven).
         .action_args("addParameter", vec![
             ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Parameter"),
@@ -1229,8 +1279,19 @@ mod tests {
         assert!(matches!(inverse, SpaceConfigMutation::SetWorkflowEngagementInput { value } if value == base.workflow_engagement_input));
         assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES) }).is_ok());
         assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES + 1) }).is_err());
-        assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetClipboard { node_ids: Vec::new() }).is_err());
-        assert_eq!(SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024, 4_096);
+        // 🚪️ `openSpace`/`openInstance`/`spawnApp` publish exactly these four session mutations, so
+        // the retained config lane must admit them — it rejected every one of them before.
+        for admitted in [
+            SpaceConfigMutation::SetClipboard { node_ids: Vec::new() },
+            SpaceConfigMutation::SetSpaceId { space_id: Some("demo".into()) },
+            SpaceConfigMutation::SetActiveNode { node_id: Some("node-1".into()) },
+            SpaceConfigMutation::SetFocusedNode { node_id: Some("node-1".into()) },
+        ] {
+            assert!(space_config_mutation_bytes(&admitted).is_ok(), "the retained config lane must admit {admitted:?}");
+            assert!(prepare_space_config(&base, admitted).is_ok());
+        }
+        assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetLocale { value: "de-DE".into() }).is_err());
+        assert_eq!(SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024, 263_168);
     }
     //#endregion 🧪️RetainedConfigOracle
     use crate::demo_space_projection;
@@ -1294,16 +1355,16 @@ mod tests {
             .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
             .map(|contract| contract.tool_id.to_string())
             .collect::<std::collections::BTreeSet<_>>();
-        assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 10, batch: 30, migrated: 10, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
+        assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 15, batch: 25, migrated: 15, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
         assert_eq!(bounded_ids.len(), SPACE_BOUNDED_TOOL_IDS.len());
-        assert_eq!(host_only_ids.len(), 4);
-        assert_eq!(SPACE_BATCH_ONLY_TOOL_IDS.len(), 30);
+        assert_eq!(host_only_ids.len(), 6);
+        assert_eq!(SPACE_BATCH_ONLY_TOOL_IDS.len(), 25);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
         let fixture = include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json");
-        let expected = ["setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        let expected = ["setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode", "importSpacePackPayload", "setAppRegistrations"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
         let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
         let wrong_tool = fixture.replacen("\"setActiveExample\"", "\"forgedTool\"", 1);
         assert_ne!(SerdeJsonSpaceRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);

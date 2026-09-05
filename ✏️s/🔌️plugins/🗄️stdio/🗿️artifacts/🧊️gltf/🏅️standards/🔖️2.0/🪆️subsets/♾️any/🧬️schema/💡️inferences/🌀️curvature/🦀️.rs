@@ -1,12 +1,12 @@
 //! 🌀 GLTF curvature indicators.
 
-#[path = "🟥️curvature-histogram/🦀️.rs"]
+#[path = "📊️curvature-histogram/🦀️.rs"]
 pub mod curvature_histogram;
-#[path = "🟪️gaussian-curvature/🦀️.rs"]
+#[path = "🧮️gaussian-curvature/🦀️.rs"]
 pub mod gaussian_curvature;
-#[path = "🐝️mean-curvature/🦀️.rs"]
+#[path = "🌀️mean-curvature/🦀️.rs"]
 pub mod mean_curvature;
-#[path = "🐨️sharp-feature-proportion/🦀️.rs"]
+#[path = "🗡️sharp-feature-proportion/🦀️.rs"]
 pub mod sharp_feature_proportion;
 
 use super::super::modules::measurement_contracts::*;

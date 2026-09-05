@@ -37,7 +37,7 @@
 }
 \str_case:VnF \semio@type {
   { report } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
-  { paper } { \LoadClass[twoside=true]{scrartcl} }
+  { paper } { \LoadClass[twoside=true,open=any]{scrartcl} }
   { flyer } { \LoadClass{scrartcl} }
 } {
   \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt}
@@ -66,7 +66,7 @@
 \RequirePackage{microtype}
 
 %region Justification Safety
-% 🧵️ German compound words carry hard hyphens (e.g. "material- und
+% 🧵 German compound words carry hard hyphens (e.g. "material- und
 % anwendungsbezogen") that are the paragraph's only nearby break point; without
 % slack a line ending there can overshoot \linewidth instead of breaking.
 % emergencystretch lets justification loosen such lines rather than overflow.
@@ -74,8 +74,11 @@
 \emergencystretch=3em
 %endregion Justification Safety
 
-\RequirePackage[style=\semio@citestyle,backend=bibtex,sorting=nyt]{biblatex}
+\RequirePackage[style=\semio@citestyle,backend=bibtex,sorting=nyt,backref=true]{biblatex}
 \RequirePackage{semio-window}
 \RequirePackage{semio-components}
+\RequirePackage{semio-graph}
+\RequirePackage{semio-tree}
+\RequirePackage{semio-viz}
 \RequirePackage{hyperref}
 \hypersetup{colorlinks,linkcolor=semio-primary,citecolor=semio-primary,urlcolor=semio-primary,filecolor=semio-primary}

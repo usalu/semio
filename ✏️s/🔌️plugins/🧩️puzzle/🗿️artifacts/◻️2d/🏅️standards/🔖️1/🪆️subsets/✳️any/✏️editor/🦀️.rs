@@ -2312,20 +2312,6 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .build_definition()
 }
 
-/// 📥️ Tier C DWG import — the puzzle-2d fixture only supports circle/rectangle nodes (no polygonal
-/// outlines), so this always returns an empty board; never errors on a structurally valid DWG.
-/// The DWG's extents no longer frame a camera here: the camera is session-only `Puzzle2dConfig`
-/// state, and this import path produces a bare document with no live app instance to receive it.
-/// Only exercised by its own `#[cfg(test)]` test below — never wired to a live `register_*` caller
-/// after the artifacts-only-plugin-architecture migration removed `register_dwg_import_handler`
-/// (see the `🔖️Register` region below) — so this is `#[cfg(test)]`-gated rather than a real
-/// production entry point.
-#[cfg(test)]
-#[allow(clippy::unnecessary_wraps, reason = "the fallible signature matches the historical `semio_framework_os::register_dwg_import_handler` shape this once fed; puzzle-2d simply has no failure mode.")]
-pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
-    Ok(default_empty_fixture())
-}
-
 // 🗂️ `Puzzle2dPlaySnapshot`'s pack<->dsl codec (so `framework/sync`'s `FolderEndpoint::Pack` can
 // print/parse puzzle-2d play documents without depending on this crate's concrete
 // `Projection`/`Mutation` types) is now declared via `.document_codec::<Puzzle2dPlayApp>()` on
@@ -2334,30 +2320,7 @@ pub(crate) fn puzzle2d_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::a
 // `register_document_codec_for_app`) is gone.
 //#endregion 🔖️Manifest
 
-//#region 🔖️Register
-/// 🖼️ Registers the `"2d.puzzle"` SVG/DWG media export-import bridge with the OS host — no
-/// `ArtifactDeclaration` field covers this OS-host media registry (see `declaration()`'s own doc in
-/// the artifact root), so it stays wired through `🧩️puzzle/🦀️.rs`'s `.setup()`. Rehomed
-/// here from the deleted artifact-side `⚙️engine` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e: `register_media_io` reaches this app's own
-/// `puzzle2d_document_json_from_dwg` callback directly, so it now lives beside it instead of
-/// crossing an artifact→app boundary). The SVG-export half of the bridge
-/// (`puzzle2d_snapshot_to_drawing`/`puzzle2d_document_json_to_svg`) was never rewired to a real
-/// caller after that move and was deleted as dead code (ticket
-/// 26/08/17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS) — SVG export should be
-/// re-derived from `io_dispatch`'s real `ComposerEntry` chain if/when this bridge is needed again.
-///
-/// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
-/// `register_dwg_import_handler` call this used to make is DELETED, not migrated --
-/// `🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs`'s `io_registry::entries()`
-/// already carries a real `ComposerEntry` for `"s.stdio.dwg"` (`DEP_DWG`), reachable via
-/// `io_dispatch` once the OS media pipeline's `native_kind` bridging bug is fixed (`component_kind`
-/// = `"puzzle2d"`, not the raw `"2d.puzzle"` workflow kind id) -- and it is a strict improvement
-/// over what this call registered: `puzzle2d_document_json_from_dwg` (still kept, still exercised
-/// by its own test below) always returns an EMPTY board regardless of input (Tier C, no polygonal
-/// outlines supported), while the artifact-level DWG deserializer does real entity parsing.
-/// `register_2d_export_handlers` is a separate function, not in this wave's five-function scope.
-//#endregion 🔖️Register
+
 
 //#region 🧪️Testkit
 /// 🧪️ The one puzzle2d-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
@@ -2894,14 +2857,6 @@ mod tests {
     /// 🎥️ The camera is session-only runtime state, never a document field — a DWG import (which has
     /// no live app instance to receive a runtime write) must produce a bare empty board with no
     /// `"camera"` key at all, regardless of the drawing's extents.
-    #[test]
-    fn dwg_import_returns_empty_board_with_no_camera_field() {
-        let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default() };
-        let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();
-        assert_eq!(fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
-        assert!(fixture_nodes(&fixture).is_empty());
-        assert!(fixture.get("camera").is_none(), "the document must never carry a camera field");
-    }
     //#endregion 🔖️Manifest
 
     //#region 🔖️Convergence

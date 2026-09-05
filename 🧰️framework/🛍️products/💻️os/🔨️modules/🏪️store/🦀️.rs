@@ -25,7 +25,13 @@ mod initial_child_identity;
 
 #[path = "🧩️composition/🚪️open/🦀️.rs"]
 pub mod member_open;
-pub use member_open::{InitialMemberStoreOpen, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
+pub use member_open::{
+    InitialMemberStoreOpen, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep,
+    MemberSnapshotOpenOperation, MemberSnapshotOpenStep, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen,
+};
+
+#[path = "🧩️composition/🗄️durable-group/🦀️.rs"]
+pub mod durable_group;
 
 // The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::crate::os_store::ArtifactDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
@@ -13577,6 +13583,7 @@ where
     /// which drains it into the returned `CommandReceipt`. Reset at the top of every `dispatch`
     /// call; every other arm leaves it at its `Default`. Not part of the wire envelope.
     pending_report: std::mem::ManuallyDrop<PendingCommandReport>,
+    durable_group_root: std::mem::ManuallyDrop<Option<durable_group::ArtifactStoreDurableGroupRootV1<P>>>,
 }
 
 struct ArtifactStoreDocumentRootCommitAuthority<P, Mutation> {
@@ -14013,6 +14020,7 @@ where
             one_item_wire_preparation_factory: std::mem::ManuallyDrop::new(None),
             tail_undo_cache: std::mem::ManuallyDrop::new(None),
             pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
+            durable_group_root: std::mem::ManuallyDrop::new(None),
         })
     }
 
@@ -14054,41 +14062,54 @@ where
             one_item_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_preparation),
             one_item_wire_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_wire_preparation),
             pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
+            durable_group_root: std::mem::ManuallyDrop::new(None),
         }
     }
 
+    fn durable_group_read_root(&self) -> Option<&durable_group::ArtifactStoreDurableGroupRootV1<P>> {
+        self.durable_group_root.as_ref().filter(|root| root.visibility.committed() && !root.adopted)
+    }
+
+    fn ensure_durable_group_idle(&self) -> Result<(), VcsError> {
+        if self.durable_group_root.is_some() {
+            return Err(VcsError::ValidationFailed("artifact store belongs to an unresolved durable group decision".into()));
+        }
+        Ok(())
+    }
+
     pub fn generation(&self) -> u64 {
-        self.generation
+        self.durable_group_read_root().map_or(self.generation, |root| root.generation)
     }
 
     /// 🧬️ Returns the current history identity used to invalidate derived work.
     pub fn artifact_revision(&self) -> ArtifactRevision {
+        let group = self.durable_group_read_root();
         ArtifactRevision {
             artifact_id: self.envelope.id.clone(),
             schema: self.envelope.schema.clone(),
-            applied_edit_ids: (&*self.applied_edit_ids).clone(),
-            redo_edit_ids: (&*self.redo_edit_ids).clone(),
+            applied_edit_ids: group.map_or_else(|| (&*self.applied_edit_ids).clone(), |root| root.applied_edit_ids.clone()),
+            redo_edit_ids: group.map_or_else(|| (&*self.redo_edit_ids).clone(), |root| root.redo_edit_ids.clone()),
             checkpoint_id: (&*self.current_checkpoint_id).clone(),
         }
     }
 
     /// 🪪️ Reads the event-maintained generation at an already-owned operation boundary.
     pub fn generation_now(&self) -> u64 {
-        self.generation
+        self.generation()
     }
 
     pub fn content_revision(&self) -> [u8; 32] {
-        self.content_revision
+        self.durable_group_read_root().map_or(self.content_revision, |root| root.content_revision)
     }
 
     /// 🧬️ Reads the fixed-width event-maintained content revision without suspension.
     pub fn content_revision_now(&self) -> [u8; 32] {
-        self.content_revision
+        self.content_revision()
     }
 
     /// 🎯️ Returns the exact revision plus local generation a projection result must match.
     pub fn projection_stamp(&self) -> ArtifactProjectionStamp {
-        ArtifactProjectionStamp { revision: self.artifact_revision(), generation: self.generation }
+        ArtifactProjectionStamp { revision: self.artifact_revision(), generation: self.generation() }
     }
 
     /// 📬️ Captures one immutable projection or inference input from the current reconciled snapshot.
@@ -14099,7 +14120,7 @@ where
     /// 📣️ Returns the last successful transition through the shared projection invalidation seam.
     pub fn last_projection_invalidation(&self) -> Option<ArtifactProjectionInvalidation> {
         // 🌀️ `projection_stamp` is async; `Option::map`'s closure is sync (R10 shape 1).
-        match self.last_projection_cause {
+        match self.durable_group_read_root().map_or(self.last_projection_cause, |root| root.last_projection_cause) {
             Some(cause) => Some(ArtifactProjectionInvalidation { cause, stamp: self.projection_stamp() }),
             None => None,
         }
@@ -14121,6 +14142,7 @@ where
     }
 
     fn invalidate_projections(&mut self, cause: ArtifactProjectionCause) -> Result<ArtifactProjectionInvalidation, VcsError> {
+        self.ensure_durable_group_idle()?;
         self.bump()?;
         self.last_projection_cause = Some(cause);
         Ok(ArtifactProjectionInvalidation { cause, stamp: self.projection_stamp() })
@@ -14147,12 +14169,12 @@ where
     }
 
     pub fn applied_edit_ids(&self) -> &[String] {
-        &self.applied_edit_ids
+        self.durable_group_read_root().map_or((&*self.applied_edit_ids).as_slice(), |root| root.applied_edit_ids.as_slice())
     }
 
     /// @emoji ↪️ Pending redo stack (edit ids undone since the last fresh `Apply`).
     pub fn redo_edit_ids(&self) -> &[String] {
-        &self.redo_edit_ids
+        self.durable_group_read_root().map_or((&*self.redo_edit_ids).as_slice(), |root| root.redo_edit_ids.as_slice())
     }
 
     /// @emoji 🧭️ The checkpoint new commits currently parent onto (defaults to the latest checkpoint
@@ -14166,6 +14188,7 @@ where
     /// checked out an older one).
     #[must_use]
     pub fn set_current_checkpoint_id(&mut self, checkpoint_id: Option<String>) -> Result<ArtifactProjectionInvalidation, VcsError> {
+        self.ensure_durable_group_idle()?;
         if let Some(checkpoint_id) = &checkpoint_id {
             if !self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == *checkpoint_id) {
                 return Err(VcsError::UnknownChange(checkpoint_id.clone()));
@@ -14179,12 +14202,13 @@ where
     /// Not part of the wire envelope — a caller reconstructing the store per call must save/restore
     /// it via {@link set_local_actor_id} for `UndoPolicy` to keep classifying foreign edits.
     pub fn local_actor_id(&self) -> Option<&str> {
-        self.local_actor_id.as_deref()
+        self.durable_group_read_root().map_or_else(|| self.local_actor_id.as_deref(), |root| root.local_actor_id.as_deref())
     }
 
     /// @emoji 🖋️ Sets the local actor id (see {@link local_actor_id}). Called automatically from each
     /// local `Apply`/`AmendLast`; callers that reconstruct the store per dispatch restore it here.
     pub fn set_local_actor_id(&mut self, actor_id: Option<String>) -> Result<(), VcsError> {
+        self.ensure_durable_group_idle()?;
         self.replace_local_actor_retained(actor_id)
     }
 
@@ -14202,6 +14226,7 @@ where
 
     /// @emoji ♻️ Sole public reload API — replaces the former public `set_state`/`set_envelope` escape hatches.
     pub async fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<CommandReceipt, VcsError> {
+        self.ensure_durable_group_idle()?;
         self.set_state(envelope, applied_edit_ids, redo_edit_ids).await?;
         self.last_projection_cause = Some(ArtifactProjectionCause::Reset);
         Ok(CommandReceipt { edit_ids: (&*self.applied_edit_ids).clone(), generation: self.generation(), messages: Vec::new(), worst: None })
@@ -14210,6 +14235,7 @@ where
     /// @emoji 💾️ Restores full store state including the redo stack, so `Redo` survives
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
     pub(crate) async fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>) -> Result<(), VcsError> {
+        self.ensure_durable_group_idle()?;
         validate_durable_history(&envelope).await?;
         validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids).await?;
         let current = Self::fold_history(&envelope, &applied_edit_ids).await?;
@@ -14274,6 +14300,7 @@ where
     /// pins rather than merely storing them beside it.
     #[must_use]
     pub async fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<crate::os_vcs::CompositionPin>) -> Result<ArtifactProjectionInvalidation, VcsError> {
+        self.ensure_durable_group_idle()?;
         validate_composition_pins(&pins).await?;
         let target_index = self.envelope.vcs.checkpoints.iter().position(|checkpoint| checkpoint.id == checkpoint_id).ok_or_else(|| VcsError::UnknownChange(checkpoint_id.to_string()))?;
         if self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.parent_id.as_deref() == Some(checkpoint_id)) {
@@ -14313,12 +14340,12 @@ where
     /// in practice (kept as `Result` for API stability); O(1) instead of a full replay. See the
     /// `current` field doc for the maintenance invariant.
     pub fn snapshot(&self) -> Result<P, VcsError> {
-        Ok(self.current.as_ref().clone())
+        Ok(self.durable_group_read_root().map_or(self.current.as_ref(), |root| root.current.as_ref().expect("unadopted durable group root retains its current snapshot").as_ref()).clone())
     }
 
     /// 🔎️ Borrows the current immutable fold without issuing or cloning a snapshot owner.
     pub fn snapshot_ref(&self) -> &P {
-        self.current.as_ref()
+        self.durable_group_read_root().map_or(self.current.as_ref(), |root| root.current.as_ref().expect("unadopted durable group root retains its current snapshot").as_ref())
     }
 
     /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
@@ -14326,24 +14353,27 @@ where
     where
         P: Sync,
     {
-        if !self.snapshot_read_leases.publish_authority(self.generation, self.content_revision) {
+        let generation = self.generation();
+        let content_revision = self.content_revision();
+        if !self.snapshot_read_leases.publish_authority(generation, content_revision) {
             return Err(VcsError::ValidationFailed("snapshot read commit authority is busy or exhausted".into()));
         }
-        let owner = Arc::clone(&*self.current);
+        let owner = self.snapshot_owner();
         let lease = self.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| VcsError::ValidationFailed("snapshot read lease registry is busy, saturated, or exhausted".into()))?;
         Ok(SnapshotRead::new(owner, lease))
     }
 
     pub fn snapshot_owner(&self) -> Arc<P> {
-        Arc::clone(&*self.current)
+        self.durable_group_read_root().map_or_else(|| Arc::clone(&*self.current), |root| Arc::clone(root.current.as_ref().expect("unadopted durable group root retains its current snapshot")))
     }
 
     /// 🧵️ Captures the immutable event-maintained snapshot root in O(1).
     pub fn snapshot_root(&self) -> Arc<P> {
-        Arc::clone(&*self.current)
+        self.snapshot_owner()
     }
 
     pub fn install_snapshot_retirement_factory(&mut self, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Result<(), VcsError> {
+        self.ensure_durable_group_idle()?;
         if self.snapshot_retirement_factory.is_some() {
             return Err(VcsError::Deserialize("snapshot retirement factory is already installed".into()));
         }
@@ -14352,6 +14382,7 @@ where
     }
 
     pub fn install_owned_disposer(&mut self, disposer: Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>) -> Result<(), VcsError> {
+        self.ensure_durable_group_idle()?;
         if self.owned_disposer.is_some() || self.owned_disposer_terminal {
             return Err(VcsError::Deserialize("artifact store owned disposer is already installed or terminal".into()));
         }
@@ -14932,7 +14963,7 @@ where
                 && self.envelope.edit_messages.is_empty()
                 && self.envelope.lanes.is_empty());
         let runtime_shell_is_empty = self.backbone.is_none() && self.pending_report.edit_ids.is_none() && self.pending_report.messages.is_empty();
-        envelope_shell_is_empty && runtime_shell_is_empty && self.dag.terminal_is_empty() && self.displaced_retirements.terminal_is_empty()
+        envelope_shell_is_empty && runtime_shell_is_empty && self.durable_group_root.is_none() && self.dag.terminal_is_empty() && self.displaced_retirements.terminal_is_empty()
     }
 
     fn close_take_final_envelope_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
@@ -14975,7 +15006,7 @@ where
     }
 
     pub fn owned_roots_terminal_is_empty(&self) -> bool {
-        self.current_detached && self.envelope_detached && self.tail_undo_cache.is_none() && self.snapshot_read_leases_terminal_is_empty() && self.close_structural_owners_terminal_is_empty()
+        self.current_detached && self.envelope_detached && self.durable_group_root.is_none() && self.tail_undo_cache.is_none() && self.snapshot_read_leases_terminal_is_empty() && self.close_structural_owners_terminal_is_empty()
     }
 
     /// @emoji 🔂️ Full raw fold of `initial_snapshot` over every `forwards` op in `applied_edit_ids`
@@ -15201,6 +15232,7 @@ where
     where
         P: Sync,
     {
+        self.ensure_durable_group_idle()?;
         self.pump().await?;
         // 🌀️ The unawaited future borrows `command`, which is then moved into `dispatch_inner`
         // below — awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
@@ -15282,6 +15314,9 @@ where
         P: Sync,
     {
         let reject = |reason: String, mutation: Input, description: Option<String>| ArtifactStoreOneItemAdmissionRejected { reason, mutation, description };
+        if self.durable_group_root.is_some() {
+            return Err(reject("one-item publication cannot interleave with an unresolved durable group decision".into(), mutation, description));
+        }
         if self.generation != expected_generation || self.content_revision != expected_revision {
             return Err(reject("one-item publication base generation or revision is stale".into(), mutation, description));
         }
@@ -15358,6 +15393,7 @@ where
     /// ⏭️ Advances at most one preparation, cursor, preflight, or atomic move-publication
     /// unit. The post-snapshot is an already-built `Arc` and is moved into the store.
     pub fn advance_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError> {
+        self.ensure_durable_group_idle()?;
         if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
             return Ok(ArtifactStoreOneItemAdvance::Complete);
         }
@@ -15504,6 +15540,7 @@ where
     where
         P: Sync,
     {
+        self.ensure_durable_group_idle()?;
         self.pump().await?;
         if self.generation != expected_generation {
             return Err(VcsError::ValidationFailed("one-item publication generation is stale".to_string()));
@@ -16044,6 +16081,7 @@ where
     /// @emoji 🔗️ Attaches a backbone channel, reconciling any already-persisted state before
     /// seeding it with this store's current snapshot.
     pub async fn attach_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> {
+        self.ensure_durable_group_idle()?;
         self.envelope.backbone = Some(backbone.descriptor().await);
         self.replace_backbone_retained(Some(backbone))?;
         self.pump().await?;
@@ -16063,6 +16101,7 @@ where
 
     /// @emoji ✂️ Detaches the backbone; the WIP graph stays in memory, simply unsynchronized.
     pub fn detach_backbone(&mut self) -> Result<Option<Backbones>, VcsError> {
+        self.ensure_durable_group_idle()?;
         self.envelope.backbone = None;
         self.bump()?;
         Ok(self.backbone.take())
@@ -16075,6 +16114,7 @@ where
     /// @emoji 📡️ Drains inbound backbone messages into the edit timeline. Safe to call anytime;
     /// `dispatch` already calls this before every command.
     pub async fn tick(&mut self) -> Result<bool, VcsError> {
+        self.ensure_durable_group_idle()?;
         self.pump().await
     }
 
@@ -16088,6 +16128,7 @@ where
     /// history, ledger, `applied_edit_ids` all move together) or quarantine the whole batch as an
     /// `Open` `Conflict` — state and the dag's own applied-set never move on rejection.
     pub async fn ingest_remote(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<crate::os_spr::MergeReport, VcsError> {
+        self.ensure_durable_group_idle()?;
         let no_op_report = |policy: crate::os_spr::MergePolicy, insertion_index: usize| crate::os_spr::MergeReport { policy, accepted: true, insertion_index: insertion_index as u32, replayed: Vec::new(), worst: None, conflict: None };
         // 1
         self.displaced_retirements.reserve(2)?;
@@ -16483,6 +16524,7 @@ where
     where
         P: Sync,
     {
+        self.ensure_durable_group_idle()?;
         let index = self.envelope.conflicts.iter().position(|conflict| conflict.id.0 == conflict_id && conflict.status == crate::os_spr::ConflictStatus::Open).ok_or_else(|| VcsError::UnknownConflict(conflict_id.to_string()))?;
         let conflict = self.envelope.conflicts[index].clone();
         match (conflict.kind.clone(), resolution) {
@@ -16763,7 +16805,8 @@ where
             && self.owned_disposer_terminal
             && self.pending_report.edit_ids.is_none()
             && self.pending_report.messages.is_empty()
-            && self.pending_report.worst.is_none();
+            && self.pending_report.worst.is_none()
+            && self.durable_group_root.is_none();
         assert!(terminal, "artifact store reached Drop without its exact terminal-empty shallow-shell witness");
         unsafe {
             drop(std::mem::ManuallyDrop::take(&mut self.backbone));
@@ -16783,6 +16826,7 @@ where
             drop(std::mem::ManuallyDrop::take(&mut self.one_item_preparation_factory));
             drop(std::mem::ManuallyDrop::take(&mut self.one_item_wire_preparation_factory));
             drop(std::mem::ManuallyDrop::take(&mut self.pending_report));
+            drop(std::mem::ManuallyDrop::take(&mut self.durable_group_root));
         }
     }
 }
@@ -17685,7 +17729,7 @@ where
     }
 
     fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
-        (self.generation, self.content_revision)
+        (self.generation(), self.content_revision())
     }
 
     fn one_item_wire_publication_supported(&self) -> bool {
@@ -17788,7 +17832,10 @@ where
     }
 
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
-        let owner = Arc::clone(&*self.current);
+        if !self.snapshot_read_leases.publish_authority(self.generation(), self.content_revision()) {
+            return Err("snapshot read commit authority is busy or exhausted".into());
+        }
+        let owner = self.snapshot_owner();
         let lease = self.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| "snapshot read lease registry is busy, saturated, or exhausted".to_string())?;
         Ok(ErasedSnapshotRead::new(owner, lease))
     }
@@ -23019,7 +23066,7 @@ mod tests {
         panic!("durable publication did not reach terminal empty");
     }
 
-    fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
+    pub(super) fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
         for _ in 0..4_096 {
             let step = SpaceMember::close_owned_step(store, 1, 512).expect("demo artifact store closes under its bounded owner grant");
             if step == SnapshotRetirementStep::Complete {
@@ -23030,7 +23077,7 @@ mod tests {
         panic!("demo artifact store did not reach its exact terminal-empty witness");
     }
 
-    fn demo_closable_store_owners() -> MemberStoreOwners<DemoSnapshot, DemoMutation> {
+    pub(super) fn demo_closable_store_owners() -> MemberStoreOwners<DemoSnapshot, DemoMutation> {
         MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))
     }
 

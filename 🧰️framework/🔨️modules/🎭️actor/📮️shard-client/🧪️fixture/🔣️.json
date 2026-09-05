@@ -1,0 +1,414 @@
+{
+  "version": 1,
+  "scope": "shard-liveness-watchdog-only",
+  "policy": {
+    "heartbeatTimeoutMs": 5000,
+    "missedLimit": 3,
+    "progressIntervalMs": 1000,
+    "pluginLoadIdleTimeoutMs": 30000,
+    "pluginLoadCeilingMs": 300000
+  },
+  "worker": {
+    "activationPhases": [
+      "module-fetch",
+      "module-ready",
+      "actor-ready"
+    ],
+    "progressPhase": "progress"
+  },
+  "jspi": {
+    "faultCode": "plugin.runtime.jspi-unavailable",
+    "vectors": [
+      {
+        "id": "jspi-present",
+        "webAssembly": true,
+        "suspending": true,
+        "promising": true,
+        "available": true
+      },
+      {
+        "id": "suspending-missing",
+        "webAssembly": true,
+        "suspending": false,
+        "promising": true,
+        "available": false
+      },
+      {
+        "id": "promising-missing",
+        "webAssembly": true,
+        "suspending": true,
+        "promising": false,
+        "available": false
+      },
+      {
+        "id": "both-missing",
+        "webAssembly": true,
+        "suspending": false,
+        "promising": false,
+        "available": false
+      },
+      {
+        "id": "no-webassembly",
+        "webAssembly": false,
+        "suspending": false,
+        "promising": false,
+        "available": false
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "idle-shard-never-misses",
+      "heartbeatTimeoutMs": 1000,
+      "timeline": [
+        {
+          "atMs": 5000,
+          "event": "check"
+        },
+        {
+          "atMs": 10000,
+          "event": "check"
+        },
+        {
+          "atMs": 15000,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          0,
+          0,
+          0
+        ],
+        "terminatedAtMs": null
+      }
+    },
+    {
+      "id": "silent-worker-terminates-after-three-windows",
+      "heartbeatTimeoutMs": 1000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 1001,
+          "event": "check"
+        },
+        {
+          "atMs": 2002,
+          "event": "check"
+        },
+        {
+          "atMs": 3003,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          1,
+          2,
+          3
+        ],
+        "terminatedAtMs": 3003
+      }
+    },
+    {
+      "id": "progress-heartbeats-keep-a-long-turn-alive",
+      "heartbeatTimeoutMs": 1000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 900,
+          "event": "liveness"
+        },
+        {
+          "atMs": 1001,
+          "event": "check"
+        },
+        {
+          "atMs": 1800,
+          "event": "liveness"
+        },
+        {
+          "atMs": 2002,
+          "event": "check"
+        },
+        {
+          "atMs": 2700,
+          "event": "liveness"
+        },
+        {
+          "atMs": 3003,
+          "event": "check"
+        },
+        {
+          "atMs": 3600,
+          "event": "liveness"
+        },
+        {
+          "atMs": 4004,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminatedAtMs": null
+      }
+    },
+    {
+      "id": "progress-stops-mid-turn-still-terminates",
+      "heartbeatTimeoutMs": 1000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 900,
+          "event": "liveness"
+        },
+        {
+          "atMs": 1001,
+          "event": "check"
+        },
+        {
+          "atMs": 2002,
+          "event": "check"
+        },
+        {
+          "atMs": 3003,
+          "event": "check"
+        },
+        {
+          "atMs": 4004,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "terminatedAtMs": 4004
+      }
+    },
+    {
+      "id": "progress-after-a-miss-resets-the-count",
+      "heartbeatTimeoutMs": 1000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 1001,
+          "event": "check"
+        },
+        {
+          "atMs": 1500,
+          "event": "liveness"
+        },
+        {
+          "atMs": 2100,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          1,
+          0
+        ],
+        "terminatedAtMs": null
+      }
+    },
+    {
+      "id": "repeated-checks-inside-one-window-count-once",
+      "heartbeatTimeoutMs": 1000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 1001,
+          "event": "check"
+        },
+        {
+          "atMs": 1200,
+          "event": "check"
+        },
+        {
+          "atMs": 1500,
+          "event": "check"
+        },
+        {
+          "atMs": 2002,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          1,
+          1,
+          1,
+          2
+        ],
+        "terminatedAtMs": null
+      }
+    },
+    {
+      "id": "a-settled-turn-clears-the-window",
+      "heartbeatTimeoutMs": 1000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 1001,
+          "event": "check"
+        },
+        {
+          "atMs": 1500,
+          "event": "idle"
+        },
+        {
+          "atMs": 5000,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          1,
+          0
+        ],
+        "terminatedAtMs": null
+      }
+    },
+    {
+      "id": "a-new-turn-after-silence-starts-its-own-window",
+      "heartbeatTimeoutMs": 1000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 100,
+          "event": "idle"
+        },
+        {
+          "atMs": 5000,
+          "event": "pending"
+        },
+        {
+          "atMs": 5500,
+          "event": "check"
+        },
+        {
+          "atMs": 6100,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          0,
+          1
+        ],
+        "terminatedAtMs": null
+      }
+    },
+    {
+      "id": "production-timeout-kills-a-silent-boot-turn",
+      "heartbeatTimeoutMs": 5000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 5001,
+          "event": "check"
+        },
+        {
+          "atMs": 10002,
+          "event": "check"
+        },
+        {
+          "atMs": 15003,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          1,
+          2,
+          3
+        ],
+        "terminatedAtMs": 15003
+      }
+    },
+    {
+      "id": "production-timeout-survives-a-sixty-second-instantiate-with-progress",
+      "heartbeatTimeoutMs": 5000,
+      "timeline": [
+        {
+          "atMs": 0,
+          "event": "pending"
+        },
+        {
+          "atMs": 4000,
+          "event": "liveness"
+        },
+        {
+          "atMs": 5001,
+          "event": "check"
+        },
+        {
+          "atMs": 9000,
+          "event": "liveness"
+        },
+        {
+          "atMs": 10002,
+          "event": "check"
+        },
+        {
+          "atMs": 30000,
+          "event": "liveness"
+        },
+        {
+          "atMs": 30003,
+          "event": "check"
+        },
+        {
+          "atMs": 59000,
+          "event": "liveness"
+        },
+        {
+          "atMs": 60004,
+          "event": "check"
+        }
+      ],
+      "expected": {
+        "missesAtCheck": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "terminatedAtMs": null
+      }
+    }
+  ]
+}

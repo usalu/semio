@@ -1,0 +1,288 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.pptx",
+  "artifact": "pptx",
+  "directory": "📽️pptx",
+  "dependencies": [
+    "s.stdio.zip",
+    "s.stdio.xml"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376",
+      "revision": "ecma-376",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.profile.any",
+      "standard": "s.stdio.pptx.standard.ecma-376",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.dialect.source",
+      "standard": "s.stdio.pptx.standard.ecma-376",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.representation.document",
+      "standard": "s.stdio.pptx.standard.ecma-376",
+      "representation": "document",
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ],
+      "extensions": [
+        ".pptx"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
+    }
+  ],
+  "codecs": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.pptx.standard.ecma-376.dialect.source",
+      "to": "s.stdio.pptx.standard.ecma-376.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.pptx.v1",
+        "artifact_kind": "stdio.pptx",
+        "document_schema": "stdio.pptx",
+        "extension": "pptx",
+        "pack_schema_hash": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
+        "runtime_capability_id": "s.stdio.pptx.standard.ecma-376.codec.codec-stdio-pptx-extension-pptx.v1"
+      }
+    }
+  ],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.pptx.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.pptx.localization.en",
+      "locale": "en",
+      "name": "PowerPoint Presentation",
+      "description": "PowerPoint Presentation artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.pptx.localization.de",
+      "locale": "de",
+      "name": "PowerPoint-Präsentation",
+      "description": "PowerPoint-Präsentation-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.pptx.conformance-suite.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.codec.codec-stdio-pptx-extension-pptx.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.pptx:pptx|codec:stdio.pptx",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.pptx"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "10:stdio.pptx:pptx"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.composer.dialect-s-stdio-pptx-ecma-376.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pptx@ecma-376/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pptx@ecma-376/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.composer.dialect-s-stdio-pptx-ecma-376-strict.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pptx@ecma-376/strict",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pptx@ecma-376/strict"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.composer.dialect-s-stdio-pptx-ecma-376-transitional.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.pptx@ecma-376/transitional",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.pptx@ecma-376/transitional"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pptx",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pptx"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx-diff.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pptx.diff",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pptx.diff"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx-op.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pptx.op",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pptx.op"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx-pack.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pptx.pack",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pptx.pack"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.grammar.grammar-stdio-pptx-spr.v1",
+      "category": "grammar",
+      "descriptor": "runtime-capability:grammar:grammar:stdio.pptx.spr",
+      "claims": [
+        {
+          "namespace": "grammar",
+          "value": "stdio.pptx.spr"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.inference.schema-s-stdio-pptx-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.pptx.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.pptx.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.standard.ecma-376.representation.mime-application-vnd-openxmlformats-officedocument-presentationml-presentation-extension-pptx",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/vnd.openxmlformats-officedocument.presentationml.presentation|extension:.pptx",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        },
+        {
+          "namespace": "extension",
+          "value": ".pptx"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.schema.schema-s-stdio-pptx.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.pptx",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.pptx"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.subset-validator.validated-dialect-s-stdio-pptx-ecma-376-strict.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.pptx@ecma-376/strict",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.pptx@ecma-376/strict"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.pptx.subset-validator.validated-dialect-s-stdio-pptx-ecma-376-transitional.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.pptx@ecma-376/transitional",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.pptx@ecma-376/transitional"
+        }
+      ]
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.pptx.standard.ecma-376.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

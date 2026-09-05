@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "switches-the-brief-from-plaintext-to-markdown",
-              "directoryName": "🧪️switches-the-brief-from-plaintext-to-markdown"
+              "directoryName": "🔤️switches-the-brief-from-plaintext-to-markdown"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "republishes-the-brief-under-a-new-uri",
-              "directoryName": "🧪️republishes-the-brief-under-a-new-uri"
+              "directoryName": "🔗️republishes-the-brief-under-a-new-uri"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "warns-that-the-brief-body-is-unchanged",
-              "directoryName": "🧪️warns-that-the-brief-body-is-unchanged"
+              "directoryName": "⚠️warns-that-the-brief-body-is-unchanged"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "renames-the-document-to-mission-brief",
-              "directoryName": "🧪️renames-the-document-to-mission-brief"
+              "directoryName": "🏷️renames-the-document-to-mission-brief"
             }
           ]
         }
