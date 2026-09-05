@@ -252,11 +252,12 @@ impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostSta
 const DESCRIBE_FUEL_BUDGET: u64 = 2_000_000_000;
 
 /// ⏳️ Aggregate plugin bundles build several complete app catalogs in one pure descriptor call.
-/// The ten-surface demonstrator exceeded the former single-plugin 60-second wall cap in an
-/// unoptimized WASI build while remaining within the measured fuel bound. Five minutes preserves a
-/// finite cancellation deadline without rejecting valid multi-app packages on slower development
-/// machines.
-const DESCRIBE_DEADLINE_MS: u32 = 300_000;
+/// The ten-surface demonstrator exceeded the former single-plugin 60-second wall cap, and the
+/// current full-catalog Space component exceeded the later five-minute cap while remaining within
+/// the measured fuel bound. Thirty minutes preserves a finite wall deadline on constrained
+/// development machines; the independent two-billion-instruction fuel cap remains the deterministic
+/// runaway bound.
+const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 
 /// 🛡️ Descriptor inputs and outputs share the strict catalog's per-artifact ceiling.
 pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 64 * 1024 * 1024;
@@ -406,13 +407,17 @@ async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<V
 }
 
 async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<Vec<u8>, DescribeError> {
+    let started = std::time::Instant::now();
+    eprintln!("[describe] owned phase=compile bytes={} elapsed_ms=0", wasm_bytes.len());
     let runtime = OwnedRuntime::new();
     let package = PackageRef { package: PackageId(source.display().to_string()), hash: PackageHash([0; 32]) };
     let compiled = runtime.compile(&package, wasm_bytes).await.map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", source.display())))?;
+    eprintln!("[describe] owned phase=execute fuel=0 elapsed_ms={}", started.elapsed().as_millis());
     runtime
-        .describe(
+        .describe_observed(
             &compiled,
             semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 },
+            |fuel, elapsed| eprintln!("[describe] owned phase=execute fuel={fuel} elapsed_ms={}", elapsed.as_millis()),
         )
         .await
         .map_err(|error| DescribeError(format!("calling owned describe() on {}: {error}", source.display())))
@@ -530,6 +535,12 @@ mod tests {
         assert_ne!(raw, core);
         let same = semio_framework_hash::sha256_hex(b"same");
         assert!(artifact_hashes(same.clone(), same).is_err());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn full_catalog_describe_retains_finite_wall_and_fuel_bounds() {
+        assert_eq!(DESCRIBE_DEADLINE_MS, 1_800_000);
+        assert_eq!(DESCRIBE_FUEL_BUDGET, 2_000_000_000);
     }
 
     #[semio_framework_async_macros::async_test]

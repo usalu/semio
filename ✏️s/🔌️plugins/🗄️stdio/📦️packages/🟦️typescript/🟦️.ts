@@ -12,7 +12,7 @@ export * as step from "../../🗿️artifacts/📐️step/🟦️.ts";
 export * as ifc from "../../🗿️artifacts/🏗️ifc/🟦️.ts";
 export * as las from "../../🗿️artifacts/☁️las/🟦️.ts";
 export * as gltf from "../../🗿️artifacts/🧊️gltf/🟦️.ts";
-export * as obj from "../../🗿️artifacts/🧊️obj/🟦️.ts";
+export * as obj from "../../🗿️artifacts/🗽️obj/🟦️.ts";
 export * as stl from "../../🗿️artifacts/🔺️stl/🟦️.ts";
 export * as ply from "../../🗿️artifacts/🧱️ply/🟦️.ts";
 export * as dwg from "../../🗿️artifacts/🖊️dwg/🟦️.ts";

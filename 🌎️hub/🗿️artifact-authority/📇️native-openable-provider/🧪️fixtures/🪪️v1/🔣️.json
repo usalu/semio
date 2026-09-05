@@ -12,7 +12,7 @@
   "openTarget": {
     "artifactKind": "stdio.json",
     "artifactSchema": "stdio.json",
-    "packSchemaHash": "7de40335bcca019c81ea7c1cb791e5e438358851fbe32117b5ad8276494b695e",
+    "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
     "surfaceId": "s.stdio.json@rfc8259/*#viewer",
     "appId": "s.stdio.json@rfc8259/*#viewer",
     "windowKindId": "framework.window.tree",

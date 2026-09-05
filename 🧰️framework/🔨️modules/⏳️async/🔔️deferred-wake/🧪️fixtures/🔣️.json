@@ -1,0 +1,109 @@
+{
+  "schema": "semio.framework.async.worker-deferred-wake/v1",
+  "capacity": {
+    "maintenanceHooks": 64,
+    "backendControls": 64,
+    "writersPerBackend": 32,
+    "partitions": 64,
+    "slotsPerPartition": 32,
+    "waitersPerWriter": 1,
+    "totalWaiters": 2048
+  },
+  "dispatch": {
+    "lane": "io",
+    "workKind": "deferred-wake",
+    "sources": ["job", "maintenance", "deferred-wake"],
+    "sourceRotation": "round-robin-within-lane",
+    "wakesPerTurn": 1,
+    "waiterTransfer": "move",
+    "enqueueNeverCallsWaker": true,
+    "catchPanics": true,
+    "locksReleasedBeforeWake": ["maintenance-registry", "scheduler-lane", "deferred-wake-ring"],
+    "forbiddenEnqueueEffects": ["waker-callback", "job-allocation", "user-closure", "db-task", "lost-owner", "io"]
+  },
+  "refusal": {
+    "controllerCopy": ["pool", "maintenance-ticket", "deferred-wake-ticket"],
+    "faultPredicate": ["exact-backend", "active", "requested", "not-faulted"],
+    "transferPredicate": ["exact-backend", "active", "requested", "faulted", "waiter-present"],
+    "queueFailure": "restore-exact-waiter-to-writer-signal-cell"
+  },
+  "retryEpoch": {
+    "hostileTrace": ["fault", "manual-poll", "pending", "drain-old-slot", "fault-ready", "retry", "park-new-waiter"],
+    "readyBeforeOldSlotDrains": false,
+    "maximumQueuedOwnersPerSignal": 1,
+    "admission": "fault-ready-after-exact-slot-drain"
+  },
+  "shutdown": {
+    "native": {
+      "admission": "close-then-drain-accepted-wakes",
+      "workersExitAfter": "deferred-wake-ring-empty"
+    },
+    "cooperative": {
+      "admission": "close-then-drain-accepted-wakes",
+      "hasPendingWhile": "deferred-wake-ring-nonempty",
+      "pump": "one-deferred-wake-per-turn-until-empty"
+    },
+    "afterTerminalEnqueue": "return-owner-for-exact-cell-restoration"
+  },
+  "cases": [
+    {
+      "id": "cross-key-refusal",
+      "activeRequested": 2,
+      "parkedWaiters": 1,
+      "supersededWaiters": 0,
+      "transferredWaiters": 1,
+      "restoredWaiters": 0,
+      "enqueuePhase": "open",
+      "requestMayHoldExternalLock": true,
+      "expected": { "inlineWakes": 0, "drainedWakes": 1, "retainedFaults": 2, "retainedGuards": 2, "terminalEpochs": 0, "jobs": 0, "dbTasks": 0, "lostOwners": 0, "io": 0 }
+    },
+    {
+      "id": "retry-supersedes-self",
+      "activeRequested": 2,
+      "parkedWaiters": 2,
+      "supersededWaiters": 1,
+      "transferredWaiters": 1,
+      "restoredWaiters": 0,
+      "enqueuePhase": "open",
+      "requestMayHoldExternalLock": true,
+      "expected": { "inlineWakes": 0, "drainedWakes": 1, "retainedFaults": 2, "retainedGuards": 2, "terminalEpochs": 0, "jobs": 0, "dbTasks": 0, "lostOwners": 0, "io": 0 }
+    },
+    {
+      "id": "maintenance-capacity-independent",
+      "activeRequested": 2,
+      "parkedWaiters": 1,
+      "supersededWaiters": 0,
+      "transferredWaiters": 1,
+      "restoredWaiters": 0,
+      "enqueuePhase": "maintenance-full",
+      "requestMayHoldExternalLock": true,
+      "expected": { "inlineWakes": 0, "drainedWakes": 1, "retainedFaults": 2, "retainedGuards": 2, "terminalEpochs": 0, "jobs": 0, "dbTasks": 0, "lostOwners": 0, "io": 0 }
+    },
+    {
+      "id": "shutdown-drains-accepted",
+      "activeRequested": 2048,
+      "parkedWaiters": 2048,
+      "supersededWaiters": 0,
+      "transferredWaiters": 2048,
+      "restoredWaiters": 0,
+      "enqueuePhase": "before-shutdown",
+      "requestMayHoldExternalLock": true,
+      "expected": { "inlineWakes": 0, "drainedWakes": 2048, "retainedFaults": 2048, "retainedGuards": 2048, "terminalEpochs": 0, "jobs": 0, "dbTasks": 0, "lostOwners": 0, "io": 0 }
+    },
+    {
+      "id": "terminal-shutdown-restores-owner",
+      "activeRequested": 1,
+      "parkedWaiters": 1,
+      "supersededWaiters": 0,
+      "transferredWaiters": 0,
+      "restoredWaiters": 1,
+      "enqueuePhase": "after-terminal-shutdown",
+      "requestMayHoldExternalLock": true,
+      "expected": { "inlineWakes": 0, "drainedWakes": 0, "retainedFaults": 1, "retainedGuards": 1, "terminalEpochs": 0, "jobs": 0, "dbTasks": 0, "lostOwners": 0, "io": 0 }
+    }
+  ],
+  "runtimeMarkers": {
+    "async": ["WorkerDeferredWakeTicket", "WorkerDeferredWakeRegistry", "PoolWork::DeferredWake", "WORKER_DEFERRED_WAKE_PARTITIONS", "WORKER_DEFERRED_WAKES_PER_PARTITION"],
+    "writer": ["deferred_wake_ticket", "defer_wake", "restore_fault_waiter"]
+  }
+}

@@ -99,20 +99,24 @@ if (logPath) {
 
 if (process.argv.includes("--apply")) {
   const fs = require("node:fs");
+  const path = require("node:path");
   let done = 0;
   const all = [...dirRenames, ...fileRenames];
   for (const [from, to] of all) {
     if (!fs.existsSync(from)) continue; // already moved by an earlier rename in this run
-    for (let attempt = 0; ; attempt++) {
-      try {
-        execSync(`git mv -f ${JSON.stringify(from)} ${JSON.stringify(to)}`);
-        break;
-      } catch (err) {
-        if (attempt >= 5) throw err;
-        execSync("sleep 0.3");
-      }
-    }
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    fs.renameSync(from, to);
     done++;
   }
-  console.log(`renamed ${done}/${all.length}`);
+  console.log(`renamed ${done}/${all.length} on disk; staging with git add -A`);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      execSync("git add -A", { maxBuffer: 1024 * 1024 * 64 });
+      break;
+    } catch (err) {
+      if (attempt >= 20) throw err;
+      execSync("sleep 1");
+    }
+  }
+  console.log("staged");
 }

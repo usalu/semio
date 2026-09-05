@@ -7,6 +7,13 @@ import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020.js";
 import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
+function exactCargoStageEnvironments() {
+  return {
+    env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+    nativeEnv: { RUST_MIN_STACK: "268435456" },
+  };
+}
+
 /** 🔔️ Neutral lifecycle and actual native/cooperative idle wake acceptance. */
 class WorkerMaintenanceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -37,8 +44,92 @@ class WorkerMaintenanceCheckScript extends BundleScript {
     for (const api of ["install_maintenance_hook", "request_maintenance", "remove_maintenance_hook"]) assert.equal(pool.match(new RegExp(`pub fn ${api}\\(`, "g"))?.length, 2, `native/cooperative API mismatch: ${api}`);
     assert(pool.includes("job.run(&inner.maintenance)") && pool.includes("job.run(&self.inner.maintenance)"), "both pool schedulers must run fixed work under their existing permits");
     if (segments[0] !== "--native") return;
-    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["worker_maintenance_matches_neutral_retention_and_aba_lifecycle", "worker_maintenance_capacity_and_pool_identity_are_exact", "worker_maintenance_native_idle_wake_uses_no_queued_job", "worker_maintenance_cooperative_wake_obeys_pump_and_drr", "worker_maintenance_native_running_close_and_shutdown_keep_exact_invocation", "worker_maintenance_native_interleaves_io_jobs_and_rotating_hooks", "worker_maintenance_cooperative_interleaves_io_jobs_and_rotating_hooks", "native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn", "cooperative_maintenance_snapshot_contention_preserves_queued_job", "cooperative_maintenance_live_host_revisits_queued_owner"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listBudgetMs: 60_000, lawBudgetMs: 120_000, progress(event) { console.log(`worker-maintenance-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["worker_maintenance_matches_neutral_retention_and_aba_lifecycle", "worker_maintenance_capacity_and_pool_identity_are_exact", "worker_maintenance_native_idle_wake_uses_no_queued_job", "worker_maintenance_cooperative_wake_obeys_pump_and_drr", "worker_maintenance_native_running_close_and_shutdown_keep_exact_invocation", "worker_maintenance_native_interleaves_io_jobs_and_rotating_hooks", "worker_maintenance_cooperative_interleaves_io_jobs_and_rotating_hooks", "native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn", "cooperative_maintenance_snapshot_contention_preserves_queued_job", "cooperative_maintenance_live_host_revisits_queued_owner"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listBudgetMs: 60_000, lawBudgetMs: 120_000, progress(event) { console.log(`worker-maintenance-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`worker-maintenance-native-receipt: ${JSON.stringify(receipt)}`);
+  }
+}
+
+/** 💤️ Proves the fixed deferred-waker runtime and hostile retry admission fence. */
+class WorkerDeferredWakeCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-deferred-wake-check accepts only --native");
+    const owner = join(this.root, "../../🔔️deferred-wake");
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧬️.schema.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    const capacity = fixture.capacity;
+    assert.equal(capacity.partitions, capacity.backendControls);
+    assert.equal(capacity.slotsPerPartition, capacity.writersPerBackend);
+    assert.equal(capacity.totalWaiters, capacity.backendControls * capacity.writersPerBackend * capacity.waitersPerWriter);
+    assert.equal(capacity.totalWaiters, capacity.partitions * capacity.slotsPerPartition);
+    let queuedOwner = true;
+    let faulted = true;
+    let retryEpoch = 0;
+    let queuedOwners = 1;
+    let maximumQueuedOwners = queuedOwners;
+    assert.equal(faulted && queuedOwner ? "pending" : "ready", fixture.retryEpoch.hostileTrace[2]);
+    assert.equal(fixture.retryEpoch.readyBeforeOldSlotDrains, false);
+    queuedOwner = false;
+    assert.equal(faulted && queuedOwner ? "pending" : "fault-ready", fixture.retryEpoch.hostileTrace[4]);
+    faulted = false;
+    retryEpoch += 1;
+    queuedOwner = true;
+    queuedOwners = Number(queuedOwner);
+    maximumQueuedOwners = Math.max(maximumQueuedOwners, queuedOwners);
+    assert.equal(retryEpoch, 1);
+    assert.equal(maximumQueuedOwners, fixture.retryEpoch.maximumQueuedOwnersPerSignal);
+    assert.equal(fixture.retryEpoch.admission, "fault-ready-after-exact-slot-drain");
+    assert.equal(new Set(fixture.cases.map((row: { id: string }) => row.id)).size, fixture.cases.length);
+    for (const row of fixture.cases) {
+      const transferable = row.parkedWaiters - row.supersededWaiters;
+      assert.equal(row.transferredWaiters + row.restoredWaiters, transferable, row.id);
+      assert(row.transferredWaiters <= capacity.totalWaiters, row.id);
+      const ring = Array<string | undefined>(capacity.totalWaiters);
+      for (let index = 0; index < row.transferredWaiters; index += 1) ring[index] = `${row.id}:${index}`;
+      assert.equal(ring.filter(Boolean).length, row.transferredWaiters, row.id);
+      assert.equal(row.expected.inlineWakes, 0, row.id);
+      let drained = 0;
+      for (let index = 0; index < ring.length; index += fixture.dispatch.wakesPerTurn) {
+        if (ring[index] !== undefined) { ring[index] = undefined; drained += 1; }
+      }
+      assert.equal(drained, row.expected.drainedWakes, row.id);
+      assert.equal(row.expected.retainedFaults, row.activeRequested, row.id);
+      assert.equal(row.expected.retainedGuards, row.activeRequested, row.id);
+      assert.equal(row.expected.terminalEpochs, 0, row.id);
+    }
+    const asyncSource = readFileSync(join(owner, "../🦀️.rs"), "utf8");
+    const storageSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs"), "utf8");
+    const writerSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🦀️.rs"), "utf8");
+    const releaseSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🔔️release/🦀️.rs"), "utf8");
+    assert(storageSource.includes(`const DB_IO_BACKEND_CONTROLS: usize = ${capacity.backendControls};`));
+    assert(writerSource.includes(`const WAL_WRITER_CAPACITY: usize = ${capacity.writersPerBackend};`));
+    assert(releaseSource.includes("fn request_controller(") && releaseSource.includes("fn notify_faults("));
+    const missingAsync = fixture.runtimeMarkers.async.filter((marker: string) => !asyncSource.includes(marker));
+    const missingWriter = fixture.runtimeMarkers.writer.filter((marker: string) => !releaseSource.includes(marker));
+    assert.deepEqual(missingAsync, [], `missing async runtime markers: ${missingAsync.join(", ")}`);
+    assert.deepEqual(missingWriter, [], `missing writer runtime markers: ${missingWriter.join(", ")}`);
+    const markerCount = fixture.runtimeMarkers.async.length + fixture.runtimeMarkers.writer.length;
+    console.log(`worker-deferred-wake-independent-oracle: AJV=1 cases=${fixture.cases.length} fixed-waiters=${capacity.totalWaiters} retry-epochs=${retryEpoch} max-queued-per-signal=${maximumQueuedOwners} inline-wakes=0 runtime-markers=${markerCount}/${markerCount}`);
+    if (segments[0] !== "--native") return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [{
+        package: "semio-framework-async",
+        target: { kind: "lib", name: "semio_framework_async" },
+        laws: [
+          "deferred_wake::tests::worker_deferred_wake_matches_neutral_capacity_generation_and_shutdown_drain",
+          "native_pool::tests::worker_deferred_wake_native_never_runs_inline_and_shutdown_drains_accepted_owner",
+          "wasm_pool::cooperative_tests::worker_deferred_wake_cooperative_shutdown_requires_later_pump_to_drain",
+        ],
+      }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) { console.log(`worker-deferred-wake-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    for (const receipt of receipts) console.log(`worker-deferred-wake-native-receipt: ${JSON.stringify(receipt)}`);
   }
 }
 
@@ -110,6 +201,6 @@ class PreviewGeneratedScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

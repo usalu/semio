@@ -5110,6 +5110,13 @@ class BenchPluginsScript extends BundleScript {
 //#endregion 🔖️Bench
 
 const router = new ScriptRouter(import.meta.dir)
+  .register("closed-browser-component-factory-check", class extends BundleScript {
+    async run(segments: string[]): Promise<void> {
+      if (segments.length) throw new Error("closed-browser-component-factory-check accepts no arguments");
+      const { testClosedBrowserComponentFactory } = await import("../../../🔌️plugin/🌐️browser-bundle/📜️script.ts");
+      await testClosedBrowserComponentFactory(this.repoRoot);
+    }
+  })
   .register("dev", DevScript)
   .register("build", BuildScript)
   .register("test", TestScript)

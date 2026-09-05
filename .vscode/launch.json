@@ -5443,6 +5443,14 @@
       "presentation": { "group": "4_gate", "order": 411.079 }
     },
     {
+      "name": "⚖️gate💤️worker-deferred-wake📐️design",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-async-rs:worker-deferred-wake-design-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.0791 }
+    },
+    {
       "name": "⚖️gate🔔️worker-maintenance🦀️native",
       "type": "node-terminal",
       "request": "launch",

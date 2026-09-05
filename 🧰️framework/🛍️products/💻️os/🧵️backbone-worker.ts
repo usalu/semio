@@ -2137,6 +2137,7 @@ type DirectoryAdministrationOperationV1 = {
   inviteTransferEpoch: number | null;
   nextInviteTransferEpoch: number;
   requestId: string | null;
+  authorPage: boolean;
   closed: boolean;
 };
 
@@ -2170,6 +2171,7 @@ function terminateDirectoryAdministration(operation: DirectoryAdministrationOper
   operation.inviteCapabilityStatus = null;
   operation.inviteTransferEpoch = null;
   operation.requestId = null;
+  operation.authorPage = false;
   operation.phase = phase;
   if (directoryAdministration === operation) directoryAdministration = null;
   if (notify) postDirectoryAdministrationState(operation, code);
@@ -2206,12 +2208,19 @@ async function loadDirectoryAdministrationPage(operationEpoch: number, cursor: s
     return;
   }
   operation.phase = loading;
+  operation.authorPage = false;
   postDirectoryAdministrationState(operation);
   try {
     const page = await client.spaceAdministrationPage(operation.spaceId, cursor, { signal: operation.abort.signal });
     const live = liveDirectoryAdministration(operationEpoch);
     if (live === null || live !== operation) return;
     operation.canonicalJson = page.canonicalJson;
+    operation.authorPage = page.page.access === "author";
+    if (!operation.authorPage) {
+      operation.inviteToken = null;
+      operation.inviteCapabilityStatus = null;
+      operation.inviteTransferEpoch = null;
+    }
     operation.phase = "ready";
     postDirectoryAdministrationState(operation);
   } catch (error) {
@@ -2244,6 +2253,7 @@ function openDirectoryAdministration(operationEpoch: number, spaceId: string): v
     inviteTransferEpoch: null,
     nextInviteTransferEpoch: 0,
     requestId: null,
+    authorPage: false,
     closed: false,
   };
   directoryAdministration = operation;
@@ -2310,6 +2320,13 @@ async function submitDirectoryAdministrationCommand(operationEpoch: number, requ
 function requestDirectoryAdministrationCapability(operationEpoch: number): void {
   const operation = liveDirectoryAdministration(operationEpoch);
   if (operation === null) return;
+  if (!operation.authorPage) {
+    operation.inviteToken = null;
+    operation.inviteCapabilityStatus = null;
+    operation.inviteTransferEpoch = null;
+    post({ kind: "directory-administration-capability-rejected", operationEpoch, code: "already-settled" });
+    return;
+  }
   const inviteToken = operation.inviteToken;
   if (inviteToken === null) {
     post({ kind: "directory-administration-capability-rejected", operationEpoch, code: "already-settled" });
@@ -3633,6 +3650,21 @@ if (import.meta.vitest) {
       return JSON.stringify({ ...unsigned, receiptSha256: Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("") });
     }
 
+    async function sealMemberAdministrationPage(): Promise<string> {
+      const unsigned = {
+        access: "member" as const,
+        schema: "semio.directory.space-administration-page.v1" as const,
+        sessionBindingSha256: "a".repeat(64),
+        authorizationGeneration: 6,
+        spaceId: SPACE,
+        space: { id: SPACE, name: "Administered", kind: "studio", visibility: "private", ownerUserId: "user-a", role: "spectator", memberCount: 2, documentCount: 0, activeConnections: 0, createdAtMs: 1, updatedAtMs: 3 },
+        members: { rows: [{ userId: "user-b", email: "b@example.invalid", displayName: "user-b", role: "spectator" as const, owner: false }] },
+        documents: { rows: [] as unknown[] },
+      };
+      const digest = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(unsigned))));
+      return JSON.stringify({ ...unsigned, receiptSha256: Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("") });
+    }
+
     async function sealCommandReceipt(requestId: string, command: DirectoryCommand, inviteToken?: string): Promise<string> {
       const commandSha256 = await directorySha256(JSON.stringify(command));
       const unsigned = {
@@ -3751,6 +3783,30 @@ if (import.meta.vitest) {
         expect(harness.posted).toContainEqual({ kind: "directory-administration-capability-rejected", operationEpoch: 2, transferEpoch: 2, code: "already-settled" });
         handleTsRequest({ kind: "directory-administration-capability-request", operationEpoch: 2 });
         expect(harness.posted.filter((message) => message.kind === "directory-administration-capability")).toHaveLength(2);
+      } finally {
+        harness.release();
+        closeDirectory();
+      }
+    });
+
+    it("erases an invite capability when the canonical refresh no longer grants author access", async () => {
+      const harness = administrationHarness([200, 200]);
+      const author = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
+      const member = await sealMemberAdministrationPage();
+      try {
+        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        harness.bodies.push(author);
+        handleTsRequest({ kind: "directory-administration-open", operationEpoch: 6, spaceId: SPACE });
+        await settleAdministrationTurns(harness);
+        const command: DirectoryCommand = { kind: "create-invite", spaceId: SPACE, role: "spectator", ttlSecs: 3600 };
+        harness.bodies.push(await sealCommandReceipt("3".repeat(32), command, "invite.v1.spectator-secret"), member);
+        handleTsRequest({ kind: "directory-administration-submit", operationEpoch: 6, requestId: "3".repeat(32), command });
+        await settleAdministrationTurns(harness);
+        await settleAdministrationTurns(harness);
+        expect(harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1)).toMatchObject({ phase: "ready", canonicalJson: member });
+        handleTsRequest({ kind: "directory-administration-capability-request", operationEpoch: 6 });
+        expect(harness.posted.some((message) => message.kind === "directory-administration-capability")).toBe(false);
+        expect(harness.posted.at(-1)).toEqual({ kind: "directory-administration-capability-rejected", operationEpoch: 6, code: "already-settled" });
       } finally {
         harness.release();
         closeDirectory();

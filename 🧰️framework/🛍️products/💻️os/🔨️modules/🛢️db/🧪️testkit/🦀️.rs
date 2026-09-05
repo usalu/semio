@@ -1325,7 +1325,7 @@ mod tests {
                 storage.append(&writer, 0, pages(bytes)).await?;
                 Ok::<_, DbError>(())
             }).map_err(|err| err.to_string());
-            let release = db_actor::block_on(writer.release()).map_err(|err| err.to_string());
+            let release = db_actor::block_on(writer.release()).map_err(|err| err.error().to_string());
             seed?;
             release?;
             let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(storage));

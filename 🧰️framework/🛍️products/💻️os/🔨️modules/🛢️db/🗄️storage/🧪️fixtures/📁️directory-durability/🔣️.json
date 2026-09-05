@@ -1,5 +1,6 @@
 {
   "schema": "semio.db.fs-directory-durability/v1",
+  "recoverySync": ["wal-file-synced", "wal-parent-synced"],
   "create": ["segment-created", "segment-file-synced", "segment-parent-synced"],
   "seal": ["marker-created", "marker-file-synced", "marker-parent-synced"],
   "delete": ["segment-deleted", "segment-delete-parent-synced", "marker-deleted", "marker-delete-parent-synced"],

@@ -1,12 +1,12 @@
 //! 🔔️ Fixed writer release intent and monotonic completion witnesses survive backend-slot reuse.
-use super::{WalWriterKey, WAL_WRITER_CAPACITY};
 use super::super::{db_io_backend_parts, DB_IO_BACKEND_CONTROLS};
+use super::super::{DbIoBackendControl, DbIoCredit, DbIoText, DbIoWriterReleaseStep};
+use super::{WalWriterKey, WAL_WRITER_CAPACITY};
 use crate::DbError;
+use semio_framework_async::{Lane, WorkerDeferredWakeTicket, WorkerMaintenanceStep, WorkerMaintenanceTicket, WorkerPool};
+use std::sync::Arc;
 use std::sync::Mutex;
 use std::task::{Context, Poll, Waker};
-use std::sync::Arc;
-use semio_framework_async::{Lane, WorkerPool, WorkerMaintenanceStep, WorkerMaintenanceTicket};
-use super::super::{DbIoBackendControl, DbIoCredit, DbIoText, DbIoWriterReleaseStep};
 
 struct WalWriterSignalCell {
     active: Option<WalWriterKey>,
@@ -15,31 +15,42 @@ struct WalWriterSignalCell {
     waiter: Option<Waker>,
     notification: Option<Waker>,
     fault: Option<DbIoText>,
+    deferred_fault_waiter: bool,
 }
 
 impl WalWriterSignalCell {
-    const fn new() -> Self { Self { active: None, requested: false, terminal_epoch: 0, waiter: None, notification: None, fault: None } }
+    const fn new() -> Self {
+        Self { active: None, requested: false, terminal_epoch: 0, waiter: None, notification: None, fault: None, deferred_fault_waiter: false }
+    }
 
     fn prepare(&mut self, key: WalWriterKey) -> Result<u64, DbError> {
-        if self.active.is_some() || self.notification.is_some() { return Err(DbError::Conflict("WAL writer signal occupied".to_string())); }
+        if self.active.is_some() || self.notification.is_some() || self.deferred_fault_waiter {
+            return Err(DbError::Conflict("WAL writer signal occupied".to_string()));
+        }
         let required_epoch = self.terminal_epoch.checked_add(1).ok_or(DbError::LimitExceeded("WAL writer terminal epoch"))?;
         self.active = Some(key);
         self.requested = false;
         self.fault = None;
+        self.deferred_fault_waiter = false;
         Ok(required_epoch)
     }
 
     fn request(&mut self, key: WalWriterKey) -> bool {
-        if self.active != Some(key) { return false; }
+        if self.active != Some(key) {
+            return false;
+        }
         self.requested = true;
         true
     }
 
-    fn requested(&self, key: WalWriterKey) -> bool { self.active == Some(key) && self.requested }
+    fn requested(&self, key: WalWriterKey) -> bool {
+        self.active == Some(key) && self.requested
+    }
 
     fn cancel(&mut self, key: WalWriterKey) {
         assert_eq!(self.active, Some(key));
         assert!(self.waiter.is_none());
+        assert!(!self.deferred_fault_waiter);
         self.active = None;
         self.requested = false;
     }
@@ -50,13 +61,26 @@ impl WalWriterSignalCell {
         self.active = None;
         self.requested = false;
         self.fault = None;
+        self.deferred_fault_waiter = false;
         self.waiter.take()
     }
 
     fn poll(&mut self, key: WalWriterKey, required_epoch: u64, context: &mut Context<'_>) -> Poll<Result<(), DbError>> {
-        if self.terminal_epoch >= required_epoch { return Poll::Ready(Ok(())); }
-        if self.active != Some(key) { return Poll::Ready(Err(DbError::Fenced { expected: self.active.map_or(0, |key| key.generation), actual: key.generation })); }
-        if self.waiter.as_ref().is_none_or(|waiter| !waiter.will_wake(context.waker())) { self.waiter = Some(context.waker().clone()); }
+        if self.terminal_epoch >= required_epoch {
+            return Poll::Ready(Ok(()));
+        }
+        if self.active != Some(key) {
+            return Poll::Ready(Err(DbError::Fenced { expected: self.active.map_or(0, |key| key.generation), actual: key.generation }));
+        }
+        if let Some(fault) = &self.fault {
+            if self.deferred_fault_waiter {
+                return Poll::Pending;
+            }
+            return Poll::Ready(Err(DbError::Unavailable(fault.as_str().to_string())));
+        }
+        if self.waiter.as_ref().is_none_or(|waiter| !waiter.will_wake(context.waker())) {
+            self.waiter = Some(context.waker().clone());
+        }
         Poll::Pending
     }
 }
@@ -85,7 +109,9 @@ impl WalWriterSignalReservation {
 
 impl Drop for WalWriterSignalReservation {
     fn drop(&mut self) {
-        if !self.committed { cell(self.key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).cancel(self.key); }
+        if !self.committed {
+            cell(self.key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).cancel(self.key);
+        }
     }
 }
 
@@ -103,18 +129,28 @@ pub struct WalWriterReleaseFailure {
 }
 
 impl WalWriterReleaseFailure {
-    pub fn error(&self) -> &DbError { &self.error }
-    pub fn into_parts(self) -> (DbError, WalWriterRelease) { (self.error, self.release) }
+    pub fn error(&self) -> &DbError {
+        &self.error
+    }
+    pub fn into_parts(self) -> (DbError, WalWriterRelease) {
+        (self.error, self.release)
+    }
 }
 
 impl std::fmt::Debug for WalWriterReleaseFailure {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("WalWriterReleaseFailure").field("error", &self.error).field("key", &self.release.key).finish() }
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("WalWriterReleaseFailure").field("error", &self.error).field("key", &self.release.key).finish()
+    }
 }
 
 impl WalWriterRelease {
     pub fn retry(self) -> Self {
         let mut cell = cell(self.key).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if cell.active == Some(self.key) { cell.fault = None; cell.waiter = None; }
+        if cell.active == Some(self.key) {
+            assert!(!cell.deferred_fault_waiter, "writer retry cannot overtake its exact deferred fault waiter");
+            cell.fault = None;
+            cell.waiter = None;
+        }
         drop(cell);
         request_controller(self.key.backend);
         self
@@ -128,10 +164,10 @@ impl std::future::Future for WalWriterRelease {
         assert!(!self.resolved, "writer close polled after terminal transfer");
         let result = {
             let mut cell = cell(self.key).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            match cell.poll(self.key, self.required_epoch, context) {
-                Poll::Pending if cell.active == Some(self.key) && cell.fault.is_some() => Poll::Ready(Err(DbError::Unavailable(cell.fault.as_ref().expect("exact retained writer fault").as_str().to_string()))),
-                result => result,
+            if cell.deferred_fault_waiter && !deferred_wake_pending(self.key) {
+                cell.deferred_fault_waiter = false;
             }
+            cell.poll(self.key, self.required_epoch, context)
         };
         match result {
             Poll::Pending => Poll::Pending,
@@ -145,7 +181,9 @@ impl std::future::Future for WalWriterRelease {
 
 pub(crate) fn prepare(key: WalWriterKey) -> Result<WalWriterSignalReservation, DbError> {
     let (slot, _) = db_io_backend_parts(key.backend);
-    if usize::from(slot) >= DB_IO_BACKEND_CONTROLS || usize::from(key.slot) >= WAL_WRITER_CAPACITY { return Err(DbError::LimitExceeded("WAL writer signal authority")); }
+    if usize::from(slot) >= DB_IO_BACKEND_CONTROLS || usize::from(key.slot) >= WAL_WRITER_CAPACITY {
+        return Err(DbError::LimitExceeded("WAL writer signal authority"));
+    }
     let required_epoch = cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).prepare(key)?;
     Ok(WalWriterSignalReservation { key, required_epoch, committed: false })
 }
@@ -160,7 +198,9 @@ pub(crate) fn requested(key: WalWriterKey) -> bool {
 
 pub(crate) fn fault(key: WalWriterKey, error: &DbError) {
     let mut cell = cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if cell.active == Some(key) && cell.fault.is_none() { cell.fault = Some(super::super::db_io_error_text(error)); }
+    if cell.active == Some(key) && cell.fault.is_none() {
+        cell.fault = Some(super::super::db_io_error_text(error));
+    }
 }
 
 pub(crate) fn faulted(key: WalWriterKey) -> bool {
@@ -178,7 +218,9 @@ pub(crate) fn notify_terminal(backend: super::super::DbIoBackendControl) {
     let (slot, _) = db_io_backend_parts(backend);
     for cell in &WAL_WRITER_SIGNALS[usize::from(slot)] {
         let waiter = cell.lock().unwrap_or_else(std::sync::PoisonError::into_inner).notification.take();
-        if let Some(waiter) = waiter { waiter.wake(); }
+        if let Some(waiter) = waiter {
+            waiter.wake();
+        }
     }
 }
 
@@ -187,9 +229,15 @@ pub(crate) fn notify_faults(backend: DbIoBackendControl) {
     for cell in &WAL_WRITER_SIGNALS[usize::from(slot)] {
         let waiter = {
             let mut cell = cell.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if cell.active.is_some_and(|key| key.backend == backend) && cell.fault.is_some() { cell.waiter.take() } else { None }
+            if cell.active.is_some_and(|key| key.backend == backend) && cell.fault.is_some() {
+                cell.waiter.take()
+            } else {
+                None
+            }
         };
-        if let Some(waiter) = waiter { waiter.wake(); }
+        if let Some(waiter) = waiter {
+            waiter.wake();
+        }
     }
 }
 
@@ -197,7 +245,9 @@ fn fault_all_requested(backend: DbIoBackendControl, error: &DbError) {
     let (slot, _) = db_io_backend_parts(backend);
     for cell in &WAL_WRITER_SIGNALS[usize::from(slot)] {
         let mut cell = cell.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if cell.active.is_some_and(|key| key.backend == backend) && cell.requested && cell.fault.is_none() { cell.fault = Some(super::super::db_io_error_text(error)); }
+        if cell.active.is_some_and(|key| key.backend == backend) && cell.requested && cell.fault.is_none() {
+            cell.fault = Some(super::super::db_io_error_text(error));
+        }
     }
 }
 
@@ -212,15 +262,22 @@ fn has_runnable_request(backend: DbIoBackendControl) -> bool {
 struct WalWriterController {
     backend: DbIoBackendControl,
     pool: Arc<WorkerPool>,
-    ticket: WorkerMaintenanceTicket,
+    ticket: Option<WorkerMaintenanceTicket>,
+    deferred_wake_ticket: Option<WorkerDeferredWakeTicket>,
     waker: Waker,
 }
 
-struct WalWriterControllerWake { backend: DbIoBackendControl }
+struct WalWriterControllerWake {
+    backend: DbIoBackendControl,
+}
 
 impl std::task::Wake for WalWriterControllerWake {
-    fn wake(self: Arc<Self>) { request_controller(self.backend); }
-    fn wake_by_ref(self: &Arc<Self>) { request_controller(self.backend); }
+    fn wake(self: Arc<Self>) {
+        request_controller(self.backend);
+    }
+    fn wake_by_ref(self: &Arc<Self>) {
+        request_controller(self.backend);
+    }
 }
 
 static WAL_WRITER_CONTROLLERS: [Mutex<Option<WalWriterController>>; DB_IO_BACKEND_CONTROLS] = [const { Mutex::new(None) }; DB_IO_BACKEND_CONTROLS];
@@ -233,23 +290,57 @@ pub(crate) const fn controller_credit() -> DbIoCredit {
 pub(crate) fn install_controller(backend: DbIoBackendControl, pool: Arc<WorkerPool>) -> Result<(), DbError> {
     let (slot, generation) = db_io_backend_parts(backend);
     let mut row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if row.is_some() { return Err(DbError::Conflict("WAL writer controller occupied".to_string())); }
-    let ticket = pool.install_maintenance_hook(Lane::Io, controller_step, [u64::from(slot), generation]).map_err(|error| DbError::Unavailable(format!("WAL writer maintenance admission: {error:?}")))?;
+    if row.is_some() {
+        return Err(DbError::Conflict("WAL writer controller occupied".to_string()));
+    }
+    let deferred_wake_ticket = pool.install_deferred_wake_partition().map_err(|error| DbError::Unavailable(format!("WAL writer deferred-wake admission: {error:?}")))?;
+    let ticket = match pool.install_maintenance_hook(Lane::Io, controller_step, [u64::from(slot), generation]) {
+        Ok(ticket) => ticket,
+        Err(error) => {
+            assert!(pool.remove_deferred_wake_partition(deferred_wake_ticket).is_ok_and(|removed| removed));
+            return Err(DbError::Unavailable(format!("WAL writer maintenance admission: {error:?}")));
+        }
+    };
     let waker = Waker::from(Arc::new(WalWriterControllerWake { backend }));
-    *row = Some(WalWriterController { backend, pool, ticket, waker });
+    *row = Some(WalWriterController { backend, pool, ticket: Some(ticket), deferred_wake_ticket: Some(deferred_wake_ticket), waker });
     Ok(())
 }
 
 pub(crate) fn request_controller(backend: DbIoBackendControl) {
     let (slot, _) = db_io_backend_parts(backend);
-    let row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    let Some(row) = row.as_ref().filter(|row| row.backend == backend) else { return };
-    if row.pool.request_maintenance(row.ticket).is_err() {
-        for cell in &WAL_WRITER_SIGNALS[usize::from(slot)] {
+    let controller = {
+        let row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(row) = row.as_ref().filter(|row| row.backend == backend) else { return };
+        let (Some(ticket), Some(deferred_wake_ticket)) = (row.ticket, row.deferred_wake_ticket) else { return };
+        (row.pool.clone(), ticket, deferred_wake_ticket)
+    };
+    if controller.0.request_maintenance(controller.1).is_err() {
+        for (writer_slot, cell) in WAL_WRITER_SIGNALS[usize::from(slot)].iter().enumerate() {
             let mut cell = cell.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if cell.active.is_some_and(|key| key.backend == backend) && cell.requested && cell.fault.is_none() { cell.fault = Some(super::super::db_io_text_literal("WAL writer maintenance request refused; exact guard remains retained")); }
+            if cell.active.is_some_and(|key| key.backend == backend) && cell.requested && cell.fault.is_none() {
+                cell.fault = Some(super::super::db_io_text_literal("WAL writer maintenance request refused; exact guard remains retained"));
+                if let Some(waiter) = cell.waiter.take() {
+                    match controller.0.defer_wake(controller.2, writer_slot, waiter) {
+                        Ok(()) => cell.deferred_fault_waiter = true,
+                        Err(rejected) => restore_fault_waiter(&mut cell, rejected.into_waker()),
+                    }
+                }
+            }
         }
     }
+}
+
+fn restore_fault_waiter(cell: &mut WalWriterSignalCell, waiter: Waker) {
+    assert!(cell.waiter.is_none() && !cell.deferred_fault_waiter, "rejected deferred wake must return to its exact empty signal slot");
+    cell.waiter = Some(waiter);
+}
+
+fn deferred_wake_pending(key: WalWriterKey) -> bool {
+    let (slot, _) = db_io_backend_parts(key.backend);
+    let controller = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(controller) = controller.as_ref().filter(|controller| controller.backend == key.backend) else { return false };
+    let Some(ticket) = controller.deferred_wake_ticket else { return false };
+    controller.pool.deferred_wake_pending(ticket, usize::from(key.slot)).unwrap_or(false)
 }
 
 fn controller_step([slot, generation]: [u64; 2]) -> WorkerMaintenanceStep {
@@ -259,9 +350,13 @@ fn controller_step([slot, generation]: [u64; 2]) -> WorkerMaintenanceStep {
         let Some(row) = row.as_ref().filter(|row| db_io_backend_parts(row.backend) == (slot as u16, generation)) else { return WorkerMaintenanceStep::Idle };
         (row.backend, row.waker.clone())
     };
-    if !has_runnable_request(backend) { return WorkerMaintenanceStep::Idle; }
+    if !has_runnable_request(backend) {
+        return WorkerMaintenanceStep::Idle;
+    }
     let result = super::super::db_io_writer_release_lane_step(backend, &mut Context::from_waker(&waker));
-    if let Err(error) = &result { fault_all_requested(backend, error); }
+    if let Err(error) = &result {
+        fault_all_requested(backend, error);
+    }
     notify_terminal(backend);
     notify_faults(backend);
     match result {
@@ -274,23 +369,43 @@ fn controller_step([slot, generation]: [u64; 2]) -> WorkerMaintenanceStep {
 pub(crate) fn close_controller(backend: DbIoBackendControl) -> Result<bool, DbError> {
     let (slot, _) = db_io_backend_parts(backend);
     let mut row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    let Some(owner) = row.as_ref() else { return Ok(true) };
-    if owner.backend != backend { return Err(DbError::Fenced { expected: db_io_backend_parts(owner.backend).1, actual: db_io_backend_parts(backend).1 }); }
-    if !owner.pool.remove_maintenance_hook(owner.ticket).map_err(|error| DbError::Unavailable(format!("WAL writer maintenance retirement: {error:?}")))? { return Ok(false); }
+    let Some(owner) = row.as_mut() else { return Ok(true) };
+    if owner.backend != backend {
+        return Err(DbError::Fenced { expected: db_io_backend_parts(owner.backend).1, actual: db_io_backend_parts(backend).1 });
+    }
+    if let Some(ticket) = owner.ticket {
+        if !owner.pool.remove_maintenance_hook(ticket).map_err(|error| DbError::Unavailable(format!("WAL writer maintenance retirement: {error:?}")))? {
+            return Ok(false);
+        }
+        owner.ticket = None;
+    }
+    if let Some(ticket) = owner.deferred_wake_ticket {
+        if !owner.pool.remove_deferred_wake_partition(ticket).map_err(|error| DbError::Unavailable(format!("WAL writer deferred-wake retirement: {error:?}")))? {
+            return Ok(false);
+        }
+        owner.deferred_wake_ticket = None;
+    }
     *row = None;
     Ok(true)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::super::DbIoBackendControl;
-    use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+    use super::*;
+    use std::sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    };
 
     struct Counter(AtomicUsize);
     impl std::task::Wake for Counter {
-        fn wake(self: Arc<Self>) { self.0.fetch_add(1, Ordering::SeqCst); }
-        fn wake_by_ref(self: &Arc<Self>) { self.0.fetch_add(1, Ordering::SeqCst); }
+        fn wake(self: Arc<Self>) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+        fn wake_by_ref(self: &Arc<Self>) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
     }
 
     #[test]

@@ -31,6 +31,13 @@ import {
   resolveTestLevel,
 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
+function exactCargoStageEnvironments() {
+  return {
+    env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+    nativeEnv: { RUST_MIN_STACK: "268435456" },
+  };
+}
+
 const LOCAL_BOOTSTRAP_SCHEMA = "semio.hub.local-bootstrap/v1";
 const LOCAL_BOOTSTRAP_DOMAIN = "semio/hub/local-bootstrap/v1\0";
 const LOCAL_BOOTSTRAP_FRAME_MAX = 16 * 1024;
@@ -2532,7 +2539,7 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
     if (phase === "all" || phase === "process") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [{
           package: "semio-hub",
           target: { kind: "bin", name: "os-hub" },
@@ -2739,7 +2746,7 @@ class ExecutionTargetRelayCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: ["configured_catalog_without_a_native_provider_fails_closed", "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body", "execution_target_selection_final_fence_matches_neutral_races"] }],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
@@ -3415,7 +3422,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
     if (process.argv.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({
       cwd: this.root,
-      env: { ...process.env, RUST_MIN_STACK: "268435456" },
+      ...exactCargoStageEnvironments(),
       groups: [
         { package: "semio-s-plugin-stdio", target: { kind: "test", name: "native_openable_provider" }, laws: [
           "native_composition_and_validation_claims_are_disjoint_but_each_exclusive",
@@ -3446,7 +3453,7 @@ class NativeCatalogSelectionCheckScript extends BundleScript {
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({
       cwd: this.root,
-      env: { ...process.env, RUST_MIN_STACK: "268435456" },
+      ...exactCargoStageEnvironments(),
       groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: [
         "selected_native_providers_are_descriptor_verified_dependency_first_and_only_selected",
         "selected_native_provider_failure_substitution_and_conflict_publish_no_partial_closure",
@@ -5121,7 +5128,7 @@ class GisMapFrozenBindingCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable", "gis_map_binding_constructs_from_loaded_catalog_and_retains_verified_bytes"] }],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
@@ -5151,10 +5158,10 @@ class GisMapProposalCheckScript extends BundleScript {
       const laws = [...libraryLaws, ...routeLaws];
       const receipts = await runExactCargoLaws({
         cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [
-          { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--features", "sqlite"], laws: libraryLaws },
-          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, laws: routeLaws },
+          { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: libraryLaws },
+          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: routeLaws },
         ],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
@@ -6834,7 +6841,7 @@ class DirectoryCommandReceiptCheckScript extends BundleScript {
       ];
       const receipts = await runExactCargoLaws({
         cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--all-features"], laws }],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
@@ -6867,7 +6874,7 @@ class DirectoryEventPageV1CheckScript extends BundleScript {
       ];
       const receipts = await runExactCargoLaws({
         cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [
           { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--all-features"], laws },
           ...(phase === "native" ? [{
@@ -7150,7 +7157,7 @@ class SpaceAdministrationCheckScript extends BundleScript {
     if (phase === "native") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [
           {
             package: "semio-hub",
@@ -7380,7 +7387,7 @@ class PresenceNormalizationCheckScript extends BundleScript {
     const checks = await provePresenceNormalizationFixture(this.repoRoot);
     if (phase === "native") {
       const receipts = await runExactCargoLaws({
-        cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        cwd: this.root, ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: [
           "presence_normalization_matches_neutral_authority_and_no_effect_rejections",
           "presence_normalization_socket_overwrites_identity_and_rejects_without_refresh",
@@ -7417,7 +7424,7 @@ class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
     if (hub.match(/const STUDIO: &str = "([^"]+)";/)?.[1] !== fixture.scope.spaceId) throw new Error("recovery fixture differs from seeded test space");
     if (phase === "native") {
       const receipts = await runExactCargoLaws({
-        cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        cwd: this.repoRoot, ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: [law] }],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 120_000,
         progress(event) { console.log(`admin-presence-target-recovery-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
@@ -7449,7 +7456,7 @@ class PresenceLeaseCheckScript extends BundleScript {
         : [hubGroup];
       const receipts = await runExactCargoLaws({
         cwd: phase === "native" ? this.repoRoot : this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups,
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
@@ -7658,7 +7665,7 @@ class DirectoryOrderedPublicationCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [{
           package: "semio-hub",
           target: { kind: "lib" },

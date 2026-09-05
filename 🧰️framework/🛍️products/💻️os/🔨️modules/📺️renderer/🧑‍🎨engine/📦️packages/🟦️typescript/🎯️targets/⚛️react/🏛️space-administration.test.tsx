@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
+import { setUiLocale } from "@semio-tech/ui-react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   decodeBackboneWorkerRequest,
@@ -12,6 +13,7 @@ import {
 import {
   copyDirectoryInviteCapabilityV1,
   reduceShellSpaceAdministrationState,
+  shellSpaceAdministrationOpening,
   shellSpaceAdministrationRequest,
   type ShellSpaceAdministrationStateV1,
 } from "../../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
@@ -66,6 +68,16 @@ const workerState = (patch: Partial<Extract<BackboneWorkerResponse, { kind: "dir
   ({ kind: "directory-administration-state", operationEpoch: 1, spaceId: SPACE, phase: "ready", ...patch }) as Extract<BackboneWorkerResponse, { kind: "directory-administration-state" }>;
 
 describe("ShellHost space administration state", () => {
+  it("maps only the exact Home manage-space effect into one canonical administration opening", () => {
+    expect(shellSpaceAdministrationOpening("os.directory.open-administration", { spaceId: SPACE }, 7)).toEqual({
+      state: { operationEpoch: 7, spaceId: SPACE, phase: "loading", page: null },
+      request: { kind: "directory-administration-open", operationEpoch: 7, spaceId: SPACE },
+    });
+    expect(shellSpaceAdministrationOpening("os.directory.open-administration", { spaceId: "" }, 7)).toBeNull();
+    expect(shellSpaceAdministrationOpening("os.directory.open", { spaceId: SPACE }, 7)).toBeNull();
+    expect(shellSpaceAdministrationOpening("os.directory.open-administration", { spaceId: SPACE }, -1)).toBeNull();
+  });
+
   it("keeps a superseded operation's state and erases page and receipt on every terminal phase", () => {
     const current = state(authorPage());
     expect(reduceShellSpaceAdministrationState(current, workerState({ operationEpoch: 2 }), 1, authorPage())).toBe(current);
@@ -115,6 +127,8 @@ describe("ShellHost space administration state", () => {
     expect(shellSpaceAdministrationRequest(author, { kind: "revoke-invite", inviteId: "invite-dead" }, "1".repeat(32))).toBeNull();
     expect(shellSpaceAdministrationRequest(author, { kind: "revoke-invite", inviteId: "invite-live" }, "1".repeat(32))).toMatchObject({ kind: "directory-administration-submit" });
     expect(shellSpaceAdministrationRequest(state(memberPage()), { kind: "create-invite", role: "spectator" }, "1".repeat(32))).toBeNull();
+    expect(shellSpaceAdministrationRequest({ ...state(memberPage()), inviteCapabilityPending: true, inviteCapabilityStatus: "available" }, { kind: "copy-invite-capability" }, "1".repeat(32))).toBeNull();
+    expect(shellSpaceAdministrationRequest({ ...author, inviteCapabilityPending: true, inviteCapabilityStatus: "available" }, { kind: "copy-invite-capability" }, "1".repeat(32))).toMatchObject({ kind: "directory-administration-capability-request" });
     expect(shellSpaceAdministrationRequest(state(authorPage(), "submitting"), { kind: "create-invite", role: "spectator" }, "1".repeat(32))).toBeNull();
     expect(shellSpaceAdministrationRequest(state(null, "denied"), { kind: "create-invite", role: "spectator" }, "1".repeat(32))).toBeNull();
     expect(shellSpaceAdministrationRequest(state(null, "denied"), { kind: "close" }, "1".repeat(32))).toMatchObject({ kind: "directory-administration-close" });
@@ -185,5 +199,21 @@ describe("SpaceAdministrationPane", () => {
     expect(container.querySelector(`[aria-label="Issue invitation"]`)).toBeNull();
     expect(container.querySelectorAll("select")).toHaveLength(0);
     expect(document.activeElement?.id).toBe("os-space-administration-title");
+  });
+
+  it("renders the German spectator status and restores keyboard focus without exposing an invite", async () => {
+    await setUiLocale("de");
+    try {
+      const { container, rerender } = render(<SpaceAdministrationPane spaceId={SPACE} phase="ready" page={memberPage()} onIntent={() => {}} />);
+      expect(screen.getByRole("status").textContent).toContain("Verwaltungsseite ist aktuell.");
+      expect(screen.getByText("Du kannst diesen Space ansehen, aber nicht verwalten.")).toBeTruthy();
+      expect(container.querySelector(`[aria-label="Einladung ausstellen"]`)).toBeNull();
+      expect(container.textContent).not.toContain("invite.v1");
+      rerender(<SpaceAdministrationPane spaceId={SPACE} phase="denied" page={null} code="forbidden" onIntent={() => {}} />);
+      expect(screen.getByRole("status").textContent).toContain("Der Zugriff auf diesen Space wurde entzogen.");
+      expect(document.activeElement?.id).toBe("os-space-administration-title");
+    } finally {
+      await setUiLocale("en");
+    }
   });
 });

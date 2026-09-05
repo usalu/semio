@@ -1128,6 +1128,29 @@ export interface ShellSpaceAdministrationStateV1 {
 
 const SHELL_SPACE_ADMINISTRATION_TERMINAL: readonly DirectoryAdministrationPhaseV1[] = ["cancelled", "denied", "stale", "failed"];
 
+/** 🏛️ The exact Home-effect bridge into one retained canonical administration operation. */
+export function shellSpaceAdministrationOpening(
+  actionId: string,
+  args: Readonly<Record<string, unknown>> | undefined,
+  operationEpoch: number,
+): { readonly state: ShellSpaceAdministrationStateV1; readonly request: BackboneWorkerRequest } | null {
+  const spaceId = args?.spaceId;
+  if (actionId !== "os.directory.open-administration" || typeof spaceId !== "string" || spaceId.length === 0 || new TextEncoder().encode(spaceId).byteLength > 256 || !Number.isSafeInteger(operationEpoch) || operationEpoch < 0) return null;
+  return {
+    state: { operationEpoch, spaceId, phase: "loading", page: null },
+    request: { kind: "directory-administration-open", operationEpoch, spaceId },
+  };
+}
+
+/** 🎟️ Accepts a worker capability only for the exact currently rendered author page. */
+export function shellSpaceAdministrationCapabilityAllowed(state: ShellSpaceAdministrationStateV1 | null, operationEpoch: number): boolean {
+  return state !== null
+    && state.operationEpoch === operationEpoch
+    && state.phase === "ready"
+    && state.page?.access === "author"
+    && state.inviteCapabilityPending === true;
+}
+
 /** 🧮️ Pure reducer over one worker administration message. A message for a superseded operation is
  * ignored wholesale; a terminal phase erases the page, receipt, and capability marker in the same
  * transition, so no renderer can read stale authority after a denial or an identity change. */
@@ -1165,10 +1188,10 @@ export function shellSpaceAdministrationRequest(
 ): BackboneWorkerRequest | null {
   const operationEpoch = state.operationEpoch;
   if (intent.kind === "close") return { kind: "directory-administration-close", operationEpoch };
-  if (intent.kind === "copy-invite-capability") return { kind: "directory-administration-capability-request", operationEpoch };
   if (intent.kind === "page") return { kind: "directory-administration-refresh", operationEpoch, cursor: intent.cursor };
   const capabilities = spaceAdministrationCapabilities(state.page);
   if (capabilities === null || state.phase !== "ready" || state.page === null || state.page.access !== "author") return null;
+  if (intent.kind === "copy-invite-capability") return state.inviteCapabilityPending === true ? { kind: "directory-administration-capability-request", operationEpoch } : null;
   const spaceId = state.spaceId;
   if (intent.kind === "set-role") {
     const row = state.page.members.rows.find((member) => member.userId === intent.userId);
@@ -1626,6 +1649,8 @@ function FrameworkOsShellInner({
    * bearer, cursor key, or invite token is ever stored here — a terminal phase arrives with the page
    * already erased, so an unmount, identity change, 401/403 or scoped 4401 clears the pane. */
   const [spaceAdministration, setSpaceAdministration] = useState<ShellSpaceAdministrationStateV1 | null>(null);
+  const spaceAdministrationRef = useRef<ShellSpaceAdministrationStateV1 | null>(null);
+  spaceAdministrationRef.current = spaceAdministration;
   const spaceAdministrationEpochRef = useRef(0);
   /** 💡️ Monotonic owner of the one worker-side inference port; a stale epoch's status is ignored. */
   const inferencePortEpochRef = useRef(0);
@@ -1774,7 +1799,7 @@ function FrameworkOsShellInner({
         return;
       }
       if (message.kind === "directory-administration-capability") {
-        if (message.operationEpoch !== spaceAdministrationEpochRef.current) return;
+        if (!shellSpaceAdministrationCapabilityAllowed(spaceAdministrationRef.current, message.operationEpoch) || message.operationEpoch !== spaceAdministrationEpochRef.current) return;
         const { operationEpoch, transferEpoch, inviteToken } = message;
         void copyDirectoryInviteCapabilityV1(inviteToken).then((copied) => {
           const currentWorker = backboneWorkerRef.current;
@@ -3719,17 +3744,17 @@ function FrameworkOsShellInner({
           const { actionId, args } = effect.replayShellCommand;
           const argsRecord = args as Record<string, unknown> | undefined;
           if (actionId === "os.directory.open-administration") {
-            const spaceId = String(argsRecord?.spaceId ?? "");
-            if (spaceId.length === 0) {
+            const opening = shellSpaceAdministrationOpening(actionId, argsRecord, spaceAdministrationEpochRef.current + 1);
+            if (opening === null) {
               console.warn("[os-shell] replayShellCommand: administration requires an exact space id");
             } else if (!identityRef.current) {
               console.warn("[os-shell] replayShellCommand: administration dropped, no signed-in identity");
             } else {
               const worker = ensureBackboneWorker();
-              const operationEpoch = spaceAdministrationEpochRef.current + 1;
-              spaceAdministrationEpochRef.current = operationEpoch;
-              setSpaceAdministration({ operationEpoch, spaceId, phase: "loading", page: null });
-              worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-administration-open", operationEpoch, spaceId }) });
+              spaceAdministrationEpochRef.current = opening.state.operationEpoch;
+              spaceAdministrationRef.current = opening.state;
+              setSpaceAdministration(opening.state);
+              worker.postMessage({ wire: encodeBackboneWorkerRequest(opening.request) });
             }
           } else if (actionId.startsWith("os.directory.")) {
             const command = directoryCommandFromAction(actionId, argsRecord);

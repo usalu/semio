@@ -70,6 +70,8 @@ A concurrent session had already staged `.depends_on("cad"|"gis"|"procedural"|"p
 
 ## Commands and outputs
 
+Both TS suites below were re-run unchanged after the session reset (18:23 and 18:24, same pass counts) against the on-disk state this report describes.
+
 ### Kernel vitest (fixture + regression)
 
 ```
@@ -144,11 +146,25 @@ Both languages therefore agree on the same vector file: same owners, same route 
 
 ### Rust — demonstrator surface-dependency law
 
-`semio-framework-plugin` (the crate carrying `surface_dependency_breaches`, the `try_build` gate and the testkit assertion) **compiles clean** in that run — `warning: semio-framework-plugin (lib) generated 218 warnings`, no errors — so the gate and helper are proven to build. The demonstrator crate's own test was still linking its six borrowed plugin crates when this report was written; see Blockers.
+`semio-framework-plugin` (the crate carrying `surface_dependency_breaches`, the `try_build` gate and the testkit assertion) **compiles clean** — `warning: semio-framework-plugin (lib) generated 218 warnings`, zero errors — so the gate and the helper are proven to build.
+
+The demonstrator crate's own test is **still building** at the time of writing:
+
+```
+$ RUSTC_WRAPPER="" CARGO_TARGET_DIR=/Users/ueli/Documents/semio/target-s-e2e-h \
+  cargo test -p semio-s-plugin-demonstrator --lib --no-fail-fast --message-format=short \
+  -- every_borrowed_surface_is_backed_by_a_declared_dependency
+…
+   Compiling semio-s-plugin-stdio v0.1.0 (…/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+   # one rustc, 1 h 50 min elapsed and counting, at load average ~100
+```
+
+`semio-s-plugin-stdio` is a demonstrator dependency and is the single slowest crate in the repo (the coordinator's own wasm check of it ran 46 min earlier today); five more plugin crates plus demonstrator follow it. The job is detached (`nohup`, pid 21995) and keeps running; its log is `…/scratchpad/lane-h/demonstrator-test.txt` — `grep -E "test result:|^error" ` on it gives the verdict. Re-running that one command is the only outstanding verification for this lane.
 
 ## Blockers
 
-- **Cargo lock contention.** `RUSTC_WRAPPER="" CARGO_TARGET_DIR=…/target-s-e2e cargo test -p semio-s-plugin-demonstrator --lib …` queued behind the coordinator's `cargo check -p semio-s-plugin-stdio --target wasm32-wasip2` (pid 20173, holder of `target-s-e2e/debug/.cargo-lock`, 30 min elapsed) at load average 67. Lane C moved to `target-s-e2e-c` for the same reason.
+- **Cargo throughput, not correctness.** The shared `target-s-e2e` is held for hours at a time by peer jobs (a `semio-s-plugin-norm` test held its build lock 3 h 37 min); this lane's private `target-s-e2e-h` paid a 44-minute cold build for the host test and the demonstrator test is still compiling `semio-s-plugin-stdio` after 1 h 50 min at load average ~100. Nothing here is blocked on a decision — only on machine time.
+- **Gate reach not yet proven repo-wide.** `try_build`'s new `plugin-assembly.surface-dependency-gate` can only fire for a plugin that registers a surface on a foreign artifact kind. A repo-wide grep (`use <plugin>::{editor,viewer}::`) finds exactly one such crate outside the wgpu renderer — demonstrator — and extensions always carry their host as `dependencies[0]` by `ExtensionBundle`'s own rule, so no other crate should trip it; that reasoning is a grep, not a compile of all 59 crates. Wave 2's rebuild is where it gets exercised for real.
 - **`🏃️run/🦀️.rs` is out of sync with the host's async API** (independent of this lane): `run/🦀️.rs:1800` calls `self.app_router.register_manifest(…)` and `:1802 owned_surface_gaps()` without `.await`, while the host declares both `async` (file mtime Sep 5 13:35 vs run Sep 4 13:41). That is a peer's in-flight async migration; not touched, and it will make `semio-framework-os` fail to compile until they land it. The `AppRouter` API change here is additive, so it neither causes nor worsens that.
 - **Old ticket scratch scripts** `26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/🧪️w1-b-verify.ts` and `🧪️w1-d-parity.ts` assert that `AppRouter.build` THROWS the two surface faults. They are standalone evidence scripts of a closed ticket (no project/target references them), so they were left as-is; anyone re-running them will see the new total-build contract instead.
 - **Catalog smoke report shape** (`🧑‍💻dev/📜️script.ts`, `🧬️catalog-smoke.schema.json`) still counts only `failed`/`crashed` install statuses in `failedPlugins`. The probe now also reports `routerFault` per plugin; folding it into the smoke's fail set belongs to lane A, whose files were being edited concurrently.

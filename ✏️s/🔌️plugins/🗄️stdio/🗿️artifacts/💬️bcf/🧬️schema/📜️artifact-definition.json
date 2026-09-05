@@ -50,7 +50,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.bcf.standard.2-1.codec.native-document.v1", "status": "implemented", "from": "s.stdio.bcf.standard.2-1.dialect.source", "to": "s.stdio.bcf.standard.2-1.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.bcf.v1", "artifact_kind": "stdio.bcf", "document_schema": "stdio.bcf", "extension": "bcf", "pack_schema_hash": "1465da1dff96abd6a625ded26f479c7fa37c4740b79f1817856a30b3cd7a7a22", "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1" } }
+    { "id": "s.stdio.bcf.standard.2-1.codec.native-document.v1", "status": "implemented", "from": "s.stdio.bcf.standard.2-1.dialect.source", "to": "s.stdio.bcf.standard.2-1.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.bcf.v1", "artifact_kind": "stdio.bcf", "document_schema": "stdio.bcf", "extension": "bcf", "pack_schema_hash": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc", "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1" } }
   ],
   "mutations": [],
   "inferences": [],

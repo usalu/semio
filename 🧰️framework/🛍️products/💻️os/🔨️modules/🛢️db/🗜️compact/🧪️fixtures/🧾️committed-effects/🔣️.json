@@ -28,15 +28,16 @@
   ],
   "expected": {
     "deletedSegments": 1,
-    "deletedPayloads": 1,
+    "deletedPayloads": 0,
     "remainingSegments": [1],
-    "retainedPayloads": ["aborted"]
+    "retainedPayloads": ["aborted", "committed"]
   },
   "actor": {
     "priority": "command",
     "writerAuthority": "retained-artifact-wal",
     "activeSegmentAuthority": "artifact-wal",
-    "leaseBefore": ["snapshot-floor", "wal-horizon", "payload-trace", "wal-delete"],
+    "leaseBefore": ["snapshot-floor", "wal-horizon", "wal-delete"],
+    "payloadReclamation": "deferred-global-reference-authority",
     "queuedSubmitDuring": "pending",
     "queuedSubmitAfter": "accepted"
   }

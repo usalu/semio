@@ -2,7 +2,7 @@
   "schema": "semio.db.wal-writer-authority/v1",
   "capacity": 32,
   "controllerFaults": { "coalesced": ["fault-retained", "healthy-terminal", "fault-retry-terminal"], "outerPanic": { "requestedOwners": 2, "executorTurns": 1, "wakesPerOwner": 1, "guardsRetained": true } },
-  "replication": { "occupiedFollower": "conflict", "inventoryAfterConflict": [], "releaseAfter": ["tail", "up-to-date", "snapshot", "leader-corrupt"] },
+  "replication": { "occupiedFollower": "conflict", "inventoryAfterConflict": [], "releaseAfter": ["tail", "up-to-date", "snapshot", "leader-corrupt"], "snapshotTransfer": { "pattern": [0, 1, 127, 128, 254, 255], "repetitions": 6000, "bytes": 36000, "owners": ["source-result", "independent-input", "source-terminal", "destination-write", "destination-terminal"], "sameOperation": false } },
   "controllerBinding": { "operation": 7, "contender": 8, "fenceBeforeCallback": "closed", "pinnedResume": "ok", "tasksAddedOnRelease": 0, "wakesAtTerminal": 1, "guardFactoryCallsOnConflict": 0, "faultRetryPreservesKey": true, "maximumStaticBytes": 4194304 },
   "resultRetirement": { "pages": 2, "terminal": [false, false, false, false, true] },
   "guardRetirement": { "operation": 7, "contender": 8, "stages": ["pending-operation", "unlock-error", "unlock-progress", "terminal"], "terminal": [false, false, false, true] },

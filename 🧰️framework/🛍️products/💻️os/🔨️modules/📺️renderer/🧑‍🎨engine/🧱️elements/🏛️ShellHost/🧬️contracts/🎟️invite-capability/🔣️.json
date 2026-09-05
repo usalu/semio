@@ -9,9 +9,21 @@
     { "from": "copying", "input": "copied", "to": "copied", "discloses": false, "erases": true },
     { "from": "available", "input": "close", "to": "closed", "discloses": false, "erases": true },
     { "from": "copying", "input": "close", "to": "closed", "discloses": false, "erases": true },
-    { "from": "failed", "input": "close", "to": "closed", "discloses": false, "erases": true }
+    { "from": "failed", "input": "close", "to": "closed", "discloses": false, "erases": true },
+    { "from": "available", "input": "authority-lost", "to": "closed", "discloses": false, "erases": true },
+    { "from": "copying", "input": "authority-lost", "to": "closed", "discloses": false, "erases": true },
+    { "from": "failed", "input": "authority-lost", "to": "closed", "discloses": false, "erases": true }
   ],
   "duplicateResult": "reject-without-disclosure",
+  "shellRoute": {
+    "actionId": "os.directory.open-administration",
+    "spaceId": "space-admin-01",
+    "operationEpoch": 7,
+    "openingPhase": "loading",
+    "requestKind": "directory-administration-open"
+  },
+  "disclosureAuthority": ["author"],
+  "focusPhases": ["ready", "denied", "stale", "failed", "cancelled"],
   "labels": {
     "en": ["The invitation link is ready to copy.", "Copying the invitation link…", "Clipboard unavailable or denied. Try copying again."],
     "de": ["Der Einladungslink kann kopiert werden.", "Einladungslink wird kopiert…", "Zwischenablage nicht verfügbar oder abgelehnt. Erneut versuchen."]

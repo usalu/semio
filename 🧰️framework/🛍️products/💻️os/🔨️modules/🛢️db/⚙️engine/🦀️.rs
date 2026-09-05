@@ -4304,6 +4304,71 @@ pub mod vcs_integration {
             Ok(HashMutation { hash, author, timestamp })
         }
     }
+
+    struct HashOwnedRetirement<T>(Option<T>);
+
+    impl<T: Send> store::ErasedSnapshotRetirement for HashOwnedRetirement<T> {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+            if maximum_items == 0 {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.0.take().is_some() {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(store::SnapshotRetirementStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.0.is_none()
+        }
+    }
+
+    struct HashOwnedRetirementFactory;
+
+    impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for HashOwnedRetirementFactory {
+        fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
+            Box::new(HashOwnedRetirement(Some(value)))
+        }
+    }
+
+    struct HashSnapshotRetirement(Option<std::sync::Arc<HashProjection>>);
+
+    impl store::ErasedSnapshotRetirement for HashSnapshotRetirement {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+            if maximum_items == 0 {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.0.take().is_some() {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(store::SnapshotRetirementStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.0.is_none()
+        }
+    }
+
+    struct HashSnapshotRetirementFactory;
+
+    impl store::SnapshotRetirementFactory<HashProjection> for HashSnapshotRetirementFactory {
+        fn retire(&self, snapshot: std::sync::Arc<HashProjection>) -> Box<dyn store::ErasedSnapshotRetirement> {
+            Box::new(HashSnapshotRetirement(Some(snapshot)))
+        }
+    }
+
+    impl store::MemberStoreOwner<HashMutation> for HashProjection {
+        type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
+
+        fn member_store_owners() -> store::MemberStoreOwners<Self, HashMutation> {
+            store::MemberStoreOwners::new(
+                std::sync::Arc::new(HashSnapshotRetirementFactory),
+                std::sync::Arc::new(HashOwnedRetirementFactory),
+                std::sync::Arc::new(HashOwnedRetirementFactory),
+                Box::new(store::ArtifactStoreCursorDisposer::<HashProjection, HashMutation>::new()),
+            )
+        }
+    }
     //#endregion 🔖️SchemaErasedTypes
 
     //#region 🔖️Store
@@ -4609,7 +4674,8 @@ pub mod vcs_integration {
                 VcsStoreClaim::Ready(lease) => Ok(lease),
                 VcsStoreClaim::Build(permit) => {
                     let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
-                    let store = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
+                    let mut store = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
+                    store.install_member_store_owners_exact(<HashProjection as store::MemberStoreOwner<HashMutation>>::member_store_owners());
                     Ok(permit.install(store))
                 }
             }
@@ -4694,6 +4760,29 @@ pub mod vcs_integration {
             fn wake(self: std::sync::Arc<Self>) {
                 self.0.fetch_add(1, Ordering::AcqRel);
             }
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn vcs_store_installs_exact_history_owners_before_first_mutation_and_closes_bounded() {
+            let graph = VcsVersionGraph::new().await;
+            let document = ArtifactId("vcs-owner-catalog".to_string());
+            let change = ChangeRecord { parent: None, content_hash: pack::ContentHash([7; 32]), author: ActorId("owner".to_string()), message: "first".to_string(), timestamp_ms: 1 };
+            let edit_id = graph.record_change(&document, change).await.expect("first history mutation has exact retirement authority");
+            assert!(!edit_id.is_empty());
+
+            let admission = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).expect("close lease admission");
+            let mut lease = graph.store(&document, &admission).await.expect("retained store lease");
+            for _ in 0..4_096 {
+                match store::SpaceMember::close_owned_step(lease.store_mut(), 1, VCS_OPERATION_BYTES as usize).expect("bounded VCS store close") {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                        assert!(released_items <= 1);
+                        assert!(released_bytes <= VCS_OPERATION_BYTES as usize);
+                    }
+                    store::SnapshotRetirementStep::Blocked => panic!("VCS hash owners have no external close dependency"),
+                    store::SnapshotRetirementStep::Complete => break,
+                }
+            }
+            assert!(store::SpaceMember::close_owned_terminal_is_empty(lease.store_mut()));
         }
 
         #[test]
@@ -9187,6 +9276,7 @@ impl ArtifactHandle {
 mod tests {
     use super::*;
     use crate::vcs_integration::{HashMutation, HashProjection};
+    use db_storage::WalStorage as _;
     use protocol::{OpBinary, OpText};
     use store::ArtifactPack;
 
@@ -9406,13 +9496,11 @@ mod tests {
             }
             match self.mode {
                 ControlledCatalogReadPoll::Pending => std::task::Poll::Pending,
-                ControlledCatalogReadPoll::Ready => {
-                    std::task::Poll::Ready(DatabaseCatalogReadResult {
-                        storage: self.storage.take().expect("controlled catalog storage"),
-                        key: self.key.take().expect("controlled catalog key"),
-                        root: Ok(Some((self.root.take().expect("controlled catalog root"), EpochFence::INITIAL))),
-                    })
-                }
+                ControlledCatalogReadPoll::Ready => std::task::Poll::Ready(DatabaseCatalogReadResult {
+                    storage: self.storage.take().expect("controlled catalog storage"),
+                    key: self.key.take().expect("controlled catalog key"),
+                    root: Ok(Some((self.root.take().expect("controlled catalog root"), EpochFence::INITIAL))),
+                }),
                 ControlledCatalogReadPoll::Panic => panic!("controlled catalog-read panic"),
             }
         }
@@ -11587,6 +11675,7 @@ mod tests {
         assert!(matches!(storage.wal().await.acquire_writer(&core_document).await, Err(DbError::Conflict(_))), "the live actor must retain its original writer before compaction");
         let report = database.compact_document(&document, "actor-holder", false).await.unwrap();
         assert!(report.wal_segments_deleted >= 1);
+        assert_eq!(report.payloads_deleted, 0, "document-scoped maintenance must not reclaim global CAS bytes");
         let mut after = storage.wal().await.list_segments(&core_document).await.unwrap();
         assert!(after.as_slice().contains(&active), "the actor WAL's authoritative active segment must survive compaction");
         while after.close_step() {}

@@ -4133,8 +4133,12 @@ mod tests {
             let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).unwrap();
             let document = ArtifactId::from("committed-history");
             let memory = db_wal::tests::committed_fixture_storage(row, &document).await;
-            if compacted { db_storage::WalStorage::delete_segment(&memory, &document, 0).await.unwrap(); }
-            if hole { db_storage::WalStorage::create_segment(&memory, &document, 3).await.unwrap(); }
+            if compacted || hole {
+                let writer = db_storage::WalStorage::acquire_writer(&memory, &document).await.unwrap();
+                if compacted { db_storage::WalStorage::delete_segment(&memory, &writer, 0).await.unwrap(); }
+                if hole { db_storage::WalStorage::create_segment(&memory, &writer, 3).await.unwrap(); }
+                writer.release().await.unwrap();
+            }
             let storage = StdArc::new(db_storage::DbBackend::Memory(memory));
             let mut replay = HistoryReplayFuture::new(storage, document, 1, StdArc::new(std::sync::atomic::AtomicBool::new(false)), HistoryReplayReservation::try_new().unwrap());
             let result = (&mut replay).await;

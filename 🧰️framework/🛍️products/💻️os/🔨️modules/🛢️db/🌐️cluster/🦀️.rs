@@ -243,12 +243,29 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
                 Ok(ReplicationOutcome::TailApplied { frontier, count })
             }
             db_sync::BootstrapPlan::Snapshot { generation, pages, pack_hash } => {
-                follower.snapshot().await.write_generation(&document, generation, pages).await?;
+                let input = replication_snapshot_input(pages).await?;
+                follower.snapshot().await.write_generation(&document, generation, input).await?;
                 Ok(ReplicationOutcome::SnapshotTransferred { generation, pack_hash })
             }
         }
     }.await;
     replication_retired(outcome, wal.close().await)
+}
+
+/// 📑️ Copies the admitted read result into an independent write owner before retiring its source task.
+async fn replication_snapshot_input(mut pages: db_storage::DbIoPages) -> Result<db_storage::DbIoPages, DbError> {
+    let copied = async { db_storage::db_io_copy_page_owner(&pages)?.await }.await;
+    let retired = close_replication_pages(&mut pages).await;
+    match (copied, retired) {
+        (Ok(input), Ok(())) => Ok(input),
+        (Err(error), retired) => replication_retired(Err(error), retired),
+        (Ok(mut input), Err(error)) => replication_retired(Err(error), close_replication_pages(&mut input).await),
+    }
+}
+
+async fn close_replication_pages(pages: &mut db_storage::DbIoPages) -> Result<(), DbError> {
+    while pages.close_step()?.is_some() { semio_framework_async::yield_once().await; }
+    Ok(())
 }
 
 fn replication_retired<T>(outcome: Result<T, DbError>, retired: Result<(), DbError>) -> Result<T, DbError> {
@@ -655,6 +672,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗄️storage/🔐️writer/🧪️fixtures/🔣️.json")).unwrap();
+        let transfer = &fixture["replication"]["snapshotTransfer"];
+        let pattern: Vec<u8> = transfer["pattern"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
+        let expected = pattern.repeat(transfer["repetitions"].as_u64().unwrap() as usize);
+        assert_eq!(expected.len(), transfer["bytes"].as_u64().unwrap() as usize);
         let leader = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let follower = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
@@ -666,8 +688,14 @@ mod tests {
             submit_record(&leader, &mut wal, db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }, 1_000).await;
             wal.close().await.unwrap();
         }
-        let pages = db_storage::db_io_copy_pages(b"snapshot-bytes").unwrap().await.unwrap();
+        let pages = db_storage::db_io_copy_pages(&expected).unwrap().await.unwrap();
         db_storage::SnapshotStorage::write_generation(&leader, &document, 9, pages).await.unwrap();
+        let source = db_storage::SnapshotStorage::read_generation(&leader, &document, 9).await.unwrap();
+        let source_operation = source.operation();
+        let mut independent = replication_snapshot_input(source).await.unwrap();
+        assert_eq!(independent.operation() == source_operation, transfer["sameOperation"].as_bool().unwrap());
+        assert_eq!(independent, expected);
+        close_replication_pages(&mut independent).await.unwrap();
         let leader: db_storage::DbBackend = db_storage::DbBackend::Memory(leader);
         let follower: db_storage::DbBackend = db_storage::DbBackend::Memory(follower);
 
@@ -675,17 +703,17 @@ mod tests {
         match outcome {
             ReplicationOutcome::SnapshotTransferred { generation, pack_hash } => {
                 assert_eq!(generation, 9);
-                assert_ne!(pack_hash, [0u8; 32]);
+                assert_eq!(pack_hash, *semio_framework_hash::hash(&expected).as_bytes());
             }
             other => panic!("expected SnapshotTransferred, got {other:?}"),
         }
         db_storage::WalStorage::acquire_writer(&follower.wal().await, &document).await.unwrap().release().await.unwrap();
-        // 🪡 `DbBackend` itself carries no blanket `SnapshotStorage` impl (only its variant
-        // payloads do — `MemoryStorage`, `FsStorage<R>`, …), so the read must go through the
-        // matched-out `Memory` payload, not the enum wrapper `replicate_document` above took by reference.
         let db_storage::DbBackend::Memory(ref follower_storage) = follower else { panic!("expected a Memory backend") };
-        let copied = db_actor::block_on(db_storage::SnapshotStorage::read_generation(follower_storage, &document, 9)).unwrap();
-        assert_eq!(copied, b"snapshot-bytes");
+        let mut copied = db_actor::block_on(db_storage::SnapshotStorage::read_generation(follower_storage, &document, 9)).unwrap();
+        assert_eq!(copied, expected);
+        close_replication_pages(&mut copied).await.unwrap();
+        assert!(copied.terminal_is_empty());
+        eprintln!("[DEBUG] snapshot replication copied {} exact bytes through distinct aggregate owners; source and final read leases retired, follower writer reacquired", expected.len());
     }
     //#endregion 🔖️Replication
 

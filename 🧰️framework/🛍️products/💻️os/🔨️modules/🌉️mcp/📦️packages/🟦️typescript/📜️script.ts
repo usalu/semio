@@ -29,6 +29,7 @@ class InferenceBridgeCheckScript extends BundleScript {
     if (mode === "--process") {
       if (!process.env.SEMIO_OS_MCP_BIN) runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot });
       console.log(`[inference-bridge] ${requireMcpBinary(this.repoRoot)}`);
+      resolveTestLevel(["long"]);
       runVitest(this.root, ["💡️inference-bridge.test.ts"], "🧪️tests/🟦️.ts");
     }
     console.log(`inference-bridge-check ${mode}: no external model provider, no WGPU rendering, and no two-user authenticated journey is run or claimed here.`);

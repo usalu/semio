@@ -809,7 +809,7 @@ pub fn plugin() -> Result<Plugin<SpaceApps>, semio_framework_plugin::PluginAssem
     Plugin::<SpaceApps>::builder("s")
         .label("S Studio")
         .version("0.1.0")
-        .package_id("semio:space")
+        .package_id("semio:s")
         .local_backbone_storage()
         .artifact(resolve_ready(crate::artifacts::home::declaration()).map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::home::HomeApp>(resolve_ready(crate::editor::home::create_home_app()))
@@ -994,7 +994,7 @@ mod interactive_job_catalog_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn studio_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
-        let definition = resolve_ready(crate::engine::space::create_space_app()).definition;
+        let definition = crate::engine::space::create_space_app().await.definition;
         let (fixture_migrated, fixture_host_only) = migrated_and_host_only(STUDIO_FIXTURE);
         let owned = factory_tool_ids::<crate::engine::space::SpaceCommandJobFactory>();
         assert!(unclassified_ids(&definition).is_empty(), "an unclassified id aborts build_definition at runtime");
@@ -1010,7 +1010,7 @@ mod interactive_job_catalog_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
-        let definition = resolve_ready(crate::editor::home::create_home_app());
+        let definition = crate::editor::home::create_home_app().await;
         let (fixture_migrated, fixture_host_only) = migrated_and_host_only_rows(HOME_FIXTURE);
         let owned = factory_tool_ids::<crate::editor::home::HomeRetainedCommandJobFactory>();
         assert!(unclassified_ids(&definition).is_empty());
@@ -1053,10 +1053,14 @@ mod interactive_job_catalog_tests {
         assert_eq!(<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA);
     }
 
-    /// 🪪️ The plugin id the manifest publishes must be the one the Cargo component package declares
-    /// (`[package.metadata.component] package = "<namespace>:<id>"`), read from the manifest itself —
-    /// a mismatch makes `describeBuiltPlugin` reject the built descriptor as an identity mismatch,
-    /// which is a 90-minute wasm build away from being noticed otherwise.
+    /// 🪪️ Builder id, `package_id` and the Cargo component package must be the same identity.
+    /// `PluginBuilder::try_build` already rejects any `package_id` that is not exactly
+    /// `semio:<plugin_id>` in canonical lowercase form
+    /// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️.rs:639-643`), and it is the ONLY
+    /// producer of `Plugin::manifest`, so asserting a successful assembly whose `plugin_id` equals the
+    /// Cargo `[package.metadata.component] package` suffix pins all three literals at once. A guest
+    /// that fails here mints the `assembly-failed` stub descriptor instead, which `describeBuiltPlugin`
+    /// rejects — 90 minutes of wasm build after the fact.
     #[semio_framework_async_macros::async_test]
     async fn manifest_plugin_id_matches_the_cargo_component_package() {
         let declared = COMPONENT_MANIFEST
@@ -1066,7 +1070,61 @@ mod interactive_job_catalog_tests {
             .expect("[package.metadata.component] package");
         let (namespace, id) = declared.split_once(':').expect("component package is <namespace>:<id>");
         assert_eq!(namespace, "semio");
-        assert_eq!(crate::plugin().expect("plugin bundle").manifest.plugin_id, id);
+        assert_eq!(assembled_plugin().manifest.plugin_id, id);
+        assert_eq!(assembled_plugin().manifest.plugin_id, "s");
+    }
+
+    /// 🏗️ The whole guest assembly, named. `plugin()` runs `build_definition` for every registered
+    /// surface — which is where `validate_interactive_job_classification` rejects an `Unclassified`
+    /// id — plus the package-identity and artifact-declaration preflights.
+    fn assembled_plugin() -> semio_framework_plugin::Plugin<crate::SpaceApps> {
+        match crate::plugin() {
+            Ok(plugin) => plugin,
+            Err(error) => panic!("plugin assembly rejected: {error:?}"),
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn plugin_assembly_succeeds_and_registers_all_five_surfaces() {
+        let plugin = assembled_plugin();
+        let ids = plugin.manifest.apps.iter().map(|app| app.id.clone()).collect::<BTreeSet<_>>();
+        assert_eq!(
+            ids,
+            ["s.space.home@1/*#editor", "s.space.home@1/*#viewer", "s.space.space@1/*#editor", "s.space.space@1/*#viewer", "s.space.studio@1/*#editor"]
+                .iter()
+                .map(|id| (*id).to_string())
+                .collect::<BTreeSet<_>>()
+        );
+    }
+
+    /// 🧰️ The build-time completeness gate, run for real: `VcsArtifactApp::with_registry` calls
+    /// `tool_job_registration`, which joins every migrated id to a live registered factory by owner
+    /// witness, controller id, document schema and exact contract equality, and every declared
+    /// publication lane to its installed store preparation factory. A mismatch is a panic here, the
+    /// same panic the guest takes on its first turn.
+    #[semio_framework_async_macros::async_test]
+    async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
+        let mut studio = semio_framework_plugin::VcsArtifactApp::<crate::engine::space::SpaceApp>::with_registry(
+            Default::default(),
+            semio_framework_plugin::AppActionRegistry::from_definition(&crate::engine::space::create_space_app().await.definition),
+        )
+        .await;
+        let mut home = semio_framework_plugin::VcsArtifactApp::<EditorApp<crate::editor::home::HomeApp>>::with_registry(
+            Default::default(),
+            semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::home::create_home_app().await),
+        )
+        .await;
+        let mut index = semio_framework_plugin::VcsArtifactApp::<EditorApp<crate::editor::space_index::SpaceIndexEditor>>::with_registry(
+            Default::default(),
+            semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::space_index::create_space_index_editor()),
+        )
+        .await;
+        assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 15);
+        assert_eq!(<EditorApp<crate::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
+        assert_eq!(<EditorApp<crate::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
+        semio_framework_plugin::testkit::close_registered_fixture_app(&mut studio);
+        semio_framework_plugin::testkit::close_registered_fixture_app(&mut home);
+        semio_framework_plugin::testkit::close_registered_fixture_app(&mut index);
     }
 }
 //#endregion 🧪️InteractiveJobCatalogTests

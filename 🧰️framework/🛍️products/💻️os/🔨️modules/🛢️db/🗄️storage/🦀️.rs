@@ -6744,6 +6744,7 @@ mod fs_storage {
         DirectoryCreated, DirectoryParentSynced, SegmentCreated, SegmentFileSynced, SegmentParentSynced,
         MarkerCreated, MarkerFileSynced, MarkerParentSynced, SegmentDeleted, SegmentDeleteParentSynced,
         MarkerDeleted, MarkerDeleteParentSynced, ReplacementRenamed, ReplacementParentSynced,
+        WalFileSynced, WalParentSynced,
     }
 
     #[derive(Default)]
@@ -6847,7 +6848,12 @@ mod fs_storage {
     }
 
     fn durable_wal_delete(dir: &Path, index: u64, lifecycle: &FsLifecycle) -> Result<(), DbError> {
-        if !dir.exists() { return Ok(()); }
+        match std::fs::symlink_metadata(dir) {
+            Ok(metadata) if metadata.is_dir() => {}
+            Ok(_) => return Err(DbError::Corrupt("WAL directory must be a directory, not a link".to_string())),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+            Err(error) => return Err(io_err(error)),
+        }
         for (path, removed, synced) in [(segment_path(dir, index), FsLifecyclePhase::SegmentDeleted, FsLifecyclePhase::SegmentDeleteParentSynced), (sealed_marker_path(dir, index), FsLifecyclePhase::MarkerDeleted, FsLifecyclePhase::MarkerDeleteParentSynced)] {
             match std::fs::remove_file(path) {
                 Ok(()) => lifecycle.hit(removed)?,
@@ -6880,6 +6886,7 @@ mod fs_storage {
                 FsLifecyclePhase::SegmentDeleted => "segment-deleted", FsLifecyclePhase::SegmentDeleteParentSynced => "segment-delete-parent-synced",
                 FsLifecyclePhase::MarkerDeleted => "marker-deleted", FsLifecyclePhase::MarkerDeleteParentSynced => "marker-delete-parent-synced",
                 FsLifecyclePhase::ReplacementRenamed => "replacement-renamed", FsLifecyclePhase::ReplacementParentSynced => "replacement-parent-synced",
+                FsLifecyclePhase::WalFileSynced => "wal-file-synced", FsLifecyclePhase::WalParentSynced => "wal-parent-synced",
             }
         }
 
@@ -6964,6 +6971,30 @@ mod fs_storage {
             while pages.close_step().unwrap().is_some() { semio_framework_async::yield_once().await; }
             storage.close().await.unwrap();
             eprintln!("[DEBUG] mounted snapshot replacement did not acknowledge an injected post-rename failure; explicit replacement completed only after parent fsync");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn fs_wal_reopen_repairs_unacknowledged_segment_namespace_before_header_ack() {
+            for (phase, missing) in [(FsLifecyclePhase::SegmentCreated, false), (FsLifecyclePhase::SegmentFileSynced, false), (FsLifecyclePhase::SegmentCreated, true)] {
+                let (storage, root, fixture) = storage("recovery").await;
+                let document: ArtifactId = "recovery-names".into();
+                let writer = storage.acquire_writer(&document).await.unwrap();
+                lifecycle(&storage, |state| { *state = FsLifecycleState::default(); state.fail = Some(phase); });
+                assert!(matches!(storage.create_segment(&writer, 0).await, Err(DbError::Io(_))));
+                writer.release().await.unwrap();
+                storage.close().await.unwrap();
+                if missing { std::fs::remove_file(root.join("wal/recovery-names/segment-00000000000000000000.bin")).unwrap(); }
+                let reopened = FsStorage::open(super::super::db_io_test_pool(), &root).await.unwrap();
+                take_trace(&reopened);
+                let (mut wal, _) = crate::db_wal::ArtifactWal::open(&reopened, document, crate::db_wal::GroupCommitPolicy::default(), 0).await.unwrap();
+                let trace = take_trace(&reopened);
+                let recovery: Vec<_> = trace.iter().copied().filter(|step| step.starts_with("wal-")).collect();
+                assert_eq!(serde_json::json!(recovery), fixture["recoverySync"]);
+                if missing { assert_eq!(serde_json::json!(&trace[..3]), fixture["create"]); }
+                wal.close().await.unwrap();
+                reopened.close().await.unwrap();
+            }
+            eprintln!("[DEBUG] independent filesystem reopen repaired the parent name after both pre-barrier create failures and durably recreated a missing unacknowledged segment before header acknowledgment");
         }
     }
 
@@ -7339,8 +7370,13 @@ mod fs_storage {
                 }
                 DbIoTask::WalSync { document, index, class, .. } => {
                     if matches!(class, DurabilityClass::Fsync | DurabilityClass::Quorum(_)) {
-                        let path = segment_path(&self.document_dir("wal", document)?, *index);
+                        let dir = self.document_dir("wal", document)?;
+                        let path = segment_path(&dir, *index);
                         std::fs::OpenOptions::new().write(true).open(path).map_err(io_err)?.sync_all().map_err(io_err)?;
+                        self.lifecycle.hit(FsLifecyclePhase::WalFileSynced)?;
+                        durable_directory(&dir, &self.lifecycle)?;
+                        sync_directory(&dir)?;
+                        self.lifecycle.hit(FsLifecyclePhase::WalParentSynced)?;
                     }
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }

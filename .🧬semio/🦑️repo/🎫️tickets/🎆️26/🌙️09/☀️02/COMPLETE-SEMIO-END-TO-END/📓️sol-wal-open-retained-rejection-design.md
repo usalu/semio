@@ -22,7 +22,13 @@ The strict fixture and schema are in `db/📝️wal/🧪️fixtures/🚪️open-
 - dropped rejection: nonpanicking transfer into the backend's fixed release-recovery cell, with no terminal-success claim;
 - engine propagation: distinct before-WAL, WAL-open-rejected, and WAL-close-rejected states, retained through authority readiness and Database mounting.
 
-The registered writer source oracle now evaluates the exact owner transition in addition to AJV validation. It has not yet been executed against this revision.
+The registered writer source oracle now evaluates the exact owner transition in addition to AJV validation:
+
+```text
+NX_ISOLATE_PLUGINS=false bun x nx run @semio-tech/framework-os-kernel:wal-writer-authority-check --skip-nx-cache
+session 96806, exit 0
+wal-writer-authority-independent-oracle: AJV=5 exact-u64=1 cases=3 mutations=6 remote=5 writer-slots=32 retained-result=1 directory-barriers=4 wal-open-owner=1
+```
 
 ## Coherent implementation plan
 
@@ -35,4 +41,4 @@ The registered writer source oracle now evaluates the exact owner transition in 
 
 ## Nonclaims
 
-The fixture is a schema-first contract, not a Rust compile or runtime result. No constructor owner preservation, abandoned-release recovery, or native fault behavior is claimed yet.
+The fixture receipt is a schema/source oracle, not a Rust compile or runtime result. No constructor owner preservation, abandoned-release recovery, or native fault behavior is claimed yet.

@@ -17,5 +17,12 @@
       "code": "mutation.fixture-rejected",
       "message": "fixture rejection"
     }
+  },
+  "probeCodec": {
+    "value": { "n": 7, "signed": -3, "ratio": 0.5, "text": "hello", "flag": true, "none": null, "tags": ["a", "b"], "deep": { "inner": [1, { "leaf": "x" }] } },
+    "snapshotEncoding": { "n": 7, "signed": -3, "ratio": 0.5, "text": "hello", "flag": true, "none": null, "tags": ["a", "b"], "deep": { "inner": [1, { "leaf": "x" }] } },
+    "diffEncoding": { "n": 7, "signed": -3, "ratio": 0.5, "text": "hello", "flag": true, "none": null, "tags": ["a", "b"], "deep": { "inner": [1, { "leaf": "x" }] } },
+    "mutationEncoding": { "SetValue": { "n": 7, "signed": -3, "ratio": 0.5, "text": "hello", "flag": true, "none": null, "tags": ["a", "b"], "deep": { "inner": [1, { "leaf": "x" }] } } },
+    "rejectedMutationEncodings": [{ "Unknown": 1 }, { "SetValue": 1, "Extra": 2 }, "SetValue"]
   }
 }

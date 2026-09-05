@@ -24,7 +24,7 @@
     "artifact_kind": "stdio.bcf",
     "document_schema": "stdio.bcf",
     "extension": "bcf",
-    "pack_schema_sha256": "1465da1dff96abd6a625ded26f479c7fa37c4740b79f1817856a30b3cd7a7a22",
+    "pack_schema_sha256": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
     "protocol_path": "🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
@@ -112,7 +112,7 @@
     "artifact_kind": "stdio.json",
     "document_schema": "stdio.json",
     "extension": "json",
-    "pack_schema_sha256": "7de40335bcca019c81ea7c1cb791e5e438358851fbe32117b5ad8276494b695e",
+    "pack_schema_sha256": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
     "protocol_path": "🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
@@ -178,7 +178,7 @@
     "artifact_kind": "stdio.pdf",
     "document_schema": "stdio.pdf",
     "extension": "pdf",
-    "pack_schema_sha256": "d0d6337bfab4ea66b3328098e4fec68ed13e909683c25232d2dfe86a02847f2b",
+    "pack_schema_sha256": "9f6de52d8be98fb427b4e2328b827b98a223494714c61b0bb5d44c2fa41fa7ce",
     "protocol_path": "🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {
@@ -266,7 +266,7 @@
     "artifact_kind": "stdio.xlsx",
     "document_schema": "stdio.xlsx",
     "extension": "xlsx",
-    "pack_schema_sha256": "e2bbdb5cdb474f7c003f5648673867868ebf172836d36d6e74dcd5296cc72366",
+    "pack_schema_sha256": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",
     "protocol_path": "🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
   },
   {

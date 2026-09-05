@@ -1,8 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object", "additionalProperties": false, "required": ["schema", "create", "seal", "delete", "replace", "duplicatePreservesBytes", "deleteFaultState"],
+  "type": "object", "additionalProperties": false, "required": ["schema", "create", "seal", "delete", "replace", "duplicatePreservesBytes", "deleteFaultState", "recoverySync"],
   "properties": {
     "schema": { "const": "semio.db.fs-directory-durability/v1" },
+    "recoverySync": { "const": ["wal-file-synced", "wal-parent-synced"] },
     "create": { "const": ["segment-created", "segment-file-synced", "segment-parent-synced"] },
     "seal": { "const": ["marker-created", "marker-file-synced", "marker-parent-synced"] },
     "delete": { "const": ["segment-deleted", "segment-delete-parent-synced", "marker-deleted", "marker-delete-parent-synced"] },

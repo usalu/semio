@@ -23,6 +23,11 @@ import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️p
 const repoRoot = getWorkspaceRoot();
 const bin = requireMcpBinary(repoRoot);
 
+/** ⏱️ The first `server/discover` answer waits on a real catalog compile over every installed plugin
+ * descriptor, which is far slower than a steady-state call; every later call keeps the default. */
+const CATALOG_COMPILE_TIMEOUT_MS = 90_000;
+const DISCOVER_ID = 9001;
+
 type CallToolResult = { isError?: boolean; structuredContent?: Record<string, unknown>; content?: Array<{ type: string; text?: string }> };
 type ToolListResult = { tools: Array<{ name: string; description?: string; inputSchema: Record<string, unknown>; outputSchema?: Record<string, unknown> }> };
 
@@ -43,11 +48,16 @@ describe("gis map inference bridge — the real semio-os-mcp binary", () => {
   const procs: RawMcpProcess[] = [];
 
   /** 🚀️ A freshly spawned, already-discovered server — `server/discover` is the modern era's opener,
-   * exactly as the sibling end-to-end suite drives it. */
+   * exactly as the sibling end-to-end suite drives it. The handshake is written raw so its FIRST
+   * answer may wait longer than `request`'s own ten seconds: that answer is gated on compiling the
+   * catalog from the real installed plugin registry, which walks every plugin descriptor on disk.
+   * Every later call on the same connection uses the ordinary `request` timeout. */
   const spawn = async (args: readonly string[]): Promise<RawMcpProcess> => {
     const proc = spawnRawMcp(bin, args);
     procs.push(proc);
-    const discovered = await proc.request("server/discover", {});
+    proc.writeRaw(JSON.stringify({ jsonrpc: "2.0", id: DISCOVER_ID, method: "server/discover", params: {} }));
+    const discovered = JSON.parse(await proc.nextLine(CATALOG_COMPILE_TIMEOUT_MS)) as { id: number | string | null; error?: unknown };
+    expect(discovered.id, "the first stdout line is the discovery answer").toBe(DISCOVER_ID);
     expect(discovered.error, `server/discover failed: ${JSON.stringify(discovered.error)}`).toBeUndefined();
     return proc;
   };

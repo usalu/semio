@@ -1252,10 +1252,15 @@ impl OwnedRuntime {
     pub fn drop_actor(&self, _inst: GuestInstance) {}
 
     pub async fn describe(&self, compiled: &CompiledHandle, budget: Budget) -> Result<Vec<u8>, TurnFault> {
+        self.describe_observed(compiled, budget, |_, _| {}).await
+    }
+
+    /// 📈️ Executes owned `describe` with bounded fuel-progress observations for build tooling.
+    pub async fn describe_observed(&self, compiled: &CompiledHandle, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<Vec<u8>, TurnFault> {
         let mut instance = self.instantiate_actor(compiled, RuntimeActorId(0)).map_err(TurnFault::Host)?;
         let state = owned_state_mut(&mut instance)?;
         begin_owned_operation(state, OwnedOperation::Describe, None)?;
-        resume_owned_operation(state, OwnedOperation::Describe, budget.fuel, budget.deadline_ms).map(|invocation| invocation.output)
+        resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_ms, progress).map(|invocation| invocation.output)
     }
 }
 
@@ -1387,13 +1392,28 @@ fn begin_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperati
 }
 
 fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32) -> Result<OwnedInvocation, TurnFault> {
+    resume_owned_operation_observed(state, operation, fuel, deadline_ms, |_, _| {})
+}
+
+fn resume_owned_operation_observed(
+    state: &mut OwnedInstanceState,
+    operation: OwnedOperation,
+    fuel: u64,
+    deadline_ms: u32,
+    mut progress: impl FnMut(u64, std::time::Duration),
+) -> Result<OwnedInvocation, TurnFault> {
     let started = std::time::Instant::now();
     let mut remaining = fuel;
+    let mut next_progress_fuel = 25_000_000;
+    let mut next_progress_elapsed = std::time::Duration::from_secs(5);
     loop {
-        if started.elapsed() >= std::time::Duration::from_millis(u64::from(deadline_ms)) {
+        let elapsed = started.elapsed();
+        if elapsed >= std::time::Duration::from_millis(u64::from(deadline_ms)) {
+            progress(fuel.saturating_sub(remaining), elapsed);
             return Err(TurnFault::DeadlineExceeded);
         }
         if remaining == 0 {
+            progress(fuel, elapsed);
             return Err(TurnFault::FuelExhausted);
         }
         let mut pending = state.pending.take().ok_or_else(|| TurnFault::Trapped("owned operation has no resumable state".to_string()))?;
@@ -1402,10 +1422,12 @@ fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperat
             return Err(TurnFault::Trapped("owned operation resume type mismatch".to_string()));
         }
         let grant = remaining.min(OWNED_STEP_FUEL);
+        let completed_fuel;
         match state.actor.step(grant, StepControl::default()) {
             CoreStepOutcome::Yield { fuel_used } => {
                 pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
                 remaining = remaining.saturating_sub(fuel_used);
+                completed_fuel = pending.fuel_used;
                 state.pending = Some(pending);
                 if fuel_used == 0 {
                     return Err(TurnFault::Trapped("owned interpreter yielded without consuming fuel".to_string()));
@@ -1414,6 +1436,7 @@ fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperat
             CoreStepOutcome::HostCall { fuel_used, call } => {
                 pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
                 remaining = remaining.saturating_sub(fuel_used);
+                completed_fuel = pending.fuel_used;
                 let results = reply_owned_host(state, &call).map_err(|error| TurnFault::Trapped(error.to_string()))?;
                 state.actor.resume_host(call.id, Ok(results))?;
                 state.pending = Some(pending);
@@ -1427,6 +1450,7 @@ fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperat
                         write_owned_memory(&mut state.actor, *pointer, &input)?;
                         state.actor.begin(operation.export(), vec![Value::I32(*pointer), Value::I32(input.len() as i32)])?;
                         pending.stage = OwnedStage::Call;
+                        completed_fuel = pending.fuel_used;
                         state.pending = Some(pending);
                     }
                     OwnedStage::Call => {
@@ -1435,13 +1459,29 @@ fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperat
                         let pair = *pair as u64;
                         state.actor.begin(OwnedSemioExport::Deallocate, vec![Value::I32(pair as u32 as i32), Value::I32((pair >> 32) as u32 as i32)])?;
                         pending.stage = OwnedStage::Deallocate { output };
+                        completed_fuel = pending.fuel_used;
                         state.pending = Some(pending);
                     }
-                    OwnedStage::Deallocate { output } => return Ok(OwnedInvocation { output, fuel_used: pending.fuel_used }),
+                    OwnedStage::Deallocate { output } => {
+                        progress(pending.fuel_used, started.elapsed());
+                        return Ok(OwnedInvocation { output, fuel_used: pending.fuel_used });
+                    }
                 }
             }
-            CoreStepOutcome::Cancelled { fuel_used } => return Err(TurnFault::Trapped(format!("owned operation cancelled after {fuel_used} instructions"))),
-            CoreStepOutcome::Fault { error, .. } => return Err(TurnFault::Trapped(error.to_string())),
+            CoreStepOutcome::Cancelled { fuel_used } => {
+                progress(pending.fuel_used.saturating_add(fuel_used), started.elapsed());
+                return Err(TurnFault::Trapped(format!("owned operation cancelled after {fuel_used} instructions")));
+            }
+            CoreStepOutcome::Fault { fuel_used, error } => {
+                progress(pending.fuel_used.saturating_add(fuel_used), started.elapsed());
+                return Err(TurnFault::Trapped(error.to_string()));
+            }
+        }
+        let elapsed = started.elapsed();
+        if completed_fuel >= next_progress_fuel || elapsed >= next_progress_elapsed {
+            progress(completed_fuel, elapsed);
+            next_progress_fuel = completed_fuel.saturating_add(25_000_000);
+            next_progress_elapsed = elapsed.saturating_add(std::time::Duration::from_secs(5));
         }
     }
 }
@@ -1606,8 +1646,14 @@ mod owned_runtime_tests {
         let runtime = OwnedRuntime::new();
         let package = PackageRef { package: PackageId("owned-fixture".to_string()), hash: PackageHash([9; 32]) };
         let compiled = runtime.compile(&package, &bytes).await.expect("compile owned fixture");
-        let descriptor = runtime.describe(&compiled, budget()).await.expect("execute owned describe");
+        let mut progress = Vec::new();
+        let descriptor = runtime.describe_observed(&compiled, budget(), |fuel, elapsed| progress.push((fuel, elapsed))).await.expect("execute owned describe");
         assert!(!descriptor.is_empty(), "owned describe returned no bytes");
+        assert!(progress.last().is_some_and(|(fuel, _)| *fuel > 0), "owned describe emitted no terminal fuel observation");
+        let mut deadline_progress = Vec::new();
+        let zero_deadline = Budget { deadline_ms: 0, ..budget() };
+        assert!(matches!(runtime.describe_observed(&compiled, zero_deadline, |fuel, elapsed| deadline_progress.push((fuel, elapsed))).await, Err(TurnFault::DeadlineExceeded)));
+        assert_eq!(deadline_progress.last().map(|(fuel, _)| *fuel), Some(0), "owned describe deadline emitted no exact terminal fuel observation");
 
         let mut resumed = runtime.instantiate(&compiled, RuntimeActorId(40), &[], &budget()).await.expect("instantiate resumable owned fixture");
         let one_instruction = Budget { fuel: 1, ..budget() };

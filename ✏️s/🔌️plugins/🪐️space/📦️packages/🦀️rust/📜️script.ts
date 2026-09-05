@@ -9,6 +9,14 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 
+/** 🧵️ Keeps compiler worker stacks bounded while retaining the native laws' deeper runtime stack. */
+function homeExactCargoEnvironment(): { env: NodeJS.ProcessEnv; nativeEnv: NodeJS.ProcessEnv } {
+  return {
+    env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+    nativeEnv: { RUST_MIN_STACK: "268435456" },
+  };
+}
+
 class TestScript extends BundleScript {
   run(_segments: string[]): void {
     runCargoTestBudgeted(["semio-s-plugin-space"], this.repoRoot);
@@ -63,7 +71,7 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...homeExactCargoEnvironment(),
         groups: [{
           package: "semio-s-plugin-space",
           target: { kind: "lib" },
@@ -156,7 +164,7 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...homeExactCargoEnvironment(),
         groups: [{
           package: "semio-s-plugin-space",
           target: { kind: "lib" },
@@ -188,16 +196,19 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     && viewerSource.includes('origin: "hub", role: None');
   assert(controller.includes("fold_directory_events, manage_space, presence_heartbeat"), "Home controller does not import the manageSpace command module");
   assert(exact(editor, viewer), "Home identity rows expose administration without current author authority");
+  assert(ownerScript.includes('RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432"'), "Home exact builds do not bound compiler worker stacks");
+  assert(ownerScript.includes('nativeEnv: { RUST_MIN_STACK: "268435456" }'), "Home exact laws lost their native runtime stack");
   for (const hostile of [
     editor.replace("row.role == Some(crate::DirectorySpaceRole::Author)", 'row.origin == "hub"'),
     editor.replace('assert_eq!(buttons.len(), 5', 'assert_eq!(buttons.len(), 4'),
     editor.replace("role: Some(crate::DirectorySpaceRole::Spectator)", "role: Some(crate::DirectorySpaceRole::Author)"),
   ]) assert.equal(exact(hostile, viewer), false);
-  for (const law of ["svg_path_extraction_preserves_transformed_geometry"]) {
-    assert(ownerScript.includes(`workflow::tests::${law}`), `Home native gate omitted ${law}`);
-    assert(osHost.includes(`fn ${law}()`), `OS host omitted ${law}`);
+  for (const law of ["workflow::tests::svg_path_extraction_preserves_transformed_geometry"]) {
+    assert(ownerScript.includes(law), `Home native gate omitted ${law}`);
+    const name = law.slice(law.lastIndexOf("::") + 2);
+    assert(osHost.includes(`fn ${name}()`), `OS host omitted ${law}`);
   }
-  return 10;
+  return 12;
 }
 
 class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
@@ -206,7 +217,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...homeExactCargoEnvironment(),
         groups: [
           {
             package: "semio-framework-plugin-host",
@@ -250,7 +261,14 @@ export function interactiveJobCatalogOracle(repoRoot: string): number {
     { appId: "s.space.space@1/*#editor", owner: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), source: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
   ];
   const descriptor = JSON.parse(readFileSync(join(plugin, "🔣️.json"), "utf8"));
-  let checks = 0;
+  const cargoComponentPackage = readFileSync(join(plugin, "📦️packages/🦀️rust/Cargo.toml"), "utf8").split("[package.metadata.component]")[1]?.split("[")[0]?.match(/package\s*=\s*"([^"]+)"/)?.[1];
+  assert(cargoComponentPackage, "Cargo [package.metadata.component] declares no package");
+  const pluginRoot = readFileSync(join(plugin, "🦀️.rs"), "utf8");
+  const builderId = pluginRoot.match(/Plugin::<SpaceApps>::builder\("([^"]+)"\)/)?.[1];
+  const packageId = pluginRoot.match(/\.package_id\("([^"]+)"\)/)?.[1];
+  assert.equal(packageId, cargoComponentPackage, "plugin().package_id must equal the Cargo component package");
+  assert.equal(packageId, `semio:${builderId}`, "component package identity must be semio:<builder plugin id>");
+  let checks = 1;
   let staleRows = 0;
   for (const surface of surfaces) {
     const fixtureRoot = join(surface.owner, "🧪️fixtures/🧫️retained-command-limits");
@@ -305,6 +323,8 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
             "interactive_job_catalog_tests::space_index_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory",
             "interactive_job_catalog_tests::tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against",
             "interactive_job_catalog_tests::manifest_plugin_id_matches_the_cargo_component_package",
+            "interactive_job_catalog_tests::plugin_assembly_succeeds_and_registers_all_five_surfaces",
+            "interactive_job_catalog_tests::every_app_instance_constructs_against_its_registered_proof_catalog",
           ],
         }],
         progress(event) { console.log(`interactive-job-catalog ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },

@@ -221,48 +221,92 @@ field anywhere — it predates the field entirely, so it cannot be used as evide
 classification until the coordinator's rebuild re-emits it. That is exactly the drift this gate exists
 to expose, and it turns into a real assertion the moment the descriptor is regenerated.
 
-### `cargo check` / `cargo test` — BLOCKED, not skipped
+### `cargo check` — RED, and every error belongs to a peer's in-flight OS-host refactor
 
 ```
 $ RUSTC_WRAPPER="" CARGO_TARGET_DIR=/Users/ueli/Documents/semio/target-s-e2e \
     cargo check -p semio-s-plugin-space --lib --keep-going --message-format=short
-(no output; still running after 3 h)
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:910:57: error[E0038]: the trait `dsl::Backbone` is not dyn compatible: `dsl::Backbone` is not dyn compatible
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:911:40: error[E0308]: mismatched types: expected `Backbones`, found `Box<dyn Backbone>`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:911:13: error[E0308]: mismatched types: expected `Result<(), VcsError>`, found future
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2295:70: error[E0308]: mismatched types: expected `FolderTextStorage`, found future
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2295:137: error[E0308]: mismatched types: expected `MemoryBackbonePort`, found future
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2301:138: error[E0308]: mismatched types: expected `MemoryBackbonePort`, found future
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2318:69: error[E0277]: the `?` operator can only be applied to values that implement `Try`: ... `impl Future<Output = Result<Option<ArtifactPackFiles>, VcsError>>`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2321:35: error[E0277]: the `?` operator can only be applied to values that implement `Try`: ... `impl Future<Output = Result<Option<ArtifactTextFiles>, VcsError>>`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2336:43: error[E0277]: the `?` operator can only be applied to values that implement `Try`: ... `impl Future<Output = Result<Option<(Vec<u8>, Vec<u8>)>, VcsError>>`
+🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:2355:32: error[E0308]: mismatched types: expected `Result<(), VcsError>`, found future
+error: could not compile `semio-framework-os` (lib) due to 10 previous errors; 6 warnings emitted
 ```
 
-The lane's `cargo check` (pid 25855) never reached this crate. `semio-s-plugin-space` depends on
-`semio-s-plugin-stdio`, and a peer session's `rustc --crate-name semio_s_plugin_stdio` in the **same**
-shared `target-s-e2e/debug` (pid 18527) has been compiling for **4 h 39 m at 1.8-3.1 % CPU** under a
-load average of 100-145 (four other cargo/rustc fleets on the box: sourcing, demonstrator, block, vcs).
-Nothing in this lane can compile until that unit lands; starting a private target directory would only
-re-do the same 4 h stdio compile from scratch.
+Run twice (21:22 and 21:30, log `scratchpad/lane-j/check-lib.txt`, `check-lib-2.txt`), identical both times.
+**All 10 errors are in `🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs`, zero in `✏️s/🔌️plugins/🪐️space`** — a peer
+fleet's in-flight `async`/`dyn`-compat migration of the OS host. `semio-s-plugin-space` depends on
+`semio-framework-os` with feature `os-host-full` off-wasm and `space-guest` on wasm, so the **native**
+target is hard-blocked on that crate and `cargo check`/`cargo test` never reach this crate at all. This
+is the known `Plugin Native Check Pulls Broken Host` shape; the fix is not in this lane's lease.
 
-**So: this lane's Rust is written and reviewed but NOT compile-verified.** Do not treat it as green.
-The check is still queued in `target-s-e2e`; re-run exactly the command above (and then
-`cargo test -p semio-s-plugin-space --lib -- interactive_job_catalog_tests`) once the stdio unit
-finishes. The TS oracle above is real, executed output.
+The first attempt additionally queued 3 h behind a peer's `semio_s_plugin_stdio` rustc (pid 18527,
+4 h 41 m at 1.8-5.5 % CPU) in the same shared `target-s-e2e/debug`.
+
+### The compile evidence that does exist
+
+The coordinator's own `wasm32-wasip2` rebuild of `semio-s-plugin-space` (started 21:35 from current
+source, and the earlier 19:45-21:22 one) **compiles this crate's library with these edits** — its log
+carries `constant SPACE_BATCH_ONLY_TOOL_IDS is never used` from `⚙️engine/🪐️space/🦀️.rs:314`, which is
+this lane's own rewritten constant. On wasm the guest takes the `space-guest` feature and never touches
+the broken host code.
+
+Every production source file of this lane settled at **20:21** (`⚙️engine/🪐️space/🦀️.rs`, both editors,
+`🔍️open-instance`); the plugin root's non-test `🧵️RetainedStore` region landed at 19:55. The only edit
+after the coordinator's 21:35 rebuild started is inside `#[cfg(test)] mod interactive_job_catalog_tests`
+(plugin root, 21:36), which wasm never compiles. **The 21:35 build therefore already covers every
+production change in this lane — it does not need to be repeated for that reason.** The coordinator's
+`.package_id("semio:s")` restore at `✏️s/🔌️plugins/🪐️space/🦀️.rs:812` was read before and preserved by
+that 21:36 write (verified: `:809 builder("s")`, `:812 .package_id("semio:s")`).
+
+**What is still unverified: the `#[cfg(test)]` code.** `cargo check --lib` does not compile test
+modules and `cargo test` cannot run at all, so the five new Rust laws are written and reviewed but not
+executed. Re-run, in this order, the moment `semio-framework-os` compiles again:
+
+```
+RUSTC_WRAPPER="" CARGO_TARGET_DIR=/Users/ueli/Documents/semio/target-s-e2e \
+  cargo test -p semio-s-plugin-space --lib -- interactive_job_catalog_tests
+# or, registered: bun nx run @semio-tech/space-plugin:interactive-job-catalog-native-check
+```
+
+`every_app_instance_constructs_against_its_registered_proof_catalog` is the one that matters: it runs
+the build-time completeness gate for real, on all three apps, and names the rejection if it still fails.
 
 ## Blockers / notes
 
-- **Machine contention is the only thing between this lane and a verdict.** See above.
-- **The wasm rebuild is still required and still the coordinator's.** Every finding here is invisible
-  to the running shell until `semio_s_plugin_space` is rebuilt: the cached core predates the
-  classification calls entirely.
+- **`semio-framework-os` (OS host) does not compile natively** — 10 errors from a peer's async/dyn
+  migration, listed above. Nothing in this plugin can be natively checked or tested until it lands.
+  This is the single open item; the lane's own code is complete.
+- **The plugin-assembly failure the coordinator saw was `plugin-assembly.package-id`**, not this lane:
+  `PluginBuilder::try_build` (`🔌️plugin/🏗️builder/🦀️.rs:639-643`) requires `package_id` to be exactly
+  `semio:<plugin_id>`, and the 03:53 auto-commit had set `builder("space")` + `.package_id("semio:space")`
+  while Cargo declares `semio:s`. Restored by the coordinator; now pinned from three sides:
+  `manifest_plugin_id_matches_the_cargo_component_package` (Rust, reads Cargo.toml via `include_str!`)
+  and the TS oracle's builder-id / `package_id` / Cargo-component three-way equality.
+- **The wasm rebuild is still required for the running shell.** Every finding here is invisible to the
+  boot until the cached 09-02 core is replaced: that core predates the classification calls entirely,
+  which is why the boot trap said *unclassified* while source said *batch-only*.
 - **Boot order after the rebuild.** `setAppRegistrations` is dispatched on every session, so the studio
   app must construct before anything renders; Home constructs immediately after (directory bootstrap
   sends `setClient` then `applyDirectoryEventPage`); the space index constructs the first time a space
-  is opened. All three were failing at construction before this lane; all three now declare a complete,
-  self-consistent proof catalog.
+  is opened. All three were failing at construction before this lane.
 - **`ArtifactBoundedFirstStepProof`'s fields are private to the framework crate** (no accessors,
-  `🔌️plugin/🦀️.rs:12609-12619`), so a plugin-side test can only assert the row *count*. The identity a
-  row carries is pinned indirectly, by asserting the macro's literals against the runtime constants
-  they must equal. A framework-side accessor (or a `#[cfg(test)]` witness) would let a plugin test
-  assert the join directly; worth a framework lane.
-- **`SPACE_BOUNDED_RAW_BYTES` is now 4 MiB.** If the live catalog JSON for 59 plugins ever exceeds that,
-  `admit_command_json` rejects `setAppRegistrations` with `ToolDispatchError::RawWireLimit` instead of
-  faulting obscurely — the ceiling is one constant, and the fixture pins it.
+  `🔌️plugin/🦀️.rs:12609-12619`), so a plugin-side test can only assert the row *count* directly. The
+  identity each row carries is pinned indirectly (macro literals vs runtime constants) and directly by
+  actually constructing the app. A framework-side accessor would let a plugin assert the join itself.
+- **`SPACE_BOUNDED_RAW_BYTES` is now 4 MiB.** If the live catalog JSON for 59 plugins ever exceeds it,
+  `admit_command_json` rejects `setAppRegistrations` with `ToolDispatchError::RawWireLimit` rather than
+  faulting obscurely — one constant, pinned by the fixture.
+- **`SPACE_BATCH_ONLY_TOOL_IDS is never used` is pre-existing**, not introduced here: the constant is
+  consumed only by the fixture test, and wasm builds never compile test modules. Left as-is rather than
+  `#[cfg(test)]`-gating a documented contract mid-flight.
 - **Home's undo granularity changed for `foldDirectoryEvents`.** Its declared inverse is a whole-config
   `Snapshot`, which is what the mutation itself declares (`🎚️config/🦀️.rs:396-398`); the retained lane
-  publishes one store edit per mutation, which is the framework's one-item publication contract, not
-  something this lane chose.
-- **Not touched:** `✏️s/🔌️plugins/🪐️space/🦀️.rs:603` (`Plugin::<SpaceApps>::builder("s")`) beyond
-  reading it; the descriptor pair (`🔣️.json` / `🛂️.descriptor.semio`) was **not** hand-edited.
+  publishes one store edit per mutation, which is the framework's one-item publication contract.
+- **Not touched:** the descriptor pair (`🔣️.json` / `🛂️.descriptor.semio`) was **not** hand-edited.

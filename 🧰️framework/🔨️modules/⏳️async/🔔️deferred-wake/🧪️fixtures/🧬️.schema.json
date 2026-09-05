@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.async.worker-deferred-wake/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "capacity", "dispatch", "refusal", "retryEpoch", "shutdown", "cases", "runtimeMarkers"],
+  "properties": {
+    "schema": { "const": "semio.framework.async.worker-deferred-wake/v1" },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maintenanceHooks", "backendControls", "writersPerBackend", "partitions", "slotsPerPartition", "waitersPerWriter", "totalWaiters"],
+      "properties": {
+        "maintenanceHooks": { "const": 64 },
+        "backendControls": { "const": 64 },
+        "writersPerBackend": { "const": 32 },
+        "partitions": { "const": 64 },
+        "slotsPerPartition": { "const": 32 },
+        "waitersPerWriter": { "const": 1 },
+        "totalWaiters": { "const": 2048 }
+      }
+    },
+    "dispatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lane", "workKind", "sources", "sourceRotation", "wakesPerTurn", "waiterTransfer", "enqueueNeverCallsWaker", "catchPanics", "locksReleasedBeforeWake", "forbiddenEnqueueEffects"],
+      "properties": {
+        "lane": { "const": "io" },
+        "workKind": { "const": "deferred-wake" },
+        "sources": { "const": ["job", "maintenance", "deferred-wake"] },
+        "sourceRotation": { "const": "round-robin-within-lane" },
+        "wakesPerTurn": { "const": 1 },
+        "waiterTransfer": { "const": "move" },
+        "enqueueNeverCallsWaker": { "const": true },
+        "catchPanics": { "const": true },
+        "locksReleasedBeforeWake": { "const": ["maintenance-registry", "scheduler-lane", "deferred-wake-ring"] },
+        "forbiddenEnqueueEffects": { "const": ["waker-callback", "job-allocation", "user-closure", "db-task", "lost-owner", "io"] }
+      }
+    },
+    "refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controllerCopy", "faultPredicate", "transferPredicate", "queueFailure"],
+      "properties": {
+        "controllerCopy": { "const": ["pool", "maintenance-ticket", "deferred-wake-ticket"] },
+        "faultPredicate": { "const": ["exact-backend", "active", "requested", "not-faulted"] },
+        "transferPredicate": { "const": ["exact-backend", "active", "requested", "faulted", "waiter-present"] },
+        "queueFailure": { "const": "restore-exact-waiter-to-writer-signal-cell" }
+      }
+    },
+    "retryEpoch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostileTrace", "readyBeforeOldSlotDrains", "maximumQueuedOwnersPerSignal", "admission"],
+      "properties": {
+        "hostileTrace": { "const": ["fault", "manual-poll", "pending", "drain-old-slot", "fault-ready", "retry", "park-new-waiter"] },
+        "readyBeforeOldSlotDrains": { "const": false },
+        "maximumQueuedOwnersPerSignal": { "const": 1 },
+        "admission": { "const": "fault-ready-after-exact-slot-drain" }
+      }
+    },
+    "shutdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["native", "cooperative", "afterTerminalEnqueue"],
+      "properties": {
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["admission", "workersExitAfter"],
+          "properties": {
+            "admission": { "const": "close-then-drain-accepted-wakes" },
+            "workersExitAfter": { "const": "deferred-wake-ring-empty" }
+          }
+        },
+        "cooperative": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["admission", "hasPendingWhile", "pump"],
+          "properties": {
+            "admission": { "const": "close-then-drain-accepted-wakes" },
+            "hasPendingWhile": { "const": "deferred-wake-ring-nonempty" },
+            "pump": { "const": "one-deferred-wake-per-turn-until-empty" }
+          }
+        },
+        "afterTerminalEnqueue": { "const": "return-owner-for-exact-cell-restoration" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "activeRequested", "parkedWaiters", "supersededWaiters", "transferredWaiters", "restoredWaiters", "enqueuePhase", "requestMayHoldExternalLock", "expected"],
+        "properties": {
+          "id": { "enum": ["cross-key-refusal", "retry-supersedes-self", "maintenance-capacity-independent", "shutdown-drains-accepted", "terminal-shutdown-restores-owner"] },
+          "activeRequested": { "type": "integer", "minimum": 1, "maximum": 2048 },
+          "parkedWaiters": { "type": "integer", "minimum": 1, "maximum": 2048 },
+          "supersededWaiters": { "type": "integer", "minimum": 0, "maximum": 2048 },
+          "transferredWaiters": { "type": "integer", "minimum": 0, "maximum": 2048 },
+          "restoredWaiters": { "type": "integer", "minimum": 0, "maximum": 2048 },
+          "enqueuePhase": { "enum": ["open", "maintenance-full", "before-shutdown", "after-terminal-shutdown"] },
+          "requestMayHoldExternalLock": { "const": true },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["inlineWakes", "drainedWakes", "retainedFaults", "retainedGuards", "terminalEpochs", "jobs", "dbTasks", "lostOwners", "io"],
+            "properties": {
+              "inlineWakes": { "const": 0 },
+              "drainedWakes": { "type": "integer", "minimum": 0, "maximum": 2048 },
+              "retainedFaults": { "type": "integer", "minimum": 1, "maximum": 2048 },
+              "retainedGuards": { "type": "integer", "minimum": 1, "maximum": 2048 },
+              "terminalEpochs": { "const": 0 },
+              "jobs": { "const": 0 },
+              "dbTasks": { "const": 0 },
+              "lostOwners": { "const": 0 },
+              "io": { "const": 0 }
+            }
+          }
+        }
+      }
+    },
+    "runtimeMarkers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["async", "writer"],
+      "properties": {
+        "async": {
+          "const": ["WorkerDeferredWakeTicket", "WorkerDeferredWakeRegistry", "PoolWork::DeferredWake", "WORKER_DEFERRED_WAKE_PARTITIONS", "WORKER_DEFERRED_WAKES_PER_PARTITION"]
+        },
+        "writer": {
+          "const": ["deferred_wake_ticket", "defer_wake", "restore_fault_waiter"]
+        }
+      }
+    }
+  }
+}

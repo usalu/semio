@@ -64,7 +64,7 @@
         "artifact_kind": "stdio.json",
         "document_schema": "stdio.json",
         "extension": "json",
-        "pack_schema_hash": "7de40335bcca019c81ea7c1cb791e5e438358851fbe32117b5ad8276494b695e",
+        "pack_schema_hash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
         "runtime_capability_id": "s.stdio.json.standard.rfc8259.codec.codec-stdio-json-extension-json.v1"
       }
     }

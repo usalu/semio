@@ -4087,12 +4087,28 @@
       "presentation": { "group": "4_gate", "order": 411.081 }
     },
     {
+      "name": "⚖️gate🌐️browser-component-factory🧊️isolation",
+      "type": "node-terminal", "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:closed-browser-component-factory-check --skip-nx-cache",
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-component-factory" },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.082 }
+    },
+    {
       "name": "⚖️gate🔔️worker-maintenance📐️source",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-async-rs:worker-maintenance-check --skip-nx-cache",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 411.079 }
+    },
+    {
+      "name": "⚖️gate💤️worker-deferred-wake📐️design",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-async-rs:worker-deferred-wake-design-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.0791 }
     },
     {
       "name": "⚖️gate🔔️worker-maintenance🦀️native",

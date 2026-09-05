@@ -208,16 +208,23 @@ impl store::ArtifactPack for ProbeSnapshot {
 
 /// 🌉️ Hand-written, not derived: `ProbeSnapshot` wraps a foreign `serde_json::Value`, one of the
 /// documented gaps the `ToValue`/`FromValue` derive does not cover (`📓️fix-os-kernel-store-mutations.md`
-/// §"Key facts"). Routes through the same `to_dsl_value`/`from_dsl_value` serde bridge
-/// `SpaceHistoryDiff`/`SpaceHistoryMutation` use for the identical reason.
+/// §"Key facts"). Bridges straight through `DslValue`'s own total `From<&serde_json::Value>` /
+/// `From<DslValue> for serde_json::Value` conversions, reproducing exactly what a derived newtype
+/// struct encodes (the inner value, transparently).
+///
+/// 🪲️ NEVER route this through `store::to_dsl_value`/`store::from_dsl_value`: since
+/// `🌱️value/🦀️.rs`'s serde-elimination those are `Ok(value.to_value())` / `T::from_value(value)`,
+/// so an impl that calls them is a two-frame infinite recursion that aborts the process with
+/// `fatal runtime error: stack overflow` the first time a probe document is committed. See
+/// `📓️fable-mcp-artifact-quick-recursion.md`.
 impl store::ToValue for ProbeSnapshot {
     fn to_value(&self) -> store::DslValue {
-        store::to_dsl_value(self).expect("ProbeSnapshot converts to DslValue infallibly")
+        store::DslValue::from(&self.0)
     }
 }
 impl store::FromValue for ProbeSnapshot {
     fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
-        store::from_dsl_value(value).map_err(store::ValueError::new)
+        Ok(ProbeSnapshot(serde_json::Value::from(value)))
     }
 }
 
@@ -234,15 +241,16 @@ impl store::MutationDiff<ProbeSnapshot> for ProbeDiff {
     }
 }
 
-/// 🌉️ Hand-written — same foreign-`serde_json::Value` gap as [`ProbeSnapshot`]'s impl above.
+/// 🌉️ Hand-written — same foreign-`serde_json::Value` gap, and the same no-`to_dsl_value` recursion
+/// rule, as [`ProbeSnapshot`]'s impl above.
 impl store::ToValue for ProbeDiff {
     fn to_value(&self) -> store::DslValue {
-        store::to_dsl_value(self).expect("ProbeDiff converts to DslValue infallibly")
+        store::DslValue::from(&self.0)
     }
 }
 impl store::FromValue for ProbeDiff {
     fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
-        store::from_dsl_value(value).map_err(store::ValueError::new)
+        Ok(ProbeDiff(serde_json::Value::from(value)))
     }
 }
 
@@ -295,15 +303,27 @@ impl store::Mutation<ProbeSnapshot> for ProbeMutation {
 }
 
 /// 🌉️ Hand-written — `ProbeMutation::SetValue` wraps a foreign `serde_json::Value` field, same gap
-/// as [`ProbeSnapshot`]'s impl above (the derive cannot map a foreign type's shape into `DslValue`).
+/// as [`ProbeSnapshot`]'s impl above (the derive cannot map a foreign type's shape into `DslValue`),
+/// and the same no-`to_dsl_value` recursion rule. Externally tagged as `{"SetValue": <payload>}` —
+/// byte-identical to what `#[derive(ToValue)]` and `serde`'s default emit for a tagless
+/// single-unnamed-field variant, which is what `🧫️fixtures/🔣️first-party-codecs.json`'s `probeCodec`
+/// section pins.
 impl store::ToValue for ProbeMutation {
     fn to_value(&self) -> store::DslValue {
-        store::to_dsl_value(self).expect("ProbeMutation converts to DslValue infallibly")
+        let ProbeMutation::SetValue(value) = self;
+        store::DslValue::object([(PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant.to_string(), store::DslValue::from(value))])
     }
 }
 impl store::FromValue for ProbeMutation {
     fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
-        store::from_dsl_value(value).map_err(store::ValueError::new)
+        let store::DslValue::Object(entries) = value else {
+            return Err(store::ValueError::new(format!("expected a one-key `{}` object, found {value:?}", PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant)));
+        };
+        match <[(String, store::DslValue); 1]>::try_from(entries) {
+            Ok([(key, payload)]) if key == PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant => Ok(ProbeMutation::SetValue(serde_json::Value::from(payload))),
+            Ok([(key, _)]) => Err(store::ValueError::new(format!("unknown variant `{key}`, expected `{}`", PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant))),
+            Err(entries) => Err(store::ValueError::new(format!("expected exactly one variant key, found {}", entries.len()))),
+        }
     }
 }
 
@@ -2085,6 +2105,37 @@ mod quick {
         let fault = decode_guest_fault(&store::pack_rt::encode_wire_value(&wire));
         assert_eq!(fault.code, fixture["guestFault"]["expected"]["code"].as_str().expect("fixture fault code"));
         assert_eq!(fault.message, fixture["guestFault"]["expected"]["message"].as_str().expect("fixture fault message"));
+    }
+
+    /// 🪲️ Regression law for the two-frame `to_value` → `to_dsl_value` → `to_value` recursion that
+    /// aborted every probe-committing test with `fatal runtime error: stack overflow`: reaching an
+    /// assertion at all proves the cycle is gone, and the fixture pins the exact wire shape so the
+    /// cure cannot silently change the encoding. `serde_json` is the independent third-party oracle
+    /// — the first-party `ToValue` tree must equal what it serializes for the same values.
+    #[test]
+    fn probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_serializer() {
+        use store::{FromValue as _, ToValue as _};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+        let probe = &fixture["probeCodec"];
+        let value = probe["value"].clone();
+        let snapshot = ProbeSnapshot(value.clone());
+        let diff = ProbeDiff(value.clone());
+        let mutation = ProbeMutation::SetValue(value.clone());
+
+        assert_eq!(serde_json::Value::from(snapshot.to_value()), probe["snapshotEncoding"]);
+        assert_eq!(serde_json::Value::from(diff.to_value()), probe["diffEncoding"]);
+        assert_eq!(serde_json::Value::from(mutation.to_value()), probe["mutationEncoding"]);
+        assert_eq!(serde_json::to_value(&snapshot).expect("serde oracle"), probe["snapshotEncoding"]);
+        assert_eq!(serde_json::to_value(&diff).expect("serde oracle"), probe["diffEncoding"]);
+        assert_eq!(serde_json::to_value(&mutation).expect("serde oracle"), probe["mutationEncoding"]);
+
+        assert_eq!(ProbeSnapshot::from_value(snapshot.to_value()).expect("snapshot round trip"), snapshot);
+        assert_eq!(ProbeDiff::from_value(diff.to_value()).expect("diff round trip"), diff);
+        assert_eq!(ProbeMutation::from_value(mutation.to_value()).expect("mutation round trip"), mutation);
+
+        for rejected in probe["rejectedMutationEncodings"].as_array().expect("fixture rejection cases") {
+            assert!(ProbeMutation::from_value(store::DslValue::from(rejected)).is_err(), "must reject {rejected}");
+        }
     }
 
     #[test]

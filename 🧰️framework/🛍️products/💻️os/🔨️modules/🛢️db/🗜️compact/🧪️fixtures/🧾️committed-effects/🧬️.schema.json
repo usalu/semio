@@ -65,14 +65,15 @@
     "actor": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["priority", "writerAuthority", "activeSegmentAuthority", "leaseBefore", "queuedSubmitDuring", "queuedSubmitAfter"],
+      "required": ["priority", "writerAuthority", "activeSegmentAuthority", "leaseBefore", "payloadReclamation", "queuedSubmitDuring", "queuedSubmitAfter"],
       "properties": {
         "priority": { "const": "command" },
         "writerAuthority": { "const": "retained-artifact-wal" },
         "activeSegmentAuthority": { "const": "artifact-wal" },
         "leaseBefore": {
-          "const": ["snapshot-floor", "wal-horizon", "payload-trace", "wal-delete"]
+          "const": ["snapshot-floor", "wal-horizon", "wal-delete"]
         },
+        "payloadReclamation": { "const": "deferred-global-reference-authority" },
         "queuedSubmitDuring": { "const": "pending" },
         "queuedSubmitAfter": { "const": "accepted" }
       }

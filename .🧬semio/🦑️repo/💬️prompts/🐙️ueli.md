@@ -6,6 +6,8 @@
 
 ---
 
+Write an indepthh refactor plan for our monorepo (find all violations, come up with a new mechanisms if necessary, everything end to end, etc).
+Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
 
 ---
 
@@ -573,6 +575,24 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+Every test must follow the convention `<parent>/🧪️tests/<test-name>/<implementation>` 
+Get rid of all legacy 
+e.g.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏛️space-administration.test.tsx
+etc
+
+---
+
+Schemas are not defined on fixture level but always for the complete scope such as artifact, etc.
+Schema is part of folder name, fixtures are only examples used for testing - schema is an integral part of the application (multiple different schema implementation can exists e.g. .json for json schema, .proto for protobuf, etc)
+
+e.g. violations
+🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability/🧬️.schema.json
+etc
 
 ---
 

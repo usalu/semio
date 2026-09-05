@@ -173,6 +173,22 @@ pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budg
 /// Idempotent (`WalStorage::delete_segment` already is). Returns how many were selected (and thus
 /// attempted).
 #[cfg(test)]
+async fn release_compaction_test_writer(writer: db_storage::WalWriterPermit) -> Result<(), DbError> {
+    let mut release = writer.release();
+    let mut first_error = None;
+    loop {
+        match release.await {
+            Ok(()) => return first_error.map_or(Ok(()), Err),
+            Err(failure) => {
+                let (error, returned) = failure.into_parts();
+                first_error.get_or_insert(error);
+                release = returned.retry();
+            }
+        }
+    }
+}
+
+#[cfg(test)]
 pub async fn apply_wal_retention(storage: &impl db_storage::WalStorage, document: &ArtifactId, segments: &[u64]) -> Result<u64, DbError> {
     let writer = storage.acquire_writer(document).await?;
     let result = async {
@@ -182,7 +198,7 @@ pub async fn apply_wal_retention(storage: &impl db_storage::WalStorage, document
         Ok(segments.len() as u64)
     }
     .await;
-    let release = writer.release().await;
+    let release = release_compaction_test_writer(writer).await;
     match (result, release) {
         (Err(error), _) => Err(error),
         (Ok(_), Err(error)) => Err(error),
@@ -769,21 +785,11 @@ impl<'storage> Compactor<'storage> {
                 selected.push(horizon)?;
             }
         }
-        let (candidates, live) = committed_compaction_payloads(&wal_storage, document, &selected, &cancelled).await?;
         for index in 0..selected.len() {
             let segment = selected.get(index).ok_or_else(|| DbError::Internal("database compaction selected segment owner lost".to_string()))?;
             wal.delete_compacted_sealed_segment(&wal_storage, segment.segment_index).await?;
             report.wal_segments_deleted += 1;
         }
-        let payloads = self.storage.payload().await;
-        for index in 0..candidates.len().min(usize::try_from(budget.max_payloads).unwrap_or(usize::MAX)) {
-            let hash = candidates.get(index).ok_or_else(|| DbError::Internal("database compaction candidate hash owner lost".to_string()))?;
-            if !live.contains(hash, &cancelled).await? {
-                payloads.delete(&hash).await?;
-                report.payloads_deleted += 1;
-            }
-        }
-        drop(payloads);
         drop(wal_storage);
 
         report.index_reports = compact_all_indexes(&self.storage.index().await, document).await?;
@@ -1191,60 +1197,6 @@ async fn committed_compaction_horizons<S: db_storage::WalStorage>(
     }
 }
 
-async fn committed_compaction_payloads<S: db_storage::WalStorage>(
-    storage: &S,
-    document: &ArtifactId,
-    selected: &DatabaseCompactionSegmentOwners,
-    cancelled: &std::sync::atomic::AtomicBool,
-) -> Result<(DatabaseCompactionHashOwners, DatabaseCompactionHashOwners), DbError> {
-    let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-    let mut replay = db_wal::replay_committed_document(storage, document, control).await?;
-    let scan = async {
-        let mut candidates = DatabaseCompactionHashOwners::new();
-        let mut live = DatabaseCompactionHashOwners::new();
-        loop {
-            compaction_opportunity(cancelled).await?;
-            match replay.next_transaction_step().await? {
-                db_wal::WalCommittedStep::Transaction(mut transaction) => {
-                    let segment_index = transaction.segment_index();
-                    loop {
-                        let hash = match transaction.next_record_step()? {
-                            db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Payload(db_wal::WalPayloadRef::CasRef(hash))) => Some(*hash),
-                            db_wal::WalCommittedRecordStep::Record(_) => None,
-                            db_wal::WalCommittedRecordStep::Yield => {
-                                compaction_opportunity(cancelled).await?;
-                                continue;
-                            }
-                            db_wal::WalCommittedRecordStep::Done => break,
-                        };
-                        close_compaction_owner(|| transaction.close_record_step()).await?;
-                        if let Some(hash) = hash {
-                            let mut deleted = false;
-                            for index in 0..selected.len() {
-                                compaction_opportunity(cancelled).await?;
-                                deleted |= selected.get(index).is_some_and(|candidate| candidate.segment_index == segment_index);
-                            }
-                            if deleted { candidates.insert(hash, cancelled).await? } else { live.insert(hash, cancelled).await? }
-                        }
-                    }
-                    transaction.finish()?;
-                }
-                db_wal::WalCommittedStep::Yield => {}
-                db_wal::WalCommittedStep::Done => break,
-            }
-        }
-        Ok((candidates, live))
-    }
-    .await;
-    let close = close_compaction_replay(&mut replay).await;
-    match (scan, close) {
-        (Err(error), _) => Err(error),
-        (Ok(_), Err(error)) => Err(error),
-        (Ok(owners), Ok(())) if replay.terminal_is_empty() => Ok(owners),
-        (Ok(_), Ok(())) => Err(DbError::Internal("database compaction committed payload cursor retained owners".to_string())),
-    }
-}
-
 /// 🧵 Runs live compaction while the document actor retains its original WAL writer.
 pub async fn retained_compaction_with_wal(
     storage: Arc<db_storage::DbBackend>,
@@ -1312,9 +1264,6 @@ async fn retained_compaction_under_lease(
         }
     }
 
-    progress.store(DatabaseCompactionProgress::PayloadTrace as u8, std::sync::atomic::Ordering::Release);
-    let (candidates, live) = committed_compaction_payloads(&wal_storage, document, &selected, cancelled).await?;
-
     progress.store(DatabaseCompactionProgress::WalDelete as u8, std::sync::atomic::Ordering::Release);
     for index in 0..selected.len() {
         compaction_opportunity(cancelled).await?;
@@ -1323,18 +1272,6 @@ async fn retained_compaction_under_lease(
         report.wal_segments_deleted = report.wal_segments_deleted.checked_add(1).ok_or(DbError::LimitExceeded("database compaction deleted segments"))?;
     }
     drop(wal_storage);
-
-    progress.store(DatabaseCompactionProgress::PayloadDelete as u8, std::sync::atomic::Ordering::Release);
-    let payload = storage.payload().await;
-    for index in 0..candidates.len().min(usize::try_from(budget.max_payloads).unwrap_or(usize::MAX)) {
-        compaction_opportunity(cancelled).await?;
-        let hash = candidates.get(index).ok_or_else(|| DbError::Internal("database compaction candidate hash owner lost".to_string()))?;
-        if !live.contains(hash, cancelled).await? {
-            payload.delete(&hash).await?;
-            report.payloads_deleted = report.payloads_deleted.checked_add(1).ok_or(DbError::LimitExceeded("database compaction deleted payloads"))?;
-        }
-    }
-    drop(payload);
 
     progress.store(DatabaseCompactionProgress::IndexMerge as u8, std::sync::atomic::Ordering::Release);
     let index_storage = storage.index().await;
@@ -2505,8 +2442,7 @@ mod tests {
         document: &ArtifactId,
         row: &serde_json::Value,
         previous: Option<[u8; 32]>,
-        aborted: pack::ContentHash,
-        committed: pack::ContentHash,
+        payloads: &[(&str, pack::ContentHash)],
     ) -> [u8; 32] {
         let index = row["index"].as_u64().unwrap();
         let options = protocol::format::WriteOptions { required_flags: protocol::wire::REQUIRED_HASH_CHAIN, optional_flags: 0 };
@@ -2520,11 +2456,11 @@ mod tests {
                 let record = match record["kind"].as_str().unwrap() {
                     "frontier" => WalRecord::Frontier(frontier(document, record["headSeq"].as_u64().unwrap()).await),
                     "snapshot" => WalRecord::SnapshotPub { generation: 1, frontier: frontier(document, record["headSeq"].as_u64().unwrap()).await },
-                    "payload" => WalRecord::Payload(WalPayloadRef::CasRef(match record["payload"].as_str().unwrap() {
-                        "aborted" => aborted,
-                        "committed" => committed,
-                        other => panic!("unknown committed compaction payload {other}"),
-                    })),
+                    "payload" => {
+                        let name = record["payload"].as_str().unwrap();
+                        let hash = payloads.iter().find_map(|(candidate, hash)| (*candidate == name).then_some(*hash)).unwrap_or_else(|| panic!("unknown committed compaction payload {name}"));
+                        WalRecord::Payload(WalPayloadRef::CasRef(hash))
+                    }
                     other => panic!("unknown committed compaction record {other}"),
                 };
                 append_fixture_record(&mut writer, record).await;
@@ -3049,7 +2985,7 @@ mod tests {
         let committed = storage.put(pages(b"committed-payload")).await.unwrap();
         let mut previous = None;
         for row in fixture["segments"].as_array().unwrap() {
-            previous = Some(append_committed_compaction_segment(&storage, &document, row, previous, aborted, committed).await);
+            previous = Some(append_committed_compaction_segment(&storage, &document, row, previous, &[("aborted", aborted), ("committed", committed)]).await);
         }
         let backend = db_storage::DbBackend::Memory(storage);
         let report = Compactor::new(&backend)
@@ -3061,11 +2997,58 @@ mod tests {
         assert_eq!(report.payloads_deleted, fixture["expected"]["deletedPayloads"].as_u64().unwrap());
         let wal = backend.wal().await;
         let remaining_segments: Vec<u64> = fixture["expected"]["remainingSegments"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap()).collect();
-        assert_eq!(wal.list_segments(&document).await.unwrap().as_slice(), remaining_segments.as_slice(), "header-only highest segment remains the active horizon");
+        let mut remaining = wal.list_segments(&document).await.unwrap();
+        assert_eq!(remaining.as_slice(), remaining_segments.as_slice(), "header-only highest segment remains the active horizon");
+        while remaining.close_step() {}
+        assert!(remaining.terminal_is_empty());
         let payload = backend.payload().await;
         let retained_payloads = fixture["expected"]["retainedPayloads"].as_array().unwrap();
         assert_eq!(payload.contains(&aborted).await.unwrap(), retained_payloads.iter().any(|value| value == "aborted"), "aborted CAS reference never becomes a deletion candidate");
-        assert_eq!(payload.contains(&committed).await.unwrap(), retained_payloads.iter().any(|value| value == "committed"), "committed CAS reference in the deleted segment is reclaimed");
+        assert_eq!(payload.contains(&committed).await.unwrap(), retained_payloads.iter().any(|value| value == "committed"), "document-scoped compaction must retain committed CAS bytes without global reference authority");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_compaction_retains_shared_and_private_cas_without_global_reference_authority() {
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let document_a = doc("payload-owner-a").await;
+        let document_b = doc("payload-owner-b").await;
+        let shared = storage.put(pages(b"shared-across-documents")).await.unwrap();
+        let private_a = storage.put(pages(b"private-to-document-a")).await.unwrap();
+        let sealed_a = serde_json::json!({
+            "index": 0,
+            "state": "sealed",
+            "transactions": [{
+                "id": 1,
+                "outcome": "commit",
+                "records": [
+                    { "kind": "frontier", "headSeq": 1 },
+                    { "kind": "payload", "payload": "shared" },
+                    { "kind": "payload", "payload": "private-a" }
+                ]
+            }]
+        });
+        let active_a = serde_json::json!({ "index": 1, "state": "active", "transactions": [] });
+        let active_b = serde_json::json!({
+            "index": 0,
+            "state": "active",
+            "transactions": [{
+                "id": 1,
+                "outcome": "commit",
+                "records": [{ "kind": "payload", "payload": "shared" }]
+            }]
+        });
+        let payloads = [("shared", shared), ("private-a", private_a)];
+        let chain = append_committed_compaction_segment(&storage, &document_a, &sealed_a, None, &payloads).await;
+        append_committed_compaction_segment(&storage, &document_a, &active_a, Some(chain), &payloads).await;
+        append_committed_compaction_segment(&storage, &document_b, &active_b, None, &payloads).await;
+
+        let backend = db_storage::DbBackend::Memory(storage);
+        let report = Compactor::new(&backend).await.run(&document_a, "document-a-holder", 1, false, &CompactionBudget::default(), 0).await.unwrap();
+        assert_eq!(report.wal_segments_deleted, 1);
+        assert_eq!(report.payloads_deleted, 0);
+        let payload = backend.payload().await;
+        assert!(payload.contains(&shared).await.unwrap(), "document B's live CAS reference must survive document A compaction");
+        assert!(payload.contains(&private_a).await.unwrap(), "even apparently private CAS bytes require storage-global reference authority before deletion");
     }
 
     #[semio_framework_async_macros::async_test]

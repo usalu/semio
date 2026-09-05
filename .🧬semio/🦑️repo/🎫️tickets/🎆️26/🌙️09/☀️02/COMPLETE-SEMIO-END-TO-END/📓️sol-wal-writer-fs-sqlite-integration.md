@@ -31,8 +31,8 @@ Registered source gate:
 
 ```text
 NX_ISOLATE_PLUGINS=false bun x nx run @semio-tech/framework-os-kernel:wal-writer-authority-check --skip-nx-cache
-session 63980, exit 0
-wal-writer-authority-independent-oracle: AJV=3 exact-u64=1 cases=3 mutations=6 remote=5 writer-slots=32 retained-result=1
+session 96806, exit 0
+wal-writer-authority-independent-oracle: AJV=5 exact-u64=1 cases=3 mutations=6 remote=5 writer-slots=32 retained-result=1 directory-barriers=4 wal-open-owner=1
 ```
 
-This final source receipt was captured after the WAL, CLI, and FaultStorage test migrations above. It validates the three AJV corpora and exact source ownership markers. It is not a Rust compile, filesystem runtime, SQLite runtime, or native qualification receipt. Root-owned production WAL, compaction, PostgreSQL, and Neo4j migration was still converging, so the native group remained intentionally unlaunched.
+This latest source receipt was captured after the WAL, CLI, FaultStorage, directory-durability, and WAL-open rejection schema migrations. It validates five AJV corpora and exact source ownership markers. It is not a Rust compile, filesystem runtime, SQLite runtime, or native qualification receipt. Root-owned production WAL, compaction, PostgreSQL, and Neo4j migration was still converging, so the native group remained intentionally unlaunched.

@@ -1071,9 +1071,9 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                 .env("SEMIO_SQLITE_WRITER_CHILD_MODE", "conflict")
                 .env("SEMIO_SQLITE_WRITER_CHILD_PATH", &alias)
                 .env("SEMIO_SQLITE_WRITER_CHILD_SENTINEL", &conflict_sentinel)
-                .status()
+                .output()
                 .unwrap();
-            assert!(conflict.success());
+            assert!(conflict.status.success(), "SQLite conflict child failed: {}\n{}", String::from_utf8_lossy(&conflict.stdout), String::from_utf8_lossy(&conflict.stderr));
             assert!(std::fs::read_to_string(&conflict_sentinel).unwrap().ends_with(":conflict"));
             writer.release().await.unwrap();
 
@@ -1085,9 +1085,9 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                 .env("SEMIO_SQLITE_WRITER_CHILD_MODE", "crash")
                 .env("SEMIO_SQLITE_WRITER_CHILD_PATH", &database)
                 .env("SEMIO_SQLITE_WRITER_CHILD_SENTINEL", &crash_sentinel)
-                .status()
+                .output()
                 .unwrap();
-            assert!(crash.success());
+            assert!(crash.status.success(), "SQLite crash child failed: {}\n{}", String::from_utf8_lossy(&crash.stdout), String::from_utf8_lossy(&crash.stderr));
             assert!(std::fs::read_to_string(&crash_sentinel).unwrap().ends_with(":acquired"));
             let after_crash = storage.acquire_writer(&document).await.unwrap();
             after_crash.release().await.unwrap();

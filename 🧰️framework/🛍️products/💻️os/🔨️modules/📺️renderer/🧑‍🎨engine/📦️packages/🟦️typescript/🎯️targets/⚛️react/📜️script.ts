@@ -83,6 +83,9 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
     states: readonly string[];
     transitions: readonly { readonly from: string; readonly input: string; readonly to: string; readonly discloses: boolean; readonly erases: boolean }[];
     duplicateResult: string;
+    shellRoute: Readonly<{ actionId: string; spaceId: string; operationEpoch: number; openingPhase: string; requestKind: string }>;
+    disclosureAuthority: readonly string[];
+    focusPhases: readonly string[];
     labels: Readonly<Record<"en" | "de", readonly string[]>>;
   };
   const schema = JSON.parse(readFileSync(join(contractRoot, "🧬️.schema.json"), "utf8"));
@@ -92,6 +95,9 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
   assert.deepEqual(fixture.transitions.filter((row) => row.discloses).map((row) => [row.from, row.input, row.to]), [["available", "request", "copying"], ["failed", "request", "copying"]]);
   assert(fixture.transitions.filter((row) => row.erases).every((row) => row.to === "copied" || row.to === "closed"));
   assert.equal(fixture.duplicateResult, "reject-without-disclosure");
+  assert.deepEqual(fixture.shellRoute, { actionId: "os.directory.open-administration", spaceId: "space-admin-01", operationEpoch: 7, openingPhase: "loading", requestKind: "directory-administration-open" });
+  assert.deepEqual(fixture.disclosureAuthority, ["author"]);
+  assert.deepEqual(fixture.focusPhases, ["ready", "denied", "stale", "failed", "cancelled"]);
   assert.deepEqual(Object.keys(fixture.labels).sort(), ["de", "en"]);
   assert(Object.values(fixture.labels).every((labels) => labels.length === 3 && labels.every((label) => label.length > 0)));
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
@@ -100,13 +106,15 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
   const request = worker.slice(worker.indexOf("function requestDirectoryAdministrationCapability"), worker.indexOf("function settleDirectoryAdministrationCapability"));
   const settle = worker.slice(worker.indexOf("function settleDirectoryAdministrationCapability"), worker.indexOf("function closeDirectoryAdministration"));
   assert(request.includes('inviteCapabilityStatus = "copying"') && request.includes('kind: "directory-administration-capability"'));
-  assert(!request.includes("operation.inviteToken = null"));
+  assert(request.includes("operation.authorPage") && request.indexOf("operation.authorPage") < request.indexOf('kind: "directory-administration-capability"'));
+  assert(request.includes("if (!operation.authorPage)") && request.includes("operation.inviteToken = null"));
   assert(settle.includes("if (copied)") && settle.includes("operation.inviteToken = null") && settle.includes('inviteCapabilityStatus = "failed"'));
   assert(worker.includes('kind: "directory-administration-capability-rejected"') && worker.includes('code: "mismatch"') && worker.includes('code: "already-settled"'));
   assert(shell.includes('kind: "directory-administration-capability-result"') && shell.includes(".then((copied)") && shell.includes("if (clipboard === undefined) return false"));
+  assert(shell.includes("shellSpaceAdministrationOpening") && shell.includes("spaceAdministrationRef.current") && shell.includes("shellSpaceAdministrationCapabilityAllowed"));
   assert(!shell.includes("console.log(inviteToken)") && !shell.includes("setInviteToken"));
   assert(pane.includes('inviteCapabilityStatus === "copying"') && pane.includes("labels.copyStatus[inviteCapabilityStatus]"));
-  return 15;
+  return 21;
 }
 
 class DirectoryInviteCapabilityCheckScript extends BundleScript {

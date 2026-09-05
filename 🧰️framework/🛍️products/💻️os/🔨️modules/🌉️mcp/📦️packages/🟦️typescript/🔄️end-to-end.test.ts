@@ -26,6 +26,11 @@ import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️p
 const repoRoot = getWorkspaceRoot();
 const bin = requireMcpBinary(repoRoot);
 
+/** ⏱️ The first `server/discover` answer waits on a real catalog compile over every installed plugin
+ * descriptor, which is far slower than a steady-state call; every later call keeps the default. */
+const CATALOG_COMPILE_TIMEOUT_MS = 90_000;
+const DISCOVER_ID = 9001;
+
 /** 🎯️ The full tool census `🦀️.rs`'s `GATEWAY_TOOL_NAMES` declares. Duplicated here on
  * purpose: this suite is an INDEPENDENT observer of the running binary, so it must not import the
  * value it is checking. */
@@ -87,11 +92,17 @@ describe("semio-os-mcp — end to end", () => {
   });
 
   /** 🚀️ A freshly spawned, already-discovered server. `server/discover` is the modern era's opener; no
-   * `initialize` handshake is sent, matching the stateless `2026-07-28` contract. */
+   * `initialize` handshake is sent, matching the stateless `2026-07-28` contract. The handshake is
+   * written raw so its FIRST answer may wait longer than `request`'s own ten seconds: that answer is
+   * gated on compiling the catalog from the real installed plugin registry, which walks every plugin
+   * descriptor on disk and is far slower than any steady-state call. Every later call on the same
+   * connection keeps the ordinary timeout, so a genuinely hung server still fails fast. */
   const openServer = async (args: readonly string[] = ["stdio"]): Promise<RawMcpProcess> => {
     const proc = spawnRawMcp(bin, args);
     procs.push(proc);
-    const discovered = await proc.request("server/discover", {});
+    proc.writeRaw(JSON.stringify({ jsonrpc: "2.0", id: DISCOVER_ID, method: "server/discover", params: {} }));
+    const discovered = JSON.parse(await proc.nextLine(CATALOG_COMPILE_TIMEOUT_MS)) as { id: number | string | null; error?: unknown };
+    expect(discovered.id, "the first stdout line is the discovery answer").toBe(DISCOVER_ID);
     expect(discovered.error, `server/discover failed: ${JSON.stringify(discovered.error)}`).toBeUndefined();
     return proc;
   };

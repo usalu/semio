@@ -868,36 +868,13 @@ impl Neo4jDbIoExecutor {
                 self.bootstrap_schema().await?;
                 Ok(DbIoResult::Unit)
             }
-            DbIoTask::WalCreate { document, index, .. } => {
-                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::create_segment(self, artifact, *index))?;
-                Ok(DbIoResult::Unit)
-            }
-            DbIoTask::WalAppend { document, index, input, .. } => {
-                let input = input.take_for_async_driver();
-                Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::append(self, artifact, *index, input))?))
-            }
-            DbIoTask::WalSync { document, index, class, .. } => {
-                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::sync(self, artifact, *index, *class))?;
-                Ok(DbIoResult::Unit)
-            }
-            DbIoTask::WalSeal { document, index, .. } => {
-                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::seal(self, artifact, *index))?;
-                Ok(DbIoResult::Unit)
-            }
+            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => Err(DbError::Unavailable("remote WAL mutation requires a mounted session-scoped writer fence".to_string())),
             DbIoTask::WalRead { document, index, range, output, .. } => Ok(DbIoResult::Pages(self.wal_read_into(document.as_str(), *index, *range, output).await?)),
-            DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::segment_len(self, artifact, *index))?)),
-            DbIoTask::WalState { document, index, .. } => Ok(DbIoResult::WalSegmentState(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::segment_state(self, artifact, *index))?)),
+            DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, self.segment_len(artifact, *index))?)),
+            DbIoTask::WalState { document, index, .. } => Ok(DbIoResult::WalSegmentState(with_admitted_artifact!(operation, document, artifact, self.segment_state(artifact, *index))?)),
             DbIoTask::WalList { document, output, .. } => {
-                let list = with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::list_segments(self, artifact))?;
+                let list = with_admitted_artifact!(operation, document, artifact, self.list_segments(artifact))?;
                 Ok(DbIoResult::List(db_io_transfer_list(list, output).await?))
-            }
-            DbIoTask::WalTruncate { document, index, new_len, .. } => {
-                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::truncate_tail(self, artifact, *index, *new_len))?;
-                Ok(DbIoResult::Unit)
-            }
-            DbIoTask::WalDelete { document, index, .. } => {
-                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::delete_segment(self, artifact, *index))?;
-                Ok(DbIoResult::Unit)
             }
             DbIoTask::SnapshotWrite { document, generation, input, .. } => {
                 let input = input.take_for_async_driver();

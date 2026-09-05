@@ -8,6 +8,13 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../../../📜️script.ts";
 
+function exactCargoStageEnvironments() {
+  return {
+    env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+    nativeEnv: { RUST_MIN_STACK: "268435456" },
+  };
+}
+
 /** 🔐️ Checks fixed writer capabilities and retained local backend integration. */
 class WalWriterAuthorityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -31,7 +38,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     const directoryFixture = JSON.parse(readFileSync(join(directoryOwner, "🔣️.json"), "utf8"));
     const validateDirectory = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directoryOwner, "🧬️.schema.json"), "utf8")));
     assert(validateDirectory(directoryFixture), JSON.stringify(validateDirectory.errors));
-    const openOwner = join(owner, "..", "..", "..", "📝️wal", "🧪️fixtures", "🚪️open-rejection");
+    const openOwner = join(owner, "..", "..", "📝️wal", "🧪️fixtures", "🚪️open-rejection");
     const openFixture = JSON.parse(readFileSync(join(openOwner, "🔣️.json"), "utf8"));
     const validateOpen = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(openOwner, "🧬️.schema.json"), "utf8")));
     assert(validateOpen(openFixture), JSON.stringify(validateOpen.errors));
@@ -71,6 +78,15 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     const followerOwners = new Set(["document"]);
     assert.equal(followerOwners.has("document") ? "conflict" : "ok", fixture.replication.occupiedFollower);
     assert.deepEqual(fixture.replication.inventoryAfterConflict, []);
+    const transfer = fixture.replication.snapshotTransfer;
+    const sourceSnapshot = Buffer.concat(Array.from({ length: transfer.repetitions }, () => Buffer.from(transfer.pattern)));
+    const copiedSnapshot = Buffer.from(sourceSnapshot);
+    assert.equal(sourceSnapshot.length, transfer.bytes);
+    sourceSnapshot.fill(0);
+    assert.deepEqual([...copiedSnapshot], Array.from({ length: transfer.bytes }, (_, index) => transfer.pattern[index % transfer.pattern.length]));
+    assert.equal(Symbol("source-result") === Symbol("independent-input"), transfer.sameOperation);
+    const clusterSource = readFileSync(join(owner, "..", "..", "🌐️cluster", "🦀️.rs"), "utf8");
+    assert(clusterSource.includes("db_io_copy_page_owner(&pages)") && clusterSource.includes("close_replication_pages(&mut pages)"), "snapshot replication must retire source result before a distinct write owner");
     for (const outcome of fixture.replication.releaseAfter) {
       const owner = new Set(["document"]);
       try { assert(["tail", "up-to-date", "snapshot", "leader-corrupt"].includes(outcome)); } finally { owner.delete("document"); }
@@ -127,7 +143,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     assert(readFileSync(join(owner, "🔔️release/🦀️.rs"), "utf8").includes("struct WalWriterSignalCell"), "missing bounded exact release signal");
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
-      cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "268435456" },
+      cwd: this.repoRoot, ...exactCargoStageEnvironments(),
       groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws: [
         "wal_writer_table_matches_neutral_exact_scope_and_aba_rejection",
         "wal_writer_table_capacity_recycles_slots_without_reusing_generations",
@@ -149,6 +165,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
         "fs_wal_directory_barriers_match_neutral_order_and_duplicate_create_is_atomic",
         "fs_wal_directory_faults_retain_seal_and_delete_order_until_explicit_retry",
         "fs_replacement_reports_failure_until_renamed_parent_is_synced",
+        "fs_wal_reopen_repairs_unacknowledged_segment_namespace_before_header_ack",
         "replicate_document_fences_occupied_follower_before_inventory_or_up_to_date",
         "replicate_document_releases_follower_after_leader_replay_failure",
         "replicate_document_applies_missing_tail_commands_to_a_fresh_follower",
@@ -256,7 +273,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     console.log(`wal-retained-decoder-independent-oracle: AJV=1 LEB128=1 vectors=${decoder.varints.length}`);
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
-        cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        cwd: this.repoRoot, ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws: [
           "wal_transaction_gate_matches_neutral_committed_spans", "wal_retained_decoder_fuel_resumes_exact_fragmented_bytes",
           "wal_retained_decoder_cancel_close_preserves_source_and_returns_owner", "wal_committed_cursor_cancel_resume_keeps_transaction_position",
@@ -300,7 +317,7 @@ class WalCommittedCompactionCheckScript extends BundleScript {
     const horizons = fixture.segments.map((segment: any) => ({ segment: segment.index, head: committed.filter((record: any) => record.segment === segment.index && ["frontier", "snapshot"].includes(record.kind)).reduce((head: number | null, record: any) => head === null ? record.headSeq : Math.max(head, record.headSeq), null) }));
     const highest = fixture.segments.at(-1).index;
     const deletedSegments = horizons.filter((row: any) => row.segment !== highest && row.head !== null && row.head <= fixture.floorHeadSeq).map((row: any) => row.segment);
-    const deletedPayloads = committed.filter((record: any) => record.kind === "payload" && deletedSegments.includes(record.segment) && !committed.some((live: any) => live.kind === "payload" && live.payload === record.payload && !deletedSegments.includes(live.segment))).map((record: any) => record.payload);
+    const deletedPayloads = fixture.actor.payloadReclamation === "deferred-global-reference-authority" ? [] : committed.filter((record: any) => record.kind === "payload" && deletedSegments.includes(record.segment) && !committed.some((live: any) => live.kind === "payload" && live.payload === record.payload && !deletedSegments.includes(live.segment))).map((record: any) => record.payload);
     const allPayloads = new Set(fixture.segments.flatMap((segment: any) => segment.transactions.flatMap((transaction: any) => transaction.records.filter((record: any) => record.kind === "payload").map((record: any) => record.payload))));
     assert.deepEqual({
       deletedSegments: deletedSegments.length,
@@ -312,7 +329,8 @@ class WalCommittedCompactionCheckScript extends BundleScript {
       priority: "command",
       writerAuthority: "retained-artifact-wal",
       activeSegmentAuthority: "artifact-wal",
-      leaseBefore: ["snapshot-floor", "wal-horizon", "payload-trace", "wal-delete"],
+      leaseBefore: ["snapshot-floor", "wal-horizon", "wal-delete"],
+      payloadReclamation: "deferred-global-reference-authority",
       queuedSubmitDuring: "pending",
       queuedSubmitAfter: "accepted",
     });
@@ -329,13 +347,15 @@ class WalCommittedCompactionCheckScript extends BundleScript {
     const artifactSource = readFileSync(join(owner, "..", "🗿️artifact", "🦀️.rs"), "utf8");
     assert(artifactSource.includes("ArtifactMessage::Compact") && artifactSource.includes("Priority::Command"));
     assert(source.includes("fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects("));
-    console.log("wal-committed-compaction-independent-oracle: abort effects excluded, committed effects retained, header-only highest preserved");
+    console.log("wal-committed-compaction-independent-oracle: abort effects excluded, global payloads retained, header-only highest preserved");
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
         cargoArgs: ["--all-features"],
         groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: [
           "db_compact::tests::compaction_applies_only_committed_frontier_snapshot_and_payload_effects",
+          "db_compact::tests::document_compaction_retains_shared_and_private_cas_without_global_reference_authority",
           "db_engine::tests::compact_document_uses_live_actor_writer_and_restores_submits",
         ] }],
         progress(event) { console.log(`wal-committed-compaction-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
@@ -354,6 +374,7 @@ class DurableOwnedGroupDecisionCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
           "durable_group::tests::durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds",
           "durable_group::tests::durable_store_prepared_outcome_derives_and_verifies_exact_unbound_bytes",
@@ -451,7 +472,7 @@ class WalRecoveryCheckScript extends BundleScript {
     const testkitSource = readFileSync(join(owner, "../🧪️testkit/🦀️.rs"), "utf8");
     for (const law of laws) assert((law.startsWith("db_testkit::") ? testkitSource : source).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws }], progress(event) { console.log(`wal-recovery ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws }], progress(event) { console.log(`wal-recovery ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
       console.log(`wal-recovery-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log(`wal-recovery-check: ${fixture.cuts.length + fixture.lifecycle.length + fixture.fragmentCopies.length + failStop.cases.length} checks clean`);
@@ -489,7 +510,7 @@ class WalCapacityCheckScript extends BundleScript {
     assert(source.includes("fn wal_transaction_frame_bytes("), "missing transaction byte preflight before writes");
     assert(source.includes("const DEFAULT_MAX_SEGMENT_BYTES: u64 = db_storage::DB_IO_MAX_READ_BYTES;"), "WAL and storage must share one byte ceiling");
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: ["db_wal::tests::wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries"] }], progress(event) { console.log(`wal-capacity ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: ["db_wal::tests::wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries"] }], progress(event) { console.log(`wal-capacity ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
       console.log(`wal-capacity-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log("wal-capacity-check: 6 checks clean");
@@ -601,7 +622,7 @@ class DirectoryEventPageContractCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::schema::tests::directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles"] }],
         progress(event) { console.log(`directory-event-page-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
       });
@@ -618,7 +639,7 @@ class DirectoryEventPageClientCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
+        ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::client::tests::directory_event_page_preserves_canonical_bytes_bounds_and_cancels_before_io"] }],
         progress(event) { console.log(`directory-event-page-client ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
       });
@@ -697,6 +718,7 @@ class WalSegmentStateCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
         cargoArgs: ["--all-features"],
         groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib" }, laws: [
           "memory_storage_satisfies_wal_storage_laws",
@@ -751,6 +773,7 @@ class MemberDialectCheckScript extends BundleScript {
     testFixtureProjectionRetirement();
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
       cargoArgs: segments,
       buildBudgetMs: 3_600_000,
       groups: [

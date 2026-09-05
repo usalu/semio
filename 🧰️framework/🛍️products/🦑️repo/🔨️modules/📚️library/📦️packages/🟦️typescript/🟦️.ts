@@ -1779,7 +1779,7 @@ export type ExactCargoLawPort = {
 };
 export type ExactCargoLawOptions = {
   cwd: string; groups: readonly ExactCargoLawGroup[]; manifestPath?: string; cargoArgs?: readonly string[];
-  env?: NodeJS.ProcessEnv; artifactDir?: string; buildBudgetMs?: number; listBudgetMs?: number; lawBudgetMs?: number;
+  env?: NodeJS.ProcessEnv; nativeEnv?: NodeJS.ProcessEnv; artifactDir?: string; buildBudgetMs?: number; listBudgetMs?: number; lawBudgetMs?: number;
   cancelled?: () => boolean;
   progress?: (event: { stage: ExactCargoLawStage; package: string; law?: string; artifactDir: string }) => void;
 };
@@ -1917,6 +1917,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
   if (!isAbsolute(cargoTargetDir) || !cargoTargetDir.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Exact Cargo laws require an absolute ticket-generated Cargo target");
   if (exactCargoGeneratedRoot(artifactRoot) !== exactCargoGeneratedRoot(cargoTargetDir)) throw new Error("Exact Cargo evidence and target must share one ticket-generated root");
   const env = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
+  const nativeEnv = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
   if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
   const groupKeys = options.groups.map(group => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));
   if (new Set(groupKeys).size !== groupKeys.length) throw new Error("Exact Cargo groups must combine laws for the same package/target");
@@ -1946,7 +1947,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
       options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
       const stdoutPath = join(groupRoot, `${name}.stdout`);
       const stderrPath = join(groupRoot, `${name}.stderr`);
-      last = await port.probe(command, args, { cwd: options.cwd, env, budgetMs: checkedBudget(budget), maxOutputBytes: next === "build" ? 256 * 1024 * 1024 : 8 * 1024 * 1024, stdoutPath, stderrPath, cancelled });
+      last = await port.probe(command, args, { cwd: options.cwd, env: next === "build" ? env : nativeEnv, budgetMs: checkedBudget(budget), maxOutputBytes: next === "build" ? 256 * 1024 * 1024 : 8 * 1024 * 1024, stdoutPath, stderrPath, cancelled });
       if (!existsSync(stdoutPath)) writeFileSync(stdoutPath, last.stdout, { flag: "wx", mode: 0o600 });
       if (!existsSync(stderrPath)) writeFileSync(stderrPath, last.stderr, { flag: "wx", mode: 0o600 });
       writeFileSync(join(groupRoot, `${name}.json`), JSON.stringify({ command, args, cargoTargetDir, status: last.status, signal: last.signal, reason: last.reason ?? "exit" }), { flag: "wx", mode: 0o600 });
