@@ -127,7 +127,7 @@ mod tests {
     /// 🏗️ Shared fixture — a scene that exercises every optional/collection field at least once
     /// (verbatim duplicate of the `rs`/`📝️text` crates' own private test-only builder — see that
     /// crate's `populated_scene_fixture` doc comment).
-    async fn populated_scene_fixture() -> RemodelingSnapshot {
+    fn populated_scene_fixture() -> RemodelingSnapshot {
         let mut scene = default_remodeling_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),

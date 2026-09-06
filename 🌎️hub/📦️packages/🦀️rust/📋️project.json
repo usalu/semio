@@ -214,6 +214,22 @@
         "command": "bun ./📜️script.ts directory-command-receipt-check process"
       }
     },
+    "space-journey-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-journey-check --source"
+      }
+    },
+    "space-journey-process-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-journey-check --process"
+      }
+    },
     "directory-home-browser-process-source-check": {
       "executor": "nx:run-commands",
       "cache": false,

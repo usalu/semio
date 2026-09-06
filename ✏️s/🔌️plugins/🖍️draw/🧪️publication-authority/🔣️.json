@@ -1,0 +1,190 @@
+{
+  "schema": "semio.app.publication-authority.v1",
+  "apps": [
+    {
+      "owner": "DrawingPlayApp",
+      "toolIdsConstants": [
+        "DRAWING_GESTURE_TOOL_IDS",
+        "DRAWING_BOUNDED_TOOL_IDS"
+      ],
+      "source": "🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "routes": [
+        {
+          "id": "canvasPointerDown",
+          "lanes": [
+            "Artifact",
+            "Config"
+          ]
+        },
+        {
+          "id": "canvasPointerMove",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "canvasPointerUp",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "canvasDoubleClick",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "canvasCommitDraft",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "canvasEscape",
+          "lanes": [
+            "Artifact",
+            "Config"
+          ]
+        },
+        {
+          "id": "setSnapshot",
+          "lanes": [
+            "HostOnly"
+          ]
+        },
+        {
+          "id": "commitDocument",
+          "lanes": [
+            "HostOnly"
+          ]
+        },
+        {
+          "id": "setFixtureJson",
+          "lanes": [
+            "HostOnly"
+          ]
+        },
+        {
+          "id": "setActiveExample",
+          "lanes": [
+            "HostOnly"
+          ]
+        },
+        {
+          "id": "setSelectedOpacity",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "engagementSubmit",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "addLayer",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "dropLayerKind",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "moveLayer",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "deleteLayer",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "duplicateLayer",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "toggleLayerVisible",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "combineBoolean",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "patchLayer",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "patchLayers",
+          "lanes": [
+            "Artifact"
+          ]
+        },
+        {
+          "id": "setActiveUtility",
+          "lanes": [
+            "Config"
+          ],
+          "frameworkInjected": true
+        },
+        {
+          "id": "setCamera",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setCameraZoom",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "engagementInput",
+          "lanes": [
+            "Config"
+          ]
+        },
+        {
+          "id": "setLocale",
+          "lanes": [
+            "Config"
+          ]
+        }
+      ],
+      "laws": {
+        "bounded": true,
+        "cancel": true,
+        "replay": true,
+        "freshness": true,
+        "ack": true,
+        "incrementalClose": true
+      },
+      "ui": {
+        "locales": [
+          "en",
+          "de"
+        ],
+        "accessibleLabels": true,
+        "customizableUi": true
+      }
+    }
+  ]
+}

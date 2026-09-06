@@ -1756,14 +1756,17 @@ impl HubState {
     /// descriptor, a document is lazily minted in `db`'s catalog on its first open. Concurrent
     /// opens resolve to the same live handle.
     async fn ensure_document(&self, id: &ProtocolArtifactId) -> Result<db::ArtifactHandle, db::DbError> {
-        match self.db.document(id).await {
+        match self.db.ensure_document(id).await {
             Ok(handle) => Ok(handle),
-            Err(db::DbError::NotFound(_)) => match self.db.create_document(db::ArtifactSpec::new(id.clone()).await).await {
-                Ok(handle) => Ok(handle),
-                Err(db::DbError::AlreadyExists(_)) => self.db.document(id).await,
-                Err(other) => Err(other),
+            Err(mut rejected) => loop {
+                match rejected.retry_close().await {
+                    Ok(error) => return Err(error),
+                    Err(retained) => {
+                        rejected = retained;
+                        semio_framework_async::yield_once().await;
+                    }
+                }
             },
-            Err(other) => Err(other),
         }
     }
 }
@@ -7375,6 +7378,295 @@ mod tests {
             }
         }
     }
+
+    /// 🗺️ Builds a real trusted GIS Map editor profile, ledger and runtime on a live `HubState`.
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    struct GisMapInferenceFixture {
+        state: HubState,
+        profile: semio_hub::artifact_authority::trusted_catalog::test_support::VerifiedGisMapTestProfileV1,
+        space_id: String,
+        document_id: String,
+        snapshot_pack: Vec<u8>,
+        ledger_path: std::path::PathBuf,
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    fn gis_map_test_snapshot() -> semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot {
+        use directory::DslValue;
+        use semio_s_plugin_gis::artifacts::gismap::{GisMapSnapshot, MapFeature};
+        let point = |lon: f64, lat: f64| DslValue::object([("lon".into(), DslValue::float(lon)), ("lat".into(), DslValue::float(lat))]);
+        let pair = |lon: f64, lat: f64| DslValue::Array(vec![DslValue::float(lon), DslValue::float(lat)]);
+        GisMapSnapshot {
+            positions: vec![MapFeature { id: "point-a".into(), data: point(7.0, 47.0) }],
+            routes: vec![MapFeature { id: "route-a".into(), data: DslValue::object([("points".into(), DslValue::Array(vec![pair(8.0, 46.0), pair(9.0, 48.0)]))]) }],
+            regions: Vec::new(),
+            ..Default::default()
+        }
+    }
+
+    /// 🧭️ Seeds one space, one Author, one Spectator, a GIS Map document and its verified checkpoint.
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) -> (GisMapInferenceFixture, TestIssuedSession, TestIssuedSession) {
+        use semio_hub::artifact_authority::trusted_catalog::test_support;
+        let mut state = test_state().await;
+        let profile = test_support::verified_gis_map_test_profile(&test_support::unique_profile_root("routes")).await.expect("real GIS Map editor profile");
+        let ledger_path = tempdir("inference").join("jobs.sqlite3");
+        let ledger = semio_hub::inference::sqlite::InferenceJobLedgerV1::open(&ledger_path).expect("private job ledger");
+        state.verified_catalog = Some(profile.catalog().clone());
+        state.gis_map_binding = Some(profile.binding().clone());
+        state.inference_runtime = Some(Arc::new(HubInferenceRuntimeV1::new(profile.binding().clone(), Arc::new(ledger), Arc::new(UnavailableGisMapApprovalCommitterV1))));
+        let author = issue_test_session(&state, author_email).await;
+        let spectator = issue_test_session(&state, spectator_email).await;
+        let space_id = create_space_for_test(&state, &author.user_id, "GIS Map Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space_id, author_email, DirectorySpaceRole::Author).await;
+        upsert_member_for_test(&state, &space_id, spectator_email, DirectorySpaceRole::Spectator).await;
+        let document_id = "gis-map-document".to_string();
+        let selection = profile.binding().selection();
+        let descriptor = os_directory::DocumentDescriptor {
+            space_id: space_id.clone(),
+            document_id: document_id.clone(),
+            artifact_kind: selection.artifact.kind.clone(),
+            artifact_schema: selection.artifact.schema.clone(),
+            owner: os_directory::DocumentOwner {
+                plugin_id: selection.package.plugin_id.clone(),
+                package_id: selection.package.package_id.clone(),
+                version: selection.package.version.clone(),
+                package_hash: selection.package.component_sha256.clone(),
+            },
+            pack_schema_hash: selection.artifact.pack_schema_hash.clone(),
+            bootstrap_version: 1,
+            bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
+            bootstrap_snapshot_hash: "33".repeat(32),
+        };
+        state
+            .directory_service
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#test", author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor })
+            .await
+            .expect("announce GIS Map document");
+        let snapshot_pack = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
+        publish_gis_checkpoint_for_test(&state, &space_id, &document_id, &snapshot_pack).await;
+        (GisMapInferenceFixture { state, profile, space_id, document_id, snapshot_pack, ledger_path }, author, spectator)
+    }
+
+    /// 🧾️ Publishes one verified active checkpoint whose pack is the literal GIS Map snapshot bytes.
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, document_id: &str, pack: &[u8]) {
+        let spr = b"gis-map-spr";
+        let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
+        let spr_hash = os_directory::ArtifactHash(Sha256::digest(spr));
+        let mut aggregate = Sha256::new();
+        aggregate.update(pack);
+        aggregate.update(spr);
+        let scope = DocumentScope::new(space_id, document_id);
+        let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor read").expect("announced GIS Map descriptor");
+        let pack_plan = prepare_artifact_cas_manifest_v1(space_id, pack).expect("pack manifest plan");
+        let spr_plan = prepare_artifact_cas_manifest_v1(space_id, spr).expect("SPR manifest plan");
+        let mut checkpoint = os_directory::ArtifactCheckpoint {
+            scope: scope.clone(),
+            checkpoint_id: os_directory::ArtifactHash([0; 32]),
+            parent_checkpoint_id: None,
+            descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
+            baseline_frontier: os_directory::ArtifactFrontier { document_id: document_id.to_string(), head_edit_ordinal: 1, head_edit_id: "gis-map-edit-1".into(), last_commit_seq: 1, chain_hash: os_directory::ArtifactHash([0x44; 32]) },
+            pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: artifact_cas_manifest_locator_v1(pack_plan.manifest_id) },
+            spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: artifact_cas_manifest_locator_v1(spr_plan.manifest_id) },
+            aggregate_sha256: os_directory::ArtifactHash(aggregate.finalize()),
+            published_at_ms: 1,
+        };
+        checkpoint.checkpoint_id = os_directory::ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&checkpoint).expect("checkpoint identity")));
+        let ownership = prepare_artifact_cas_ownership_v1(&checkpoint, &ArtifactPair { pack: pack.to_vec(), spr: spr.to_vec() }).expect("ownership plan");
+        let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:gis-map-inference-test".into() };
+        let reservation = state.directory_service.reserve_artifact_cas(system.clone(), ownership, 1_000, 100).await.expect("reserve checkpoint objects");
+        let cas = ArtifactChunkBlobStore::new(state.artifact_cas.clone());
+        let control = StartupCatalogControl;
+        let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
+        cas.stage(space_id, ArtifactBlobIntegrity { sha256: pack_hash, byte_length: pack.len() as u64 }, pack, &context).await.expect("stage GIS Map pack");
+        cas.stage(space_id, ArtifactBlobIntegrity { sha256: spr_hash, byte_length: spr.len() as u64 }, spr, &context).await.expect("stage GIS Map SPR");
+        state.directory_service.publish_reserved_artifact_checkpoint(system, checkpoint, reservation, 100).await.expect("publish verified GIS Map checkpoint");
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    fn inference_route(space_id: &str, document_id: &str, suffix: &str) -> String {
+        format!("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs{suffix}")
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    fn inference_intent(request_id: &str) -> String {
+        serde_json::json!({ "schema": "semio.hub.inference-request/v1", "version": 1, "requestId": request_id, "serviceId": "s.gis.gismap.inference", "policyVersion": 1, "lifetimeMs": 120_000 }).to_string()
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    fn proposal_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("../../🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    #[tokio::test]
+    async fn gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation() {
+        let fixture = proposal_fixture();
+        let (bound, author, _spectator) = gis_map_inference_fixture("map-owner@example.test", "map-watcher@example.test").await;
+        let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+        let addr = spawn_server(bound.state.clone()).await;
+        let bearer = format!("Bearer {}", author.token);
+        let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
+        let accepted = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("11111111111111111111111111111111").as_bytes()).await;
+        assert_eq!(accepted.status, 200, "an Author with a bound Map may submit: {}", String::from_utf8_lossy(&accepted.body));
+        let receipt: serde_json::Value = serde_json::from_slice(&accepted.body).expect("closed job receipt");
+        assert_eq!(receipt["schema"], "semio.hub.inference-job-receipt/v1");
+        assert_eq!(receipt["state"], "succeeded");
+        assert_eq!(receipt["proposalState"], "offered");
+        let job_id = receipt["jobId"].as_str().expect("server-minted job id").to_owned();
+        let expected_proposal = fixture["proposalCanonical"].as_str().expect("canonical proposal").replace(fixture["sampleJobId"].as_str().expect("sample job"), &job_id);
+        assert_eq!(
+            receipt["proposalHash"].as_str().expect("offered proposal hash"),
+            semio_hub::inference::sha256(expected_proposal.as_bytes()),
+            "the server's canonical CreateRegion bytes must equal the neutral corpus literal for this job"
+        );
+        let page: serde_json::Value =
+            serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner event page");
+        assert_eq!(page["schema"], "semio.hub.inference-job-events/v1");
+        assert_eq!(page["stale"], false);
+        assert_eq!(page["cancelRequested"], false);
+        let kinds: Vec<&str> = page["events"].as_array().expect("events").iter().map(|row| row["kind"].as_str().expect("kind")).collect();
+        assert_eq!(kinds, vec!["accepted", "running", "succeeded"], "the private stream is ordered and dense");
+        let cursors: Vec<u64> = page["progress"].as_array().expect("progress").iter().map(|row| row["cursor"].as_u64().expect("cursor")).collect();
+        assert!(cursors.windows(2).all(|pair| pair[1] == pair[0] + 1), "the progress cursor is monotonic and dense: {cursors:?}");
+        assert!(cursors.len() as u64 <= fixture["limits"]["progressMaxCursor"].as_u64().expect("cursor bound"), "progress is bounded");
+        assert_eq!(page["nextCursor"].as_u64().expect("next cursor"), cursors.last().copied().unwrap_or(0));
+        let cancelled: serde_json::Value =
+            serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/cancel")), &headers, &[]).await.body).expect("cancel page");
+        assert_eq!(cancelled["cancelRequested"], true, "cancellation is durably requested before any terminal effect");
+        assert_eq!(cancelled["proposalState"], "cancelled", "a cancelled offer retires its private proposal");
+        assert_eq!(cancelled["proposalHash"], serde_json::Value::Null, "no private proposal survives cancellation");
+        let after: serde_json::Value =
+            serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("retired page");
+        assert!(after["events"].as_array().expect("events").iter().any(|row| row["kind"] == "cancel-requested"));
+        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": receipt["proposalHash"] }).to_string();
+        let denied = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
+        assert_eq!(denied.status, 409, "a cancelled offer can never be approved afterwards");
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    #[tokio::test]
+    async fn gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller() {
+        let fixture = proposal_fixture();
+        let (bound, author, spectator) = gis_map_inference_fixture("private-owner@example.test", "private-watcher@example.test").await;
+        let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+        let peer = issue_test_session(&bound.state, "private-peer@example.test").await;
+        upsert_member_for_test(&bound.state, &space_id, "private-peer@example.test", DirectorySpaceRole::Author).await;
+        let other_space = create_space_for_test(&bound.state, &peer.user_id, "Other Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let addr = spawn_server(bound.state.clone()).await;
+        let owner_bearer = format!("Bearer {}", author.token);
+        let owner_headers = [("Authorization", owner_bearer.as_str()), ("Content-Type", "application/json")];
+        let accepted = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &owner_headers, inference_intent("22222222222222222222222222222222").as_bytes()).await;
+        assert_eq!(accepted.status, 200, "{}", String::from_utf8_lossy(&accepted.body));
+        let receipt: serde_json::Value = serde_json::from_slice(&accepted.body).expect("job receipt");
+        let job_id = receipt["jobId"].as_str().expect("job id").to_owned();
+        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": receipt["proposalHash"] }).to_string();
+        let peer_bearer = format!("Bearer {}", peer.token);
+        let spectator_bearer = format!("Bearer {}", spectator.token);
+        let denied_code = fixture["visibility"].as_array().expect("visibility").iter().find(|row| row["role"] == "peer-author-same-space").expect("peer row")["expectedCode"].clone();
+        for (role, header) in [("peer-author-same-space", peer_bearer.as_str()), ("viewer", spectator_bearer.as_str())] {
+            let headers = [("Authorization", header), ("Content-Type", "application/json")];
+            for (method, suffix, body) in [
+                ("GET", format!("/{job_id}/events?after=0"), String::new()),
+                ("POST", format!("/{job_id}/cancel"), String::new()),
+                ("POST", format!("/{job_id}/approval"), approval.clone()),
+            ] {
+                let response = raw_http_request(addr, method, &inference_route(&space_id, &document_id, &suffix), &headers, body.as_bytes()).await;
+                assert_eq!(response.status, 403, "{role} reached {method} {suffix}");
+                let published: serde_json::Value = serde_json::from_slice(&response.body).expect("closed denial");
+                assert_eq!(published["code"], denied_code, "{role} {method}");
+                assert_eq!(published.as_object().expect("closed object").len(), 2, "a denial never names a private object");
+            }
+        }
+        let cross = raw_http_request(addr, "GET", &inference_route(&other_space, &document_id, &format!("/{job_id}/events?after=0")), &[("Authorization", peer_bearer.as_str())], &[]).await;
+        assert!(matches!(cross.status, 403 | 404 | 503), "a cross-space read never returns another space's job: {}", cross.status);
+        assert_ne!(cross.status, 200);
+        let anonymous = raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &[]).await;
+        assert_eq!(anonymous.status, 403, "an unauthenticated caller is denied");
+        bound.state.directory.revoke_auth_sessions_for_user(&author.user_id, "test-revocation", None, "gis-map-inference-test").await.expect("revoke the original owner sessions");
+        let stale = raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &owner_headers).await;
+        assert_eq!(stale.status, 403, "a revoked original session loses its own private stream");
+        assert!(!bound.snapshot_pack.is_empty(), "the base Map pack the job froze is a real encoded snapshot");
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    #[tokio::test]
+    async fn gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drift() {
+        let fixture = proposal_fixture();
+        let (bound, author, _spectator) = gis_map_inference_fixture("approve-owner@example.test", "approve-watcher@example.test").await;
+        let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+        let addr = spawn_server(bound.state.clone()).await;
+        let bearer = format!("Bearer {}", author.token);
+        let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
+        let receipt: serde_json::Value = serde_json::from_slice(
+            &raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("33333333333333333333333333333333").as_bytes()).await.body,
+        )
+        .expect("job receipt");
+        let job_id = receipt["jobId"].as_str().expect("job id").to_owned();
+        let proposal_hash = receipt["proposalHash"].as_str().expect("offered hash").to_owned();
+        let wrong = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": "9".repeat(64) }).to_string();
+        let rejected = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, wrong.as_bytes()).await;
+        assert_eq!(rejected.status, 409, "a substituted proposal hash is refused");
+        let foreign_job = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": "4".repeat(32), "proposalHash": proposal_hash }).to_string();
+        let mismatched = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, foreign_job.as_bytes()).await;
+        assert_eq!(mismatched.status, 409, "the body's job id must equal the route's");
+        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": proposal_hash }).to_string();
+        let unavailable = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
+        let expected = fixture["errors"].as_array().expect("errors").iter().find(|row| row["name"] == "no-composition-transaction").expect("commit-unavailable row");
+        assert_eq!(u64::from(unavailable.status), expected["status"].as_u64().expect("status"), "{}", String::from_utf8_lossy(&unavailable.body));
+        let published: serde_json::Value = serde_json::from_slice(&unavailable.body).expect("closed error");
+        assert_eq!(published["code"], expected["code"], "a Map with composed children must fail closed, never auto-apply");
+        let page: serde_json::Value =
+            serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner page");
+        assert_eq!(page["proposalState"], "offered", "a refused publication never marks the proposal approved");
+        let kinds: Vec<&str> = page["events"].as_array().expect("events").iter().map(|row| row["kind"].as_str().expect("kind")).collect();
+        assert!(kinds.contains(&"approval-prepared"), "the outbox row is durably prepared before publication is attempted");
+        assert!(!kinds.contains(&"approved"), "no committed-WAL witness, no approved event");
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    #[tokio::test]
+    async fn gis_map_approval_is_idempotent_across_duplicate_requests_and_restart() {
+        let (bound, author, _spectator) = gis_map_inference_fixture("idempotent-owner@example.test", "idempotent-watcher@example.test").await;
+        let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+        let addr = spawn_server(bound.state.clone()).await;
+        let bearer = format!("Bearer {}", author.token);
+        let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
+        let first: serde_json::Value = serde_json::from_slice(
+            &raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("55555555555555555555555555555555").as_bytes()).await.body,
+        )
+        .expect("job receipt");
+        let repeated: serde_json::Value = serde_json::from_slice(
+            &raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("55555555555555555555555555555555").as_bytes()).await.body,
+        )
+        .expect("repeated job receipt");
+        assert_eq!(first["jobId"], repeated["jobId"], "one scoped request id can only ever mint one job");
+        assert_eq!(first["proposalHash"], repeated["proposalHash"], "a replayed request never re-executes the service");
+        let job_id = first["jobId"].as_str().expect("job id").to_owned();
+        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": first["proposalHash"] }).to_string();
+        for attempt in 0..3 {
+            let response = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
+            assert_eq!(response.status, 503, "attempt {attempt} must reach the same fail-closed publication boundary");
+        }
+        let page: serde_json::Value =
+            serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner page");
+        let prepared = page["events"].as_array().expect("events").iter().filter(|row| row["kind"] == "approval-prepared").count();
+        assert_eq!(prepared, 1, "three duplicate approvals reconcile to exactly one prepared envelope");
+        assert_eq!(page["events"].as_array().expect("events").iter().filter(|row| row["kind"] == "succeeded").count(), 1, "the job succeeded exactly once");
+        let mut restarted = bound.state.clone();
+        let reopened = semio_hub::inference::sqlite::InferenceJobLedgerV1::open(&bound.ledger_path).expect("the durable ledger reopens after a restart");
+        restarted.inference_runtime = Some(Arc::new(HubInferenceRuntimeV1::new(bound.profile.binding().clone(), Arc::new(reopened), Arc::new(UnavailableGisMapApprovalCommitterV1))));
+        let restarted_addr = spawn_server(restarted).await;
+        let recovered: serde_json::Value =
+            serde_json::from_slice(&raw_http_get(restarted_addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("recovered owner page");
+        let recovered_kinds: Vec<&str> = recovered["events"].as_array().expect("events").iter().map(|row| row["kind"].as_str().expect("kind")).collect();
+        assert_eq!(recovered_kinds.iter().filter(|kind| **kind == "approval-prepared").count(), 1, "restart recovery finds exactly one prepared envelope");
+        assert_eq!(recovered_kinds.iter().filter(|kind| **kind == "succeeded").count(), 1, "restart never re-executes an already-offered job");
+        assert!(!recovered_kinds.contains(&"approved"), "restart never invents a committed witness");
+        let after_restart = raw_http_request(restarted_addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
+        assert_eq!(after_restart.status, 503, "approval after restart reaches the same fail-closed publication boundary");
+    }
     //#endregion 💡️Inference
 
     #[tokio::test]
@@ -9124,8 +9416,9 @@ mod tests {
         })
         .await
         .expect("all socket and directory owners retired before reopen");
-        let database = Arc::try_unwrap(database).unwrap_or_else(|_| panic!("database owner remained shared"));
-        tokio::time::timeout(std::time::Duration::from_secs(5), database.shutdown(std::time::Duration::from_secs(5))).await.expect("database shutdown deadline").expect("database shutdown");
+        let mut database = Arc::try_unwrap(database).unwrap_or_else(|_| panic!("database owner remained shared"));
+        let control = db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5));
+        tokio::time::timeout(std::time::Duration::from_secs(5), database.shutdown(&control)).await.expect("database shutdown deadline").expect("database shutdown");
     }
 
     fn assert_recovery_denied(response: RawHttpResponse, expected: &serde_json::Value) {
@@ -9171,9 +9464,11 @@ mod tests {
             let (mut c, _) = connect_async(socket_request(&url, &grant_c.grant)).await.expect("observer document socket");
             b.send(client_binary(&socket_hello(), Lane::Command).await).await.unwrap();
             c.send(client_binary(&socket_hello(), Lane::Command).await).await.unwrap();
-            assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { .. }));
+            let welcome_b = next_server_frame(&mut b).await;
+            assert!(matches!(&welcome_b, ServerFrame::Welcome { .. }), "member welcome: {welcome_b:?}");
             let ServerFrame::Session { actor: actor_b, color: color_b } = next_server_frame(&mut b).await else { panic!("member session") };
-            assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { .. }));
+            let welcome_c = next_server_frame(&mut c).await;
+            assert!(matches!(&welcome_c, ServerFrame::Welcome { .. }), "observer welcome: {welcome_c:?}");
             let ServerFrame::Session { actor: actor_c, .. } = next_server_frame(&mut c).await else { panic!("observer session") };
             let raw = presence_hex_bytes(presence_normalization_fixture()["vectors"][0]["rawPeerHex"].as_str().unwrap());
             b.send(client_binary(&ClientFrame::Presence { peer: raw.clone() }, Lane::Preview).await).await.unwrap();

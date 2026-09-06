@@ -513,8 +513,8 @@ pub(crate) mod testkit {
 
     pub type SpaceIndexApp = semio_framework_plugin::VcsArtifactApp<EditorApp<SpaceIndexEditor>>;
 
-    pub fn new_app() -> SpaceIndexApp {
-        framework_new_app::<EditorApp<SpaceIndexEditor>>()
+    pub async fn new_app() -> SpaceIndexApp {
+        framework_new_app::<EditorApp<SpaceIndexEditor>>().await
     }
 
     #[allow(dead_code)]

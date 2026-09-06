@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "format", "artifact", "artifactLaws", "name", "component", "importInterfaces", "starts", "calls", "expected", "afterCloseB", "lifecycle", "laws"],
+  "properties": {
+    "schema": { "const": "semio.browser-actor-factory/v1" },
+    "format": { "const": "semio.browser-actor-esm/v1" },
+    "artifact": { "const": { "schema": "semio.os.closed-browser-actor.v1", "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1", "maximumBytes": 67108864 } },
+    "artifactLaws": { "const": ["component-snapshot-is-owned", "closed-bytes-hash", "derived-import-manifest", "deterministic-codegen", "unknown-import-denied", "cancel-before-codegen", "cancel-after-codegen", "invalid-component-denied", "opened-file-replacement-denied", "pinned-runtime-with-sanitized-environment", "bun-component-api-matches-node-jco", "single-build-admission-before-input-copy", "compiler-snapshot-replacement-denied-before-evaluation", "component-snapshot-replacement-denied-before-codegen", "first-party-runtime-snapshot-survives-path-replacement", "runtime-snapshot-import-denied", "actual-policy-schema-and-digest-binding", "caller-build-paths-denied-before-input", "private-scratch-retired-after-success", "private-scratch-retired-after-cancellation"] },
+    "name": { "const": "host-counter" },
+    "component": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "importInterfaces": { "const": ["semio:framework/pure@1.0.0"] },
+    "starts": { "const": { "a": 12, "b": 21 } },
+    "calls": { "const": ["a", "a", "b", "a", "b"] },
+    "expected": { "const": [13, 14, 22, 15, 23] },
+    "afterCloseB": { "const": 24 },
+    "lifecycle": { "const": { "open": { "phase": "open", "activeInvocations": 0 }, "invoking": { "phase": "open", "activeInvocations": 1 }, "closing": { "phase": "closing", "activeInvocations": 1 }, "closed": { "phase": "closed", "activeInvocations": 0 } } },
+    "laws": { "const": ["single-closed-esm", "actual-component-import", "actor-local-host", "native-wasm-oracle", "closed-owner-denied", "sibling-survives", "reentrant-close-drains-admitted-call", "abort-retires-actor-owner", "queued-invocation-cancelled-before-guest", "invocation-capacity-before-guest"] }
+  }
+}

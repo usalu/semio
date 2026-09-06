@@ -1,0 +1,9 @@
+{
+  "schema": "semio.browser-wasi-activation/v1",
+  "limits": { "resources": 256, "waiters": 128, "writeBytes": 65536, "outputBytes": 1048576 },
+  "output": [65, 0, 128, 255],
+  "readyIndices": [0],
+  "emptyAmbient": { "environment": [], "arguments": [], "cwd": null, "terminal": null },
+  "terminal": { "phase": "closed", "resources": 0, "waiters": 0, "timers": 0 },
+  "laws": ["fresh-resource-classes", "foreign-resource-denied", "closed-stdin", "no-ambient-process", "bounded-write-permits", "aggregate-output-bound", "exact-u64-clock", "asynchronous-poll", "close-retires-timers-waiters", "resource-capacity", "waiter-capacity", "invalid-poll-denied", "sink-failure-credit-at-capacity", "reentrant-sink-close-releases-credit-once", "reentrant-clock-close-never-rearms"]
+}

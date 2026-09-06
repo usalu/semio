@@ -425,6 +425,20 @@ pub fn semio_example_document() -> RasterSnapshot {
     semio_fixture_snapshot()
 }
 
+/// 📄️ The document every raster surface boots on: the committed `📚️examples/🎬️demo` Semio-logo
+/// carrier, read through the artifact's own text codec so the `.dsl.semio` asset stays the single
+/// source of truth instead of being restated in Rust. Falls back to [`empty_raster_document`] when
+/// the carrier does not parse — the same shape `block2d`'s `default_block2d_snapshot` uses.
+pub fn default_raster_document() -> RasterSnapshot {
+    super::snapshot::text::parse_dsl(crate::artifacts::raster::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
+}
+
+/// 📚️ The committed example document behind one registered example id, or `None` when the id is not
+/// one this subset registers — the lookup `🎮️commands/🎬️set-active-example` resolves against.
+pub fn raster_example_document(example_id: &str) -> Option<RasterSnapshot> {
+    (example_id == crate::artifacts::raster::examples::demo::ID).then(default_raster_document)
+}
+
 /// 📄️ Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).
 pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
     match layer {
@@ -465,3 +479,30 @@ pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
 //#endregion 🔖️DocumentHelpers
 
 
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod boot_document_tests {
+    use super::*;
+
+    /// 📄️ The boot document is the committed Semio-logo carrier read through the artifact's own text
+    /// codec — not the empty scaffold, and not a Rust restatement of the `.dsl.semio` bytes.
+    #[semio_framework_async_macros::async_test]
+    async fn default_document_boots_on_the_semio_demo_carrier() {
+        let document = default_raster_document();
+        assert_ne!(document, empty_raster_document(), "the boot document must not fall back to the empty scaffold");
+        assert_eq!(document.id, "semio-demo");
+        assert_eq!(document.title.as_deref(), Some("Semio Raster Demo"));
+        assert_eq!(document.layers.len(), 2, "the Semio logo carries a backdrop pixel layer and a brighten adjustment layer");
+        assert_eq!(layer_node_id(&document.layers[0]), "backdrop");
+        assert!(matches!(document.layers[1], RasterLayerNode::Adjustment { .. }), "the second layer is the brighten adjustment");
+    }
+
+    /// 📚️ `raster_example_document` resolves exactly the ids this subset registers, and nothing else.
+    #[semio_framework_async_macros::async_test]
+    async fn only_a_registered_example_id_resolves_to_a_document() {
+        assert_eq!(raster_example_document(crate::artifacts::raster::examples::demo::ID), Some(default_raster_document()));
+        assert_eq!(raster_example_document("not-a-real-example"), None);
+    }
+}
+//#endregion 🧪️Tests

@@ -1,0 +1,79 @@
+{
+  "schema": "semio.framework.os.db.document-mount/v1",
+  "capacity": { "waitersPerDocument": 32, "ownerFuturesPerDocument": 1 },
+  "states": ["vacant", "opening", "ready"],
+  "driver": {
+    "states": ["idle", "queued", "polling", "non-runnable", "terminal"],
+    "maximumQueuedPollers": 1,
+    "resumeRequestsCoalesce": true
+  },
+  "driverCases": [
+    {
+      "name": "join-storm-never-parks-rival-pollers",
+      "steps": ["request", "poll-start", "request", "request", "request", "poll-pending", "poll-pending"],
+      "expected": { "state": "idle", "maximumQueuedPollers": 1, "cleanupResumes": 0 }
+    },
+    {
+      "name": "racing-cleanup-resume-is-not-lost",
+      "steps": ["request", "poll-start", "request-resume", "cleanup-fault", "cleanup-resume", "poll-pending", "poll-pending"],
+      "expected": { "state": "idle", "maximumQueuedPollers": 1, "cleanupResumes": 1 }
+    },
+    {
+      "name": "hard-scheduler-fault-retains-one-non-runnable-job",
+      "steps": ["request", "hard-submit-rejected"],
+      "expected": { "state": "non-runnable", "maximumQueuedPollers": 1, "cleanupResumes": 0 }
+    }
+  ],
+  "cases": [
+    {
+      "name": "concurrent-empty-ensure",
+      "steps": [{ "action": "install", "generation": "1" }, { "action": "join", "generation": "1" }, { "action": "emit-complete", "generation": "1" }, { "action": "ready", "generation": "1" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 2, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "published-before-actor-ready",
+      "steps": [{ "action": "install", "generation": "2" }, { "action": "catalog-published", "generation": "2" }, { "action": "join", "generation": "2" }, { "action": "emit-complete", "generation": "2" }, { "action": "ready", "generation": "2" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 2, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "initiator-cancel-keeps-owner",
+      "steps": [{ "action": "install", "generation": "3" }, { "action": "cancel-waiter", "generation": "3" }, { "action": "join", "generation": "3" }, { "action": "emit-complete", "generation": "3" }, { "action": "ready", "generation": "3" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 1, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "retained-close-fault-blocks-retry",
+      "steps": [{ "action": "install", "generation": "4" }, { "action": "join", "generation": "4" }, { "action": "close-fault", "generation": "4" }, { "action": "shutdown-interrupted", "generation": "4" }, { "action": "resume-cleanup", "generation": "4" }, { "action": "close-terminal", "generation": "4" }],
+      "expected": { "owners": 1, "actors": 0, "events": 0, "waitersReleased": 2, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "generation-fences-obsolete-owner",
+      "steps": [{ "action": "install", "generation": "5" }, { "action": "close-terminal", "generation": "5" }, { "action": "retry", "generation": "6" }, { "action": "emit-complete", "generation": "6" }, { "action": "ready", "generation": "6" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 1, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "fixed-waiter-capacity",
+      "steps": [{ "action": "install", "generation": "7" }, { "action": "fill-waiters", "generation": "7" }, { "action": "reject-over-capacity", "generation": "7" }, { "action": "release-slot", "generation": "7" }, { "action": "join", "generation": "7" }, { "action": "emit-complete", "generation": "7" }, { "action": "ready", "generation": "7" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 32, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "cancel-during-owner-emission",
+      "steps": [{ "action": "install", "generation": "8" }, { "action": "emit-begin", "generation": "8" }, { "action": "cancel-waiter", "generation": "8" }, { "action": "join", "generation": "8" }, { "action": "emit-complete", "generation": "8" }, { "action": "ready", "generation": "8" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 1, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "shutdown-interrupt-retains-opening",
+      "steps": [{ "action": "install", "generation": "9" }, { "action": "catalog-published", "generation": "9" }, { "action": "emit-begin", "generation": "9" }, { "action": "cancel-waiter", "generation": "9" }, { "action": "shutdown-interrupted", "generation": "9" }, { "action": "emit-complete", "generation": "9" }, { "action": "ready", "generation": "9" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 0, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "fanout-wakes-after-registry-unlock",
+      "steps": [{ "action": "install", "generation": "10" }, { "action": "emit-complete", "generation": "10" }, { "action": "prepare-fanout", "generation": "10" }, { "action": "unlock-registry", "generation": "10" }, { "action": "wake-waiter", "generation": "10" }, { "action": "ready", "generation": "10" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 1, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "join-never-waits-behind-active-owner-poll",
+      "steps": [{ "action": "install", "generation": "11" }, { "action": "owner-poll-active", "generation": "11" }, { "action": "join", "generation": "11" }, { "action": "request-drive", "generation": "11" }, { "action": "owner-poll-release", "generation": "11" }, { "action": "emit-complete", "generation": "11" }, { "action": "ready", "generation": "11" }],
+      "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 2, "terminalBeforeFanout": true }
+    }
+  ]
+}

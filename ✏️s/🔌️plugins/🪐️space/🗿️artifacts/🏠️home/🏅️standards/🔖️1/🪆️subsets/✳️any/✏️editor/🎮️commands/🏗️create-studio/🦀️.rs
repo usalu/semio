@@ -88,7 +88,7 @@ mod tests {
     async fn creates_studio_via_home_action() {
         let port = crate::catalog_port();
         let before = list_os_space_catalog_entries(port.clone()).expect("list").len();
-        let mut home = VcsArtifactApp::new(EditorApp::<crate::editor::home::HomeApp>::default());
+        let mut home = VcsArtifactApp::new(EditorApp::<crate::editor::home::HomeApp>::default()).await;
         home.dispatch_typed(crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }), &testkit::meta("local")).expect("create");
         let after = list_os_space_catalog_entries(port).expect("list").len();
         assert!(after >= before);

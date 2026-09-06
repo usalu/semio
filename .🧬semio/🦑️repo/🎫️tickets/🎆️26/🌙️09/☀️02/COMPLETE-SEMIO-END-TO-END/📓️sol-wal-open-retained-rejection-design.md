@@ -1,6 +1,18 @@
 # WAL Open Retained Rejection Design
 
-Status: schema and read-only design completed on 2026-09-05. No Rust constructor signature or writer-controller source was changed while the root-owned writer native snapshot was running.
+Status: schema, owner-preserving Rust API migration, source oracle, and exact native registration completed on 2026-09-05. Native qualification remains pending.
+
+## Implemented owner flow
+
+- `ArtifactWalAcquiredRejected` returns the original `DbError` and exact `WalWriterPermit`. Its `retry_open` invokes `open_acquired` with that same permit; it never releases/reacquires or admits a generic mutation shortcut.
+- `ArtifactWalOpenRejected` distinguishes a failure before acquisition from an acquired failure holding the exact `WalWriterRelease`. `retry_close` returns the original open cause only after terminal ACK; a close fault returns the same release plus its distinct cleanup error.
+- `ArtifactWal::{create,open,open_with_control}` no longer await or stringify failed-open release ownership. `open_acquired` returns the exact caller permit and joins all current recovery failures after infallible segment-index retirement.
+- `ArtifactEngineOpenRejected` distinguishes pre-WAL, WAL-open, and post-open retained-WAL rejection. Post-open replay rejection closes retained state first and returns the live WAL for explicit bounded close.
+- The authority builder/ready channel carries `ArtifactEngineOpenRejected`. `DatabaseDocumentOpenRejected` carries it through `create_document`, `document`, and actor-mounted compaction entry.
+- Cluster replication acquires the follower writer before inventory, uses `open_acquired`, and returns the exact permit on recovery rejection. A later close fault returns the live follower WAL.
+- CLI repair, migration, document open/create, compaction, and replication explicitly drive typed rejections to terminal before reporting their ordinary cause.
+
+The retained writer signal/backend cell remains the nonpanicking fail-closed owner if a rejection is abandoned: permit/release construction already requests backend close and the backend table retains the physical guard. Abandonment does not claim terminal success. Normal production paths now retain and drive the typed owner explicitly.
 
 ## Validated current frontier
 
@@ -22,23 +34,22 @@ The strict fixture and schema are in `db/📝️wal/🧪️fixtures/🚪️open-
 - dropped rejection: nonpanicking transfer into the backend's fixed release-recovery cell, with no terminal-success claim;
 - engine propagation: distinct before-WAL, WAL-open-rejected, and WAL-close-rejected states, retained through authority readiness and Database mounting.
 
-The registered writer source oracle now evaluates the exact owner transition in addition to AJV validation:
+The registered writer source oracle evaluates the exact owner transition and source propagation in addition to AJV validation:
 
 ```text
-NX_ISOLATE_PLUGINS=false bun x nx run @semio-tech/framework-os-kernel:wal-writer-authority-check --skip-nx-cache
-session 96806, exit 0
+NX_ISOLATE_PLUGINS=false bun ./📜️script.ts nx run @semio-tech/framework-os-kernel:wal-writer-authority-check --skip-nx-cache
+exit 0
 wal-writer-authority-independent-oracle: AJV=5 exact-u64=1 cases=3 mutations=6 remote=5 writer-slots=32 retained-result=1 directory-barriers=4 wal-open-owner=1
 ```
 
-## Coherent implementation plan
+## Exact native registration
 
-1. Replace `release_failed_open` with `ArtifactWalAcquiredRejected` and `ArtifactWalOpenRejected`. `open_acquired` returns the caller's exact permit untouched; self-acquiring entry points synchronously transform it into an unpolled release owner.
-2. Give the public rejection an owning close/retry operation. Every fault returns the original cause, latest close cause, and same release. Moving parts out is explicit; no conversion to `DbError` consumes a retained owner.
-3. Add a nonpanicking abandoned-release transfer in the fixed writer signal/controller authority. Drop requests fail-closed cleanup and leaves the actual guard backend-retained; it never reports success. Explicit close remains the normal path.
-4. Propagate `ArtifactEngineOpenRejected` through the authority construction result. A post-WAL replay error that cannot terminally close returns the whole WAL owner. The authority/Database must mount an undelivered builder rejection so cancellation of the waiter cannot discard it.
-5. Migrate Database create/open, CLI, cluster, standalone compaction, sync, and tests in one cross-file patch. Cluster uses `acquire_writer -> open_acquired` and retains the returned permit in its existing outer cleanup rather than closing and reacquiring.
-6. Add the native fault law only after the signature migration is coherent. The mounted backend must fail the initial segment operation and at least two writer closes, proving conflict before each exact retry and reacquisition only after terminal cleanup; direct WAL and engine/authority propagation are both required.
+The existing `wal-writer-authority-native-check` all-features exact group now includes:
+
+- `db_wal::tests::artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owner_retry`
+- `db_artifact::tests::artifact_engine_create_rejection_propagates_exact_wal_release_owner`
+- `db_engine::tests::database_document_rejection_retains_authority_builder_wal_owner`
 
 ## Nonclaims
 
-The fixture receipt is a schema/source oracle, not a Rust compile or runtime result. No constructor owner preservation, abandoned-release recovery, or native fault behavior is claimed yet.
+The source receipt is not a Rust compile or runtime result. The registered laws have not yet run. The first implementation corpus uses injected WAL begin faults and exact conflict/terminal reacquisition; repeated physical guard-close faulting remains covered by the writer-controller laws in the same exact group, not yet by a combined WAL-open plus guard-fault law. Cancellation of an abandoned `ArtifactAuthority::spawn` receiver still relies on the backend release cell rather than a caller-recoverable authority-mount handle and needs a later dedicated cancellation law.

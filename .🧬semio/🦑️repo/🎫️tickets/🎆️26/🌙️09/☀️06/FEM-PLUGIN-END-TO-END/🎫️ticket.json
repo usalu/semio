@@ -1,0 +1,9 @@
+{
+  "title": "Fem Plugin End To End",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Get the 🏗️fem plugin (apps fem2d, fem3d of ✏️s/🔌️plugins/🏗️fem on the ✏️s/🔨️modules/🏗️fem engine) working end to end: the crate builds natively and for wasm32-wasip2, every mutation of both artifacts has an exhaustive real-world fixture test (Rust + third-party FEM solver oracles), the descriptor is regenerated, and `bun run dev:fem:2d|3d` boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪b3308b14-66ae-4d36-b96a-4a1e815aaa45"],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-06)."
+}

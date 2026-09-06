@@ -50,8 +50,8 @@ function terminal(output: unknown) {
 
 function handle(output: Promise<unknown> | unknown, calls: string[] = [], identityOutput: Promise<unknown> | unknown = terminal(null)): PluginWasmHandle {
   return {
-    pluginId: "s",
-    manifest: { pluginId: "s", label: "Space", version: "1", apps: [app], examples: [] },
+    pluginId: "space",
+    manifest: { pluginId: "space", label: "Space", version: "1", apps: [app], examples: [] },
     createApp: async () => { calls.push("create"); return 41; },
     destroyApp: async () => { calls.push("destroy"); },
     handleAction: async (_instance: number, invocation: string) => {
@@ -99,7 +99,7 @@ describe("retained visible Home directory bootstrap", () => {
     const owner = await ownerFor(handle(fixture.receipt, calls), posts);
     expect(calls.map((call) => call.split(":").slice(0, 2).join(":"))).toEqual(["create", "action:setClient"]);
     const identityInvocation = JSON.parse(calls.find((call) => call.startsWith("action:setClient:"))!.split(":").slice(2).join(":"));
-    expect(identityInvocation).toMatchObject({ address: { pluginId: "s", appId: app.id, actionId: "setClient" }, arguments: { clientId: "user-a", clientName: "Ada Author", windowId: "main" } });
+    expect(identityInvocation).toMatchObject({ address: { pluginId: "space", appId: app.id, actionId: "setClient" }, arguments: { clientId: "user-a", clientName: "Ada Author", windowId: "main" } });
     expect(posts).toEqual([{ kind: "directory-bootstrap-open", baseUrl: "https://hub.example", after: 0, bootstrapEpoch: 3 }]);
     expect(owner.viewState.locale).toBe("de-DE");
     await closeDirectoryHomeOwnerV1(owner, (message) => posts.push(message));

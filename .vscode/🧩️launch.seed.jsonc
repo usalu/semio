@@ -3752,6 +3752,17 @@
       }
     },
     {
+      "name": "⚖️gate🪪️space-plugin-identity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/space-plugin:plugin-identity-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.0435
+      }
+    },
+    {
       "name": "⚖️gate🧵️space-interactive-job-catalog",
       "type": "node-terminal",
       "request": "launch",
@@ -4079,6 +4090,7 @@
       "env": {
         "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-space-component-sol-target",
         "CARGO_BUILD_JOBS": "1",
+        "CARGO_TARGET_WASM32_WASIP2_RUSTFLAGS": "-Z threads=1 -C link-arg=--max-memory=536870912",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
         "SEMIO_CMD_BUDGET_MS": "86700000"
@@ -4095,6 +4107,138 @@
       "presentation": { "group": "4_gate", "order": 411.082 }
     },
     {
+      "name": "⚖️gate💾️database-shutdown📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:database-shutdown-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.083 }
+    },
+    {
+      "name": "⚖️gate💾️database-shutdown🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:database-shutdown-native-check --skip-nx-cache",
+      "env": {
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/database-shutdown-exact",
+        "CARGO_BUILD_JOBS": "1",
+        "RUST_MIN_STACK": "268435456",
+        "SEMIO_BUILD_BUDGET_MS": "86400000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
+        "SEMIO_CMD_BUDGET_MS": "86700000"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.084 }
+    },
+    {
+      "name": "⚖️gate🪢️document-mount-single-flight📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:document-mount-single-flight-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.086 }
+    },
+    {
+      "name": "⚖️gate🪢️document-mount-single-flight🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:document-mount-single-flight-native-check --skip-nx-cache",
+      "env": {
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/document-mount-single-flight-exact",
+        "CARGO_BUILD_JOBS": "1",
+        "RUST_MIN_STACK": "268435456",
+        "SEMIO_BUILD_BUDGET_MS": "86400000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
+        "SEMIO_CMD_BUDGET_MS": "86700000"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.087 }
+    },
+    {
+      "name": "⚖️gate🏗️gis-durable-three-store-assembly📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/gis-plugin:durable-three-store-assembly-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.088 }
+    },
+    {
+      "name": "⚖️gate🏗️gis-durable-three-store-assembly🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/gis-plugin:durable-three-store-assembly-native-check --skip-nx-cache",
+      "env": {
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/gis-durable-three-store-assembly-exact",
+        "CARGO_BUILD_JOBS": "1",
+        "RUST_MIN_STACK": "268435456",
+        "SEMIO_BUILD_BUDGET_MS": "86400000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
+        "SEMIO_CMD_BUDGET_MS": "86700000"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.089 }
+    },
+    {
+      "name": "⚖️gate🧾️durable-group-journal📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:durable-group-journal-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.0891 }
+    },
+    {
+      "name": "⚖️gate🧾️durable-group-journal🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:durable-group-journal-native-check --skip-nx-cache",
+      "env": {
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/durable-group-journal-exact",
+        "CARGO_BUILD_JOBS": "1",
+        "RUST_MIN_STACK": "268435456",
+        "SEMIO_BUILD_BUDGET_MS": "86400000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
+        "SEMIO_CMD_BUDGET_MS": "86700000"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.0892 }
+    },
+    {
+      "name": "⚖️gate🌊️browser-actor-import🧪️runtime",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/browser-actor-import-fixture:runtime-check --skip-nx-cache",
+      "env": {
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-target",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-exact",
+        "CARGO_BUILD_JOBS": "1",
+        "SEMIO_BUILD_BUDGET_MS": "600000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "600000",
+        "SEMIO_CMD_BUDGET_MS": "600000"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.085 }
+    },
+    {
+      "name": "⚖️gate🌊️browser-actor-import🧪️pending-host-close",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/browser-actor-import-fixture:pending-host-close-check --skip-nx-cache",
+      "env": {
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-target",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-import-exact",
+        "CARGO_BUILD_JOBS": "1",
+        "SEMIO_BUILD_BUDGET_MS": "600000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "600000",
+        "SEMIO_CMD_BUDGET_MS": "600000"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.0851 }
+    },
+    {
       "name": "⚖️gate🔔️worker-maintenance📐️source",
       "type": "node-terminal",
       "request": "launch",
@@ -4103,12 +4247,54 @@
       "presentation": { "group": "4_gate", "order": 411.079 }
     },
     {
-      "name": "⚖️gate💤️worker-deferred-wake📐️design",
+      "name": "⚖️gate💤️worker-deferred-wake📐️source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-async-rs:worker-deferred-wake-design-check --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-async-rs:worker-deferred-wake-check --skip-nx-cache",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 411.0791 }
+    },
+    {
+      "name": "⚖️gate💤️worker-deferred-wake🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-async-rs:worker-deferred-wake-native-check --skip-nx-cache",
+      "env": {
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/worker-deferred-wake-exact",
+        "CARGO_BUILD_JOBS": "1",
+        "RUST_MIN_STACK": "268435456",
+        "SEMIO_BUILD_BUDGET_MS": "86400000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
+        "SEMIO_CMD_BUDGET_MS": "86700000"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.0792 }
+    },
+    {
+      "name": "⚖️gate🔐️worker-pool-use📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-async-rs:worker-pool-use-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.0793 }
+    },
+    {
+      "name": "⚖️gate🔐️worker-pool-use🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-async-rs:worker-pool-use-native-check --skip-nx-cache",
+      "env": {
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/home-directory-projection-target",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/worker-pool-use-exact",
+        "CARGO_BUILD_JOBS": "1",
+        "RUST_MIN_STACK": "268435456",
+        "SEMIO_BUILD_BUDGET_MS": "86400000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
+        "SEMIO_CMD_BUDGET_MS": "86700000"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.0794 }
     },
     {
       "name": "⚖️gate🔔️worker-maintenance🦀️native",
@@ -4382,6 +4568,33 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.09992
+      }
+    },
+    {
+      "name": "⚖️gate🚻️space-journey📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run os-hub:space-journey-source-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.09993
+      }
+    },
+    {
+      "name": "⚖️gate🚻️space-journey🌎️process",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run os-hub:space-journey-process-check --skip-nx-cache",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-two-user-space-journey/process-exact",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-two-user-space-journey/target",
+        "CARGO_BUILD_JOBS": "4"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.09994
       }
     },
     {

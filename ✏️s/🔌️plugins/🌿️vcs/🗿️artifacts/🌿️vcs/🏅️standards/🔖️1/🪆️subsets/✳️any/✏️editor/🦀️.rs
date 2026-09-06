@@ -21,10 +21,10 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ui_text, ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
+    HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
-use dsl::os_pack::json::Value;
+use dsl::os_pack::json::{parse, Value};
 use std::collections::BTreeSet;
 use store::EngineHandles;
 
@@ -72,6 +72,13 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
         builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+/// 🏷️ Resolves an `app_labels!`-checked `LabelText` (locale/terminology already folded) into the UI
+/// contract's own fixed-capacity `Label` — the contract type deliberately has no `From<LabelText>`,
+/// so every chrome node in this surface bridges here.
+pub fn ui_fixed_label(label: semio_framework_plugin::LabelText) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(label.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI label admission failed"))
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
@@ -841,9 +848,9 @@ impl ArtifactEditor for VcsPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(Value::Null);
-        let text_arg = |key: &str| args.get(key).and_then(Value::as_str).unwrap_or_default().to_string();
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
+        let text_arg = |key: &str| args.get(key).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string();
         match action {
             "incrementCounter" => Ok(VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})),
             "patchSnapshot" => {
@@ -869,7 +876,7 @@ impl ArtifactEditor for VcsPlayApp {
                 Ok(VcsCommand::Edit(edit_command::Edit { text }))
             }
             "setLocale" => {
-                let value = args.get("value").or_else(|| args.get("locale")).and_then(Value::as_str).unwrap_or_default().to_string();
+                let value = args.get("value").or_else(|| args.get("locale")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string();
                 if value.len() > VCS_BOUNDED_RAW_BYTES {
                     return Err(Fault::from("vcs-command-payload-too-large"));
                 }
@@ -898,11 +905,11 @@ impl ArtifactEditor for VcsPlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = vcs_play_labels(cfg.snapshot);
         match body_key {
-            VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels),
-            VCS_PLAY_BODY_HISTORY => history::render(doc.history),
-            VCS_PLAY_BODY_DOCUMENT => document_panel::render(doc.history, labels),
-            VCS_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, labels),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
+            VCS_PLAY_BODY_HISTORY => history::render(doc.history).map(semio_framework_plugin::built_to_component_tree),
+            VCS_PLAY_BODY_DOCUMENT => document_panel::render(doc.history, labels).map(semio_framework_plugin::built_to_component_tree),
+            VCS_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -987,6 +994,7 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::ActionMeta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use store::ArtifactEnvelope;
 
@@ -1005,33 +1013,44 @@ pub(crate) mod testkit {
     /// 🧪️ A bare, pre-seeded app instance — no `AppActionRegistry`, so undeclared internal commands
     /// dispatch freely. Seeded via `seed_vcs_demo_history` (see its own doc comment for why this
     /// replaced `ArtifactApp::seed`).
-    pub fn app() -> VcsApp {
-        let mut instance = new_app::<EditorApp<VcsPlayApp>>();
-        seed_vcs_demo_history(&mut instance);
+    pub async fn app() -> VcsApp {
+        let mut instance = new_app::<EditorApp<VcsPlayApp>>().await;
+        seed_vcs_demo_history(&mut instance).await;
         instance
     }
 
     /// 🧪️ A pre-seeded app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn app_with_registry() -> VcsApp {
-        let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_testkit);
-        seed_vcs_demo_history(&mut instance);
+    pub async fn app_with_registry() -> VcsApp {
+        let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_testkit).await;
+        seed_vcs_demo_history(&mut instance).await;
         instance
     }
 
-    pub fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
-        instance.dispatch_typed(command, &meta("local")).expect("dispatch")
+    /// 🧾️ Builds one flat, string-valued action argument object — the `DslValue` shape
+    /// `handle_action`/`command_from_action` take now that the action wire is the DSL value, not JSON.
+    pub fn action_args(entries: impl IntoIterator<Item = (&'static str, String)>) -> dsl::DslValue {
+        dsl::DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), dsl::DslValue::String(value))))
     }
 
-    pub fn render(instance: &mut VcsApp, body_key: &str) -> String {
-        serde_json::to_string(&instance.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    /// 🕳️ The empty action argument object.
+    pub fn no_args() -> dsl::DslValue {
+        dsl::DslValue::Object(Vec::new())
+    }
+
+    pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
+        instance.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+
+    pub async fn render(instance: &mut VcsApp, body_key: &str) -> String {
+        serde_json::to_string(&instance.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
     /// edit in the log is still applied.
-    pub fn seeded_envelope(instance: &VcsApp) -> ArtifactEnvelope<VcsSnapshot, VcsDemoMutation> {
-        let files = instance.document_pack().expect("document pack");
-        store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).expect("parse document pack").envelope
+    pub async fn seeded_envelope(instance: &VcsApp) -> ArtifactEnvelope<VcsSnapshot, VcsDemoMutation> {
+        let files = instance.document_pack().await.expect("document pack");
+        store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).await.expect("parse document pack").envelope
     }
 
     /// 🌱️ Seeds a rich, forked checkpoint/alternative history through `VcsApp`'s own public dispatch
@@ -1046,129 +1065,152 @@ pub(crate) mod testkit {
     /// hardcodes `authors: Vec::new()` with no wire path for real authors (framework-owned, out of this
     /// plugin's boundary) — no test asserts on authorship, so this is a silent, documented fidelity
     /// loss, not a functional gap.
-    pub fn seed_vcs_demo_history(app: &mut VcsApp) {
-        let local = meta("local");
-        let edit = |app: &mut VcsApp, f: fn(&mut VcsSnapshot)| {
-            let mut next = app.snapshot().expect("materialize snapshot");
-            f(&mut next);
-            let text = serde_json::to_string(&next).expect("serialize snapshot");
-            let _ = app.dispatch_typed(VcsCommand::TextEdit(text_edit::TextEdit { text }), &local);
-        };
-        let commit = |app: &mut VcsApp, message: &str| {
-            let _ = app.handle_action("commitCheckpoint", Some(&serde_json::json!({ "message": message })), &local);
-        };
-        let checkout = |app: &mut VcsApp, checkpoint_id: &str| {
-            let _ = app.handle_action("checkoutCheckpoint", Some(&serde_json::json!({ "checkpointId": checkpoint_id })), &local);
-        };
-        let create_alternative = |app: &mut VcsApp, name: &str| -> String {
-            let _ = app.handle_action("createAlternative", Some(&serde_json::json!({ "name": name })), &local);
-            seeded_envelope(app).active_alternative_id.clone().expect("alternative id")
-        };
-        let switch_alternative = |app: &mut VcsApp, alternative_id: &str| {
-            let _ = app.handle_action("switchAlternative", Some(&serde_json::json!({ "alternativeId": alternative_id })), &local);
-        };
-        let last_checkpoint_id = |app: &VcsApp| -> String { seeded_envelope(app).vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
+    async fn seed_edit(app: &mut VcsApp, local: &ActionMeta, mutate: fn(&mut VcsSnapshot)) {
+        let mut next = app.snapshot().expect("materialize snapshot");
+        mutate(&mut next);
+        let text = serde_json::to_string(&next).expect("serialize snapshot");
+        let _ = app.dispatch_typed(VcsCommand::TextEdit(text_edit::TextEdit { text }), local).await;
+    }
 
-        edit(app, |s| {
+    async fn seed_commit(app: &mut VcsApp, local: &ActionMeta, message: &str) {
+        let _ = app.handle_action("commitCheckpoint", Some(&action_args([("message", message.to_string())])), local).await;
+    }
+
+    async fn seed_checkout(app: &mut VcsApp, local: &ActionMeta, checkpoint_id: &str) {
+        let _ = app.handle_action("checkoutCheckpoint", Some(&action_args([("checkpointId", checkpoint_id.to_string())])), local).await;
+    }
+
+    async fn seed_create_alternative(app: &mut VcsApp, local: &ActionMeta, name: &str) -> String {
+        let _ = app.handle_action("createAlternative", Some(&action_args([("name", name.to_string())])), local).await;
+        seeded_envelope(app).await.active_alternative_id.clone().expect("alternative id")
+    }
+
+    async fn seed_switch_alternative(app: &mut VcsApp, local: &ActionMeta, alternative_id: &str) {
+        let _ = app.handle_action("switchAlternative", Some(&action_args([("alternativeId", alternative_id.to_string())])), local).await;
+    }
+
+    async fn seed_last_checkpoint_id(app: &VcsApp) -> String {
+        seeded_envelope(app).await.vcs.checkpoints.last().expect("checkpoint just committed").id.clone()
+    }
+
+    pub async fn seed_vcs_demo_history(app: &mut VcsApp) {
+        let local = meta("local");
+
+        seed_edit(app, &local, |s| {
             s.counter = 1;
             s.title = "VCS Demo".into();
-        });
-        commit(app, "Bootstrap");
-        let c1 = last_checkpoint_id(app);
+        })
+        .await;
+        seed_commit(app, &local, "Bootstrap").await;
+        let c1 = seed_last_checkpoint_id(app).await;
 
-        edit(app, |s| {
+        seed_edit(app, &local, |s| {
             s.notes = "main line".into();
             s.status = "draft".into();
-        });
-        commit(app, "Annotate main draft");
-        let c2 = last_checkpoint_id(app);
+        })
+        .await;
+        seed_commit(app, &local, "Annotate main draft").await;
+        let c2 = seed_last_checkpoint_id(app).await;
 
-        edit(app, |s| {
+        seed_edit(app, &local, |s| {
             s.counter = 2;
-        });
-        commit(app, "Main milestone");
-        let c3 = last_checkpoint_id(app);
+        })
+        .await;
+        seed_commit(app, &local, "Main milestone").await;
+        let c3 = seed_last_checkpoint_id(app).await;
 
-        checkout(app, &c3);
-        let feature_a_id = create_alternative(app, "feature-a");
-        edit(app, |s| {
+        seed_checkout(app, &local, &c3).await;
+        let feature_a_id = seed_create_alternative(app, &local, "feature-a").await;
+        seed_edit(app, &local, |s| {
             s.title = "Feature A".into();
             s.tags.push("feature-a".into());
-        });
-        commit(app, "Start feature A");
-        let c4 = last_checkpoint_id(app);
+        })
+        .await;
+        seed_commit(app, &local, "Start feature A").await;
+        let c4 = seed_last_checkpoint_id(app).await;
 
-        edit(app, |s| {
+        seed_edit(app, &local, |s| {
             s.counter = 10;
-        });
-        commit(app, "Feature A progress");
+        })
+        .await;
+        seed_commit(app, &local, "Feature A progress").await;
 
-        checkout(app, &c3);
-        let feature_b_id = create_alternative(app, "feature-b");
-        edit(app, |s| {
+        seed_checkout(app, &local, &c3).await;
+        let feature_b_id = seed_create_alternative(app, &local, "feature-b").await;
+        seed_edit(app, &local, |s| {
             s.title = "Feature B".into();
             s.notes = "branch b".into();
-        });
-        commit(app, "Start feature B");
+        })
+        .await;
+        seed_commit(app, &local, "Start feature B").await;
 
-        edit(app, |s| {
+        seed_edit(app, &local, |s| {
             s.counter = 20;
-        });
-        commit(app, "Feature B try");
+        })
+        .await;
+        seed_commit(app, &local, "Feature B try").await;
 
-        checkout(app, &c3);
-        edit(app, |s| {
+        seed_checkout(app, &local, &c3).await;
+        seed_edit(app, &local, |s| {
             s.status = "active".into();
-        });
-        commit(app, "Resume main");
-        let c8 = last_checkpoint_id(app);
+        })
+        .await;
+        seed_commit(app, &local, "Resume main").await;
+        let c8 = seed_last_checkpoint_id(app).await;
 
-        switch_alternative(app, &feature_a_id);
-        edit(app, |s| {
+        seed_switch_alternative(app, &local, &feature_a_id).await;
+        seed_edit(app, &local, |s| {
             s.counter = 11;
             s.tags.push("wip".into());
-        });
-        commit(app, "Feature A sprint");
+        })
+        .await;
+        seed_commit(app, &local, "Feature A sprint").await;
 
-        checkout(app, &c4);
-        let _ = create_alternative(app, "feature-a-hotfix");
-        edit(app, |s| {
+        seed_checkout(app, &local, &c4).await;
+        let _ = seed_create_alternative(app, &local, "feature-a-hotfix").await;
+        seed_edit(app, &local, |s| {
             s.status = "hotfix".into();
-        });
-        commit(app, "Hotfix off feature A");
+        })
+        .await;
+        seed_commit(app, &local, "Hotfix off feature A").await;
 
-        switch_alternative(app, &feature_b_id);
-        edit(app, |s| {
+        seed_switch_alternative(app, &local, &feature_b_id).await;
+        seed_edit(app, &local, |s| {
             s.tags.push("review".into());
-        });
-        commit(app, "Feature B review");
+        })
+        .await;
+        seed_commit(app, &local, "Feature B review").await;
 
-        checkout(app, &c8);
-        edit(app, |s| {
+        seed_checkout(app, &local, &c8).await;
+        seed_edit(app, &local, |s| {
             s.counter = 3;
             s.notes = "main polish".into();
             s.tags.push("release".into());
-        });
-        commit(app, "Main batch polish");
+        })
+        .await;
+        seed_commit(app, &local, "Main batch polish").await;
 
-        edit(app, |s| {
+        seed_edit(app, &local, |s| {
             s.status = "done".into();
-        });
-        commit(app, "Main release");
+        })
+        .await;
+        seed_commit(app, &local, "Main release").await;
 
-        checkout(app, &c2);
-        let _ = create_alternative(app, "docs");
-        edit(app, |s| {
+        seed_checkout(app, &local, &c2).await;
+        let _ = seed_create_alternative(app, &local, "docs").await;
+        seed_edit(app, &local, |s| {
             s.notes = "documentation pass".into();
-        });
-        commit(app, "Docs branch");
+        })
+        .await;
+        seed_commit(app, &local, "Docs branch").await;
 
-        checkout(app, &c1);
-        let _ = create_alternative(app, "spike");
-        edit(app, |s| {
+        seed_checkout(app, &local, &c1).await;
+        let _ = seed_create_alternative(app, &local, "spike").await;
+        seed_edit(app, &local, |s| {
             s.title = "Spike prototype".into();
-        });
-        commit(app, "Spike experiment");
+        })
+        .await;
+        seed_commit(app, &local, "Spike experiment").await;
     }
 }
 //#endregion 🧪️Testkit
@@ -1177,7 +1219,7 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::vcs::testkit::{app, dispatch, seeded_envelope};
+    use crate::editor::vcs::testkit::{action_args, app, dispatch, no_args, seeded_envelope};
     use semio_framework_plugin::testkit::meta;
     use semio_framework_plugin::PluginApp;
     use store::HistoryColumn;
@@ -1190,7 +1232,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[semio_framework_async_macros::async_test]
-    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -1202,7 +1244,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[semio_framework_async_macros::async_test]
-    fn every_command_round_trips_through_text_and_binary() {
+    async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -1213,7 +1255,7 @@ mod tests {
     /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
     #[semio_framework_async_macros::async_test]
-    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
             let expected = if id == "setLocale" {
@@ -1251,7 +1293,7 @@ mod tests {
 
     #[test]
     fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
-        let fixture: serde_json::Value = serde_json::from_str(RETAINED_LIMITS).expect("VCS retained limits decode through serde_json");
+        let fixture: Value = parse(RETAINED_LIMITS).expect("VCS retained limits decode");
         let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
         let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
         let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
@@ -1267,13 +1309,13 @@ mod tests {
         assert_eq!(vcs_bounded_extent(&rejected, &snapshot, &interaction), None);
         let factory = VcsBoundedCommandJobFactory::new("s.vcs.vcs@1/*#editor");
         assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
-        assert!(VcsPlayApp::command_from_action("patchSnapshot", Some(&serde_json::json!({ "field": "f", "value": "v".repeat(maximum + additional) }))).is_err());
+        assert!(VcsPlayApp::command_from_action("patchSnapshot", Some(&action_args([("field", "f".to_string()), ("value", "v".repeat(maximum + additional))]))).is_err());
     }
 
     #[test]
     fn retained_factories_publish_only_their_exact_declared_lanes() {
         use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-        let fixture: serde_json::Value = serde_json::from_str(RETAINED_ROUTES).expect("VCS retained route fixture decodes through serde_json");
+        let fixture: Value = parse(RETAINED_ROUTES).expect("VCS retained route fixture decodes");
         let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
         assert_eq!(routes.len(), 10);
         assert_eq!(<VcsBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_BOUNDED_PUBLICATION_CONTRACTS);
@@ -1303,16 +1345,16 @@ mod tests {
     #[test]
     fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
         let rows = [
-            ("incrementCounter", serde_json::json!({})),
-            ("patchSnapshot", serde_json::json!({ "field": "title", "value": "next" })),
-            ("textEdit", serde_json::json!({ "text": "{}" })),
-            ("edit", serde_json::json!({ "text": "{}" })),
-            ("setLocale", serde_json::json!({ "value": "de-DE" })),
-            ("noMutation", serde_json::json!({})),
-            ("canvasPointerDown", serde_json::json!({})),
-            ("canvasPointerMove", serde_json::json!({})),
-            ("canvasPointerUp", serde_json::json!({})),
-            ("canvasWheel", serde_json::json!({})),
+            ("incrementCounter", no_args()),
+            ("patchSnapshot", action_args([("field", "title".to_string()), ("value", "next".to_string())])),
+            ("textEdit", action_args([("text", "{}".to_string())])),
+            ("edit", action_args([("text", "{}".to_string())])),
+            ("setLocale", action_args([("value", "de-DE".to_string())])),
+            ("noMutation", no_args()),
+            ("canvasPointerDown", no_args()),
+            ("canvasPointerMove", no_args()),
+            ("canvasPointerUp", no_args()),
+            ("canvasWheel", no_args()),
         ];
         for (id, args) in rows {
             assert_eq!(VcsPlayApp::command_from_action(id, Some(&args)).expect("declared action bridge").command_id(), id);
@@ -1322,7 +1364,7 @@ mod tests {
 
     #[test]
     fn resumable_text_edit_matches_the_serde_json_batch_oracle() {
-        let fixture: serde_json::Value = serde_json::from_str(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode through serde_json");
+        let fixture: Value = parse(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode");
         assert_eq!(fixture.get("toolIds").and_then(Value::as_array).expect("toolIds").iter().map(|value| value.as_str().expect("tool id")).collect::<Vec<_>>(), VCS_RESUMABLE_TOOL_IDS);
         assert_eq!(fixture.get("maximumTextBytes").and_then(Value::as_u64), Some(VCS_BOUNDED_RAW_BYTES as u64));
         assert_eq!(fixture.get("maximumTags").and_then(Value::as_u64), Some(VCS_EDIT_MAXIMUM_TAGS as u64));
@@ -1355,10 +1397,10 @@ mod tests {
     #[test]
     fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
         use semio_framework_plugin::retained_command::ArtifactCommandWork;
-        let fixture: serde_json::Value = serde_json::from_str(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode through serde_json");
+        let fixture: Value = parse(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode");
         let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
         let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
-        assert!(VcsPlayApp::command_from_action("textEdit", Some(&serde_json::json!({ "text": "x".repeat(maximum + additional) }))).is_err());
+        assert!(VcsPlayApp::command_from_action("textEdit", Some(&action_args([("text", "x".repeat(maximum + additional))]))).is_err());
         let mut oversized_snapshot = VcsPlayApp::initial_snapshot();
         oversized_snapshot.tags = (0..=VCS_EDIT_MAXIMUM_TAGS).map(|index| format!("tag-{index}")).collect();
         let command = VcsCommand::Edit(edit_command::Edit { text: "{}".into() });
@@ -1404,7 +1446,7 @@ mod tests {
 
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
-    fn the_manifest_stitches_every_taxonomy_node() {
+    async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_vcs_app()).expect("app definition json");
         for id in [editor::VCS_PLAY_WINDOW_EDITOR, history::VCS_PLAY_WINDOW_HISTORY] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -1420,11 +1462,11 @@ mod tests {
     /// manifest action — exercises `testkit::app_with_registry`, the counterpart to the bare `app()`
     /// every other node's tests use.
     #[semio_framework_async_macros::async_test]
-    fn registry_enforced_app_dispatches_a_declared_action() {
+    async fn registry_enforced_app_dispatches_a_declared_action() {
         use crate::editor::vcs::testkit::app_with_registry;
-        let mut instance = app_with_registry();
+        let mut instance = app_with_registry().await;
         let before = instance.snapshot().expect("materialize snapshot").counter;
-        dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
+        dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
         assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
     }
     //#endregion 🔖️ManifestSanity
@@ -1434,7 +1476,7 @@ mod tests {
     /// history window kind — see `VCS_INTERACTION_HISTORY`'s doc comment for why this is entity
     /// selection over checkpoints, not the per-row `checkoutCheckpoint`/`switchAlternative` navigation.
     #[semio_framework_async_macros::async_test]
-    fn history_interaction_domain_is_declared_flat_and_scoped_to_the_history_window() {
+    async fn history_interaction_domain_is_declared_flat_and_scoped_to_the_history_window() {
         let definition = create_vcs_app();
         let history_domain = definition.interactions.iter().find(|interaction| interaction.id == VCS_INTERACTION_HISTORY).expect("history interaction domain declared");
         assert!(matches!(history_domain.hierarchy, HierarchyProvider::Flat));
@@ -1450,9 +1492,9 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
-    fn seeded_history_has_checkpoints() {
-        let instance = app();
-        let envelope = seeded_envelope(&instance);
+    async fn seeded_history_has_checkpoints() {
+        let instance = app().await;
+        let envelope = seeded_envelope(&instance).await;
         assert!(envelope.vcs.alternatives.len() >= 5, "expected >=5 alternatives, got {}", envelope.vcs.alternatives.len());
         assert!(envelope.vcs.checkpoints.len() >= 14, "expected >=14 checkpoints, got {}", envelope.vcs.checkpoints.len());
         let mut children_by_parent: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
@@ -1467,43 +1509,43 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn checkout_then_commit_forks_across_actions() {
-        let mut instance = app();
-        let envelope_before = seeded_envelope(&instance);
+    async fn checkout_then_commit_forks_across_actions() {
+        let mut instance = app().await;
+        let envelope_before = seeded_envelope(&instance).await;
         let root_checkpoint_id = envelope_before.vcs.checkpoints[0].id.clone();
         let children_of_root_before = envelope_before.vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str())).count();
 
-        let checkout = instance.handle_action("checkoutCheckpoint", Some(&serde_json::json!({ "checkpointId": root_checkpoint_id })), &meta("local")).expect("checkout");
+        let checkout = instance.handle_action("checkoutCheckpoint", Some(&action_args([("checkpointId", root_checkpoint_id.clone())])), &meta("local")).await.expect("checkout");
         assert!(checkout.mutations.is_empty(), "history actions never emit KernelMutations");
 
-        dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
-        instance.handle_action("commitCheckpoint", Some(&serde_json::json!({ "message": "forked from root" })), &meta("local")).expect("commit");
+        dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
+        instance.handle_action("commitCheckpoint", Some(&action_args([("message", "forked from root".to_string())])), &meta("local")).await.expect("commit");
 
-        let envelope_after = seeded_envelope(&instance);
+        let envelope_after = seeded_envelope(&instance).await;
         let children_of_root_after = envelope_after.vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str())).count();
         assert_eq!(children_of_root_after, children_of_root_before + 1, "checking out the root then committing through actions must add a new fork of the root, not extend the trunk");
     }
 
     #[semio_framework_async_macros::async_test]
-    fn undo_redo_round_trips_through_the_wrapper() {
-        let mut instance = app();
+    async fn undo_redo_round_trips_through_the_wrapper() {
+        let mut instance = app().await;
         let before = instance.snapshot().expect("materialize snapshot").counter;
-        dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
+        dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
         assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
-        let undo = instance.handle_action("undo", None, &meta("local")).expect("undo");
+        let undo = instance.handle_action("undo", None, &meta("local")).await.expect("undo");
         assert!(undo.mutations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before);
-        instance.handle_action("redo", None, &meta("local")).expect("redo");
+        instance.handle_action("redo", None, &meta("local")).await.expect("redo");
         assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn create_and_switch_alternative_round_trip_through_the_wrapper() {
-        let mut instance = app();
-        let create = instance.handle_action("createAlternative", Some(&serde_json::json!({ "name": "trying-something" })), &meta("local")).expect("create alternative");
+    async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
+        let mut instance = app().await;
+        let create = instance.handle_action("createAlternative", Some(&action_args([("name", "trying-something".to_string())])), &meta("local")).await.expect("create alternative");
         assert!(create.mutations.is_empty());
-        let envelope = seeded_envelope(&instance);
+        let envelope = seeded_envelope(&instance).await;
         assert!(envelope.active_alternative_id.is_some(), "createAlternative must set an active alternative");
     }
     //#endregion 🔖️CrossCutting

@@ -31,7 +31,7 @@ pub use crate::db_engine::{
     take_database_capability_open_terminal, take_database_catalog_read_terminal, take_next_database_capability_open_terminal, ArtifactHandle, ArtifactHistoryTerminalConstructionFault, ArtifactHistoryTerminalHandle, ArtifactSpec, CatalogEntry,
     CatalogView, CommandReceipt, Consistency, Database, DatabaseCapabilityOpenCloseStep, DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenProgress, DatabaseCapabilityOpenRejected, DatabaseCapabilityOpenResult,
     DatabaseCapabilityOpenTerminalHandle, DatabaseCapabilityOpenTerminalResult, DatabaseCatalogReadCloseStep, DatabaseCatalogReadFuture, DatabaseCatalogReadProgress, DatabaseCatalogReadRejected, DatabaseCatalogReadResult,
-    DatabaseCatalogReadTerminalHandle, DatabaseCatalogReadTerminalResult, DatabaseCatalogRootKey, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryResultEntry, QueryStream, SecurityAuthzHook, SnapshotFuture,
+    DatabaseCatalogReadTerminalHandle, DatabaseCatalogReadTerminalResult, DatabaseCatalogRootKey, DatabaseDocumentOpenRejected, DatabaseRetainedActivityRejected, DatabaseShutdownBlock, DatabaseShutdownControl, DatabaseShutdownPhase, DatabaseShutdownProgress, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryResultEntry, QueryStream, SecurityAuthzHook, SnapshotFuture,
     SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
@@ -253,7 +253,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn full_round_trip_reachable_purely_through_facade_reexports() {
         let root = tempdir("round-trip").await;
-        let database = Database::open_at(test_pool(), &root, Profile::Dev).await.unwrap();
+        let mut database = Database::open_at(test_pool(), &root, Profile::Dev).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
@@ -275,7 +275,8 @@ mod tests {
         while history.close_step() {}
 
         assert_eq!(database.catalog().await.artifacts.len(), 1);
-        database.shutdown(std::time::Duration::from_secs(1)).await.unwrap();
+        drop(handle);
+        database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(1))).await.unwrap();
     }
 
     #[semio_framework_async_macros::async_test]
@@ -284,7 +285,17 @@ mod tests {
         let database = Database::open_at(test_pool(), &root, Profile::Test).await.unwrap();
         let never_created = protocol::ArtifactId("never-created".to_string());
         let result = database.document(&never_created);
-        assert!(matches!(result.await, Err(DbError::NotFound(_))));
+        let mut rejected = match result.await {
+            Err(rejected) => rejected,
+            Ok(_) => panic!("unknown document was admitted"),
+        };
+        let error = loop {
+            match rejected.retry_close().await {
+                Ok(error) => break error,
+                Err(retained) => rejected = retained,
+            }
+        };
+        assert!(matches!(error, DbError::NotFound(_)));
     }
     //#endregion 🔖️Facade round trip
 

@@ -9,7 +9,8 @@ export type OwnedUiGenericPackToken =
   | { readonly kind: "field"; readonly field: number }
   | { readonly kind: "null" | "true" | "false" | "array" | "map" | "end-array" | "end-map" }
   | ({ readonly kind: "key" | "string" } & Span)
-  | ({ readonly kind: "number"; readonly value: number } & Span);
+  | ({ readonly kind: "number"; readonly value: number } & Span)
+  | ({ readonly kind: "int" | "uint"; readonly value: bigint } & Span);
 type Frame = { readonly kind: "array" | "map"; remaining: number; key: boolean; parent: Frame | null };
 type Retirement = { advance(grant: Grant): { readonly kind: string; readonly items: number; readonly bytes: number }; terminalIsEmpty(): boolean };
 type Link = { owner: Retirement | null; next: Link | null; complete: boolean };
@@ -118,6 +119,20 @@ export class OwnedUiGenericPackCursor {
     for (let count = 0; count < 8; count++) { const byte = this.#byte(); value += (byte & 127) * factor; yield 1; if (!Number.isSafeInteger(value)) throw new Error("Generic pack integer exceeds exact admitted range"); if (byte < 128) return value; factor *= 128; }
     throw new Error("Generic pack varint overflow");
   }
+  /** 🔢️ Ten-byte scalar varint for `TAG_INT`/`TAG_UINT`, kept distinct from `#natural`: a
+   * dynamic integer spans the whole 64-bit range and must stay a `bigint`, while collection
+   * counts and indices remain bounded exact `number`s. Enforces the shared reader's exact
+   * overflow rule — the tenth byte may neither continue nor carry a payload above 1. */
+  *#scalar(signed: boolean): Program<{ value: bigint; start: number; length: number }> {
+    const start = this.#offset; let value = 0n; let shift = 0n;
+    for (let count = 0; count < 10; count++) {
+      const byte = this.#byte(); yield 1;
+      if (count === 9 && (byte >= 128 || (byte & 127) > 1)) throw new Error("Generic pack integer varint overflow");
+      value |= BigInt(byte & 127) << shift; shift += 7n;
+      if (byte < 128) return { value: signed ? (value >> 1n) ^ -(value & 1n) : value, start, length: this.#offset - start };
+    }
+    throw new Error("Generic pack integer varint overflow");
+  }
   *#text(): Program<Span> {
     const length = yield* this.#natural(); if (length > this.#source!.length - this.#offset) throw new Error("Generic pack string exceeds exact source");
     const start = this.#offset; let remaining = 0; let scalar = 0; let minimum = 0;
@@ -158,6 +173,7 @@ export class OwnedUiGenericPackCursor {
       this.#phase = "generic-pack-value"; const tag = this.#byte(); yield 1;
       if (tag === 12 || tag === 16) { const count = yield* this.#natural(); if (count > this.#source!.length - this.#offset) throw new Error("Generic pack collection exceeds exact source"); const kind = tag === 12 ? "array" : "map"; this.#frames = { kind, remaining: count, key: kind === "map", parent: this.#frames }; yield 64; yield* this.#emit({ kind }); continue; }
       if (tag === 18 || tag === 1 || tag === 2) yield* this.#emit({ kind: tag === 18 ? "null" : tag === 1 ? "false" : "true" });
+      else if (tag === 3 || tag === 4) { const scalar = yield* this.#scalar(tag === 3); yield 32; yield* this.#emit({ kind: tag === 3 ? "int" : "uint", value: scalar.value, start: scalar.start, length: scalar.length }); }
       else if (tag === 5) { const start = this.#offset; for (let index = 0; index < 8; index++) { this.#float[index] = this.#byte(); yield 1; } const value = new DataView(this.#float.buffer).getFloat64(0, true); yield 32; yield* this.#emit({ kind: "number", value, start, length: 8 }); }
       else if (tag === 6 || tag === 7) { const span = yield* this.#string(tag); yield* this.#emit({ kind: "string", ...span }); }
       else throw new Error("Unsupported generic pack value tag");

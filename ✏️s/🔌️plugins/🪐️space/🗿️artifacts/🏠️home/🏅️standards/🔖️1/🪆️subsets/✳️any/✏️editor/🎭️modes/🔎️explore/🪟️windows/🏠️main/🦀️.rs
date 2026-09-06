@@ -24,7 +24,7 @@ use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use crate::HomeTableLabels;
 use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{ActionFactory, IconName, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{ActionFactory, IconName, LocalizedLabel, UiNode, WindowKindDefinition};
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants
@@ -162,14 +162,8 @@ fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssem
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create", "create button admission failed"))
 }
 
-pub fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let table = semio_framework_plugin::resolve_labels_for_locale::<HomeTableLabels>(&cfg.locale);
-    let actions = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.locale);
-    let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
-    // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
-    // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
-    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &cfg.client_id));
-    let table_node = render_rows(&rows, table, actions)?;
+fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let table_node = render_rows(rows, table, actions)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
     for child in [window_content_dead_line_spacer()?, window_content_dead_line_spacer()?, create_space_button(actions)?, table_node] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
@@ -180,6 +174,16 @@ pub fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semi
         .try_build()
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.build", "window admission failed"))
 }
+
+pub fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let table = semio_framework_plugin::resolve_labels_for_locale::<HomeTableLabels>(&cfg.locale);
+    let actions = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.locale);
+    let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
+    // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
+    // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
+    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &cfg.client_id));
+    render_rows_wrapped(&rows, table, actions)
+}
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
@@ -187,19 +191,19 @@ pub fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semi
 mod tests {
     use super::*;
 
-    async fn one_local_row() -> crate::HomeSpaceRow {
+    fn one_local_row() -> crate::HomeSpaceRow {
         crate::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: "atelier".into(), visibility: "private".into(), members: "1".into(), updated: "0".into(), origin: "local", role: None }
     }
 
-    async fn one_hub_row() -> crate::HomeSpaceRow {
+    fn one_hub_row() -> crate::HomeSpaceRow {
         crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub", role: Some(crate::DirectorySpaceRole::Author) }
     }
 
-    async fn spectator_hub_row() -> crate::HomeSpaceRow {
+    fn spectator_hub_row() -> crate::HomeSpaceRow {
         crate::HomeSpaceRow { role: Some(crate::DirectorySpaceRole::Spectator), ..one_hub_row() }
     }
 
-    async fn unbound_hub_row() -> crate::HomeSpaceRow {
+    fn unbound_hub_row() -> crate::HomeSpaceRow {
         crate::HomeSpaceRow { role: None, ..one_hub_row() }
     }
 
@@ -320,8 +324,7 @@ mod tests {
     /// 🧪️ `render`'s own composition, isolated from `crate::list_all_space_catalog_entries()`'s
     /// process-global singleton — mirrors `render_rows`'s own isolation rationale above.
     async fn render_rows_wrapped_for_test(rows: &[crate::HomeSpaceRow]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-        let table_node = render_rows(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN);
-        ui_stack_vertical(vec![window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_space_button(&SHomeLabels::NATIVE_EN), table_node])
+        render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)
     }
 }
 //#endregion 🧪️Tests

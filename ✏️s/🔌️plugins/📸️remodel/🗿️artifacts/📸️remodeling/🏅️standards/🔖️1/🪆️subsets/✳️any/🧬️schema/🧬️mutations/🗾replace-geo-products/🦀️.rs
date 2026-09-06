@@ -29,13 +29,13 @@ pub fn replace_geo_products(geo: Option<GeoProducts>) -> RemodelingMutation {
 impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceGeoProducts {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "geo-products", kind: "replace-geo-products", record: "ReplacedGeoProducts" };
 
-    async fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+    fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Replace geo-products".to_string()
     }
 }

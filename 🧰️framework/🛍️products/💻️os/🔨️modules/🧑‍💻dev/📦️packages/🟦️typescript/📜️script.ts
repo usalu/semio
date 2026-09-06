@@ -38,12 +38,14 @@ import {
   semioBuildMode,
   semioShipEnv,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
+import type { PackValue } from "@semio-tech/framework-os";
 import { PLUGIN_MODULES_ROOT, PLUGIN_SOURCE_WATCH_PATH, backboneDbHandleFor, descriptorRouteDecision, scanBuiltPluginModules } from "./🔌️vite-plugins.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { filterProjectedPluginRegistry, generatePluginRegistry, readGeneratedCatalogProjection, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
+import { PLUGIN_HOST_CONFIGS } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
 import {
   ensurePreview2ShimVendorAt,
   hostShimSource,
@@ -313,15 +315,15 @@ process.stdout.write(Buffer.from(bytes).toString("base64"));
 
 /** 🔏️ Uses the same native pack self-hash convention for the genuine guest descriptor. */
 function finalizePluginDescriptor(bytes: Uint8Array, pluginId: string, wasmSha256: string, coreWasmSha256: string): { pack: Uint8Array; json: string } {
-  const descriptor = decodePackValue(bytes) as { manifest?: { pluginId?: string }; hashes?: Record<string, string> };
+  const descriptor = decodePackValue(bytes) as unknown as { manifest?: { pluginId?: string }; hashes?: Record<string, string> };
   if (descriptor?.manifest?.pluginId === "assembly-failed") throw new Error("Plugin descriptor assembly failed");
   if (descriptor?.manifest?.pluginId !== pluginId || !descriptor.hashes) throw new Error("Plugin descriptor identity mismatch");
   if (![wasmSha256, coreWasmSha256].every((hash) => /^[a-f0-9]{64}$/.test(hash))) throw new Error("Invalid plugin artifact digest");
   descriptor.hashes.wasmSha256 = wasmSha256;
   descriptor.hashes.coreWasmSha256 = coreWasmSha256;
   descriptor.hashes.descriptorSha256 = "";
-  descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor)).digest("hex");
-  return { pack: encodePackValue(descriptor), json: JSON.stringify(descriptor, null, 2) + "\n" };
+  descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor as PackValue)).digest("hex");
+  return { pack: encodePackValue(descriptor as PackValue), json: JSON.stringify(packValueToExactJson(descriptor as PackValue), null, 2) + "\n" };
 }
 
 async function pluginFileDigest(path: string): Promise<string> {
@@ -2411,15 +2413,15 @@ async function collabStartHub(port: number, dataDir: string, logPath: string): P
   throw new Error(`hub did not become ready on port ${port} within ${COLLAB_E2E_HUB_BOOT_BUDGET_MS}ms — see ${logPath}`);
 }
 
-/** 🎯️ The ONLY plugin crates this scenario touches: `"s"` is the space plugin's own registry
- * `pluginId` (verified: `🤖️generated/🎮️playgrounds.ts`'s `variant: "s"` row carries `pluginId: "s"`,
- * NOT `"space"` — it hosts both the Home and Space apps and is host-first in registry order) and
- * `"writer"` is the stdio-free artifact kind this scenario creates (the brief's other suggestion,
- * `"note"`, is a confirmed pre-existing break — see `collabPrebuildPlugins`'s own doc comment). Building
- * only these two (not the full ~58-crate catalog `buildPluginsStreaming("s")` would otherwise attempt)
- * turns a 20-40 minute run into a sub-minute one and matches the coordinator's own guidance: build just
- * what the scenario needs, per-crate try/catch, then gate on the artifacts actually existing. */
-const COLLAB_E2E_REQUIRED_PLUGIN_IDS: readonly string[] = ["s", "writer"];
+/** 🎯️ The ONLY plugin crates this scenario touches: every host plugin id the generated catalog
+ * declares (`🤖️generated/🧩️plugins.ts`'s `PLUGIN_HOST_CONFIGS` — the `space` crate hosting Home and
+ * Studio, never the `s` playground VARIANT that merely selects it) plus `"writer"`, the stdio-free
+ * artifact kind this scenario creates (the brief's other suggestion, `"note"`, is a confirmed
+ * pre-existing break — see `collabPrebuildPlugins`'s own doc comment). Building only these (not the
+ * full ~58-crate catalog `buildPluginsStreaming(DEFAULT_HOST_VARIANT)` would otherwise attempt) turns a
+ * 20-40 minute run into a sub-minute one and matches the coordinator's own guidance: build just what the
+ * scenario needs, per-crate try/catch, then gate on the artifacts actually existing. */
+const COLLAB_E2E_REQUIRED_PLUGIN_IDS: readonly string[] = [...PLUGIN_HOST_CONFIGS.map((entry) => entry.pluginId), "writer"];
 
 /** 📁️ The exact `.core.wasm` path `buildPlugin` (this same file, `🔖️PluginSizeMeasurement` region's
  * neighbor) writes for `target` — mirrors its own `jsBase`/`componentBase` derivation so this check
@@ -2432,8 +2434,8 @@ function collabPluginArtifactPath(target: PluginRegistryEntry): string {
 /** 🧱️ Builds ONLY the plugin crates `COLLAB_E2E_REQUIRED_PLUGIN_IDS` needs, once, in-process — still
  * reuses the SAME `PluginBuildLease` a real `dev` process would (mutual exclusion against a peer
  * session's own `bun dev s`), still per-crate try/catch (continues past one target's failure to attempt
- * the other — matters when, as observed, `"s"` itself fails: without the try/catch `"writer"` would
- * never even get attempted). `preparePluginBuildTargets("s")` still does the necessary prep (registry
+ * the other — matters when, as observed, the host plugin itself fails: without the try/catch `"writer"` would
+ * never even get attempted). `preparePluginBuildTargets(DEFAULT_HOST_VARIANT)` still does the necessary prep (registry
  * regen, wasm target ensure, shim vendor, stale-output cleanup) `buildPlugin` depends on — only the
  * ITERATION is narrowed from "all ~58 catalog entries" to just the two this scenario touches; unlike the
  * catalog-wide `buildPluginsStreaming`/non-streaming `buildPlugins`, this never even attempts `animate`/
@@ -2441,7 +2443,7 @@ function collabPluginArtifactPath(target: PluginRegistryEntry): string {
  * catalog-wide run during this lane's own iteration, `🧪️3-c-collab-e2e-run2.txt`) cost nothing here.
  *
  * **Hard gate, per the coordinator's explicit instruction**: after building, this asserts BOTH required
- * artifacts exist on disk. If `"s"` (the space plugin — Home AND Space apps) is missing, that is a
+ * artifacts exist on disk. If the host plugin (`space` — Home AND Space apps) is missing, that is a
  * genuine, scenario-fatal blocker (neither app can load in a browser) and this throws with the real
  * compiler error already printed above by the per-target `catch`, never silently continuing to start a
  * browser against a build that cannot possibly serve anything. Confirmed (this lane, this session, via
@@ -2472,15 +2474,15 @@ function collabPluginArtifactPath(target: PluginRegistryEntry): string {
 async function collabPrebuildPlugins(): Promise<void> {
   ensureAppleDeveloperDir();
   process.env.FLOW_CORE_SKIP_WASM_BUILD = process.env.FLOW_CORE_SKIP_WASM_BUILD ?? "1";
-  const lease = acquirePluginBuildLease("s", 0);
+  const lease = acquirePluginBuildLease(DEFAULT_HOST_VARIANT, 0);
   if (lease.role === "follower") {
     console.log(`[collab-e2e] plugin builds owned by pid ${lease.lease.pid}; waiting for ready`);
-    await waitForPluginBuildLeaseReady("s", COLLAB_E2E_PREBUILD_BUDGET_MS);
+    await waitForPluginBuildLeaseReady(DEFAULT_HOST_VARIANT, COLLAB_E2E_PREBUILD_BUDGET_MS);
   } else {
     try {
-      await ensurePluginRegistry("s");
-      await buildEngineWasm("s", "react");
-      const targets = await preparePluginBuildTargets("s");
+      await ensurePluginRegistry(DEFAULT_HOST_VARIANT);
+      await buildEngineWasm(DEFAULT_HOST_VARIANT, "react");
+      const targets = await preparePluginBuildTargets(DEFAULT_HOST_VARIANT);
       const required = targets.filter((target) => COLLAB_E2E_REQUIRED_PLUGIN_IDS.includes(target.pluginId));
       const foundIds = new Set(required.map((target) => target.pluginId));
       for (const pluginId of COLLAB_E2E_REQUIRED_PLUGIN_IDS) {
@@ -2493,12 +2495,12 @@ async function collabPrebuildPlugins(): Promise<void> {
           console.error(`[collab-e2e] required plugin build failed: ${target.pluginId}`, error);
         }
       }
-      markPluginBuildLeaseReady("s");
+      markPluginBuildLeaseReady(DEFAULT_HOST_VARIANT);
     } finally {
-      releasePluginBuildLease("s");
+      releasePluginBuildLease(DEFAULT_HOST_VARIANT);
     }
   }
-  const targets = await preparePluginBuildTargets("s");
+  const targets = await preparePluginBuildTargets(DEFAULT_HOST_VARIANT);
   const missing: string[] = [];
   for (const pluginId of COLLAB_E2E_REQUIRED_PLUGIN_IDS) {
     const target = targets.find((entry) => entry.pluginId === pluginId);
@@ -5507,11 +5509,11 @@ if (import.meta.vitest) {
       try {
         mkdirSync(join(root, "🗒️note"), { recursive: true });
         writeFileSync(join(root, "🗒️note", "🔣️.json"), '{"manifest":{"pluginId":"note"}}\n');
-        const specs = [{ route: "/🔌️plugin-modules", root, directoryNames: new Set(["🗒️note", "🪐️s"]) }];
+        const specs = [{ route: "/🔌️plugin-modules", root, directoryNames: new Set(["🗒️note", "🪐️space"]) }];
         expect(descriptorRouteDecision("/🔌️plugin-modules/🗒️note/🔣️.json", specs)).toEqual({ kind: "pass" });
-        expect(descriptorRouteDecision("/🔌️plugin-modules/🪐️s/🔣️.json?epoch=1", specs)).toEqual({ kind: "missing", moduleDirectory: "🪐️s" });
+        expect(descriptorRouteDecision("/🔌️plugin-modules/🪐️space/🔣️.json?epoch=1", specs)).toEqual({ kind: "missing", moduleDirectory: "🪐️space" });
         expect(descriptorRouteDecision("/🔌️plugin-modules/unknown/🔣️.json", specs)).toEqual({ kind: "missing", moduleDirectory: "unknown" });
-        expect(descriptorRouteDecision("/other/🪐️s/🔣️.json", specs)).toEqual({ kind: "pass" });
+        expect(descriptorRouteDecision("/other/🪐️space/🔣️.json", specs)).toEqual({ kind: "pass" });
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
@@ -5558,10 +5560,10 @@ if (import.meta.vitest) {
       mkdirSync(join(root, "🗒️note"), { recursive: true });
       writeFileSync(join(root, "🗒️note", "note_plugin_component.core.wasm"), "");
       writeFileSync(join(root, "🗒️note", "note_plugin_component.core2.wasm"), "");
-      mkdirSync(join(root, "🪐️s"), { recursive: true });
-      writeFileSync(join(root, "🪐️s", "s_plugin_component.core.wasm"), "");
+      mkdirSync(join(root, "🪐️space"), { recursive: true });
+      writeFileSync(join(root, "🪐️space", "semio_s_plugin_space_component.core.wasm"), "");
       const rows = scanBuiltPluginModules(root);
-      expect(rows.map((row) => row.pluginId).sort()).toEqual(["note", "s"]);
+      expect(rows.map((row) => row.pluginId).sort()).toEqual(["note", "space"]);
     });
 
     it("does not infer a public identity from undeclared raw or decorated basenames", () => {
@@ -5823,19 +5825,20 @@ if (import.meta.vitest) {
     });
 
     itLong("finalizes genuine descriptor bytes identically to the native descriptor oracle", async () => {
-      const { decodePackValue, encodePackValue } = await import("@semio-tech/framework-os");
+      const { clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } = await import("@semio-tech/framework-os");
       const { createHash } = await import("node:crypto");
       const bytes = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🎪️demonstrator/🛂️.descriptor.semio"));
-      const descriptor = decodePackValue(bytes) as { manifest: { pluginId: string }; hashes: { wasmSha256: string; coreWasmSha256: string; descriptorSha256: string } };
+      const decoded = decodePackValue(bytes);
+      const descriptor = decoded as unknown as { manifest: { pluginId: string }; hashes: { wasmSha256: string; coreWasmSha256: string; descriptorSha256: string } };
       const finalized = finalizePluginDescriptor(bytes, descriptor.manifest.pluginId, descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256);
       expect(Buffer.from(finalized.pack)).toEqual(bytes);
-      expect(JSON.parse(finalized.json)).toEqual(descriptor);
-      const prehash = structuredClone(descriptor);
+      expect(JSON.parse(finalized.json)).toEqual(packValueToExactJson(decoded));
+      const prehash = clonePackValue(decoded) as unknown as { hashes: { descriptorSha256: string } };
       prehash.hashes.descriptorSha256 = "";
-      expect(createHash("sha256").update(encodePackValue(prehash)).digest("hex")).toBe(descriptor.hashes.descriptorSha256);
+      expect(createHash("sha256").update(encodePackValue(prehash as unknown as PackValue)).digest("hex")).toBe(descriptor.hashes.descriptorSha256);
       expect(() => finalizePluginDescriptor(bytes, "wrong-plugin", descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256)).toThrow("identity");
       descriptor.manifest.pluginId = "assembly-failed";
-      expect(() => finalizePluginDescriptor(encodePackValue(descriptor), "assembly-failed", descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256)).toThrow("assembly");
+      expect(() => finalizePluginDescriptor(encodePackValue(decoded), "assembly-failed", descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256)).toThrow("assembly");
     });
 
     it("adapts the shard envelope into the canonical jco variant representation", () => {

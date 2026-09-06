@@ -1,0 +1,456 @@
+{
+  "schema": "semio.hub.directory-space-journey/v1",
+  "limits": {
+    "journeyMs": 180000,
+    "stepMs": 20000,
+    "responseBytes": 65536,
+    "commandRequestBytes": 8192,
+    "administrationPageBytes": 49152,
+    "socketWaitMs": 6000
+  },
+  "bindings": {
+    "eventPageDomain": "semio/hub/directory-event-page/session-binding/v1",
+    "administrationDomain": "semio/hub/directory-space-administration/session-binding/v1",
+    "commandRequestSchema": "semio.directory.command-request.v1",
+    "commandReceiptSchema": "semio.directory.command-receipt.v1",
+    "eventPageSchema": "semio.directory.event-page.v1",
+    "administrationPageSchema": "semio.directory.space-administration-page.v1",
+    "socketProtocol": "semio.socket.v1",
+    "socketHelloSchema": "semio.directory.events/v1",
+    "domainTerminator": "nul"
+  },
+  "profiles": {
+    "a": {
+      "profileId": "space-journey-a",
+      "subject": "space-journey-process-a",
+      "displayName": "Space Journey A"
+    },
+    "b": {
+      "profileId": "space-journey-b",
+      "subject": "space-journey-process-b",
+      "displayName": "Space Journey B"
+    }
+  },
+  "space": {
+    "name": "Space Journey Shared",
+    "spaceKind": "studio",
+    "visibility": "private",
+    "renamedName": "Space Journey Shared Renamed By B",
+    "privateBName": "Space Journey Private B"
+  },
+  "document": {
+    "documentId": "space-journey-document",
+    "artifactKind": "s.gis.gismap",
+    "artifactSchema": "s.gis.gismap@1/*",
+    "owner": {
+      "pluginId": "s.gis",
+      "packageId": "s.gis.gismap",
+      "version": "1.0.0",
+      "packageHash": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "bootstrapVersion": 1,
+    "bootstrapFrontier": {
+      "headSeq": 0,
+      "commitSeq": 0,
+      "epoch": 1
+    },
+    "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "steps": [
+    {
+      "id": "create-space",
+      "actor": "a",
+      "route": "/directory/commands",
+      "method": "POST",
+      "expect": {
+        "kind": "receipt",
+        "outcome": "accepted",
+        "events": 2,
+        "result": "none"
+      },
+      "labels": {
+        "en": "A creates one private space through the idempotent command route",
+        "de": "A erstellt einen privaten Space über die idempotente Kommandoroute"
+      }
+    },
+    {
+      "id": "create-space-redacted-retry",
+      "actor": "a",
+      "route": "/directory/commands",
+      "method": "POST",
+      "expect": {
+        "kind": "receipt",
+        "outcome": "previously-accepted",
+        "events": 0,
+        "result": "none"
+      },
+      "labels": {
+        "en": "The byte-identical retry is redacted and mints no second space",
+        "de": "Der byteidentische Wiederholungsversuch ist redigiert und erzeugt keinen zweiten Space"
+      }
+    },
+    {
+      "id": "author-reads-administration-page",
+      "actor": "a",
+      "route": "/directory/spaces/{id}",
+      "method": "GET",
+      "expect": {
+        "kind": "administration-page",
+        "access": "author",
+        "hasInvites": true,
+        "hasCapabilities": true,
+        "memberRows": 1
+      },
+      "labels": {
+        "en": "A reads the author administration page with a verified receipt",
+        "de": "A liest die Autoren-Verwaltungsseite mit geprüfter Quittung"
+      }
+    },
+    {
+      "id": "nonmember-administration-page-denied",
+      "actor": "b",
+      "route": "/directory/spaces/{id}",
+      "method": "GET",
+      "expect": {
+        "kind": "status",
+        "status": 404,
+        "emptyBody": true
+      },
+      "labels": {
+        "en": "B is not a member and the private space does not enumerate",
+        "de": "B ist kein Mitglied und der private Space wird nicht aufgezählt"
+      }
+    },
+    {
+      "id": "author-adds-b-as-spectator",
+      "actor": "a",
+      "route": "/directory/commands",
+      "method": "POST",
+      "expect": {
+        "kind": "receipt",
+        "outcome": "accepted",
+        "events": 1,
+        "result": "none"
+      },
+      "labels": {
+        "en": "A admits B as a spectator through the receipt route",
+        "de": "A nimmt B über die Quittungsroute als Zuschauer auf"
+      }
+    },
+    {
+      "id": "member-reads-administration-page",
+      "actor": "b",
+      "route": "/directory/spaces/{id}",
+      "method": "GET",
+      "expect": {
+        "kind": "administration-page",
+        "access": "member",
+        "hasInvites": false,
+        "hasCapabilities": false,
+        "memberRows": 2
+      },
+      "labels": {
+        "en": "B reads the member page which omits invites and capabilities structurally",
+        "de": "B liest die Mitgliedsseite, die Einladungen und Berechtigungen strukturell auslässt"
+      }
+    },
+    {
+      "id": "author-promotes-b",
+      "actor": "a",
+      "route": "/directory/commands",
+      "method": "POST",
+      "expect": {
+        "kind": "receipt",
+        "outcome": "accepted",
+        "events": 1,
+        "result": "none"
+      },
+      "labels": {
+        "en": "A promotes B to author",
+        "de": "A befördert B zum Autor"
+      }
+    },
+    {
+      "id": "announce-document",
+      "actor": "a",
+      "route": "/directory/commands",
+      "method": "POST",
+      "expect": {
+        "kind": "receipt",
+        "outcome": "accepted",
+        "events": 1,
+        "result": "none"
+      },
+      "labels": {
+        "en": "A announces one document descriptor so an exact scope exists",
+        "de": "A kündigt einen Dokumentdeskriptor an, damit ein exakter Bereich existiert"
+      }
+    },
+    {
+      "id": "b-creates-private-space",
+      "actor": "b",
+      "route": "/directory/commands",
+      "method": "POST",
+      "expect": {
+        "kind": "receipt",
+        "outcome": "accepted",
+        "events": 2,
+        "result": "none"
+      },
+      "labels": {
+        "en": "B creates an unrelated private space that A must never observe",
+        "de": "B erstellt einen fremden privaten Space, den A niemals sehen darf"
+      }
+    },
+    {
+      "id": "open-global-sockets",
+      "actor": "both",
+      "route": "/directory/socket/v1",
+      "method": "GET",
+      "expect": {
+        "kind": "socket-open",
+        "protocol": "semio.socket.v1"
+      },
+      "labels": {
+        "en": "A and B each consume one directory socket grant and dial the global socket",
+        "de": "A und B lösen je eine Verzeichnis-Socket-Erlaubnis ein und wählen den globalen Socket"
+      }
+    },
+    {
+      "id": "open-scoped-socket",
+      "actor": "b",
+      "route": "/directory/spaces/{space_id}/documents/{document_id}/socket/v1",
+      "method": "GET",
+      "expect": {
+        "kind": "socket-open",
+        "protocol": "semio.socket.v1"
+      },
+      "labels": {
+        "en": "B opens one membership-bound scoped directory socket",
+        "de": "B öffnet einen mitgliedschaftsgebundenen bereichsgebundenen Verzeichnis-Socket"
+      }
+    },
+    {
+      "id": "member-renames-space",
+      "actor": "b",
+      "route": "/directory/commands",
+      "method": "POST",
+      "expect": {
+        "kind": "receipt",
+        "outcome": "accepted",
+        "events": 1,
+        "result": "none"
+      },
+      "labels": {
+        "en": "B renames the shared space as an author",
+        "de": "B benennt den geteilten Space als Autor um"
+      }
+    },
+    {
+      "id": "author-observes-dirty-wake",
+      "actor": "a",
+      "route": "/directory/socket/v1",
+      "method": "GET",
+      "expect": {
+        "kind": "wake",
+        "sequences": 1
+      },
+      "labels": {
+        "en": "A observes the rename exactly once as a live socket wake",
+        "de": "A beobachtet die Umbenennung genau einmal als Live-Socket-Weckruf"
+      }
+    },
+    {
+      "id": "author-reads-ordered-event-page",
+      "actor": "a",
+      "route": "/directory/event-page/v1",
+      "method": "GET",
+      "expect": {
+        "kind": "event-page",
+        "ordered": true,
+        "leaks": 0
+      },
+      "labels": {
+        "en": "A reads the ordered visible event page with no private leakage from B",
+        "de": "A liest die geordnete sichtbare Ereignisseite ohne private Preisgabe von B"
+      }
+    },
+    {
+      "id": "author-removes-b",
+      "actor": "a",
+      "route": "/directory/commands",
+      "method": "POST",
+      "expect": {
+        "kind": "receipt",
+        "outcome": "accepted",
+        "events": 1,
+        "result": "none"
+      },
+      "labels": {
+        "en": "A removes B from the shared space",
+        "de": "A entfernt B aus dem geteilten Space"
+      }
+    },
+    {
+      "id": "scoped-socket-revoked",
+      "actor": "b",
+      "route": "/directory/spaces/{space_id}/documents/{document_id}/socket/v1",
+      "method": "GET",
+      "expect": {
+        "kind": "close",
+        "code": 4401
+      },
+      "labels": {
+        "en": "B's scoped socket terminates with the authority close code",
+        "de": "Bs bereichsgebundener Socket endet mit dem Autoritäts-Schließcode"
+      }
+    },
+    {
+      "id": "removed-member-page-denied",
+      "actor": "b",
+      "route": "/directory/spaces/{id}",
+      "method": "GET",
+      "expect": {
+        "kind": "status",
+        "status": 404,
+        "emptyBody": true
+      },
+      "labels": {
+        "en": "The removed member's page read is denied without enumerating the space",
+        "de": "Der Seitenabruf des entfernten Mitglieds wird ohne Aufzählung des Space verweigert"
+      }
+    },
+    {
+      "id": "author-self-revokes",
+      "actor": "a",
+      "route": "/auth/sessions/me",
+      "method": "DELETE",
+      "expect": {
+        "kind": "status",
+        "status": 204,
+        "emptyBody": true
+      },
+      "labels": {
+        "en": "A self-revokes its own session",
+        "de": "A widerruft die eigene Sitzung"
+      }
+    },
+    {
+      "id": "self-revoked-read-denied",
+      "actor": "a",
+      "route": "/directory/event-page/v1",
+      "method": "GET",
+      "expect": {
+        "kind": "status",
+        "status": 401,
+        "emptyBody": true
+      },
+      "labels": {
+        "en": "A's stale bearer is denied with an empty body",
+        "de": "As veraltetes Zugriffsmerkmal wird mit leerem Rumpf abgelehnt"
+      }
+    },
+    {
+      "id": "restart-preserves-history",
+      "actor": "a",
+      "route": "/directory/spaces/{id}",
+      "method": "GET",
+      "expect": {
+        "kind": "administration-page",
+        "access": "author",
+        "hasInvites": true,
+        "hasCapabilities": true,
+        "memberRows": 1
+      },
+      "labels": {
+        "en": "A restarted hub on the same data root preserves the space and its membership history",
+        "de": "Ein neu gestarteter Hub auf demselben Datenstamm bewahrt den Space und seine Mitgliedschaftshistorie"
+      }
+    }
+  ],
+  "skips": [
+    {
+      "id": "document-open-plan-and-presence",
+      "reason": "no document open plan is obtainable without a trusted catalog profile, so no document-scoped presence socket is dialled and no roster is claimed",
+      "admissibleStatuses": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        503
+      ],
+      "labels": {
+        "en": "Document open plan and presence roster are not claimed",
+        "de": "Dokument-Öffnungsplan und Präsenzliste werden nicht behauptet"
+      }
+    },
+    {
+      "id": "document-content-edit",
+      "reason": "no landed application content-mutation factory is wired to the document socket, so no document content is edited",
+      "admissibleStatuses": [],
+      "labels": {
+        "en": "No document content edit is performed",
+        "de": "Es wird keine Dokumentinhaltsänderung durchgeführt"
+      }
+    },
+    {
+      "id": "rendered-surface",
+      "reason": "no browser or WGPU renderer target is driven by this gate, so no rendered surface or pixel is claimed",
+      "admissibleStatuses": [],
+      "labels": {
+        "en": "No rendered surface is claimed",
+        "de": "Es wird keine gerenderte Oberfläche behauptet"
+      }
+    },
+    {
+      "id": "invite-token-leg",
+      "reason": "membership is established through the direct upsert-member command, so the invite-token delivery and redemption legs are out of scope",
+      "admissibleStatuses": [],
+      "labels": {
+        "en": "No invite-token leg is exercised",
+        "de": "Kein Einladungsschlüssel-Abschnitt wird ausgeführt"
+      }
+    },
+    {
+      "id": "alternate-directory-backends",
+      "reason": "the journey runs against SQLite only; the PostgreSQL and Neo4j directory backends are neither compiled nor executed here",
+      "admissibleStatuses": [],
+      "labels": {
+        "en": "Only the SQLite directory backend is exercised",
+        "de": "Nur das SQLite-Verzeichnis-Backend wird ausgeführt"
+      }
+    }
+  ],
+  "privacy": {
+    "forbiddenTraceSubstrings": [
+      "Bearer ",
+      "capability",
+      "inviteToken",
+      "secretDigest",
+      "passwordHash",
+      "ssoSubject",
+      "channelKey"
+    ],
+    "forbiddenPageSubstrings": [
+      "selector",
+      "secretDigest",
+      "passwordHash",
+      "ssoSubject",
+      "ssoProvider",
+      "sessionId"
+    ]
+  },
+  "routes": [
+    "/directory/commands",
+    "/directory/spaces/{id}",
+    "/directory/event-page/v1",
+    "/directory/socket-grants",
+    "/directory/socket/v1",
+    "/directory/spaces/{space_id}/documents/{document_id}/socket-grants",
+    "/directory/spaces/{space_id}/documents/{document_id}/socket/v1",
+    "/auth/sessions/me",
+    "/spaces/{space_id}/documents/{id}/open-plan"
+  ]
+}

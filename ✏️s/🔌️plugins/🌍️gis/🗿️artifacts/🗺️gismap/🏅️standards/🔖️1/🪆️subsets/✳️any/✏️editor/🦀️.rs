@@ -384,6 +384,33 @@ impl<P, M> Default for Gis2dOneItemPreparationFactory<P, M> {
     }
 }
 
+/// 📍 Creates the exact parent Map preparation port used by the retained fixed-three assembly.
+pub fn gis_map_parent_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
+}
+
+/// 🎨 Creates the exact drawing-child preparation port used by the retained fixed-three assembly.
+pub fn gis_map_drawing_one_item_preparation_factory(
+) -> std::sync::Arc<
+    dyn store::ArtifactStoreOneItemPreparationFactory<
+        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+    >,
+> {
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
+}
+
+/// 🔢 Creates the exact value-child preparation port used by the retained fixed-three assembly.
+pub fn gis_map_value_one_item_preparation_factory(
+) -> std::sync::Arc<
+    dyn store::ArtifactStoreOneItemPreparationFactory<
+        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+    >,
+> {
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
+}
+
 struct Gis2dOneItemPreparation<P, M> {
     base: Option<store::SnapshotRead<P>>,
     mutation: Option<M>,
@@ -1015,6 +1042,24 @@ mod tests {
     use super::*;
     use crate::editor::gis2d::testkit::{app, app_with_registry, gis2d_app_manifest_for_testkit, render};
     use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp, VcsArtifactApp};
+
+    #[test]
+    fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
+        let parent: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> = gis_map_parent_one_item_preparation_factory();
+        let drawing: std::sync::Arc<
+            dyn store::ArtifactStoreOneItemPreparationFactory<
+                semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+                semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+            >,
+        > = gis_map_drawing_one_item_preparation_factory();
+        let value: std::sync::Arc<
+            dyn store::ArtifactStoreOneItemPreparationFactory<
+                semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+                semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+            >,
+        > = gis_map_value_one_item_preparation_factory();
+        assert_eq!([std::sync::Arc::strong_count(&parent), std::sync::Arc::strong_count(&drawing), std::sync::Arc::strong_count(&value)], [1, 1, 1]);
+    }
 
     fn gis_map_envelope_wire() -> Vec<u8> {
         use store::ArtifactPack;

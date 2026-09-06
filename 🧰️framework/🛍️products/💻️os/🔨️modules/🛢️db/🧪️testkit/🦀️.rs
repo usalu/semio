@@ -574,7 +574,15 @@ impl CrashHarness {
                         report.state_mismatches.push(crash_at);
                     }
                 }
-                Err(err) => report.reopen_failures.push((crash_at, err.to_string())),
+                Err(mut rejected) => loop {
+                    match rejected.retry_close().await {
+                        Ok(error) => {
+                            report.reopen_failures.push((crash_at, error.to_string()));
+                            break;
+                        }
+                        Err(retained) => rejected = retained,
+                    }
+                },
             }
         }
         report
@@ -697,14 +705,14 @@ pub async fn assert_replay_deterministic(pool: Arc<semio_framework_async::Worker
 
     let root = temp_dir("replay").await;
     let frontier_first_run = {
-        let database = Database::open_at(pool.clone(), &root, Profile::Test).await.expect("testkit: open_at for replay law");
+        let mut database = Database::open_at(pool.clone(), &root, Profile::Test).await.expect("testkit: open_at for replay law");
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.expect("testkit: create_document for replay law");
         for envelope in &ops {
             db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
         }
         let frontier = handle.frontier().await.expect("frontier");
         drop(handle);
-        database.shutdown(std::time::Duration::from_secs(5)).await.expect("shutdown");
+        database.shutdown(&crate::db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("shutdown");
         frontier
     };
 
@@ -1329,7 +1337,15 @@ mod tests {
             seed?;
             release?;
             let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(storage));
-            db_artifact::ArtifactEngine::open(protocol::ArtifactId(document.0), &storage, db_artifact::ArtifactEngineConfig::default(), 0).map(|_| ()).map_err(|err| err.to_string())
+            match db_artifact::ArtifactEngine::open(protocol::ArtifactId(document.0), &storage, db_artifact::ArtifactEngineConfig::default(), 0) {
+                Ok(_) => Ok(()),
+                Err(mut rejected) => loop {
+                    match db_actor::block_on(rejected.retry_close()) {
+                        Ok(error) => break Err(error.to_string()),
+                        Err(retained) => rejected = retained,
+                    }
+                },
+            }
         }
 
         #[semio_framework_async_macros::async_test]

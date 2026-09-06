@@ -1,7 +1,7 @@
 {
   "input": {
     "baseUrl": "http://127.0.0.1:6070/",
-    "shellPluginId": "s",
+    "shellPluginId": "space",
     "startedAt": "2026-09-05T04:00:00.000Z",
     "durationMs": 42000,
     "boot": {
@@ -74,7 +74,7 @@
   },
   "report": {
     "baseUrl": "http://127.0.0.1:6070/",
-    "shellPluginId": "s",
+    "shellPluginId": "space",
     "startedAt": "2026-09-05T04:00:00.000Z",
     "durationMs": 42000,
     "boot": {

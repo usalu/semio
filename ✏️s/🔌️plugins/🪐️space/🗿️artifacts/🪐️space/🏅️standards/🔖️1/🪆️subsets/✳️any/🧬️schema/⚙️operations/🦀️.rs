@@ -9,7 +9,7 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpa
 mod tests {
     use super::*;
     use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
-    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::Mutation;
 
     fn sample_row(id: &str) -> SpaceArtifactRow {
@@ -53,25 +53,25 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_artifact_inverse_law() {
         let base = empty_space_index_snapshot("space-1");
-        assert_mutation_inverse_law(&base, &create_artifact(sample_row("artifact-1")));
+        assert_mutation_inverse_law(&base, &create_artifact(sample_row("artifact-1"))).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_artifact_inverse_law() {
         let base = seeded_snapshot();
-        assert_mutation_inverse_law(&base, &delete_artifact("artifact-1".into()));
+        assert_mutation_inverse_law(&base, &delete_artifact("artifact-1".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_artifact_inverse_law() {
         let base = seeded_snapshot();
-        assert_mutation_inverse_law(&base, &rename_artifact("artifact-1".into(), "Renamed".into()));
+        assert_mutation_inverse_law(&base, &rename_artifact("artifact-1".into(), "Renamed".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn touch_artifact_inverse_law() {
         let base = seeded_snapshot();
-        assert_mutation_inverse_law(&base, &touch_artifact("artifact-1".into(), 99, "user:3".into()));
+        assert_mutation_inverse_law(&base, &touch_artifact("artifact-1".into(), 99, "user:3".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -80,7 +80,7 @@ mod tests {
         let d1 = create_artifact(sample_row("artifact-1")).diff(&base).diff().clone();
         let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = touch_artifact("artifact-1".into(), 55, "user:4".into()).diff(&mid).diff().clone();
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🔖️MutationLaws
 
@@ -90,20 +90,20 @@ mod tests {
     async fn create_artifact_duplicate_id_is_fatal() {
         let base = seeded_snapshot();
         let outcome = create_artifact(sample_row("artifact-1")).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
-        assert_missing_target_is_error(&base, &delete_artifact("ghost".into()));
+        assert_missing_target_is_error(&base, &delete_artifact("ghost".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
-        assert_missing_target_is_error(&base, &rename_artifact("ghost".into(), "x".into()));
+        assert_missing_target_is_error(&base, &rename_artifact("ghost".into(), "x".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -120,14 +120,14 @@ mod tests {
         base.artifacts.push(sample_row("artifact-2"));
         base.artifacts[1].name = "Taken".into();
         let outcome = rename_artifact("artifact-1".into(), "Taken".into()).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn touch_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
-        assert_missing_target_is_error(&base, &touch_artifact("ghost".into(), 1, "user:1".into()));
+        assert_missing_target_is_error(&base, &touch_artifact("ghost".into(), 1, "user:1".into())).await;
     }
     //#endregion 🔖️OutcomeLaws
 }

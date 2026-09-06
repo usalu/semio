@@ -33,7 +33,7 @@
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::*;
 use db_storage::{IndexStorage as _, LeaseStorage as _, PayloadStorage as _, SnapshotStorage as _, WalStorage as _};
-use semio_framework_async::{Lane, WorkerPool};
+use semio_framework_async::{Lane, WorkerPool, WorkerPoolUse};
 use std::future::Future;
 use std::sync::Arc;
 
@@ -717,6 +717,15 @@ pub struct Compactor<'storage> {
     storage: &'storage db_storage::DbBackend,
 }
 
+async fn close_compaction_wal_open_rejected(mut rejected: db_wal::ArtifactWalOpenRejected) -> DbError {
+    loop {
+        match rejected.retry_close().await {
+            Ok(cause) => return cause,
+            Err(retained) => rejected = retained,
+        }
+    }
+}
+
 #[cfg(test)]
 impl<'storage> Compactor<'storage> {
     pub async fn new(storage: &'storage db_storage::DbBackend) -> Compactor<'storage> {
@@ -743,7 +752,10 @@ impl<'storage> Compactor<'storage> {
 
     async fn run_owned(&self, document: &ArtifactId, holder: &str, floor: Option<u64>, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
         let wal_storage = self.storage.wal().await;
-        let (mut wal, _) = db_wal::ArtifactWal::open(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await?;
+        let (mut wal, _) = match db_wal::ArtifactWal::open(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await {
+            Ok(opened) => opened,
+            Err(rejected) => return Err(close_compaction_wal_open_rejected(rejected).await),
+        };
         let fence = match CompactionLease::acquire(&self.storage.lease().await, document, holder, DEFAULT_LEASE_TTL_MS, now_ms).await {
             Ok(fence) => fence,
             Err(error) => {
@@ -1587,7 +1599,10 @@ async fn retained_compaction_execute(
     let mut result = async {
         compaction_opportunity(cancelled.as_ref()).await?;
         let wal_storage = storage.wal().await;
-        let (mut artifact_wal, _) = db_wal::ArtifactWal::open(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await?;
+        let (mut artifact_wal, _) = match db_wal::ArtifactWal::open(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await {
+            Ok(opened) => opened,
+            Err(rejected) => return Err(close_compaction_wal_open_rejected(rejected).await),
+        };
         let operation = async {
             let mut ledger = DatabaseCompactionBackingLedger::default();
             compaction_opportunity(cancelled.as_ref()).await?;
@@ -1707,6 +1722,7 @@ struct DatabaseCompactionCore {
 
 struct DatabaseCompactionState {
     pool: Arc<WorkerPool>,
+    _pool_use: Arc<WorkerPoolUse>,
     slot: usize,
     generation: u64,
     admission: std::sync::Mutex<Option<DatabaseCompactionAdmission>>,
@@ -2153,6 +2169,10 @@ impl std::fmt::Debug for DatabaseCompactionFuture {
 
 impl DatabaseCompactionFuture {
     pub fn try_submit(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, document: ArtifactId, holder: db_storage::DbIoText, consolidate_snapshots: bool, budget: CompactionBudget, now_ms: u64) -> Result<Self, DatabaseCompactionRejected> {
+        let pool_use = match pool.acquire_use() {
+            Ok(pool_use) => pool_use,
+            Err(error) => return Err(DatabaseCompactionRejected::new(pool, DbError::Unavailable(format!("database compaction WorkerPool use rejected: {error:?}")), storage, document, holder)),
+        };
         let admission = match DatabaseCompactionAdmission::try_claim(&document) {
             Ok(admission) => admission,
             Err(error) => return Err(DatabaseCompactionRejected::new(pool, error, storage, document, holder)),
@@ -2171,6 +2191,7 @@ impl DatabaseCompactionFuture {
         let deadline_ms = pool.now_ms().saturating_add(DATABASE_COMPACTION_DEADLINE_MS);
         let state = Arc::new(DatabaseCompactionState {
             pool: pool.clone(),
+            _pool_use: pool_use,
             slot,
             generation,
             admission: std::sync::Mutex::new(Some(admission)),
@@ -2650,6 +2671,33 @@ mod tests {
         drop(admitted);
         held.store(false, std::sync::atomic::Ordering::Release);
         pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_compaction_future_acquires_pool_use_before_admission() {
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        assert_eq!(pool.shutdown(), Ok(()));
+        let before = {
+            let admission = DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            (admission.items, admission.bytes, admission.slots.iter().filter(|slot| slot.occupied).count())
+        };
+        let storage = retained_compaction_storage().await;
+        let storage_identity = Arc::as_ptr(&storage) as usize;
+        let document = ArtifactId(String::from("pool-use-precedes-compaction-admission"));
+        let document_identity = document.0.as_ptr();
+        let holder = db_storage::DbIoText::try_from_str("pool-use-holder").unwrap();
+        let rejected = DatabaseCompactionFuture::try_submit(pool, storage, document, holder, false, CompactionBudget::default(), 0).unwrap_err();
+        let (error, storage, document, mut holder) = rejected.into_parts().unwrap();
+        assert!(matches!(error, DbError::Unavailable(detail) if detail.contains("WorkerPool use rejected")));
+        assert_eq!(Arc::as_ptr(&storage) as usize, storage_identity);
+        assert_eq!(document.0.as_ptr(), document_identity);
+        assert_eq!(holder.as_str(), "pool-use-holder");
+        assert!(holder.close_step());
+        let after = {
+            let admission = DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            (admission.items, admission.bytes, admission.slots.iter().filter(|slot| slot.occupied).count())
+        };
+        assert_eq!(after, before);
     }
 
     #[semio_framework_async_macros::async_test]

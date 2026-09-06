@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["phases", "maximumAuthorityStepsPerTurn", "cases"],
+  "properties": {
+    "phases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        { "const": "authority" },
+        { "const": "versionGraph" },
+        { "const": "emit" },
+        { "const": "complete" }
+      ],
+      "items": false
+    },
+    "maximumAuthorityStepsPerTurn": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "initial", "trace", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "initial": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["authorityOwners", "externalAuthorityOwners", "graphStores"],
+            "properties": {
+              "authorityOwners": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "externalAuthorityOwners": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "graphStores": { "type": "integer", "minimum": 0, "maximum": 1 }
+            }
+          },
+          "trace": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "enum": ["advance", "cancel", "retry", "inject-close-error", "release-shared-owner"] }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["terminal", "authorityRetained", "graphRetained", "emitCount"],
+            "properties": {
+              "terminal": { "type": "boolean" },
+              "authorityRetained": { "type": "boolean" },
+              "graphRetained": { "type": "boolean" },
+              "emitCount": { "type": "integer", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

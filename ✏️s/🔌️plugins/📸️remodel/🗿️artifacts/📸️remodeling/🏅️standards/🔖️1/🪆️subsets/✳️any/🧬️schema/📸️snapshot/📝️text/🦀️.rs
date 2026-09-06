@@ -13,12 +13,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::artifacts::remodeling::RemodelingSnapshot;
 
 /// 📖️ Parses `.remodeling` DSL text into a `RemodelingSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<RemodelingSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<RemodelingSnapshot, store::TextError> {
     <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RemodelingSnapshot` back to `.remodeling` DSL text.
-pub async fn print_dsl(scene: &RemodelingSnapshot) -> String {
+pub fn print_dsl(scene: &RemodelingSnapshot) -> String {
     store::ArtifactDsl::print_dsl(scene)
 }
 
@@ -33,7 +33,7 @@ mod tests {
 
     /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder — see that
     /// crate's `populated_scene_fixture` doc comment for why this is copied rather than shared.
-    async fn populated_scene_fixture() -> RemodelingSnapshot {
+    fn populated_scene_fixture() -> RemodelingSnapshot {
         let mut scene = default_remodeling_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),

@@ -636,6 +636,18 @@ pub const RASTER_DIALECT: semio_framework_plugin::app::Dialect = semio_framework
 //#region 🔖️ArtifactKind
 /// 🏷️ The `2d.raster` artifact kind — lifted out of `create_raster_app`'s `.artifact_kind(…)` call so
 /// both the app manifest and (in the future) any other consumer can share one definition.
+///
+/// 🗄️ `export_stdio_kinds`/`import_stdio_kinds` are READ from `🚪️io`'s own two functions rather than
+/// re-listed here (🗒️note's convention, `🗒️note/🗿️artifacts/🗒️note/🦀️.rs:101-102`). Before this the
+/// two surfaces disagreed three ways — `🚪️io` listed all 9 formats, this spec listed 2, and
+/// `io_registry::entries()` registered 9 — which matters because
+/// `negotiate_wire_format` (`🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs:3484`) picks a workflow wire
+/// straight out of THESE lists: anything listed here that has no real codec becomes an edge that
+/// always fails at run time. The io functions now list only the hops that genuinely encode/decode;
+/// the composer registry deliberately still carries all 9 so a refused hop answers with its own
+/// typed reason instead of a bare "no route" (block's `📓️w3-io.md` §2 records the same rule).
+/// `export_formats`/`import_formats` stay empty: they are the pre-stdio format-enum peer that
+/// 🗒️note, 🧱️block and every stdio artifact also leave empty.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.raster".into(),
@@ -648,8 +660,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.svg", "stdio.png"],
-        import_stdio_kinds: vec!["stdio.svg", "stdio.png"],
+        export_stdio_kinds: crate::artifacts::raster::standards::v1::subsets::any::io::export_stdio_kinds().to_vec(),
+        import_stdio_kinds: crate::artifacts::raster::standards::v1::subsets::any::io::import_stdio_kinds().to_vec(),
     }
 }
 //#endregion 🔖️ArtifactKind

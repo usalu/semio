@@ -48,10 +48,10 @@
       "additionalProperties": false,
       "required": ["pluginId", "appId", "actionId", "moduleDirectory"],
       "properties": {
-        "pluginId": { "const": "s" },
+        "pluginId": { "const": "space" },
         "appId": { "const": "s.space.home@1/*#editor" },
         "actionId": { "const": "applyDirectoryEventPage" },
-        "moduleDirectory": { "const": "🪐️s" }
+        "moduleDirectory": { "const": "🪐️space" }
       }
     },
     "pages": {

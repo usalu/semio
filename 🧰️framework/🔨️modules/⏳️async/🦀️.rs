@@ -1473,6 +1473,26 @@ pub struct WorkerSubmitError {
     job: Job,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PoolLifecycleState {
+    Open { retained_uses: usize },
+    Closing,
+    Stopped,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorkerPoolUseError {
+    Closing,
+    Stopped,
+    Exhausted,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorkerPoolShutdownError {
+    Busy { retained_uses: usize },
+    Closing,
+}
+
 impl WorkerSubmitError {
     pub fn kind(&self) -> WorkerSubmitErrorKind {
         self.kind
@@ -1539,6 +1559,7 @@ mod native_pool {
         workers: Vec<WorkerLocal>,
         maintenance: WorkerMaintenanceRegistry,
         deferred_wakes: WorkerDeferredWakeRegistry,
+        lifecycle: Mutex<PoolLifecycleState>,
         shutdown: std::sync::atomic::AtomicBool,
         next_submit: AtomicUsize,
         io_source: AtomicUsize,
@@ -1719,6 +1740,20 @@ mod native_pool {
         inner: Arc<PoolInner>,
     }
 
+    pub struct WorkerPoolUse {
+        inner: std::sync::Weak<PoolInner>,
+    }
+
+    impl Drop for WorkerPoolUse {
+        fn drop(&mut self) {
+            let Some(inner) = self.inner.upgrade() else { return };
+            let mut lifecycle = inner.lifecycle.lock().unwrap_or_else(PoisonError::into_inner);
+            if let PoolLifecycleState::Open { retained_uses } = &mut *lifecycle {
+                *retained_uses = retained_uses.checked_sub(1).expect("WorkerPoolUse: retained-use underflow");
+            }
+        }
+    }
+
     impl WorkerPool {
         pub fn new(config: WorkerPoolConfig) -> WorkerPool {
             let worker_count = worker_count_for(config.process_kind, config.cores).max(1);
@@ -1726,6 +1761,7 @@ mod native_pool {
                 workers: (0..worker_count).map(|_| WorkerLocal::new()).collect(),
                 maintenance: WorkerMaintenanceRegistry::new(),
                 deferred_wakes: WorkerDeferredWakeRegistry::new(),
+                lifecycle: Mutex::new(PoolLifecycleState::Open { retained_uses: 0 }),
                 shutdown: std::sync::atomic::AtomicBool::new(false),
                 next_submit: AtomicUsize::new(0),
                 io_source: AtomicUsize::new(0),
@@ -1866,6 +1902,19 @@ mod native_pool {
             self.inner.shutdown.load(Ordering::SeqCst)
         }
 
+        /// 🔐️ Retains one cold lifecycle use until the final clone of the returned cell drops.
+        pub fn acquire_use(&self) -> Result<Arc<WorkerPoolUse>, WorkerPoolUseError> {
+            let mut lifecycle = self.inner.lifecycle.lock().unwrap_or_else(PoisonError::into_inner);
+            match &mut *lifecycle {
+                PoolLifecycleState::Open { retained_uses } => {
+                    *retained_uses = retained_uses.checked_add(1).ok_or(WorkerPoolUseError::Exhausted)?;
+                    Ok(Arc::new(WorkerPoolUse { inner: Arc::downgrade(&self.inner) }))
+                }
+                PoolLifecycleState::Closing => Err(WorkerPoolUseError::Closing),
+                PoolLifecycleState::Stopped => Err(WorkerPoolUseError::Stopped),
+            }
+        }
+
         pub fn worker_count(&self) -> usize {
             self.inner.workers.len()
         }
@@ -1907,7 +1956,16 @@ mod native_pool {
         /// 🛑️ Signals shutdown, wakes every idle-parked worker, and joins every worker thread —
         /// blocks until all in-flight jobs finish. Not called automatically on drop (a cloned
         /// handle dropping must never tear down siblings' pool).
-        pub fn shutdown(&self) {
+        pub fn shutdown(&self) -> Result<(), WorkerPoolShutdownError> {
+            {
+                let mut lifecycle = self.inner.lifecycle.lock().unwrap_or_else(PoisonError::into_inner);
+                match *lifecycle {
+                    PoolLifecycleState::Open { retained_uses: 0 } => *lifecycle = PoolLifecycleState::Closing,
+                    PoolLifecycleState::Open { retained_uses } => return Err(WorkerPoolShutdownError::Busy { retained_uses }),
+                    PoolLifecycleState::Closing => return Err(WorkerPoolShutdownError::Closing),
+                    PoolLifecycleState::Stopped => return Ok(()),
+                }
+            }
             self.inner.maintenance.shutdown();
             self.inner.deferred_wakes.shutdown();
             self.inner.shutdown.store(true, Ordering::SeqCst);
@@ -1917,6 +1975,8 @@ mod native_pool {
             for handle in handles.drain(..) {
                 let _ = handle.join();
             }
+            *self.inner.lifecycle.lock().unwrap_or_else(PoisonError::into_inner) = PoolLifecycleState::Stopped;
+            Ok(())
         }
     }
 
@@ -1937,6 +1997,54 @@ mod native_pool {
                 }
                 self.wakes.fetch_add(1, Ordering::SeqCst);
             }
+        }
+
+        #[test]
+        fn worker_pool_use_native_busy_keeps_executor_running_until_final_release() {
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            let retained = pool.acquire_use().unwrap();
+            let clone = retained.clone();
+            assert_eq!(pool.shutdown(), Err(WorkerPoolShutdownError::Busy { retained_uses: 1 }));
+            assert!(!pool.is_shutdown());
+            let (ran_tx, ran_rx) = std::sync::mpsc::sync_channel(1);
+            pool.submit(Lane::UserVisible, Box::new(move || ran_tx.send(()).unwrap()));
+            ran_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+            drop(retained);
+            assert_eq!(pool.shutdown(), Err(WorkerPoolShutdownError::Busy { retained_uses: 1 }));
+            drop(clone);
+            assert_eq!(pool.shutdown(), Ok(()));
+            assert_eq!(pool.shutdown(), Ok(()));
+        }
+
+        #[test]
+        fn worker_pool_use_acquire_and_shutdown_linearize_exactly_once() {
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            let barrier = Arc::new(std::sync::Barrier::new(3));
+            let acquire_pool = pool.clone();
+            let acquire_barrier = barrier.clone();
+            let acquire = std::thread::spawn(move || {
+                acquire_barrier.wait();
+                acquire_pool.acquire_use()
+            });
+            let shutdown_pool = pool.clone();
+            let shutdown_barrier = barrier.clone();
+            let shutdown = std::thread::spawn(move || {
+                shutdown_barrier.wait();
+                shutdown_pool.shutdown()
+            });
+            barrier.wait();
+            let acquired = acquire.join().unwrap();
+            let closed = shutdown.join().unwrap();
+            match (acquired, closed) {
+                (Ok(retained), Err(WorkerPoolShutdownError::Busy { retained_uses: 1 })) => {
+                    drop(retained);
+                    assert_eq!(pool.shutdown(), Ok(()));
+                }
+                (Err(WorkerPoolUseError::Closing | WorkerPoolUseError::Stopped), Ok(())) => {}
+                _ => panic!("pool use and shutdown did not linearize"),
+            }
+            assert!(pool.is_shutdown());
+            assert_eq!(pool.shutdown(), Ok(()));
         }
 
         #[test]
@@ -2215,6 +2323,7 @@ mod wasm_pool {
         state: Mutex<SchedulerState>,
         maintenance: WorkerMaintenanceRegistry,
         deferred_wakes: WorkerDeferredWakeRegistry,
+        lifecycle: Mutex<PoolLifecycleState>,
         wheel: TimerWheel,
         now_ms: std::sync::atomic::AtomicU64,
         pump_calls: std::sync::atomic::AtomicU64,
@@ -2242,12 +2351,27 @@ mod wasm_pool {
         interactive_reserve: bool,
     }
 
+    pub struct WorkerPoolUse {
+        inner: std::sync::Weak<PoolInner>,
+    }
+
+    impl Drop for WorkerPoolUse {
+        fn drop(&mut self) {
+            let Some(inner) = self.inner.upgrade() else { return };
+            let mut lifecycle = inner.lifecycle.lock().unwrap_or_else(PoisonError::into_inner);
+            if let PoolLifecycleState::Open { retained_uses } = &mut *lifecycle {
+                *retained_uses = retained_uses.checked_sub(1).expect("WorkerPoolUse: retained-use underflow");
+            }
+        }
+    }
+
     impl WorkerPool {
         pub fn new(config: WorkerPoolConfig) -> WorkerPool {
             let inner = Arc::new(PoolInner {
                 state: Mutex::new(SchedulerState::new()),
                 maintenance: WorkerMaintenanceRegistry::new(),
                 deferred_wakes: WorkerDeferredWakeRegistry::new(),
+                lifecycle: Mutex::new(PoolLifecycleState::Open { retained_uses: 0 }),
                 wheel: TimerWheel::new(),
                 now_ms: std::sync::atomic::AtomicU64::new(0),
                 pump_calls: std::sync::atomic::AtomicU64::new(0),
@@ -2362,6 +2486,19 @@ mod wasm_pool {
             self.inner.shutdown.load(Ordering::SeqCst)
         }
 
+        /// 🔐️ Retains one cold lifecycle use until the final clone of the returned cell drops.
+        pub fn acquire_use(&self) -> Result<Arc<WorkerPoolUse>, WorkerPoolUseError> {
+            let mut lifecycle = self.inner.lifecycle.lock().unwrap_or_else(PoisonError::into_inner);
+            match &mut *lifecycle {
+                PoolLifecycleState::Open { retained_uses } => {
+                    *retained_uses = retained_uses.checked_add(1).ok_or(WorkerPoolUseError::Exhausted)?;
+                    Ok(Arc::new(WorkerPoolUse { inner: Arc::downgrade(&self.inner) }))
+                }
+                PoolLifecycleState::Closing => Err(WorkerPoolUseError::Closing),
+                PoolLifecycleState::Stopped => Err(WorkerPoolUseError::Stopped),
+            }
+        }
+
         pub fn worker_count(&self) -> usize {
             1
         }
@@ -2394,12 +2531,23 @@ mod wasm_pool {
         }
 
         /// 🛑️ Marks the cooperative pool stopped and releases every retained timed callback.
-        pub fn shutdown(&self) {
+        pub fn shutdown(&self) -> Result<(), WorkerPoolShutdownError> {
+            {
+                let mut lifecycle = self.inner.lifecycle.lock().unwrap_or_else(PoisonError::into_inner);
+                match *lifecycle {
+                    PoolLifecycleState::Open { retained_uses: 0 } => *lifecycle = PoolLifecycleState::Closing,
+                    PoolLifecycleState::Open { retained_uses } => return Err(WorkerPoolShutdownError::Busy { retained_uses }),
+                    PoolLifecycleState::Closing => return Err(WorkerPoolShutdownError::Closing),
+                    PoolLifecycleState::Stopped => return Ok(()),
+                }
+            }
             self.inner.maintenance.shutdown();
             self.inner.deferred_wakes.shutdown();
             self.inner.shutdown.store(true, Ordering::SeqCst);
             self.inner.wheel.fire_due(u64::MAX);
             let _ = self.interactive_reserve;
+            *self.inner.lifecycle.lock().unwrap_or_else(PoisonError::into_inner) = PoolLifecycleState::Stopped;
+            Ok(())
         }
 
         /// ⏱️ Runs at most one DRR-selected job (admission control is a documented no-op here — the
@@ -2460,6 +2608,22 @@ mod wasm_pool {
             fn wake(self: Arc<Self>) {
                 self.0.fetch_add(1, Ordering::SeqCst);
             }
+        }
+
+        #[test]
+        fn worker_pool_use_cooperative_busy_keeps_executor_running_until_final_release() {
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            let retained = pool.acquire_use().unwrap();
+            assert_eq!(pool.shutdown(), Err(WorkerPoolShutdownError::Busy { retained_uses: 1 }));
+            assert!(!pool.is_shutdown());
+            let ran = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let ran_job = ran.clone();
+            pool.submit(Lane::UserVisible, Box::new(move || ran_job.store(true, Ordering::SeqCst)));
+            pool.pump(1);
+            assert!(ran.load(Ordering::SeqCst));
+            drop(retained);
+            assert_eq!(pool.shutdown(), Ok(()));
+            assert_eq!(pool.shutdown(), Ok(()));
         }
 
         #[test]
@@ -2556,9 +2720,9 @@ mod wasm_pool {
 //#endregion 🧵️WorkerPoolWasm
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use native_pool::WorkerPool;
+pub use native_pool::{WorkerPool, WorkerPoolUse};
 #[cfg(target_arch = "wasm32")]
-pub use wasm_pool::{CooperativePoolSnapshot, WorkerPool};
+pub use wasm_pool::{CooperativePoolSnapshot, WorkerPool, WorkerPoolUse};
 
 //#region 🌐️ProcessWorkerPool
 static PROCESS_WORKER_POOL_CONFIG: OnceLock<WorkerPoolConfig> = OnceLock::new();

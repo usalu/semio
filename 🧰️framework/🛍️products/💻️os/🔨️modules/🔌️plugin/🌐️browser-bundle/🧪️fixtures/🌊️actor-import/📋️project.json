@@ -1,0 +1,16 @@
+{
+  "name": "@semio-tech/browser-actor-import-fixture",
+  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "runtime-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "cwd": "{projectRoot}", "command": "bun ./📜️script.ts" }
+    },
+    "pending-host-close-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "cwd": "{projectRoot}", "command": "bun ./📜️script.ts pending-host-close-check" }
+    }
+  }
+}

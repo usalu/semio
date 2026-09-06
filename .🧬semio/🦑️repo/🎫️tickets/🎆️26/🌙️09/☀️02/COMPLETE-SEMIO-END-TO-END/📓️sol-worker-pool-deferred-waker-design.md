@@ -2,7 +2,7 @@
 
 ## Status
 
-Schema-first design and independent source oracle only. The WorkerPool and writer controller runtime are not changed or qualified by this slice. No Cargo process was launched.
+Runtime implementation, strict neutral fixture, mounted DB refusal law, registered source gate, and registered exact-native selectors are present. The source gate and all three pure async native laws are green. The mounted DB refusal law remains native-pending.
 
 ## Current refusal defect
 
@@ -41,15 +41,21 @@ Shutdown first closes ordinary ingress and deferred-wake admission, then drains 
 
 No queued waiter is silently discarded and shutdown does not fabricate writer completion.
 
-## Required native laws after runtime landing
+## Runtime laws
 
 1. Cross-key refusal under an application mutex performs zero inline wakes; a later pool turn wakes B once, then B returns its retained failure while A and B guards remain mounted.
 2. `A.retry()` discards only A's obsolete waiter. A second refusal moves B's existing waiter once; both failures preserve distinct retry owners and neither guard unlocks.
 3. Filling all 64 maintenance hooks does not consume the separate wake partition. Closed/stale refusal still drains the parked waiter with zero jobs, DB tasks, lost owners, or I/O.
 4. Filling all 2,048 reserved waiter cells drains exactly once during native and cooperative shutdown. After the terminal shutdown fence, a rejected enqueue restores its exact waiter and backend close remains required.
 
+The pure async laws cover the full 2,048-owner registry, generation fencing, shutdown drain, native no-inline dispatch, and cooperative later-pump drain. The mounted DB law uses a real registered backend on a dedicated one-worker pool: B is released and parked first; its maintenance ticket is retired to produce a generation-qualified stale refusal; A is publicly released while an application mutex is held. The law requires zero inline wakes, a still-Pending B while its exact slot is queued, one later wake after worker release, two distinct retained failures, both guards fenced, and explicit retries to terminal.
+
+The retry-epoch admission is stronger than the raw 32-slot capacity equation. A faulted release remains `Pending` while `deferred_fault_waiter` is true and the exact pool slot is occupied. It can expose `Ready(Err(retained_owner))` only after selection has removed the old Waker from that slot. Therefore a caller cannot obtain and retry that owner before the prior epoch releases its exact slot; the maximum queued owners per signal remains one.
+
 ## Registered evidence
 
-`@semio-tech/framework-async-rs:worker-deferred-wake-design-check` validates the strict JSON Schema with AJV, independently models all five refusal/shutdown cases and the 2,048-owner capacity equation, and checks the current async/DB bounds. It reports how many future runtime markers are present but deliberately does not treat their absence as runtime qualification.
+`@semio-tech/framework-async-rs:worker-deferred-wake-check` validates the strict JSON Schema with AJV, independently executes the hostile retry epoch, models all five refusal/shutdown cases and the 2,048-owner capacity equation, and requires all nine runtime markers. Missing runtime code now fails the target. `worker-deferred-wake-native-check` selects the three exact async runtime laws. The OS writer native group also selects `wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch`.
 
-Source receipt on 2026-09-05: GREEN via the registered Nx target with `AJV=1 cases=5 fixed-waiters=2048 inline-wakes=0 runtime-markers=0/8`. The zero runtime-marker count is the expected pre-implementation boundary, not a runtime pass.
+Source receipt on 2026-09-05: GREEN via the registered Nx target with `AJV=1 cases=5 fixed-waiters=2048 retry-epochs=1 max-queued-per-signal=1 inline-wakes=0 runtime-markers=9/9`. The registered OS writer source oracle also passed and requires that no public DB handback path names the direct `notify_faults` boundary.
+
+Root's exact native run is GREEN3 at `worker-deferred-wake-exact/exact-cargo-laws-Pj2Y8N/00`, executable SHA-256 `cd3a8448cf9099e37da12a70cc59ec032b6929607825aa55cc14163a162be552`. It passed the fixed 2,048-owner capacity/generation law, native no-inline wake plus shutdown drain, and cooperative post-shutdown pump drain. It does not qualify the separately registered mounted DB refusal law.

@@ -1,0 +1,30 @@
+{
+  "phases": ["authority", "versionGraph", "emit", "complete"],
+  "maximumAuthorityStepsPerTurn": 1,
+  "cases": [
+    {
+      "name": "cancelled authority close retains exact owner for retry",
+      "initial": { "authorityOwners": 1, "externalAuthorityOwners": 0, "graphStores": 1 },
+      "trace": ["advance", "cancel", "retry", "advance", "advance", "advance", "advance"],
+      "expected": { "terminal": true, "authorityRetained": true, "graphRetained": true, "emitCount": 1 }
+    },
+    {
+      "name": "version graph close error retains exact store for retry",
+      "initial": { "authorityOwners": 0, "externalAuthorityOwners": 0, "graphStores": 1 },
+      "trace": ["inject-close-error", "advance", "retry", "advance", "advance", "advance"],
+      "expected": { "terminal": true, "authorityRetained": false, "graphRetained": true, "emitCount": 1 }
+    },
+    {
+      "name": "shared authority blocks without draining caller owner",
+      "initial": { "authorityOwners": 1, "externalAuthorityOwners": 1, "graphStores": 1 },
+      "trace": ["advance", "release-shared-owner", "retry", "advance", "advance", "advance", "advance", "advance"],
+      "expected": { "terminal": true, "authorityRetained": true, "graphRetained": true, "emitCount": 1 }
+    },
+    {
+      "name": "terminal acknowledgement emits exactly once",
+      "initial": { "authorityOwners": 0, "externalAuthorityOwners": 0, "graphStores": 0 },
+      "trace": ["advance", "advance", "retry"],
+      "expected": { "terminal": true, "authorityRetained": false, "graphRetained": false, "emitCount": 1 }
+    }
+  ]
+}

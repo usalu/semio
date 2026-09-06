@@ -907,8 +907,8 @@ pub mod host {
         /// @emoji 🔗️ Attaches an explicit native backbone channel (typically a `channel_backbone` handed
         /// out by `framework/sync`'s `ArtifactHost::open`, per `ArtifactHost`'s canonical sequence).
         #[cfg(not(target_arch = "wasm32"))]
-        pub fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), VcsError> {
-            self.inner.attach_backbone(backbone)
+        pub fn attach_backbone(&mut self, backbone: store::Backbones) -> Result<(), VcsError> {
+            resolve_kernel_future(self.inner.attach_backbone(backbone))
         }
 
         pub fn detach_backbone(&mut self) {
@@ -1376,8 +1376,8 @@ pub mod host {
                     media_inputs: Vec::new(),
                     media_outputs: Vec::new(),
                     artifact_kinds: Vec::new(),
-                    config: semio_framework::ConfigSpec::empty(),
-                    command_grammar: semio_framework::CommandGrammar::empty(),
+                    config: resolve_kernel_future(semio_framework::ConfigSpec::empty()),
+                    command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
                     io: semio_framework::AppIo::default(),
                     tutorials: Vec::new(),
                 }],
@@ -1437,8 +1437,8 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: semio_framework::ConfigSpec::empty(),
-                command_grammar: semio_framework::CommandGrammar::empty(),
+                config: resolve_kernel_future(semio_framework::ConfigSpec::empty()),
+                command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
                 io: semio_framework::AppIo::default(),
                 tutorials: Vec::new(),
             };
@@ -1483,8 +1483,8 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: semio_framework::ConfigSpec::empty(),
-                command_grammar: semio_framework::CommandGrammar::empty(),
+                config: resolve_kernel_future(semio_framework::ConfigSpec::empty()),
+                command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
                 io: semio_framework::AppIo::default(),
                 tutorials: Vec::new(),
             };
@@ -1576,8 +1576,8 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: semio_framework::ConfigSpec::empty(),
-                command_grammar: semio_framework::CommandGrammar::empty(),
+                config: resolve_kernel_future(semio_framework::ConfigSpec::empty()),
+                command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
                 io: semio_framework::AppIo::default(),
                 tutorials: Vec::new(),
             };
@@ -1734,14 +1734,16 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: semio_framework::ConfigSpec::empty(),
-                command_grammar: semio_framework::CommandGrammar::empty(),
-                io: semio_framework::AppIo::from_document(
-                    document_schema,
-                    MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    semio_framework::ArtifactPresentation { id: id.into(), name: label.into(), dimension: "2d".into(), component_kind: id.into() },
-                )
-                .with_ports(ports),
+                config: resolve_kernel_future(semio_framework::ConfigSpec::empty()),
+                command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
+                io: resolve_kernel_future(
+                    resolve_kernel_future(semio_framework::AppIo::from_document(
+                        document_schema,
+                        MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                        semio_framework::ArtifactPresentation { id: id.into(), name: label.into(), dimension: "2d".into(), component_kind: id.into() },
+                    ))
+                    .with_ports(ports),
+                ),
                 tutorials: Vec::new(),
             }
         }
@@ -1759,11 +1761,17 @@ pub mod host {
 
         fn test_space_store() -> OsSpaceStore {
             let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None);
-            ArtifactStore::new(envelope).expect("valid artifact store fixture")
+            resolve_kernel_future(ArtifactStore::new(envelope)).expect("valid artifact store fixture")
         }
 
         fn test_workflow_store() -> OsWorkflowStore {
-            OsWorkflowStore::new(create_backbone_document(workflow::S_WORKFLOW_SCHEMA, "workflow", "Workflow", workflow::empty_workflow_snapshot())).expect("valid workflow store fixture")
+            OsWorkflowStore::new(create_backbone_document(
+                workflow::S_WORKFLOW_SCHEMA,
+                "workflow",
+                "Workflow",
+                resolve_kernel_future(workflow::empty_workflow_snapshot()),
+            ))
+            .expect("valid workflow store fixture")
         }
 
         #[test]
@@ -1779,7 +1787,14 @@ pub mod host {
             let timestamp = edit.mutation_meta.first().expect("operation metadata").timestamp;
             let mutation_ids = edit.mutation_meta.iter().map(|meta| meta.mutation_id.clone().expect("stable mutation identity")).collect::<Vec<_>>();
             let actors = vec![protocol::ActorId(edit.actor.clone().expect("stable edit actor"))];
-            document.conflicts = vec![protocol::Conflict { id: protocol::ConflictId::new(&kind, &protocol::ArtifactId(document.id.clone()), &mutation_ids, &timestamp), kind, status: protocol::ConflictStatus::Open, messages, actors, timestamp }];
+            document.conflicts = vec![protocol::Conflict {
+                id: resolve_kernel_future(protocol::ConflictId::new(&kind, &protocol::ArtifactId(document.id.clone()), &mutation_ids, &timestamp)),
+                kind,
+                status: protocol::ConflictStatus::Open,
+                messages,
+                actors,
+                timestamp,
+            }];
 
             let payload = encode_backbone_payload(&document).expect("backbone payload encodes");
             let decoded: OsWorkflowArtifactDocument = decode_backbone_payload(&payload, workflow::S_WORKFLOW_SCHEMA).expect("backbone payload decodes");
@@ -1793,23 +1808,26 @@ pub mod host {
             assert_eq!(rebuilt_document.conflicts, document.conflicts);
 
             let text = export_backbone_dsl(&document).expect("backbone text encodes");
-            let parsed = store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops).expect("backbone text decodes");
-            assert_eq!(parsed.envelope.edit_messages, document.edit_messages);
+            let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("backbone text decodes");
+            assert!(parsed.envelope.edit_messages.iter().eq(document.edit_messages.iter()));
             assert_eq!(parsed.envelope.conflicts, document.conflicts);
-            assert_eq!(parsed.envelope.cursor.expect("text carries explicit cursor"), document.cursor);
+            assert_eq!(parsed.envelope.cursor.as_ref().expect("text carries explicit cursor"), &document.cursor);
 
             let mut invalid = document.clone();
             invalid.conflicts[0].id = protocol::ConflictId("conflict-invalid".into());
             assert!(encode_backbone_payload(&invalid).is_err(), "host binary persistence must reject a non-content-addressed conflict id");
             let malformed_text = text.ops.replacen(&document.conflicts[0].id.0, "conflict-invalid", 1);
-            assert!(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &malformed_text).is_err(), "host text persistence must reject a non-content-addressed conflict id");
+            assert!(
+                resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &malformed_text)).is_err(),
+                "host text persistence must reject a non-content-addressed conflict id"
+            );
         }
 
         #[test]
         fn backbone_binary_text_and_workflow_store_preserve_the_complete_cursor() {
             let mut store = test_workflow_store();
             store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Committed").expect("first edit");
-            store.inner.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("cursor checkpoint".into()), authors: Vec::new() }).expect("checkpoint");
+            resolve_kernel_future(store.inner.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("cursor checkpoint".into()), authors: Vec::new() })).expect("checkpoint");
             store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Undone").expect("second edit");
             store.dispatch_text("undo").expect("undo second edit");
             let document = store.document();
@@ -1822,8 +1840,8 @@ pub mod host {
             assert_eq!(OsWorkflowStore::new(decoded).expect("workflow rebuild").document().cursor, document.cursor);
 
             let text = export_backbone_dsl(&document).expect("text encode");
-            let parsed = store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops).expect("text decode");
-            assert_eq!(parsed.envelope.cursor.expect("text cursor"), document.cursor);
+            let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("text decode");
+            assert_eq!(parsed.envelope.cursor.as_ref().expect("text cursor"), &document.cursor);
         }
 
         #[test]
@@ -1851,7 +1869,7 @@ pub mod host {
 
         #[test]
         fn creates_and_lists_space_catalog_entries() {
-            let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::Memory(MemoryBackbonePort::new())));
+            let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
             let owner = space::SpaceUser { id: "user-1".into(), name: "Ada".into(), avatar: None, role: space::SpaceRole::Author };
             let entry = create_os_space("Catalog Space", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner, port.clone()).expect("create");
             assert_eq!(entry.collection_count, 1, "create_os_space must seed exactly one default collection");
@@ -1865,7 +1883,7 @@ pub mod host {
 
         #[test]
         fn validates_workflow_cycles() {
-            assert!(validate_workflow(&empty_workflow()).ok);
+            assert!(validate_workflow(&resolve_kernel_future(empty_workflow())).ok);
         }
 
         #[test]
@@ -1878,9 +1896,9 @@ pub mod host {
             let node_b_id = store_a.add_workflow_node("sink", "sink", None, 200.0, 0.0, &mut space_store_a).expect("spawn b");
             let mut store_b = OsWorkflowStore::new(store_a.document()).expect("valid replicated workflow store fixture");
 
-            let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race");
-            store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-            store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+            let (backbone_a, backbone_b) = resolve_kernel_future(MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race"));
+            store_a.attach_backbone(store::Backbones::Memory(backbone_a)).expect("attach a");
+            store_b.attach_backbone(store::Backbones::Memory(backbone_b)).expect("attach b");
 
             let document = store_a.snapshot().expect("projection");
             let node_a = document.graph.nodes.iter().find(|node| node.id == node_a_id).expect("node a");
@@ -1895,7 +1913,14 @@ pub mod host {
             store_a.dispatch_apply(vec![workflow::WorkflowMutation::RemoveNode(workflow::RemoveNode { node_id: node_b_id.clone() })]).expect("remove node b");
             store_b
                 .dispatch_apply(vec![workflow::WorkflowMutation::ConnectPorts(workflow::ConnectPorts {
-                    edge: WorkflowEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id, contract: placeholder_media_contract("draw") },
+                    edge: WorkflowEdge {
+                        id: "edge-race".into(),
+                        source_node_id: source_node_id.clone(),
+                        source_port_id,
+                        target_node_id: target_node_id.clone(),
+                        target_port_id,
+                        contract: resolve_kernel_future(placeholder_media_contract("draw")),
+                    },
                 })])
                 .expect("wire edge to node b");
             store_a.tick().expect("pump a");
@@ -2002,8 +2027,9 @@ pub mod host {
 
         #[test]
         fn dsl_round_trips_default_workflow_snapshot() {
-            store::test_support::assert_dsl_round_trip(&workflow::empty_workflow_snapshot());
-            store::test_support::assert_dsl_pack_equivalence(&workflow::empty_workflow_snapshot());
+            let snapshot = resolve_kernel_future(workflow::empty_workflow_snapshot());
+            store::test_support::assert_dsl_round_trip(&snapshot);
+            store::test_support::assert_dsl_pack_equivalence(&snapshot);
         }
 
         #[test]
@@ -2110,9 +2136,9 @@ pub mod host {
 
         #[test]
         fn document_text_round_trips_store_with_applied_operation() {
-            let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", workflow::empty_workflow_snapshot(), None);
-            let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
-            store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], description: None }).expect("apply");
+            let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", resolve_kernel_future(workflow::empty_workflow_snapshot()), None);
+            let mut store = resolve_kernel_future(ArtifactStore::new(envelope)).expect("valid artifact store fixture");
+            resolve_kernel_future(store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], description: None })).expect("apply");
             store::test_support::assert_document_text_round_trip(&store);
             store::test_support::assert_document_pack_round_trip(&store);
         }
@@ -2152,9 +2178,9 @@ pub mod host {
                 version: "0.1.0".into(),
                 extends: extends.into(),
                 capabilities,
-                topic_contributions: serde_json::json!([]),
+                topic_contributions: semio_framework_os_kernel::json::Value::Array(Vec::new()),
                 dependencies: vec![store::extension::PackagePluginDependency { plugin_id: extends.into(), version: "^1.0.0".into() }],
-                contributions: serde_json::json!([]),
+                contributions: semio_framework_os_kernel::json::Value::Array(Vec::new()),
                 package_format: store::extension::EXTENSION_PACKAGE_FORMAT,
             };
             let component = b"\0asm\x01\x00\x00\x00fake-component".to_vec();
@@ -2203,9 +2229,9 @@ pub mod host {
                 version: "0.1.0".into(),
                 extends: "flow".into(),
                 capabilities: vec![],
-                topic_contributions: serde_json::json!([]),
+                topic_contributions: semio_framework_os_kernel::json::Value::Array(Vec::new()),
                 dependencies: vec![store::extension::PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() }],
-                contributions: serde_json::json!([]),
+                contributions: semio_framework_os_kernel::json::Value::Array(Vec::new()),
                 package_format: store::extension::EXTENSION_PACKAGE_FORMAT,
             };
             let manifest_bytes_source = block_on(store::extension::pack(&mismatched_manifest, b"\0asm\x01\x00\x00\x00x", &[])).expect("pack a structurally-valid but contract-violating .sxt");
@@ -2292,13 +2318,19 @@ pub mod backbone {
             let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("txt").to_string();
             let document_id = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("document").to_string();
             let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| std::path::PathBuf::from("."));
-            Ok(Self { kind: Some(SpacePortKind::File { uri, storage: FolderTextStorage::new(folder), document_id, extension }), memory: MemoryBackbonePort::new() })
+            Ok(Self {
+                kind: Some(SpacePortKind::File { uri, storage: crate::host::resolve_kernel_future(FolderTextStorage::new(folder)), document_id, extension }),
+                memory: crate::host::resolve_kernel_future(MemoryBackbonePort::new()),
+            })
         }
 
         #[cfg(not(target_arch = "wasm32"))]
         pub fn folder(folder_path: &str) -> Result<Self, VcsError> {
             let uri = format!("folder://{folder_path}");
-            Ok(Self { kind: Some(SpacePortKind::Folder(uri, FolderEventLogStorage::new(std::path::PathBuf::from(folder_path)))), memory: MemoryBackbonePort::new() })
+            Ok(Self {
+                kind: Some(SpacePortKind::Folder(uri, FolderEventLogStorage::new(std::path::PathBuf::from(folder_path)))),
+                memory: crate::host::resolve_kernel_future(MemoryBackbonePort::new()),
+            })
         }
     }
 
@@ -2315,10 +2347,10 @@ pub mod backbone {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                        let (pack, spr) = if let Some(pack_files) = storage.read_pack(document_id, extension)? {
+                        let (pack, spr) = if let Some(pack_files) = crate::host::resolve_kernel_future(storage.read_pack(document_id, extension))? {
                             (pack_files.pack, pack_files.spr)
                         } else {
-                            match storage.read(document_id, extension)? {
+                            match crate::host::resolve_kernel_future(storage.read(document_id, extension))? {
                                 Some(text_files) => {
                                     let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
                                     let envelope = store::create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, document_id, snapshot, None);
@@ -2333,7 +2365,7 @@ pub mod backbone {
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                        let (pack, spr) = storage.read(SPACE_FOLDER_DOCUMENT_ID)?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
+                        let (pack, spr) = crate::host::resolve_kernel_future(storage.read(SPACE_FOLDER_DOCUMENT_ID))?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
                         let inner = crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&pack, &spr));
                         return Ok(crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&[], &inner)));
                     }
@@ -2352,12 +2384,12 @@ pub mod backbone {
                         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                         let dsl_mirror = store::ArtifactDsl::print_dsl(&parsed.envelope.vcs.initial_snapshot);
                         let pack_files = store::ArtifactPackFiles { pack, spr, ops: String::new() };
-                        return storage.write_pack(document_id, extension, &pack_files, &dsl_mirror);
+                        return crate::host::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
-                        return storage.write(SPACE_FOLDER_DOCUMENT_ID, space::S_SPACE_SCHEMA, &pack, &spr);
+                        return crate::host::resolve_kernel_future(storage.write(SPACE_FOLDER_DOCUMENT_ID, space::S_SPACE_SCHEMA, &pack, &spr));
                     }
                     _ => {}
                 }
@@ -4210,7 +4242,7 @@ pub mod workflow {
             });
             assert_eq!(crate::registry::os_artifact_dialect(TEST_KIND).to_coordinate(), "s.__w1b_export_bug_proof@1/*", "catalog-derived dialect must exactly match the dialect the test IoEntry was registered under");
 
-            semio_framework::register_format_descriptors([semio_framework::FormatDescriptor {
+            crate::host::resolve_kernel_future(semio_framework::register_format_descriptors([semio_framework::FormatDescriptor {
                 kind_id: "stdio.__w1b_export_bug_proof_fmt".to_string(),
                 short_id: "w1bproof".to_string(),
                 aliases: Vec::new(),
@@ -4221,7 +4253,7 @@ pub mod workflow {
                 neutral: false,
                 dir_name: "w1bproof".to_string(),
                 is_binary: true,
-            }])
+            }]))
             .ok();
 
             let source_document = serde_json::json!({ "value": "RAW-FILE-CONTENT-not-a-pack" });
@@ -4235,7 +4267,7 @@ pub mod workflow {
 
         #[test]
         fn validates_empty_workflow() {
-            assert!(validate_workflow(&empty_workflow()).ok);
+            assert!(validate_workflow(&crate::host::resolve_kernel_future(empty_workflow())).ok);
         }
 
         #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -4313,7 +4345,7 @@ pub mod workflow {
 
         #[test]
         fn flow_fixture_projects_neuron_preview() {
-            let mut graph = empty_workflow();
+            let mut graph = crate::host::resolve_kernel_future(empty_workflow());
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             let fixture = os_workflow_to_flow_fixture(&graph, &OsWorkflowCamera::default());
             assert_eq!(fixture["schema"], "flow.fixture");
@@ -4334,7 +4366,7 @@ pub mod workflow {
 
         #[test]
         fn flow_fixture_round_trips_camera_and_diffs_back_to_operations() {
-            let mut graph = empty_workflow();
+            let mut graph = crate::host::resolve_kernel_future(empty_workflow());
             graph.nodes.push(media_node("node-1", 40.0, 80.0));
             graph.nodes.push(media_node("node-2", 300.0, 80.0));
             graph.edges.push(WorkflowEdge {
@@ -4343,7 +4375,7 @@ pub mod workflow {
                 source_port_id: "node-1:out".into(),
                 target_node_id: "node-2".into(),
                 target_port_id: "node-2:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
             let camera = OsWorkflowCamera { x: 12.0, y: -8.0, zoom: 1.5 };
             let fixture = os_workflow_to_flow_fixture(&graph, &camera);
@@ -4359,7 +4391,7 @@ pub mod workflow {
 
         #[test]
         fn flow_fixture_diff_connects_disconnects_and_removes() {
-            let mut graph = empty_workflow();
+            let mut graph = crate::host::resolve_kernel_future(empty_workflow());
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", 200.0, 0.0));
             graph.edges.push(WorkflowEdge {
@@ -4368,7 +4400,7 @@ pub mod workflow {
                 source_port_id: "node-1:out".into(),
                 target_node_id: "node-2".into(),
                 target_port_id: "node-2:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
             let mut fixture = os_workflow_to_flow_fixture(&graph, &OsWorkflowCamera::default());
             fixture["synapses"] = json!([
@@ -4395,7 +4427,7 @@ pub mod workflow {
 
         #[test]
         fn plans_a_single_delivery_across_one_dirty_edge() {
-            let mut graph = empty_workflow();
+            let mut graph = crate::host::resolve_kernel_future(empty_workflow());
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", 200.0, 0.0));
             graph.edges.push(WorkflowEdge {
@@ -4404,15 +4436,15 @@ pub mod workflow {
                 source_port_id: "node-1:out".into(),
                 target_node_id: "node-2".into(),
                 target_port_id: "node-2:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
-            let deliveries = plan_workflow(&graph, &dirty_set(&["node-1"]));
+            let deliveries = crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"])));
             assert_eq!(deliveries, vec![WorkflowDelivery { edge_id: "edge-1".into(), producer_node_id: "node-1".into(), producer_port_id: "node-1:out".into(), consumer_node_id: "node-2".into(), consumer_port_id: "node-2:in".into() }]);
         }
 
         #[test]
         fn plans_a_chain_in_topological_order_when_only_the_root_is_dirty() {
-            let mut graph = empty_workflow();
+            let mut graph = crate::host::resolve_kernel_future(empty_workflow());
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", 200.0, 0.0));
             graph.nodes.push(media_node("node-3", 400.0, 0.0));
@@ -4422,7 +4454,7 @@ pub mod workflow {
                 source_port_id: "node-1:out".into(),
                 target_node_id: "node-2".into(),
                 target_port_id: "node-2:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
             graph.edges.push(WorkflowEdge {
                 id: "edge-bc".into(),
@@ -4430,9 +4462,9 @@ pub mod workflow {
                 source_port_id: "node-2:out".into(),
                 target_node_id: "node-3".into(),
                 target_port_id: "node-3:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
-            let deliveries = plan_workflow(&graph, &dirty_set(&["node-1"]));
+            let deliveries = crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"])));
             assert_eq!(deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect::<Vec<_>>(), vec!["edge-ab", "edge-bc"], "A→B must be planned before B→C");
         }
 
@@ -4440,7 +4472,7 @@ pub mod workflow {
         fn plans_a_diamond_with_one_delivery_per_incoming_edge() {
             // 🔀️ One delivery per edge, not per node: D has two producers (B and C), so D is the
             // target of two separate deliveries rather than a single merged one.
-            let mut graph = empty_workflow();
+            let mut graph = crate::host::resolve_kernel_future(empty_workflow());
             graph.nodes.push(media_node("node-a", 0.0, 0.0));
             graph.nodes.push(media_node("node-b", 200.0, -80.0));
             graph.nodes.push(media_node("node-c", 200.0, 80.0));
@@ -4451,7 +4483,7 @@ pub mod workflow {
                 source_port_id: "node-a:out".into(),
                 target_node_id: "node-b".into(),
                 target_port_id: "node-b:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
             graph.edges.push(WorkflowEdge {
                 id: "edge-ac".into(),
@@ -4459,7 +4491,7 @@ pub mod workflow {
                 source_port_id: "node-a:out".into(),
                 target_node_id: "node-c".into(),
                 target_port_id: "node-c:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
             graph.edges.push(WorkflowEdge {
                 id: "edge-bd".into(),
@@ -4467,7 +4499,7 @@ pub mod workflow {
                 source_port_id: "node-b:out".into(),
                 target_node_id: "node-d".into(),
                 target_port_id: "node-d:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
             graph.edges.push(WorkflowEdge {
                 id: "edge-cd".into(),
@@ -4475,9 +4507,9 @@ pub mod workflow {
                 source_port_id: "node-c:out".into(),
                 target_node_id: "node-d".into(),
                 target_port_id: "node-d:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
-            let deliveries = plan_workflow(&graph, &dirty_set(&["node-a"]));
+            let deliveries = crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-a"])));
             let edge_ids: Vec<&str> = deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect();
             assert_eq!(edge_ids.len(), 4);
             let index_of = |id: &str| edge_ids.iter().position(|candidate| *candidate == id).unwrap();
@@ -4487,7 +4519,7 @@ pub mod workflow {
 
         #[test]
         fn plans_nothing_when_no_instance_is_dirty() {
-            let mut graph = empty_workflow();
+            let mut graph = crate::host::resolve_kernel_future(empty_workflow());
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", 200.0, 0.0));
             graph.edges.push(WorkflowEdge {
@@ -4496,16 +4528,16 @@ pub mod workflow {
                 source_port_id: "node-1:out".into(),
                 target_node_id: "node-2".into(),
                 target_port_id: "node-2:in".into(),
-                contract: placeholder_media_contract("2d.drawing"),
+                contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
             });
-            assert!(plan_workflow(&graph, &dirty_set(&[])).is_empty());
+            assert!(crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&[]))).is_empty());
         }
 
         #[test]
         fn plans_nothing_for_a_dirty_node_with_no_outgoing_edges() {
-            let mut graph = empty_workflow();
+            let mut graph = crate::host::resolve_kernel_future(empty_workflow());
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
-            assert!(plan_workflow(&graph, &dirty_set(&["node-1"])).is_empty());
+            assert!(crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"]))).is_empty());
         }
 
         /// 🔬️ Shared fixtures replay (`framework/product/os/core/fixtures/*.dsl`) — the same files
@@ -4527,7 +4559,7 @@ pub mod workflow {
                 let contents = std::fs::read_to_string(path).unwrap_or_else(|error| panic!("read fixture {path:?}: {error}"));
                 let fixture = <WorkflowFixture as store::ArtifactDsl>::parse_dsl(&contents).unwrap_or_else(|error| panic!("parse fixture {path:?}: {error}"));
                 let dirty: HashSet<String> = fixture.dirty_node_ids.iter().cloned().collect();
-                let deliveries = plan_workflow(&fixture.graph, &dirty);
+                let deliveries = crate::host::resolve_kernel_future(plan_workflow(&fixture.graph, &dirty));
                 assert_eq!(deliveries, fixture.expected_deliveries, "fixture {} mismatch", fixture.name);
             }
             assert!(paths.len() >= 5, "expected workflow fixtures in fixtures dir, found {}", paths.len());
@@ -6907,13 +6939,13 @@ pub mod registry {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
-                config: ConfigSpec::empty(),
-                command_grammar: semio_framework::CommandGrammar::empty(),
-                io: semio_framework::AppIo::from_document(
+                config: crate::host::resolve_kernel_future(ConfigSpec::empty()),
+                command_grammar: crate::host::resolve_kernel_future(semio_framework::CommandGrammar::empty()),
+                io: crate::host::resolve_kernel_future(semio_framework::AppIo::from_document(
                     "draw.document",
                     MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
                     semio_framework::ArtifactPresentation { id: "draw".into(), name: "Draw".into(), dimension: "2d".into(), component_kind: "draw".into() },
-                ),
+                )),
                 tutorials: Vec::new(),
             };
             register_app_io("draw", &app);

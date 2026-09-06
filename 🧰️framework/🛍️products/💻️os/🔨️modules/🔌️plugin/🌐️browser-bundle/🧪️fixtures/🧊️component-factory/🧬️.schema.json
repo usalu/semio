@@ -2,14 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "component", "name", "calls", "expected", "forbidden", "cancelledBeforeCompile", "cancelledDuringCompile"],
+  "required": ["schema", "component", "name", "calls", "expected", "forbidden", "factoryModes", "cancelledBeforeCompile", "cancelledDuringCompile"],
   "properties": {
     "schema": { "const": "semio.browser-component-factory/v1" },
     "component": { "type": "string", "minLength": 1, "maxLength": 4096 },
     "name": { "const": "counter" },
     "calls": { "const": ["a", "a", "b", "a", "b"] },
     "expected": { "const": [1, 2, 1, 3, 2] },
-    "forbidden": { "const": ["static-import", "dynamic-import", "network-fetch", "asset-url", "extra-export", "missing-core", "duplicate-core", "extra-core"] },
+    "forbidden": { "const": ["static-import", "dynamic-import", "network-fetch", "asset-url", "extra-export", "missing-core", "duplicate-core", "extra-core", "import-meta", "unlisted-interface", "dynamic-interface"] },
+    "factoryModes": { "const": ["generated", "explicit-async"] },
     "cancelledBeforeCompile": { "const": { "compilations": 0, "instances": 0 } },
     "cancelledDuringCompile": { "const": { "compilations": 1, "instances": 0, "stagingZeroed": true } }
   }

@@ -5,6 +5,24 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "durable-three-store-assembly-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts durable-three-store-assembly-check",
+        "forwardAllArgs": true
+      }
+    },
+    "durable-three-store-assembly-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts durable-three-store-assembly-native-check",
+        "forwardAllArgs": true
+      }
+    },
     "map-create-region-group-check": {
       "executor": "nx:run-commands",
       "cache": false,

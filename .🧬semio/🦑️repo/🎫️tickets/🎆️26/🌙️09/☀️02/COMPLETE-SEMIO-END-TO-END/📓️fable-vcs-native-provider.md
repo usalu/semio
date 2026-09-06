@@ -26,10 +26,11 @@ Still stale, **not** hand-edited (per the no-hand-edit rule for generated descri
   `"packageId"`; `✏️s/🔌️plugins/🌿️vcs/🛂️.descriptor.semio` is from 2026-08-18.
 - The only legitimate regenerator is the registered `@semio-tech/vcs-plugin:describe` target
   (`bun ./📜️script.ts describe` → `describePluginComponent(repoRoot, "semio-s-plugin-vcs", …)`), which
-  builds this crate's own `wasm32-wasip2` cdylib. **Blocker (recorded, see §7):** it was not run in this
-  lane's budget — the shared `target/debug` lock was held for 5h15m by a peer
-  `cargo check --workspace --all-targets --keep-going`, and the box was carrying ~50 concurrent rustc
-  processes. The lane's own cold private-target build was already the single cargo process allowed.
+  builds this crate's own `wasm32-wasip2` cdylib. **Blocker (recorded, see §8):** it was not run, and could not
+  have succeeded — `describe` builds this crate's `wasm32-wasip2` component, and the VCS crate does not compile
+  at all right now (18 errors across `E0046`/`E0053`/`E0277`/`E0308`/`E0432`/`E0599`/`E0631` from in-flight
+  framework migrations, none of them this lane's; §8). Separately, the shared `target/debug` lock was held for
+  5 h 15 m by a peer `cargo check --workspace --all-targets --keep-going` on a box carrying ~50 rustc processes.
   **Nonclaim:** the checked-in VCS descriptor pair is *not* fresh and is not authority for anything below.
 
 ## 2. VCS `📇️native-codecs` receipt module (new)
@@ -187,52 +188,112 @@ touched.
 
 ## 7. Verification — exact commands and results
 
+All bun/oracle gates below were re-run at 23:2x after ~4 h of concurrent peer edits and are current.
+
 | Command | Result |
 | --- | --- |
 | `bun ./📜️script.ts nx run @semio-tech/vcs-plugin:native-codec-check --skip-nx-cache -- --oracle-only` | **GREEN, exit 0.** `vcs-native-codec-oracle: receipts=1 hostile=9 ajv+node+webcrypto=1` |
-| `bun ./📜️script.ts native-openable-catalog-provider-check --oracle-only` (hub cwd) | **VCS portion GREEN**, then RED on a pre-existing stdio blocker — see below. Printed: `vcs-native-codec-oracle: receipts=1 hostile=9 …` and `vcs-native-provider-selection-oracle: cases=8 accepted=1 unconsumed-profiles=2 linked-receipts=29 …` |
+| `bun ./📜️script.ts native-openable-catalog-provider-check --oracle-only` (hub cwd) | **GREEN, exit 0** (whole gate). `vcs-native-codec-oracle: receipts=1 hostile=9 …` · `vcs-native-provider-selection-oracle: cases=8 accepted=1 unconsumed-profiles=2 linked-receipts=29 …` · `native-openable-claim-oracle cases=8` · `native-openable-neutral-oracle: AJV=2 owner-receipts=26 protocol-webcrypto=26 targets=1 hostile-denied=13 no-partial=13` |
 | `bun ./📜️script.ts nx run @semio-tech/plugin-registry:native-catalog-selection-check --skip-nx-cache` | **GREEN, exit 0.** `native-catalog-selection-oracle cases=23 positive=4 denied=19 authority=planning-only published=0` |
 | `bun ./📜️script.ts native-catalog-selection-check --oracle-only` (hub cwd) | **GREEN, exit 0.** Same corpus terminal through the hub gate |
-| `bun ./📜️script.ts nx run @semio-tech/plugin-registry:generate --skip-nx-cache` | **GREEN, exit 0.** 59 plugin crates, 60 playgrounds, 45 framework packages; `.vscode/launch.json` regenerated with `⚖️gate🪢️native-codecs🌿️vcs` at line 5881 |
+| `bun ./📜️script.ts nx run @semio-tech/plugin-registry:generate --skip-nx-cache` | **GREEN, exit 0.** 59 plugin crates, 60 playgrounds, 45 framework packages; `.vscode/launch.json` regenerated, `⚖️gate🪢️native-codecs🌿️vcs` at line 5881 |
 | `bun ./📜️script.ts nx run @semio-tech/plugin-registry:check-generated --skip-nx-cache` | **GREEN, exit 0.** `plugin registry generated catalog and launch bytes are fresh.` |
+| `bun ./📜️script.ts trusted-stdio-gis-bundle-check --source` (hub cwd, Sol-owned) | **RED, exit 1** — external, see below |
 
-### External blocker — stdio projection paths are stale (pre-existing, not this lane)
+### Earlier stdio blocker: resolved by its own lane, not by this one
 
-`os-hub:native-openable-catalog-provider-check` cannot reach a green terminal for any lane right now.
-Verbatim:
+At 19:30 this gate aborted with `ENOENT … 🗿️artifacts/🧊️obj/…/📡️.protocol.semio` because stdio's checked-in
+projection still named `🧊️obj` after the emoji-uniqueness repair renamed the directory to `🗽️obj`. The stdio
+lane rewrote `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json` at 20:59 (committed
+`3a6a9d6bfc`, `git log --date=iso` → 2026-09-05 22:02:04); it now contains 0 × `🧊️obj` / 1 × `🗽️obj`, and the
+gate is green end-to-end. The VCS oracle calls remain ordered before `proveNativeOpenableCatalogProviderFixture`
+so package-owned evidence stays reachable independently of stdio's projection freshness.
+
+### External blocker — Sol's bootstrap generation is stale after that same stdio repair
 
 ```
-ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio'
-      at proveNativeOpenableCatalogProviderFixture (🌎️hub/📦️packages/🦀️rust/📜️script.ts:3315)
+error: trusted bootstrap full generation mismatch: b96fb865e3d176c5038700db7ad47d2dd5624d3c2baa9b059c728cf548e1d696
+      at proveTrustedStdioGisBootstrapFixture (🌎️hub/📦️packages/🦀️rust/📜️script.ts:4560)
 ```
 
-The stdio artifact directory is now `🗽️obj` (`🧊️` was reassigned to `gltf` by the repo-wide
-emoji-uniqueness repair), but the checked-in projection
-`✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json` (mtime 2026-09-05 06:06,
-five hours before this lane started) still names the old path. This belongs to the stdio/emoji lane and
-also blocks the Sol bundle producer, whose `trustedBootstrapSourceCodecs` reads the same file. This
-lane's two VCS oracle calls were deliberately ordered *before* `proveNativeOpenableCatalogProviderFixture`
-so package-owned evidence is reachable while that repair is pending; both printed green above.
-
-### Cargo status
-
-- `cargo check -p semio-s-plugin-vcs --lib` against the shared `target/` sat on the file lock for 13
-  minutes and was killed. Lock holder: a peer `cargo check --workspace --all-targets --keep-going`
-  with 5h15m elapsed, plus ~50 concurrent `rustc` processes on the box.
-- Relaunched once, as the single cargo process, into the lane-private
-  `…/scratchpad/fable-vcs-native-provider-target`. Outcome is recorded in §8.
+Attribution is proved, not assumed. `trustedBootstrapProfileEncoding` hashes only the rows returned by
+`trustedBootstrapSourceCodecs`, which reads exactly two files — stdio's `📜️native-codec-factories.json` and
+GIS's `📇️native-codecs/🔣️.json` — and no file this lane created or edited. stdio's projection was last
+committed 2026-09-05 22:02:04 (`3a6a9d6bfc`); Sol's fixture
+`🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json` was last committed 2026-09-05 03:53:30
+(`fe7c8a8f8b`) and still pins `generationId = 7cf0515d…`. The stdio repair therefore invalidated Sol's pinned
+generation ~18 h after it was written. **Sol must recompute that `generationId` to `b96fb865…`**; this lane did
+not touch their fixture. The gate aborts at line 4560, well before line 5386, so it never reaches this lane's
+one-token change there (`NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 28 → 29`), which consequently has
+**no** verified terminal yet and must be re-run by Sol once their generation is repinned.
 
 ## 8. Cargo terminal
 
-<!-- filled in below -->
+One cargo process at a time, foreground-launched, in the lane-private target dir
+`…/scratchpad/fable-vcs-native-provider-target` (the shared `target/debug` lock was held for 5 h 15 m by a peer
+`cargo check --workspace --all-targets --keep-going`).
+
+```
+CARGO_TARGET_DIR=…/fable-vcs-native-provider-target CARGO_BUILD_JOBS=4 RUSTC_WRAPPER=""   cargo check -p semio-s-plugin-vcs --lib --tests --message-format=short
+```
+
+**RED after 3 h 52 m** (cold build, box at load average 68 with ~29 competing rustc processes, this lane's rustc
+pinned at nice 5 and ~2–3 % of one core; `taskpolicy -B`/`renice` could not lift it without privileges):
+
+```
+error: could not compile `semio-s-plugin-vcs` (lib) due to 18 previous errors; 42 warnings emitted
+error: could not compile `semio-s-plugin-vcs` (lib test) due to 152 previous errors; 92 warnings emitted
+```
+
+**The VCS crate does not compile today, and none of it is this lane's.** Attribution, measured from the log
+rather than asserted:
+
+- This lane's `📇️native-codecs/🦀️.rs` produced **exactly one diagnostic in the whole build** — `warning: unused
+  import: Hasher` — and **zero errors**. That warning is now fixed (`use semio_framework_hash::Sha256;`), which is
+  precisely the change the compiler asked for.
+- Every error is in files this lane never touched: `✏️editor` (124), `🧬️schema` (77), `🚪️io` (23), `👁️viewer` (8).
+- The error classes are in-flight framework migrations, not identity or naming drift: `E0046` missing
+  `DESCRIPTORS`/`descriptor` trait items (presence/config), `E0053` `render` expected `Result<ComponentTree, …>`
+  found `UiNode`, `E0053` `command_from_action` expected `DslValue` found `JsonValue`, `E0277`
+  `Result<IoOutcome<…>, IoError>` is not a future (io went async), `E0277` `Label: From<Label>` prelude collision,
+  `E0432` `protocol::testkit::assert_mutation_{diff_absorb,inverse}_law` removed, plus 18 × `E0308` / 12 × `E0631`
+  / 4 × `E0599` in the editor. The single `E0432` is a framework testkit removal, not a rename of anything here.
+
+A confirmation re-check (`--lib` only, deps warm) was started after the import fix; a peer had meanwhile rebuilt
+`semio-framework-plugin`, so it must re-check `semio-s-plugin-stdio` (the ~3 h unit) again and had not finished
+within this lane's window. Retry command, unchanged:
+
+```
+CARGO_TARGET_DIR=/private/tmp/claude-501/-Users-ueli-Documents-semio/c34c334c-fe3e-420d-a00b-7b4aa1238be5/scratchpad/fable-vcs-native-provider-target CARGO_BUILD_JOBS=4 RUSTC_WRAPPER="" cargo check -p semio-s-plugin-vcs --lib --message-format=short
+```
+
+### Consequences, stated plainly
+
+- **The four new Rust laws were never executed.** The two VCS receipt laws need `semio-s-plugin-vcs` (lib test)
+  to build; the two hub link laws need the hub, which now depends on that crate. Narrowest filters, ready to run
+  the moment the VCS crate's migration errors are fixed:
+  - `bun nx run @semio-tech/vcs-plugin:native-codec-check --skip-nx-cache`
+  - `bun nx run os-hub:native-openable-catalog-provider-check --skip-nx-cache`
+- **Blast radius of the hub dependency — the coordinator should decide.** `native-artifact-execution` is in the
+  hub's `default` feature set, so adding `dep:semio-s-plugin-vcs` means a default-feature hub build now also
+  requires the VCS crate to compile. stdio and GIS have already been migrated (stdio checked clean in this
+  lane's build); VCS has not. Until the migration lanes repair VCS, this line makes a default hub build
+  inherit VCS's 18 errors. Reverting only the hub `Cargo.toml` dependency line and the `linked()` entry would
+  restore the previous hub build while leaving the receipt module, fixtures, oracles and laws intact — this lane
+  did **not** do that, because linking VCS is the packet's deliverable and the correct end state, and no
+  feature-gate or compatibility shim may be introduced to hide it. Flagging it rather than deciding unilaterally.
 
 ## 9. Explicit nonclaims
 
-- No fresh VCS descriptor pair. `🔣️.json`/`🛂️.descriptor.semio` remain stale and were not hand-edited.
-- No immutable bundle, no `native-stdio-gis-vcs-v1` bundle generation, no producer, candidate or
-  rotation change, no `current.json`.
-- No hub process was started; no readiness, no open plan, no catalog generation was observed.
+- **No Rust law in this packet has passed.** Nothing here claims the VCS receipt module, the hub provider entry
+  or their four laws compile or execute. The only executed evidence is the bun/AJV/Node/WebCrypto oracles in §7.
+- The VCS crate does not currently compile; the descriptor `describe` target was therefore never runnable either.
+- No fresh VCS descriptor pair. `🔣️.json` (2 × `vcs.document`, 0 × `packageId`) and `🛂️.descriptor.semio` remain
+  stale and were **not** hand-edited.
+- No immutable bundle, no `native-stdio-gis-vcs-v1` bundle generation, no producer, candidate or rotation change,
+  no `current.json`.
+- No hub process was started; no readiness, open plan or catalog generation was observed. No codec was registered.
 - No client mount, no browser/WGPU/MCP rendering, no all-plugin activation.
-- The stdio+gis process gates remain unrun by anyone; nothing here upgrades them.
-- `os-hub:native-openable-catalog-provider-check` has no green terminal for its stdio portion; only the
-  two VCS oracle lines inside it are this lane's evidence.
+- The stdio+gis `--native` and `--process` gates remain unrun by anyone; nothing here upgrades them.
+- `os-hub:trusted-stdio-gis-bundle-check --source` is RED for a reason outside this lane, so this lane's one-token
+  change inside it is **unverified** and needs Sol's re-run.

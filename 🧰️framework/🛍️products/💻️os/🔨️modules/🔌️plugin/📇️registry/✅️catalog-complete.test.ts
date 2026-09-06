@@ -63,7 +63,7 @@ describe("handpicked module deployment directories", () => {
     for (const name of [cases.bridgeFile, cases.installMetaFile]) expect([...name.matchAll(emojiRegex())]).toHaveLength(1);
     const deployment = await import("./📦️deployment/🟦️.ts");
     expect(deployment.moduleStaticDirectoryNames("puzzle", false)).toEqual(cases.staticDirectories);
-    expect(deployment.moduleStaticDirectoryNames("s", true)).toBeUndefined();
+    expect(deployment.moduleStaticDirectoryNames("space", true)).toBeUndefined();
     expect(() => deployment.moduleStaticDirectoryNames("unknown", true)).toThrow();
     for (const row of cases.moduleUrls) {
       expect(pluginModuleUrl(row.pluginId)).toBe(row.plugin);

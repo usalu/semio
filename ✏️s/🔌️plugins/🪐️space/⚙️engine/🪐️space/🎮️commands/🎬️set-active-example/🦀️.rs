@@ -51,7 +51,7 @@ mod tests {
         crate::register_studio_port_for_test(&entry.id, port);
         let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: entry.id.clone() })).expect("handle");
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: entry.id.clone() })).await.expect("handle");
         assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId { space_id: Some(entry.id) }));
         assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetActiveNode { node_id: None }));
         assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })));
@@ -62,7 +62,7 @@ mod tests {
     async fn open_studio_unknown_id_returns_not_found() {
         let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
-        let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "unknown-studio-id".into() })).err().expect("not found");
+        let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "unknown-studio-id".into() })).await.err().expect("not found");
         assert_eq!(err.code.0, "s.space.not-found");
     }
 
@@ -84,7 +84,7 @@ mod tests {
     async fn open_studio_demo_explicit_loads_demo_fixture() {
         let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "demo".into() })).expect("handle");
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "demo".into() })).await.expect("handle");
         let (projection, id) = load_document_snapshot(&emit);
         assert!(id.contains("demo-studio"));
         assert!(!projection.graph.nodes.is_empty());
@@ -111,7 +111,7 @@ mod tests {
             .expect("navigate");
         let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: space_id.clone() })).expect("handle");
+        let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: space_id.clone() })).await.expect("handle");
         let (projection, id) = load_document_snapshot(&emit);
         assert_eq!(id, space_id);
         assert!(projection.graph.nodes.is_empty());

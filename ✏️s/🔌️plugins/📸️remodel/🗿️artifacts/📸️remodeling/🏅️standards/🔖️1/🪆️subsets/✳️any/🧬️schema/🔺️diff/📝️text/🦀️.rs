@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️Apply
 impl RemodelingDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &RemodelingArtifact) -> protocol::MutationApplyResult<RemodelingArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &RemodelingArtifact) -> protocol::MutationApplyResult<RemodelingArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -77,7 +77,7 @@ impl RemodelingDiff {
 }
 
 impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
-    async fn apply(&self, snapshot: &RemodelingSnapshot) -> protocol::MutationApplyResult<RemodelingSnapshot> {
+    fn apply(&self, snapshot: &RemodelingSnapshot) -> protocol::MutationApplyResult<RemodelingSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -116,7 +116,7 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;

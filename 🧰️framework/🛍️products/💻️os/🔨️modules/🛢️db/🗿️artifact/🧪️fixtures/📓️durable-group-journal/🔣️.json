@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "record": {
+    "kind": "event",
+    "durability": "fsync",
+    "document": "map-a",
+    "decisionSha256": "e73f56dcf3fb6d51a2464b12dd338a75053574a45edbc2649b2d7a23b8fda181",
+    "anchorSha256": "8fa0d6568bd058b287a2969948d051c65b73028bc4065219422cc37b3aa7ec88"
+  },
+  "limits": {
+    "storeEventBytes": 491520,
+    "walSegmentBytes": 507904,
+    "successorHeaderBytes": 165,
+    "storeMaximumTransactionBytes": 491650,
+    "storeMaximumSegmentBytes": 491815,
+    "maximumEventBytes": 507609
+  },
+  "lifecycle": ["not-submitted", "awaiting", "rejected", "failed", "absent", "committed", "empty"],
+  "cases": [
+    { "id": "canonical-store-decision", "expected": "committed", "mailboxTransfers": 1, "walTransactions": 1 },
+    { "id": "cancel-before-mailbox", "expected": "absent", "mailboxTransfers": 0, "walTransactions": 0 },
+    { "id": "forged-decision-hash", "expected": "rejected", "mailboxTransfers": 0, "walTransactions": 0 },
+    { "id": "foreign-anchor-document", "expected": "rejected", "mailboxTransfers": 1, "walTransactions": 0 },
+    { "id": "oversized-physical-transaction", "expected": "rejected", "mailboxTransfers": 1, "walTransactions": 0 },
+    { "id": "append-or-sync-error", "expected": "uncertain", "mailboxTransfers": 1, "walTransactions": 1 }
+  ],
+  "nonClaims": ["decision-recovery", "inference-witness", "three-store-publication"]
+}

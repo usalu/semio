@@ -2,9 +2,10 @@
 
 use crate::artifacts::vcs::VcsSnapshot;
 use crate::editor::vcs::terminology::VcsPlayLabels;
-use crate::editor::vcs::{ui_value_map, ui_value_text, vcs_action};
+use crate::editor::vcs::{ui_fixed_label, ui_node_list, ui_value_map, ui_value_text, vcs_action};
+use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::{
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    tree_item_desc, Buildable, BuiltNode, HasBase, HasChildren, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Trigger, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 
@@ -25,108 +26,32 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "vcs-play-inspector".into(),
-        label: labels.title.into(),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        fields: vec![
-            UiNode::Field(UiFieldNode {
-                presence: UiPresence::default(),
-                id: "vcs-play-inspector.title".into(),
-                label: labels.title.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    presence: UiPresence::default(),
-                    id: "vcs-play-inspector.title.input".into(),
-                    input_kind: "text".into(),
-                    value: projection.title.clone(),
-                    placeholder: None,
-                    commit: Some("blur".into()),
-                    on_change: vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text("title").expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                menu: None,
-            }),
-            UiNode::Field(UiFieldNode {
-                presence: UiPresence::default(),
-                id: "vcs-play-inspector.counter".into(),
-                label: labels.counter.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    presence: UiPresence::default(),
-                    id: "vcs-play-inspector.counter.input".into(),
-                    input_kind: "number".into(),
-                    value: projection.counter.to_string(),
-                    placeholder: None,
-                    commit: Some("blur".into()),
-                    on_change: vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text("counter").expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                menu: None,
-            }),
-            UiNode::Field(UiFieldNode {
-                presence: UiPresence::default(),
-                id: "vcs-play-inspector.status".into(),
-                label: labels.status.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    presence: UiPresence::default(),
-                    id: "vcs-play-inspector.status.input".into(),
-                    input_kind: "text".into(),
-                    value: projection.status.clone(),
-                    placeholder: None,
-                    commit: Some("blur".into()),
-                    on_change: vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text("status").expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                menu: None,
-            }),
-            UiNode::Field(UiFieldNode {
-                presence: UiPresence::default(),
-                id: "vcs-play-inspector.notes".into(),
-                label: labels.notes.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    presence: UiPresence::default(),
-                    id: "vcs-play-inspector.notes.input".into(),
-                    input_kind: "text".into(),
-                    value: projection.notes.clone(),
-                    placeholder: None,
-                    commit: Some("blur".into()),
-                    on_change: vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text("notes").expect("static field name fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                menu: None,
-            }),
-            ui_inspector_readonly_field("vcs-play-inspector.tags", labels.tags, projection.tags.join(", ")),
-        ],
-    }])
+fn ui_error(detail: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new("ui.fixed-capacity", detail)
+}
+
+/// ✍️ One inspector row: a labelled tree item carrying the field's own live input control, whose
+/// change dispatches `patchSnapshot` for exactly that field.
+fn field_row(field: &'static str, label: LabelText, kind: ui::InputKind, value: String) -> UiAssemblyResult<BuiltNode> {
+    let (action, args) = vcs_action("patchSnapshot", Some(ui_value_map([("field", ui_value_text(field)?)])?))?;
+    let args = args.ok_or_else(|| ui_error("vcs inspector action arguments missing"))?;
+    let control = ui::input(kind).value(UiText::try_from_string(value).map_err(|_| ui_error("vcs inspector value admission failed"))?).commit(UiText::try_from_str("blur").ok_or_else(|| ui_error("vcs inspector commit admission failed"))?);
+    let control = control.try_id(format!("vcs-play-inspector.{field}.input")).map_err(|_| ui_error("vcs inspector input id admission failed"))?;
+    let control = control.try_on_with(Trigger::Change, action, args).map_err(|_| ui_error("vcs inspector input binding admission failed"))?;
+    let control = control.try_build().map_err(|_| ui_error("vcs inspector input admission failed"))?;
+    let row = ui::tree_item(ui_fixed_label(label)?).try_id(format!("vcs-play-inspector.{field}")).map_err(|_| ui_error("vcs inspector row id admission failed"))?;
+    row.try_child(control).map_err(|_| ui_error("vcs inspector row child admission failed"))?.try_build().map_err(|_| ui_error("vcs inspector row admission failed"))
+}
+
+pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiAssemblyResult<BuiltNode> {
+    let items = ui_node_list([
+        field_row("title", labels.title, ui::InputKind::Text, projection.title.clone()),
+        field_row("counter", labels.counter, ui::InputKind::Number, projection.counter.to_string()),
+        field_row("status", labels.status, ui::InputKind::Text, projection.status.clone()),
+        field_row("notes", labels.notes, ui::InputKind::Text, projection.notes.clone()),
+        tree_item_desc("vcs-play-inspector.tags", labels.tags.as_str(), Some(projection.tags.join(", "))),
+    ])?;
+    PanelTreeBuilder::new("vcs-play-inspector")?.section("vcs-play-inspector", Some(ui_fixed_label(labels.title)?), true, items)?.build()
 }
 //#endregion 🔖️Render
 
@@ -137,9 +62,9 @@ mod tests {
     use crate::editor::vcs::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]
-    fn vcs_labels_resolve_native_english_by_default() {
-        let mut instance = app();
-        let json = render_body(&mut instance, VCS_PLAY_BODY_INSPECTION);
+    async fn vcs_labels_resolve_native_english_by_default() {
+        let mut instance = app().await;
+        let json = render_body(&mut instance, VCS_PLAY_BODY_INSPECTION).await;
         assert!(json.contains("Title"));
         assert!(json.contains("Status"));
         assert!(json.contains("Notes"));

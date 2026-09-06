@@ -1,0 +1,119 @@
+{
+  "schema": "semio.pack.dynamic-integer/v1",
+  "version": 1,
+  "accept": [
+    {
+      "id": "uint-zero",
+      "variant": "uint",
+      "value": {
+        "uint": "0"
+      },
+      "wireHex": "000101110400"
+    },
+    {
+      "id": "uint-safe-plus-one",
+      "variant": "uint",
+      "value": {
+        "uint": "9007199254740993"
+      },
+      "wireHex": "00010111048180808080808010"
+    },
+    {
+      "id": "uint-max",
+      "variant": "uint",
+      "value": {
+        "uint": "18446744073709551615"
+      },
+      "wireHex": "0001011104ffffffffffffffffff01"
+    },
+    {
+      "id": "int-min",
+      "variant": "int",
+      "value": {
+        "int": "-9223372036854775808"
+      },
+      "wireHex": "0001011103ffffffffffffffffff01"
+    },
+    {
+      "id": "float-negative-zero",
+      "variant": "float",
+      "value": {
+        "f64LeHex": "0000000000000080"
+      },
+      "wireHex": "00010111050000000000000080"
+    },
+    {
+      "id": "nested",
+      "variant": "map",
+      "value": {
+        "map": [
+          [
+            "b",
+            {
+              "list": [
+                {
+                  "int": "7"
+                },
+                {
+                  "uint": "9223372036854775808"
+                },
+                {
+                  "int": "-9007199254740992"
+                },
+                {
+                  "uint": "9007199254740992"
+                }
+              ]
+            }
+          ],
+          [
+            "f",
+            {
+              "f64LeHex": "0000000000000040"
+            }
+          ],
+          [
+            "i",
+            {
+              "int": "9223372036854775807"
+            }
+          ]
+        ]
+      },
+      "wireHex": "0001011110030701620c04030e048080808080808080800103ffffffffffffff1f04808080808080801007016605000000000000004007016903feffffffffffffffff01"
+    }
+  ],
+  "reject": [
+    {
+      "id": "truncated-u64",
+      "outcome": "decode-error",
+      "wireHex": "0001011104ff"
+    },
+    {
+      "id": "u64-overflow",
+      "outcome": "decode-error",
+      "wireHex": "0001011104ffffffffffffffffff02"
+    },
+    {
+      "id": "nonminimal-u64",
+      "outcome": "noncanonical",
+      "decodes": {
+        "uint": "0"
+      },
+      "wireHex": "00010111048000"
+    },
+    {
+      "id": "nonminimal-zigzag-i64",
+      "outcome": "noncanonical",
+      "decodes": {
+        "int": "0"
+      },
+      "wireHex": "00010111038000"
+    }
+  ],
+  "nonclaims": [
+    "The corpus pins the dynamic `Shape::Value` grammar only; typed `FieldValue::Int`/`UInt` bytes are unchanged by it.",
+    "`decodes` on a noncanonical row states what the shared permissive `read_varint_u64` yields; it is not a claim that the bytes are admissible where canonical bytes are required.",
+    "No JSON number ever appears in this corpus: every integer is a decimal string so the fixture is exact in every host language."
+  ]
+}

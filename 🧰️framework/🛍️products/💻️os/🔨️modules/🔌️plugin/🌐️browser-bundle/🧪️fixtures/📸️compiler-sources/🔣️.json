@@ -1,0 +1,7 @@
+{
+  "schema": "semio.browser-codegen-sources/v1",
+  "files": { "entry.js": "import { value } from './value.js'; export const answer = value + 1;", "value.js": "export const value = 41;" },
+  "expected": 42,
+  "inputs": ["fixture/entry.js", "fixture/value.js"],
+  "laws": ["stable-onload-capture", "replacement-after-capture-is-not-evaluated", "metafile-exact-capture-coverage", "foreign-root-denied", "non-javascript-denied", "cancel-before-capture"]
+}

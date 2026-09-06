@@ -688,7 +688,7 @@ pub(crate) mod testkit {
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub async fn new_app() -> HomeEditorApp {
-        semio_framework_plugin::testkit::new_app::<EditorApp<HomeApp>>()
+        semio_framework_plugin::testkit::new_app::<EditorApp<HomeApp>>().await
     }
 }
 //#endregion 🧪️Testkit
@@ -746,7 +746,7 @@ mod tests {
     use semio_framework_os::{create_backbone_document, empty_space_snapshot, load_os_space_document, seed_os_space_catalog_if_empty, LocalStorageBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
     use std::sync::Arc;
 
-    async fn empty_history() -> semio_framework_plugin::HistoryView {
+    fn empty_history() -> semio_framework_plugin::HistoryView {
         semio_framework_plugin::HistoryView::empty()
     }
 

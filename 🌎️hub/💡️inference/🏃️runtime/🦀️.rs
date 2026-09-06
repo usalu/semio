@@ -87,6 +87,14 @@ impl From<InferenceErrorV1> for InferenceRouteErrorV1 {
 
 /// 🧾️ Everything the atomic parent+existing-child composition transaction needs, all server-derived.
 pub struct GisMapApprovalCommitRequestV1<'a> {
+    /// 🕸️ The composed child members the frozen base Map already owns, in stable-member order.
+    ///
+    /// A `CreateRegion` is never parent-only when these are present: `create_region_group_work`
+    /// pairs it with a `gismap-drawing` `CreateNode` and a `gismap-value` `insertListItem`, and the
+    /// Map's own apply function does not keep them in sync. Any committer that published the parent
+    /// alone against a child-bearing Map would leave a region with no drawing node and no value
+    /// entry, so the publication boundary refuses that case outright and this slice is always empty.
+    pub composed_children: &'a [String],
     pub scope: &'a DocumentScope,
     pub actor: &'a str,
     pub mutation_id: &'a str,
@@ -126,6 +134,15 @@ pub trait GisMapApprovalCommitterV1: Send + Sync {
 }
 
 /// 🚧️ Fail-closed committer for every deployment where no composition transaction is registered.
+///
+/// A first single-document committer is deliberately NOT registered here. `bounds_proposal` produces
+/// the parent `CreateRegion` alone, while `create_region_group_work` shows the semantically complete
+/// approval is a fixed three-member group (parent + `gismap-drawing` `CreateNode` + `gismap-value`
+/// `insertListItem`); the Map's own apply function does not keep the two children in sync. Publishing
+/// the parent alone would therefore durably corrupt any Map that owns children, so
+/// `commit_prepared_approval` refuses a child-bearing Map before a committer is ever consulted, and
+/// the remaining zero-children case waits for the typed composition transaction rather than being
+/// shortcut through the generic document receiver.
 pub struct UnavailableGisMapApprovalCommitterV1;
 
 impl GisMapApprovalCommitterV1 for UnavailableGisMapApprovalCommitterV1 {
@@ -145,6 +162,22 @@ impl InferenceMapBaseV1 {
     /// 🔐️ Returns the exact base-pack digest the identity froze and every recheck compares.
     pub fn digest(&self) -> String {
         sha256(self.pack.as_slice())
+    }
+
+    /// 🕸️ Returns the composed child members this Map owns, in stable-member order.
+    pub fn composed_children(&self) -> Result<Vec<String>, InferenceRouteErrorV1> {
+        let snapshot = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(self.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+        let mut members = Vec::with_capacity(3);
+        if !snapshot.drawing.child_id.is_empty() {
+            members.push(snapshot.drawing.child_id.clone());
+        }
+        if let Some(image) = snapshot.image.as_ref() {
+            members.push(image.child_id.clone());
+        }
+        if !snapshot.value.child_id.is_empty() {
+            members.push(snapshot.value.child_id.clone());
+        }
+        Ok(members)
     }
 }
 
@@ -359,8 +392,13 @@ pub async fn commit_prepared_approval(
     now_ms: u64,
 ) -> Result<bool, InferenceRouteErrorV1> {
     let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
+    let composed_children = base.composed_children()?;
+    if !composed_children.is_empty() {
+        return Err(InferenceRouteErrorV1::CommitUnavailable);
+    }
     let receipt = committer
         .commit(GisMapApprovalCommitRequestV1 {
+            composed_children: &composed_children,
             scope: &scope,
             actor: &approval_actor(identity),
             mutation_id: &approval_mutation_id(job_id, proposal_hash),

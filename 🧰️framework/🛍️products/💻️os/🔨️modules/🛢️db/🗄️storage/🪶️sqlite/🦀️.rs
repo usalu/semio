@@ -663,8 +663,8 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         closed: std::sync::atomic::AtomicBool,
     }
 
-    async fn execute(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoResult, DbError> {
-        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.finish().await
+    async fn execute(task: DbIoTask) -> Result<DbIoResult, DbError> {
+        submit_db_io_task(task).map_err(|(error, _)| error)?.finish().await
     }
 
     fn output_writer(bytes: u64) -> Result<DbIoPageWriter, DbError> {
@@ -719,8 +719,8 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         async fn open_owned(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbError> {
             let executor = Box::new(SqliteDbIoExecutor::new(path.clone(), in_memory));
             let control = register_db_io_backend(DbIoBackendKind::Sqlite, executor, pool.clone())?;
-            if let Err(error) = execute(pool.as_ref(), DbIoTask::BackendOpen { backend: control, path }).await {
-                let _ = execute(pool.as_ref(), DbIoTask::BackendClose { backend: control }).await;
+            if let Err(error) = execute(DbIoTask::BackendOpen { backend: control, path }).await {
+                let _ = execute(DbIoTask::BackendClose { backend: control }).await;
                 return Err(error);
             }
             Ok(Self { control, pool, closed: std::sync::atomic::AtomicBool::new(false) })
@@ -736,7 +736,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         }
 
         pub async fn close(&self) -> Result<(), DbError> {
-            let result = unit(execute(self.pool.as_ref(), DbIoTask::BackendClose { backend: self.control }).await?);
+            let result = unit(execute(DbIoTask::BackendClose { backend: self.control }).await?);
             if result.is_ok() {
                 close_db_io_backend(self.control).await?;
                 self.closed.store(true, std::sync::atomic::Ordering::Release);
@@ -759,113 +759,113 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
     impl WalStorage for SqliteStorage {
         async fn acquire_writer(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError> {
-            wal_writer(execute(self.pool.as_ref(), DbIoTask::WalWriterAcquire { backend: self.control, document: document_text(document)? }).await?)
+            wal_writer(execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document_text(document)? }).await?)
         }
 
         async fn create_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalCreate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
+            unit(execute(DbIoTask::WalCreate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
         }
 
         async fn append(&self, writer: &WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite WAL append")?;
-            length(execute(self.pool.as_ref(), DbIoTask::WalAppend { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, input: bytes }).await?)
+            length(execute(DbIoTask::WalAppend { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, input: bytes }).await?)
         }
 
         async fn sync(&self, writer: &WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalSync { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, class }).await?)
+            unit(execute(DbIoTask::WalSync { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, class }).await?)
         }
 
         async fn seal(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalSeal { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
+            unit(execute(DbIoTask::WalSeal { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
         }
 
         async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
             check_len(range.len, MAX_BLOB_BYTES, "sqlite WAL read")?;
-            pages(execute(self.pool.as_ref(), DbIoTask::WalRead { backend: self.control, document: document_text(document)?, index, range, output: output_writer(range.len)? }).await?)
+            pages(execute(DbIoTask::WalRead { backend: self.control, document: document_text(document)?, index, range, output: output_writer(range.len)? }).await?)
         }
 
         async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
-            length(execute(self.pool.as_ref(), DbIoTask::WalLength { backend: self.control, document: document_text(document)?, index }).await?)
+            length(execute(DbIoTask::WalLength { backend: self.control, document: document_text(document)?, index }).await?)
         }
 
         async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
-            match execute(self.pool.as_ref(), DbIoTask::WalState { backend: self.control, document: document_text(document)?, index }).await? {
+            match execute(DbIoTask::WalState { backend: self.control, document: document_text(document)?, index }).await? {
                 DbIoResult::WalSegmentState(state) => Ok(state),
                 _ => Err(DbError::Internal("SQLite executor returned a non-WAL-state result".to_string())),
             }
         }
 
         async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-            list(execute(self.pool.as_ref(), DbIoTask::WalList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
+            list(execute(DbIoTask::WalList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
 
         async fn truncate_tail(&self, writer: &WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalTruncate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, new_len }).await?)
+            unit(execute(DbIoTask::WalTruncate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, new_len }).await?)
         }
 
         async fn delete_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::WalDelete { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
+            unit(execute(DbIoTask::WalDelete { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
         }
     }
 
     impl SnapshotStorage for SqliteStorage {
         async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite snapshot write")?;
-            unit(execute(self.pool.as_ref(), DbIoTask::SnapshotWrite { backend: self.control, document: document_text(document)?, generation, input: bytes }).await?)
+            unit(execute(DbIoTask::SnapshotWrite { backend: self.control, document: document_text(document)?, generation, input: bytes }).await?)
         }
 
         async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
-            pages(execute(self.pool.as_ref(), DbIoTask::SnapshotRead { backend: self.control, document: document_text(document)?, generation, output: output_writer(MAX_BLOB_BYTES)? }).await?)
+            pages(execute(DbIoTask::SnapshotRead { backend: self.control, document: document_text(document)?, generation, output: output_writer(MAX_BLOB_BYTES)? }).await?)
         }
 
         async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
-            match execute(self.pool.as_ref(), DbIoTask::SnapshotLatest { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await? {
+            match execute(DbIoTask::SnapshotLatest { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await? {
                 DbIoResult::OptionalLength(value) => Ok(value),
                 _ => Err(result_fault("optional generation")),
             }
         }
 
         async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-            list(execute(self.pool.as_ref(), DbIoTask::SnapshotList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
+            list(execute(DbIoTask::SnapshotList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
 
         async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::SnapshotDelete { backend: self.control, document: document_text(document)?, generation }).await?)
+            unit(execute(DbIoTask::SnapshotDelete { backend: self.control, document: document_text(document)?, generation }).await?)
         }
     }
 
     impl PayloadStorage for SqliteStorage {
         async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite payload put")?;
-            match execute(self.pool.as_ref(), DbIoTask::PayloadPut { backend: self.control, input: bytes }).await? {
+            match execute(DbIoTask::PayloadPut { backend: self.control, input: bytes }).await? {
                 DbIoResult::Hash(hash) => Ok(hash),
                 _ => Err(result_fault("hash")),
             }
         }
 
         async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
-            pages(execute(self.pool.as_ref(), DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: output_writer(MAX_BLOB_BYTES)? }).await?)
+            pages(execute(DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: output_writer(MAX_BLOB_BYTES)? }).await?)
         }
 
         async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
-            match execute(self.pool.as_ref(), DbIoTask::PayloadExists { backend: self.control, hash: *hash }).await? {
+            match execute(DbIoTask::PayloadExists { backend: self.control, hash: *hash }).await? {
                 DbIoResult::Exists(value) => Ok(value),
                 _ => Err(result_fault("existence")),
             }
         }
 
         async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::PayloadDelete { backend: self.control, hash: *hash }).await?)
+            unit(execute(DbIoTask::PayloadDelete { backend: self.control, hash: *hash }).await?)
         }
 
         async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-            length(execute(self.pool.as_ref(), DbIoTask::PayloadLength { backend: self.control, hash: *hash }).await?)
+            length(execute(DbIoTask::PayloadLength { backend: self.control, hash: *hash }).await?)
         }
     }
 
     impl CatalogStorage for SqliteStorage {
         async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-            match execute(self.pool.as_ref(), DbIoTask::CatalogRead { backend: self.control, output: output_writer(MAX_BLOB_BYTES)? }).await? {
+            match execute(DbIoTask::CatalogRead { backend: self.control, output: output_writer(MAX_BLOB_BYTES)? }).await? {
                 DbIoResult::OptionalCatalog(value) => Ok(value),
                 _ => Err(result_fault("optional catalog")),
             }
@@ -873,7 +873,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
         async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
             check_len(new_bytes.len() as u64, MAX_BLOB_BYTES, "sqlite catalog CAS")?;
-            match execute(self.pool.as_ref(), DbIoTask::CatalogCas { backend: self.control, expected, input: new_bytes }).await? {
+            match execute(DbIoTask::CatalogCas { backend: self.control, expected, input: new_bytes }).await? {
                 DbIoResult::Fence(value) => Ok(value),
                 _ => Err(result_fault("fence")),
             }
@@ -883,40 +883,40 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     impl IndexStorage for SqliteStorage {
         async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite index write")?;
-            unit(execute(self.pool.as_ref(), DbIoTask::IndexWrite { backend: self.control, document: document_text(document)?, run_id, input: bytes }).await?)
+            unit(execute(DbIoTask::IndexWrite { backend: self.control, document: document_text(document)?, run_id, input: bytes }).await?)
         }
 
         async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
-            pages(execute(self.pool.as_ref(), DbIoTask::IndexRead { backend: self.control, document: document_text(document)?, run_id, output: output_writer(MAX_BLOB_BYTES)? }).await?)
+            pages(execute(DbIoTask::IndexRead { backend: self.control, document: document_text(document)?, run_id, output: output_writer(MAX_BLOB_BYTES)? }).await?)
         }
 
         async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-            list(execute(self.pool.as_ref(), DbIoTask::IndexList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
+            list(execute(DbIoTask::IndexList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
 
         async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::IndexDelete { backend: self.control, document: document_text(document)?, run_id }).await?)
+            unit(execute(DbIoTask::IndexDelete { backend: self.control, document: document_text(document)?, run_id }).await?)
         }
     }
 
     impl LeaseStorage for SqliteStorage {
         async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-            match execute(self.pool.as_ref(), DbIoTask::LeaseAcquire { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, now_ms, ttl_ms }).await? {
+            match execute(DbIoTask::LeaseAcquire { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, now_ms, ttl_ms }).await? {
                 DbIoResult::Fence(value) => Ok(value),
                 _ => Err(result_fault("fence")),
             }
         }
 
         async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::LeaseRenew { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, fence, now_ms, ttl_ms }).await?)
+            unit(execute(DbIoTask::LeaseRenew { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, fence, now_ms, ttl_ms }).await?)
         }
 
         async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::LeaseRelease { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, fence }).await?)
+            unit(execute(DbIoTask::LeaseRelease { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, fence }).await?)
         }
 
         async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-            match execute(self.pool.as_ref(), DbIoTask::LeaseGet { backend: self.control, document: DbIoText::try_from_str(resource)?, now_ms }).await? {
+            match execute(DbIoTask::LeaseGet { backend: self.control, document: DbIoText::try_from_str(resource)?, now_ms }).await? {
                 DbIoResult::OptionalLease(value) => Ok(value),
                 _ => Err(result_fault("optional lease")),
             }

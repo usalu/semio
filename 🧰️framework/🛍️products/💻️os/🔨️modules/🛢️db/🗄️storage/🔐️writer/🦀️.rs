@@ -67,20 +67,22 @@ pub(crate) struct WalWriterTable<G> {
     next_generation: u64,
     close_cursor: usize,
     entries: [Option<WalWriterEntry<G>>; WAL_WRITER_CAPACITY],
+    #[cfg(test)]
+    release_failures: usize,
 }
 
 impl<G: WalWriterGuard> WalWriterTable<G> {
     #[cfg(test)]
     pub(crate) fn new(backend: DbIoBackendControl) -> Self {
-        Self { backend: Some(backend), signalled: false, next_generation: 1, close_cursor: 0, entries: std::array::from_fn(|_| None) }
+        Self { backend: Some(backend), signalled: false, next_generation: 1, close_cursor: 0, entries: std::array::from_fn(|_| None), release_failures: 0 }
     }
 
     pub(crate) fn for_backend(backend: DbIoBackendControl) -> Self {
-        Self { backend: Some(backend), signalled: true, next_generation: 1, close_cursor: 0, entries: std::array::from_fn(|_| None) }
+        Self { backend: Some(backend), signalled: true, next_generation: 1, close_cursor: 0, entries: std::array::from_fn(|_| None), #[cfg(test)] release_failures: 0 }
     }
 
     pub(crate) fn unbound() -> Self {
-        Self { backend: None, signalled: true, next_generation: 1, close_cursor: 0, entries: std::array::from_fn(|_| None) }
+        Self { backend: None, signalled: true, next_generation: 1, close_cursor: 0, entries: std::array::from_fn(|_| None), #[cfg(test)] release_failures: 0 }
     }
 
     pub(crate) fn bind(&mut self, backend: DbIoBackendControl) -> Result<(), DbError> {
@@ -90,6 +92,9 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
     }
 
     fn backend(&self) -> DbIoBackendControl { self.backend.expect("writer admission requires a bound backend") }
+
+    #[cfg(test)]
+    pub(crate) fn fail_next_release(&mut self) { self.release_failures = self.release_failures.saturating_add(1); }
 
     pub(crate) fn acquire_with(&mut self, document: &DbIoText, guard: impl FnOnce() -> Result<G, DbError>) -> Result<WalWriterPermit, DbError> {
         if document.as_str().is_empty() { return Err(DbError::InvalidArgument("empty WAL writer document".to_string())); }
@@ -159,6 +164,11 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         self.matching_entry(key, backend, document)?;
         let entry = self.entries[usize::from(key.slot)].as_mut().expect("validated writer slot");
         entry.releasing = true;
+        #[cfg(test)]
+        if self.release_failures != 0 {
+            self.release_failures -= 1;
+            return Err(DbError::Io("injected WAL writer unlock failure".to_string()));
+        }
         if entry.active_operation.is_some() || entry.guard.close_step()? { return Ok(true); }
         if !entry.guard.terminal_is_empty() { return Err(DbError::Internal("WAL writer guard returned a false terminal witness".to_string())); }
         if self.signalled { release::finish(key); }

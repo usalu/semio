@@ -315,15 +315,31 @@ pub(crate) fn request_controller(backend: DbIoBackendControl) {
         (row.pool.clone(), ticket, deferred_wake_ticket)
     };
     if controller.0.request_maintenance(controller.1).is_err() {
-        for (writer_slot, cell) in WAL_WRITER_SIGNALS[usize::from(slot)].iter().enumerate() {
-            let mut cell = cell.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if cell.active.is_some_and(|key| key.backend == backend) && cell.requested && cell.fault.is_none() {
-                cell.fault = Some(super::super::db_io_text_literal("WAL writer maintenance request refused; exact guard remains retained"));
-                if let Some(waiter) = cell.waiter.take() {
-                    match controller.0.defer_wake(controller.2, writer_slot, waiter) {
-                        Ok(()) => cell.deferred_fault_waiter = true,
-                        Err(rejected) => restore_fault_waiter(&mut cell, rejected.into_waker()),
-                    }
+        fault_all_requested(backend, &DbError::Unavailable("WAL writer maintenance request refused; exact guard remains retained".to_string()));
+        defer_fault_waiters(backend, &controller.0, controller.2);
+    }
+}
+
+pub(crate) fn defer_fault_notifications(backend: DbIoBackendControl) {
+    let (slot, _) = db_io_backend_parts(backend);
+    let controller = {
+        let row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(row) = row.as_ref().filter(|row| row.backend == backend) else { return };
+        let Some(ticket) = row.deferred_wake_ticket else { return };
+        (row.pool.clone(), ticket)
+    };
+    defer_fault_waiters(backend, &controller.0, controller.1);
+}
+
+fn defer_fault_waiters(backend: DbIoBackendControl, pool: &WorkerPool, ticket: WorkerDeferredWakeTicket) {
+    let (slot, _) = db_io_backend_parts(backend);
+    for (writer_slot, cell) in WAL_WRITER_SIGNALS[usize::from(slot)].iter().enumerate() {
+        let mut cell = cell.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if cell.active.is_some_and(|key| key.backend == backend) && cell.fault.is_some() && !cell.deferred_fault_waiter {
+            if let Some(waiter) = cell.waiter.take() {
+                match pool.defer_wake(ticket, writer_slot, waiter) {
+                    Ok(()) => cell.deferred_fault_waiter = true,
+                    Err(rejected) => restore_fault_waiter(&mut cell, rejected.into_waker()),
                 }
             }
         }
@@ -387,6 +403,36 @@ pub(crate) fn close_controller(backend: DbIoBackendControl) -> Result<bool, DbEr
     }
     *row = None;
     Ok(true)
+}
+
+#[cfg(test)]
+pub(crate) fn suspend_controller_for_refusal(backend: DbIoBackendControl) -> Result<(), DbError> {
+    let (slot, _) = db_io_backend_parts(backend);
+    let row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let owner = row.as_ref().filter(|owner| owner.backend == backend).ok_or_else(|| DbError::Closed)?;
+    let ticket = owner.ticket.ok_or(DbError::Closed)?;
+    if !owner.pool.remove_maintenance_hook(ticket).map_err(|error| DbError::Unavailable(format!("WAL writer refusal fixture retirement: {error:?}")))? {
+        return Err(DbError::Conflict("WAL writer controller is already running".to_string()));
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+pub(crate) fn restore_controller_after_refusal(backend: DbIoBackendControl) -> Result<(), DbError> {
+    let (slot, generation) = db_io_backend_parts(backend);
+    let mut row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let owner = row.as_mut().filter(|owner| owner.backend == backend).ok_or_else(|| DbError::Closed)?;
+    let ticket = owner
+        .pool
+        .install_maintenance_hook(Lane::Io, controller_step, [u64::from(slot), generation])
+        .map_err(|error| DbError::Unavailable(format!("WAL writer refusal fixture restore: {error:?}")))?;
+    owner.ticket = Some(ticket);
+    Ok(())
+}
+
+#[cfg(test)]
+pub(crate) fn deferred_wake_pending_for_test(key: WalWriterKey) -> bool {
+    deferred_wake_pending(key)
 }
 
 #[cfg(test)]

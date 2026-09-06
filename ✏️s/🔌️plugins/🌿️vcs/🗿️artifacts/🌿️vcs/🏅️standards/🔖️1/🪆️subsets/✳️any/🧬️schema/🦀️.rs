@@ -121,7 +121,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn empty_snapshot_matches_schema() {
+    async fn empty_snapshot_matches_schema() {
         let snapshot = empty_vcs_snapshot();
         assert_eq!(snapshot.schema, crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.status, "new");

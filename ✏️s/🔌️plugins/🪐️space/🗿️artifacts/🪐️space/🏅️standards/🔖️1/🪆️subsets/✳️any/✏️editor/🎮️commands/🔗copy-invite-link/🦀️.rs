@@ -29,7 +29,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn copy_invite_link_relays_share_link() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::new_app().await;
         let result = app.dispatch_typed(SpaceIndexCommand::CopyInviteLink(CopyInviteLink { role: "spectator".into(), ttl_secs: 3600 }), &semio_framework_plugin::testkit::meta("local")).expect("copy link");
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {

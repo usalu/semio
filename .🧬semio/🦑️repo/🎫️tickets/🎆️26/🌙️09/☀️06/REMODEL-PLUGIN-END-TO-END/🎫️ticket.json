@@ -1,0 +1,9 @@
+{
+  "title": "Remodel Plugin End To End",
+  "emoji": "📸️",
+  "status": "open",
+  "description": "Get the 📸️remodel plugin (✏️s/🔌️plugins/📸️remodel) working end to end: the crate builds natively and for wasm32-wasip2, every mutation of the 📸️remodeling artifact has an exhaustive real-world fixture test (Rust + third-party oracle), the descriptor is regenerated, and the remodel playground boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪0b03f376-5325-4732-a1fa-4765f6959f2a"],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-06)."
+}

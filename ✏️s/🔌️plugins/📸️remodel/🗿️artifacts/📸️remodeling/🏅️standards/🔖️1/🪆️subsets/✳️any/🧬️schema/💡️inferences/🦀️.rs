@@ -43,7 +43,7 @@ pub struct RemodelingInference {
 }
 
 impl protocol::Inference<RemodelingSnapshot> for RemodelingInference {
-    async fn infer(snapshot: &RemodelingSnapshot) -> Self {
+    fn infer(snapshot: &RemodelingSnapshot) -> Self {
         Self { bounds: compute_remodeling_bounds(snapshot), relative_camera_poses: store::infer_field::<RemodelingSnapshot, RemodelingRelativeCameraPose>(snapshot, None) }
     }
 }
@@ -58,13 +58,13 @@ impl Default for RemodelingInference {
 }
 
 impl protocol::InferenceSpec<RemodelingSnapshot> for RemodelingInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.remodeling.remodeling.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.remodeling.remodeling.inference.bounds", reads: &["results"] }, protocol::InferenceFieldSpec { id: "s.remodeling.remodeling.inference.relative_camera_pose", reads: &["results"] }]
     }
 }
@@ -80,7 +80,7 @@ impl ArtifactInferrer for crate::artifacts::remodeling::standards::v1::subsets::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.remodeling.remodeling.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `remodeling_artifact_schema_descriptor`'s registration.
-pub async fn remodeling_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn remodeling_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.remodeling.remodeling.inference",
         inference: schema::FacetLeaves {
@@ -102,7 +102,7 @@ mod tests {
     use protocol::Inference;
     use semio_framework::MeshData;
 
-    async fn triangle_snapshot() -> RemodelingSnapshot {
+    fn triangle_snapshot() -> RemodelingSnapshot {
         let mut snapshot = RemodelingSnapshot::default();
         snapshot.results.mesh.mesh = mint_and_stash_mesh(MeshData { positions: vec![0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() });
         snapshot

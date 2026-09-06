@@ -1,12 +1,35 @@
 import { test, expect } from "bun:test";
-import { existsSync, mkdirSync, readFileSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, mkdtempSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
-import { ExactCargoLawError, runExactCargoLawProcess, runExactCargoLaws, type ExactCargoLawPort } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { ExactCargoLawError, exactExecutableFingerprint, runExactCargoLawProcess, runExactCargoLaws, type ExactCargoLawPort } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("./🧬️schema.json", import.meta.url), "utf8"));
+
+test("exact executable fingerprint retains identity, exposes progress and refuses cancellation or path replacement", async () => {
+  const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "executable-fingerprint-"));
+  const path = join(root, "fixture");
+  const bytes = Buffer.from(fixture.executableBytesHex, "hex");
+  writeFileSync(path, bytes, { mode: 0o700 });
+  const progress: number[][] = [];
+  const receipt = exactExecutableFingerprint(path, { progress: (completed, total) => progress.push([completed, total]) });
+  expect(receipt).toEqual({ path, sha256: fixture.executableSha256, byteLength: bytes.byteLength });
+  expect(receipt.sha256).toBe(Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex"));
+  expect(progress.at(-1)).toEqual([bytes.byteLength, bytes.byteLength]);
+  expect(() => exactExecutableFingerprint(path, { cancelled: () => true })).toThrow("cancelled");
+  let cancelled = false;
+  expect(() => exactExecutableFingerprint(path, { cancelled: () => cancelled, progress: () => { cancelled = true; } })).toThrow("cancelled");
+  let replaced = false;
+  expect(() => exactExecutableFingerprint(path, { progress() {
+    if (replaced) return;
+    renameSync(path, path + ".retained");
+    writeFileSync(path, bytes, { mode: 0o700 });
+    replaced = true;
+  } })).toThrow("changed while hashing");
+  expect(replaced).toBe(true);
+});
 
 for (const mode of ["exit", "timeout", "cancelled", "output-limit"] as const) {
   test(`exact Cargo process capture retains actual ${mode} evidence`, async () => {

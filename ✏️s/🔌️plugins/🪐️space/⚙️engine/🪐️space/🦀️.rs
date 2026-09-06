@@ -1114,7 +1114,7 @@ pub(crate) mod testkit {
     use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
     use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel, SurfaceKind};
 
-    pub(crate) async fn empty_history() -> HistoryView {
+    pub(crate) fn empty_history() -> HistoryView {
         HistoryView::empty()
     }
 
@@ -1125,7 +1125,7 @@ pub(crate) mod testkit {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so any test exercising the `graph`
     /// domain's real selection/hover state must go through this, not `studio_emit`.
     pub(crate) async fn app() -> SpaceVcsApp {
-        semio_framework_plugin::testkit::new_app::<SpaceApp>()
+        semio_framework_plugin::testkit::new_app::<SpaceApp>().await
     }
 
     /// 🕹️ Registry-backed counterpart of `app()` — carries the manifest's real `AppActionRegistry`
@@ -1133,7 +1133,7 @@ pub(crate) mod testkit {
     /// framework interaction verb (`interactionSelect`/`interactionHover`/…) via `handle_action`, which
     /// faults with "undeclared interaction domain" against the bare, registry-less `app()`.
     pub(crate) async fn app_with_registry() -> SpaceVcsApp {
-        semio_framework_plugin::testkit::new_app_with_registry::<SpaceApp>(create_space_app)
+        semio_framework_plugin::testkit::new_registered_app::<SpaceApp, _>(create_space_app()).await
     }
 
     pub(crate) async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
@@ -1176,7 +1176,7 @@ pub(crate) mod testkit {
     }
 
     async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str, ports: Vec<MediaPortSpec>) {
-        let surface_id = test_surface_id(app_id);
+        let surface_id = test_surface_id(app_id).await;
         let definition = App::builder(surface_id, LocalizedLabel::data(label))
             .document(document.iter().map(|segment| segment.to_string()))
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
@@ -1188,7 +1188,7 @@ pub(crate) mod testkit {
     }
 
     pub(crate) async fn seed_draw_plugin() {
-        seed_app("draw", "draw", "Draw", &["semio", "draw"], "draw.document", Vec::new());
+        seed_app("draw", "draw", "Draw", &["semio", "draw"], "draw.document", Vec::new()).await;
     }
 
     pub(crate) async fn seed_multi_port_plugins() {
@@ -1221,7 +1221,7 @@ pub(crate) mod testkit {
                 multiplicity: PortMultiplicity::One,
             },
         ];
-        seed_app("puzzle.5d", "puzzle5d", "Puzzle 5D", &["semio", "puzzle", "5d"], "puzzle5d.document", puzzle_ports);
+        seed_app("puzzle.5d", "puzzle5d", "Puzzle 5D", &["semio", "puzzle", "5d"], "puzzle5d.document", puzzle_ports).await;
 
         let shooting_ports = vec![MediaPortSpec {
             id: "scene-in".into(),
@@ -1232,7 +1232,7 @@ pub(crate) mod testkit {
             required: true,
             multiplicity: PortMultiplicity::One,
         }];
-        seed_app("shooting", "shooting", "Shooting", &["semio", "shooting"], "shooting.document", shooting_ports);
+        seed_app("shooting", "shooting", "Shooting", &["semio", "shooting"], "shooting.document", shooting_ports).await;
     }
 
     pub(crate) async fn test_node(id: &str, inputs: Vec<WorkflowMediaPort>, outputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
@@ -1380,7 +1380,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn demo_document_has_instances_and_edges() {
-        let projection = demo_space_projection();
+        let projection = demo_space_projection().await;
         assert!(projection.graph.nodes.len() >= 5);
         assert!(!projection.graph.edges.is_empty());
         assert!(semio_framework_os::validate_workflow(&projection.graph).ok);
@@ -1388,7 +1388,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn space_window_kind_actions_scope_editing_to_workflow() {
-        let definition = create_space_app().definition;
+        let definition = create_space_app().await.definition;
         let resolve = |window_id: &str| -> Vec<String> {
             let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
             semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
@@ -1413,7 +1413,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn space_manifest_uses_studio_app_id() {
-        let app = create_space_app();
+        let app = create_space_app().await;
         assert_eq!(app.definition.id, S_PLAY_APP_ID);
         assert_eq!(app.definition.controller_id, "s-play");
     }
@@ -1426,30 +1426,30 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn commit_checkpoint_round_trips_projection() {
         use crate::engine::space::commands::spawn_app;
-        testkit::seed_draw_plugin();
-        let mut app = VcsArtifactApp::new(SpaceApp::default());
-        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw"), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
+        testkit::seed_draw_plugin().await;
+        let mut app = VcsArtifactApp::new(SpaceApp::default()).await;
+        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
         let before = app.snapshot().expect("projection").graph.nodes.len();
-        app.handle_action("commitCheckpoint", Some(&json!({ "message": "snapshot" })), &plugin_testkit::meta("local")).expect("commit");
+        app.handle_action("commitCheckpoint", Some(&pack::json!({ "message": "snapshot" })), &plugin_testkit::meta("local")).expect("commit");
         assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn checkout_checkpoint_restores_projection() {
         use crate::engine::space::commands::spawn_app;
-        testkit::seed_draw_plugin();
-        let mut app = VcsArtifactApp::new(SpaceApp::default());
+        testkit::seed_draw_plugin().await;
+        let mut app = VcsArtifactApp::new(SpaceApp::default()).await;
         let before = app.snapshot().expect("projection").graph.nodes.len();
-        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw"), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
-        app.handle_action("commitCheckpoint", Some(&json!({ "message": "after-first-spawn" })), &plugin_testkit::meta("local")).expect("commit");
+        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
+        app.handle_action("commitCheckpoint", Some(&pack::json!({ "message": "after-first-spawn" })), &plugin_testkit::meta("local")).expect("commit");
         let after_first = app.snapshot().expect("projection").graph.nodes.len();
         assert!(after_first > before);
         let files = app.document_pack().expect("document pack");
         let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(&files.pack, &files.spr).expect("parse document pack");
         let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
-        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw"), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn2");
+        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn2");
         assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
-        app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": checkpoint_id })), &plugin_testkit::meta("local")).expect("checkout");
+        app.handle_action("checkoutCheckpoint", Some(&pack::json!({ "checkpointId": checkpoint_id })), &plugin_testkit::meta("local")).expect("checkout");
         assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), after_first);
     }
 
@@ -1481,24 +1481,27 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_on_disjoint_edits_via_backbone() {
         use crate::engine::space::commands::spawn_app;
-        testkit::seed_draw_plugin();
-        testkit::seed_multi_port_plugins();
+        testkit::seed_draw_plugin().await;
+        testkit::seed_multi_port_plugins().await;
+        let draw_surface_id = testkit::test_surface_id("draw").await;
+        let shooting_surface_id = testkit::test_surface_id("shooting").await;
         plugin_testkit::assert_two_instances_converge::<SpaceApp, (usize, usize)>(
             "mem://s-studio-convergence",
-            SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw"), x: 80.0, y: 80.0 }),
-            SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "shooting".into(), app_id: testkit::test_surface_id("shooting"), x: 300.0, y: 100.0 }),
+            SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: draw_surface_id, x: 80.0, y: 80.0 }),
+            SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "shooting".into(), app_id: shooting_surface_id, x: 300.0, y: 100.0 }),
             move |app| {
                 let projection = app.snapshot().expect("projection");
                 let draw_count = projection.graph.nodes.iter().filter(|node| node.plugin_id == "draw").count();
                 let shooting_count = projection.graph.nodes.iter().filter(|node| node.plugin_id == "shooting").count();
                 (draw_count, shooting_count)
             },
-        );
+        )
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn space_declares_expected_actions_and_examples() {
-        let studio = create_space_app();
+        let studio = create_space_app().await;
         let workflow = studio.definition.window_kinds.iter().find(|window| window.id == crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW).expect("workflow window");
         assert!(workflow.actions.iter().any(|action| action.id == "spawnApp"));
         assert!(workflow.actions.iter().any(|action| action.id == "reorganizeWorkflow"));
@@ -1510,7 +1513,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn space_labels_resolve_native_english_by_default() {
-        let projection = demo_space_projection();
+        let projection = demo_space_projection().await;
         let history = empty_history();
         let doc = ArtifactView::new(&projection, &history);
         let config = SpaceConfig::default();
@@ -1528,7 +1531,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn space_labels_resolve_native_german_locale() {
-        let projection = demo_space_projection();
+        let projection = demo_space_projection().await;
         let history = empty_history();
         let doc = ArtifactView::new(&projection, &history);
         let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
@@ -1547,7 +1550,7 @@ mod tests {
     /// destructive `removeAppInstance` row is always the final top-level entry.
     #[semio_framework_async_macros::async_test]
     async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail() {
-        let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().definition);
+        let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&SpaceConfig::default().locale);
         let selected_node_ids = vec!["node-1".to_string()];
         let items = space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids);
@@ -1561,10 +1564,10 @@ mod tests {
     // command-group file also imports them directly from `testkit`).
     #[semio_framework_async_macros::async_test]
     async fn testkit_studio_emit_smoke_test() {
-        let projection = demo_space_projection();
+        let projection = demo_space_projection().await;
         let config = SpaceConfig::default();
         let _ = empty_history();
-        let _ = studio_emit(&projection, &config, &SpaceCommand::GoHome(go_home::GoHome {})).expect("handle");
+        let _ = studio_emit(&projection, &config, &SpaceCommand::GoHome(go_home::GoHome {})).await.expect("handle");
     }
 }
 //#endregion 🧪️Tests

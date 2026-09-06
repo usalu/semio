@@ -25,7 +25,19 @@
     {"name":"missing-symbol","hex":"000101110600"},
     {"name":"invalid-key-tag","hex":"0001011110010112"},
     {"name":"truncated-map","hex":"000101111001070161"},
-    {"name":"truncated-list","hex":"000101110c0111"}
+    {"name":"truncated-list","hex":"000101110c0111"},
+    {"name":"truncated-uint-varint","hex":"0001011104ff"},
+    {"name":"overlong-uint-varint","hex":"0001011104ffffffffffffffffff02"}
+  ],
+  "integers":[
+    {"name":"uint-zero","hex":"000101110400","tokens":[{"kind":"uint","value":"0"}]},
+    {"name":"uint-safe-plus-one","hex":"00010111048180808080808010","tokens":[{"kind":"uint","value":"9007199254740993"}]},
+    {"name":"uint-max","hex":"0001011104ffffffffffffffffff01","tokens":[{"kind":"uint","value":"18446744073709551615"}]},
+    {"name":"int-negative-one","hex":"000101110301","tokens":[{"kind":"int","value":"-1"}]},
+    {"name":"int-min","hex":"0001011103ffffffffffffffffff01","tokens":[{"kind":"int","value":"-9223372036854775808"}]},
+    {"name":"int-positive-seven","hex":"00010111030e","tokens":[{"kind":"int","value":"7"}]},
+    {"name":"nested-list","hex":"000101110c02030e0480808080808080808001","tokens":[{"kind":"int","value":"7"},{"kind":"uint","value":"9223372036854775808"}]},
+    {"name":"map-int","hex":"00010111100107016e038180808080808020","tokens":[{"kind":"int","value":"-9007199254740993"}]}
   ],
   "floatBits":["0000000000000080","000000000000f07f","000000000000f0ff","010000000000f87f"],
   "large":{"repeat":4096,"key":"ä","text":"😀","items":1024},

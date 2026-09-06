@@ -28,16 +28,16 @@ pub fn create_camera_calibration(camera: CameraCalibration) -> RemodelingMutatio
 impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateCameraCalibration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "camera-calibration", kind: "create-camera-calibration", record: "CreatedCameraCalibration" };
 
-    async fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+    fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create camera calibration \"{}\"", self.camera.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.camera.id.clone()]
     }
 }

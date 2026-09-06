@@ -9,7 +9,7 @@ description = "S Studio plugin: OS host shell bundling the Home launcher and Stu
 workspace = true
 
 [package.metadata.component]
-package = "semio:s"
+package = "semio:space"
 
 [package.metadata.semio]
 role = "plugin"

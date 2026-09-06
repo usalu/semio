@@ -1,14 +1,24 @@
 // #region 🧲️Header
 // 💻️ .storybook/s-end-to-end.spec.ts
-// Specs: End-to-end acceptance for `s` — semio's OS host shell (plugin id `s`, backed by `semio-s-plugin-space`).
+// Specs: End-to-end acceptance for `s` — semio's OS host shell (playground variant `s`, plugin id `space`, backed by `semio-s-plugin-space`).
 // Summary: `os-plugins.spec.ts` proves every plugin reaches *a deterministic boot outcome*, which a failed boot also satisfies. This spec makes the stronger claim `s` alone has to meet: it boots to READY (never `semioOsError`), it renders the shell's structural landmarks, and it is INTERACTIVE — the command palette opens on Ctrl/Cmd+K and closes on Escape, and the shell answers a context-menu gesture. Assertions are structural (`data-*`/`role`), never text, because the UI is multi-language with no default language.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-const S_STORY_ID = "🛠️framework🖥️os-plugins--s";
-const S_PLUGIN_ID = "s";
+import { PLUGIN_HOST_CONFIGS } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
+
+/** @emoji 🪪️ The OS host plugin's id comes from the generated catalog (`PLUGIN_HOST_CONFIGS`), never a
+ * literal: the plugin identity (`space`) and the playground/launch variant that selects it (`s`) are
+ * different names, and only the catalog knows which crate currently hosts Home + Studio. */
+const S_PLUGIN_ID = (() => {
+  const hosts = PLUGIN_HOST_CONFIGS.map((entry) => entry.pluginId);
+  if (hosts.length !== 1) throw new Error(`expected exactly one host plugin in the generated catalog, got ${JSON.stringify(hosts)}`);
+  return hosts[0]!;
+})();
+/** @emoji 🎬️ `plugins.stories.tsx` names each story `toPascalCase(pluginId)`, so the story id follows the catalog too. */
+const S_STORY_ID = `🛠️framework🖥️os-plugins--${S_PLUGIN_ID.toLowerCase()}`;
 const READY_TIMEOUT_MS = 60_000;
 
 /** @emoji 🔇️ Same filter `os-plugins.spec.ts` and `puzzle-2d.spec.ts` use: a 404 for an optional asset is not a shell defect. */
@@ -46,12 +56,12 @@ async function openSStory(page: Page): Promise<{ readonly scope: Locator; readon
 
   await page.goto(`iframe.html?id=${encodeURIComponent(S_STORY_ID)}&viewMode=story`, { waitUntil: "domcontentloaded" });
 
-  // 🧭️ `s` is a host variant with a prebuilt artifact, so the artifact-missing panel must NOT appear —
+  // 🧭️ the host plugin has a prebuilt artifact, so the artifact-missing panel must NOT appear —
   // if it does, the plugin fleet did not materialize and the rest of this spec would assert nothing.
   await expect(page.getByText("plugin artifact missing", { exact: false })).toHaveCount(0);
 
   const outcome = await bootOutcome(page, S_PLUGIN_ID);
-  expect(outcome, `s must boot READY, got "${outcome}"`).toBe("ready");
+  expect(outcome, `${S_PLUGIN_ID} must boot READY, got "${outcome}"`).toBe("ready");
 
   const scope = page.locator(".semio-scope[data-shell-id]").first();
   await expect(scope).toBeVisible();

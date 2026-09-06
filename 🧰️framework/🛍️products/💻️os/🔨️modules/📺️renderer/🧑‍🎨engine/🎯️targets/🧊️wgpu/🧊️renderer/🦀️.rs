@@ -15900,17 +15900,28 @@ impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
     }
 }
 
+/// 🌉️ Hand-written, not derived: this newtype wraps a bare `String`, so it encodes transparently as
+/// that string — exactly what `#[derive(ToValue)]` and `serde` emit for a newtype struct.
+///
+/// 🪲️ NEVER route this through `store::os_store::to_dsl_value`/`from_dsl_value`: since
+/// `🧰️framework/🔨️modules/🌱️value/🦀️.rs:313`'s serde-elimination those are `Ok(value.to_value())` /
+/// `T::from_value(value)`, so an impl that calls them is a two-frame infinite recursion that aborts
+/// the process with `fatal runtime error: stack overflow` the first time a probe document is
+/// committed — no stack size survives it. See `📓️fable-mcp-artifact-quick-recursion.md`.
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::ToValue for NativeSocketProbeSnapshot {
     fn to_value(&self) -> store::os_store::DslValue {
-        store::os_store::to_dsl_value(self).expect("native probe snapshot value")
+        store::os_store::DslValue::String(self.0.clone())
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::FromValue for NativeSocketProbeSnapshot {
     fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
-        store::os_store::from_dsl_value(value).map_err(store::os_store::ValueError::new)
+        match value {
+            store::os_store::DslValue::String(text) => Ok(Self(text)),
+            other => Err(store::os_store::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
     }
 }
 
@@ -15929,17 +15940,22 @@ impl store::os_store::MutationDiff<NativeSocketProbeSnapshot> for NativeSocketPr
     }
 }
 
+/// 🌉️ Hand-written — same transparent-newtype shape, and the same no-`to_dsl_value` recursion rule,
+/// as [`NativeSocketProbeSnapshot`]'s impl above.
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::ToValue for NativeSocketProbeDiff {
     fn to_value(&self) -> store::os_store::DslValue {
-        store::os_store::to_dsl_value(self).expect("native probe diff value")
+        store::os_store::DslValue::String(self.0.clone())
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::FromValue for NativeSocketProbeDiff {
     fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
-        store::os_store::from_dsl_value(value).map_err(store::os_store::ValueError::new)
+        match value {
+            store::os_store::DslValue::String(text) => Ok(Self(text)),
+            other => Err(store::os_store::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
     }
 }
 
@@ -15986,17 +16002,63 @@ impl store::os_store::Mutation<NativeSocketProbeSnapshot> for NativeSocketProbeM
     }
 }
 
+/// 🌉️ Hand-written — externally tagged as `{"Set": "<payload>"}`, byte-identical to what
+/// `#[derive(ToValue)]` and `serde` emit for a tagless single-unnamed-field variant, and bound to
+/// the one descriptor's own `aggregate_variant` rather than a second copy of the string. Same
+/// no-`to_dsl_value` recursion rule as [`NativeSocketProbeSnapshot`]'s impl above.
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::ToValue for NativeSocketProbeMutation {
     fn to_value(&self) -> store::os_store::DslValue {
-        store::os_store::to_dsl_value(self).expect("native probe mutation value")
+        let Self::Set(value) = self;
+        store::os_store::DslValue::object([(NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant.to_string(), store::os_store::DslValue::String(value.clone()))])
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::FromValue for NativeSocketProbeMutation {
     fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
-        store::os_store::from_dsl_value(value).map_err(store::os_store::ValueError::new)
+        let store::os_store::DslValue::Object(entries) = value else {
+            return Err(store::os_store::ValueError::new(format!("expected a one-key `{}` object, found {value:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant)));
+        };
+        match <[(String, store::os_store::DslValue); 1]>::try_from(entries) {
+            Ok([(key, store::os_store::DslValue::String(text))]) if key == NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant => Ok(Self::Set(text)),
+            Ok([(key, payload)]) => Err(store::os_store::ValueError::new(format!("expected variant `{}` with a string payload, found `{key}` with {payload:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant))),
+            Err(entries) => Err(store::os_store::ValueError::new(format!("expected exactly one variant key, found {}", entries.len()))),
+        }
+    }
+}
+
+/// 🪲️ Regression law for the two-frame `to_value` → `to_dsl_value` → `to_value` recursion that made
+/// every `NativeSocketProbe*` encode abort the process with `fatal runtime error: stack overflow`:
+/// reaching an assertion at all proves the cycle is gone, and the fixture pins the exact wire shape
+/// so the cure cannot silently change the encoding. `serde_json` is the independent third-party
+/// oracle — the first-party `ToValue` tree must equal what it serializes for the same values.
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[test]
+fn native_socket_probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_serializer() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️native-socket-probe-codec.json")).expect("language-neutral codec fixture parses");
+    let probe = &fixture["nativeSocketProbeCodec"];
+    let value = probe["value"].as_str().expect("fixture value is a string").to_string();
+    let snapshot = NativeSocketProbeSnapshot(value.clone());
+    let diff = NativeSocketProbeDiff(value.clone());
+    let mutation = NativeSocketProbeMutation::Set(value);
+
+    assert_eq!(serde_json::Value::from(store::os_store::ToValue::to_value(&snapshot)), probe["snapshotEncoding"]);
+    assert_eq!(serde_json::Value::from(store::os_store::ToValue::to_value(&diff)), probe["diffEncoding"]);
+    assert_eq!(serde_json::Value::from(store::os_store::ToValue::to_value(&mutation)), probe["mutationEncoding"]);
+    assert_eq!(serde_json::to_value(&snapshot).expect("serde oracle"), probe["snapshotEncoding"]);
+    assert_eq!(serde_json::to_value(&diff).expect("serde oracle"), probe["diffEncoding"]);
+    assert_eq!(serde_json::to_value(&mutation).expect("serde oracle"), probe["mutationEncoding"]);
+
+    assert_eq!(<NativeSocketProbeSnapshot as store::os_store::FromValue>::from_value(store::os_store::ToValue::to_value(&snapshot)).expect("snapshot round trip"), snapshot);
+    assert_eq!(<NativeSocketProbeDiff as store::os_store::FromValue>::from_value(store::os_store::ToValue::to_value(&diff)).expect("diff round trip"), diff);
+    assert_eq!(<NativeSocketProbeMutation as store::os_store::FromValue>::from_value(store::os_store::ToValue::to_value(&mutation)).expect("mutation round trip"), mutation);
+
+    for rejected in probe["rejectedSnapshotEncodings"].as_array().expect("fixture snapshot rejections") {
+        assert!(<NativeSocketProbeSnapshot as store::os_store::FromValue>::from_value(store::os_store::DslValue::from(rejected)).is_err(), "snapshot must reject {rejected}");
+    }
+    for rejected in probe["rejectedMutationEncodings"].as_array().expect("fixture mutation rejections") {
+        assert!(<NativeSocketProbeMutation as store::os_store::FromValue>::from_value(store::os_store::DslValue::from(rejected)).is_err(), "mutation must reject {rejected}");
     }
 }
 

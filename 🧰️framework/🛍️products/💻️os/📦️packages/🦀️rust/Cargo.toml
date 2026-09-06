@@ -38,6 +38,8 @@ worker = ["sync"]
 # 🧬️ Keeps the boundary/protocol type-generation capability explicit at this layer. The current
 # wire declarations are owned by `semio-framework`, so enabling this feature adds no dependency.
 typegen = []
+# 🧪️ Exposes only canonical, Store-owned fixture constructors to downstream native law suites.
+testkit = []
 
 [dependencies]
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }

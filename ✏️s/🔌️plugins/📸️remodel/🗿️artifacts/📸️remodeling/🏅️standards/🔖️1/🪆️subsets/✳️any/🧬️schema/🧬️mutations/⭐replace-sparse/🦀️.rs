@@ -29,13 +29,13 @@ pub fn replace_sparse(sparse: Option<SparseCloud>) -> RemodelingMutation {
 impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceSparse {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "sparse", kind: "replace-sparse", record: "ReplacedSparse" };
 
-    async fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+    fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Replace sparse".to_string()
     }
 }

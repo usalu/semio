@@ -10,7 +10,8 @@
 import type { ArtifactBootstrapControl, ArtifactBootstrapProgress, ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireArtifactBootstrap, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
 import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, BrowserBrokerPortResponseV1, CanonicalDirectoryEventPageV1, CommandAckOutcome, DirectoryAcknowledgedStream, DirectoryAdministrationPhaseV1, DirectoryCommand, DirectoryEventPageAckV1, DirectoryStreamMessage, DocumentScope, PersistenceBinding, RemoteState, SocketGrantReceiptV1 } from "./🟦️";
 import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
-import { DirectoryClient, DirectoryCommandError, DirectoryHttpError, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, documentRuntimeKeyV1, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue, parseBrowserBrokerPortRequestV1, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "./🟦️";
+import { DirectoryClient, DirectoryCommandError, DirectoryHttpError, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, documentRuntimeKeyV1, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue, isPackInteger, packUIntSafeOrNull, parseBrowserBrokerPortRequestV1, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "./🟦️";
+import type { PackValue } from "./🟦️";
 import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, DocumentOpenIntentV1, DocumentOpenPlanV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortStatusV1, GisMapInferencePreviewV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import { GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, gisMapInferenceCodeFromStatusV1, gisMapInferencePortTerminalV1, idleGisMapInferencePortStatusV1, parseGisMapInferenceApprovalReceiptV1, parseGisMapInferenceEventPageV1, parseGisMapInferenceJobReceiptV1, reduceGisMapInferencePortV1, sealGisMapInferenceApprovalRequestV1, sealGisMapInferenceJobRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, directoryCommandErrorIsTransient, directoryCommandRequestJson, directoryCommandSha256, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1, sameLeaseFieldsV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
@@ -690,20 +691,20 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
   const decoded = decodePackValue(bytes);
   const canonical = encodePackValue(decoded);
   if (canonical.length !== bytes.length || canonical.some((byte, index) => byte !== bytes[index])) throw new Error("document execution target: descriptor is not canonical");
-  const record = (value: unknown): Record<string, unknown> => {
-    if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("document execution target: descriptor invalid");
-    return value as Record<string, unknown>;
+  const record = (value: PackValue): Record<string, PackValue> => {
+    if (value === null || typeof value !== "object" || Array.isArray(value) || isPackInteger(value)) throw new Error("document execution target: descriptor invalid");
+    return value as Record<string, PackValue>;
   };
   const descriptor = record(decoded);
   const manifest = record(descriptor.manifest);
   const hashes = record(descriptor.hashes);
-  const apps = Array.isArray(manifest.apps) ? manifest.apps.map(record) : [];
-  const artifactKinds = Array.isArray(manifest.artifactKinds) ? manifest.artifactKinds.map(record) : [];
+  const apps = Array.isArray(manifest.apps) ? (manifest.apps as readonly PackValue[]).map(record) : [];
+  const artifactKinds = Array.isArray(manifest.artifactKinds) ? (manifest.artifactKinds as readonly PackValue[]).map(record) : [];
   const app = apps.find((entry) => entry.id === fields.surface.appId);
   const dialect = app === undefined ? undefined : record(app.dialect);
-  const windowKinds = app !== undefined && Array.isArray(app.windowKinds) ? app.windowKinds.map(record) : [];
+  const windowKinds = app !== undefined && Array.isArray(app.windowKinds) ? (app.windowKinds as readonly PackValue[]).map(record) : [];
   if (
-    descriptor.descriptorVersion !== 1
+    packUIntSafeOrNull(descriptor.descriptorVersion) !== 1
     || descriptor.packageId !== fields.package.packageId
     || descriptor.execution !== "isolated"
     || manifest.pluginId !== fields.package.pluginId
@@ -1001,7 +1002,7 @@ function nextWireTimestamp(state: ArtifactState): WireMutationEnvelope["timestam
  * doc — the real content-addressed check happens Rust-side via `semio_framework_hash::hash_bytes`
  * once the wasm actor is available), so a real blake3 dependency isn't worth adding here just to
  * fill an otherwise-unused field. */
-function placeholderPayloadHash(payload: unknown): string {
+function placeholderPayloadHash(payload: PackValue): string {
   const packed = encodePackValue(payload);
   let hash = 0x811c9dc5;
   for (let index = 0; index < packed.length; index++) {
@@ -1013,13 +1014,13 @@ function placeholderPayloadHash(payload: unknown): string {
 
 /** 🎞️ `store::pack_rt` wire bytes for {@link toWireEnvelope}'s diff/inverse payloads — the TS twin
  * of the Rust actor's `encode_wire_value` call in `to_wire_envelope`. */
-function encodePackPayload(value: unknown): number[] {
+function encodePackPayload(value: PackValue): number[] {
   return Array.from(encodePackValue(value));
 }
 
 /** 🎞️ The inverse of {@link encodePackPayload} — the TS twin of `decode_wire_value` in the Rust
  * actor's `from_wire_envelope`. */
-function decodePackPayload(bytes: readonly number[]): unknown {
+function decodePackPayload(bytes: readonly number[]): PackValue {
   return decodePackValue(new Uint8Array(bytes));
 }
 
@@ -1043,7 +1044,8 @@ function toWireEnvelope(envelope: MutationEnvelope, timestamp: WireMutationEnvel
  * always edit-shaped JSON), mirroring the Rust side's identical recovery. */
 function fromWireEnvelope(envelope: WireMutationEnvelope): MutationEnvelope {
   const payload = decodePackPayload(envelope.diff.payload);
-  const sequenceNumber = payload !== null && typeof payload === "object" && "sequenceNumber" in payload ? Number((payload as Record<string, unknown>).sequenceNumber) : 0;
+  const sequenceNumber = payload !== null && typeof payload === "object" && !Array.isArray(payload) && !isPackInteger(payload) && "sequenceNumber" in payload ? packUIntSafeOrNull((payload as Record<string, PackValue>).sequenceNumber) : 0;
+  if (sequenceNumber === null) throw new Error("wire envelope: sequenceNumber is not an exact unsigned integer");
   return {
     id: envelope.mutation_id,
     actor: envelope.actor,
@@ -1055,7 +1057,7 @@ function fromWireEnvelope(envelope: WireMutationEnvelope): MutationEnvelope {
     inverse: {
       targetOperation: envelope.mutation_id,
       inverseDiff: { schemaId: envelope.inverse.schema, payload: decodePackPayload(envelope.inverse.payload) },
-      baseVersion: Number.isFinite(sequenceNumber) ? Math.max(0, sequenceNumber) : 0,
+      baseVersion: sequenceNumber,
       dependencies: [],
       undoPolicy: "exactBaseOnly",
     },
@@ -4153,7 +4155,7 @@ if (import.meta.vitest) {
     const DOCUMENT = "doc-inference";
     const JOB = "1".repeat(32);
     const HASH = "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130";
-    const PREVIEW = { schema: "semio.hub.gis-map-inference-preview/v1" as const, jobId: JOB, proposalHash: HASH, regionId: `inference-${JOB}`, ring: [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]] };
+    const PREVIEW: GisMapInferencePreviewV1 = { schema: "semio.hub.gis-map-inference-preview/v1", jobId: JOB, proposalHash: HASH, regionId: `inference-${JOB}`, ring: [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]] };
 
     function leaseFields(write: boolean): DocumentExecutionTargetLeaseFieldsV1 {
       return { scope: { spaceId: SPACE, documentId: DOCUMENT }, grant: { read: true, write, observe: true } } as unknown as DocumentExecutionTargetLeaseFieldsV1;

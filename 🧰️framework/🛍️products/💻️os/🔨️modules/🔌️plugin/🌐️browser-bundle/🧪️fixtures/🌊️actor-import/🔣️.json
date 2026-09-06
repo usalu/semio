@@ -1,0 +1,63 @@
+{
+  "schema": "semio.browser-actor-import/v1",
+  "streamClose": { "phase": "closed", "activeInvocations": 0, "cancellations": 1, "result": "rejected", "locked": false },
+  "lateStreamFault": { "code": "browser.host.stream-failed", "message": "fixture late stream fault" },
+  "failedStreamRetirement": { "code": "browser.host.stream-failed", "message": "browser host: invalid stream chunk", "cancelMessage": "fixture stream cancellation failed" },
+  "identity": {
+    "artifactPolicy": "semio.os.browser-jco-1.27.0-jspi.v1",
+    "component": "semio:framework/actor-import-probe@1.0.0",
+    "canonicalInterface": "semio:framework/host-async@1.0.0",
+    "expectedImports": [
+      "semio:framework/host-async@1.0.0",
+      "wasi:cli/environment@0.2.0",
+      "wasi:cli/exit@0.2.0",
+      "wasi:cli/stderr@0.2.0",
+      "wasi:cli/stdin@0.2.0",
+      "wasi:cli/stdout@0.2.0",
+      "wasi:cli/terminal-input@0.2.0",
+      "wasi:cli/terminal-output@0.2.0",
+      "wasi:cli/terminal-stderr@0.2.0",
+      "wasi:cli/terminal-stdin@0.2.0",
+      "wasi:cli/terminal-stdout@0.2.0",
+      "wasi:clocks/monotonic-clock@0.2.0",
+      "wasi:io/error@0.2.0",
+      "wasi:io/poll@0.2.0",
+      "wasi:io/streams@0.2.0"
+    ],
+    "jco": {
+      "asyncMode": "jspi",
+      "asyncImports": [
+        "wasi:io/poll#poll",
+        "wasi:io/poll#[method]pollable.block",
+        "wasi:io/streams#[method]input-stream.blocking-read",
+        "wasi:io/streams#[method]input-stream.blocking-skip",
+        "wasi:io/streams#[method]output-stream.blocking-flush",
+        "wasi:io/streams#[method]output-stream.blocking-write-and-flush",
+        "wasi:io/streams#[method]output-stream.blocking-write-zeroes-and-flush",
+        "wasi:io/streams#[method]output-stream.blocking-splice"
+      ]
+    },
+    "emittedAsyncBindings": [
+      { "trampoline": "19", "fnName": "wasi:io/poll@0.2.9#block" },
+      { "trampoline": "32", "fnName": "wasi:io/poll@0.2.9#poll" },
+      { "trampoline": "35", "fnName": "wasi:io/streams@0.2.9#blockingFlush" }
+    ],
+    "unsupportedImport": "wasi:filesystem/types@0.2.0",
+    "productionHostAsyncAbiQualified": true
+  },
+  "actors": [
+    {
+      "actorId": "actor-a",
+      "link": { "okRequest": [7], "okValue": [17, 18], "errorRequest": [8], "errorValue": [225, 8] },
+      "blob": { "okHash": "a-ok", "chunks": [[1, 2], [3], [4, 5]], "errorHash": "a-err", "errorValue": [226, 1] },
+      "timer": { "delayMs": 12 }
+    },
+    {
+      "actorId": "actor-b",
+      "link": { "okRequest": [9], "okValue": [29], "errorRequest": [10], "errorValue": [225, 10] },
+      "blob": { "okHash": "b-ok", "chunks": [[6], [7, 8]], "errorHash": "b-err", "errorValue": [226, 2] },
+      "timer": { "delayMs": 8 }
+    }
+  ],
+  "limits": { "buildBudgetMs": 600000, "runtimeBudgetMs": 120000, "maximumOutputBytes": 65536, "actors": 2 }
+}

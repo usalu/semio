@@ -29,16 +29,16 @@ pub fn create_asset(key: String, asset: ImageAsset) -> RemodelingMutation {
 impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateAsset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
 
-    async fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
+    fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create asset \"{}\"", self.key)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
 }

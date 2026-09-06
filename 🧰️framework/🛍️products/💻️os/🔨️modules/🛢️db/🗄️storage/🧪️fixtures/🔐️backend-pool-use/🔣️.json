@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "registered-backend-blocks-shutdown", "registeredUses": 1, "expected": "busy" },
+    { "name": "task-derives-registered-pool", "registeredUses": 1, "expected": "registered-pool" },
+    { "name": "dropped-facade-retains-use", "registeredUses": 1, "expected": "deferred-close" },
+    { "name": "compaction-acquires-before-admission", "registeredUses": 2, "expected": "retained-rejection" },
+    { "name": "forged-kind-rejected-before-page-admission", "registeredUses": 1, "expected": "stale-generation" }
+  ]
+}

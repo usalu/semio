@@ -304,13 +304,15 @@ impl RecordValueGen {
         match self.next_range(6) {
             0 => DslValue::Null,
             1 => DslValue::Bool(self.next_bool()),
-            // 🌉️ Deliberately `Number::Float` only, matching `encode_dsl_value`/`decode_dsl_value`'s
-            // still-`TAG_F64`-only wire tag (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-            // 26/09/01: `DslValue::Number` gained `UInt`/`Int` fidelity, but this crate's frozen
-            // HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS wire tag set was left
-            // unchanged pending a matching TS `PackValueCodec` update — a `UInt`/`Int` fixture here
-            // would fail this generator's own round-trip assertions).
-            2 => DslValue::float(self.next_f64()),
+            // 🌉️ All three `Number` variants, matching `encode_dsl_value`/`decode_dsl_value`'s
+            // `TAG_INT`/`TAG_UINT`/`TAG_F64` grammar — a generated `UInt`/`Int` now survives the
+            // round trip as its own variant, so restricting this arm to `Float` would leave two
+            // thirds of the dynamic numeric grammar unexercised.
+            2 => match self.next_range(3) {
+                0 => DslValue::float(self.next_f64()),
+                1 => DslValue::uint(self.next_uint()),
+                _ => DslValue::int(self.next_uint() as i64),
+            },
             3 => DslValue::String(self.next_string(8)),
             4 => {
                 let n = self.next_range(3) as usize;

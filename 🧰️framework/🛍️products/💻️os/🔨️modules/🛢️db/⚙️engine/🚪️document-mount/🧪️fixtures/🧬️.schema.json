@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.os.db.document-mount/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "capacity", "states", "driver", "driverCases", "cases"],
+  "properties": {
+    "schema": { "const": "semio.framework.os.db.document-mount/v1" },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["waitersPerDocument", "ownerFuturesPerDocument"],
+      "properties": {
+        "waitersPerDocument": { "const": 32 },
+        "ownerFuturesPerDocument": { "const": 1 }
+      }
+    },
+    "states": { "const": ["vacant", "opening", "ready"] },
+    "driver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["states", "maximumQueuedPollers", "resumeRequestsCoalesce"],
+      "properties": {
+        "states": { "const": ["idle", "queued", "polling", "non-runnable", "terminal"] },
+        "maximumQueuedPollers": { "const": 1 },
+        "resumeRequestsCoalesce": { "const": true }
+      }
+    },
+    "driverCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "steps", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "steps": { "type": "array", "minItems": 2, "items": { "enum": ["request", "request-resume", "poll-start", "poll-pending", "cleanup-fault", "cleanup-resume", "hard-submit-rejected", "complete"] } },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "maximumQueuedPollers", "cleanupResumes"],
+            "properties": {
+              "state": { "enum": ["idle", "non-runnable", "terminal"] },
+              "maximumQueuedPollers": { "const": 1 },
+              "cleanupResumes": { "type": "integer", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "steps", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "steps": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["action", "generation"],
+              "properties": {
+                "action": { "enum": ["install", "join", "cancel-waiter", "catalog-published", "emit-begin", "emit-complete", "fill-waiters", "reject-over-capacity", "release-slot", "shutdown-interrupted", "close-fault", "resume-cleanup", "close-terminal", "prepare-fanout", "unlock-registry", "wake-waiter", "owner-poll-active", "request-drive", "owner-poll-release", "ready", "retry"] },
+                "generation": { "type": "string", "pattern": "^[1-9][0-9]*$" }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["owners", "actors", "events", "waitersReleased", "terminalBeforeFanout"],
+            "properties": {
+              "owners": { "const": 1 },
+              "actors": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "events": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "waitersReleased": { "type": "integer", "minimum": 0, "maximum": 32 },
+              "terminalBeforeFanout": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

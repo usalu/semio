@@ -326,3 +326,43 @@ The build is still running at 4h55m, inside stdio's codegen/link phase (377 MB w
 emitted during codegen, hence a log that stops growing while `rustc` stays busy at ~15% CPU under 22
 competing peer cargo processes). A silent log here is expected, not a hang — confirmed by a live
 `rustc` child with advancing CPU time.
+
+## 🧨️ The 10-hour build was not slow — it was swapped out
+
+The 13:19 build ran **10h09m of wall clock for 44 minutes of CPU** and never emitted an artifact. The
+log stopped growing at 15:05 and stayed silent, while `rustc` remained alive with slowly advancing CPU
+time — which reads as "compiling a huge crate slowly" and is why it was left running.
+
+It was not. The measurement that settles it:
+
+```
+rustc 17769   rss = 0.04 GB   vsz = 431.2 GB   cpu = 44:15   elapsed = 10:09:07
+vm.swapusage: total = 70656 M   used = 69460 M   free = 1195 M
+```
+
+**Resident set 40 MB against a 431 GB address space, on a box with 1.2 GB of swap left.** The process
+had been almost entirely paged out and was thrashing, not computing. ~32 concurrent peer `rustc`
+processes had exhausted system memory. No amount of waiting fixes that, and a live `rustc` child with
+rising CPU is *not* evidence of progress under swap exhaustion — only the CPU-time-per-wall-second
+ratio is, and here it was ~7%.
+
+Cross-check that rules out "stdio is just enormous": **no target directory on this machine has a
+built stdio rlib for `wasm-dev`** — not the shared `target/`, not `target-demonstrator-dev` (which
+holds only a `.d` file from 23:20). Eight sessions have been grinding the same crate and none has
+finished it. That is a machine-capacity symptom, not a per-session one.
+
+### Fix
+Rebuilt with debug info off, which is the documented remedy for exactly this crate — `wasm-dev`
+inherits `debug` from `dev`, and stdio's `rustc` drops from ~8.6 GB to ~165 MB without it:
+
+```
+CARGO_PROFILE_WASM_DEV_DEBUG=false \
+CARGO_PROFILE_WASM_DEV_INCREMENTAL=false \
+CARGO_TARGET_DIR=target-sourcing-e2e RUSTC_WRAPPER="" \
+  cargo rustc -j 4 -p semio-s-plugin-sourcing --target wasm32-wasip2 --profile wasm-dev \
+    -- -C link-arg=-zstack-size=8388608
+```
+
+These are environment overrides, so the shared root `Cargo.toml` is untouched and no peer's profile
+changes. `-j 4` caps peak parallel memory. The profile change invalidates the previous artifacts, but
+those artifacts were never going to complete: ten hours produced only an `.rmeta`.

@@ -2613,7 +2613,7 @@ mod tests {
 
     //#region 🧪️DraftLaws
     fn memory_draft_port() -> Arc<store::BackbonePorts> {
-        Arc::new(store::BackbonePorts::Memory(store::MemoryBackbonePort::new()))
+        Arc::new(store::BackbonePorts::Memory(crate::host::resolve_kernel_future(store::MemoryBackbonePort::new())))
     }
 
     #[test]

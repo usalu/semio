@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "identity", "actors", "limits", "streamClose", "lateStreamFault", "failedStreamRetirement"],
+  "properties": {
+    "schema": { "const": "semio.browser-actor-import/v1" },
+    "streamClose": { "const": { "phase": "closed", "activeInvocations": 0, "cancellations": 1, "result": "rejected", "locked": false } },
+    "lateStreamFault": { "const": { "code": "browser.host.stream-failed", "message": "fixture late stream fault" } },
+    "failedStreamRetirement": { "const": { "code": "browser.host.stream-failed", "message": "browser host: invalid stream chunk", "cancelMessage": "fixture stream cancellation failed" } },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "canonicalInterface", "expectedImports", "jco", "emittedAsyncBindings", "unsupportedImport", "productionHostAsyncAbiQualified", "artifactPolicy"],
+      "properties": {
+        "artifactPolicy": { "const": "semio.os.browser-jco-1.27.0-jspi.v1" },
+        "component": { "const": "semio:framework/actor-import-probe@1.0.0" },
+        "canonicalInterface": { "const": "semio:framework/host-async@1.0.0" },
+        "expectedImports": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$" },
+          "contains": { "const": "semio:framework/host-async@1.0.0" }
+        },
+        "jco": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["asyncMode", "asyncImports"],
+          "properties": {
+            "asyncMode": { "const": "jspi" },
+            "asyncImports": {
+              "type": "array",
+              "minItems": 8,
+              "maxItems": 8,
+              "uniqueItems": true,
+              "prefixItems": [
+                { "const": "wasi:io/poll#poll" },
+                { "const": "wasi:io/poll#[method]pollable.block" },
+                { "const": "wasi:io/streams#[method]input-stream.blocking-read" },
+                { "const": "wasi:io/streams#[method]input-stream.blocking-skip" },
+                { "const": "wasi:io/streams#[method]output-stream.blocking-flush" },
+                { "const": "wasi:io/streams#[method]output-stream.blocking-write-and-flush" },
+                { "const": "wasi:io/streams#[method]output-stream.blocking-write-zeroes-and-flush" },
+                { "const": "wasi:io/streams#[method]output-stream.blocking-splice" }
+              ],
+              "items": false
+            }
+          }
+        },
+        "emittedAsyncBindings": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [
+            { "const": { "trampoline": "19", "fnName": "wasi:io/poll@0.2.9#block" } },
+            { "const": { "trampoline": "32", "fnName": "wasi:io/poll@0.2.9#poll" } },
+            { "const": { "trampoline": "35", "fnName": "wasi:io/streams@0.2.9#blockingFlush" } }
+          ],
+          "items": false
+        },
+        "unsupportedImport": { "const": "wasi:filesystem/types@0.2.0" },
+        "productionHostAsyncAbiQualified": { "const": true }
+      }
+    },
+    "actors": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actorId", "link", "blob", "timer"],
+        "properties": {
+          "actorId": { "enum": ["actor-a", "actor-b"] },
+          "link": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["okRequest", "okValue", "errorRequest", "errorValue"],
+            "properties": {
+              "okRequest": { "$ref": "#/$defs/pack" },
+              "okValue": { "$ref": "#/$defs/pack" },
+              "errorRequest": { "$ref": "#/$defs/pack" },
+              "errorValue": { "$ref": "#/$defs/pack" }
+            }
+          },
+          "blob": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["okHash", "chunks", "errorHash", "errorValue"],
+            "properties": {
+              "okHash": { "type": "string", "minLength": 1, "maxLength": 32 },
+              "chunks": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "items": { "$ref": "#/$defs/pack" }
+              },
+              "errorHash": { "type": "string", "minLength": 1, "maxLength": 32 },
+              "errorValue": { "$ref": "#/$defs/pack" }
+            }
+          },
+          "timer": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["delayMs"],
+            "properties": { "delayMs": { "type": "integer", "minimum": 4, "maximum": 32 } }
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["buildBudgetMs", "runtimeBudgetMs", "maximumOutputBytes", "actors"],
+      "properties": {
+        "buildBudgetMs": { "const": 600000 },
+        "runtimeBudgetMs": { "const": 120000 },
+        "maximumOutputBytes": { "const": 65536 },
+        "actors": { "const": 2 }
+      }
+    }
+  },
+  "$defs": {
+    "pack": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+    }
+  }
+}

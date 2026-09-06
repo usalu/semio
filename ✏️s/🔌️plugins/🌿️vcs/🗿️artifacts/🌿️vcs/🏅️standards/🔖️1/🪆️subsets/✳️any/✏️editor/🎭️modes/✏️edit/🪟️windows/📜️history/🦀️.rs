@@ -1,7 +1,7 @@
 //! 📜️ VCS play app — the history window: the checkpoint/alternative swimlane graph.
 
 use crate::editor::vcs::VCS_PLAY_APP_ID;
-use semio_framework_plugin::{build_graph_timeline_scene, GraphTimelineScene, HistoryView, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, HistoryView, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const VCS_PLAY_WINDOW_HISTORY: &str = "vcs-history";
@@ -34,8 +34,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(history: &HistoryView) -> UiNode {
-    build_graph_timeline_scene(VCS_PLAY_SURFACE_HISTORY, VCS_PLAY_APP_ID, GraphTimelineScene { columns_json: dsl::json::to_json_string(&history.columns) })
+pub fn render(history: &HistoryView) -> UiAssemblyResult<BuiltNode> {
+    let scene = semio_framework_ui_scene::GraphTimelineScene { columns_json: dsl::json::to_json_string(&history.columns) };
+    scene_surface(VCS_PLAY_SURFACE_HISTORY, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::GraphTimeline, &scene)
 }
 //#endregion 🔖️Render
 
@@ -46,9 +47,9 @@ mod tests {
     use crate::editor::vcs::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]
-    fn renders_history_scene() {
-        let mut instance = app();
-        let json = render_body(&mut instance, VCS_PLAY_BODY_HISTORY);
+    async fn renders_history_scene() {
+        let mut instance = app().await;
+        let json = render_body(&mut instance, VCS_PLAY_BODY_HISTORY).await;
         assert!(json.contains("graph-timeline"), "missing graph-timeline surface kind: {json}");
         assert!(json.contains("lane"), "missing lane field in history columns: {json}");
         assert!(!json.contains("\"table\""), "history must not fall back to a generic table: {json}");

@@ -1,11 +1,14 @@
-//! raster <- tiff
-use crate::artifacts::raster::schema::{create_raster_id, empty_raster_snapshot};
+//! 📥️ raster ← tiff — REAL. stdio's own byte decoder produces the typed `s.stdio.tiff` snapshot, stdio's
+//! own registered `s.stdio.tiff` → `s.stdio.semio/v1/image` deserializer turns it into canonical RGBA8,
+//! and that content becomes one `Pixel` layer with a materialized asset child. The incoming bytes
+//! are genuinely read — nothing is fabricated.
+//!
+//! 🧾️ stdio's TIFF codec decodes/encodes IFD 0 as canonical RGBA8 strips.
+use crate::artifacts::raster::io::{raster_document_from_semio_image, semio_image_from_format, TIFF_DIALECT};
 use crate::artifacts::raster::RasterSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
-    let _ = bytes;
-    let mut snap = empty_raster_snapshot();
-    snap.id = create_raster_id("tiff-import");
-    snap.title = Some(format!("Imported tiff"));
-    Ok(snap)
+    let decoded = semio_s_plugin_stdio::artifacts::tiff::io::decode_tiff(bytes)?;
+    let image = semio_image_from_format(&decoded, TIFF_DIALECT)?;
+    raster_document_from_semio_image(&image, "tiff-import", "Imported tiff")
 }

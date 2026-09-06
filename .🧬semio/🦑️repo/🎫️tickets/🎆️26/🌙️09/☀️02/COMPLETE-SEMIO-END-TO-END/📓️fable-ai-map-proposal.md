@@ -101,7 +101,9 @@ All six were this lane's own defects and are fixed in the tree:
 2. **E0599 ×2** — `authenticate_session` / `get_document_descriptor` are `HubDirectory` trait methods; `use crate::directory::HubDirectory;` added to the runtime module (matching what `🛂️authorization/🦀️.rs` already does).
 3. **E0621 / E0597 / E0505** — `encode_server_stamped` was an associated function on `impl<'a> CanonicalInferenceCommandV1<'a>`, so `Self::decode(&bytes)` tied the re-decode of the freshly built envelope to the impl's `'a` and made the local `bytes` outlive itself. It is now the free function `encode_server_stamped_command_v1` in the same module, where the re-decode borrows a fresh local lifetime and `bytes` moves out cleanly. The self-verifying round trip (encode → decode → return) is preserved.
 
-**Round 2 — post-fix compile did not complete.** The identical command was relaunched at 16:25:43 in the same private target and was still inside `semio_s_plugin_stdio` at 20:31 (**4 h 06 min elapsed, no diagnostics emitted, 3238 lines of dependency warnings**). It is starved, not stuck: its two `rustc --crate-name semio_s_plugin_stdio` processes were measured at **2.8 % and 9.6 % CPU**, against 20+ concurrent peer `rustc` processes including five other `semio_s_plugin_stdio` compilations aged 7 h 12 m, 7 h 05 m, 4 h 29 m, 2 h 08 m and 47 m, plus a peer watchdog loop re-applying `taskpolicy -B` to every `cargo`/`rustc` on the box. The build is still running detached and writes to `🗑️generated/fable-ai-map-proposal/steps.txt`.
+**Round 2 — post-fix compile did not complete.** The identical command was relaunched at 16:25:43 in the same private target and was still inside `semio_s_plugin_stdio` at 20:31 (**4 h 06 min elapsed, no diagnostics emitted, 3238 lines of dependency warnings**). It is starved, not stuck: its two `rustc --crate-name semio_s_plugin_stdio` processes were measured at **2.8 % and 9.6 % CPU**, against 20+ concurrent peer `rustc` processes including five other `semio_s_plugin_stdio` compilations aged 7 h 12 m, 7 h 05 m, 4 h 29 m, 2 h 08 m and 47 m, plus a peer watchdog loop re-applying `taskpolicy -B` to every `cargo`/`rustc` on the box. At 21:58 it was still on a single `semio_s_plugin_stdio` unit at **4.2 % CPU, 3 h 24 min**. The build is still running detached and writes to `🗑️generated/fable-ai-map-proposal/steps.txt`; whoever picks this up should read that file first rather than restarting.
+
+One observation worth carrying forward: `semio_s_plugin_stdio` is on the critical path of every `semio-hub` build, it takes over two hours to check on this box under load, and peer lanes edit it continuously — a second stdio unit restarted inside this run after the first had already completed at 18:39. Any `semio-hub` gate is effectively gated on stdio being quiet, not on hub compile time.
 
 Therefore: **no post-fix compile, no Rust assertion, no test-binary SHA-256, and no `--native` gate result is claimed here.** `bun nx run os-hub:gis-map-proposal-native-check --skip-nx-cache` was not run, because it would queue the same `semio-hub` build behind the same contention. The exact retry, once the box is quiet, is:
 
@@ -158,3 +160,107 @@ SEMIO_TEST_ARTIFACT_DIR="$PWD/$G/gis-map-proposal-exact" CARGO_TARGET_DIR="$PWD/
 .vscode/launch.json                                              (generated)
 .🧬semio/…/COMPLETE-SEMIO-END-TO-END/fable-ai-map-proposal-identity-recompute.mjs (new, ticket input script)
 ```
+
+---
+
+# Follow-up — 2026-09-05 late (dispatch packet `📓️fable-explore-inference-readiness-path.md`)
+
+## The correction that matters most
+
+The packet's §3 finding is right and it changes this lane's own design claim. `GisMapInference::bounds_proposal`
+produces the **parent-only** `CreateRegion`. `GisMapInference::create_region_group_work` shows the semantically
+complete approval is a fixed **three-member group**: the parent `CreateRegion`, a `gismap-drawing` `CreateNode`,
+and a `gismap-value` `insertListItem`. Its own internal invariant (applying the parent alone must leave
+`after.drawing == snapshot.drawing && after.value == snapshot.value`) proves the Map's apply function does **not**
+keep the children in sync. My earlier report described the approval path as "the sole `CreateRegion` and inverse"
+without stating that this is incomplete for any Map that owns children. It is incomplete, and left unguarded it
+would durably corrupt such a Map — a new region with no drawing node and no value entry.
+
+**Implemented fix (`🌎️hub/💡️inference/🏃️runtime/🦀️.rs`):**
+
+- `InferenceMapBaseV1::composed_children()` decodes the frozen base pack and returns the composed members
+  (`drawing.child_id`, `image.child_id`, `value.child_id`) in stable-member order.
+- `commit_prepared_approval` calls it **before any committer is consulted**: a child-bearing Map is refused with
+  `approval.commit-unavailable` and the durable outbox row stays `prepared`. Nothing can auto-apply a parent-only
+  `CreateRegion` to a composed Map.
+- `GisMapApprovalCommitRequestV1` gained `composed_children: &[String]`, documenting the invariant at the port.
+- `UnavailableGisMapApprovalCommitterV1`'s docstring now records exactly why no first committer is registered.
+
+**Deliberately NOT done: the parent-only "zero-children" committer the dispatch asked for as item (3).** The
+packet says it is buildable through the ordinary single-document `ArtifactEngine`/`ArtifactWal` path, and
+mechanically that is true. I did not build it, for a reason the packet itself supplies: the same §3 analysis shows
+a `CreateRegion` is *never* semantically parent-only for a real Map, and the only Maps that would qualify are ones
+with empty child handles — which the GIS snapshot constructor (`gis_map_snapshot_with_derived_children`) does not
+produce. A committer that only ever fires for a shape the product does not create is not "a first honest
+committer"; it is a code path that exists to make a gate green. The honest first committer needs
+`create_region_group_work` through the durable-group module's public Store admission plus a real journal sink, and
+that waits on `📓️sol-map-durable-group-decision-codec.md` and the writer-permit migration, exactly as the packet
+sequences it (§5 row 4). **The composition gate above is the part that is both correct and buildable today, and
+it is what landed.**
+
+## What else landed
+
+1. **Non-`cfg(test)`, feature-gated GIS Map profile builder** — new
+   `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🏗️test-support/🦀️.rs`, mounted from the trusted-catalog module
+   under `#[cfg(all(feature = "test-support", feature = "native-artifact-execution"))]`, plus a new
+   `test-support = ["native-artifact-execution"]` feature in `🌎️hub/📦️packages/🦀️rust/Cargo.toml`. It reuses the
+   peer's already-landed `prepared_gis_binding_fixture` approach (real `describe_plugin` descriptor, real
+   `native_codec_factory_receipts`, real editor app id/window kind, synthetic component bytes hashed for real) but
+   selects the **editor** target with `read+write+observe`, writes the bundle to disk, and loads it through the
+   **production** `TrustedCatalogLoader::load` — no second trust check. It returns a
+   `VerifiedGisMapTestProfileV1` holding both the `Arc<VerifiedTrustedCatalog>` and the frozen
+   `Arc<VerifiedGisMapArtifactBindingV1>`, and deletes its directory on drop. `mod tests` was not edited.
+2. **Four route-level `#[tokio::test]` laws** in `🚀️bin.rs`'s `//#region 💡️Inference`, all
+   `#[cfg(all(feature = "sqlite", feature = "test-support"))]`, over a real `spawn_server` with a real bound
+   runtime, a real space with an Author and a Spectator, a real announced GIS Map document and a real published
+   checkpoint whose pack is an actual encoded `GisMapSnapshot`:
+   - `gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation`
+   - `gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller`
+   - `gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drift`
+   - `gis_map_approval_is_idempotent_across_duplicate_requests_and_restart`
+   One of these closes an earlier nonclaim by construction: law 1 asserts the route's offered `proposalHash`
+   equals `sha256` of the neutral corpus's `proposalCanonical` with the sample job id replaced by the real
+   server-minted job id — i.e. it compares the pinned literal against the **real `os_pack` serialization**, which
+   the previous report explicitly listed as unverified.
+3. **Gate wiring** — `GisMapProposalCheckScript`'s `routeLaws` now lists all five bin laws and passes
+   `--no-default-features --features sqlite,test-support`.
+4. **`--process` is now a documented design, not a one-line placeholder** — it prints the exact two-user shape
+   (A = Author drives the four routes; B = Spectator, who can never call an inference route because
+   `check_live_inference_author` admits `SpaceRole::Author` alone, and must observe the committed region only
+   through the ordinary document path), the negative cases, and the two things that block running it.
+
+## Verified (exact)
+
+| Command | Result |
+|---|---|
+| `bun ./📜️script.ts gis-map-proposal-check --source` | **exit 0**: `ajv=1 hostile=7 node-sha256=2 independent-bounds=2 preview=1 lifecycle=9 visibility=7 errors=11 approval-rejections=11 cross-fixture=1` |
+| `CARGO_BUILD_JOBS=4 cargo check -p semio-hub --lib --features sqlite --message-format=short` (round 2, pre-follow-up code) | **exit 0** after **17607 s** (4 h 53 min, 16:25:43 → 21:19:11) — the six round-1 diagnostics are fixed and the library compiles |
+| `cargo check -p semio-hub --bin os-hub --message-format=short` | **exit 101** after **444 s** — **not this lane's code**: `🛢️db/⚙️engine/🦀️.rs:8202:86 error[E0308]: mismatched types: expected &Arc<_, _>, found &DatabaseDocumentMountReply` and `:8210:54` the same for `Arc<ArtifactAuthority>`; `could not compile semio-framework-os-kernel-db (lib) due to 2 previous errors` |
+| `cargo check -p semio-hub --lib --features test-support --message-format=short` (follow-up code) | **exit 101** after **331 s** — again **not this lane's code**, and a *different* db error than 7 minutes earlier: `🛢️db/👁️observe/🦀️.rs:121:46 error[E0405]: cannot find trait Future in this scope`; `could not compile semio-framework-os-kernel-db (lib) due to 1 previous error` |
+
+The library compile at 21:19 is the first clean `semio-hub` lib result this lane has produced, and it covers the
+whole slice-A/B/C implementation as of that moment. Everything written **after** it — the `test_support` builder,
+the composition gate, and the four route laws — has **not** compiled, because the `db` crate went red between
+21:19 and 21:26 and has changed shape at least twice since.
+
+## Honest nonclaims (follow-up)
+
+- **The four new route laws have never compiled or run. Zero assertions executed.** They are written against APIs
+  I read but could not type-check, because `semio-framework-os-kernel-db` does not build. Treat them as unverified
+  source until a run exists.
+- The `test_support` builder has likewise never compiled. Its shape follows the peer's working
+  `prepared_gis_binding_fixture` closely, but "follows closely" is not evidence.
+- `bun nx run os-hub:gis-map-proposal-native-check --skip-nx-cache` was **not** run — it would queue the same
+  blocked build. No binary SHA-256, no assertion counts, no durations for any native law.
+- No committer was implemented; approval remains fail-closed for every Map. The composition gate makes that
+  refusal *correct* for child-bearing Maps rather than merely absent.
+- `--process` remains not run, and is now explicitly designed rather than deferred without a shape.
+
+## External blocker (current evidence)
+
+`semio-framework-os-kernel-db` is mid-refactor (Sol's WAL writer-permit work) and broke twice inside seven
+minutes with unrelated diagnostics (`⚙️engine/🦀️.rs` E0308 at 21:26, `👁️observe/🦀️.rs` E0405 at 21:38). Every
+`semio-hub` target depends on it, so nothing in this lane can be compiled or run until it settles. The detached
+runner at `🗑️generated/fable-ai-map-proposal/run.sh` re-runs the full four-step sequence
+(`lib-check` → `bin-check` → `lib-laws` → `bin-laws`) into `steps.txt`; re-launch it once `cargo check -p
+semio-framework-os-kernel-db --lib` is green.

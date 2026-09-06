@@ -36,9 +36,9 @@ mod tests {
         use crate::engine::space::testkit::studio_emit;
         use crate::engine::space::SpaceCommand;
         use semio_framework::kernel::UiDirtyScope;
-        let projection = demo_space_projection();
+        let projection = demo_space_projection().await;
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, &SpaceCommand::PresenceHeartbeat(PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() })).expect("handle");
+        let emit = studio_emit(&projection, &config, &SpaceCommand::PresenceHeartbeat(PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() })).await.expect("handle");
         assert!(matches!(emit.ui_scope, UiDirtyScope::None), "presenceHeartbeat must declare None, got {:?}", emit.ui_scope);
     }
 }

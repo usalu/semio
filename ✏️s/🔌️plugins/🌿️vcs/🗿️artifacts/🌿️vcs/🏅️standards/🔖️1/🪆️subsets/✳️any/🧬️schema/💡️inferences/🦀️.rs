@@ -104,18 +104,18 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = tagged_snapshot();
         assert_eq!(VcsInference::infer(&snapshot), VcsInference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(VcsInference::infer(&VcsSnapshot::default()), VcsInference::default());
     }
 
     #[semio_framework_async_macros::async_test]
-    fn summary_counts_tags_and_words() {
+    async fn summary_counts_tags_and_words() {
         let inferred = VcsInference::infer(&tagged_snapshot());
         assert_eq!(inferred.summary.tag_count, 2);
         assert_eq!(inferred.summary.notes_word_count, 3);

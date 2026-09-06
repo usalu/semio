@@ -35,7 +35,7 @@ pub struct RemodelingBounds {
 /// 📦️ `MeshData::aabb()` returns `[INFINITY; 3]`/`[NEG_INFINITY; 3]` for an empty mesh (no
 /// vertices to fold over); normalized here to a zero box so an empty/default snapshot infers a
 /// clean, serializable `RemodelingBounds::default()` rather than propagating infinities.
-pub async fn compute_remodeling_bounds(snapshot: &RemodelingSnapshot) -> RemodelingBounds {
+pub fn compute_remodeling_bounds(snapshot: &RemodelingSnapshot) -> RemodelingBounds {
     let Some(mesh) = resolve_bounded_remodeling_mesh(&snapshot.durable_artifacts, &snapshot.results.mesh.mesh) else {
         return RemodelingBounds { bounding_box: RemodelingBoundingBox::default(), vertex_count: 0, face_count: 0 };
     };

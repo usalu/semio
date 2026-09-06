@@ -1,10 +1,20 @@
 //! 🚪️ IO s.raster (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
+/// 📥️ The stdio format kinds this artifact can genuinely BUILD a document from — the single source
+/// of truth `artifact_kind()` re-exports, so the workflow wire negotiator
+/// (`🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs`'s `negotiate_wire_format`) can never pick a hop that
+/// has no real decoder. `stdio.pdf` is absent on purpose: `PdfSnapshot`'s only per-page state is
+/// `{width, height, text}` (no image XObject model at all), so there is nothing to read pixels out
+/// of — the leaf itself says so with a typed `Err`.
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"]
+    &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.png", "stdio.svg", "stdio.tiff"]
 }
+/// 📤️ The stdio format kinds this artifact can genuinely EMIT — same single-source-of-truth rule as
+/// `import_stdio_kinds`. `stdio.dwg`/`stdio.pdf` are absent on purpose: both of stdio's own
+/// `s.stdio.semio/v1/drawing` bridges into those formats drop `DrawNode::Image` outright (their own
+/// module docs say so), so a raster composite would encode as an empty drawing/text-only page.
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"]
+    &["stdio.bmp", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.png", "stdio.svg", "stdio.tiff"]
 }
 
 //#region 🔖️SemioBridge
@@ -26,13 +36,27 @@ use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 
 const SEMIO_DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const SEMIO_IMAGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
-const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
+pub(crate) const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
+/// 🪟️ The four other pixel formats stdio's own `s.stdio.semio/v1/image` hub already bridges both
+/// ways (`🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🦀️.rs:91-105` registers
+/// all five `SemioImageFrom*`/`SemioImageTo*` pairs in ONE `register_composer_entries` call). Every
+/// pixel hop in this subset's io leaves goes through that hub — this plugin never hand-rolls a
+/// PNG/BMP/GIF/JPEG/TIFF byte codec of its own.
+pub(crate) const BMP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId::ANY };
+pub(crate) const JPG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId::ANY };
+pub(crate) const TIFF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId::ANY };
+/// 🎞️ The hub bridges GIF at **89a** only (that is the standard the `SemioImageFromGif`/`ToGif`
+/// leaves declare), while this subset's own gif leaf is declared at `87a`. The gif leaves therefore
+/// hop `semio/image ↔ gif@89a` for the palette work (real 1:1 quantization, never a local
+/// re-implementation) and then remap the 89a snapshot onto stdio's own `87a` `GifSnapshot`/
+/// `encode_gif`, which is what actually writes the `GIF87a` bytes this dialect promises.
+pub(crate) const GIF89A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId::ANY };
 
 /// 📌️ w5b-close fix: registers stdio's `semio` v1 engine (drawing/image/… subset composers) and
 /// stdio's `png` engine into the process-global `io` registry exactly once, so `io_dispatch`/
@@ -171,27 +195,43 @@ fn dispatch_drawing_to_svg(snapshot: &SemioDrawingSnapshot) -> Result<String, St
     Ok(semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml(&svg_snapshot.doc))
 }
 
+/// 🚪️ Dispatches a decoded foreign pixel snapshot (`PngSnapshot`/`BmpSnapshot`/`GifSnapshot`/
+/// `JpgSnapshot`/`TiffSnapshot`) → `s.stdio.semio/v1/image` through stdio's own registered
+/// deserializer for that dialect — the honest, structured way to reach an image's real
+/// width/height/RGBA8 frames without this plugin ever touching the wire format itself.
+pub(crate) fn semio_image_from_format<T: store::ArtifactPack>(snapshot: &T, format: Dialect) -> Result<SemioImageSnapshot, String> {
+    ensure_stdio_semio_and_png_registered();
+    let payload = IoPayload::Binary(<T as store::ArtifactPack>::encode_pack(snapshot));
+    let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &format);
+    let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: format, payload }])).map_err(|error| error.message)?;
+    let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.semio image composer returned a non-binary payload".into()) };
+    <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
+}
+
+/// 🚪️ Dispatches `s.stdio.semio/v1/image` → the target format's own typed snapshot through stdio's
+/// registered serializer for that dialect. The caller then hands that snapshot to the format's own
+/// real byte encoder (`encode_png`/`encode_bmp`/…) — never a hand-rolled writer here.
+pub(crate) fn semio_image_to_format<T: store::ArtifactPack>(image: &SemioImageSnapshot, format: Dialect) -> Result<T, String> {
+    ensure_stdio_semio_and_png_registered();
+    let payload = IoPayload::Binary(<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image));
+    let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &format);
+    let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
+    let IoPayload::Binary(bytes) = composed.payload else { return Err(format!("{} composer returned a non-binary payload", format.artifact_kind)) };
+    <T as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
+}
+
 /// 🚪️ Dispatches real `png` bytes → `s.stdio.semio/v1/image` through stdio's real PNG deserializer
 /// (`io_dispatch`) — the honest, structured way to learn a decoded image's real width/height/pixels.
 pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
-    let png_snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
-    let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
-    let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
-    let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
-    let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.semio image composer returned a non-binary payload".into()) };
-    <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
+    let png_snapshot: PngSnapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
+    semio_image_from_format(&png_snapshot, PNG_DIALECT)
 }
 
 /// 🚪️ Dispatches `s.stdio.semio/v1/image` → real `png` bytes through stdio's real PNG serializer
 /// (`io_dispatch`) plus its own real byte encoder — never a hand-rolled PNG writer.
 pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
-    ensure_stdio_semio_and_png_registered();
-    let payload = IoPayload::Binary(<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image));
-    let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
-    let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
-    let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
-    let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
+    let png_snapshot: PngSnapshot = semio_image_to_format(image, PNG_DIALECT)?;
     semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
 }
 
@@ -230,6 +270,332 @@ pub fn canonicalize_png_bytes(raw_png_bytes: &[u8]) -> Result<Vec<u8>, String> {
     semio_s_plugin_stdio::artifacts::png::io::encode_png(&png_snapshot)
 }
 //#endregion 🔖️SemioBridge
+
+//#region 🔖️Composite
+/// 🎨️ The separable blend functions this compositor implements, per W3C Compositing-1 §11 (the
+/// `blend_mode` field is a free `String` in the schema, so an unrecognized value is reported as a
+/// typed error rather than silently painted as `normal` — that would fabricate a picture the app
+/// never showed).
+#[derive(Clone, Copy)]
+enum RasterBlend {
+    Normal,
+    Multiply,
+    Screen,
+    Darken,
+    Lighten,
+    Difference,
+}
+
+impl RasterBlend {
+    fn parse(mode: &str) -> Result<Self, String> {
+        match mode {
+            "normal" => Ok(Self::Normal),
+            "multiply" => Ok(Self::Multiply),
+            "screen" => Ok(Self::Screen),
+            "darken" => Ok(Self::Darken),
+            "lighten" => Ok(Self::Lighten),
+            "difference" => Ok(Self::Difference),
+            other => Err(format!("unsupported blend mode {other:?} (this compositor implements normal/multiply/screen/darken/lighten/difference)")),
+        }
+    }
+
+    fn apply(self, backdrop: f32, source: f32) -> f32 {
+        match self {
+            Self::Normal => source,
+            Self::Multiply => backdrop * source,
+            Self::Screen => backdrop + source - backdrop * source,
+            Self::Darken => backdrop.min(source),
+            Self::Lighten => backdrop.max(source),
+            Self::Difference => (backdrop - source).abs(),
+        }
+    }
+}
+
+/// 📐️ A 2D affine `[a c e; b d f]` in the same column convention SVG/`SemioTransform` use:
+/// `x' = a·x + c·y + e`, `y' = b·x + d·y + f`.
+#[derive(Clone, Copy)]
+struct RasterAffine {
+    a: f64,
+    b: f64,
+    c: f64,
+    d: f64,
+    e: f64,
+    f: f64,
+}
+
+impl RasterAffine {
+    const IDENTITY: Self = Self { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0 };
+
+    /// 🧭️ `translate(x, y) ∘ rotate(rotation) ∘ scale(scale_x, scale_y)` — the exact order
+    /// `semio_transform_from_raster` above already assumes when it hands the same `RasterTransform`
+    /// to the drawing bridge, so the pixel and vector exports agree on what a layer transform means.
+    fn from_transform(transform: &RasterTransform) -> Self {
+        let (sin, cos) = transform.rotation.to_radians().sin_cos();
+        Self { a: cos * transform.scale_x, b: sin * transform.scale_x, c: -sin * transform.scale_y, d: cos * transform.scale_y, e: transform.x, f: transform.y }
+    }
+
+    fn then(self, outer: Self) -> Self {
+        Self {
+            a: outer.a * self.a + outer.c * self.b,
+            b: outer.b * self.a + outer.d * self.b,
+            c: outer.a * self.c + outer.c * self.d,
+            d: outer.b * self.c + outer.d * self.d,
+            e: outer.a * self.e + outer.c * self.f + outer.e,
+            f: outer.b * self.e + outer.d * self.f + outer.f,
+        }
+    }
+
+    fn apply(self, x: f64, y: f64) -> (f64, f64) {
+        (self.a * x + self.c * y + self.e, self.b * x + self.d * y + self.f)
+    }
+
+    fn invert(self) -> Option<Self> {
+        let determinant = self.a * self.d - self.b * self.c;
+        if !determinant.is_finite() || determinant.abs() <= f64::EPSILON {
+            return None;
+        }
+        let (a, b, c, d) = (self.d / determinant, -self.b / determinant, -self.c / determinant, self.a / determinant);
+        Some(Self { a, b, c, d, e: -(a * self.e + c * self.f), f: -(b * self.e + d * self.f) })
+    }
+}
+
+/// 🖼️ One pixel layer resolved to everything the rasterizer needs: its materialized child content
+/// (real decoded RGBA8, never re-encoded bytes), its local→device matrix, its local box, and the
+/// accumulated group opacity.
+struct RasterPlacement {
+    image: std::sync::Arc<SemioImageSnapshot>,
+    matrix: RasterAffine,
+    width: f64,
+    height: f64,
+    alpha: f32,
+    blend: RasterBlend,
+}
+
+/// 🛡️ Refuses a canvas no honest single-frame encoder should be asked to allocate inside a
+/// `wasm32-wasip2` guest (4 bytes/pixel; 64 MPx is already a 256 MB buffer).
+const RASTER_COMPOSITE_MAX_SIDE: u32 = 16_384;
+const RASTER_COMPOSITE_MAX_PIXELS: u64 = 64 * 1024 * 1024;
+
+/// 🌉️ Resolves the exact `s.stdio.semio/v1/image` content this snapshot's own asset child owns —
+/// the same materialization rule `crate::artifacts::raster::raster_asset` follows, minus its
+/// re-encode to PNG bytes (this compositor wants the decoded frames, not a wire encoding).
+fn placement_image(assets: &crate::artifacts::raster::RasterOwnedMap<crate::artifacts::raster::RasterAssetChild>, image_key: &str) -> Result<std::sync::Arc<SemioImageSnapshot>, String> {
+    let handle = assets.get(image_key).ok_or_else(|| format!("layer references asset {image_key:?}, which this document does not carry"))?;
+    handle.local_owner::<SemioImageSnapshot>().ok_or_else(|| format!("asset {image_key:?} is not materialized in this snapshot — its content must be resolved before a composite can be produced"))
+}
+
+/// 🧭️ Walks the layer stack in painter's order (index 0 paints first, exactly as
+/// `draw_node_for_raster_layer` already orders the vector bridge), pushing one `RasterPlacement`
+/// per visible pixel layer that actually carries image content.
+fn collect_placements(layers: &[RasterLayerNode], assets: &crate::artifacts::raster::RasterOwnedMap<crate::artifacts::raster::RasterAssetChild>, parent: RasterAffine, parent_alpha: f32, out: &mut Vec<RasterPlacement>) -> Result<(), String> {
+    for layer in layers {
+        match layer {
+            RasterLayerNode::Pixel { visible, opacity, blend_mode, transform, width, height, image_key, .. } => {
+                if !*visible {
+                    continue;
+                }
+                let Some(key) = image_key.as_deref() else { continue };
+                let image = placement_image(assets, key)?;
+                let box_width = width.map(|value| value as f64).unwrap_or(image.width as f64);
+                let box_height = height.map(|value| value as f64).unwrap_or(image.height as f64);
+                if box_width <= 0.0 || box_height <= 0.0 || image.width == 0 || image.height == 0 {
+                    continue;
+                }
+                out.push(RasterPlacement { image, matrix: RasterAffine::from_transform(transform).then(parent), width: box_width, height: box_height, alpha: parent_alpha * opacity, blend: RasterBlend::parse(blend_mode)? });
+            }
+            RasterLayerNode::Group { visible, opacity, blend_mode, transform, children, .. } => {
+                if !*visible {
+                    continue;
+                }
+                // 🚧️ A non-`normal` group blend needs the group rendered to its own offscreen buffer
+                // first and only then blended as one unit; painting its children individually with
+                // that mode is a DIFFERENT picture, so it is refused rather than approximated.
+                if !matches!(RasterBlend::parse(blend_mode)?, RasterBlend::Normal) {
+                    return Err(format!("group layer declares blend mode {blend_mode:?}; group-level (offscreen) blending is not implemented, only per-layer blending"));
+                }
+                collect_placements(children, assets, RasterAffine::from_transform(transform).then(parent), parent_alpha * opacity, out)?;
+            }
+            RasterLayerNode::Adjustment { visible, adjustment_kind, name, .. } => {
+                if !*visible {
+                    continue;
+                }
+                return Err(format!(
+                    "visible adjustment layer {name:?} of kind {adjustment_kind:?} cannot be applied: this document model carries no pixel-level adjustment evaluator, and flattening without it would encode a picture the editor never showed"
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// 🖼️ Flattens the document's visible pixel layers into one canonical RGBA8 canvas, as an
+/// `s.stdio.semio/v1/image` snapshot — the ONE hub every real pixel export in this subset then
+/// hands to stdio's own png/bmp/gif/jpg/tiff serializer.
+///
+/// 📐️ Canvas: the union of every placement's device-space axis-aligned bounding box, anchored at
+/// the origin (a layer painted at a negative coordinate is clipped, matching the editor's own
+/// origin-anchored composite viewport). Sampling is nearest-neighbour through each placement's
+/// inverse matrix, so translation, non-uniform scale and rotation are all honoured exactly.
+///
+/// 🚧️ Honest limitations, each of which is an `Err` and never a silent approximation: a visible
+/// adjustment layer, a group-level non-`normal` blend, an unrecognized blend mode, an unmaterialized
+/// asset child, and a canvas past `RASTER_COMPOSITE_MAX_*`. `RasterLayerMask` carries no pixel
+/// payload at all in this schema (`enabled`/`linked`/`invert`/`width`/`height`, no `image_key`), so
+/// there is nothing a mask could mask out — it is honestly inert here, not dropped.
+pub fn raster_composite_image(document: &RasterSnapshot) -> Result<SemioImageSnapshot, String> {
+    let mut placements = Vec::new();
+    collect_placements(&document.layers, &document.assets, RasterAffine::IDENTITY, 1.0, &mut placements)?;
+    if placements.is_empty() {
+        return Err("no visible pixel layer with materialized image content: there is nothing to flatten into a raster composite".into());
+    }
+
+    let mut max_x = 0.0f64;
+    let mut max_y = 0.0f64;
+    for placement in &placements {
+        for (x, y) in [(0.0, 0.0), (placement.width, 0.0), (0.0, placement.height), (placement.width, placement.height)] {
+            let (device_x, device_y) = placement.matrix.apply(x, y);
+            if !device_x.is_finite() || !device_y.is_finite() {
+                return Err("a layer transform maps its box to a non-finite device coordinate".into());
+            }
+            max_x = max_x.max(device_x);
+            max_y = max_y.max(device_y);
+        }
+    }
+    let width = (max_x.ceil().max(1.0)) as u64;
+    let height = (max_y.ceil().max(1.0)) as u64;
+    if width > RASTER_COMPOSITE_MAX_SIDE as u64 || height > RASTER_COMPOSITE_MAX_SIDE as u64 || width * height > RASTER_COMPOSITE_MAX_PIXELS {
+        return Err(format!("composite canvas {width}x{height} exceeds this encoder's {RASTER_COMPOSITE_MAX_SIDE} px side / {RASTER_COMPOSITE_MAX_PIXELS} px area budget"));
+    }
+    let (width, height) = (width as u32, height as u32);
+
+    let mut canvas = vec![0u8; width as usize * height as usize * 4];
+    for placement in &placements {
+        let frame = placement.image.frames.first().ok_or_else(|| "a layer's image asset carries no decoded frame".to_string())?;
+        let (source_width, source_height) = (placement.image.width as usize, placement.image.height as usize);
+        if frame.rgba8.len() != source_width * source_height * 4 {
+            return Err("a layer's image asset frame length does not match width*height*4".into());
+        }
+        let Some(inverse) = placement.matrix.invert() else {
+            return Err("a layer transform is singular (zero scale) and cannot be sampled".into());
+        };
+        let mut min_device = (f64::MAX, f64::MAX);
+        let mut max_device = (f64::MIN, f64::MIN);
+        for (x, y) in [(0.0, 0.0), (placement.width, 0.0), (0.0, placement.height), (placement.width, placement.height)] {
+            let (device_x, device_y) = placement.matrix.apply(x, y);
+            min_device = (min_device.0.min(device_x), min_device.1.min(device_y));
+            max_device = (max_device.0.max(device_x), max_device.1.max(device_y));
+        }
+        let x0 = min_device.0.floor().max(0.0) as u32;
+        let y0 = min_device.1.floor().max(0.0) as u32;
+        let x1 = (max_device.0.ceil().max(0.0) as u64).min(width as u64) as u32;
+        let y1 = (max_device.1.ceil().max(0.0) as u64).min(height as u64) as u32;
+        for y in y0..y1 {
+            for x in x0..x1 {
+                let (u, v) = inverse.apply(x as f64 + 0.5, y as f64 + 0.5);
+                if u < 0.0 || v < 0.0 || u >= placement.width || v >= placement.height {
+                    continue;
+                }
+                let source_x = ((u / placement.width) * source_width as f64) as usize;
+                let source_y = ((v / placement.height) * source_height as f64) as usize;
+                let source_index = (source_y.min(source_height - 1) * source_width + source_x.min(source_width - 1)) * 4;
+                let source_alpha = (frame.rgba8[source_index + 3] as f32 / 255.0) * placement.alpha;
+                if source_alpha <= 0.0 {
+                    continue;
+                }
+                let destination_index = (y as usize * width as usize + x as usize) * 4;
+                let backdrop_alpha = canvas[destination_index + 3] as f32 / 255.0;
+                let out_alpha = source_alpha + backdrop_alpha * (1.0 - source_alpha);
+                for channel in 0..3 {
+                    let source_channel = frame.rgba8[source_index + channel] as f32 / 255.0;
+                    let backdrop_channel = canvas[destination_index + channel] as f32 / 255.0;
+                    let blended = (1.0 - backdrop_alpha) * source_channel + backdrop_alpha * placement.blend.apply(backdrop_channel, source_channel);
+                    let out_channel = if out_alpha > 0.0 { ((1.0 - source_alpha) * backdrop_alpha * backdrop_channel + source_alpha * blended) / out_alpha } else { 0.0 };
+                    canvas[destination_index + channel] = (out_channel.clamp(0.0, 1.0) * 255.0).round() as u8;
+                }
+                canvas[destination_index + 3] = (out_alpha.clamp(0.0, 1.0) * 255.0).round() as u8;
+            }
+        }
+    }
+
+    Ok(SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: canvas }], icc: None, metadata: Vec::new() })
+}
+
+/// 📥️ The inverse hub hop every real pixel IMPORT in this subset ends on: one decoded
+/// `s.stdio.semio/v1/image` becomes a one-`Pixel`-layer raster document whose single asset child is
+/// that same content (canonicalized to PNG bytes by the real png serializer, exactly as
+/// `raster_document_json_from_dwg`/`raster_image_layer_and_asset` already do).
+pub fn raster_document_from_semio_image(image: &SemioImageSnapshot, id_prefix: &str, title: &str) -> Result<RasterSnapshot, String> {
+    if image.width == 0 || image.height == 0 {
+        return Err(format!("{id_prefix}: decoded image is {}x{} — an empty raster cannot become a pixel layer", image.width, image.height));
+    }
+    let data = png_bytes_from_semio_image(image)?;
+    let asset_key = crate::artifacts::raster::schema::create_raster_id(&format!("{id_prefix}-asset"));
+    let mut layer = crate::artifacts::raster::schema::create_pixel_layer(title, image.width, image.height);
+    if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
+        *image_key = Some(asset_key.clone());
+    }
+    let asset = RasterImageAsset { mime: "image/png".into(), data };
+    let handle = crate::artifacts::raster::mint_raster_asset_child(&asset_key, &asset);
+    let mut assets = crate::artifacts::raster::RasterOwnedMap::new();
+    assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
+    Ok(RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::artifacts::raster::schema::create_raster_id(id_prefix), title: Some(title.into()), layers: vec![layer], assets })
+}
+//#endregion 🔖️Composite
+
+//#region 🔖️Gif87aBridge
+/// 🎞️ A pure VERSION remap between stdio's two `GifSnapshot` types. It moves no pixels and quantizes
+/// nothing — the palette work stays in stdio's own `SemioImageFromGif`/`SemioImageToGif` leaves,
+/// which are declared at `89a` only, while this subset's own gif dialect is `87a`. GIF87a has no
+/// Graphic Control Extension, so the 89a-only frame state (`delay_cs`, `disposal`,
+/// `transparent_index`, `user_input`, `plain_text`) and the 89a-only document state (`loop_count`,
+/// `comments`, `app_extensions`) have no on-disk home in an 87a file and are dropped ON PURPOSE —
+/// that is what "this document is GIF87a" means, not a shortcut taken here.
+pub(crate) mod gif87a {
+    use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable as Table87a, GifImage as Image87a, GifRgb as Rgb87a, GifSnapshot as Snapshot87a};
+    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable as Table89a, GifFrame as Frame89a, GifRgb as Rgb89a, GifSnapshot as Snapshot89a};
+
+    fn table_to_87a(table: &Table89a) -> Table87a {
+        Table87a { sorted: table.sorted, colors: table.colors.iter().map(|color| Rgb87a { r: color.r, g: color.g, b: color.b }).collect() }
+    }
+
+    fn table_to_89a(table: &Table87a) -> Table89a {
+        Table89a { sorted: table.sorted, colors: table.colors.iter().map(|color| Rgb89a { r: color.r, g: color.g, b: color.b }).collect() }
+    }
+
+    pub(crate) fn from_89a(snapshot: &Snapshot89a) -> Snapshot87a {
+        Snapshot87a {
+            width: snapshot.width,
+            height: snapshot.height,
+            gct: snapshot.gct.as_ref().map(table_to_87a),
+            background_color_index: snapshot.background_color_index,
+            pixel_aspect_ratio: snapshot.pixel_aspect_ratio,
+            images: snapshot
+                .frames
+                .iter()
+                .filter(|frame| !frame.indices.is_empty())
+                .map(|frame| Image87a { left: frame.left, top: frame.top, width: frame.width, height: frame.height, interlace: frame.interlace, lct: frame.lct.as_ref().map(table_to_87a), indices: frame.indices.clone() })
+                .collect(),
+            ..Snapshot87a::default()
+        }
+    }
+
+    pub(crate) fn to_89a(snapshot: &Snapshot87a) -> Snapshot89a {
+        Snapshot89a {
+            width: snapshot.width,
+            height: snapshot.height,
+            gct: snapshot.gct.as_ref().map(table_to_89a),
+            background_color_index: snapshot.background_color_index,
+            pixel_aspect_ratio: snapshot.pixel_aspect_ratio,
+            frames: snapshot
+                .images
+                .iter()
+                .map(|image| Frame89a { left: image.left, top: image.top, width: image.width, height: image.height, interlace: image.interlace, lct: image.lct.as_ref().map(table_to_89a), indices: image.indices.clone(), ..Frame89a::default() })
+                .collect(),
+            ..Snapshot89a::default()
+        }
+    }
+}
+//#endregion 🔖️Gif87aBridge
 
 //#region 🔖️MediaExport
 /// 📤️ Real vector export: the document's visible layer stack becomes a `SemioDrawingSnapshot`
@@ -310,6 +676,106 @@ mod tests {
         assert_eq!(asset.data, b"hello".to_vec());
         let RasterLayerNode::Pixel { image_key, .. } = &layer else { panic!("expected pixel layer") };
         assert_eq!(image_key.as_deref(), Some(asset_id.as_str()));
+    }
+
+    /// 🧪️ Builds a real one-pixel-layer document whose asset child carries genuinely PNG-encoded
+    /// content (through the same `mint_raster_asset_child` funnel every mutation uses), so the
+    /// composite tests below exercise the real materialization path and never a fabricated handle.
+    fn document_with_solid_layer(red: u8, green: u8, blue: u8, alpha: u8, width: u32, height: u32) -> RasterSnapshot {
+        let pixel_count = width as usize * height as usize;
+        let mut rgba8 = Vec::with_capacity(pixel_count * 4);
+        for _ in 0..pixel_count {
+            rgba8.extend_from_slice(&[red, green, blue, alpha]);
+        }
+        let image = SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() };
+        raster_document_from_semio_image(&image, "fixture", "Fixture").expect("fixture document")
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn composite_flattens_a_pixel_layer_back_to_its_own_canvas() {
+        let document = document_with_solid_layer(10, 20, 30, 255, 4, 2);
+        let composite = raster_composite_image(&document).expect("composite");
+        assert_eq!((composite.width, composite.height), (4, 2));
+        let frame = composite.frames.first().expect("one frame");
+        assert_eq!(frame.rgba8.len(), 4 * 2 * 4);
+        assert_eq!(&frame.rgba8[..4], &[10, 20, 30, 255]);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn composite_refuses_a_visible_adjustment_layer_with_a_reason() {
+        let mut document = document_with_solid_layer(1, 2, 3, 255, 2, 2);
+        document.layers.push(crate::artifacts::raster::schema::create_layer_of_kind("adjustment"));
+        let error = raster_composite_image(&document).expect_err("adjustment layers must refuse");
+        assert!(error.contains("adjustment layer"), "{error}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn composite_refuses_an_unknown_blend_mode_with_a_reason() {
+        let mut document = document_with_solid_layer(1, 2, 3, 255, 2, 2);
+        if let Some(RasterLayerNode::Pixel { blend_mode, .. }) = document.layers.first_mut() {
+            *blend_mode = "colorDodge".into();
+        }
+        let error = raster_composite_image(&document).expect_err("unknown blend modes must refuse");
+        assert!(error.contains("unsupported blend mode"), "{error}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn composite_refuses_a_document_with_nothing_to_flatten() {
+        let error = raster_composite_image(&crate::artifacts::raster::schema::empty_raster_snapshot()).expect_err("an empty document has no composite");
+        assert!(error.contains("nothing to flatten"), "{error}");
+    }
+
+    /// 🧪️ The real end-to-end pixel hop this packet exists for: composite → stdio's own
+    /// `semio/image` → `bmp` serializer → stdio's own `encode_bmp`, then all the way back. A BMP v3
+    /// file starts with `BM`, and the round trip must recover the same RGB (alpha is the format's
+    /// own documented loss).
+    #[semio_framework_async_macros::async_test]
+    async fn bmp_export_writes_real_bytes_that_import_reads_back() {
+        let document = document_with_solid_layer(200, 100, 50, 255, 3, 2);
+        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
+        assert_eq!(&bytes[..2], b"BM", "real BITMAPFILEHEADER magic, not DSL text");
+        let reimported = crate::artifacts::raster::io::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes).expect("bmp import");
+        let composite = raster_composite_image(&reimported).expect("composite of the reimported document");
+        assert_eq!((composite.width, composite.height), (3, 2));
+        assert_eq!(&composite.frames[0].rgba8[..3], &[200, 100, 50]);
+    }
+
+    /// 🧪️ A PNG export must carry the 8-byte PNG signature — the single sharpest proof that no leaf
+    /// is printing this artifact's own DSL text under a foreign extension any more.
+    #[semio_framework_async_macros::async_test]
+    async fn png_export_writes_a_real_png_signature() {
+        let document = document_with_solid_layer(0, 128, 255, 255, 2, 2);
+        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&document).expect("png export");
+        assert_eq!(&bytes[..8], &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]);
+    }
+
+    /// 🧪️ Every hop this subset declines is declined with a SENTENCE, never with silently wrong
+    /// bytes and never with a bare "not implemented".
+    #[semio_framework_async_macros::async_test]
+    async fn declined_hops_refuse_with_a_reason() {
+        let document = document_with_solid_layer(1, 2, 3, 255, 2, 2);
+        let pdf_export = crate::artifacts::raster::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&document).expect_err("pdf export is declined");
+        assert!(pdf_export.contains("pdf export not supported for a raster document:"), "{pdf_export}");
+        let pdf_import = crate::artifacts::raster::io::import::deserializers::artifacts::pdf::v1_4::any::deserialize_bytes(b"%PDF-1.4\n").expect_err("pdf import is declined");
+        assert!(pdf_import.contains("pdf import not supported for a raster document:"), "{pdf_import}");
+        let dwg_export = crate::artifacts::raster::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&document).expect_err("dwg export is declined");
+        assert!(dwg_export.contains("dwg export not supported for a raster document:"), "{dwg_export}");
+    }
+
+    /// 🧪️ The two advertised-kind lists must name only formats a leaf really encodes/decodes —
+    /// `negotiate_wire_format` picks workflow wires straight out of them.
+    #[semio_framework_async_macros::async_test]
+    async fn advertised_stdio_kinds_exclude_every_declined_hop() {
+        assert!(!export_stdio_kinds().contains(&"stdio.pdf"), "pdf export is declined");
+        assert!(!export_stdio_kinds().contains(&"stdio.dwg"), "dwg export is declined");
+        assert!(!import_stdio_kinds().contains(&"stdio.pdf"), "pdf import is declined");
+        assert!(import_stdio_kinds().contains(&"stdio.dwg"), "dwg import is real");
+        for kind in ["stdio.bmp", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.png", "stdio.svg", "stdio.tiff"] {
+            assert!(export_stdio_kinds().contains(&kind), "{kind} export is real");
+            assert!(import_stdio_kinds().contains(&kind), "{kind} import is real");
+        }
+        assert_eq!(crate::artifacts::raster::artifact_kind().export_stdio_kinds, export_stdio_kinds().to_vec());
+        assert_eq!(crate::artifacts::raster::artifact_kind().import_stdio_kinds, import_stdio_kinds().to_vec());
     }
 }
 //#endregion 🧪️Tests

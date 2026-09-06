@@ -1,0 +1,48 @@
+{
+  "schema": "gis.map.durable-three-store-assembly.v1",
+  "shape": "parent-drawing-value",
+  "actor": "user:author#session:1",
+  "operation": 73,
+  "members": [
+    { "role": "parent", "document": "map-1!s.gis.gismap@1/*", "owner": null },
+    { "role": "drawing", "document": "gismap-drawing!s.stdio.semio@v1/drawing", "owner": "map-1" },
+    { "role": "value", "document": "gismap-value!s.stdio.semio@v1/value", "owner": "map-1" }
+  ],
+  "preparationOrder": ["parent", "drawing", "value"],
+  "successTrace": [
+    "admit-parent",
+    "admit-drawing",
+    "admit-value",
+    "prepare-parent",
+    "prepare-drawing",
+    "prepare-value",
+    "bind-once",
+    "mount-host",
+    "journal",
+    "publish-parent",
+    "publish-drawing",
+    "publish-value",
+    "await-ack",
+    "terminal-handoff"
+  ],
+  "invariants": {
+    "publishBeforeAllPrepared": false,
+    "callerSuppliesGroupId": false,
+    "exposesPreparedSeal": false,
+    "terminalReturnsStores": 3,
+    "journalBegins": 1
+  },
+  "cancellationCases": [
+    { "at": "admit-parent", "prepared": 0, "journalBegins": 0, "terminalStores": 3 },
+    { "at": "prepare-parent", "prepared": 1, "journalBegins": 0, "terminalStores": 3 },
+    { "at": "prepare-drawing", "prepared": 2, "journalBegins": 0, "terminalStores": 3 },
+    { "at": "prepare-value", "prepared": 3, "journalBegins": 0, "terminalStores": 3 }
+  ],
+  "rejectionCases": [
+    { "at": "parent", "priorPreparations": 0, "terminalStores": 3 },
+    { "at": "drawing", "priorPreparations": 1, "terminalStores": 3 },
+    { "at": "value", "priorPreparations": 2, "terminalStores": 3 }
+  ],
+  "canonicalIdentity": "gis.map.durable-three-store-assembly.v1|parent-drawing-value|73|user:author#session:1|parent:map-1!s.gis.gismap@1/*|drawing:gismap-drawing!s.stdio.semio@v1/drawing:map-1|value:gismap-value!s.stdio.semio@v1/value:map-1",
+  "canonicalIdentitySha256": "6ef32e9754945969d0179db5842e35f71703ec2091367fef49139312dbfab305"
+}

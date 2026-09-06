@@ -184,6 +184,14 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const controller = readFileSync(join(base, "✏️editor/🦀️.rs"), "utf8");
   const editor = readFileSync(join(base, "✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs"), "utf8");
   const viewer = readFileSync(join(base, "👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  const homeOperations = readFileSync(join(base, "🧬️schema/⚙️operations/🦀️.rs"), "utf8");
+  const spaceOperations = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"), "utf8");
+  const spaceEditor = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  const spaceIndexController = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
+  const spaceEngine = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs"), "utf8");
+  const spaceCrateRoot = join(repoRoot, "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust");
+  const spaceCrate = readFileSync(join(spaceCrateRoot, "🦀️.rs"), "utf8");
+  const spaceShared = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🦀️.rs"), "utf8");
   const ownerScript = readFileSync(import.meta.filename, "utf8");
   const osHost = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
   const exact = (editorSource: string, viewerSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
@@ -196,6 +204,33 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     && viewerSource.includes('origin: "hub", role: None');
   assert(controller.includes("fold_directory_events, manage_space, presence_heartbeat"), "Home controller does not import the manageSpace command module");
   assert(exact(editor, viewer), "Home identity rows expose administration without current author authority");
+  const catalogGenerationFixture = "🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🦀️.rs";
+  assert(existsSync(join(base, catalogGenerationFixture)), "Home catalog-generation fixture is not present at its canonical bounded physical path");
+  assert(spaceCrate.includes(`../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/${catalogGenerationFixture}`), "Space crate mounts a stale logical path instead of the canonical bounded fixture path");
+  const spaceBase = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any");
+  const createArtifactFixture = "🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🗿️appends-artifact-3-4665d4/🦀️.rs";
+  assert(existsSync(join(spaceBase, createArtifactFixture)), "Space create-artifact fixture is not present at its canonical bounded physical path");
+  assert(spaceCrate.includes(`../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/${createArtifactFixture}`), "Space crate mounts a stale logical create-artifact fixture path");
+  const missingMounts = [...spaceCrate.matchAll(/#\[path = "([^"]+)"\]/g)]
+    .map((match) => match[1])
+    .filter((mount) => !existsSync(join(spaceCrateRoot, mount)));
+  assert.deepEqual(missingMounts, [], `Space crate mounts missing physical paths: ${missingMounts.join(", ")}`);
+  assert(homeOperations.includes("use protocol::os_spr::testkit::{") && spaceOperations.includes("use protocol::os_spr::testkit::{"), "Home or Space mutation laws import the Pack testkit instead of the current SPR testkit");
+  const operationSources = `${homeOperations}\n${spaceOperations}`;
+  assert(!operationSources.includes("protocol::testkit::assert_"), "Home or Space mutation laws retain the removed Pack testkit path");
+  const sprLawCalls = operationSources.split("\n").filter((line) => /\bassert_(?:fatal_never_applies|missing_target_is_error|mutation_diff_absorb_law|mutation_inverse_law|outcome_policy_matrix)\(/.test(line));
+  assert(sprLawCalls.length === 14 && sprLawCalls.every((call) => call.includes(".await;")), "Home or Space mutation laws do not await the current async SPR testkit");
+  assert(!spaceEngine.includes("Some(&json!(") && spaceEngine.match(/Some\(&pack::json!\(/g)?.length === 3, "Space checkpoint tests do not use the first-party scoped JSON macro");
+  assert(editor.includes("LocalizedLabel, UiNode, WindowKindDefinition") && spaceEditor.includes("IconName, UiNode, WindowKindDefinition"), "Home or Space table tests cannot name the public UiNode projection");
+  assert(editor.includes("fn render_rows_wrapped(") && editor.includes("render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)"), "Home production and injected-row composition do not share the current fallible node builder");
+  assert(!editor.includes("async fn one_local_row()") && !editor.includes("async fn one_hub_row()"), "Pure Home row fixtures are needlessly async");
+  assert(controller.includes("semio_framework_plugin::testkit::new_app::<EditorApp<HomeApp>>().await"), "Home testkit does not await async app construction");
+  assert(spaceEngine.includes("semio_framework_plugin::testkit::new_app::<SpaceApp>().await"), "Space testkit does not await bare async app construction");
+  assert(spaceEngine.includes("new_registered_app::<SpaceApp, _>(create_space_app()).await"), "Space testkit does not await its async manifest through the registered constructor");
+  assert(!spaceEngine.includes("let projection = demo_space_projection();") && !spaceEngine.includes("let app = create_space_app();") && !spaceEngine.includes("let studio = create_space_app();"), "Space engine retains an unawaited async fixture");
+  assert(!spaceEngine.includes("VcsArtifactApp::new(SpaceApp::default());") && !spaceEngine.includes('testkit::test_surface_id("draw"),'), "Space engine retains an unawaited app or surface fixture");
+  assert(spaceIndexController.includes("pub async fn new_app() -> SpaceIndexApp") && spaceIndexController.includes("framework_new_app::<EditorApp<SpaceIndexEditor>>().await"), "Space index testkit does not await async app construction");
+  assert(spaceShared.includes("Some(document_backbone_ref(backbone_uri).await)"), "Space document synchronization does not await its typed backbone reference");
   assert(ownerScript.includes('RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432"'), "Home exact builds do not bound compiler worker stacks");
   assert(ownerScript.includes('nativeEnv: { RUST_MIN_STACK: "268435456" }'), "Home exact laws lost their native runtime stack");
   for (const hostile of [
@@ -208,7 +243,8 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     const name = law.slice(law.lastIndexOf("::") + 2);
     assert(osHost.includes(`fn ${name}()`), `OS host omitted ${law}`);
   }
-  return 12;
+  assert(ownerScript.includes('cargoArgs: ["--features", "os-host-full"]'), "Home native gate cannot select its feature-owned workflow law");
+  return 31;
 }
 
 class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
@@ -227,6 +263,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
           {
             package: "semio-framework-os",
             target: { kind: "lib" },
+            cargoArgs: ["--features", "os-host-full"],
             laws: [
               "workflow::tests::svg_path_extraction_preserves_transformed_geometry",
             ],
@@ -249,6 +286,60 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
   }
 }
 
+/** 🪪️ Proves every authority that names the OS host plugin names the SAME identity — the
+ * language-agnostic tuple in `🧪️fixtures/🧫️plugin-identity/🔣️.json`, validated against its own schema by
+ * a third-party oracle (ajv 2020), then joined to: the Cargo `[package.metadata.component] package`, the
+ * plugin root's `builder(…)`/`package_id(…)` literals, the hand-authored deployment catalog row (public
+ * id + physical module directory), and the generated registry row (`pluginId`/`packageId`/`packageName`/
+ * `host`). The playground VARIANT (`s`) is a different name and is pinned separately against the Cargo
+ * `[[package.metadata.semio.playground]]` row and the generated `DEFAULT_HOST_VARIANT`, so the two can
+ * never be conflated again — the 2026-09-05 regression was `builder("space")` landing in Rust alone while
+ * every other authority still said `s`, which the wasm assembly gate only reported 90 minutes later. */
+export function spacePluginIdentityOracle(repoRoot: string): number {
+  const plugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
+  const registryRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
+  const fixture = JSON.parse(readFileSync(join(plugin, "🧪️fixtures/🧫️plugin-identity/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(plugin, "🧪️fixtures/🧫️plugin-identity/🧬️.schema.json"), "utf8"));
+  assert(new Ajv2020({ strict: true, allErrors: true }).compile(schema)(fixture), "plugin-identity fixture violates its own schema");
+
+  const cargo = readFileSync(join(plugin, "📦️packages/🦀️rust/Cargo.toml"), "utf8");
+  const cargoComponentPackage = cargo.split("[package.metadata.component]")[1]?.split("[")[0]?.match(/package\s*=\s*"([^"]+)"/)?.[1];
+  assert.equal(cargoComponentPackage, fixture.packageId, "Cargo component package is not the fixture identity");
+  assert.equal(cargo.match(/^name\s*=\s*"([^"]+)"/mu)?.[1], fixture.packageName, "Cargo package name is not the fixture identity");
+  assert.equal(cargo.split("[[package.metadata.semio.playground]]")[1]?.match(/variant\s*=\s*"([^"]+)"/)?.[1], fixture.playgroundVariant, "the playground variant row is the OTHER name and must stay declared");
+
+  const pluginRoot = readFileSync(join(plugin, "🦀️.rs"), "utf8");
+  assert.equal(pluginRoot.match(/Plugin::<SpaceApps>::builder\("([^"]+)"\)/)?.[1], fixture.pluginId, "plugin() builder id is not the fixture identity");
+  assert.equal(pluginRoot.match(/\.package_id\("([^"]+)"\)/)?.[1], fixture.packageId, "plugin().package_id is not the fixture identity");
+  assert.equal(fixture.packageId, `semio:${fixture.pluginId}`, "component package identity must be semio:<plugin id>");
+  assert.equal(fixture.artifactKindPrefix, `s.${fixture.pluginId}.`, "the canonical s.<plugin>.<kind> owner segment must be the plugin id");
+
+  const deployment = JSON.parse(readFileSync(join(registryRoot, "📦️deployment/🗺️catalog.json"), "utf8"));
+  const row = deployment.modules.find((entry: { pluginId: string }) => entry.pluginId === fixture.pluginId);
+  assert(row, `deployment catalog has no row for ${fixture.pluginId}`);
+  assert.equal(row.directoryName, fixture.moduleDirectoryName, "deployment catalog directory is not the fixture module directory");
+
+  const registry = JSON.parse(readFileSync(join(registryRoot, "🤖️generated/🔌️plugins.json"), "utf8"));
+  const entry = registry.find((candidate: { pluginId: string }) => candidate.pluginId === fixture.pluginId);
+  assert(entry, `generated registry has no row for ${fixture.pluginId}`);
+  assert.equal(entry.packageId, fixture.packageId, "generated registry packageId is not the fixture identity");
+  assert.equal(entry.packageName, fixture.packageName, "generated registry packageName is not the fixture identity");
+  assert.deepEqual(entry.host, fixture.host, "generated registry host config is not the fixture host config");
+  assert.deepEqual(
+    deployment.modules.map((module: { pluginId: string }) => module.pluginId),
+    registry.map((candidate: { pluginId: string }) => candidate.pluginId),
+    "deployment catalog and generated registry disagree on the public identity roster",
+  );
+
+  const playgrounds = readFileSync(join(registryRoot, "🤖️generated/🎮️playgrounds.ts"), "utf8");
+  assert(playgrounds.includes(`export const DEFAULT_HOST_VARIANT = ${JSON.stringify(fixture.playgroundVariant)}`), "DEFAULT_HOST_VARIANT is not the declared playground variant");
+  assert(playgrounds.includes(`{ variant: ${JSON.stringify(fixture.playgroundVariant)}, pluginId: ${JSON.stringify(fixture.pluginId)},`), "the playground variant row does not resolve to the plugin identity");
+
+  const hosts = readFileSync(join(registryRoot, "🤖️generated/🖥️hosts.rs"), "utf8");
+  assert(hosts.includes(`PluginHostConfig { plugin_id: ${JSON.stringify(fixture.pluginId)}, landing_app_id: ${JSON.stringify(fixture.host.landingAppId)}, host_app_id: ${JSON.stringify(fixture.host.hostAppId)} }`), "the generated Rust host table is not the fixture host config");
+  return 11;
+}
+
 /** 🧵️ Proves the three `🪐️space` app surfaces declare exactly the interactive-job dispositions their
  * language-neutral fixtures declare, and reports the committed descriptor's drift against them. The
  * descriptor is regenerated only by a full `wasm32-wasip2` build (`describe`), so a stale one is
@@ -261,14 +352,7 @@ export function interactiveJobCatalogOracle(repoRoot: string): number {
     { appId: "s.space.space@1/*#editor", owner: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), source: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
   ];
   const descriptor = JSON.parse(readFileSync(join(plugin, "🔣️.json"), "utf8"));
-  const cargoComponentPackage = readFileSync(join(plugin, "📦️packages/🦀️rust/Cargo.toml"), "utf8").split("[package.metadata.component]")[1]?.split("[")[0]?.match(/package\s*=\s*"([^"]+)"/)?.[1];
-  assert(cargoComponentPackage, "Cargo [package.metadata.component] declares no package");
-  const pluginRoot = readFileSync(join(plugin, "🦀️.rs"), "utf8");
-  const builderId = pluginRoot.match(/Plugin::<SpaceApps>::builder\("([^"]+)"\)/)?.[1];
-  const packageId = pluginRoot.match(/\.package_id\("([^"]+)"\)/)?.[1];
-  assert.equal(packageId, cargoComponentPackage, "plugin().package_id must equal the Cargo component package");
-  assert.equal(packageId, `semio:${builderId}`, "component package identity must be semio:<builder plugin id>");
-  let checks = 1;
+  let checks = spacePluginIdentityOracle(repoRoot);
   let staleRows = 0;
   for (const surface of surfaces) {
     const fixtureRoot = join(surface.owner, "🧪️fixtures/🧫️retained-command-limits");
@@ -305,6 +389,14 @@ export function interactiveJobCatalogOracle(repoRoot: string): number {
   }
   console.log(`interactive-job-catalog: descriptor rows without an interactiveJob disposition: ${staleRows} (regenerated by \`describe\` after a wasm build)`);
   return checks;
+}
+
+/** 🪪️ Registered gate for {@link spacePluginIdentityOracle}. */
+class PluginIdentityCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length > 0) throw new Error("plugin-identity-check accepts no arguments");
+    console.log(`plugin-identity-check: checks=${spacePluginIdentityOracle(this.repoRoot)} clean`);
+  }
 }
 
 class InteractiveJobCatalogCheckScript extends BundleScript {
@@ -344,6 +436,6 @@ class DescribeScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("plugin-identity-check", PluginIdentityCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

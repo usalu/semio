@@ -74,6 +74,9 @@ semio-framework-actor = { workspace = true }
 semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 semio-framework-async = { workspace = true }
 
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+
 [features]
 default = []
 space-guest = []

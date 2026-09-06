@@ -6,6 +6,14 @@
     "default": ["{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "worker-pool-use-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts worker-pool-use-check", "cwd": "{projectRoot}" }
+    },
+    "worker-pool-use-native-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts worker-pool-use-check --native", "cwd": "{projectRoot}" }
+    },
     "worker-deferred-wake-check": {
       "executor": "nx:run-commands",
       "options": { "command": "bun ./📜️script.ts worker-deferred-wake-check", "cwd": "{projectRoot}" }

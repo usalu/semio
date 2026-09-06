@@ -49,11 +49,11 @@ The matching in-app Chromium run is green at the explicitly narrow boundary `mou
 
 - `@semio-tech/plugin-registry:generate --skip-nx-cache`: green; 59 plugin crates, 60 playgrounds, 45 framework packages
 - `@semio-tech/plugin-registry:check-generated --skip-nx-cache`: green; generated catalog and launch bytes fresh
-- generated launch includes `⚖️gate🎟️directory-invite-capability🌐️browser-worker` and `⚖️gate👥️scoped-presence🌐️browser-worker`
+- generated launch includes `⚖️gate🎟️directory-invite-capability🌐️browser-worker`, `⚖️gate👥️scoped-presence🌐️browser-worker`, the settled deferred-wake order `411.0791`, and closed browser component-factory order `411.082`
 
 ### Full TypeScript boundary
 
-`@semio-tech/framework-renderer-react:typecheck --skip-nx-cache` remains red on concurrent/pre-existing repository errors (tutorial tuples/snapshots, replication typed arrays, directory reexports, parser export, PluginRuntime/UI contracts, Flow declaration, and existing worker execution-target errors). It reported no line attributable to the scoped-presence implementation or its tests.
+`@semio-tech/framework-renderer-react:typecheck --skip-nx-cache` remains red on concurrent/pre-existing repository errors (tutorial tuples/snapshots, replication typed arrays, PluginRuntime/UI contracts, AgentBridge, Flow declaration, and existing worker execution-target errors). This run also caught required `Button.icon` props on the new administration pane and an inference-preview fixture whose ring inferred as an unbounded array. Those two scoped type failures were repaired with explicit semantic icons and an exact `GisMapInferencePreviewV1` fixture type; the focused invitation gate was rerun green afterward. A second full typecheck was not launched under current compiler pressure, so no whole-project green claim is made.
 
 ### Native/process status
 

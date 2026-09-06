@@ -1486,6 +1486,7 @@ struct DatabaseSyncHelloCore {
 
 struct DatabaseSyncHelloState {
     pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+    _pool_use: std::sync::Arc<semio_framework_async::WorkerPoolUse>,
     slot: usize,
     generation: u64,
     admission: std::sync::Mutex<Option<DatabaseSyncHelloAdmission>>,
@@ -1831,6 +1832,16 @@ impl DatabaseSyncHelloFuture {
         snapshot_chunk_bytes: usize,
     ) -> Result<Self, DatabaseSyncHelloRejected> {
         let owners = DatabaseSyncHelloOwners { storage: Some(storage), document, hello_frontier, session_id, origin, snapshot_chunk_bytes };
+        let pool_use = match pool.acquire_use() {
+            Ok(pool_use) => pool_use,
+            Err(error) => {
+                return Err(DatabaseSyncHelloRejected::new(
+                    pool,
+                    DbError::Unavailable(format!("database sync-hello WorkerPool use rejected: {error:?}")),
+                    owners,
+                ))
+            }
+        };
         let (input_items, input_bytes) = match database_sync_hello_input_credit(&owners) {
             Ok(credit) => credit,
             Err(error) => return Err(DatabaseSyncHelloRejected::new(pool, error, owners)),
@@ -1848,6 +1859,7 @@ impl DatabaseSyncHelloFuture {
         let deadline_ms = pool.now_ms().saturating_add(DATABASE_SYNC_HELLO_DEADLINE_MS);
         let state = std::sync::Arc::new(DatabaseSyncHelloState {
             pool: pool.clone(),
+            _pool_use: pool_use,
             slot,
             generation,
             admission: std::sync::Mutex::new(Some(admission)),

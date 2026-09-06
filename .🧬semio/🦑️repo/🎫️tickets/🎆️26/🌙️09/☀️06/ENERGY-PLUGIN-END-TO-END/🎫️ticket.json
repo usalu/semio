@@ -1,0 +1,9 @@
+{
+  "title": "Energy Plugin End To End",
+  "emoji": "🔋️",
+  "status": "open",
+  "description": "Get the 🔋️energy plugin (✏️s/🔌️plugins/🔋️energy) working end to end: the crate builds natively and for wasm32-wasip2, every mutation of the 🔋️model artifact has an exhaustive real-world fixture test validated in Rust and against third-party oracles (Honeybee → OpenStudio → EnergyPlus), the descriptor is regenerated, and the energy playground boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.",
+  "goal": "ENERGY",
+  "sessions": ["⚪411af150-09ce-4f7f-a1b9-ac675c7c067d"],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-06)."
+}

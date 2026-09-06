@@ -53,7 +53,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn create_artifact_mints_an_id_adds_a_row_and_relays_the_open_command() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::new_app().await;
         let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
         let snapshot = app.snapshot().expect("projection");
         assert_eq!(snapshot.artifacts.len(), 1);
@@ -76,7 +76,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_name_and_kind_open_the_dialog_instead_of_failing() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::new_app().await;
         let result = app
             .dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: String::new(), kind_id: String::new(), now_ms: 0, actor: String::new() }), &semio_framework_plugin::testkit::meta("local"))
             .expect("empty args must open the dialog, not fail");
@@ -94,7 +94,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn create_artifact_rejects_an_unknown_kind() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::new_app().await;
         let error = app
             .dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "First".into(), kind_id: "nope".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
             .expect_err("unknown kind must fail");
@@ -103,7 +103,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn create_artifact_mints_distinct_ids_for_two_rows_created_at_the_same_instant() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::new_app().await;
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "A".into(), kind_id: "draw".into(), now_ms: 5, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create a");
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "B".into(), kind_id: "draw".into(), now_ms: 5, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create b");
         let snapshot = app.snapshot().expect("projection");

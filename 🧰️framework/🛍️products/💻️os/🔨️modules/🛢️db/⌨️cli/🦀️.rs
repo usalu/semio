@@ -171,6 +171,41 @@ async fn fail(context: &str, err: impl std::fmt::Display) -> i32 {
     1
 }
 
+async fn close_wal_open_rejected(mut rejected: db::wal::ArtifactWalOpenRejected) -> db::DbError {
+    loop {
+        match rejected.retry_close().await {
+            Ok(cause) => return cause,
+            Err(retained) => rejected = retained,
+        }
+    }
+}
+
+async fn close_document_open_rejected(mut rejected: db::DatabaseDocumentOpenRejected) -> db::DbError {
+    loop {
+        match rejected.retry_close().await {
+            Ok(cause) => return cause,
+            Err(retained) => rejected = retained,
+        }
+    }
+}
+
+async fn fail_wal_open(context: &str, rejected: db::wal::ArtifactWalOpenRejected) -> i32 {
+    fail(context, close_wal_open_rejected(rejected).await).await
+}
+
+async fn fail_document_open(context: &str, rejected: db::DatabaseDocumentOpenRejected) -> i32 {
+    fail(context, close_document_open_rejected(rejected).await).await
+}
+
+async fn close_replication_rejected(mut rejected: db::cluster::ReplicationRejected) -> db::DbError {
+    loop {
+        match rejected.retry_close().await {
+            Ok(cause) => return cause,
+            Err(retained) => rejected = retained,
+        }
+    }
+}
+
 async fn usage(message: &str) -> i32 {
     eprintln!("db: {message}");
     2
@@ -232,7 +267,7 @@ async fn cmd_inspect(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match open_database(Path::new(root), profile).await {
+    let mut database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -245,7 +280,7 @@ async fn cmd_inspect(rest: &[String]) -> i32 {
     }
     print_health(&database.health().await);
 
-    if let Err(err) = database.shutdown(std::time::Duration::from_secs(5)).await {
+    if let Err(err) = database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
         return fail("shutdown", err).await;
     }
     0
@@ -275,14 +310,14 @@ async fn cmd_doc(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match open_database(Path::new(root), profile).await {
+    let mut database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
     let document_id = protocol::ArtifactId(id.clone());
     let handle = match database.document(&document_id).await {
         Ok(handle) => handle,
-        Err(err) => return fail("document", err).await,
+        Err(err) => return fail_document_open("document", err).await,
     };
 
     let outcome = match handle.frontier().await {
@@ -303,7 +338,8 @@ async fn cmd_doc(rest: &[String]) -> i32 {
         Err(err) => fail("frontier", err).await,
     };
 
-    match database.shutdown(std::time::Duration::from_secs(5)).await {
+    drop(handle);
+    match database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
         Ok(()) => outcome,
         Err(err) => fail("shutdown", err).await,
     }
@@ -864,12 +900,12 @@ async fn cmd_verify(rest: &[String]) -> i32 {
     let ids: Vec<String> = match positional.get(1) {
         Some(id) => vec![id.clone()],
         None => {
-            let database = match open_database(Path::new(root), profile).await {
+            let mut database = match open_database(Path::new(root), profile).await {
                 Ok(database) => database,
                 Err(err) => return fail("open", err).await,
             };
             let ids = database.catalog().await.artifacts.iter().map(|entry| entry.document.0.clone()).collect();
-            if let Err(err) = database.shutdown(std::time::Duration::from_secs(5)).await {
+            if let Err(err) = database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
                 return fail("shutdown", err).await;
             }
             ids
@@ -919,14 +955,14 @@ async fn cmd_query(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match open_database(Path::new(root), profile).await {
+    let mut database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
     let document_id = protocol::ArtifactId(id.clone());
     let handle = match database.document(&document_id).await {
         Ok(handle) => handle,
-        Err(err) => return fail("document", err).await,
+        Err(err) => return fail_document_open("document", err).await,
     };
 
     let query = match paths.len() {
@@ -952,7 +988,8 @@ async fn cmd_query(rest: &[String]) -> i32 {
         Err(err) => fail("query", err).await,
     };
 
-    match database.shutdown(std::time::Duration::from_secs(5)).await {
+    drop(handle);
+    match database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
         Ok(()) => outcome,
         Err(err) => fail("shutdown", err).await,
     }
@@ -1064,7 +1101,7 @@ async fn cmd_repair(rest: &[String]) -> i32 {
             }
             0
         }
-        Err(err) => fail("repair", err).await,
+        Err(err) => fail_wal_open("repair", err).await,
     }
 }
 //#endregion 🔖️Repair
@@ -1085,7 +1122,7 @@ async fn cmd_compact(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match open_database(Path::new(root), profile).await {
+    let mut database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -1101,10 +1138,10 @@ async fn cmd_compact(rest: &[String]) -> i32 {
             println!("  snapshot_generations_pruned: {}", report.snapshot_generations_pruned);
             0
         }
-        Err(err) => fail("compact", err).await,
+        Err(err) => fail_document_open("compact", err).await,
     };
 
-    match database.shutdown(std::time::Duration::from_secs(5)).await {
+    match database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
         Ok(()) => outcome,
         Err(err) => fail("shutdown", err).await,
     }
@@ -1123,7 +1160,7 @@ async fn cmd_health(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match open_database(Path::new(root), profile).await {
+    let mut database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -1131,7 +1168,7 @@ async fn cmd_health(rest: &[String]) -> i32 {
     print_health(&health);
     let exit = if matches!(health.report.overall, db::observe::HealthState::Unhealthy(_)) { 1 } else { 0 };
 
-    match database.shutdown(std::time::Duration::from_secs(5)).await {
+    match database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
         Ok(()) => exit,
         Err(err) => fail("shutdown", err).await,
     }
@@ -1226,7 +1263,7 @@ async fn cmd_replica_simulate(rest: &[String]) -> i32 {
             println!("  pack_hash: {}", hex32(&pack_hash));
             0
         }
-        Err(err) => fail("replicate", err).await,
+        Err(err) => fail("replicate", close_replication_rejected(err).await).await,
     }
 }
 //#endregion 🔖️ReplicaSimulate
@@ -1256,7 +1293,7 @@ async fn cmd_migrate(rest: &[String]) -> i32 {
     let now = now_ms().await;
     let (mut wal, _report) = match db::actor::block_on(db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now)) {
         Ok(pair) => pair,
-        Err(err) => return fail("open wal", err).await,
+        Err(err) => return fail_wal_open("open wal", err).await,
     };
     let outcome: Result<db::wal::WalAppendReceipt, (&'static str, db::DbError)> = async {
         let bytes = format!("{name}\n{payload}").into_bytes();
@@ -1356,17 +1393,23 @@ async fn cmd_profile(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match open_database(Path::new(root), profile).await {
+    let mut database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
     let document_id = protocol::ArtifactId(id.clone());
     let handle = match database.document(&document_id).await {
         Ok(handle) => handle,
-        Err(_) => match database.create_document(db::ArtifactSpec::new(document_id.clone()).await).await {
-            Ok(handle) => handle,
-            Err(err) => return fail("create", err).await,
-        },
+        Err(rejected) => {
+            let error = close_document_open_rejected(rejected).await;
+            if !matches!(error, db::DbError::NotFound(_)) {
+                return fail("document", error).await;
+            }
+            match database.create_document(db::ArtifactSpec::new(document_id.clone()).await).await {
+                Ok(handle) => handle,
+                Err(err) => return fail_document_open("create", err).await,
+            }
+        }
     };
 
     let start = std::time::Instant::now();
@@ -1404,7 +1447,8 @@ async fn cmd_profile(rest: &[String]) -> i32 {
     println!("  commands_per_sec: {per_sec:.1}");
     println!("  avg_latency_us: {avg_latency_us:.1}");
 
-    match database.shutdown(std::time::Duration::from_secs(5)).await {
+    drop(handle);
+    match database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
         Ok(()) => 0,
         Err(err) => fail("shutdown", err).await,
     }
@@ -1528,12 +1572,13 @@ mod tests {
     /// 🌱️ Seeds `doc-1` at `root` with one committed, `Fsync`-durable transaction through the real
     /// `Database::create_document`/`ArtifactHandle::submit` round trip, then cleanly shuts down.
     async fn seed_document(root: &Path) {
-        let database = open_database(root, db::Profile::Test).await.unwrap();
+        let mut database = open_database(root, db::Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(db::ArtifactSpec::new(document.clone()).await).await.unwrap();
         let batch = db::document::CommandBatch::new(vec![test_envelope("op-1", &document).await]).await.unwrap();
         db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
-        database.shutdown(std::time::Duration::from_secs(1)).await.unwrap();
+        drop(handle);
+        database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(1))).await.unwrap();
     }
     //#endregion 🧸️Fixtures
 

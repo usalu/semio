@@ -12,6 +12,7 @@ use crate::artifacts::home::SHomeSnapshot;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
 
     #[semio_framework_async_macros::async_test]
     async fn home_op_text_round_trips_every_variant() {
@@ -31,7 +32,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn change_catalog_generation_inverse_law() {
         let base = SHomeSnapshot::default();
-        protocol::testkit::assert_mutation_inverse_law(&base, &change_catalog_generation(7));
+        assert_mutation_inverse_law(&base, &change_catalog_generation(7)).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -41,7 +42,7 @@ mod tests {
         let d1 = change_catalog_generation(3).diff(&base).diff().clone();
         let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = change_catalog_generation(9).diff(&mid).diff().clone();
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🔖️MutationLaws
 
@@ -55,13 +56,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn change_catalog_generation_success_outcome_obeys_the_policy_matrix() {
         let base = SHomeSnapshot::default();
-        protocol::testkit::assert_outcome_policy_matrix(&base, &change_catalog_generation(7));
+        assert_outcome_policy_matrix(&base, &change_catalog_generation(7)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_catalog_generation_no_op_outcome_obeys_the_policy_matrix() {
         let base = SHomeSnapshot::default();
-        protocol::testkit::assert_outcome_policy_matrix(&base, &change_catalog_generation(base.catalog_generation));
+        assert_outcome_policy_matrix(&base, &change_catalog_generation(base.catalog_generation)).await;
     }
     //#endregion 🔖️OutcomeLaws
 }

@@ -28,6 +28,13 @@ pub struct CheckpointRequest {
     pub timestamp_ms: u64,
 }
 
+/// 🧹️ One bounded retirement result for a retained version graph.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum VersionGraphShutdownStep {
+    Progress,
+    Complete,
+}
+
 /// @emoji 🌿️ The vcs seam: per the contract's hard dependency rule, only `db_engine` (behind the
 /// `vcs` Cargo feature) may depend on the `vcs` crate — every crate below it, including
 /// `db_artifact` (which drives commits), talks to version history ONLY through this
@@ -52,6 +59,9 @@ pub trait VersionGraph: Send + Sync {
 
     /// @emoji 🎯️ The current head checkpoint id of `alternative`, or `None` if it has none yet.
     fn head<'a>(&'a self, document: &'a ArtifactId, alternative: &'a str) -> VersionGraphFuture<'a, Option<String>>;
+
+    /// 🧹️ Advances at most one retained per-document history owner.
+    fn shutdown_step(&self) -> VersionGraphFuture<'_, VersionGraphShutdownStep>;
 }
 
 /// @emoji 🧵️ A worker-safe version-graph operation future with its input borrow lifetime preserved.
@@ -79,6 +89,10 @@ impl VersionGraph for NullVersionGraph {
 
     fn head<'a>(&'a self, _document: &'a ArtifactId, _alternative: &'a str) -> VersionGraphFuture<'a, Option<String>> {
         Box::pin(async { Err(DbError::Unimplemented("VersionGraph is not wired up (vcs feature disabled)")) })
+    }
+
+    fn shutdown_step(&self) -> VersionGraphFuture<'_, VersionGraphShutdownStep> {
+        Box::pin(async { Ok(VersionGraphShutdownStep::Complete) })
     }
 }
 //#endregion 🔖️VersionGraph
@@ -137,7 +151,7 @@ impl EmitEvent {
 /// `AuthzHook`/`VersionGraph` already use, so `db_core..db_cluster` stay `db_observe`-free while
 /// `db_observe`'s real sinks (structured/audit JSON-lines, metric registries) implement this trait.
 pub trait Emit: Send + Sync {
-    async fn emit(&self, event: EmitEvent);
+    fn emit(&self, event: EmitEvent) -> impl Future<Output = ()> + Send;
 }
 
 /// @emoji 🔇️ An `Emit` that discards every event — the default when no observability sink is

@@ -8,6 +8,24 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "anastruct"
+version = "1.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3a/a5/c8056f62118c8779fee38d0efc47a25dacae681b9fb2c27db62639308a92/anastruct-1.7.0.tar.gz", hash = "sha256:34fcba6e3fbc6ba290b9e79c22dd5253f89a3f19530da285d33cbcf06e1b8f86", size = 553572, upload-time = "2026-06-06T07:06:18.26Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/af/a8/bdb277d4b8a175fa1f0d0502fdf461dc345da2d98b4b2c4cefbfa5161d90/anastruct-1.7.0-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:429bab414759206aa126ba2fa09c81c288f8fe5254cc0c273b56240e1423a58b", size = 617381, upload-time = "2026-06-06T07:06:10.306Z" },
+    { url = "https://files.pythonhosted.org/packages/46/cc/dbb1c415855e23bc2217f79fad44fb4632b20f0254938993daf169d9e801/anastruct-1.7.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:8916564b353417f5741141d1d004e24bff9d1fe05d43dc21efa699385432123b", size = 618540, upload-time = "2026-06-06T07:06:11.465Z" },
+    { url = "https://files.pythonhosted.org/packages/36/16/ffc9801acf144a991c79b94fa6a8aed9180ba187c02530868d9241ffcdfc/anastruct-1.7.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:8ca44f0f7d8e29a294dd229dcdead4bd83febcbd3de49912b4f5a684b60d21dd", size = 776394, upload-time = "2026-06-06T07:06:12.791Z" },
+    { url = "https://files.pythonhosted.org/packages/70/41/32fef0ac52fb3fc6ef3fb45daafeb85703365e9e538eb7b0e37d650f46f4/anastruct-1.7.0-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:241477b0d4bbb64574e3fc631e697d45bfcf5f8d16b616907172ad6e80ce2729", size = 778725, upload-time = "2026-06-06T07:06:13.97Z" },
+    { url = "https://files.pythonhosted.org/packages/47/c4/2bba45a3cb07aed370cfd3f6236afbc67970416c32ba358ca8b87b7382d6/anastruct-1.7.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:52b823ca3a70490cf4663ca61499e9c7f45789013a12ae701259acdd392bbfef", size = 774630, upload-time = "2026-06-06T07:06:15.533Z" },
+    { url = "https://files.pythonhosted.org/packages/72/9c/fe03d6f131f2c1ce941c768ece0a6e460ee3061bc94c7ebc981c54c9dbb6/anastruct-1.7.0-cp314-cp314-win_amd64.whl", hash = "sha256:8838c82d13e03d61c9b57e7afa1a82fdce09d9c6eaaf666fc19b83f279c86827", size = 629928, upload-time = "2026-06-06T07:06:16.921Z" },
+]
+
+[[package]]
 name = "antlr4-python3-runtime"
 version = "4.13.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1234,17 +1252,20 @@ dev = [
     { name = "seaborn" },
 ]
 test = [
+    { name = "anastruct" },
     { name = "deepdiff" },
     { name = "html5lib" },
     { name = "ifcopenshell" },
     { name = "lxml" },
     { name = "mercantile" },
     { name = "openpyxl" },
+    { name = "pynitefea" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-timeout" },
     { name = "python-docx" },
     { name = "python-pptx" },
+    { name = "scikit-fem" },
     { name = "steputils" },
 ]
 
@@ -1265,17 +1286,20 @@ dev = [
     { name = "seaborn", specifier = ">=0.13.0" },
 ]
 test = [
+    { name = "anastruct", specifier = ">=1.6.1" },
     { name = "deepdiff", specifier = ">=9.1.0" },
     { name = "html5lib", specifier = ">=1.1" },
     { name = "ifcopenshell", specifier = "==0.8.4.post1" },
     { name = "lxml", specifier = ">=6.1.3" },
     { name = "mercantile", specifier = ">=1.2.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
+    { name = "pynitefea", specifier = ">=1.1.6" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "pytest-timeout", specifier = ">=2.4.0" },
     { name = "python-docx", specifier = ">=1.2.0" },
     { name = "python-pptx", specifier = ">=1.0.2" },
+    { name = "scikit-fem", specifier = ">=10.0.2" },
     { name = "steputils", specifier = ">=0.1" },
 ]
 
@@ -1569,6 +1593,18 @@ wheels = [
 ]
 
 [[package]]
+name = "prettytable"
+version = "3.18.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "wcwidth" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/81/74/ba08d81e668ccfe8658d7520a307e63c19862c08eb4ccb26f356c5239a7a/prettytable-3.18.0.tar.gz", hash = "sha256:439217116152244369caf3d9f1caf2f9fe29b03bd79e88d2928c8e718c95d680", size = 76373, upload-time = "2026-06-22T16:07:50.174Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fe/be/2e6798ace5cc036f5d05d36b7b2fd85346f1a708c87060890b070d0ec607/prettytable-3.18.0-py3-none-any.whl", hash = "sha256:b3346e0e6f79180833aebaac088ae926340586cf6d7d991b9eb125b65f72313a", size = 37357, upload-time = "2026-06-22T16:07:48.595Z" },
+]
+
+[[package]]
 name = "prometheus-client"
 version = "0.25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1645,6 +1681,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152d655522fdcebac55e66de6603a76a02bca1b6414f6c/pygments-2.20.0.tar.gz", hash = "sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f", size = 4955991, upload-time = "2026-03-29T13:29:33.898Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
+]
+
+[[package]]
+name = "pynitefea"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "prettytable" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/48/71fa2a878c92e499af64a3bdd0c99da1b79ba641a0d84cd904711a1b1510/pynitefea-3.0.0.tar.gz", hash = "sha256:188b189910f65735d298e6e08d511a29b00beac8d523d7d45612fc332d7465a8", size = 195408, upload-time = "2026-06-01T14:55:48.556Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/ba/ef1347ce36c20217d0c525e05b4d665e978a0f8beb2ab0e865fa9e1f51ef/pynitefea-3.0.0-py3-none-any.whl", hash = "sha256:7bca74ec066116ea263cd08e3e761ec7b870b7de149bde1c410b5e947557d9e2", size = 198114, upload-time = "2026-06-01T14:55:47.356Z" },
 ]
 
 [[package]]
@@ -1956,6 +2007,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c3/1a/0725a7cfdc32ff769efb96ee782bec882e16448c5d9e3be947ec4c04ce27/ruff-0.15.18-py3-none-win32.whl", hash = "sha256:02299e6e9fa5b297a3f6d5d10d7bcd655c925b028bb8b9d4588214549c6b9ec4", size = 10901903, upload-time = "2026-06-18T18:25:24.755Z" },
     { url = "https://files.pythonhosted.org/packages/f3/51/805d9f6fb7970505c3504794a5ec350f605361b807fef4dcf214ebd35e72/ruff-0.15.18-py3-none-win_amd64.whl", hash = "sha256:dac80dc8d26b2257dbefabed62f5d255c3937b4ccb122da1fc634794fa3578b3", size = 12041189, upload-time = "2026-06-18T18:25:17.915Z" },
     { url = "https://files.pythonhosted.org/packages/29/4c/67bb45e41609eb4726f1bfeb59e083cf91d14c696d4bd14c234a980be93d/ruff-0.15.18-py3-none-win_arm64.whl", hash = "sha256:b2c9257fcbd4a3e5b977a1904e6facca016bafe2edc17df24db67cfaee03b4e4", size = 11329958, upload-time = "2026-06-18T18:25:43.686Z" },
+]
+
+[[package]]
+name = "scikit-fem"
+version = "12.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a7/5f/77643ece20e33a770fdfb6cafb9b2a5a1dd51b8a1ee1d3dc5bac8c72bdfa/scikit_fem-12.0.2.tar.gz", hash = "sha256:0a38764cdb93411c5a994451c22c1da07808ebabf920f462c6253f78f5703f8a", size = 130353, upload-time = "2026-06-05T20:45:50.903Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/13/d46cf943bd1b04b1b010094eb08493d6660c99c49652fa46cf7c3bf36ab5/scikit_fem-12.0.2-py3-none-any.whl", hash = "sha256:34cd891f80072c0c1eb759a2371e82f0eeec91ff7c08acab96d27b6edbbe1b05", size = 178478, upload-time = "2026-06-05T20:45:49.084Z" },
 ]
 
 [[package]]

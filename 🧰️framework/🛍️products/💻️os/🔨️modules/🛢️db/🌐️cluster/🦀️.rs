@@ -23,7 +23,7 @@
 //! rather than re-deriving.
 use crate::db_durability::Frontier;
 use crate::*;
-use db_storage::SnapshotStorage as _;
+use db_storage::{SnapshotStorage as _, WalStorage as _};
 /// @emoji 🏷️ A cluster node's identity — the consistent-hash ring's key type and the `holder`
 /// string `db_storage::LeaseStorage` records ownership grants under.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -197,15 +197,65 @@ pub enum ReplicationOutcome {
     SnapshotTransferred { generation: u64, pack_hash: [u8; 32] },
 }
 
+/// 📡️ Replication rejection retaining the exact follower writer through recovery and close faults.
+#[must_use = "replication rejection must reach terminal follower-writer cleanup"]
+pub enum ReplicationRejected {
+    BeforeWriter(DbError),
+    WalOpen(db_wal::ArtifactWalAcquiredRejected),
+    WalRelease(db_wal::ArtifactWalOpenRejected),
+    RetainedWal { cause: DbError, close_error: DbError, wal: db_wal::ArtifactWal },
+}
+
+impl ReplicationRejected {
+    pub fn error(&self) -> &DbError {
+        match self {
+            Self::BeforeWriter(error) => error,
+            Self::WalOpen(rejected) => rejected.error(),
+            Self::WalRelease(rejected) => rejected.error(),
+            Self::RetainedWal { cause, .. } => cause,
+        }
+    }
+
+    pub async fn retry_close(self) -> Result<DbError, ReplicationRejected> {
+        match self {
+            Self::BeforeWriter(error) => Ok(error),
+            Self::WalOpen(rejected) => rejected.into_open_rejected().retry_close().await.map_err(Self::WalRelease),
+            Self::WalRelease(rejected) => rejected.retry_close().await.map_err(Self::WalRelease),
+            Self::RetainedWal { cause, mut close_error, mut wal } => loop {
+                match wal.close_step() {
+                    Ok(true) => semio_framework_async::yield_once().await,
+                    Ok(false) => return Ok(cause),
+                    Err(error) => {
+                        close_error = error;
+                        return Err(Self::RetainedWal { cause, close_error, wal });
+                    }
+                }
+            },
+        }
+    }
+}
+
+impl From<DbError> for ReplicationRejected {
+    fn from(error: DbError) -> Self { Self::BeforeWriter(error) }
+}
+
+impl std::fmt::Debug for ReplicationRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("ReplicationRejected").field("cause", self.error()).finish_non_exhaustive()
+    }
+}
+
 /// @emoji 🔁️ Catches `document` up on `follower` against `leader`'s current state: replays both
 /// sides' WALs (via `db_sync::replay_sync_state`), decides a `db_sync::BootstrapPlan`, and applies
 /// it — appending missing commands to the follower's own WAL for the `Tail` case (this crate's
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_storage::DbBackend, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_storage::DbBackend, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, ReplicationRejected> {
     let follower_storage = follower.wal().await;
-    let (mut wal, _report) = db_wal::ArtifactWal::open(&follower_storage, document.clone(), policy, now_ms).await?;
+    let writer = follower_storage.acquire_writer(&document).await.map_err(ReplicationRejected::BeforeWriter)?;
+    let mut open_control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).map_err(ReplicationRejected::BeforeWriter)?;
+    let (mut wal, _report) = db_wal::ArtifactWal::open_acquired(&follower_storage, writer, policy, now_ms, &mut open_control).await.map_err(ReplicationRejected::WalOpen)?;
     let outcome = async {
         let follower_state = db_sync::replay_sync_state(&follower_storage, document.clone()).await?;
         let leader_state = db_sync::replay_sync_state(&leader.wal().await, document.clone()).await?;
@@ -249,7 +299,11 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
             }
         }
     }.await;
-    replication_retired(outcome, wal.close().await)
+    match (outcome, wal.close().await) {
+        (outcome, Ok(())) => outcome.map_err(ReplicationRejected::BeforeWriter),
+        (Ok(_), Err(close_error)) => Err(ReplicationRejected::RetainedWal { cause: DbError::Unavailable("replication follower WAL close failed".to_string()), close_error, wal }),
+        (Err(cause), Err(close_error)) => Err(ReplicationRejected::RetainedWal { cause, close_error, wal }),
+    }
 }
 
 /// 📑️ Copies the admitted read result into an independent write owner before retiring its source task.
@@ -451,6 +505,15 @@ pub async fn cluster_mailbox(capacities: MailboxCapacities) -> (db_actor::Addres
 mod tests {
     use super::*;
 
+    async fn close_replication_rejection(mut rejected: ReplicationRejected) -> DbError {
+        loop {
+            match rejected.retry_close().await {
+                Ok(error) => return error,
+                Err(retained) => rejected = retained,
+            }
+        }
+    }
+
     //#region 🔖️ShardMap
     #[semio_framework_async_macros::async_test]
     async fn shard_map_owner_is_stable_for_a_fixed_ring() {
@@ -569,7 +632,11 @@ mod tests {
         let storage = follower.wal().await;
         let writer = storage.acquire_writer(&document).await.unwrap();
         let result = replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await;
-        assert_eq!(if matches!(result, Err(DbError::Conflict(_))) { "conflict" } else { "not-conflict" }, fixture["replication"]["occupiedFollower"]);
+        let conflict = matches!(result.as_ref().err().map(ReplicationRejected::error), Some(DbError::Conflict(_)));
+        assert_eq!(if conflict { "conflict" } else { "not-conflict" }, fixture["replication"]["occupiedFollower"]);
+        if let Err(rejected) = result {
+            assert!(matches!(close_replication_rejection(rejected).await, DbError::Conflict(_)));
+        }
         let mut segments = storage.list_segments(&document).await.unwrap();
         assert_eq!(serde_json::json!(segments.as_slice()), fixture["replication"]["inventoryAfterConflict"]);
         while segments.close_step() { semio_framework_async::yield_once().await; }
@@ -590,7 +657,11 @@ mod tests {
         let bytes = db_storage::db_io_copy_pages(&[0xff; 128]).unwrap().await.unwrap();
         leader_storage.append(&seed, 0, bytes).await.unwrap();
         seed.release().await.unwrap();
-        assert!(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await.is_err());
+        let rejected = match replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await {
+            Err(rejected) => rejected,
+            Ok(_) => panic!("corrupt leader replication was admitted"),
+        };
+        assert!(matches!(close_replication_rejection(rejected).await, DbError::Corrupt(_)));
         follower.wal().await.acquire_writer(&document).await.expect("failed replication completes follower release").release().await.unwrap();
     }
 

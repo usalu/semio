@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "states": ["open", "closing", "stopped"],
+  "mountedCases": [
+    { "id": "database-retains-one-clone-shared-use", "pool": "open", "database": "open", "authority": "ready", "externalUses": 0, "databaseActivities": "open", "expectedShutdown": "busy-1" },
+    { "id": "terminal-database-releases-exact-use", "pool": "open", "database": "terminal", "authority": "empty", "externalUses": 0, "databaseActivities": "closed", "expectedShutdown": "stopped" },
+    { "id": "stopped-pool-refuses-before-storage-probe", "pool": "stopped", "database": "absent", "authority": "empty", "externalUses": 0, "databaseActivities": "closed", "expectedShutdown": "stopped" },
+    { "id": "hard-scheduler-fault-retains-job", "pool": "stopped", "database": "opening-non-runnable", "authority": "empty", "externalUses": 0, "databaseActivities": "blocked", "expectedShutdown": "stopped" },
+    { "id": "terminal-database-fences-activity-while-unrelated-use-runs", "pool": "open", "database": "terminal", "authority": "empty", "externalUses": 1, "databaseActivities": "closed", "expectedShutdown": "busy-1" }
+  ],
+  "cases": [
+    { "id": "held-use-refuses-shutdown", "steps": ["acquire", "shutdown-busy"], "expected": { "state": "open", "retainedUses": 1, "executable": true } },
+    { "id": "arc-clones-count-one-use-cell", "steps": ["acquire", "clone", "drop", "shutdown-busy"], "expected": { "state": "open", "retainedUses": 1, "executable": true } },
+    { "id": "final-drop-enables-shutdown", "steps": ["acquire", "drop", "shutdown"], "expected": { "state": "stopped", "retainedUses": 0, "executable": false } },
+    { "id": "closing-fences-racing-acquire", "steps": ["shutdown", "acquire-rejected"], "expected": { "state": "stopped", "retainedUses": 0, "executable": false } },
+    { "id": "stopped-shutdown-is-idempotent", "steps": ["shutdown", "shutdown-idempotent"], "expected": { "state": "stopped", "retainedUses": 0, "executable": false } }
+  ]
+}

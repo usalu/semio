@@ -1,0 +1,2 @@
+- Host swap exhausted at open (63.4/64.5 GB, load 147): no cargo/bun builds until memory recovers; exploration is file-reading only.
+- Repo MCP down: ticket managed on disk; close by editing 🎫️ticket.json when done.

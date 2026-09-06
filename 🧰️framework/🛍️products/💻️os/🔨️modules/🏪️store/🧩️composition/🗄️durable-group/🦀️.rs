@@ -241,12 +241,125 @@ pub struct DurableOwnedGroupJournalReceiptV1 {
     pub segment_index: u64,
 }
 
-/// 🧭️ One retained journal turn. `Absent` is the only result that restores abort authority after
-/// a commit attempt; an error remains an uncertain external state and must be resolved by retry.
+/// 🔐️ Store-admitted decision event whose private bytes and identities can only come from
+/// one fully verified canonical fixed-three decision Pack.
+pub struct DurableOwnedGroupJournalRecordV1 {
+    canonical_pack: Vec<u8>,
+    decision_sha256: String,
+    anchor_sha256: String,
+    document: crate::os_io::ArtifactRef,
+}
+
+/// 🔎️ Immutable typed edits projected only after Store verifies every bound fixed-three outcome.
+pub struct DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation> {
+    decision_sha256: String,
+    anchor_sha256: String,
+    document: crate::os_io::ArtifactRef,
+    parent: Edit<ParentMutation>,
+    drawing: Edit<DrawingMutation>,
+    value: Edit<ValueMutation>,
+}
+
+impl<ParentMutation, DrawingMutation, ValueMutation> DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation> {
+    pub fn decision_sha256(&self) -> &str {
+        &self.decision_sha256
+    }
+
+    pub fn anchor_sha256(&self) -> &str {
+        &self.anchor_sha256
+    }
+
+    pub fn document(&self) -> &crate::os_io::ArtifactRef {
+        &self.document
+    }
+
+    pub fn parent(&self) -> &Edit<ParentMutation> {
+        &self.parent
+    }
+
+    pub fn drawing(&self) -> &Edit<DrawingMutation> {
+        &self.drawing
+    }
+
+    pub fn value(&self) -> &Edit<ValueMutation> {
+        &self.value
+    }
+}
+
+impl DurableOwnedGroupJournalRecordV1 {
+    /// 🔏️ Admits one canonical decision Pack and derives its decision identity exclusively from
+    /// the Store-verified fixed-three envelope.
+    pub fn admit_canonical(canonical_pack: Vec<u8>) -> Result<Self, DurableOwnedGroupDecisionError> {
+        let decision = DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&canonical_pack)?;
+        Ok(Self { canonical_pack, decision_sha256: decision.decision_sha256, anchor_sha256: decision.anchor_sha256, document: decision.anchor.parent })
+    }
+
+    pub fn admit(canonical_pack: Vec<u8>, claimed_decision_sha256: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
+        let record = Self::admit_canonical(canonical_pack)?;
+        if record.decision_sha256 != claimed_decision_sha256 {
+            return Err(DurableOwnedGroupDecisionError::InvalidHash);
+        }
+        Ok(record)
+    }
+
+    pub fn canonical_pack(&self) -> &[u8] {
+        &self.canonical_pack
+    }
+
+    pub fn into_canonical_pack(self) -> Vec<u8> {
+        self.canonical_pack
+    }
+
+    pub fn decision_sha256(&self) -> &str {
+        &self.decision_sha256
+    }
+
+    pub fn anchor_sha256(&self) -> &str {
+        &self.anchor_sha256
+    }
+
+    pub fn document(&self) -> &crate::os_io::ArtifactRef {
+        &self.document
+    }
+
+    pub fn into_parts(self) -> (Vec<u8>, String, String, crate::os_io::ArtifactRef) {
+        (self.canonical_pack, self.decision_sha256, self.anchor_sha256, self.document)
+    }
+
+    /// 🧬️ Re-admits the complete decision and verifies all three typed bound outcomes before
+    /// exposing immutable edit projections; no publication seal or binding authority escapes.
+    pub fn verify_fixed_three_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(&self) -> Result<DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation>, DurableOwnedGroupDecisionError>
+    where
+        ParentP: ArtifactPack,
+        ParentMutation: ValueToValue + ValueFromValue,
+        DrawingP: ArtifactPack,
+        DrawingMutation: ValueToValue + ValueFromValue,
+        ValueP: ArtifactPack,
+        ValueMutation: ValueToValue + ValueFromValue,
+    {
+        let decision = DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&self.canonical_pack)?;
+        if decision.decision_sha256 != self.decision_sha256 || decision.anchor_sha256 != self.anchor_sha256 || decision.anchor.parent != self.document {
+            return Err(DurableOwnedGroupDecisionError::InvalidHash);
+        }
+        Ok(DurableOwnedGroupVerifiedThreeEditsV1 {
+            parent: verify_bound_member_edit::<ParentP, ParentMutation>(&decision.parent, &decision.decision_sha256)?,
+            drawing: verify_bound_member_edit::<DrawingP, DrawingMutation>(&decision.drawing, &decision.decision_sha256)?,
+            value: verify_bound_member_edit::<ValueP, ValueMutation>(&decision.value, &decision.decision_sha256)?,
+            decision_sha256: decision.decision_sha256,
+            anchor_sha256: decision.anchor_sha256,
+            document: decision.anchor.parent,
+        })
+    }
+}
+
+/// 🧭️ One retained journal turn. `Rejected` proves that no mailbox/WAL transfer began,
+/// while `Absent` proves an accepted cancellation left no durable record. An error remains an
+/// uncertain external state and must be resolved by the same retained owner.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DurableOwnedGroupJournalAdvanceV1 {
     Pending,
     Absent,
+    Rejected(String),
     Committed(DurableOwnedGroupJournalReceiptV1),
 }
 
@@ -740,6 +853,455 @@ where
     pub sink: Box<dyn DurableOwnedGroupJournalSinkV1>,
 }
 
+/// 🎫 One exact unbound Store admission. No group identity can enter before the private bind.
+pub struct DurableOwnedMapMemberAdmissionV1<Mutation> {
+    pub operation: semio_framework_job::OperationId,
+    pub expected_generation: u64,
+    pub expected_revision: [u8; 32],
+    pub actor: String,
+    mutation: Option<Mutation>,
+    description: Option<String>,
+}
+
+impl<Mutation> DurableOwnedMapMemberAdmissionV1<Mutation> {
+    pub fn new(operation: semio_framework_job::OperationId, expected_generation: u64, expected_revision: [u8; 32], actor: String, mutation: Mutation, description: Option<String>) -> Self {
+        Self { operation, expected_generation, expected_revision, actor, mutation: Some(mutation), description }
+    }
+}
+
+/// 🚫 Terminal pre-journal assembly outcome. Every variant still returns all three Stores and the sink.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DurableOwnedThreeStoreMapAssemblyFailureV1 {
+    Cancelled,
+    Admission { role: &'static str, reason: String },
+    Preparation { role: &'static str, reason: String },
+    Binding(DurableOwnedGroupDecisionError),
+}
+
+/// 🧭 Observable retained assembly phase. `Mounted` contains the existing fixed host and no loose Store.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DurableOwnedThreeStoreMapAssemblyPhaseV1 {
+    AdmittingParent,
+    AdmittingDrawing,
+    AdmittingValue,
+    PreparingParent,
+    PreparingDrawing,
+    PreparingValue,
+    ClosingValue,
+    ClosingDrawing,
+    ClosingParent,
+    Binding,
+    Mounted,
+    Terminal,
+    Empty,
+}
+
+/// ⏭️ One bounded assembly turn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DurableOwnedThreeStoreMapAssemblyAdvanceV1 {
+    Progress(DurableOwnedThreeStoreMapAssemblyPhaseV1),
+    Blocked,
+    Mounted,
+    Terminal,
+}
+
+/// 🧳 Exact owners returned after a pre-journal rejection or cancellation reaches terminal emptiness.
+pub struct DurableOwnedThreeStoreMapAssemblyOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    pub parent: ArtifactStore<ParentP, ParentMutation>,
+    pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
+    pub value: ArtifactStore<ValueP, ValueMutation>,
+    pub sink: Box<dyn DurableOwnedGroupJournalSinkV1>,
+    pub parent_mutation: Option<ParentMutation>,
+    pub drawing_mutation: Option<DrawingMutation>,
+    pub value_mutation: Option<ValueMutation>,
+    pub failure: DurableOwnedThreeStoreMapAssemblyFailureV1,
+}
+
+/// 🏗️ Store-owned fixed-three admission and preparation owner. It never publishes an individual member.
+pub struct DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
+    drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
+    value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
+    parent_admission: Option<DurableOwnedMapMemberAdmissionV1<ParentMutation>>,
+    drawing_admission: Option<DurableOwnedMapMemberAdmissionV1<DrawingMutation>>,
+    value_admission: Option<DurableOwnedMapMemberAdmissionV1<ValueMutation>>,
+    parent_factory: Option<Arc<dyn super::ArtifactStoreOneItemPreparationFactory<ParentP, ParentMutation>>>,
+    drawing_factory: Option<Arc<dyn super::ArtifactStoreOneItemPreparationFactory<DrawingP, DrawingMutation>>>,
+    value_factory: Option<Arc<dyn super::ArtifactStoreOneItemPreparationFactory<ValueP, ValueMutation>>>,
+    parent_publication: std::mem::ManuallyDrop<Option<super::ArtifactStoreOneItemPublication<ParentP, ParentMutation>>>,
+    drawing_publication: std::mem::ManuallyDrop<Option<super::ArtifactStoreOneItemPublication<DrawingP, DrawingMutation>>>,
+    value_publication: std::mem::ManuallyDrop<Option<super::ArtifactStoreOneItemPublication<ValueP, ValueMutation>>>,
+    prepared: std::mem::ManuallyDrop<Option<DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+    host: std::mem::ManuallyDrop<Option<DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+    sink: std::mem::ManuallyDrop<Option<Box<dyn DurableOwnedGroupJournalSinkV1>>>,
+    phase: DurableOwnedThreeStoreMapAssemblyPhaseV1,
+    failure: Option<DurableOwnedThreeStoreMapAssemblyFailureV1>,
+}
+
+fn close_assembly_publication<P, Mutation>(publication: &mut Option<super::ArtifactStoreOneItemPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
+    let Some(owner) = publication.as_mut() else { return Ok(true) };
+    owner.begin_close();
+    match owner.close_step(super::ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(DurableOwnedGroupDecisionError::Codec)? {
+        super::SnapshotRetirementStep::Complete => {
+            if !owner.terminal_is_empty() {
+                return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
+            }
+            drop(publication.take());
+            Ok(true)
+        }
+        super::SnapshotRetirementStep::Pending { .. } | super::SnapshotRetirementStep::Blocked => Ok(false),
+    }
+}
+
+fn take_assembly_prepared<P, Mutation>(publication: &mut Option<super::ArtifactStoreOneItemPublication<P, Mutation>>) -> Result<ArtifactStoreOneItemPrepared<P, Mutation>, DurableOwnedGroupDecisionError> {
+    let publication = publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    if publication.phase() != super::ArtifactStoreOneItemPublicationPhase::Publishing {
+        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
+    }
+    publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentMutation: StoreMutation<ParentP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingMutation: StoreMutation<DrawingP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueMutation: StoreMutation<ValueP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
+{
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        parent: ArtifactStore<ParentP, ParentMutation>,
+        drawing: ArtifactStore<DrawingP, DrawingMutation>,
+        value: ArtifactStore<ValueP, ValueMutation>,
+        parent_admission: DurableOwnedMapMemberAdmissionV1<ParentMutation>,
+        drawing_admission: DurableOwnedMapMemberAdmissionV1<DrawingMutation>,
+        value_admission: DurableOwnedMapMemberAdmissionV1<ValueMutation>,
+        parent_factory: Arc<dyn super::ArtifactStoreOneItemPreparationFactory<ParentP, ParentMutation>>,
+        drawing_factory: Arc<dyn super::ArtifactStoreOneItemPreparationFactory<DrawingP, DrawingMutation>>,
+        value_factory: Arc<dyn super::ArtifactStoreOneItemPreparationFactory<ValueP, ValueMutation>>,
+        sink: Box<dyn DurableOwnedGroupJournalSinkV1>,
+    ) -> Self {
+        Self {
+            parent: std::mem::ManuallyDrop::new(Some(parent)),
+            drawing: std::mem::ManuallyDrop::new(Some(drawing)),
+            value: std::mem::ManuallyDrop::new(Some(value)),
+            parent_admission: Some(parent_admission),
+            drawing_admission: Some(drawing_admission),
+            value_admission: Some(value_admission),
+            parent_factory: Some(parent_factory),
+            drawing_factory: Some(drawing_factory),
+            value_factory: Some(value_factory),
+            parent_publication: std::mem::ManuallyDrop::new(None),
+            drawing_publication: std::mem::ManuallyDrop::new(None),
+            value_publication: std::mem::ManuallyDrop::new(None),
+            prepared: std::mem::ManuallyDrop::new(None),
+            host: std::mem::ManuallyDrop::new(None),
+            sink: std::mem::ManuallyDrop::new(Some(sink)),
+            phase: DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingParent,
+            failure: None,
+        }
+    }
+
+    pub fn phase(&self) -> DurableOwnedThreeStoreMapAssemblyPhaseV1 {
+        self.phase
+    }
+
+    fn fail(&mut self, failure: DurableOwnedThreeStoreMapAssemblyFailureV1) {
+        if self.failure.is_none() {
+            self.failure = Some(failure);
+        }
+        self.parent_factory = None;
+        self.drawing_factory = None;
+        self.value_factory = None;
+        if let Some(publication) = self.parent_publication.as_mut() {
+            publication.begin_close();
+        }
+        if let Some(publication) = self.drawing_publication.as_mut() {
+            publication.begin_close();
+        }
+        if let Some(publication) = self.value_publication.as_mut() {
+            publication.begin_close();
+        }
+        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue;
+    }
+
+    pub fn cancel(&mut self) -> bool {
+        match self.phase {
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::Mounted => self.host.as_mut().is_some_and(DurableOwnedMapCommitHostV1::cancel),
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal | DurableOwnedThreeStoreMapAssemblyPhaseV1::Empty => false,
+            _ => {
+                self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Cancelled);
+                true
+            }
+        }
+    }
+
+    pub fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedGroupDecisionError> {
+        if !grant.permits_one() {
+            return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);
+        }
+        match self.phase {
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingParent => {
+                let admission = self.parent_admission.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let description = admission.description.take();
+                let store = self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let factory = self.parent_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                match store.begin_apply_one(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), mutation, description, super::HistoryLane::Document, Some(factory.as_ref())) {
+                    Ok(publication) => {
+                        *self.parent_publication = Some(publication);
+                        self.parent_admission = None;
+                        self.parent_factory = None;
+                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingDrawing;
+                    }
+                    Err(rejected) => {
+                        let (reason, mutation, description) = rejected.into_owners();
+                        admission.mutation = Some(mutation);
+                        admission.description = description;
+                        self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: PARENT_ROLE, reason });
+                    }
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingDrawing => {
+                let admission = self.drawing_admission.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let description = admission.description.take();
+                let store = self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let factory = self.drawing_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                match store.begin_apply_one(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), mutation, description, super::HistoryLane::Document, Some(factory.as_ref())) {
+                    Ok(publication) => {
+                        *self.drawing_publication = Some(publication);
+                        self.drawing_admission = None;
+                        self.drawing_factory = None;
+                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingValue;
+                    }
+                    Err(rejected) => {
+                        let (reason, mutation, description) = rejected.into_owners();
+                        admission.mutation = Some(mutation);
+                        admission.description = description;
+                        self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: DRAWING_ROLE, reason });
+                    }
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingValue => {
+                let admission = self.value_admission.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let description = admission.description.take();
+                let store = self.value.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let factory = self.value_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                match store.begin_apply_one(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), mutation, description, super::HistoryLane::Document, Some(factory.as_ref())) {
+                    Ok(publication) => {
+                        *self.value_publication = Some(publication);
+                        self.value_admission = None;
+                        self.value_factory = None;
+                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingParent;
+                    }
+                    Err(rejected) => {
+                        let (reason, mutation, description) = rejected.into_owners();
+                        admission.mutation = Some(mutation);
+                        admission.description = description;
+                        self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: VALUE_ROLE, reason });
+                    }
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingParent => {
+                let store = self.parent.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let publication = self.parent_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                match store.advance_apply_one(publication, grant) {
+                    Ok(super::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing,
+                    Ok(_) => {}
+                    Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: PARENT_ROLE, reason: error.to_string() }),
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing => {
+                let store = self.drawing.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let publication = self.drawing_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                match store.advance_apply_one(publication, grant) {
+                    Ok(super::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue,
+                    Ok(_) => {}
+                    Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: DRAWING_ROLE, reason: error.to_string() }),
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue => {
+                let store = self.value.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let publication = self.value_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                match store.advance_apply_one(publication, grant) {
+                    Ok(super::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => {
+                        let parent = take_assembly_prepared(&mut self.parent_publication)?;
+                        let drawing = take_assembly_prepared(&mut self.drawing_publication)?;
+                        let value = take_assembly_prepared(&mut self.value_publication)?;
+                        match DurableOwnedThreeStorePreparedV1::from_store_prepared(parent, drawing, value) {
+                            Ok(prepared) => *self.prepared = Some(prepared),
+                            Err(error) => self.failure = Some(DurableOwnedThreeStoreMapAssemblyFailureV1::Binding(error)),
+                        }
+                        if let Some(publication) = self.parent_publication.as_mut() {
+                            publication.begin_close();
+                        }
+                        if let Some(publication) = self.drawing_publication.as_mut() {
+                            publication.begin_close();
+                        }
+                        if let Some(publication) = self.value_publication.as_mut() {
+                            publication.begin_close();
+                        }
+                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue;
+                    }
+                    Ok(_) => {}
+                    Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: VALUE_ROLE, reason: error.to_string() }),
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue => {
+                if close_assembly_publication(&mut self.value_publication, grant)? {
+                    self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingDrawing;
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingDrawing => {
+                if close_assembly_publication(&mut self.drawing_publication, grant)? {
+                    self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingParent;
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingParent => {
+                if close_assembly_publication(&mut self.parent_publication, grant)? {
+                    if self.failure.is_some() {
+                        drop(self.prepared.take());
+                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal;
+                    } else {
+                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding;
+                    }
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding => {
+                let prepared = self.prepared.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                let bound = prepared.bind_store_owned(
+                    self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+                    self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+                    self.value.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+                );
+                match bound.and_then(DurableOwnedThreeStoreBoundV1::begin_retained_commit) {
+                    Ok(coordinator) => {
+                        let host = coordinator.mount_map(
+                            self.parent.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+                            self.drawing.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+                            self.value.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+                            self.sink.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+                        );
+                        *self.host = Some(host);
+                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Mounted;
+                    }
+                    Err(error) => {
+                        self.failure = Some(DurableOwnedThreeStoreMapAssemblyFailureV1::Binding(error));
+                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal;
+                    }
+                }
+            }
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::Mounted => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted),
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal),
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::Empty => return Err(DurableOwnedGroupDecisionError::InvalidOutcome),
+        }
+        Ok(match self.phase {
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::Mounted => DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted,
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal => DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal,
+            phase => DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(phase),
+        })
+    }
+
+    pub fn take_mounted_host(&mut self) -> Option<DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+        if self.phase != DurableOwnedThreeStoreMapAssemblyPhaseV1::Mounted {
+            return None;
+        }
+        let host = self.host.take()?;
+        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Empty;
+        Some(host)
+    }
+
+    pub fn take_terminal_owners(&mut self) -> Option<DurableOwnedThreeStoreMapAssemblyOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+        if self.phase != DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal {
+            return None;
+        }
+        let owners = DurableOwnedThreeStoreMapAssemblyOwnersV1 {
+            parent: self.parent.take()?,
+            drawing: self.drawing.take()?,
+            value: self.value.take()?,
+            sink: self.sink.take()?,
+            parent_mutation: self.parent_admission.take().and_then(|mut admission| admission.mutation.take()),
+            drawing_mutation: self.drawing_admission.take().and_then(|mut admission| admission.mutation.take()),
+            value_mutation: self.value_admission.take().and_then(|mut admission| admission.mutation.take()),
+            failure: self.failure.take()?,
+        };
+        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Empty;
+        Some(owners)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.phase == DurableOwnedThreeStoreMapAssemblyPhaseV1::Empty
+            && self.parent.is_none()
+            && self.drawing.is_none()
+            && self.value.is_none()
+            && self.parent_admission.is_none()
+            && self.drawing_admission.is_none()
+            && self.value_admission.is_none()
+            && self.parent_factory.is_none()
+            && self.drawing_factory.is_none()
+            && self.value_factory.is_none()
+            && self.parent_publication.is_none()
+            && self.drawing_publication.is_none()
+            && self.value_publication.is_none()
+            && self.prepared.is_none()
+            && self.host.is_none()
+            && self.sink.is_none()
+            && self.failure.is_none()
+    }
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    fn drop(&mut self) {
+        assert!(
+            self.phase == DurableOwnedThreeStoreMapAssemblyPhaseV1::Empty
+                && self.parent.is_none()
+                && self.drawing.is_none()
+                && self.value.is_none()
+                && self.parent_admission.is_none()
+                && self.drawing_admission.is_none()
+                && self.value_admission.is_none()
+                && self.parent_publication.is_none()
+                && self.drawing_publication.is_none()
+                && self.value_publication.is_none()
+                && self.prepared.is_none()
+                && self.host.is_none()
+                && self.sink.is_none(),
+            "durable fixed-three Map assembly reached Drop before mounted or terminal owner handoff"
+        );
+    }
+}
+
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     pub(super) fn begin_retained_commit(self) -> Result<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError> {
         self.decision.validate()?;
@@ -940,6 +1502,10 @@ where
                     DurableOwnedGroupJournalAdvanceV1::Pending => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(self.phase)),
                     DurableOwnedGroupJournalAdvanceV1::Absent => {
                         self.begin_abort()?;
+                    }
+                    DurableOwnedGroupJournalAdvanceV1::Rejected(reason) => {
+                        self.begin_abort()?;
+                        return Err(DurableOwnedGroupDecisionError::Codec(reason));
                     }
                     DurableOwnedGroupJournalAdvanceV1::Committed(receipt) => {
                         if receipt.decision_sha256 != self.decision_sha256 || self.decision.as_ref().is_none_or(|decision| receipt.anchor_sha256 != decision.anchor_sha256) {
@@ -1427,6 +1993,60 @@ fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
                 && meta.semantic_kind.as_ref().is_none_or(|id| valid_identity(&id.0))
                 && meta.group_id.as_deref().is_none_or(valid_identity)
         })
+}
+
+fn verify_bound_member_edit<P, Mutation>(member: &DurableOwnedGroupMemberV1, decision_sha256: &str) -> Result<Edit<Mutation>, DurableOwnedGroupDecisionError>
+where
+    P: ArtifactPack,
+    Mutation: ValueToValue + ValueFromValue,
+{
+    let outcome = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&member.recovery_pack)?;
+    if outcome.recovery_schema != member.recovery_schema
+        || outcome.group_id != decision_sha256
+        || outcome.base_generation != member.expected_generation
+        || outcome.base_revision != member.expected_revision
+        || outcome.post_generation != member.post_generation
+        || outcome.post_revision != member.post_revision
+        || semio_framework_hash::sha256_hex(&outcome.unbound_pack::<Mutation>()?) != member.unbound_outcome_sha256
+    {
+        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
+    }
+    let next_clock: HybridLogicalTimestamp = parse_canonical_json_value(&outcome.next_clock_canonical_json)?;
+    let edit: Edit<Mutation> = parse_canonical_json_value(&outcome.edit_canonical_json)?;
+    if !valid_edit_identities(&edit) || CursorRevisionAccumulator::edit_digest(&edit) != outcome.edit_digest {
+        return Err(DurableOwnedGroupDecisionError::InvalidHash);
+    }
+    let authority = ArtifactStoreOneItemLiveAuthority {
+        operation: semio_framework_job::OperationId(outcome.operation),
+        generation: semio_framework_job::Generation(outcome.base_generation),
+        base_revision: outcome.base_revision,
+        base_applied_edit_count: outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
+        next_sequence_number: outcome.next_sequence_number,
+        next_clock,
+        actor: outcome.actor,
+        group_id: Some(decision_sha256.into()),
+    };
+    authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let snapshot = P::decode_pack_with(
+        &outcome.post_snapshot_pack,
+        &PackDecodeOptions {
+            verification: PackVerificationLevel::Full,
+            preserve_unknown: true,
+            limits: crate::os_pack::PackLimits {
+                max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
+                max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
+                max_symbols: 128,
+                max_depth: 32,
+                max_items: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
+                max_total_alloc: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
+            },
+        },
+    )
+    .map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+    if snapshot.encode_pack() != outcome.post_snapshot_pack {
+        return Err(DurableOwnedGroupDecisionError::NonCanonical);
+    }
+    Ok(edit)
 }
 
 fn store_post_revision<P, Mutation>(store: &ArtifactStore<P, Mutation>, authority: &ArtifactStoreOneItemLiveAuthority, edit_digest: [u8; 32]) -> Result<[u8; 32], DurableOwnedGroupDecisionError>
@@ -2011,7 +2631,7 @@ fn member_matches(member: &DurableOwnedGroupMemberV1, role: &str, recovery_schem
 }
 
 impl DurableOwnedThreeMemberDecisionV1 {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fn seal_fixture(
         anchor: DurableOwnedGroupAnchorV1,
         mut parent: DurableOwnedGroupMemberV1,
@@ -2226,10 +2846,191 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
     }
 }
 
+/// 🧪️ Builds the independently specified canonical journal record only for downstream
+/// package law suites; production callers must obtain records through Store-owned assembly.
+#[cfg(feature = "testkit")]
+pub fn durable_owned_group_journal_test_record() -> DurableOwnedGroupJournalRecordV1 {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("durable group fixture");
+    let hex = |value: &str| value.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("fixture hex"), 16).expect("fixture byte")).collect::<Vec<_>>();
+    let revision = |value: &str| -> [u8; 32] { hex(value).try_into().expect("fixed fixture revision") };
+    let reference = |value: &serde_json::Value| crate::os_pack::json::from_json_str(&serde_json::to_string(value).expect("fixture reference json")).expect("fixture reference");
+    let member = |value: &serde_json::Value| DurableOwnedGroupMemberV1 {
+        role: value["role"].as_str().expect("fixture role").to_string(),
+        reference: reference(&value["reference"]),
+        owner: if value["owner"].is_null() { None } else { Some(crate::os_pack::json::from_json_str(&serde_json::to_string(&value["owner"]).expect("fixture owner json")).expect("fixture owner")) },
+        expected_generation: value["expectedGeneration"].as_u64().expect("fixture generation"),
+        expected_revision: revision(value["expectedRevisionHex"].as_str().expect("fixture revision")),
+        recovery_schema: value["recoverySchema"].as_str().expect("fixture recovery schema").to_string(),
+        recovery_pack: Vec::new(),
+        recovery_pack_sha256: String::new(),
+        unbound_outcome_sha256: String::new(),
+        post_generation: value["postGeneration"].as_u64().expect("fixture post generation"),
+        post_revision: revision(value["postRevisionHex"].as_str().expect("fixture post revision")),
+    };
+    let outcome = |value: &serde_json::Value| DurableStorePreparedOutcomeV1 {
+        recovery_schema: value["recoverySchema"].as_str().expect("fixture recovery schema").to_string(),
+        pack: hex(value["unboundOutcomePackHex"].as_str().expect("fixture unbound outcome")),
+        sha256: value["unboundOutcomeSha256"].as_str().expect("fixture unbound outcome hash").to_string(),
+    };
+    let members = &fixture["members"];
+    let outcomes = DurableStorePreparedOutcomesV1 { parent: outcome(&members["parent"]), drawing: outcome(&members["drawing"]), value: outcome(&members["value"]) };
+    let decision = DurableOwnedThreeMemberDecisionV1::seal_fixture(
+        crate::os_pack::json::from_json_str(&serde_json::to_string(&fixture["anchor"]).expect("fixture anchor json")).expect("fixture anchor"),
+        member(&members["parent"]),
+        member(&members["drawing"]),
+        member(&members["value"]),
+        &outcomes,
+    )
+    .expect("fixture decision");
+    DurableOwnedGroupJournalRecordV1::admit(decision.encode_pack(), &decision.decision_sha256).expect("fixture journal record")
+}
+
+#[cfg(feature = "testkit")]
+fn durable_group_test_revision(bytes: &[u8]) -> [u8; 32] {
+    let digest = semio_framework_hash::sha256_hex(bytes);
+    std::array::from_fn(|index| u8::from_str_radix(&digest[index * 2..index * 2 + 2], 16).expect("SHA-256 hexadecimal byte"))
+}
+
+#[cfg(feature = "testkit")]
+fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, edit: Edit<Mutation>, post_snapshot: P) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
+where
+    P: ArtifactPack,
+    Mutation: ValueToValue + ValueFromValue,
+{
+    let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
+    let meta = edit.mutation_meta.first().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
+        operation: semio_framework_job::OperationId(10_000 + ordinal),
+        generation: semio_framework_job::Generation(ordinal),
+        base_revision: durable_group_test_revision(format!("durable-group-test-base-{ordinal}").as_bytes()),
+        base_applied_edit_count: 0,
+        next_sequence_number: edit.sequence_number,
+        next_clock: meta.timestamp,
+        actor,
+        group_id: None,
+    });
+    let prepared = authority.prepare_one_item(edit, Arc::new(post_snapshot)).map_err(DurableOwnedGroupDecisionError::Codec)?;
+    DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)
+}
+
+#[cfg(feature = "testkit")]
+fn durable_group_test_member(role: &str, reference: crate::os_io::ArtifactRef, owner: Option<OwnerRef>, outcome: &DurableStorePreparedOutcomeV1) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
+    let unbound = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&outcome.pack)?;
+    let post_revision = durable_group_test_revision(format!("{}:{}:{}", role, reference.to_uri(), outcome.sha256).as_bytes());
+    Ok(DurableOwnedGroupMemberV1 {
+        role: role.into(),
+        reference,
+        owner,
+        expected_generation: unbound.base_generation,
+        expected_revision: unbound.base_revision,
+        recovery_schema: outcome.recovery_schema.clone(),
+        recovery_pack: Vec::new(),
+        recovery_pack_sha256: String::new(),
+        unbound_outcome_sha256: outcome.sha256.clone(),
+        post_generation: unbound.base_generation.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?,
+        post_revision,
+    })
+}
+
+#[cfg(feature = "testkit")]
+fn durable_group_test_bind_member<Mutation>(member: &mut DurableOwnedGroupMemberV1, outcome: &DurableStorePreparedOutcomeV1, decision_sha256: &str) -> Result<(), DurableOwnedGroupDecisionError>
+where
+    Mutation: ValueToValue + ValueFromValue,
+{
+    let unbound = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&outcome.pack)?;
+    let mut edit: Edit<Mutation> = parse_canonical_json_value(&unbound.edit_without_group_canonical_json)?;
+    if edit.mutation_meta.len() != 1 {
+        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
+    }
+    let meta = edit.mutation_meta.first_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    if meta.group_id.replace(decision_sha256.into()).is_some() {
+        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
+    }
+    let bound = DurableBoundOneItemOutcomeV1 {
+        schema: DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1.into(),
+        recovery_schema: unbound.recovery_schema,
+        operation: unbound.operation,
+        base_generation: unbound.base_generation,
+        base_revision: unbound.base_revision,
+        base_applied_edit_count: unbound.base_applied_edit_count,
+        next_sequence_number: unbound.next_sequence_number,
+        next_clock_canonical_json: unbound.next_clock_canonical_json,
+        actor: unbound.actor,
+        group_id: decision_sha256.into(),
+        edit_canonical_json: crate::os_pack::json::to_json_string(&edit).into_bytes(),
+        post_snapshot_pack: unbound.post_snapshot_pack,
+        edit_digest: CursorRevisionAccumulator::edit_digest(&edit),
+        post_generation: member.post_generation,
+        post_revision: member.post_revision,
+    };
+    member.recovery_pack = bound.encode_pack();
+    member.recovery_pack_sha256 = semio_framework_hash::sha256_hex(&member.recovery_pack);
+    Ok(())
+}
+
+/// 🧪️ Builds a typed fixed-three decision Event for downstream WAL laws; production code cannot
+/// fabricate this record and must obtain it from the retained Store-owned assembly.
+#[cfg(feature = "testkit")]
+pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+    document: crate::os_io::ArtifactRef,
+    parent_edit: Edit<ParentMutation>,
+    parent_post_snapshot: ParentP,
+    drawing_edit: Edit<DrawingMutation>,
+    drawing_post_snapshot: DrawingP,
+    value_edit: Edit<ValueMutation>,
+    value_post_snapshot: ValueP,
+) -> Result<DurableOwnedGroupJournalRecordV1, DurableOwnedGroupDecisionError>
+where
+    ParentP: ArtifactPack,
+    ParentMutation: ValueToValue + ValueFromValue,
+    DrawingP: ArtifactPack,
+    DrawingMutation: ValueToValue + ValueFromValue,
+    ValueP: ArtifactPack,
+    ValueMutation: ValueToValue + ValueFromValue,
+{
+    let parent_outcome = durable_group_test_outcome(PARENT_RECOVERY_SCHEMA, 1, parent_edit, parent_post_snapshot)?;
+    let drawing_outcome = durable_group_test_outcome(DRAWING_RECOVERY_SCHEMA, 2, drawing_edit, drawing_post_snapshot)?;
+    let value_outcome = durable_group_test_outcome(VALUE_RECOVERY_SCHEMA, 3, value_edit, value_post_snapshot)?;
+    let drawing_reference = crate::os_io::ArtifactRef {
+        artifact_id: "gismap-drawing".into(),
+        dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: DRAWING_ROLE.into() },
+    };
+    let value_reference = crate::os_io::ArtifactRef {
+        artifact_id: "gismap-value".into(),
+        dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: VALUE_ROLE.into() },
+    };
+    let anchor = DurableOwnedGroupAnchorV1 { schema: DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1.into(), parent: document.clone(), shape: DURABLE_OWNED_GROUP_SHAPE_V1.into() };
+    let mut decision = DurableOwnedThreeMemberDecisionV1 {
+        schema: DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1.into(),
+        anchor_sha256: semio_framework_hash::sha256_hex(crate::os_pack::json::to_json_string(&anchor).as_bytes()),
+        decision_sha256: String::new(),
+        parent: durable_group_test_member(PARENT_ROLE, document.clone(), None, &parent_outcome)?,
+        drawing: durable_group_test_member(
+            DRAWING_ROLE,
+            drawing_reference.clone(),
+            Some(OwnerRef { parent: document.clone(), slot: DRAWING_ROLE.into(), child_id: drawing_reference.artifact_id.clone() }),
+            &drawing_outcome,
+        )?,
+        value: durable_group_test_member(
+            VALUE_ROLE,
+            value_reference.clone(),
+            Some(OwnerRef { parent: document.clone(), slot: VALUE_ROLE.into(), child_id: value_reference.artifact_id.clone() }),
+            &value_outcome,
+        )?,
+        anchor,
+    };
+    decision.decision_sha256 = semio_framework_hash::sha256_hex(decision.canonical_unsigned_json().as_bytes());
+    durable_group_test_bind_member::<ParentMutation>(&mut decision.parent, &parent_outcome, &decision.decision_sha256)?;
+    durable_group_test_bind_member::<DrawingMutation>(&mut decision.drawing, &drawing_outcome, &decision.decision_sha256)?;
+    durable_group_test_bind_member::<ValueMutation>(&mut decision.value, &value_outcome, &decision.decision_sha256)?;
+    decision.validate()?;
+    DurableOwnedGroupJournalRecordV1::admit_canonical(decision.encode_pack())
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::fixture_mutations::demo::{DemoMutation, SetN};
-    use super::super::tests::{demo_closable_store_owners, DemoSnapshot};
+    use super::super::tests::{demo_closable_store_owners, DemoOneItemPreparationFactory, DemoSnapshot};
     use super::*;
 
     fn fixture() -> serde_json::Value {
@@ -2539,6 +3340,169 @@ mod tests {
         }
     }
 
+    type DemoMapAssembly = DurableOwnedThreeStoreMapAssemblyV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation>;
+
+    fn map_member_admission(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u64, next: i32, stale: bool) -> DurableOwnedMapMemberAdmissionV1<DemoMutation> {
+        DurableOwnedMapMemberAdmissionV1::new(
+            semio_framework_job::OperationId(300 + ordinal),
+            store.generation_now() + u64::from(stale),
+            store.content_revision_now(),
+            format!("map-owner-{ordinal}"),
+            DemoMutation::SetN(SetN { n: next }),
+            Some(format!("durable Map member {ordinal}")),
+        )
+    }
+
+    fn map_assembly(
+        parent: ArtifactStore<DemoSnapshot, DemoMutation>,
+        drawing: ArtifactStore<DemoSnapshot, DemoMutation>,
+        value: ArtifactStore<DemoSnapshot, DemoMutation>,
+        stale_role: Option<&str>,
+        resolution: FakeJournalResolution,
+        state: Arc<std::sync::Mutex<FakeJournalState>>,
+    ) -> (DemoMapAssembly, [Arc<DemoOneItemPreparationFactory>; 3]) {
+        let parent_admission = map_member_admission(&parent, 1, 7, stale_role == Some(PARENT_ROLE));
+        let drawing_admission = map_member_admission(&drawing, 2, 11, stale_role == Some(DRAWING_ROLE));
+        let value_admission = map_member_admission(&value, 3, 13, stale_role == Some(VALUE_ROLE));
+        let factories = std::array::from_fn(|_| Arc::new(DemoOneItemPreparationFactory::admissible()));
+        let parent_factory: Arc<dyn crate::os_store::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[0].clone();
+        let drawing_factory: Arc<dyn crate::os_store::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[1].clone();
+        let value_factory: Arc<dyn crate::os_store::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[2].clone();
+        (DurableOwnedThreeStoreMapAssemblyV1::new(parent, drawing, value, parent_admission, drawing_admission, value_admission, parent_factory, drawing_factory, value_factory, Box::new(FakeJournalSink { resolution, state })), factories)
+    }
+
+    fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
+        let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+        for _ in 0..512 {
+            match assembly.advance(grant).expect("fixed-three assembly turn") {
+                DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted => return,
+                DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(_) | DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked => {}
+                DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal => panic!("valid assembly reached rejection terminal"),
+            }
+        }
+        panic!("fixed-three assembly did not mount within its bounded turns");
+    }
+
+    fn drain_assembly_rejection(assembly: &mut DemoMapAssembly) -> DurableOwnedThreeStoreMapAssemblyOwnersV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation> {
+        let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+        for _ in 0..512 {
+            match assembly.advance(grant).expect("rejected fixed-three assembly cleanup turn") {
+                DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal => return assembly.take_terminal_owners().expect("terminal assembly returns every owner"),
+                DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(_) | DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked => {}
+                DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted => panic!("rejected assembly mounted a journal host"),
+            }
+        }
+        panic!("rejected fixed-three assembly did not terminate within its bounded turns");
+    }
+
+    fn close_assembly_owners(owners: DurableOwnedThreeStoreMapAssemblyOwnersV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation>) {
+        let DurableOwnedThreeStoreMapAssemblyOwnersV1 { mut parent, mut drawing, mut value, sink, .. } = owners;
+        drop(sink);
+        close_demo_artifact_store(&mut value);
+        close_demo_artifact_store(&mut drawing);
+        close_demo_artifact_store(&mut parent);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn durable_map_three_store_assembly_uses_exact_gis_factories_and_binds_one_decision() {
+        let (parent, drawing, value) = owned_three_stores().await;
+        let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
+        let (mut assembly, factories) = map_assembly(parent, drawing, value, None, FakeJournalResolution::Commit, state.clone());
+        drive_assembly_to_mounted(&mut assembly);
+        assert!(factories.iter().all(|factory| Arc::strong_count(factory) == 1), "each explicit role factory leaves the assembly immediately after admission");
+        let mut host = assembly.take_mounted_host().expect("valid assembly transfers only the existing fixed host");
+        assert!(assembly.terminal_is_empty());
+        let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+        for _ in 0..128 {
+            match host.advance(grant).expect("mounted assembly commit turn") {
+                DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(_) => assert!(host.acknowledge()),
+                DurableOwnedThreeStoreCommitAdvanceV1::Complete => break,
+                DurableOwnedThreeStoreCommitAdvanceV1::Progress(_) | DurableOwnedThreeStoreCommitAdvanceV1::Blocked => {}
+            }
+        }
+        let decision_pack = state.lock().unwrap().decision_pack.clone();
+        let decision = DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&decision_pack).expect("journal receives one Store-sealed canonical decision");
+        for member in [&decision.parent, &decision.drawing, &decision.value] {
+            let outcome = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&member.recovery_pack).expect("member retains one bound recovery owner");
+            assert_eq!(outcome.group_id, decision.decision_sha256);
+        }
+        assert_eq!(state.lock().unwrap().begins, 1);
+        let owners = host.take_terminal_owners().expect("acknowledged host returns all Stores and sink");
+        let DurableOwnedMapCommitOwnersV1 { mut parent, mut drawing, mut value, sink } = owners;
+        drop(sink);
+        close_demo_artifact_store(&mut value);
+        close_demo_artifact_store(&mut drawing);
+        close_demo_artifact_store(&mut parent);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn durable_map_three_store_assembly_late_member_rejection_closes_prior_publications_before_owner_handoff() {
+        for role in [DRAWING_ROLE, VALUE_ROLE] {
+            let (parent, drawing, value) = owned_three_stores().await;
+            let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
+            let (mut assembly, _) = map_assembly(parent, drawing, value, Some(role), FakeJournalResolution::Commit, state.clone());
+            let owners = drain_assembly_rejection(&mut assembly);
+            assert!(assembly.terminal_is_empty());
+            assert_eq!([owners.parent.generation(), owners.drawing.generation(), owners.value.generation()], [0, 0, 0]);
+            assert_eq!(state.lock().unwrap().begins, 0);
+            assert!(matches!(owners.failure, DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: rejected, .. } if rejected == role));
+            assert_eq!(owners.parent_mutation.is_some(), false);
+            assert_eq!(owners.drawing_mutation.is_some(), role == DRAWING_ROLE);
+            assert!(owners.value_mutation.is_some());
+            close_assembly_owners(owners);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn durable_map_three_store_assembly_cancellation_before_journal_restores_all_three_frontiers() {
+        let (parent, drawing, value) = owned_three_stores().await;
+        let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
+        let (mut assembly, _) = map_assembly(parent, drawing, value, None, FakeJournalResolution::Commit, state.clone());
+        let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+        while assembly.phase() != DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing {
+            assembly.advance(grant).expect("pre-cancellation assembly turn");
+        }
+        assert!(assembly.cancel());
+        let owners = drain_assembly_rejection(&mut assembly);
+        assert!(matches!(owners.failure, DurableOwnedThreeStoreMapAssemblyFailureV1::Cancelled));
+        assert_eq!([owners.parent.generation(), owners.drawing.generation(), owners.value.generation()], [0, 0, 0]);
+        assert_eq!(state.lock().unwrap().begins, 0);
+        close_assembly_owners(owners);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn durable_map_three_store_assembly_uncertain_journal_retains_same_host_until_committed_or_proven_absent() {
+        let (parent, drawing, value) = owned_three_stores().await;
+        let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
+        let (mut assembly, _) = map_assembly(parent, drawing, value, None, FakeJournalResolution::ErrorThenCommit, state.clone());
+        drive_assembly_to_mounted(&mut assembly);
+        let mut host = assembly.take_mounted_host().expect("prepared assembly transfers one fixed host");
+        let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+        let mut uncertain = false;
+        for _ in 0..128 {
+            match host.advance(grant) {
+                Err(DurableOwnedGroupDecisionError::Codec(error)) if error == "uncertain sync result" => {
+                    uncertain = true;
+                    let snapshot = host.capture_snapshot().expect("uncertain journal retains one all-old snapshot");
+                    assert_eq!([snapshot.parent.n, snapshot.drawing.n, snapshot.value.n], [Some(0), Some(0), Some(0)]);
+                    assert_eq!(state.lock().unwrap().begins, 1);
+                }
+                Ok(DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(_)) => assert!(host.acknowledge()),
+                Ok(DurableOwnedThreeStoreCommitAdvanceV1::Complete) => break,
+                Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(_) | DurableOwnedThreeStoreCommitAdvanceV1::Blocked) => {}
+                Err(error) => panic!("unexpected retained assembly journal error: {error}"),
+            }
+        }
+        assert!(uncertain);
+        assert_eq!(state.lock().unwrap().begins, 1);
+        let owners = host.take_terminal_owners().expect("same host terminates after one commit and ACK");
+        let DurableOwnedMapCommitOwnersV1 { mut parent, mut drawing, mut value, sink } = owners;
+        drop(sink);
+        close_demo_artifact_store(&mut value);
+        close_demo_artifact_store(&mut drawing);
+        close_demo_artifact_store(&mut parent);
+    }
+
     #[test]
     fn durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds() {
         let fixture = fixture();
@@ -2587,6 +3551,25 @@ mod tests {
         let frame = |payload: usize| varint(payload + 2) + payload + 10;
         assert_eq!(129 + frame(8) + frame(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES) + frame(12) + 75, 491_779);
         assert!(491_779 <= 507_904);
+    }
+
+    #[test]
+    fn durable_group_journal_record_projects_edits_only_after_all_three_bound_outcomes_verify() {
+        let decision = decision();
+        let canonical_pack = decision.encode_pack();
+        let record = DurableOwnedGroupJournalRecordV1::admit_canonical(canonical_pack.clone()).expect("Store derives identity from the complete canonical decision");
+        assert!(matches!(DurableOwnedGroupJournalRecordV1::admit(canonical_pack, &"0".repeat(64)), Err(DurableOwnedGroupDecisionError::InvalidHash)));
+        let verified = record.verify_fixed_three_edits::<DslValue, String, DslValue, String, DslValue, String>().expect("all three typed outcomes verify before projection");
+        assert_eq!(verified.decision_sha256(), decision.decision_sha256);
+        assert_eq!(verified.anchor_sha256(), decision.anchor_sha256);
+        assert_eq!(verified.document(), &decision.anchor.parent);
+        assert_eq!(verified.parent().forwards, ["parent:forward"]);
+        assert_eq!(verified.drawing().forwards, ["drawing:forward"]);
+        assert_eq!(verified.value().forwards, ["value:forward"]);
+        for edit in [verified.parent(), verified.drawing(), verified.value()] {
+            assert_eq!(edit.mutation_meta.len(), 1);
+            assert_eq!(edit.mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
+        }
     }
 
     #[test]

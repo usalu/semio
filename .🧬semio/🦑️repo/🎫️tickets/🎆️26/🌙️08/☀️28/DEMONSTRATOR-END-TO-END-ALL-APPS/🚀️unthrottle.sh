@@ -5,7 +5,7 @@
 # every 30s across cargo -> rustc -> grandchildren. Scoped by CARGO_TARGET_DIR to THIS ticket's two
 # private target dirs, so peers' builds are never touched.
 set -uo pipefail
-MINE="target-demonstrator"
+MINE="semio-demonstrator-target"
 while true; do
   for c in $(pgrep -f "bin/cargo" 2>/dev/null); do
     env_line=$(ps eww -o command= -p "$c" 2>/dev/null | tr ' ' '\n' | grep '^CARGO_TARGET_DIR=' | head -1)

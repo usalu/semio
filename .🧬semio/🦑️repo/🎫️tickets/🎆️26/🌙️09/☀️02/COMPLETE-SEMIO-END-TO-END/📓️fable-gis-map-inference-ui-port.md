@@ -239,8 +239,8 @@ the cargo runs below used a lane-qualified `CARGO_TARGET_DIR` under this ticket'
 | `cargo test --manifest-path Cargo.toml` (cwd `🖥️shell/📦️packages/🦀️rust`) | **12 passed, 0 failed**, 0.45 s (5.85 s incremental build) — includes `constructed_cases_match_committed_fixtures`, `fixtures_produce_expected_output` (77 fixtures) and `shell_capabilities_declaration_order_matches_enum` (65 rows) |
 | `cargo test --features typegen exports_typescript_bindings` (same cwd) | **1 passed** — the committed `🤖️generated/🟦️.ts` is byte-identical to the exporter's own output, so the mirror is not a hand-edit that drifted |
 | `bun nx run @semio-tech/framework-os-shell:test-long --skip-nx-cache` | **exit 0** — 3 passed, 3.91 s; the independent TypeScript reducer re-derives every committed shell fixture. The plain `:test` target fails under the box's current load for a budget reason only (`[budget] … exceeded 15000ms — killed`, the same suite runs in 3.91 s at `long`), not an assertion failure |
-| `cargo test -p semio-s-plugin-gis --lib propose_bounds_region` | **not completed in this session.** Started three times; the first two runs were terminated by the harness's background-task limit and the third was still compiling `semio-framework-plugin` when this report was written (1458 dependency crates built into the lane-qualified target dir, box load average 66-123 throughout from peer builds). Live output: `🗑️generated/fable-gis-map-inference-ui-port/gis-propose-bounds-region.txt`. **The two GIS laws are therefore written but unrun**, and nothing in this report claims otherwise. What IS known about this crate's compilability: its whole dependency chain up to and including `semio-framework-plugin-host` compiles clean (row above), and the row it adds is a pure textual mirror of the `openSource` precedent |
-| `cargo test -p semio-framework-os-renderer-wgpu --lib inference_driver` | **not run.** The renderer crate's dependency tree (wgpu/naga/winit) has never been built in this lane's private target dir, and the shared target dir was locked all session. **The five WGPU turn-driver laws are written but unrun.** They are pure, I/O-free unit tests over `GisMapInferenceDriverV1`, so they carry no runtime risk beyond compilation — but that is a claim about their shape, not evidence that they pass |
+| `cargo test -p semio-s-plugin-gis --lib propose_bounds_region` | **started, not settled — no result is claimed.** Four attempts: the first three were reclaimed by the harness's background-task lifecycle (`[killed]`, no output); the fourth was detached with `nohup … & disown` (pid 87303) and has been compiling for **2 h 15 m**, currently inside `semio-s-plugin-stdio` — the same crate a peer's orphaned build has been compiling for 5+ hours on this box. 1459 dependency crates are built; **zero `error` lines so far** (`grep -c '^error' → 0`), but a clean prefix is not a pass. Live log: `🗑️generated/fable-gis-map-inference-ui-port/gis-propose-bounds-region.txt`. **The two GIS command laws are written but unrun.** |
+| `cargo test -p semio-framework-os-renderer-wgpu --lib inference_driver` | **not run.** Starting it would have been a second concurrent cargo, which the lane's build discipline forbids, and its tree (wgpu/naga/winit) is entirely cold in this lane's private target dir. **The five WGPU turn-driver laws are written but unrun**, including the new `previewless` assertion added when this lane repaired the driver/reducer approve divergence. |
 | `bun nx run @semio-tech/plugin-registry:generate --skip-nx-cache` | **exit 0**; `.vscode/launch.json regenerated`; 4 lines matching `gis-map-inference-port` in the seed and 4 in the generated file |
 | `bunx tsc --noEmit … 🏛️ShellHost/🟦️.tsx` | one error, pre-existing and unrelated (`(5412,153) TS2345: 'readonly TutorialDefinition[]' is not assignable …`); **zero** errors in ShellHost's, `🐚️Shell`'s or `🪪️host-bootstrap`'s new code |
 | `bunx tsc --noEmit … 🧵️backbone-worker.ts` | every reported error lies outside the new `//#region 💡️Inference` and the new `💡️InferencePort` schema region; all are pre-existing (`FetchTimeoutResponse.body`, `Uint8Array`/`BufferSource`, `DirectorySpaceListEntryV1` re-exports) |
@@ -313,7 +313,12 @@ this lane's own edits:
    `🗑️generated/fable-gis-map-inference-ui-port/{kernel-target,shell-target}` holds ~2.3 GB of cargo
    build output, kept only because the shared lock was unusable. It is pure tool output and **must be
    swept when the ticket closes**; nothing in it is an input, a report or a fixture.
-3. **Consequence for coverage.** Escaping the lock makes `semio-s-plugin-gis` and
+3. **A detached GIS build is still running at hand-off.** `pid 87303`
+   (`cargo test -p semio-s-plugin-gis --lib propose_bounds_region`, started with `nohup … & disown` so
+   the harness cannot reclaim it) is writing to
+   `🗑️generated/fable-gis-map-inference-ui-port/gis-propose-bounds-region.txt`. Check it before starting
+   any other cargo. Kill it with `kill 87303` if you need the slot.
+4. **Consequence for coverage.** Escaping the lock makes `semio-s-plugin-gis` and
    `semio-framework-os-renderer-wgpu` expensive to check: both pull dependency trees this lane's private
    target directory has never built. Their status is stated exactly in the evidence table above rather
    than assumed.
@@ -330,6 +335,33 @@ and the WIT `enum inference-proposal-kind` / `record request-inference-proposal-
 added in the same `effects` interface. **A `wasm32-wasip2` plugin build is required before this arm can
 be called verified, and this lane did not run one.** The same applies to every wasm plugin that must be
 rebuilt because a variant was appended to the WIT `variant effect`.
+
+### Exact retry commands for the two unrun suites
+
+Run one at a time, foreground. Check `ps aux | grep "[c]argo test -p semio-s-plugin-gis"` first — the
+detached attempt above may still be alive, and a second concurrent cargo is forbidden.
+
+```sh
+export CARGO_BUILD_JOBS=4 RUSTC_WRAPPER=""
+export CARGO_TARGET_DIR="$PWD/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/fable-gis-map-inference-ui-port/kernel-target"
+
+# 1. the two GIS Shell-kind command laws (dependency tree ~95 % warm in that target dir)
+cargo test -p semio-s-plugin-gis --lib --message-format=short propose_bounds_region
+
+# 2. the five native turn-driver laws (cold wgpu/naga/winit tree — budget hours under load)
+cargo test -p semio-framework-os-renderer-wgpu --lib --message-format=short inference_driver
+```
+
+Expected law names: `propose_bounds_region_emits_one_intent_and_no_document_state`,
+`propose_bounds_region_is_a_shell_action_that_emits_no_operations`;
+`inference_driver_refuses_to_start_without_a_verified_execution_target_lease`,
+`inference_driver_runs_one_bounded_action_at_a_time_and_never_optimistically_cancels`,
+`inference_driver_approves_only_an_offered_proposal_and_is_terminal_once`,
+`inference_driver_retires_after_its_bounded_poll_budget`,
+`inference_driver_ignores_an_answer_for_another_job`.
+
+Prefer the shared `target/` once `lsof target/debug/.cargo-lock` shows no holder — these two crates are
+already built there and would finish in minutes rather than hours.
 
 ## Nonclaims
 
@@ -352,6 +384,10 @@ rebuilt because a variant was appended to the WIT `variant effect`.
   same host-owned object ShellHost drives. `InferencePortPanel`'s own accessibility (live-region
   politeness, the real `<progress>`, semantic buttons, focus restoration) is **asserted by construction
   and by the shared politeness table, not by a rendering test.**
+- **The GIS command laws and the WGPU turn-driver laws are written but unrun** — see their rows in the
+  evidence table and the exact retry commands above. Nothing in this report treats them as passing, and
+  the "fifteenth Shell-kind command" claim rests on source review plus the closed-set assertions the
+  `🖥️shell` and oracle suites *did* run, not on a green GIS test.
 - **The guest-side WIT conversion is unverified by any build this lane ran** — see the wasm-gating note
   above; no `wasm32-wasip2` plugin was rebuilt.
 

@@ -1,0 +1,35 @@
+{
+  "schema": "semio.raster.publication-authority.v1",
+  "closePageBytes": 16384,
+  "owners": [
+    {
+      "owner": "RasterPlayApp",
+      "source": "🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "groups": [
+        {
+          "status": "Migrated",
+          "lanes": ["Artifact"],
+          "routes": ["addLayer", "deleteLayer", "dropLayerKind", "duplicateLayer", "moveLayer", "patchLayer", "patchLayers", "setLayerVisible", "toggleLayerVisible"]
+        },
+        {
+          "status": "Migrated",
+          "lanes": ["Config"],
+          "routes": ["setActiveUtility", "setBrushOpacity", "setBrushSize", "setCamera", "setCameraZoom", "setCompositeViewport", "setLocale"]
+        }
+      ]
+    }
+  ],
+  "laws": {
+    "activationBeforeDecode": true,
+    "contractBijection": true,
+    "hostOnlyExclusive": true,
+    "storeAuthorityRequired": true,
+    "operationOwnedCursor": true,
+    "boundedProgress": true,
+    "cancellation": true,
+    "freshnessValidation": true,
+    "exactOwnerReturn": true,
+    "incrementalClose": true,
+    "terminalEmpty": true
+  }
+}

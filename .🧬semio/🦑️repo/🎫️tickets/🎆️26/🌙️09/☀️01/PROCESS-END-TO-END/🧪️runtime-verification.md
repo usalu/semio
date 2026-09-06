@@ -617,3 +617,41 @@ Two earlier positions are now settled:
 The 225-error census reported elsewhere stays scoped to `💠️lowpoly`, and the reading consistent with all three
 measurements is that lowpoly's `default-features = false` **disables** the features carrying those impls — i.e.
 it fails for having too FEW features, the opposite of a feature-unification story.
+
+---
+
+# 📅️ 2026-09-06 — a wedged `sccache` was deadlocking the whole native build queue
+
+Every native `cargo` on this machine was stuck, including this ticket's test run, and the cause was not
+contention:
+
+```
+55268  cargo run -p semio-framework-os-mcp   ppid 1  0.0% CPU  12m  child: sccache (idle, later <defunct>)
+55312  cargo run -p semio-framework-os-mcp   ppid 1  0.0% CPU  14m  no child
+59429  cargo run -p semio-framework-os-mcp   ppid 1  0.0% CPU  10m  no child
+63161  cargo test -p semio-s-plugin-process          0.0% CPU   8m  "Blocking waiting for file lock"
+```
+
+`sccache -s` **hung with no output** — the daemon itself was wedged. Three orphaned MCP-server builds were
+blocked on it, one holding `target/debug/.cargo-build-lock`, and everything else queued behind them forever.
+
+Killing the wedged `sccache` daemon (plus its idle/zombie child) and the three orphans — each verified
+`ppid == 1`, 0 % CPU, **no `rustc` child** — released the lock immediately. The test run went from 0 % CPU with
+no children to **ten parallel `rustc` children** within ninety seconds.
+
+**This also explains the repo/semio MCP servers timing out all session.** They are launched as
+`cargo run --quiet -p semio-framework-os-mcp`; with `sccache` wedged they never finish building, so the MCP
+connect deadline expires. A `repo (CONNECT_TIMEOUT)` in this repo is worth checking against `sccache -s` before
+assuming the server is misconfigured.
+
+**Discriminator, final form** (this session refined it three times):
+
+| parent | child | verdict |
+| --- | --- | --- |
+| 0 % CPU | live `rustc` | holding the lock and compiling — **leave it**, orphan or not |
+| 0 % CPU | idle or `<defunct>` `sccache` | **stuck** — safe to kill |
+| 0 % CPU | none, for minutes | **stuck** — safe to kill |
+
+Always confirm `ppid == 1` and attribute via `lsof -p <pid> | awk '$4 ~ /^1w?$/ {print $NF}'` before killing
+anything; `%CPU` alone is meaningless on this box, and `pkill -f` is unsafe because nine sessions run
+near-identical command lines.

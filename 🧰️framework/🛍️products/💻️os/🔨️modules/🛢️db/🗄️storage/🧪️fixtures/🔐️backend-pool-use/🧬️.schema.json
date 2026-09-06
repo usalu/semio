@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "registeredUses", "expected"],
+        "properties": {
+          "name": {
+            "enum": [
+              "registered-backend-blocks-shutdown",
+              "task-derives-registered-pool",
+              "dropped-facade-retains-use",
+              "compaction-acquires-before-admission",
+              "forged-kind-rejected-before-page-admission"
+            ]
+          },
+          "registeredUses": { "type": "integer", "minimum": 1, "maximum": 2 },
+          "expected": { "enum": ["busy", "registered-pool", "deferred-close", "retained-rejection", "stale-generation"] }
+        }
+      }
+    }
+  }
+}

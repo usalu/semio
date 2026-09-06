@@ -1,0 +1,17 @@
+{
+  "schema": "semio.browser-actor-codegen-manifest-fixture/v1",
+  "valid": { "version": "1.27.0", "runtime": "bun@1.3.14", "importInterfaces": ["semio:framework/pure@1.0.0"], "files": ["browser-actor.core.wasm", "browser-actor.js"] },
+  "denied": [
+    { "version": "1.28.0" },
+    { "runtime": "node@24.0.0" },
+    { "runtime": "bun@1.3.13" },
+    { "extra": true },
+    { "files": ["../browser-actor.core.wasm", "browser-actor.js"] },
+    { "files": ["browser-actor.core.wasm", "browser-actor.core.wasm", "browser-actor.js"] },
+    { "files": ["browser-actor.js", "browser-actor.core.wasm"] },
+    { "files": ["browser-actor.core.wasm", "browser-actor.core2.wasm"] },
+    { "importInterfaces": ["untrusted:remote/pure@1.0.0"] },
+    { "importInterfaces": ["semio:framework/pure@1.0.0", "semio:framework/pure@1.0.0"] },
+    { "importInterfaces": ["semio:framework/pure@1.0.0", "semio:framework/host-async@1.0.0"] }
+  ]
+}

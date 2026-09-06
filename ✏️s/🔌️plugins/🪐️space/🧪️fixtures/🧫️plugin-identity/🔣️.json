@@ -1,0 +1,10 @@
+{
+  "schema": "semio.space.plugin-identity/v1",
+  "pluginId": "space",
+  "packageId": "semio:space",
+  "packageName": "semio-s-plugin-space",
+  "moduleDirectoryName": "🪐️space",
+  "artifactKindPrefix": "s.space.",
+  "playgroundVariant": "s",
+  "host": { "landingAppId": "home", "hostAppId": "studio" }
+}

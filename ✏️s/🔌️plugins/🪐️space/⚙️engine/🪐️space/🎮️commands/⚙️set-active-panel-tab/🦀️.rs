@@ -46,7 +46,7 @@ mod tests {
         // 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §1) — mirror `testkit::test_surface_id`'s
         // synthetic-dialect convention here since this test builds its `AppDefinition` by hand instead
         // of through `seed_app`.
-        let root_tool_id = crate::engine::space::testkit::test_surface_id("root-tool");
+        let root_tool_id = crate::engine::space::testkit::test_surface_id("root-tool").await;
         let definition = App::builder(root_tool_id.clone(), LocalizedLabel::data("Root Tool"))
             .document(["root-tool".to_string()])
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
@@ -70,7 +70,7 @@ mod tests {
         let wire = pack::json!([{ "pluginId": "root", "app": app_json }]).to_string();
         let projection = empty_workflow_snapshot();
         let config = SpaceConfig::default();
-        studio_emit(&projection, &config, &SpaceCommand::SetAppRegistrations(crate::engine::space::commands::set_app_registrations::SetAppRegistrations { json: wire })).expect("handle");
+        studio_emit(&projection, &config, &SpaceCommand::SetAppRegistrations(crate::engine::space::commands::set_app_registrations::SetAppRegistrations { json: wire })).await.expect("handle");
         assert!(os_app_registration("root", &root_tool_id).is_some(), "SetAppRegistrations must populate this wasm instance's own registry");
         assert!(workflow_palette().iter().any(|entry| entry.plugin_id == "root" && entry.app_id == root_tool_id), "workflow_palette must surface the pushed app");
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::engine::space::terminology::SStudioLabels>(&config.locale);

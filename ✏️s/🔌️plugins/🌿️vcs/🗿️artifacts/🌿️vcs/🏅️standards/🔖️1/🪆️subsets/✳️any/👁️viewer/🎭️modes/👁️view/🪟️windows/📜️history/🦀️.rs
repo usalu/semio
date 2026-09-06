@@ -8,7 +8,7 @@
 //! sibling editor module (`policyViewerPurityBreaches` forbids it outright).
 
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{HistoryView, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, HistoryView, UiAssemblyResult, WindowKindDefinition};
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -24,11 +24,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `HistoryView -> UiNode` read: every checkpoint becomes one tree node, nested under its
+/// 👁️ Pure `HistoryView -> BuiltNode` read: every checkpoint becomes one tree node, nested under its
 /// parent (root checkpoints — `parent_checkpoint_id: None` — become tree roots). Alternative names and
 /// per-row navigation actions (`checkoutCheckpoint`/`switchAlternative`, real app actions on the
 /// editor's document panel) have no read-only counterpart here: a viewer declares no actions.
-pub fn render(history: &HistoryView) -> UiNode {
+pub fn render(history: &HistoryView) -> UiAssemblyResult<BuiltNode> {
     TreeWindowKit::render(&history_tree_view(history))
 }
 
@@ -56,13 +56,13 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn definition_declares_a_tree_window() {
+    async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn render_nests_checkpoints_under_their_parent() {
+    async fn render_nests_checkpoints_under_their_parent() {
         let history = HistoryView {
             columns: vec![
                 store::HistoryColumn { checkpoint_id: "c1".into(), timestamp: "t1".into(), labels: Vec::new(), authors: Vec::new(), parent_checkpoint_id: None, description: Some("root".into()), lane: 0, alternative_ids: Vec::new() },

@@ -81,8 +81,8 @@
           "mutationDirectoryName": "🔎add-gcp-observation",
           "scenarios": [
             {
-              "id": "adds-the-first-observation-to-gcp-ridge",
-            "directoryName": "🔎️adds-the-first-observation-to-gcp-ridge"
+              "id": "adds-the-first-05b1b5",
+            "directoryName": "🔎️adds-the-first-05b1b5"
             }
           ]
         },
@@ -92,8 +92,8 @@
           "mutationDirectoryName": "➕add-stream-frame",
           "scenarios": [
             {
-              "id": "appends-a-third-frame-to-stream-a",
-            "directoryName": "🎞️appends-a-third-frame-to-stream-a"
+              "id": "appends-a-third-8ac259",
+            "directoryName": "🎞️appends-a-third-8ac259"
             }
           ]
         },
@@ -103,8 +103,8 @@
           "mutationDirectoryName": "⏱️change-stream-sync",
           "scenarios": [
             {
-              "id": "shifts-stream-a-sync-offset-to-minus-seven-and-a-half",
-            "directoryName": "⏱️shifts-stream-a-sync-offset-to-minus-seven-and-a-half"
+              "id": "t038",
+            "directoryName": "t038"
             }
           ]
         },
@@ -114,8 +114,8 @@
           "mutationDirectoryName": "🧷create-asset",
           "scenarios": [
             {
-              "id": "stores-a-new-jpeg-frame-asset",
-            "directoryName": "🖼️stores-a-new-jpeg-frame-asset"
+              "id": "stores-a-new-d56283",
+            "directoryName": "🖼️stores-a-new-d56283"
             }
           ]
         },
@@ -125,8 +125,8 @@
           "mutationDirectoryName": "🔭create-camera-calibration",
           "scenarios": [
             {
-              "id": "adds-the-cam-c-fisheye-calibration",
-            "directoryName": "📷️adds-the-cam-c-fisheye-calibration"
+              "id": "adds-the-cam-c-82c8fb",
+            "directoryName": "📷️adds-the-cam-c-82c8fb"
             }
           ]
         },
@@ -136,8 +136,8 @@
           "mutationDirectoryName": "🧿create-gcp",
           "scenarios": [
             {
-              "id": "adds-gcp-tower-with-one-observation",
-            "directoryName": "📍️adds-gcp-tower-with-one-observation"
+              "id": "adds-gcp-tower-d71a54",
+            "directoryName": "📍️adds-gcp-tower-d71a54"
             }
           ]
         },
@@ -147,8 +147,8 @@
           "mutationDirectoryName": "⛓️create-rig-extrinsic",
           "scenarios": [
             {
-              "id": "adds-a-rig-extrinsic-for-cam-b",
-            "directoryName": "🔗️adds-a-rig-extrinsic-for-cam-b"
+              "id": "adds-a-rig-2df5df",
+            "directoryName": "🔗️adds-a-rig-2df5df"
             }
           ]
         },
@@ -158,8 +158,8 @@
           "mutationDirectoryName": "🌱create-stream",
           "scenarios": [
             {
-              "id": "adds-stream-c-bound-to-cam-b",
-            "directoryName": "🎥️adds-stream-c-bound-to-cam-b"
+              "id": "adds-stream-c-458900",
+            "directoryName": "🎥️adds-stream-c-458900"
             }
           ]
         },
@@ -169,8 +169,8 @@
           "mutationDirectoryName": "🗞️delete-asset",
           "scenarios": [
             {
-              "id": "removes-asset-a-and-reports-its-stale-references",
-            "directoryName": "🗑️removes-asset-a-and-reports-its-stale-references"
+              "id": "removes-asset-a-170889",
+            "directoryName": "🗑️removes-asset-a-170889"
             }
           ]
         },
@@ -180,8 +180,8 @@
           "mutationDirectoryName": "🚫delete-camera-calibration",
           "scenarios": [
             {
-              "id": "removes-the-cam-b-calibration",
-            "directoryName": "🚫️removes-the-cam-b-calibration"
+              "id": "removes-the-cam-f90b89",
+            "directoryName": "🚫️removes-the-cam-f90b89"
             }
           ]
         },
@@ -191,8 +191,8 @@
           "mutationDirectoryName": "🚮delete-gcp",
           "scenarios": [
             {
-              "id": "removes-gcp-corner-and-cascades-its-observation",
-            "directoryName": "🚫️removes-gcp-corner-and-cascades-its-observation"
+              "id": "removes-gcp-209b7d",
+            "directoryName": "🚫️removes-gcp-209b7d"
             }
           ]
         },
@@ -202,8 +202,8 @@
           "mutationDirectoryName": "✂️delete-rig-extrinsic",
           "scenarios": [
             {
-              "id": "drops-the-cam-a-rig-extrinsic",
-            "directoryName": "✂️drops-the-cam-a-rig-extrinsic"
+              "id": "drops-the-cam-a-a1f8a2",
+            "directoryName": "✂️drops-the-cam-a-a1f8a2"
             }
           ]
         },
@@ -213,8 +213,8 @@
           "mutationDirectoryName": "🪓delete-stream",
           "scenarios": [
             {
-              "id": "removes-stream-b-and-cascades-its-gcp-observation",
-            "directoryName": "🚫️removes-stream-b-and-cascades-its-gcp-observation"
+              "id": "removes-stream-b-0f62a7",
+            "directoryName": "🚫️removes-stream-b-0f62a7"
             }
           ]
         },
@@ -224,8 +224,8 @@
           "mutationDirectoryName": "🚷remove-gcp-observation",
           "scenarios": [
             {
-              "id": "removes-the-only-observation-of-gcp-corner",
-            "directoryName": "🚫️removes-the-only-observation-of-gcp-corner"
+              "id": "removes-the-only-f82e64",
+            "directoryName": "🚫️removes-the-only-f82e64"
             }
           ]
         },
@@ -235,8 +235,8 @@
           "mutationDirectoryName": "➖remove-stream-frame",
           "scenarios": [
             {
-              "id": "removes-the-last-frame-of-stream-a",
-            "directoryName": "🚫️removes-the-last-frame-of-stream-a"
+              "id": "removes-the-last-304bdf",
+            "directoryName": "🚫️removes-the-last-304bdf"
             }
           ]
         },
@@ -246,8 +246,8 @@
           "mutationDirectoryName": "☁️replace-dense",
           "scenarios": [
             {
-              "id": "swaps-in-a-two-point-classified-dense-cloud",
-            "directoryName": "☁️swaps-in-a-two-point-classified-dense-cloud"
+              "id": "swaps-in-a-two-c688db",
+            "directoryName": "☁️swaps-in-a-two-c688db"
             }
           ]
         },
@@ -257,8 +257,8 @@
           "mutationDirectoryName": "🗾replace-geo-products",
           "scenarios": [
             {
-              "id": "adds-the-dtm-and-ortho-rasters",
-            "directoryName": "🗺️adds-the-dtm-and-ortho-rasters"
+              "id": "adds-the-dtm-and-64d5bb",
+            "directoryName": "🗺️adds-the-dtm-and-64d5bb"
             }
           ]
         },
@@ -268,8 +268,8 @@
           "mutationDirectoryName": "🏗️replace-job",
           "scenarios": [
             {
-              "id": "advances-the-job-to-texturing",
-            "directoryName": "🎨️advances-the-job-to-texturing"
+              "id": "advances-the-job-c1e878",
+            "directoryName": "🎨️advances-the-job-c1e878"
             }
           ]
         },
@@ -279,8 +279,8 @@
           "mutationDirectoryName": "🧱replace-mesh-result",
           "scenarios": [
             {
-              "id": "swaps-in-an-imported-untextured-mesh",
-            "directoryName": "🕸️swaps-in-an-imported-untextured-mesh"
+              "id": "swaps-in-an-f23e71",
+            "directoryName": "🕸️swaps-in-an-f23e71"
             }
           ]
         },
@@ -290,8 +290,8 @@
           "mutationDirectoryName": "🧾replace-qc",
           "scenarios": [
             {
-              "id": "records-a-qc-report-carrying-a-watertight-summary",
-            "directoryName": "📋️records-a-qc-report-carrying-a-watertight-summary"
+              "id": "records-a-qc-f5caf4",
+            "directoryName": "📋️records-a-qc-f5caf4"
             }
           ]
         },
@@ -301,8 +301,8 @@
           "mutationDirectoryName": "⭐replace-sparse",
           "scenarios": [
             {
-              "id": "swaps-in-an-uncolored-four-point-sparse-cloud",
-            "directoryName": "✨️swaps-in-an-uncolored-four-point-sparse-cloud"
+              "id": "swaps-in-an-6d9ae4",
+            "directoryName": "✨️swaps-in-an-6d9ae4"
             }
           ]
         },
@@ -312,8 +312,8 @@
           "mutationDirectoryName": "🔁replace-stream-source",
           "scenarios": [
             {
-              "id": "clears-the-video-source-of-stream-a",
-            "directoryName": "🧹️clears-the-video-source-of-stream-a"
+              "id": "clears-the-video-143f2b",
+            "directoryName": "🧹️clears-the-video-143f2b"
             }
           ]
         },
@@ -323,8 +323,8 @@
           "mutationDirectoryName": "🚂replace-tracks",
           "scenarios": [
             {
-              "id": "replaces-the-moving-track-with-two-static-tracks",
-            "directoryName": "⏸️replaces-the-moving-track-with-two-static-tracks"
+              "id": "replaces-the-d40c68",
+            "directoryName": "⏸️replaces-the-d40c68"
             }
           ]
         },
@@ -334,8 +334,8 @@
           "mutationDirectoryName": "🛣️replace-trajectory",
           "scenarios": [
             {
-              "id": "clears-the-camera-trajectory",
-            "directoryName": "🧹️clears-the-camera-trajectory"
+              "id": "clears-the-d2f81a",
+            "directoryName": "🧹️clears-the-d2f81a"
             }
           ]
         },
@@ -345,8 +345,8 @@
           "mutationDirectoryName": "🛠️update-camera-calibration",
           "scenarios": [
             {
-              "id": "refines-the-cam-a-focal-length-and-rms",
-            "directoryName": "🔍️refines-the-cam-a-focal-length-and-rms"
+              "id": "refines-the-cam-0eaef0",
+            "directoryName": "🔍️refines-the-cam-0eaef0"
             }
           ]
         },
@@ -356,8 +356,8 @@
           "mutationDirectoryName": "🌁update-dense-params",
           "scenarios": [
             {
-              "id": "raises-the-dense-resolution-and-confidence-gate",
-            "directoryName": "🔬️raises-the-dense-resolution-and-confidence-gate"
+              "id": "raises-the-dense-ddb263",
+            "directoryName": "🔬️raises-the-dense-ddb263"
             }
           ]
         },
@@ -367,8 +367,8 @@
           "mutationDirectoryName": "🌠update-feature-params",
           "scenarios": [
             {
-              "id": "switches-the-detector-to-akaze",
-            "directoryName": "🔎️switches-the-detector-to-akaze"
+              "id": "switches-the-423de9",
+            "directoryName": "🔎️switches-the-423de9"
             }
           ]
         },
@@ -378,8 +378,8 @@
           "mutationDirectoryName": "🌐update-geo-params",
           "scenarios": [
             {
-              "id": "enables-georeferencing-with-an-origin",
-            "directoryName": "🌐️enables-georeferencing-with-an-origin"
+              "id": "enables-georefere-18a68a",
+            "directoryName": "🌐️enables-georefere-18a68a"
             }
           ]
         },
@@ -389,8 +389,8 @@
           "mutationDirectoryName": "🥣update-ingest-params",
           "scenarios": [
             {
-              "id": "tightens-the-ingest-sharpness-gate",
-            "directoryName": "🔍️tightens-the-ingest-sharpness-gate"
+              "id": "tightens-the-499c47",
+            "directoryName": "🔍️tightens-the-499c47"
             }
           ]
         },
@@ -400,8 +400,8 @@
           "mutationDirectoryName": "🪢update-match-params",
           "scenarios": [
             {
-              "id": "switches-the-matcher-to-a-kd-tree",
-            "directoryName": "🌳️switches-the-matcher-to-a-kd-tree"
+              "id": "switches-the-652d03",
+            "directoryName": "🌳️switches-the-652d03"
             }
           ]
         },
@@ -411,8 +411,8 @@
           "mutationDirectoryName": "🕸️update-mesh-params",
           "scenarios": [
             {
-              "id": "doubles-the-texture-size-and-drops-the-watertight-guarantee",
-            "directoryName": "🔳️doubles-the-texture-size-and-drops-the-watertight-guarantee"
+              "id": "t039",
+            "directoryName": "t039"
             }
           ]
         },
@@ -422,8 +422,8 @@
           "mutationDirectoryName": "🏎️update-motion-params",
           "scenarios": [
             {
-              "id": "enables-motion-tracking",
-            "directoryName": "🏃️enables-motion-tracking"
+              "id": "enables-motion-2444a3",
+            "directoryName": "🏃️enables-motion-2444a3"
             }
           ]
         },
@@ -433,8 +433,8 @@
           "mutationDirectoryName": "🔩update-rig-extrinsic",
           "scenarios": [
             {
-              "id": "retunes-the-cam-a-rig-translation",
-            "directoryName": "📍️retunes-the-cam-a-rig-translation"
+              "id": "retunes-the-cam-4ca5a2",
+            "directoryName": "📍️retunes-the-cam-4ca5a2"
             }
           ]
         },
@@ -444,8 +444,8 @@
           "mutationDirectoryName": "🧮update-sfm-params",
           "scenarios": [
             {
-              "id": "switches-the-robust-loss-to-cauchy",
-            "directoryName": "🎯️switches-the-robust-loss-to-cauchy"
+              "id": "switches-the-7f0371",
+            "directoryName": "🎯️switches-the-7f0371"
             }
           ]
         }

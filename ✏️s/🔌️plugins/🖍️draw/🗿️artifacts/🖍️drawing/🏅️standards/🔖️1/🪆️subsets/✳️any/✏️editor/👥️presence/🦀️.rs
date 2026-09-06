@@ -95,6 +95,19 @@ pub enum DrawingPresenceMutation {
 impl Mutation<DrawingPresence> for DrawingPresenceMutation {
     type Diff = DrawingPresence;
 
+    /// 🧷️ Hand-written: `dsl::DslOps` supplies `DslVariants` only, not this trait's leaf metadata.
+    /// ⚠️ PROVISIONAL: the `owner` leaf directory does not exist on disk — a placeholder that
+    /// satisfies `protocol::Mutation`, not a real registration.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
     fn diff(&self, _base: &DrawingPresence) -> protocol::MutationOutcome<DrawingPresence> {
         match self {
             Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),

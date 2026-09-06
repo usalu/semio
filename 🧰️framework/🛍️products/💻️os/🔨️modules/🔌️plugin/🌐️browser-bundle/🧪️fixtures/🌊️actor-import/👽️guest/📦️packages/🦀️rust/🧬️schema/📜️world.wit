@@ -1,0 +1,23 @@
+package semio:framework@1.0.0;
+
+interface types {
+  type pack = list<u8>;
+}
+
+interface host-async {
+  use types.{pack};
+  blob-read: async func(hash: string) -> result<stream<u8>, pack>;
+  link-resolve: async func(link: pack) -> result<pack, pack>;
+}
+
+interface actor-import-probe {
+  use types.{pack};
+  link-roundtrip: async func(link: pack) -> result<pack, pack>;
+  blob-collect: async func(hash: string) -> result<pack, pack>;
+  timer-roundtrip: async func(delay-ms: u32) -> u32;
+}
+
+world actor-import {
+  import host-async;
+  export actor-import-probe;
+}

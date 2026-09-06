@@ -5301,6 +5301,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-actor",
  "semio-framework-async",
+ "semio-framework-async-macros",
  "semio-framework-io-base64",
  "semio-framework-os-kernel",
  "semio-framework-plugin",

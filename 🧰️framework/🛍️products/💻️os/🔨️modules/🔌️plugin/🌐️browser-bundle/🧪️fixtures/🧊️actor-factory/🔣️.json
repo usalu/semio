@@ -1,0 +1,20 @@
+{
+  "schema": "semio.browser-actor-factory/v1",
+  "format": "semio.browser-actor-esm/v1",
+  "artifact": { "schema": "semio.os.closed-browser-actor.v1", "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1", "maximumBytes": 67108864 },
+  "artifactLaws": ["component-snapshot-is-owned", "closed-bytes-hash", "derived-import-manifest", "deterministic-codegen", "unknown-import-denied", "cancel-before-codegen", "cancel-after-codegen", "invalid-component-denied", "opened-file-replacement-denied", "pinned-runtime-with-sanitized-environment", "bun-component-api-matches-node-jco", "single-build-admission-before-input-copy", "compiler-snapshot-replacement-denied-before-evaluation", "component-snapshot-replacement-denied-before-codegen", "first-party-runtime-snapshot-survives-path-replacement", "runtime-snapshot-import-denied", "actual-policy-schema-and-digest-binding", "caller-build-paths-denied-before-input", "private-scratch-retired-after-success", "private-scratch-retired-after-cancellation"],
+  "name": "host-counter",
+  "component": "(component (import \"semio:framework/pure@1.0.0\" (instance $host (export \"now-ms\" (func (result u64))))) (alias export $host \"now-ms\" (func $now)) (core func $lower (canon lower (func $now))) (core module $m (import \"host\" \"now\" (func $now (result i64))) (func (export \"next\") (result i32) call $now i32.wrap_i64)) (core instance $host-core (export \"now\" (func $lower))) (core instance $i (instantiate $m (with \"host\" (instance $host-core)))) (func (export \"next\") (result u32) (canon lift (core func $i \"next\"))))",
+  "importInterfaces": ["semio:framework/pure@1.0.0"],
+  "starts": { "a": 12, "b": 21 },
+  "calls": ["a", "a", "b", "a", "b"],
+  "expected": [13, 14, 22, 15, 23],
+  "afterCloseB": 24,
+  "lifecycle": {
+    "open": { "phase": "open", "activeInvocations": 0 },
+    "invoking": { "phase": "open", "activeInvocations": 1 },
+    "closing": { "phase": "closing", "activeInvocations": 1 },
+    "closed": { "phase": "closed", "activeInvocations": 0 }
+  },
+  "laws": ["single-closed-esm", "actual-component-import", "actor-local-host", "native-wasm-oracle", "closed-owner-denied", "sibling-survives", "reentrant-close-drains-admitted-call", "abort-retires-actor-owner", "queued-invocation-cancelled-before-guest", "invocation-capacity-before-guest"]
+}

@@ -528,14 +528,27 @@ fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -
 /// @emoji 🌱️ Encodes a `DslValue` using the same self-describing tag set recursively; object
 /// entries sorted by key bytes with keys FORCED inline (`encode_string_inline`, never a symref) —
 /// the one deliberate carve-out from the general conditional-interning rule.
+///
+/// `Number` writes its own variant's tag — `TAG_UINT`/`TAG_INT` carry the exact 64-bit magnitude
+/// as a canonical unsigned/zig-zag LEB128, `TAG_F64` the normalized little-endian double. Widening
+/// through `as_f64` is not injective past 2^53, so the tag, not the reader, is what preserves an
+/// integer; see the `🎒️pack-dynamic-integer-v1` corpus under `💻️os/🧫️fixtures`.
 fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     match v {
         DslValue::Null => out.push(TAG_NULL),
         DslValue::Bool(b) => out.push(if *b { TAG_TRUE } else { TAG_FALSE }),
-        DslValue::Number(n) => {
+        DslValue::Number(Number::UInt(u)) => {
+            out.push(TAG_UINT);
+            write_varint_u64(out, *u);
+        }
+        DslValue::Number(Number::Int(i)) => {
+            out.push(TAG_INT);
+            write_varint_i64(out, *i);
+        }
+        DslValue::Number(Number::Float(f)) => {
             out.push(TAG_F64);
-            out.extend_from_slice(&normalize_f64(n.as_f64()).to_le_bytes());
+            out.extend_from_slice(&normalize_f64(*f).to_le_bytes());
         }
         DslValue::String(s) => encode_string(ctx, s, out),
         DslValue::Array(items) => {
@@ -984,7 +997,7 @@ impl RetainedValueCursor {
         if depth > self.limits.max_depth {
             return Err(PackError::LimitExceeded("retained value depth"));
         }
-        if context == RetainedContext::Dsl && !matches!(tag, TAG_FALSE | TAG_TRUE | TAG_F64 | TAG_STR | TAG_STR_INLINE | TAG_LIST | TAG_MAP | TAG_NULL) {
+        if context == RetainedContext::Dsl && !matches!(tag, TAG_FALSE | TAG_TRUE | TAG_INT | TAG_UINT | TAG_F64 | TAG_STR | TAG_STR_INLINE | TAG_LIST | TAG_MAP | TAG_NULL) {
             return Err(PackError::Malformed { what: "dsl-value", offset, detail: "field-only tag".into() });
         }
         if context == RetainedContext::Field && tag == TAG_NULL {
@@ -1668,6 +1681,8 @@ fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u1
         TAG_NULL => Ok(DslValue::Null),
         TAG_FALSE => Ok(DslValue::Bool(false)),
         TAG_TRUE => Ok(DslValue::Bool(true)),
+        TAG_UINT => Ok(DslValue::Number(Number::UInt(reader.read_varint_u64()?))),
+        TAG_INT => Ok(DslValue::Number(Number::Int(reader.read_varint_i64()?))),
         TAG_F64 => Ok(DslValue::Number(Number::Float(reader.read_f64_le()?))),
         TAG_STR => {
             let idx = reader.read_varint_u64()?;

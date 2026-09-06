@@ -11,7 +11,13 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-fn examples() -> &'static [ExampleSource] {
+/// 📚️ The one example-document catalogue of this subset — the same slice the shell's example switcher
+/// reads through `SubsetDeclaration.examples` and the same one `setActiveExample` resolves its
+/// `example_id` against, so an id the switcher offers is exactly an id the command accepts.
+/// `✏️editor/📚️examples/🎬️demo-session` is deliberately NOT a row here: it carries a `.cmd.semio`
+/// command-replay script, a session fixture for the editor's own tests, not a drawing document, and
+/// registering it would advertise an id `setActiveExample` could never parse into a document.
+pub fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::drawing::examples::demo::source()]).as_slice()
 }

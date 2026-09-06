@@ -136,7 +136,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-catalog-generation-to-7/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🦀️.rs"]
                                     mod tests_bumps_the_catalog_generation_to_7;
                                     #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -416,7 +416,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🗿️appends-artifact-3-to-the-index/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🗿️appends-artifact-3-4665d4/🦀️.rs"]
                                     mod tests_appends_artifact_3_to_the_index;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -433,7 +433,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/🗿️removes-artifact-2-from-the-index/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/🗿️removes-artifact-2eb687/🦀️.rs"]
                                     mod tests_removes_artifact_2_from_the_index;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -467,7 +467,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/🗿️stamps-artifact-1-with-a-new-editor/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/🗿️stamps-artifact-1-89ad80/🦀️.rs"]
                                     mod tests_stamps_artifact_1_with_a_new_editor;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/📝️text/🦀️.rs"]
                                     pub mod text;

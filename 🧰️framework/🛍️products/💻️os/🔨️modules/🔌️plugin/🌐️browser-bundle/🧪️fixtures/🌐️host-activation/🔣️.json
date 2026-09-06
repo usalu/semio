@@ -1,0 +1,10 @@
+{
+  "schema": "semio.browser-host-activation/v1",
+  "actors": [{ "id": "same-actor", "generation": "1" }, { "id": "same-actor", "generation": "2" }],
+  "limits": { "pendingEffects": 128, "streams": 128, "bufferedStreamBytes": 1048576, "streamChunkBytes": 65536 },
+  "responses": [[0, 1, 127, 255], [42, 7]],
+  "stream": [0, 1, 128, 255],
+  "closedFault": { "origin": "os", "code": "capability-revoked", "severity": "error", "message": "browser host: closed", "scope": {}, "retryable": false },
+  "lateStreamFault": { "origin": "os", "code": "browser.host.stream-failed", "severity": "error", "message": "late-stream-fault", "scope": {}, "retryable": false },
+  "laws": ["generation-isolation", "pending-close", "late-reply", "closed-dispatch", "capacity-recovery", "dispatch-fault", "stream-close", "unused-stream-close", "external-abort", "invalid-identity", "tagged-error", "reject-untagged-result", "stream-reservation-before-dispatch", "buffered-stream-byte-bound", "unused-stream-return", "stream-chunk-backing-bound", "parked-consumer-return", "parked-consumer-throw", "cancel-failure-retirement", "canonical-request-fault-payload", "late-stream-terminal-fault", "private-invocation-fault-brand"]
+}

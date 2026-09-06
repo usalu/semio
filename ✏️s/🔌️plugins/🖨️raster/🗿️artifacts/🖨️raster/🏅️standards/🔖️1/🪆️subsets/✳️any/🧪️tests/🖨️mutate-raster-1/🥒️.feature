@@ -126,19 +126,19 @@ Feature: Apply every typed raster-document mutation twice — once in Rust, once
       """
     Then each implementation gives the committed <verdict> answer in role, and the two agree
     Examples:
-      | id                           | verdict | dir                             | fixture                                               |
-      | create-layer                 | applied | 🌱create-layer                   | 🖋️creates-an-ink-layer-inside-the-artwork-group         |
-      | delete-layer                 | applied | 🗑️delete-layer                   | 🚫️deletes-the-frame-group-and-its-nested-children       |
-      | reorder-layers               | applied | 🔀reorder-layers                 | ⤴️lifts-the-caption-layer-out-of-the-frame-group        |
-      | rename-layer                 | applied | ✏️rename-layer                   | ✏️renames-the-sketch-layer-to-final-linework            |
-      | change-layer-visible         | applied | 👁️change-layer-visible           | 🙈️hides-the-overlay-layer                               |
-      | change-layer-opacity         | applied | 🌫️change-layer-opacity           | 🌫️fades-the-highlight-layer-to-a-quarter                |
-      | change-layer-blend-mode      | applied | 🎨change-layer-blend-mode        | 💡️switches-the-glow-layer-to-screen                     |
-      | move-layer                   | applied | ↔️move-layer                     | 📍️slides-the-stamp-layer-off-the-origin                 |
-      | resize-layer                 | applied | 📐resize-layer                   | 📐️resizes-the-canvas-layer-to-256-by-128                |
-      | change-layer-adjustment-kind | applied | 🎚️change-layer-adjustment-kind   | 📈️switches-the-tone-layer-from-levels-to-curves         |
-      | add-layer-asset              | noop    | 🖇️add-layer-asset                | 🖼️declines-to-reattach-an-asset-already-on-the-document |
-      | remove-layer-asset           | refused | 🗂️remove-layer-asset             | 🖼️rejects-removing-an-asset-the-document-never-attached |
+      | id                           | verdict | dir                             | fixture                     |
+      | create-layer                 | applied | 🌱create-layer                   | 🖋️creates-an-ink-8a1bf9     |
+      | delete-layer                 | applied | 🗑️delete-layer                   | 🚫️deletes-the-frame-2d257c  |
+      | reorder-layers               | applied | 🔀reorder-layers                 | ⤴️lifts-the-caption-fe529f   |
+      | rename-layer                 | applied | ✏️rename-layer                   | ✏️renames-the-sketch-73921a  |
+      | change-layer-visible         | applied | 👁️change-layer-visible           | 🙈️hides-the-d0ca7b          |
+      | change-layer-opacity         | applied | 🌫️change-layer-opacity           | 🌫️fades-the-c4cbe8          |
+      | change-layer-blend-mode      | applied | 🎨change-layer-blend-mode        | 💡️switches-the-a17d90       |
+      | move-layer                   | applied | ↔️move-layer                     | 📍️slides-the-stamp-b7bdca   |
+      | resize-layer                 | applied | 📐resize-layer                   | 📐️resizes-the-canvas-41d97f |
+      | change-layer-adjustment-kind | applied | 🎚️change-layer-adjustment-kind   | 📈️switches-the-tone-d5816a  |
+      | add-layer-asset              | noop    | 🖇️add-layer-asset                | 🖼️declines-to-4af870        |
+      | remove-layer-asset           | refused | 🗂️remove-layer-asset             | 🖼️rejects-removing-1c84a7   |
 
   @id-identity-round-trip
   @level-long

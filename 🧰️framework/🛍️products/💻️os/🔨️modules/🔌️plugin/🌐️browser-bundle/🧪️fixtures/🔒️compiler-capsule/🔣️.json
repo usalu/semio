@@ -1,0 +1,10 @@
+{
+  "schema": "semio.browser-codegen-capsule-fixture/v1",
+  "source": "let _fs; async function fetchCompile(url) { _fs = _fs || await import('node:fs/promises'); return WebAssembly.compile(await _fs.readFile(url)); } const module0 = fetchCompile(new URL('./js-component-bindgen-component.core.wasm', import.meta.url)); const module1 = fetchCompile(new URL('./js-component-bindgen-component.core2.wasm', import.meta.url)); export async function generate() { await Promise.all([module0, module1]); return 2; }",
+  "cores": [
+    { "name": "js-component-bindgen-component.core.wasm", "hex": "0061736d01000000" },
+    { "name": "js-component-bindgen-component.core2.wasm", "hex": "0061736d01000000" }
+  ],
+  "expected": 2,
+  "denied": ["parse-error", "third-core", "wrong-url-base", "foreign-dynamic-import", "static-import", "ambient-fetch", "wrong-builtin", "source-url", "missing-core", "extra-core", "rebound-loader"]
+}

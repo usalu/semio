@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source", "cores", "expected", "denied"],
+  "properties": {
+    "schema": { "const": "semio.browser-codegen-capsule-fixture/v1" },
+    "source": { "type": "string", "minLength": 1, "maxLength": 2048 },
+    "cores": { "const": [{ "name": "js-component-bindgen-component.core.wasm", "hex": "0061736d01000000" }, { "name": "js-component-bindgen-component.core2.wasm", "hex": "0061736d01000000" }] },
+    "expected": { "const": 2 },
+    "denied": { "const": ["parse-error", "third-core", "wrong-url-base", "foreign-dynamic-import", "static-import", "ambient-fetch", "wrong-builtin", "source-url", "missing-core", "extra-core", "rebound-loader"] }
+  }
+}

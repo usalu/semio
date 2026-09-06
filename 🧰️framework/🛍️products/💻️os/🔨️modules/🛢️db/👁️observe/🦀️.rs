@@ -118,7 +118,7 @@ pub fn encode_emit_event_json(event: &EmitEvent) -> String {
 /// family's error type) instead of `PackError`, and writes pre-delimited lines rather than raw
 /// byte ranges.
 pub trait EventSink: Send + Sync {
-    async fn write_line(&self, line: &str) -> Result<(), DbError>;
+    fn write_line(&self, line: &str) -> impl std::future::Future<Output = Result<(), DbError>> + Send;
 }
 
 /// @emoji 🧠️ An in-memory `EventSink` — the default for tests and for introspecting what a sink
@@ -213,7 +213,7 @@ pub struct AuditLink {
     pub checksum: u32,
 }
 
-async fn fold_checksum(prev_checksum: u32, line: &str) -> u32 {
+fn fold_checksum(prev_checksum: u32, line: &str) -> u32 {
     let mut buf = Vec::with_capacity(4 + line.len());
     buf.extend_from_slice(&prev_checksum.to_le_bytes());
     buf.extend_from_slice(line.as_bytes());
@@ -275,7 +275,7 @@ impl<S: EventSink> AuditSink<S> {
         }
         let mut prev_checksum = state.base_checksum;
         for (line, expected) in lines.iter().zip(state.links.iter()) {
-            let checksum = fold_checksum(prev_checksum, line).await;
+            let checksum = fold_checksum(prev_checksum, line);
             if checksum != expected.checksum {
                 return Err(DbError::Corrupt(format!("audit chain diverges at seq {}", expected.seq)));
             }
@@ -295,7 +295,7 @@ impl<S: EventSink> Emit for AuditSink<S> {
         let seq = self.next_seq.fetch_add(1, Ordering::Relaxed);
         let mut state = lock(&self.state);
         let prev_checksum = state.links.back().map_or(state.base_checksum, |link| link.checksum);
-        let checksum = fold_checksum(prev_checksum, &line).await;
+        let checksum = fold_checksum(prev_checksum, &line);
         state.links.push_back(AuditLink { seq, checksum });
         while state.links.len() > self.max_retained {
             if let Some(evicted) = state.links.pop_front() {

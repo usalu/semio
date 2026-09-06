@@ -2309,46 +2309,136 @@ pub struct ArtifactWal {
     next_tx_id: u64,
 }
 
-impl ArtifactWal {
-    async fn release_failed_open(writer: db_storage::WalWriterPermit, error: DbError) -> DbError {
-        match writer.release().await {
-            Ok(()) => error,
-            Err(failure) => DbError::Unavailable(format!("WAL open failed ({error}); writer remains retained by its backend: {}", failure.error())),
+/// 🧲️ A failed recovery returns the caller's exact acquired writer for same-owner retry.
+#[must_use = "the acquired WAL writer must be retried or converted into a retained close"]
+pub struct ArtifactWalAcquiredRejected {
+    cause: DbError,
+    writer: db_storage::WalWriterPermit,
+}
+
+impl ArtifactWalAcquiredRejected {
+    fn new(cause: DbError, writer: db_storage::WalWriterPermit) -> Self { Self { cause, writer } }
+
+    pub fn error(&self) -> &DbError { &self.cause }
+
+    pub fn into_parts(self) -> (DbError, db_storage::WalWriterPermit) { (self.cause, self.writer) }
+
+    pub async fn retry_open(
+        self,
+        storage: &impl db_storage::WalStorage,
+        policy: GroupCommitPolicy,
+        now_ms: u64,
+        control: &mut WalCursorControl,
+    ) -> Result<(ArtifactWal, WalRecoveryReport), ArtifactWalAcquiredRejected> {
+        ArtifactWal::open_acquired(storage, self.writer, policy, now_ms, control).await
+    }
+
+    pub fn into_open_rejected(self) -> ArtifactWalOpenRejected {
+        ArtifactWalOpenRejected::retained(self.cause, self.writer.release())
+    }
+}
+
+impl std::fmt::Debug for ArtifactWalAcquiredRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("ArtifactWalAcquiredRejected").field("cause", &self.cause).finish_non_exhaustive()
+    }
+}
+
+/// 🚑️ Self-acquiring WAL rejection retaining the exact writer-release witness until terminal ACK.
+#[must_use = "the WAL rejection must be closed to its terminal writer-release witness"]
+pub enum ArtifactWalOpenRejected {
+    BeforeAcquire { cause: DbError },
+    Retained { cause: DbError, release_error: Option<DbError>, release: db_storage::WalWriterRelease },
+}
+
+impl ArtifactWalOpenRejected {
+    fn before_acquire(cause: DbError) -> Self { Self::BeforeAcquire { cause } }
+
+    fn retained(cause: DbError, release: db_storage::WalWriterRelease) -> Self { Self::Retained { cause, release_error: None, release } }
+
+    pub fn error(&self) -> &DbError {
+        match self {
+            Self::BeforeAcquire { cause } | Self::Retained { cause, .. } => cause,
         }
     }
 
+    pub fn release_error(&self) -> Option<&DbError> {
+        match self {
+            Self::BeforeAcquire { .. } => None,
+            Self::Retained { release_error, .. } => release_error.as_ref(),
+        }
+    }
+
+    pub fn has_release_owner(&self) -> bool { matches!(self, Self::Retained { .. }) }
+
+    pub fn into_parts(self) -> (DbError, Option<db_storage::WalWriterRelease>) {
+        match self {
+            Self::BeforeAcquire { cause } => (cause, None),
+            Self::Retained { cause, release, .. } => (cause, Some(release)),
+        }
+    }
+
+    pub async fn retry_close(self) -> Result<DbError, ArtifactWalOpenRejected> {
+        match self {
+            Self::BeforeAcquire { cause } => Ok(cause),
+            Self::Retained { cause, release_error, release } => {
+                let release = if release_error.is_some() { release.retry() } else { release };
+                match release.await {
+                    Ok(()) => Ok(cause),
+                    Err(failure) => {
+                        let (release_error, release) = failure.into_parts();
+                        Err(Self::Retained { cause, release_error: Some(release_error), release })
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl std::fmt::Debug for ArtifactWalOpenRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("ArtifactWalOpenRejected")
+            .field("cause", self.error())
+            .field("release_error", &self.release_error())
+            .field("has_release_owner", &self.has_release_owner())
+            .finish()
+    }
+}
+
+impl ArtifactWal {
     /// @emoji 🌱️ Creates a brand new WAL for `document` (segment 0, genesis — no prior segment to
     /// chain from). Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
-    pub async fn create(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<Self, DbError> {
-        let writer = storage.acquire_writer(&document).await?;
+    pub async fn create(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<Self, ArtifactWalOpenRejected> {
+        let writer = storage.acquire_writer(&document).await.map_err(ArtifactWalOpenRejected::before_acquire)?;
         let active = match SegmentWriter::begin(storage, &writer, document.clone(), 0, None, now_ms).await {
             Ok(active) => active,
-            Err(error) => return Err(Self::release_failed_open(writer, error).await),
+            Err(error) => return Err(ArtifactWalAcquiredRejected::new(error, writer).into_open_rejected()),
         };
         Ok(Self { document, writer: Some(writer), release: None, release_retry: false, policy, max_segment_bytes: DEFAULT_MAX_SEGMENT_BYTES, next_segment_index: 1, active, next_tx_id: 1 })
     }
 
     /// 🚑️ Verifies the retained chain, durably aborts incomplete active transactions, repairs the
     /// uncommitted tail, and resumes the physical sequence under the caller's exclusive write authority.
-    pub async fn open(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), DbError> {
+    pub async fn open(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), ArtifactWalOpenRejected> {
         let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let mut control = WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+        let mut control = WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).map_err(ArtifactWalOpenRejected::before_acquire)?;
         Self::open_with_control(storage, document, policy, now_ms, &mut control).await
     }
 
     /// 🚦️ Caller-controlled bounded recovery; cleanup is never gated by cancellation.
-    pub async fn open_with_control(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64, control: &mut WalCursorControl) -> Result<(Self, WalRecoveryReport), DbError> {
-        control.grant()?;
-        let writer = storage.acquire_writer(&document).await?;
-        Self::open_acquired(storage, writer, policy, now_ms, control).await
+    pub async fn open_with_control(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64, control: &mut WalCursorControl) -> Result<(Self, WalRecoveryReport), ArtifactWalOpenRejected> {
+        control.grant().map_err(ArtifactWalOpenRejected::before_acquire)?;
+        let writer = storage.acquire_writer(&document).await.map_err(ArtifactWalOpenRejected::before_acquire)?;
+        Self::open_acquired(storage, writer, policy, now_ms, control).await.map_err(ArtifactWalAcquiredRejected::into_open_rejected)
     }
 
-    pub(crate) async fn open_acquired(storage: &impl db_storage::WalStorage, writer: db_storage::WalWriterPermit, policy: GroupCommitPolicy, now_ms: u64, control: &mut WalCursorControl) -> Result<(Self, WalRecoveryReport), DbError> {
+    pub async fn open_acquired(storage: &impl db_storage::WalStorage, writer: db_storage::WalWriterPermit, policy: GroupCommitPolicy, now_ms: u64, control: &mut WalCursorControl) -> Result<(Self, WalRecoveryReport), ArtifactWalAcquiredRejected> {
         let document = ArtifactId(writer.document().as_str().to_string());
         let mut writer = Some(writer);
         let mut indices = match storage.list_segments(&document).await {
             Ok(indices) => indices,
-            Err(error) => return Err(Self::release_failed_open(writer.take().expect("acquired writer"), error).await),
+            Err(error) => return Err(ArtifactWalAcquiredRejected::new(error, writer.take().expect("acquired writer"))),
         };
         let result = async {
             let permit = writer.as_ref().expect("recovery retains its acquired writer");
@@ -2447,8 +2537,9 @@ impl ArtifactWal {
         }.await;
         while indices.close_step() { semio_framework_async::yield_once().await; }
         match (result, writer) {
-            (Err(error), Some(writer)) => Err(Self::release_failed_open(writer, error).await),
-            (result, _) => result,
+            (Err(error), Some(writer)) => Err(ArtifactWalAcquiredRejected::new(error, writer)),
+            (Ok(value), _) => Ok(value),
+            (Err(_), None) => unreachable!("failed WAL open transferred its writer only on success"),
         }
     }
 
@@ -2471,21 +2562,32 @@ impl ArtifactWal {
         storage.delete_segment(self.writer.as_ref().ok_or(DbError::Closed)?, index).await
     }
 
+    /// 📐️ Validates the complete framed transaction against the current or successor
+    /// readable-segment bound without consuming a transaction id or beginning storage I/O.
+    pub(crate) fn preflight_submit(&self, records: &WalRecordBatch) -> Result<bool, DbError> {
+        self.active.ensure_open()?;
+        let reservation = wal_transaction_frame_bytes(records)?.checked_add(protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal transaction reservation"))?;
+        self.next_tx_id.checked_add(1).ok_or(DbError::LimitExceeded("wal transaction sequence"))?;
+        if self.active.total_len()?.checked_add(reservation).ok_or(DbError::LimitExceeded("wal segment reservation"))? <= db_storage::DB_IO_MAX_READ_BYTES {
+            return Ok(false);
+        }
+        let header_payload = wal_field_len(self.document.0.as_bytes()).checked_add(41).ok_or(DbError::LimitExceeded("wal successor header"))?;
+        let header_bytes = wal_frame_bytes(header_payload)?.checked_add(protocol::format::HEADER_SIZE as u64 + protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal successor header"))?;
+        if header_bytes.checked_add(reservation).ok_or(DbError::LimitExceeded("wal transaction reservation"))? > db_storage::DB_IO_MAX_READ_BYTES {
+            return Err(DbError::LimitExceeded("wal transaction exceeds readable segment"));
+        }
+        Ok(true)
+    }
+
     /// @emoji ✍️ Appends `records` as one transaction (`WAL_TX_BEGIN` .. `WAL_TX_COMMIT`), then
     /// group-commits per `GroupCommitPolicy` — except `durability >= Fsync` always forces an
     /// immediate commit, since deferring one can never satisfy a durability request stronger than
     /// what's already flushed. Rotates to a new segment (sealing this one first, which forces a
     /// commit if anything is still pending) once the active segment crosses `max_segment_bytes`.
     pub async fn submit(&mut self, storage: &impl db_storage::WalStorage, records: &WalRecordBatch, durability: DurabilityClass, now_ms: u64) -> Result<WalAppendReceipt, DbError> {
-        self.active.ensure_open()?;
-        let reservation = wal_transaction_frame_bytes(records)?.checked_add(protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal transaction reservation"))?;
+        let rotate = self.preflight_submit(records)?;
         let next_tx_id = self.next_tx_id.checked_add(1).ok_or(DbError::LimitExceeded("wal transaction sequence"))?;
-        if self.active.total_len()?.checked_add(reservation).ok_or(DbError::LimitExceeded("wal segment reservation"))? > db_storage::DB_IO_MAX_READ_BYTES {
-            let header_payload = wal_field_len(self.document.0.as_bytes()).checked_add(41).ok_or(DbError::LimitExceeded("wal successor header"))?;
-            let header_bytes = wal_frame_bytes(header_payload)?.checked_add(protocol::format::HEADER_SIZE as u64 + protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal successor header"))?;
-            if header_bytes.checked_add(reservation).ok_or(DbError::LimitExceeded("wal transaction reservation"))? > db_storage::DB_IO_MAX_READ_BYTES {
-                return Err(DbError::LimitExceeded("wal transaction exceeds readable segment"));
-            }
+        if rotate {
             self.rotate(storage, now_ms).await?;
         }
         let tx_id = self.next_tx_id;
@@ -2597,6 +2699,15 @@ pub(crate) mod tests {
 
     fn control() -> WalCursorControl {
         WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap()
+    }
+
+    async fn rejected_open_error(mut rejected: ArtifactWalOpenRejected) -> DbError {
+        loop {
+            match rejected.retry_close().await {
+                Ok(cause) => return cause,
+                Err(retained) => rejected = retained,
+            }
+        }
     }
 
     async fn retained(source: &[u8]) -> WalBytes {
@@ -2746,9 +2857,8 @@ pub(crate) mod tests {
             let opened = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 1).await;
             if row["expected"]["accepted"] == false {
                 let rejected = match opened {
-                    Err(DbError::Corrupt(_)) => true,
+                    Err(rejected) => matches!(rejected_open_error(rejected).await, DbError::Corrupt(_)),
                     Ok((mut wal, _)) => { wal.close().await.unwrap(); false },
-                    Err(_) => false,
                 };
                 assert!(rejected, "{name}");
                 for (index, (bytes, state)) in before.iter().enumerate() {
@@ -2857,7 +2967,7 @@ pub(crate) mod tests {
             }
             storage.set_script(script).await;
             let error = match ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 1).await {
-                Err(error) => error,
+                Err(rejected) => rejected_open_error(rejected).await,
                 Ok((mut wal, _)) => { wal.close().await.unwrap(); panic!("abort recovery ignored injected fault"); }
             };
             match case["expectedError"].as_str().unwrap() { "Corrupt" => assert!(matches!(error, DbError::Corrupt(_))), "Io" => assert!(matches!(error, DbError::Io(_))), _ => unreachable!() }
@@ -2932,9 +3042,8 @@ pub(crate) mod tests {
             let deadline = if mode == "expired" { std::time::Instant::now() } else { std::time::Instant::now() + std::time::Duration::from_secs(30) };
             let mut control = WalCursorControl::new(cancelled, deadline, if mode == "fuel" { 1 } else { 1_000_000 }).unwrap();
             let rejected = match ArtifactWal::open_with_control(&storage, document.clone(), GroupCommitPolicy::default(), 1, &mut control).await {
-                Err(DbError::Unavailable(_)) | Err(DbError::LimitExceeded("wal cursor fuel")) => true,
+                Err(rejected) => matches!(rejected_open_error(rejected).await, DbError::Unavailable(_) | DbError::LimitExceeded("wal cursor fuel")),
                 Ok((mut wal, _)) => { wal.close().await.unwrap(); false },
-                Err(_) => false,
             };
             assert!(rejected, "{mode}");
             assert_eq!(segment_bytes(&storage, &document, 0).await, before);
@@ -3003,9 +3112,8 @@ pub(crate) mod tests {
                 reopened.close().await.unwrap();
             } else {
                 let rejected = match result {
-                    Err(DbError::LimitExceeded("wal recovery abort exceeds retained segment budget")) => true,
+                    Err(rejected) => matches!(rejected_open_error(rejected).await, DbError::LimitExceeded("wal recovery abort exceeds retained segment budget")),
                     Ok((mut wal, _)) => { wal.close().await.unwrap(); false },
-                    Err(_) => false,
                 };
                 assert!(rejected);
                 assert_eq!(segment_bytes(&storage, &document, 0).await, before);
@@ -3475,7 +3583,7 @@ pub(crate) mod tests {
             storage.create_segment(&writer, 0).await.unwrap();
             if cut != 0 { storage.append(&writer, 0, pages(&full[..cut])).await.unwrap(); }
             writer.release().await.unwrap();
-            let (mut wal, report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 9).await.unwrap_or_else(|error| panic!("cut {cut}: {error}"));
+            let (mut wal, report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 9).await.unwrap_or_else(|error| panic!("cut {cut}: {error:?}"));
             assert_eq!(report.torn_tail_bytes, (cut - trusted) as u64, "cut {cut}");
             assert_eq!(report.segments_seen, 1);
             assert_eq!(wal.next_tx_id, next_tx, "cut {cut}");
@@ -3577,13 +3685,18 @@ pub(crate) mod tests {
                     assert_eq!(storage.segment_state(&document, *index).await.unwrap(), *state, "{name}: lifecycle changed");
                 }
             }
-            if let Ok((mut wal, _)) = result {
-                let expected_tx = if name == "missing" { 1 } else if name == "compacted-clean" { 4 } else { 3 };
-                assert_eq!(wal.next_tx_id, expected_tx, "{name}");
-                let receipt = submit_one(&storage, &mut wal, WalRecord::Command(retained(b"z").await), DurabilityClass::Fsync, 6).await;
-                assert_eq!(receipt.tx_id, expected_tx);
-                assert!(replay_summaries(&storage, &document).await.contains(&ReplaySummary::Commit(expected_tx, 1)), "{name}");
-                wal.close().await.unwrap();
+            match result {
+                Ok((mut wal, _)) => {
+                    let expected_tx = if name == "missing" { 1 } else if name == "compacted-clean" { 4 } else { 3 };
+                    assert_eq!(wal.next_tx_id, expected_tx, "{name}");
+                    let receipt = submit_one(&storage, &mut wal, WalRecord::Command(retained(b"z").await), DurabilityClass::Fsync, 6).await;
+                    assert_eq!(receipt.tx_id, expected_tx);
+                    assert!(replay_summaries(&storage, &document).await.contains(&ReplaySummary::Commit(expected_tx, 1)), "{name}");
+                    wal.close().await.unwrap();
+                }
+                Err(rejected) => {
+                    let _ = rejected_open_error(rejected).await;
+                }
             }
         }
         println!("[DEBUG] WAL recovery: 18 neutral lifecycle rows cover rotation gaps, compaction boundaries, invalid partial headers, sealed damage, identity/chain forgery and exhausted ids without replacement");
@@ -3894,7 +4007,14 @@ pub(crate) mod tests {
         writer.release().await.unwrap();
 
         let result = db_actor::block_on(ArtifactWal::open(&storage, document, GroupCommitPolicy::default(), 100));
-        assert!(matches!(result, Err(DbError::Corrupt(_))), "a torn sealed (non-active) segment must be a hard recovery error");
+        let rejected = match result {
+            Err(rejected) => matches!(rejected_open_error(rejected).await, DbError::Corrupt(_)),
+            Ok((mut wal, _)) => {
+                wal.close().await.unwrap();
+                false
+            }
+        };
+        assert!(rejected, "a torn sealed (non-active) segment must be a hard recovery error");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3906,6 +4026,45 @@ pub(crate) mod tests {
         assert_eq!(wal.active_segment_index().await, 0);
         assert_eq!(db_actor::block_on(storage.list_segments(&document)).unwrap(), vec![0]);
         wal.close().await.unwrap();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owner_retry() {
+        let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = crate::db_testkit::FaultStorage::new(inner).await;
+        let document = ArtifactId::from("wal-open-retained-owner");
+        storage.set_script(crate::db_testkit::FaultScript { fail_nth_write: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
+        let rejected = match ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await {
+            Err(rejected) => rejected,
+            Ok(mut wal) => {
+                wal.close().await.unwrap();
+                panic!("faulted WAL create was admitted");
+            }
+        };
+        assert!(matches!(rejected.error(), DbError::Io(_)));
+        assert!(rejected.has_release_owner());
+        assert!(matches!(storage.acquire_writer(&document).await, Err(DbError::Conflict(_))));
+        assert!(matches!(rejected_open_error(rejected).await, DbError::Io(_)));
+
+        let writer = storage.acquire_writer(&document).await.unwrap();
+        storage.set_script(crate::db_testkit::FaultScript { fail_nth_write: Some(storage.append_calls().await + 1), ..crate::db_testkit::FaultScript::default() }).await;
+        let mut open_control = control();
+        let rejected = match ArtifactWal::open_acquired(&storage, writer, GroupCommitPolicy::default(), 1, &mut open_control).await {
+            Err(rejected) => rejected,
+            Ok((mut wal, _)) => {
+                wal.close().await.unwrap();
+                panic!("faulted acquired WAL open was admitted");
+            }
+        };
+        assert!(matches!(rejected.error(), DbError::Io(_)));
+        assert!(matches!(storage.acquire_writer(&document).await, Err(DbError::Conflict(_))));
+        storage.set_script(crate::db_testkit::FaultScript::default()).await;
+        let mut retry_control = control();
+        let (mut wal, report) = rejected.retry_open(&storage, GroupCommitPolicy::default(), 2, &mut retry_control).await.unwrap();
+        assert_eq!(report.segments_seen, 1);
+        wal.close().await.unwrap();
+        storage.acquire_writer(&document).await.unwrap().release().await.unwrap();
+        eprintln!("[DEBUG] WAL open rejection retained exact permit for same-owner retry and exact release for terminal close");
     }
     //#endregion 🔖️Segment + ArtifactWal
 }

@@ -17,7 +17,8 @@ import { isAbsolute, basename, dirname, join, relative, resolve } from "node:pat
 import { isDeepStrictEqual } from "node:util";
 import type { AreaState, ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { authorArtifactScaffold, BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { decodePackValue, encodePackValue } from "../../../🟦️.ts";
+import { clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } from "../../../🟦️.ts";
+import type { PackValue } from "../../../🟦️.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "./📦️deployment/🟦️.ts";
 
@@ -2507,7 +2508,7 @@ export function rejectPlaceholderCatalogIdentity(pluginId: string, version: stri
 export function verifyDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Uint8Array, expected: Readonly<{ wasmSha256: string; coreWasmSha256: string }>): OwnerDescriptorPairV1 {
   if (jsonBytes.byteLength === 0 || jsonBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES || packBytes.byteLength === 0 || packBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES) throw new Error("emitted descriptor forms exceed the fixed boundary");
   let descriptor: unknown;
-  let packed: unknown;
+  let packed: PackValue;
   try {
     const json = new TextDecoder("utf-8", { fatal: true }).decode(jsonBytes);
     rejectDuplicateJsonObjectNames(json);
@@ -2523,9 +2524,9 @@ export function verifyDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Ui
   const entry: CatalogDescriptorIdentity = { pluginId: String(record.manifest?.pluginId), packageId: String(record.packageId), role, extends: host, dependsOn: host ? [host] : [] };
   const hashes = validateCatalogDescriptorValue(entry, descriptor);
   if (hashes.wasmSha256 !== expected.wasmSha256 || hashes.coreWasmSha256 !== expected.coreWasmSha256) throw new Error(`${entry.pluginId}: emitted descriptor hashes do not name the exact raw/core artifacts it was emitted from`);
-  if (!isDeepStrictEqual(normalizeCatalogDescriptorEnums(descriptor), normalizeCatalogDescriptorEnums(packed))) throw new Error(`${entry.pluginId}: emitted descriptor JSON and pack forms disagree`);
   if (!Buffer.from(encodePackValue(packed)).equals(Buffer.from(packBytes))) throw new Error(`${entry.pluginId}: emitted descriptor pack is not canonical or contains trailing bytes`);
-  const blanked = structuredClone(packed as Record<string, any>);
+  if (!isDeepStrictEqual(normalizeCatalogDescriptorEnums(descriptor), normalizeCatalogDescriptorEnums(packValueToExactJson(packed)))) throw new Error(`${entry.pluginId}: emitted descriptor JSON and pack forms disagree`);
+  const blanked = clonePackValue(packed) as Record<string, any>;
   blanked.hashes.descriptorSha256 = "";
   if (createHash("sha256").update(encodePackValue(blanked)).digest("hex") !== hashes.descriptorSha256) throw new Error(`${entry.pluginId}: emitted descriptor self-hash mismatch`);
   rejectPlaceholderCatalogIdentity(entry.pluginId, String(record.manifest.version));
@@ -2553,7 +2554,7 @@ export function validateCatalogDescriptorPair(entry: PluginRegistryEntry, repoRo
   const jsonBytes = readCatalogFile(jsonPath, repoRoot, CATALOG_DESCRIPTOR_MAX_BYTES);
   const packBytes = readCatalogFile(packPath, repoRoot, CATALOG_DESCRIPTOR_MAX_BYTES);
   let descriptor: unknown;
-  let packed: unknown;
+  let packed: PackValue;
   try {
     const json = Buffer.from(jsonBytes).toString("utf8");
     rejectDuplicateJsonObjectNames(json);
@@ -2588,9 +2589,9 @@ export function validateCatalogDescriptorPair(entry: PluginRegistryEntry, repoRo
   const hashRecord = hashes as Record<string, unknown>;
   if (Object.keys(hashRecord).sort().join(",") !== "coreWasmSha256,descriptorSha256,wasmSha256") throw new Error(`${entry.pluginId}: descriptor hashes must contain exactly raw/core/descriptor SHA-256`);
   for (const [name, value] of Object.entries(hashRecord)) if (typeof value !== "string" || !CATALOG_SHA256.test(value)) throw new Error(`${entry.pluginId}: hashes.${name} must be lowercase 64-hex`);
-  if (!isDeepStrictEqual(normalizeCatalogDescriptorEnums(descriptor), normalizeCatalogDescriptorEnums(packed))) throw new Error(`${entry.pluginId}: descriptor JSON and pack forms disagree`);
   if (!Buffer.from(encodePackValue(packed)).equals(Buffer.from(packBytes))) throw new Error(`${entry.pluginId}: descriptor pack is not canonical or contains trailing bytes`);
-  const blanked = structuredClone(packed as Record<string, unknown>);
+  if (!isDeepStrictEqual(normalizeCatalogDescriptorEnums(descriptor), normalizeCatalogDescriptorEnums(packValueToExactJson(packed)))) throw new Error(`${entry.pluginId}: descriptor JSON and pack forms disagree`);
+  const blanked = clonePackValue(packed) as Record<string, unknown>;
   (blanked.hashes as Record<string, unknown>).descriptorSha256 = "";
   const actualDescriptorHash = createHash("sha256").update(encodePackValue(blanked)).digest("hex");
   if (actualDescriptorHash !== hashRecord.descriptorSha256) throw new Error(`${entry.pluginId}: descriptor self-hash mismatch`);
@@ -2825,15 +2826,15 @@ export function createFreshCatalogBuildVerifier(repoRoot: string, buildRoot: str
       const descriptorFileSha256 = createHash("sha256").update(descriptor.bytes).digest("hex");
       const expectedDescriptor = fileReceipt(join("descriptor", CATALOG_DESCRIPTOR_PACK_FILENAME), descriptor.bytes, descriptorFileSha256);
       if (!isDeepStrictEqual(markerRecord.raw, expectedRaw) || !isDeepStrictEqual(markerRecord.core, expectedCore) || !isDeepStrictEqual(markerRecord.descriptor, expectedDescriptor)) throw new Error(`${entry.pluginId}: catalog commit marker artifact receipts disagree with the staged row`);
-      let packed: unknown;
+      let packed: PackValue;
       try {
         packed = decodePackValue(descriptor.bytes);
       } catch (error) {
         throw new Error(`${entry.pluginId}: staged descriptor pack does not decode: ${boundedCatalogDiagnostic(error)}`);
       }
       if (!Buffer.from(encodePackValue(packed)).equals(Buffer.from(descriptor.bytes))) throw new Error(`${entry.pluginId}: staged descriptor pack is not canonical`);
-      const hashes = validateCatalogDescriptorValue(entry, packed);
-      const blanked = structuredClone(packed as Record<string, unknown>);
+      const hashes = validateCatalogDescriptorValue(entry, packValueToExactJson(packed));
+      const blanked = clonePackValue(packed) as Record<string, unknown>;
       (blanked.hashes as Record<string, unknown>).descriptorSha256 = "";
       const descriptorSha256 = createHash("sha256").update(encodePackValue(blanked)).digest("hex");
       if (hashes.wasmSha256 !== raw.sha256 || hashes.coreWasmSha256 !== core.sha256 || hashes.descriptorSha256 !== descriptorSha256 || markerRecord.descriptorSha256 !== descriptorSha256) throw new Error(`${entry.pluginId}: staged descriptor identity disagrees with the committed artifacts`);

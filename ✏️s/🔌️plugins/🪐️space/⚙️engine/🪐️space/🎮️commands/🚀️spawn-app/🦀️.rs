@@ -125,7 +125,7 @@ mod tests {
     async fn undo_redo_round_trip_on_spawn() {
         use semio_framework_plugin::{testkit, VcsArtifactApp};
         seed_draw_plugin().await;
-        let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
+        let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default()).await;
         let before = app.snapshot().expect("projection").graph.nodes.len();
         testkit::assert_undo_redo_round_trip(&mut app, SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 80.0, y: 80.0 }), |app| app.snapshot().expect("projection").graph.nodes.len(), before, before + 1).await;
     }

@@ -1,0 +1,17 @@
+[package]
+name = "semio-browser-actor-import-guest"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+path = "📚️library/🦀️.rs"
+
+[dependencies]
+wit-bindgen = { version = "=0.57.1", features = ["macros", "async-spawn"] }
+
+[profile.release]
+opt-level = "s"

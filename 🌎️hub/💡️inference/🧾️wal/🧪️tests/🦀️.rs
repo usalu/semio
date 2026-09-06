@@ -14,6 +14,97 @@ fn decode_hex(value: &str) -> Vec<u8> {
     (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).unwrap()).collect()
 }
 
+#[cfg(feature = "native-artifact-execution")]
+fn durable_edit<Mutation>(ordinal: i32, actor: &str, timestamp: protocol::HybridLogicalTimestamp, forward: Mutation, inverse: Vec<Mutation>) -> directory::os_spr::Edit<Mutation> {
+    let id = format!("inference-store-edit-{ordinal}");
+    directory::os_spr::Edit {
+        id: id.clone(),
+        actor: Some(actor.into()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![directory::os_spr::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}-mutation"))),
+            dependencies: Vec::new(),
+            base_version: ordinal as u64,
+            author_id: Some(protocol::ActorId(actor.into())),
+            timestamp,
+            undo_policy: directory::os_spr::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: Some(protocol::SchemaId(format!("inference-store-member-{ordinal}"))),
+            label: Some(format!("inference Store member {ordinal}")),
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description: Some(format!("inference Store member {ordinal}")),
+        coalesce_key: None,
+        sequence_number: ordinal,
+        started_at: format!("2026-09-06T00:00:0{ordinal}Z"),
+        finished_at: Some(format!("2026-09-06T00:00:1{ordinal}Z")),
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> (directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1, Vec<u8>) {
+    use protocol::Inference as _;
+    use semio_s_plugin_gis::artifacts::gismap::{
+        mutations::apply_gis_map_mutation,
+        schema::{gis_map_descriptor_json, gis_map_document_from_descriptor_json, gis_map_snapshot_to_drawing},
+        standards::v1::subsets::any::schema::inferences::GisMapInference,
+    };
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::{
+        drawing::schema::mutations::apply_semio_drawing_mutation,
+        value::schema::mutations::apply_semio_value_mutation,
+    };
+
+    let base = gis_map_document_from_descriptor_json(r#"{"positions":[{"id":"point-a","lon":7,"lat":47}],"routes":[{"id":"route-a","points":[[8,46],[9,48]]}],"regions":[]}"#);
+    let work = GisMapInference::infer(&base).create_region_group_work(&base, fixture["jobId"].as_str().unwrap()).expect("typed fixed-three inference work");
+    let mut parent_post = base.clone();
+    apply_gis_map_mutation(&mut parent_post, &work.parent).expect("parent inference mutation applies");
+    let drawing_base = gis_map_snapshot_to_drawing(&base);
+    let mut drawing_post = drawing_base.clone();
+    apply_semio_drawing_mutation(&mut drawing_post, &work.drawing);
+    let value_base = semio_s_plugin_gis::artifacts::gismap::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&base));
+    let mut value_post = value_base.clone();
+    apply_semio_value_mutation(&mut value_post, &work.value);
+    let actor = fixture["command"]["actor"].as_str().unwrap();
+    let timestamp = protocol::HybridLogicalTimestamp {
+        actor: fixture["command"]["timestamp"]["actor"].as_u64().unwrap(),
+        physical_ms: fixture["command"]["timestamp"]["physicalMs"].as_u64().unwrap(),
+        logical: fixture["command"]["timestamp"]["logical"].as_u64().unwrap(),
+    };
+    let proposal = directory::os_pack::json::to_json_string(&work.parent).into_bytes();
+    let inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
+    assert_eq!(proposal, decode_hex(fixture["command"]["diff"]["payloadHex"].as_str().unwrap()));
+    assert_eq!(inverse, decode_hex(fixture["command"]["inverse"]["payloadHex"].as_str().unwrap()));
+    let record = directory::os_store::durable_group::durable_owned_group_journal_test_record_from_edits(
+        directory::os_io::ArtifactRef {
+            artifact_id: fixture["documentKey"].as_str().unwrap().into(),
+            dialect: directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() },
+        },
+        durable_edit(1, actor, timestamp, work.parent, work.parent_inverse),
+        parent_post,
+        durable_edit(2, actor, protocol::HybridLogicalTimestamp { logical: 1, ..timestamp }, work.drawing, work.drawing_inverse),
+        drawing_post,
+        durable_edit(3, actor, protocol::HybridLogicalTimestamp { logical: 2, ..timestamp }, work.value, work.value_inverse),
+        value_post,
+    )
+    .expect("Store-owned typed fixed-three decision fixture");
+    let command = super::super::command::encode_server_stamped_command_v1(&super::super::command::CanonicalInferenceCommandPartsV1 {
+        mutation_id: fixture["command"]["mutationId"].as_str().unwrap(),
+        document_id: fixture["documentKey"].as_str().unwrap(),
+        actor,
+        diff_schema: super::super::schema::GIS_DOCUMENT_SCHEMA,
+        diff_payload: &proposal,
+        inverse_schema: super::super::schema::GIS_DOCUMENT_SCHEMA,
+        inverse_payload: &inverse,
+        timestamp,
+    })
+    .expect("canonical command reconstructed from Store parent edit");
+    assert_eq!(crate::inference::sha256(&proposal), fixture["proposalHash"].as_str().unwrap());
+    assert_eq!(crate::inference::sha256(&command), fixture["commandHash"].as_str().unwrap());
+    (record, command)
+}
+
 fn scope(fixture: &serde_json::Value) -> DocumentScope {
     DocumentScope::new(fixture["scope"]["spaceId"].as_str().unwrap(), fixture["scope"]["documentId"].as_str().unwrap())
 }
@@ -43,6 +134,7 @@ fn target(fixture: &serde_json::Value, trace: &serde_json::Value) -> InferenceWa
         proposal_hash: fixture["proposalHash"].as_str().unwrap().into(),
         mutation_id: fixture["command"]["mutationId"].as_str().unwrap().into(),
         command_hash: fixture["commandHash"].as_str().unwrap().into(),
+        decision_hash: fixture["decisionHash"].as_str().unwrap().into(),
         actor: fixture["command"]["actor"].as_str().unwrap().into(),
         maximum_records: trace["maximumRecords"].as_u64().unwrap_or(fixture["maximumRecords"].as_u64().unwrap()),
     }

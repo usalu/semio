@@ -15254,12 +15254,46 @@ function formatQuotaBreachMessage(breach) {
 }
 var MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096;
 var MAX_SEGMENTED_DOWNLOAD_OPERATION_ID = (1n << 64n) - 1n;
-var DEFAULT_HEARTBEAT_TIMEOUT_MS = 5000;
-var HEARTBEAT_MISSED_LIMIT = 3;
+var SHARD_LIVENESS_POLICY = Object.freeze({
+  heartbeatTimeoutMs: 5000,
+  missedLimit: 3,
+  progressIntervalMs: 1000,
+  pluginLoadIdleTimeoutMs: 30000,
+  pluginLoadCeilingMs: 300000
+});
 var DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR = 64;
 function freshHeartbeatState(nowMs) {
-  return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
+  return { lastHeartbeatAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatTurnSeq: 0, lastLivenessAtMs: Number.NEGATIVE_INFINITY, oldestPendingStartedAtMs: null, missedCount: 0, lastMissCountedAtMs: nowMs };
 }
+function evaluateShardLiveness(window) {
+  const unchanged = { missedCount: window.missedCount, lastMissCountedAtMs: window.lastMissCountedAtMs, terminate: false };
+  if (window.oldestPendingStartedAtMs === null)
+    return unchanged;
+  const provenAliveAtMs = Math.max(window.lastLivenessAtMs, window.oldestPendingStartedAtMs);
+  if (window.nowMs - provenAliveAtMs <= window.heartbeatTimeoutMs)
+    return unchanged;
+  if (window.nowMs - window.lastMissCountedAtMs < window.heartbeatTimeoutMs)
+    return unchanged;
+  const missedCount = window.missedCount + 1;
+  return { missedCount, lastMissCountedAtMs: window.nowMs, terminate: missedCount >= SHARD_LIVENESS_POLICY.missedLimit };
+}
+function describeShardWorkerError(event) {
+  const record = event ?? {};
+  const message = typeof record.message === "string" && record.message.length > 0 ? record.message : typeof record.error?.message === "string" && record.error.message.length > 0 ? record.error.message : typeof record.type === "string" ? `redacted "${record.type}" event with no message — the worker script threw before it could report, or failed to load` : String(event);
+  if (typeof record.filename !== "string" || record.filename.length === 0)
+    return message;
+  return `${message} at ${record.filename}:${typeof record.lineno === "number" ? record.lineno : "?"}:${typeof record.colno === "number" ? record.colno : "?"}`;
+}
+function formatShardWorkerFault(shardIndex, fault) {
+  const where = fault.filename ? ` at ${fault.filename}:${fault.lineno ?? "?"}` : "";
+  const actor = fault.actorId ? ` actor=${fault.actorId}` : "";
+  const module = fault.moduleUrl ? ` module=${fault.moduleUrl}` : "";
+  return `shard ${shardIndex} worker fault [${fault.source}/${fault.phase}]${actor}${module}: ${fault.message}${where}`;
+}
+var SHARD_JSPI_FAULT_TEXT = Object.freeze({
+  en: "This browser cannot run semio plugins: WebAssembly JavaScript Promise Integration (WebAssembly.Suspending / WebAssembly.promising) is unavailable. Chromium-based browsers ship it on by default; Firefox needs javascript.options.wasm_js_promise_integration in about:config, Node.js needs --experimental-wasm-jspi, and headless Chromium needs --enable-features=WebAssemblyJavaScriptPromiseIntegration.",
+  de: "Dieser Browser kann semio-Plugins nicht ausführen: WebAssembly JavaScript Promise Integration (WebAssembly.Suspending / WebAssembly.promising) ist nicht verfügbar. Chromium-basierte Browser liefern sie standardmäßig aus; Firefox benötigt javascript.options.wasm_js_promise_integration in about:config, Node.js --experimental-wasm-jspi und headless Chromium --enable-features=WebAssemblyJavaScriptPromiseIntegration."
+});
 function graftWorkerStack(actorId, reason, stack, kind, framesBytes) {
   const error = new Error(reason);
   if (stack)
@@ -15530,7 +15564,7 @@ class ShardClient {
       throw new Error("[DEBUG] ShardClient requires shardCount >= 1");
     this.createWorker = options.createWorker;
     this.now = options.now ?? (() => Date.now());
-    this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? DEFAULT_HEARTBEAT_TIMEOUT_MS;
+    this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? SHARD_LIVENESS_POLICY.heartbeatTimeoutMs;
     this.watchdogIntervalMs = options.watchdogIntervalMs ?? this.heartbeatTimeoutMs;
     this.heartbeatSabView = options.heartbeatSab ? new Int32Array(options.heartbeatSab) : null;
     this.onShardLost = options.onShardLost;
@@ -16166,8 +16200,9 @@ class ShardClient {
     worker.onerror = (error) => {
       if (this.shards[index] !== slot)
         return;
-      console.error(`[DEBUG] shard ${index} worker error`, error);
-      this.failShard(slot, new Error(`shard ${index} worker crashed`));
+      const detail = describeShardWorkerError(error);
+      console.error(`[DEBUG] shard ${index} worker error: ${detail}`, error);
+      this.failShard(slot, new Error(`shard ${index} worker crashed: ${detail}`));
     };
     if (this.heartbeatSabView)
       worker.postMessage({ kind: "attachHeartbeatSab", shardIndex: index, sab: this.heartbeatSabView.buffer });
@@ -16176,8 +16211,15 @@ class ShardClient {
   handleMessage(slot, message) {
     if (!slot.available || this.shards[slot.index] !== slot)
       return;
+    this.noteLiveness(slot, this.now());
     if (message.kind === "heartbeat") {
       this.recordHeartbeat(slot, message.turnSeq, this.now());
+      return;
+    }
+    if (message.kind === "worker-fault") {
+      const detail = formatShardWorkerFault(slot.index, message);
+      console.error(`[DEBUG] ${detail}`, message.stack ?? "");
+      this.onActorTrap?.(message.actorId ?? "*", detail);
       return;
     }
     if (message.kind === "trap") {
@@ -17120,42 +17162,44 @@ class ShardClient {
   replyEffectError(activation, requestId, message) {
     this.postEffectReply(activation, "effect-error", { requestId, message });
   }
+  noteLiveness(slot, atMs) {
+    slot.heartbeat.lastLivenessAtMs = atMs;
+    slot.heartbeat.missedCount = 0;
+    slot.heartbeat.lastMissCountedAtMs = atMs;
+  }
   recordHeartbeat(slot, turnSeq, atMs) {
     slot.heartbeat.lastHeartbeatAtMs = atMs;
     slot.heartbeat.lastHeartbeatTurnSeq = turnSeq;
-    slot.heartbeat.missedCount = 0;
-    slot.heartbeat.lastMissCountedAtMs = atMs;
+    this.noteLiveness(slot, atMs);
   }
   pollHeartbeatSab(nowMs = this.now()) {
     if (!this.heartbeatSabView)
       return;
     for (const slot of this.shards) {
       const seq = Atomics.load(this.heartbeatSabView, slot.index);
-      if (seq !== slot.heartbeat.lastHeartbeatTurnSeq || slot.heartbeat.oldestPendingStartedAtMs === null) {
+      if (seq > slot.heartbeat.lastHeartbeatTurnSeq || slot.heartbeat.oldestPendingStartedAtMs === null) {
         this.recordHeartbeat(slot, seq, nowMs);
       }
     }
   }
   checkHeartbeats(nowMs = this.now()) {
     for (const slot of this.shards) {
-      const pendingSince = slot.heartbeat.oldestPendingStartedAtMs;
-      if (pendingSince === null)
+      const decision = evaluateShardLiveness({
+        nowMs,
+        oldestPendingStartedAtMs: slot.heartbeat.oldestPendingStartedAtMs,
+        lastLivenessAtMs: slot.heartbeat.lastLivenessAtMs,
+        missedCount: slot.heartbeat.missedCount,
+        lastMissCountedAtMs: slot.heartbeat.lastMissCountedAtMs,
+        heartbeatTimeoutMs: this.heartbeatTimeoutMs
+      });
+      slot.heartbeat.missedCount = decision.missedCount;
+      slot.heartbeat.lastMissCountedAtMs = decision.lastMissCountedAtMs;
+      if (!decision.terminate)
         continue;
-      if (slot.heartbeat.lastHeartbeatAtMs >= pendingSince)
-        continue;
-      const silentForMs = nowMs - pendingSince;
-      if (silentForMs <= this.heartbeatTimeoutMs)
-        continue;
-      if (nowMs - slot.heartbeat.lastMissCountedAtMs < this.heartbeatTimeoutMs)
-        continue;
-      slot.heartbeat.missedCount += 1;
-      slot.heartbeat.lastMissCountedAtMs = nowMs;
-      if (slot.heartbeat.missedCount >= HEARTBEAT_MISSED_LIMIT) {
-        const actorIds = [...slot.actorIds];
-        this.terminate(slot.index);
-        this.rebuild(slot.index);
-        this.onShardLost?.(slot.index, actorIds);
-      }
+      const actorIds = [...slot.actorIds];
+      this.terminate(slot.index);
+      this.rebuild(slot.index);
+      this.onShardLost?.(slot.index, actorIds);
     }
   }
   startWatchdog(intervalMs = this.watchdogIntervalMs) {
@@ -18857,13 +18901,13 @@ var _catalog_default2 = {
     { pluginId: "raster", directoryName: "🖨️raster" },
     { pluginId: "reasoning-mindmap", directoryName: "💡️reasoning-mindmap" },
     { pluginId: "remodel", directoryName: "📸️remodel" },
-    { pluginId: "s", directoryName: "🪐️s" },
     { pluginId: "sequence", directoryName: "🎬️sequence" },
     { pluginId: "shooting", directoryName: "🎥️shooting" },
     { pluginId: "sourcing", directoryName: "🪵️sourcing" },
     { pluginId: "sourcing-module-beams", directoryName: "🪜️sourcing-module-beams" },
     { pluginId: "sourcing-module-slabs", directoryName: "🧇️sourcing-module-slabs" },
     { pluginId: "sourcing-module-windows", directoryName: "🪟️sourcing-module-windows" },
+    { pluginId: "space", directoryName: "🪐️space" },
     { pluginId: "stdio", directoryName: "🗄️stdio" },
     { pluginId: "trinity", directoryName: "🔱️trinity" },
     { pluginId: "vcs", directoryName: "🌿️vcs" },
@@ -18973,7 +19017,7 @@ function moduleDirectoryName(pluginId) {
 
 /* ../../../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts */
 var PLUGIN_HOST_CONFIGS = [
-  { pluginId: "s", landingAppId: "home", hostAppId: "studio" }
+  { pluginId: "space", landingAppId: "home", hostAppId: "studio" }
 ];
 var PLUGIN_BUILD_TARGETS = [
   { pluginId: "animate", packageId: "semio:animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_animate.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:animate.present"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", coreWasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", descriptorSha256: "12a912e82f98d54f405262123150f41035a15234332a1abc971062ac7e973b17" } },
@@ -19001,10 +19045,10 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "raster", packageId: "semio:raster", cratePath: "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_raster.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.raster"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", coreWasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", descriptorSha256: "26760a5a3c146b1612a8e8036c877f91a17c13cef425b94a174127df3e33bd94" } },
   { pluginId: "reasoning-mindmap", packageId: "semio:reasoning-mindmap", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_reasoning_mindmap.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:graph.wires"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", coreWasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", descriptorSha256: "eb21b2587a19242762803823f748628b1eb1553c783f6281dfee25ac72706f93" } },
   { pluginId: "remodel", packageId: "semio:remodel", cratePath: "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_remodel.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.remodel"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "77ef3c98d134f1164cdd388911333b0618bcec94fead7c11ad6fdd24abb125b5", coreWasmSha256: "77ef3c98d134f1164cdd388911333b0618bcec94fead7c11ad6fdd24abb125b5", descriptorSha256: "1e1dded5a4979ce72c0ff11f4e12e8336df93784c89c0f53b0ee573b694fbe62" } },
-  { pluginId: "s", packageId: "semio:s", cratePath: "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_space.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:space.shome", "on-artifact-kind:space.sspace"], extensionPoints: [], host: { landingAppId: "home", hostAppId: "studio" }, executionMode: "isolated", hashes: { wasmSha256: "762dad6b1eca109108ff781d0697bdc2114ed8869b692c2cf88cc60ec03209af", coreWasmSha256: "762dad6b1eca109108ff781d0697bdc2114ed8869b692c2cf88cc60ec03209af", descriptorSha256: "df021b9a83bcb48ab858afe4a8f2c2e30d69f8166850ddebb064421109b3fed6" } },
   { pluginId: "sequence", packageId: "semio:sequence", cratePath: "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_sequence.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["imperative-control", "imperative-effect", "imperative-math", "imperative-text", "stdio"], activationEvents: ["on-artifact-kind:computation.sequence"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "bbcf24176893beb37e0dcdf36f658f52a62b8a5e48163130cd5f02371b2a6a79", coreWasmSha256: "bbcf24176893beb37e0dcdf36f658f52a62b8a5e48163130cd5f02371b2a6a79", descriptorSha256: "5c5ee126f62f14b60a81d95575c85186db47ec9b7712d0e56d5ba6b2a032088a" } },
   { pluginId: "shooting", packageId: "semio:shooting", cratePath: "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_shooting.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.shooting"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2e16eed70a875e078501c439d8f05c162163f1193bcaee4f11b41f0b2f2eed01", coreWasmSha256: "2e16eed70a875e078501c439d8f05c162163f1193bcaee4f11b41f0b2f2eed01", descriptorSha256: "ad86c4d9cf0730ae4b512389898962bb9eefd1f631f8543d7fd8143be3276129" } },
   { pluginId: "sourcing", packageId: "semio:sourcing", cratePath: "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_sourcing.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "c27638455e4eba364a044826adb2e5ad2b679c88601d80757f40e354c4c12298", coreWasmSha256: "81b04b6396cf37bd2fee9119cd802592bbf51a40ceef05c7af4c710801bc9045", descriptorSha256: "fa7ea0be8379f959e0e9b7bbf2c5ae4168a3b29104e8d9d2015c27847632ac28" } },
+  { pluginId: "space", packageId: "semio:space", cratePath: "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_space.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:space.shome", "on-artifact-kind:space.sspace"], extensionPoints: [], host: { landingAppId: "home", hostAppId: "studio" }, executionMode: "isolated", hashes: { wasmSha256: "762dad6b1eca109108ff781d0697bdc2114ed8869b692c2cf88cc60ec03209af", coreWasmSha256: "762dad6b1eca109108ff781d0697bdc2114ed8869b692c2cf88cc60ec03209af", descriptorSha256: "df021b9a83bcb48ab858afe4a8f2c2e30d69f8166850ddebb064421109b3fed6" } },
   { pluginId: "stdio", packageId: "semio:stdio", cratePath: "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_stdio.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [] },
   { pluginId: "trinity", packageId: "semio:trinity", cratePath: "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_trinity.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [] },
   { pluginId: "vcs", packageId: "semio:vcs", cratePath: "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_vcs.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:vcs.document"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "74771b987f39e483da63efdb21006a3ce511ad5edd1c3bd0de05543bef00d925", coreWasmSha256: "74771b987f39e483da63efdb21006a3ce511ad5edd1c3bd0de05543bef00d925", descriptorSha256: "b702fe11bb1c92bb06226ccce58792ccd37fa01be8313a740e52ea6a48e8329e" } },
@@ -19047,66 +19091,66 @@ var extensionModuleUrl = (extensionId) => `${MODULE_EXTENSION_ROUTE}/${moduleDir
 
 /* ../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts */
 var PLAYGROUND_BUILD_TARGETS = [
-  { variant: "aggregator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.puzzle.puzzle3d@1/*#editor", brand: "entwerfen-mit-bestand-aggregator", aliases: ["mit-bestand", "entwerfen-mit-bestand"], ports: { react: 6023, wgpu: 6123 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }, { kind: "static-dir", route: "/infinite-fixture", root: "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures" }] },
-  { variant: "animate", pluginId: "animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", aliases: [], ports: { react: 6051, wgpu: 6151 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "architect", pluginId: "architect", cratePath: "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust", aliases: [], ports: { react: 6090, wgpu: 6190 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "aussuchen", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.sourcing.curation@1/*#editor", brand: "entwerfen-mit-bestand-aussuchen", aliases: ["entwerfen-mit-bestand-aussuchen"], ports: { react: 6030, wgpu: 6130 }, examples: [], engines: [], assets: [] },
-  { variant: "bearbeiten", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.process.process3d@1/*#editor", brand: "entwerfen-mit-bestand-bearbeiten", aliases: ["entwerfen-mit-bestand-bearbeiten"], ports: { react: 6031, wgpu: 6131 }, examples: [], engines: [], assets: [] },
-  { variant: "block2d", pluginId: "block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", app: "s.block.block2d@1/*#editor", aliases: ["block 2d"], ports: { react: 6024, wgpu: 6124 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "block3d", pluginId: "block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", app: "s.block.block3d@1/*#editor", aliases: ["block 3d"], ports: { react: 6025, wgpu: 6125 }, examples: ["🎬️demo-session"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }] },
-  { variant: "block5d", pluginId: "block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", app: "s.block.block5d@1/*#editor", aliases: ["block 5d"], ports: { react: 6026, wgpu: 6126 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "cad", pluginId: "cad", cratePath: "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", app: "s.cad.cad@1/*#editor", aliases: [], ports: { react: 6020, wgpu: 6120 }, examples: ["🎬️demo-session"], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures" }] },
-  { variant: "dag", pluginId: "dag", cratePath: "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust", aliases: [], ports: { react: 6017, wgpu: 6117 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "demonstrator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.demonstrator.playground@1/*#editor", aliases: [], ports: { react: 6107, wgpu: 6207 }, examples: [], engines: [], assets: [] },
-  { variant: "din16798", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.din16798@1/*#editor", aliases: [], ports: { react: 6092, wgpu: 6192 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "din18599", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.din18599@1/*#editor", aliases: [], ports: { react: 6093, wgpu: 6193 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "din4108", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.din4108@1/*#editor", aliases: [], ports: { react: 6091, wgpu: 6191 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "draw", pluginId: "draw", cratePath: "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", aliases: [], ports: { react: 6064, wgpu: 6164 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1990", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1990@1/*#editor", aliases: [], ports: { react: 6094, wgpu: 6194 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1991", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1991@1/*#editor", aliases: [], ports: { react: 6095, wgpu: 6195 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1992", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1992@1/*#editor", aliases: [], ports: { react: 6096, wgpu: 6196 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1993", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1993@1/*#editor", aliases: [], ports: { react: 6097, wgpu: 6197 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1994", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1994@1/*#editor", aliases: [], ports: { react: 6098, wgpu: 6198 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1995", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1995@1/*#editor", aliases: [], ports: { react: 6099, wgpu: 6199 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1996", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1996@1/*#editor", aliases: [], ports: { react: 6100, wgpu: 6200 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1997", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1997@1/*#editor", aliases: [], ports: { react: 6101, wgpu: 6201 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1998", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1998@1/*#editor", aliases: [], ports: { react: 6102, wgpu: 6202 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "en1999", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1999@1/*#editor", aliases: [], ports: { react: 6103, wgpu: 6203 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "energy", pluginId: "energy", cratePath: "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust", app: "s.energy.model@1/*#editor", aliases: [], ports: { react: 6106, wgpu: 6206 }, examples: [], engines: [], assets: [] },
-  { variant: "fem2d", pluginId: "fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", app: "s.fem.fem2d@1/*#editor", aliases: ["fem 2d"], ports: { react: 6086, wgpu: 6186 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "fem3d", pluginId: "fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", app: "s.fem.fem3d@1/*#editor", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "flow", pluginId: "flow", cratePath: "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: ["🎬️demo-session"], engines: ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings"], assets: [] },
-  { variant: "forms", pluginId: "forms", cratePath: "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "generation2d", pluginId: "procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", app: "s.procedural.generation2d@1/*#editor", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "generation3d", pluginId: "procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", app: "s.procedural.generation3d@1/*#editor", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "generator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.procedural.generation3d@1/*#editor", brand: "entwerfen-mit-bestand-generator", aliases: ["entwerfen-mit-bestand-generator"], ports: { react: 6027, wgpu: 6127 }, examples: [], engines: [], assets: [] },
-  { variant: "gis2d", pluginId: "gis", cratePath: "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", app: "s.gis.gismap@1/*#editor", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: ["🎬️demo-session"], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
-  { variant: "gis3d", pluginId: "gis", cratePath: "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", app: "s.gis.gisterrain@1/*#editor", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: ["🎬️demo-session"], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
-  { variant: "imperative", pluginId: "imperative", cratePath: "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "iso16757", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.iso16757@1/*#editor", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "koordinator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.cad.cad@1/*#editor", brand: "entwerfen-mit-bestand-koordinator", aliases: ["entwerfen-mit-bestand-koordinator"], ports: { react: 6028, wgpu: 6128 }, examples: [], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures" }] },
-  { variant: "layout", pluginId: "layout", cratePath: "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "lowpoly", pluginId: "lowpoly", cratePath: "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "mathematical", pluginId: "mathematical", cratePath: "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", app: "s.mathematical.equation@1/*#editor", aliases: ["mathematical", "math"], ports: { react: 6084, wgpu: 6184 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "note", pluginId: "note", cratePath: "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", aliases: [], ports: { react: 6080, wgpu: 6180 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "playbook", pluginId: "playbook", cratePath: "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust", aliases: [], ports: { react: 6085, wgpu: 6185 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "process3d", pluginId: "process", cratePath: "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", app: "s.process.process3d@1/*#editor", aliases: ["process 3d"], ports: { react: 6022, wgpu: 6122 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "puzzle2d", pluginId: "puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", app: "s.puzzle.puzzle2d@1/*#editor", aliases: ["2d", "puzzle 2d"], ports: { react: 6012, wgpu: 6112 }, examples: ["🎬️demo-session"], engines: ["./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust"], assets: [] },
-  { variant: "puzzle3d", pluginId: "puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", app: "s.puzzle.puzzle3d@1/*#editor", aliases: ["3d", "puzzle 3d"], ports: { react: 6013, wgpu: 6113 }, examples: ["🎬️demo-session"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }, { kind: "static-dir", route: "/infinite-fixture", root: "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures" }] },
-  { variant: "puzzle5d", pluginId: "puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", app: "s.puzzle.puzzle5d@1/*#editor", aliases: ["5d", "puzzle 5d"], ports: { react: 6014, wgpu: 6114 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "raster", pluginId: "raster", cratePath: "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: ["🎬️demo-session"], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [] },
-  { variant: "reasoning-wires", pluginId: "reasoning-mindmap", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "remodel", pluginId: "remodel", cratePath: "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "s", pluginId: "s", cratePath: "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", aliases: [], ports: { react: 6070, wgpu: 6066 }, userPorts: { react: [6072, 6073], wgpu: [6067, 6068] }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "sequence", pluginId: "sequence", cratePath: "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "shooting", pluginId: "shooting", cratePath: "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: ["🎬️demo-session"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }] },
-  { variant: "sourcing", pluginId: "sourcing", cratePath: "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", app: "s.sourcing.curation@1/*#editor", aliases: ["curation"], ports: { react: 6081, wgpu: 6181 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "trinity-jack", pluginId: "trinity", cratePath: "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", app: "s.trinity.jack@1/*#editor", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "trinity-rewriting", pluginId: "trinity", cratePath: "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", app: "s.trinity.rewriting@1/*#editor", aliases: ["trinity rewriting"], ports: { react: 6056, wgpu: 6156 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "vcs", pluginId: "vcs", cratePath: "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", aliases: [], ports: { react: 6075, wgpu: 6175 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "vdi3805", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.vdi3805@1/*#editor", aliases: [], ports: { react: 6105, wgpu: 6205 }, examples: ["🎬️demo-session"], engines: [], assets: [] },
-  { variant: "verfolgen", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.gis.gismap@1/*#editor", brand: "entwerfen-mit-bestand-verfolgen", aliases: ["entwerfen-mit-bestand-verfolgen"], ports: { react: 6032, wgpu: 6132 }, examples: [], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
-  { variant: "writer", pluginId: "writer", cratePath: "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: ["🎬️demo-session"], engines: [], assets: [] }
+  { variant: "aggregator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.puzzle.puzzle3d@1/*#editor", brand: "entwerfen-mit-bestand-aggregator", aliases: ["mit-bestand", "entwerfen-mit-bestand"], ports: { react: 6023, wgpu: 6123 }, examples: ["🎬️demo"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }, { kind: "static-dir", route: "/infinite-fixture", root: "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures" }] },
+  { variant: "animate", pluginId: "animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", aliases: [], ports: { react: 6051, wgpu: 6151 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "architect", pluginId: "architect", cratePath: "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust", aliases: [], ports: { react: 6090, wgpu: 6190 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "aussuchen", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.sourcing.curation@1/*#editor", brand: "entwerfen-mit-bestand-aussuchen", aliases: ["entwerfen-mit-bestand-aussuchen"], ports: { react: 6030, wgpu: 6130 }, examples: ["🎬️demo"], engines: [], assets: [] },
+  { variant: "bearbeiten", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.process.process3d@1/*#editor", brand: "entwerfen-mit-bestand-bearbeiten", aliases: ["entwerfen-mit-bestand-bearbeiten"], ports: { react: 6031, wgpu: 6131 }, examples: ["🎬️demo"], engines: [], assets: [] },
+  { variant: "block2d", pluginId: "block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", app: "s.block.block2d@1/*#editor", aliases: ["block 2d"], ports: { react: 6024, wgpu: 6124 }, examples: ["➡️hexagonal-cut-concrete-forest-right", "🌲️hexagonal-cut-concrete-forest-left", "🏢️nakagin-capsule"], engines: [], assets: [] },
+  { variant: "block3d", pluginId: "block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", app: "s.block.block3d@1/*#editor", aliases: ["block 3d"], ports: { react: 6025, wgpu: 6125 }, examples: ["➡️hexagonal-cut-concrete-forest-right", "🌲️hexagonal-cut-concrete-forest-left", "🏢️nakagin-capsule"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }] },
+  { variant: "block5d", pluginId: "block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", app: "s.block.block5d@1/*#editor", aliases: ["block 5d"], ports: { react: 6026, wgpu: 6126 }, examples: ["➡️hexagonal-cut-concrete-forest-right", "🌲️hexagonal-cut-concrete-forest-left", "🏢️nakagin-capsule"], engines: [], assets: [] },
+  { variant: "cad", pluginId: "cad", cratePath: "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", app: "s.cad.cad@1/*#editor", aliases: [], ports: { react: 6020, wgpu: 6120 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures" }] },
+  { variant: "dag", pluginId: "dag", cratePath: "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust", aliases: [], ports: { react: 6017, wgpu: 6117 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "demonstrator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.demonstrator.playground@1/*#editor", aliases: [], ports: { react: 6107, wgpu: 6207 }, examples: ["🎬️demo"], engines: [], assets: [] },
+  { variant: "din16798", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.din16798@1/*#editor", aliases: [], ports: { react: 6092, wgpu: 6192 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "din18599", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.din18599@1/*#editor", aliases: [], ports: { react: 6093, wgpu: 6193 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "din4108", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.din4108@1/*#editor", aliases: [], ports: { react: 6091, wgpu: 6191 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "draw", pluginId: "draw", cratePath: "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", aliases: [], ports: { react: 6064, wgpu: 6164 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "en1990", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1990@1/*#editor", aliases: [], ports: { react: 6094, wgpu: 6194 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1991", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1991@1/*#editor", aliases: [], ports: { react: 6095, wgpu: 6195 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1992", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1992@1/*#editor", aliases: [], ports: { react: 6096, wgpu: 6196 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1993", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1993@1/*#editor", aliases: [], ports: { react: 6097, wgpu: 6197 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1994", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1994@1/*#editor", aliases: [], ports: { react: 6098, wgpu: 6198 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1995", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1995@1/*#editor", aliases: [], ports: { react: 6099, wgpu: 6199 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1996", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1996@1/*#editor", aliases: [], ports: { react: 6100, wgpu: 6200 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1997", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1997@1/*#editor", aliases: [], ports: { react: 6101, wgpu: 6201 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1998", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1998@1/*#editor", aliases: [], ports: { react: 6102, wgpu: 6202 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "en1999", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.en1999@1/*#editor", aliases: [], ports: { react: 6103, wgpu: 6203 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "energy", pluginId: "energy", cratePath: "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust", app: "s.energy.model@1/*#editor", aliases: [], ports: { react: 6106, wgpu: 6206 }, examples: ["🎬️demo"], engines: [], assets: [] },
+  { variant: "fem2d", pluginId: "fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", app: "s.fem.fem2d@1/*#editor", aliases: ["fem 2d"], ports: { react: 6086, wgpu: 6186 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "fem3d", pluginId: "fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", app: "s.fem.fem3d@1/*#editor", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "flow", pluginId: "flow", cratePath: "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: ["🎬️demo", "🎬️demo-session"], engines: ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings"], assets: [] },
+  { variant: "forms", pluginId: "forms", cratePath: "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "generation2d", pluginId: "procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", app: "s.procedural.generation2d@1/*#editor", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: ["🍄️hexagonal-mushroom-column", "🍩️sphere-cut-with-torus", "🎬️demo", "🎬️demo-session", "🐚️box-shell-preview", "📐️box-fillet-preview", "📦️rectangle-extrude-volume", "🧲️sphere-box-fuse", "🧹️face-sweep-extrude", "🪢️rectangle-wire-preview"], engines: [], assets: [] },
+  { variant: "generation3d", pluginId: "procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", app: "s.procedural.generation3d@1/*#editor", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: ["🍄️hexagonal-mushroom-column", "🍩️sphere-cut-with-torus", "🎬️demo", "🎬️demo-session", "🐚️box-shell-preview", "📐️box-fillet-preview", "📦️rectangle-extrude-volume", "🧲️sphere-box-fuse", "🧹️face-sweep-extrude", "🪢️rectangle-wire-preview"], engines: [], assets: [] },
+  { variant: "generator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.procedural.generation3d@1/*#editor", brand: "entwerfen-mit-bestand-generator", aliases: ["entwerfen-mit-bestand-generator"], ports: { react: 6027, wgpu: 6127 }, examples: ["🎬️demo"], engines: [], assets: [] },
+  { variant: "gis2d", pluginId: "gis", cratePath: "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", app: "s.gis.gismap@1/*#editor", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: ["🎬️demo", "🎬️demo-session"], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
+  { variant: "gis3d", pluginId: "gis", cratePath: "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", app: "s.gis.gisterrain@1/*#editor", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: ["🎬️demo", "🎬️demo-session"], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
+  { variant: "imperative", pluginId: "imperative", cratePath: "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "iso16757", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.iso16757@1/*#editor", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "koordinator", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.cad.cad@1/*#editor", brand: "entwerfen-mit-bestand-koordinator", aliases: ["entwerfen-mit-bestand-koordinator"], ports: { react: 6028, wgpu: 6128 }, examples: ["🎬️demo"], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures" }] },
+  { variant: "layout", pluginId: "layout", cratePath: "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "lowpoly", pluginId: "lowpoly", cratePath: "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "mathematical", pluginId: "mathematical", cratePath: "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", app: "s.mathematical.equation@1/*#editor", aliases: ["mathematical", "math"], ports: { react: 6084, wgpu: 6184 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "note", pluginId: "note", cratePath: "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", aliases: [], ports: { react: 6080, wgpu: 6180 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "playbook", pluginId: "playbook", cratePath: "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust", aliases: [], ports: { react: 6085, wgpu: 6185 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "process3d", pluginId: "process", cratePath: "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", app: "s.process.process3d@1/*#editor", aliases: ["process 3d"], ports: { react: 6022, wgpu: 6122 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "puzzle2d", pluginId: "puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", app: "s.puzzle.puzzle2d@1/*#editor", aliases: ["2d", "puzzle 2d"], ports: { react: 6012, wgpu: 6112 }, examples: ["🌙️capsule-dream", "🌲️concrete-forest", "🎬️demo-session", "🏗️nakagin-capsule-tower"], engines: ["./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust"], assets: [] },
+  { variant: "puzzle3d", pluginId: "puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", app: "s.puzzle.puzzle3d@1/*#editor", aliases: ["3d", "puzzle 3d"], ports: { react: 6013, wgpu: 6113 }, examples: ["🌙️capsule-dream", "🌲️concrete-forest", "🎬️demo-session", "🏗️nakagin-capsule-tower"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }, { kind: "static-dir", route: "/infinite-fixture", root: "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures" }] },
+  { variant: "puzzle5d", pluginId: "puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", app: "s.puzzle.puzzle5d@1/*#editor", aliases: ["5d", "puzzle 5d"], ports: { react: 6014, wgpu: 6114 }, examples: ["🌙️capsule-dream", "🌲️concrete-forest", "🎬️demo-session", "🏗️nakagin-capsule-tower"], engines: [], assets: [] },
+  { variant: "raster", pluginId: "raster", cratePath: "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: ["🎬️demo", "🎬️demo-session"], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [] },
+  { variant: "reasoning-wires", pluginId: "reasoning-mindmap", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "remodel", pluginId: "remodel", cratePath: "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "s", pluginId: "space", cratePath: "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", aliases: [], ports: { react: 6070, wgpu: 6066 }, userPorts: { react: [6072, 6073], wgpu: [6067, 6068] }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "sequence", pluginId: "sequence", cratePath: "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "shooting", pluginId: "shooting", cratePath: "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }] },
+  { variant: "sourcing", pluginId: "sourcing", cratePath: "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", app: "s.sourcing.curation@1/*#editor", aliases: ["curation"], ports: { react: 6081, wgpu: 6181 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "trinity-jack", pluginId: "trinity", cratePath: "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", app: "s.trinity.jack@1/*#editor", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "trinity-rewriting", pluginId: "trinity", cratePath: "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", app: "s.trinity.rewriting@1/*#editor", aliases: ["trinity rewriting"], ports: { react: 6056, wgpu: 6156 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "vcs", pluginId: "vcs", cratePath: "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", aliases: [], ports: { react: 6075, wgpu: 6175 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] },
+  { variant: "vdi3805", pluginId: "norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", app: "s.norm.vdi3805@1/*#editor", aliases: [], ports: { react: 6105, wgpu: 6205 }, examples: ["🌉️composite-bridge-girder", "🌉️glulam-footbridge", "🎬️demo", "🎬️demo-session", "🏠️aluminium-roof-purlin", "🏢️high-consequence-office", "🏢️seismic-rc-frame", "🔥️retail-hydrocarbon-fire", "🔩️high-strength-connection", "🛢️liquid-retaining-fem-anchor", "🧱️loadbearing-wall"], engines: [], assets: [] },
+  { variant: "verfolgen", pluginId: "demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", app: "s.gis.gismap@1/*#editor", brand: "entwerfen-mit-bestand-verfolgen", aliases: ["entwerfen-mit-bestand-verfolgen"], ports: { react: 6032, wgpu: 6132 }, examples: ["🎬️demo"], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
+  { variant: "writer", pluginId: "writer", cratePath: "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: ["🎬️demo", "🎬️demo-session"], engines: [], assets: [] }
 ];
 
 /* ../../../../../../🔌️plugin/📇️registry/🟦️.ts */
@@ -21083,6 +21127,43 @@ var DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1 = Object.freeze({
   cancelled: Object.freeze({ en: "Opening the document was cancelled.", de: "Das Öffnen des Dokuments wurde abgebrochen." }),
   "renderer-unavailable": Object.freeze({ en: "The verified document component is ready, but this renderer is unavailable.", de: "Die überprüfte Dokumentkomponente ist bereit, aber dieser Renderer ist nicht verfügbar." })
 });
+var GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES = 16 * 1024;
+var GIS_MAP_INFERENCE_PORT_TEXT_V1 = Object.freeze({
+  idle: Object.freeze({ en: "No proposal requested.", de: "Kein Vorschlag angefordert." }),
+  submitting: Object.freeze({ en: "Requesting a bounds proposal…", de: "Begrenzungsvorschlag wird angefordert…" }),
+  running: Object.freeze({ en: "Computing the bounds proposal…", de: "Begrenzungsvorschlag wird berechnet…" }),
+  offered: Object.freeze({ en: "A bounds proposal is ready for review.", de: "Ein Begrenzungsvorschlag liegt zur Prüfung bereit." }),
+  approving: Object.freeze({ en: "Waiting for the server to commit the approved proposal…", de: "Warten auf die Freigabe des Vorschlags durch den Server…" }),
+  applied: Object.freeze({ en: "The approved proposal was committed to the document.", de: "Der freigegebene Vorschlag wurde im Dokument übernommen." }),
+  cancelled: Object.freeze({ en: "The proposal was cancelled.", de: "Der Vorschlag wurde abgebrochen." }),
+  stale: Object.freeze({ en: "The document changed while the proposal ran. Request a new one.", de: "Das Dokument hat sich während des Vorschlags geändert. Fordern Sie einen neuen an." }),
+  failed: Object.freeze({ en: "The proposal did not complete.", de: "Der Vorschlag wurde nicht abgeschlossen." })
+});
+var GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1 = Object.freeze({
+  "inference.unavailable": Object.freeze({ en: "Proposals are unavailable for this document.", de: "Für dieses Dokument sind keine Vorschläge verfügbar." }),
+  "inference.denied": Object.freeze({ en: "You may not request proposals for this document.", de: "Sie dürfen für dieses Dokument keine Vorschläge anfordern." }),
+  "inference.not-found": Object.freeze({ en: "This proposal no longer exists.", de: "Dieser Vorschlag existiert nicht mehr." }),
+  "inference.invalid": Object.freeze({ en: "The request was rejected as malformed.", de: "Die Anfrage wurde als fehlerhaft abgelehnt." }),
+  "inference.bounds": Object.freeze({ en: "The request exceeded its accepted size.", de: "Die Anfrage hat die zulässige Größe überschritten." }),
+  "inference.conflict": Object.freeze({ en: "The document changed; request a new proposal.", de: "Das Dokument hat sich geändert; fordern Sie einen neuen Vorschlag an." }),
+  "inference.capacity": Object.freeze({ en: "Too many proposals are running. Try again shortly.", de: "Es laufen zu viele Vorschläge. Versuchen Sie es in Kürze erneut." }),
+  "inference.expired": Object.freeze({ en: "This proposal expired before it was approved.", de: "Dieser Vorschlag ist vor der Freigabe abgelaufen." }),
+  "inference.cancelled": Object.freeze({ en: "The proposal was cancelled.", de: "Der Vorschlag wurde abgebrochen." }),
+  "approval.commit-unavailable": Object.freeze({ en: "The approved proposal could not be committed and was not applied.", de: "Der freigegebene Vorschlag konnte nicht übernommen werden und wurde nicht angewendet." }),
+  "inference.storage": Object.freeze({ en: "The proposal service is temporarily unavailable.", de: "Der Vorschlagsdienst ist vorübergehend nicht verfügbar." }),
+  "inference.transport": Object.freeze({ en: "The outcome is unknown. Reopen the document before retrying.", de: "Das Ergebnis ist unbekannt. Öffnen Sie das Dokument erneut, bevor Sie es wiederholen." }),
+  "inference.lease-unverified": Object.freeze({ en: "This document has no verified execution target, so no proposal can start.", de: "Dieses Dokument hat kein verifiziertes Ausführungsziel, daher kann kein Vorschlag starten." })
+});
+var GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1 = Object.freeze({
+  heading: Object.freeze({ en: "Bounds proposal", de: "Begrenzungsvorschlag" }),
+  cancel: Object.freeze({ en: "Cancel proposal", de: "Vorschlag abbrechen" }),
+  approve: Object.freeze({ en: "Approve proposal", de: "Vorschlag freigeben" }),
+  close: Object.freeze({ en: "Close proposal", de: "Vorschlag schließen" }),
+  progress: Object.freeze({ en: "Proposal progress", de: "Fortschritt des Vorschlags" }),
+  region: Object.freeze({ en: "Region", de: "Gebiet" }),
+  longitude: Object.freeze({ en: "Longitude extent", de: "Längengradbereich" }),
+  latitude: Object.freeze({ en: "Latitude extent", de: "Breitengradbereich" })
+});
 
 /* ../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts */
 function localInteractionIdentityEquals(left, right) {
@@ -21369,6 +21450,15 @@ function encodePresencePeer(peer) {
     writePresenceUi(out, peer.ui);
   return out;
 }
+var PRESENCE_PEER_WIRE_LIMITS_V1 = Object.freeze({
+  maximumEntryBytes: 4096,
+  maximumTextBytes: 1024,
+  maximumPresencePackBytes: 2048,
+  maximumViews: 16,
+  maximumInteractionDomains: 16,
+  maximumDomainIds: 64,
+  maximumConnectedAtMs: Number.MAX_SAFE_INTEGER
+});
 function writePresenceInteraction(out, interaction) {
   writeStr(out, interaction.app_id);
   writeVarintU64(out, interaction.domains.length);
@@ -21664,6 +21754,8 @@ if (undefined) {}
 var JSON_BRIDGE_FIELD_ID = 1;
 var PACK_TAG_FALSE = 1;
 var PACK_TAG_TRUE = 2;
+var PACK_TAG_INT = 3;
+var PACK_TAG_UINT = 4;
 var PACK_TAG_F64 = 5;
 var PACK_TAG_STR = 6;
 var PACK_TAG_STR_INLINE = 7;
@@ -21687,11 +21779,70 @@ function packByteCompare(a, b) {
   }
   return ab.length - bb.length;
 }
+var PACK_U64_MAX = (1n << 64n) - 1n;
+var PACK_I64_MIN = -(1n << 63n);
+var PACK_I64_MAX = (1n << 63n) - 1n;
+var packIntegerMint = new WeakSet;
+function packMintInteger(kind, value) {
+  const carrier = Object.freeze({ kind, value });
+  packIntegerMint.add(carrier);
+  return carrier;
+}
+function packInt(value) {
+  if (typeof value !== "bigint" || value < PACK_I64_MIN || value > PACK_I64_MAX)
+    throw new Error(`packInt: ${String(value)} is outside the exact i64 range`);
+  return packMintInteger("int", value);
+}
+function packUInt(value) {
+  if (typeof value !== "bigint" || value < 0n || value > PACK_U64_MAX)
+    throw new Error(`packUInt: ${String(value)} is outside the exact u64 range`);
+  return packMintInteger("uint", value);
+}
+function isPackInteger(value) {
+  return typeof value === "object" && value !== null && packIntegerMint.has(value);
+}
+function packRejectIntegerLookAlike(value) {
+  if (typeof value.value === "bigint")
+    throw new Error("PackValue: an unminted { value: bigint } object is ambiguous — mint it with packInt/packUInt or remove the bigint");
+}
+function packWriteVarintBigInt(out, value) {
+  let remaining = value;
+  for (;; ) {
+    const byte = Number(remaining & 0x7fn);
+    remaining >>= 7n;
+    if (remaining === 0n) {
+      out.push(byte);
+      return;
+    }
+    out.push(byte | 128);
+  }
+}
+function packReadVarintBigInt(bytes, pos) {
+  let result3 = 0n;
+  for (let index = 0;index < 10; index++) {
+    const byte = bytes[pos[0]];
+    if (byte === undefined)
+      throw new Error("decodePackValue: truncated integer varint");
+    pos[0] += 1;
+    const payload = byte & 127;
+    const more = (byte & 128) !== 0;
+    if (index === 9 && (more || payload > 1))
+      throw new Error("decodePackValue: overlong integer varint (exceeds 10 bytes / 64 bits)");
+    result3 |= BigInt(payload) << BigInt(index * 7);
+    if (!more)
+      return result3;
+  }
+  throw new Error("decodePackValue: overlong integer varint (exceeds 10 bytes)");
+}
+var packZigzagEncode = (value) => value < 0n ? (-value << 1n) - 1n : value << 1n;
+var packZigzagDecode = (raw) => raw >> 1n ^ -(raw & 1n);
 function packCollectStrings(value, counts) {
   if (typeof value === "string") {
     counts.set(value, (counts.get(value) ?? 0) + 1);
     return;
   }
+  if (isPackInteger(value))
+    return;
   if (Array.isArray(value)) {
     for (const item of value)
       packCollectStrings(item, counts);
@@ -21755,9 +21906,14 @@ function packEncodeValue(value, symbolIndex, out) {
     out.push(value ? PACK_TAG_TRUE : PACK_TAG_FALSE);
     return;
   }
+  if (isPackInteger(value)) {
+    out.push(value.kind === "uint" ? PACK_TAG_UINT : PACK_TAG_INT);
+    packWriteVarintBigInt(out, value.kind === "uint" ? value.value : packZigzagEncode(value.value));
+    return;
+  }
   if (typeof value === "number") {
     out.push(PACK_TAG_F64);
-    writeF64(out, value === 0 ? 0 : value);
+    writeF64(out, value);
     return;
   }
   if (typeof value === "string") {
@@ -21772,6 +21928,7 @@ function packEncodeValue(value, symbolIndex, out) {
     return;
   }
   if (typeof value === "object") {
+    packRejectIntegerLookAlike(value);
     out.push(PACK_TAG_MAP);
     const entries = Object.entries(value).sort((a, b) => packByteCompare(a[0], b[0]));
     writeVarintU64(out, entries.length);
@@ -21781,7 +21938,7 @@ function packEncodeValue(value, symbolIndex, out) {
     }
     return;
   }
-  throw new Error(`encodePackValue: unsupported JSON value of type ${typeof value}`);
+  throw new Error(`encodePackValue: unsupported dynamic value of type ${typeof value}`);
 }
 function packDecodeValue(bytes, symbols, pos) {
   const tag = bytes[pos[0]];
@@ -21793,6 +21950,10 @@ function packDecodeValue(bytes, symbols, pos) {
       return false;
     case PACK_TAG_TRUE:
       return true;
+    case PACK_TAG_UINT:
+      return packUInt(packReadVarintBigInt(bytes, pos));
+    case PACK_TAG_INT:
+      return packInt(packZigzagDecode(packReadVarintBigInt(bytes, pos)));
     case PACK_TAG_F64:
       return readF64(bytes, pos);
     case PACK_TAG_STR: {

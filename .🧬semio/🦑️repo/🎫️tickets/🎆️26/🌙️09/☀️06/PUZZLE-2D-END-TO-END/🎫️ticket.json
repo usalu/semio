@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle 2d End To End",
+  "emoji": "◻️",
+  "status": "open",
+  "description": "Get the ◻️puzzle 2d artifact of the 🧩️puzzle plugin (✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d) working end to end: the crate builds natively and for wasm32-wasip2, every one of the 26 mutations of s.puzzle.2d@1 has exhaustive real-world fixture tests validated in Rust, against the in-repo Python second implementation and against a qualifying third-party oracle, all 40 editor actions are migrated to InteractiveJobClassification::Migrated with real Work completions, the descriptor is regenerated, and the puzzle 2d playground (react, then wgpu wasm) boots with every window rendering non-empty content, both examples loading and switchable, and editor actions dispatching at runtime.",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "sessions": ["⚪c1117632-c36f-478e-b3f6-2b268c8a2b95"],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-06)."
+}

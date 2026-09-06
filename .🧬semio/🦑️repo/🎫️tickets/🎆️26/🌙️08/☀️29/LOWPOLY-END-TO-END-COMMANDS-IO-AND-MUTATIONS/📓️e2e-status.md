@@ -461,3 +461,45 @@ peer's 5h15m `cargo check --workspace` has sccache children pinned at 0.0% CPU. 
 ticket's jobs bypass it via `RUSTC_WRAPPER=` and are unaffected.
 
 Port 6078 has not yet bound. No browser observation is claimed.
+
+## Gate 6 attempts 3-5 — the wasm leg, and why it is the expensive one
+
+| # | Setup | Outcome |
+|---|---|---|
+| 3 | shared `target/`, 2h budget | Wedged. A peer wiped `target/wasm32-wasip2` mid-build; the cargo child died and the `bun` parent hung on it for ~2h at 0.0% CPU with **no** lock actually held. Killed. |
+| 4 | `CARGO_TARGET_DIR=target-lowpoly-e2e`, 3h budget | Built the whole framework + stdio for wasm cleanly (0 errors), reached `cargo rustc -p semio-s-plugin-lowpoly --target wasm32-wasip2`, then **`[budget] … exceeded 10800000ms — killed`** → `spawnSync cargo ETIMEDOUT` → `plugin catalog build failed: lowpoly`. |
+| 5 | `CARGO_TARGET_DIR=target-lowpoly-boot`, `CARGO_PROFILE_WASM_DEV_CODEGEN_UNITS=16`, `CARGO_BUILD_JOBS=4`, 6h budget | In flight. |
+
+### Two of my own hypotheses, checked and killed
+
+- **"My `cargo test` starved my own boot via a shared target-dir lock."** Wrong. The locks are
+  distinct files — `target-lowpoly-e2e/debug/.cargo-lock` (held by the test) and
+  `target-lowpoly-e2e/wasm-dev/.cargo-lock` (unheld). Native and wasm lanes inside one
+  `CARGO_TARGET_DIR` do **not** contend. Good news: one private target dir can serve both lanes.
+- **"`CARGO_PROFILE_WASM_DEV_DEBUG=false` will cut memory ~50×."** Not applicable here — root
+  `Cargo.toml` already has `[profile.dev] debug = false`, and `wasm-dev` inherits it. That lever was
+  already pulled; the note it came from predates the fix.
+
+### The actual cause, and the lever that is left
+
+`[profile.wasm-dev]` is `inherits = "dev"` + **`codegen-units = 1`**. One codegen unit means **no
+intra-crate parallelism**, so a crate the size of lowpoly serialises its entire codegen onto a single
+core — on a box at load 60-180 that is what turned a 3-hour budget into a timeout. `debug` was
+already off, so the remaining lever is `CARGO_PROFILE_WASM_DEV_CODEGEN_UNITS`, which attempt 5 sets
+to 16.
+
+The cost of changing it is a full wasm-dev invalidation, but that was nearly free here: the killed
+build had left only **144 MB** in `target-lowpoly-e2e/wasm-dev` with **no stdio wasm artifact**, so
+attempt 4's wasm work was almost entirely lost anyway.
+
+### Machine note
+
+Swap has climbed to **68.5 G / 69.6 G used, ~1 GB free**, ~75 MB free RAM, load 60-180 all session.
+`CARGO_BUILD_JOBS=4` is set on attempt 5 to cap concurrent crates against that.
+
+### Honest status of gate 6
+
+Port 6078 has never bound. **No browser observation has been made, and none is claimed.** The dev
+script aborts in `assertPluginCatalogComplete` *before* Vite starts when the plugin build fails, so a
+failed wasm build yields no server at all — there is no partial-credit path where the shell is up but
+the plugin is missing.

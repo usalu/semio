@@ -338,10 +338,18 @@ pub struct CommitNotification {
     pub operation_ids: Vec<protocol::MutationId>,
     pub touched: db_state::TouchedSet,
 }
+
+/// 🧾️ Actor-owned outcome for one Store-admitted durable fixed-three decision event.
+pub enum ArtifactDurableGroupJournalAppendV1 {
+    Absent,
+    Rejected(DbError),
+    Committed(store::durable_group::DurableOwnedGroupJournalReceiptV1),
+}
 //#endregion 🔖️Receipt
 
 //#region 🔖️State
 async fn admit_wal_bytes(source: Vec<u8>, maximum: u64, control: &mut db_wal::WalCursorControl) -> Result<db_wal::WalBytes, DbError> {
+    let source = if source.len() as u64 <= maximum && source.capacity() as u64 > maximum { source.into_boxed_slice().into_vec() } else { source };
     match db_wal::WalBytes::try_admit(source, maximum, control).await {
         Ok(bytes) => Ok(bytes),
         Err(mut rejected) => {
@@ -362,6 +370,22 @@ async fn push_wal_record(records: &mut db_wal::WalRecordBatch, record: db_wal::W
             Err(DbError::LimitExceeded("db_artifact fixed wal record batch"))
         }
     }
+}
+
+async fn close_wal_record_batch(records: &mut db_wal::WalRecordBatch) -> Result<(), DbError> {
+    let mut control = db_wal::WalCursorControl::new(
+        Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        std::time::Instant::now() + std::time::Duration::from_secs(30),
+        1_000_000,
+    )?;
+    while !records.terminal_is_empty() {
+        control.grant()?;
+        if !records.close_step()? && !records.terminal_is_empty() {
+            return Err(DbError::Internal("WAL record batch retirement stalled".to_string()));
+        }
+        semio_framework_async::yield_once().await;
+    }
+    Ok(())
 }
 
 const ARTIFACT_WAL_DEPENDENCIES: usize = 64;
@@ -1175,14 +1199,92 @@ pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + '
     config: ArtifactEngineConfig<A, V>,
 }
 
+/// 🧯️ Engine construction rejection that keeps every acquired WAL owner until bounded terminal close.
+#[must_use = "engine construction rejection must reach terminal retained cleanup"]
+pub enum ArtifactEngineOpenRejected {
+    BeforeWal(DbError),
+    WalOpen(db_wal::ArtifactWalOpenRejected),
+    RetainedWal { cause: DbError, close_error: Option<DbError>, wal: db_wal::ArtifactWal },
+}
+
+impl ArtifactEngineOpenRejected {
+    fn retained_wal(cause: DbError, wal: db_wal::ArtifactWal) -> Self {
+        Self::RetainedWal { cause, close_error: None, wal }
+    }
+
+    fn retained_wal_after_cleanup_error(cause: DbError, close_error: DbError, wal: db_wal::ArtifactWal) -> Self {
+        Self::RetainedWal { cause, close_error: Some(close_error), wal }
+    }
+
+    pub fn error(&self) -> &DbError {
+        match self {
+            Self::BeforeWal(cause) => cause,
+            Self::WalOpen(rejected) => rejected.error(),
+            Self::RetainedWal { cause, .. } => cause,
+        }
+    }
+
+    pub fn cleanup_error(&self) -> Option<&DbError> {
+        match self {
+            Self::WalOpen(rejected) => rejected.release_error(),
+            Self::RetainedWal { close_error, .. } => close_error.as_ref(),
+            Self::BeforeWal(_) => None,
+        }
+    }
+
+    pub fn has_retained_writer(&self) -> bool {
+        match self {
+            Self::BeforeWal(_) => false,
+            Self::WalOpen(rejected) => rejected.has_release_owner(),
+            Self::RetainedWal { .. } => true,
+        }
+    }
+
+    pub async fn retry_close(self) -> Result<DbError, ArtifactEngineOpenRejected> {
+        match self {
+            Self::BeforeWal(cause) => Ok(cause),
+            Self::WalOpen(rejected) => rejected.retry_close().await.map_err(Self::WalOpen),
+            Self::RetainedWal { cause, mut close_error, mut wal } => loop {
+                match wal.close_step() {
+                    Ok(true) => semio_framework_async::yield_once().await,
+                    Ok(false) => return Ok(cause),
+                    Err(error) => {
+                        close_error = Some(error);
+                        return Err(Self::RetainedWal { cause, close_error, wal });
+                    }
+                }
+            },
+        }
+    }
+}
+
+impl From<DbError> for ArtifactEngineOpenRejected {
+    fn from(error: DbError) -> Self { Self::BeforeWal(error) }
+}
+
+impl From<db_wal::ArtifactWalOpenRejected> for ArtifactEngineOpenRejected {
+    fn from(rejected: db_wal::ArtifactWalOpenRejected) -> Self { Self::WalOpen(rejected) }
+}
+
+impl std::fmt::Debug for ArtifactEngineOpenRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("ArtifactEngineOpenRejected")
+            .field("cause", self.error())
+            .field("cleanup_error", &self.cleanup_error())
+            .field("has_retained_writer", &self.has_retained_writer())
+            .finish()
+    }
+}
+
 const MAX_RECENT_TOUCHES: usize = 256;
 
 impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// @emoji 🌱️ Retained constructor used by the document authority. Every storage wait remains
     /// represented by this future so a pool worker only polls it once before yielding.
-    pub async fn create_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, DbError> {
+    pub async fn create_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected> {
         let core_id = to_core_document_id(&document).await;
-        let wal = db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await?;
+        let wal = db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await.map_err(ArtifactEngineOpenRejected::WalOpen)?;
         Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config).await)
     }
 
@@ -1190,12 +1292,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
     /// Process/test entry-point convenience; live document authorities use `create_retained`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, DbError> {
+    pub(crate) fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected> {
         db_actor::block_on(Self::create_retained(document, storage, config, now_ms))
     }
 
     /// @emoji 🚑️ Retained materialization as initial ⊕ snapshot ⊕ WAL suffix.
-    pub async fn open_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), DbError> {
+    pub async fn open_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), ArtifactEngineOpenRejected> {
         let core_id = to_core_document_id(&document).await;
         let mut report = MaterializeReport::default();
 
@@ -1219,7 +1321,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                         Ok(replaced) => replaced,
                         Err(mut rejected) => {
                             let _ = rejected.close_step()?;
-                            return Err(DbError::LimitExceeded("retained state entries"));
+                            return Err(ArtifactEngineOpenRejected::BeforeWal(DbError::LimitExceeded("retained state entries")));
                         }
                     };
                     if let Some(mut replaced) = replaced {
@@ -1239,19 +1341,20 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         drop(snapshot_manager);
         drop(snapshot_facet);
 
-        let (wal, wal_recovery) = db_wal::ArtifactWal::open(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await?;
+        let (wal, wal_recovery) = db_wal::ArtifactWal::open(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await.map_err(ArtifactEngineOpenRejected::WalOpen)?;
         report.torn_tail_bytes = wal_recovery.torn_tail_bytes;
         let mut engine = ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, vcs_head, config).await;
         engine.state = state;
         engine.frontier.head_seq = applied_head_seq;
 
-        let wal_facet = storage.wal().await;
-        let replay_cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let replay_control = db_wal::WalCursorControl::new(replay_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-        let mut records = db_wal::replay_committed_document(&wal_facet, &core_id, replay_control).await?;
-        let mut batch_ids: HashSet<String> = HashSet::new();
-        let mut seen: u64 = 0;
         let replay = async {
+            let wal_facet = storage.wal().await;
+            let replay_cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let replay_control = db_wal::WalCursorControl::new(replay_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+            let mut records = db_wal::replay_committed_document(&wal_facet, &core_id, replay_control).await?;
+            let mut batch_ids: HashSet<String> = HashSet::new();
+            let mut seen: u64 = 0;
+            let result = async {
             loop {
                 let mut transaction = match records.next_transaction_step().await? {
                     db_wal::WalCommittedStep::Transaction(transaction) => transaction,
@@ -1298,24 +1401,32 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                 transaction.finish()?;
             }
             Ok::<(), DbError>(())
-        }.await;
-        let closed = async {
+            }.await;
+            let closed = async {
             while records.close_owner_step()? { semio_framework_async::yield_once().await; }
             Ok::<(), DbError>(())
+            }.await;
+            drop(records);
+            drop(wal_facet);
+            result.and(closed)
         }.await;
-        if let Err(error) = replay.and(closed) {
-            while engine.wal.close_step()? { semio_framework_async::yield_once().await; }
-            while engine.state.values.close_step()? { semio_framework_async::yield_once().await; }
-            return Err(error);
+        if let Err(error) = replay {
+            let state_close = async {
+                while engine.state.values.close_step()? { semio_framework_async::yield_once().await; }
+                Ok::<(), DbError>(())
+            }.await;
+            let ArtifactEngine { wal, .. } = engine;
+            if let Err(close_error) = state_close {
+                return Err(ArtifactEngineOpenRejected::retained_wal_after_cleanup_error(error, close_error, wal));
+            }
+            return Err(ArtifactEngineOpenRejected::retained_wal(error, wal));
         }
-        drop(records);
-        drop(wal_facet);
         Ok((engine, report))
     }
 
     /// @emoji 🚑️ Process/test entry-point convenience; live authorities use `open_retained`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), DbError> {
+    pub(crate) fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), ArtifactEngineOpenRejected> {
         db_actor::block_on(Self::open_retained(document, storage.clone(), config, now_ms))
     }
 
@@ -1601,6 +1712,69 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
     pub fn history_replay(&self, operation_generation: u64, cancelled: Arc<std::sync::atomic::AtomicBool>, reservation: HistoryReplayReservation) -> HistoryReplayFuture {
         HistoryReplayFuture::new(self.storage.clone(), self.document.clone(), operation_generation, cancelled, reservation)
+    }
+
+    /// 📓️ Appends one Store-admitted fixed-three decision as a forced-Fsync event on this
+    /// authority's already-retained WAL writer. Admission and capacity rejection complete before
+    /// storage I/O; every error returned by `submit` remains an uncertain durable outcome.
+    async fn append_durable_group_decision(
+        &mut self,
+        record: store::durable_group::DurableOwnedGroupJournalRecordV1,
+        cancelled: Arc<std::sync::atomic::AtomicBool>,
+        now_ms: u64,
+    ) -> Result<ArtifactDurableGroupJournalAppendV1, DbError> {
+        if cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            return Ok(ArtifactDurableGroupJournalAppendV1::Absent);
+        }
+        let (canonical_pack, decision_sha256, anchor_sha256, document) = record.into_parts();
+        if document.artifact_id != self.protocol_document.0 {
+            return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(DbError::InvalidArgument(
+                "durable group decision anchor targets a different document".to_string(),
+            )));
+        }
+        let mut control = db_wal::WalCursorControl::new(
+            cancelled.clone(),
+            std::time::Instant::now() + std::time::Duration::from_secs(30),
+            1_000_000,
+        )?;
+        let event = match admit_wal_bytes(canonical_pack, db_storage::DB_IO_MAX_READ_BYTES, &mut control).await {
+            Ok(event) => event,
+            Err(error) => return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(error)),
+        };
+        let mut records = db_wal::WalRecordBatch::new();
+        if let Err(error) = push_wal_record(&mut records, db_wal::WalRecord::Event(event), &mut control).await {
+            let close = close_wal_record_batch(&mut records).await;
+            return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(close.err().unwrap_or(error)));
+        }
+        if let Err(error) = self.wal.preflight_submit(&records) {
+            let close = close_wal_record_batch(&mut records).await;
+            return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(close.err().unwrap_or(error)));
+        }
+        if cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            close_wal_record_batch(&mut records).await?;
+            return Ok(ArtifactDurableGroupJournalAppendV1::Absent);
+        }
+        let wal_facet = self.storage.wal().await;
+        let append = self.wal.submit(&wal_facet, &records, DurabilityClass::Fsync, now_ms).await;
+        drop(wal_facet);
+        let close = close_wal_record_batch(&mut records).await;
+        let receipt = match (append, close) {
+            (Ok(receipt), Ok(())) => receipt,
+            (Err(error), Ok(())) => return Err(error),
+            (Ok(_), Err(error)) => return Err(error),
+            (Err(error), Err(close_error)) => return Err(DbError::Internal(format!("durable group WAL append failed: {error}; record retirement failed: {close_error}"))),
+        };
+        if !receipt.committed {
+            return Err(DbError::Internal("forced-Fsync durable group decision did not commit".to_string()));
+        }
+        Ok(ArtifactDurableGroupJournalAppendV1::Committed(
+            store::durable_group::DurableOwnedGroupJournalReceiptV1 {
+                anchor_sha256,
+                decision_sha256,
+                transaction_id: receipt.tx_id,
+                segment_index: receipt.segment_index,
+            },
+        ))
     }
 
     /// 🧹 Runs compaction inside this document authority while its WAL writer stays retained.
@@ -3502,6 +3676,12 @@ impl Drop for HistoryReplayFuture {
 //#region 🔖️Actor
 /// @emoji 📨️ A `Send` message crossing `ArtifactAuthority`'s bounded mailbox.
 pub enum ArtifactMessage {
+    AppendDurableGroupDecision {
+        record: store::durable_group::DurableOwnedGroupJournalRecordV1,
+        cancelled: Arc<std::sync::atomic::AtomicBool>,
+        now_ms: u64,
+        reply: db_actor::ReplySender<Result<ArtifactDurableGroupJournalAppendV1, DbError>>,
+    },
     Submit {
         batch: CommandBatch,
         options: SubmitOptions,
@@ -3554,11 +3734,137 @@ pub struct ArtifactAuthority {
     address: db_actor::Address<ArtifactMessage>,
     cancel: Arc<dyn Fn() + Send + Sync>,
     handoff: Arc<ArtifactRunnerHandoff>,
-    done: std::sync::Mutex<Option<db_actor::ReplyReceiver<()>>>,
+    _pool_use: Arc<semio_framework_async::WorkerPoolUse>,
+    _done: std::sync::Mutex<Option<db_actor::ReplyReceiver<()>>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-type ArtifactBuildFuture<A, V> = Pin<Box<dyn Future<Output = Result<ArtifactEngine<A, V>, DbError>> + Send + 'static>>;
+struct ArtifactDurableGroupJournalSinkV1 {
+    address: db_actor::Address<ArtifactMessage>,
+    now_ms: u64,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+enum ArtifactDurableGroupJournalCommitStateV1 {
+    NotSubmitted { decision_pack: Vec<u8>, decision_sha256: String },
+    Awaiting(Pin<Box<db_actor::AskFuture<ArtifactMessage, Result<ArtifactDurableGroupJournalAppendV1, DbError>>>>),
+    Rejected(String),
+    Failed(String),
+    Absent,
+    Committed(store::durable_group::DurableOwnedGroupJournalReceiptV1),
+    Empty,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactDurableGroupJournalCommitV1 {
+    address: db_actor::Address<ArtifactMessage>,
+    now_ms: u64,
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    close_started: bool,
+    state: ArtifactDurableGroupJournalCommitStateV1,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::durable_group::DurableOwnedGroupJournalSinkV1 for ArtifactDurableGroupJournalSinkV1 {
+    fn begin_commit(
+        &mut self,
+        decision_pack: Vec<u8>,
+        decision_sha256: String,
+    ) -> Box<dyn store::durable_group::DurableOwnedGroupJournalCommitV1> {
+        Box::new(ArtifactDurableGroupJournalCommitV1 {
+            address: self.address.clone(),
+            now_ms: self.now_ms,
+            cancelled: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            close_started: false,
+            state: ArtifactDurableGroupJournalCommitStateV1::NotSubmitted { decision_pack, decision_sha256 },
+        })
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableGroupJournalCommitV1 {
+    fn advance(
+        &mut self,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<store::durable_group::DurableOwnedGroupJournalAdvanceV1, String> {
+        use store::durable_group::DurableOwnedGroupJournalAdvanceV1;
+        if !grant.permits_one() {
+            return Ok(DurableOwnedGroupJournalAdvanceV1::Pending);
+        }
+        if matches!(self.state, ArtifactDurableGroupJournalCommitStateV1::NotSubmitted { .. }) {
+            let state = std::mem::replace(&mut self.state, ArtifactDurableGroupJournalCommitStateV1::Empty);
+            let ArtifactDurableGroupJournalCommitStateV1::NotSubmitted { decision_pack, decision_sha256 } = state else { unreachable!() };
+            if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+                self.state = ArtifactDurableGroupJournalCommitStateV1::Absent;
+            } else if grant.maximum_bytes < decision_pack.len() {
+                self.state = ArtifactDurableGroupJournalCommitStateV1::Rejected("durable group journal grant is smaller than the canonical decision".to_string());
+            } else {
+                match store::durable_group::DurableOwnedGroupJournalRecordV1::admit(decision_pack, &decision_sha256) {
+                    Ok(record) => {
+                        let cancelled = self.cancelled.clone();
+                        let future = self.address.ask(Priority::Command, |reply| ArtifactMessage::AppendDurableGroupDecision {
+                            record,
+                            cancelled,
+                            now_ms: self.now_ms,
+                            reply,
+                        });
+                        self.state = ArtifactDurableGroupJournalCommitStateV1::Awaiting(Box::pin(future));
+                    }
+                    Err(error) => self.state = ArtifactDurableGroupJournalCommitStateV1::Rejected(error.to_string()),
+                }
+            }
+        }
+        if let ArtifactDurableGroupJournalCommitStateV1::Awaiting(future) = &mut self.state {
+            let polled = future.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop()));
+            if let std::task::Poll::Ready(result) = polled {
+                self.state = match result {
+                    Ok(Ok(ArtifactDurableGroupJournalAppendV1::Absent)) => ArtifactDurableGroupJournalCommitStateV1::Absent,
+                    Ok(Ok(ArtifactDurableGroupJournalAppendV1::Rejected(error))) => ArtifactDurableGroupJournalCommitStateV1::Rejected(error.to_string()),
+                    Ok(Ok(ArtifactDurableGroupJournalAppendV1::Committed(receipt))) => ArtifactDurableGroupJournalCommitStateV1::Committed(receipt),
+                    Ok(Err(error)) | Err(error) => ArtifactDurableGroupJournalCommitStateV1::Failed(error.to_string()),
+                };
+            }
+        }
+        match &self.state {
+            ArtifactDurableGroupJournalCommitStateV1::NotSubmitted { .. } | ArtifactDurableGroupJournalCommitStateV1::Awaiting(_) => Ok(DurableOwnedGroupJournalAdvanceV1::Pending),
+            ArtifactDurableGroupJournalCommitStateV1::Rejected(reason) => Ok(DurableOwnedGroupJournalAdvanceV1::Rejected(reason.clone())),
+            ArtifactDurableGroupJournalCommitStateV1::Failed(reason) => Err(reason.clone()),
+            ArtifactDurableGroupJournalCommitStateV1::Absent => Ok(DurableOwnedGroupJournalAdvanceV1::Absent),
+            ArtifactDurableGroupJournalCommitStateV1::Committed(receipt) => Ok(DurableOwnedGroupJournalAdvanceV1::Committed(receipt.clone())),
+            ArtifactDurableGroupJournalCommitStateV1::Empty => Err("durable group journal owner is closed".to_string()),
+        }
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+    }
+
+    fn begin_close(&mut self) {
+        self.close_started = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        use store::SnapshotRetirementStep;
+        if matches!(self.state, ArtifactDurableGroupJournalCommitStateV1::Empty) {
+            return Ok(SnapshotRetirementStep::Complete);
+        }
+        if !self.close_started || !grant.permits_one() {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        if matches!(self.state, ArtifactDurableGroupJournalCommitStateV1::Awaiting(_) | ArtifactDurableGroupJournalCommitStateV1::Failed(_)) {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        self.state = ArtifactDurableGroupJournalCommitStateV1::Empty;
+        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        matches!(self.state, ArtifactDurableGroupJournalCommitStateV1::Empty)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+type ArtifactBuildFuture<A, V> = Pin<Box<dyn Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>> + Send + 'static>>;
 
 #[cfg(not(target_arch = "wasm32"))]
 type ArtifactTurnFuture<A, V> = Pin<Box<dyn Future<Output = ArtifactEngine<A, V>> + Send + 'static>>;
@@ -3577,9 +3883,11 @@ const ARTIFACT_RUNNER_RETRY_LIMIT: u8 = 8;
 #[cfg(not(target_arch = "wasm32"))]
 struct ArtifactRunnerHandoff {
     pool: Arc<semio_framework_async::WorkerPool>,
+    _pool_use: Arc<semio_framework_async::WorkerPoolUse>,
     terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
     close_runner: std::sync::Mutex<Option<Arc<dyn Fn() -> bool + Send + Sync>>>,
     active_history: std::sync::atomic::AtomicBool,
+    terminal: std::sync::atomic::AtomicBool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -3597,7 +3905,7 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     builder: std::sync::Mutex<Option<ArtifactBuildFuture<A, V>>>,
     engine: std::sync::Mutex<Option<ArtifactEngine<A, V>>>,
     turn: std::sync::Mutex<Option<ArtifactTurn<A, V>>>,
-    ready: std::sync::Mutex<Option<db_actor::ReplySender<Result<(), DbError>>>>,
+    ready: std::sync::Mutex<Option<db_actor::ReplySender<Result<(), ArtifactEngineOpenRejected>>>>,
     done: std::sync::Mutex<Option<db_actor::ReplySender<()>>>,
     handoff: Arc<ArtifactRunnerHandoff>,
     retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
@@ -3654,7 +3962,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                     let job = error.into_job();
                     if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                         drop(job);
-                        ready.send(Err(DbError::Unavailable(format!("artifact authority WorkerPool submission failed: {kind:?}"))));
+                        ready.send(Err(ArtifactEngineOpenRejected::BeforeWal(DbError::Unavailable(format!("artifact authority WorkerPool submission failed: {kind:?}")))));
                         self.finish();
                     } else {
                         *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
@@ -3717,7 +4025,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
             }
         }
         if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            ready.send(Err(DbError::Unavailable(detail.to_string())));
+            ready.send(Err(ArtifactEngineOpenRejected::BeforeWal(DbError::Unavailable(detail.to_string()))));
             self.finish();
         }
     }
@@ -3739,7 +4047,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                     self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
                 }
             }
-            if let Some(done) = self.done.lock().unwrap().take() {
+            self.handoff.terminal.store(true, std::sync::atomic::Ordering::Release);
+            if let Some(done) = self.done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                 done.send(());
             }
         }
@@ -3754,6 +4063,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
             message => ArtifactTurn::Future(Box::pin(async move {
                 let mut engine = engine;
                 match message {
+                    ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms, reply } => {
+                        reply.send(engine.append_durable_group_decision(record, cancelled, now_ms).await)
+                    }
                     ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms).await),
                     ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path).await),
                     ArtifactMessage::Frontier { reply } => reply.send(engine.frontier().await),
@@ -3819,7 +4131,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                     builder.take();
                     drop(builder);
                     if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                        ready.send(Err(DbError::Internal("document authority construction panicked".to_string())));
+                        ready.send(Err(ArtifactEngineOpenRejected::BeforeWal(DbError::Internal("document authority construction panicked".to_string()))));
                     }
                     self.finish();
                     return;
@@ -3917,15 +4229,41 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
 impl ArtifactAuthority {
     /// @emoji 🚀️ Builds the engine on the injected pool and resolves only after construction, so
     /// a caller never receives an authority whose engine failed to open.
-    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<ArtifactEngine<A, V>, DbError>> + Send + 'static>(
+    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
         build: impl FnOnce() -> F + Send + 'static,
         capacities: MailboxCapacities,
-    ) -> Result<ArtifactAuthority, DbError> {
+    ) -> Result<ArtifactAuthority, ArtifactEngineOpenRejected> {
+        let pool_use = pool.acquire_use().map_err(|error| {
+            ArtifactEngineOpenRejected::BeforeWal(DbError::Unavailable(format!("artifact authority WorkerPool use rejected: {error:?}")))
+        })?;
+        Self::spawn_with_pool_use(pool, pool_use, build, capacities).await
+    }
+
+    /// 🧵️ Mounts an authority under an already-retained process-pool use. Database document
+    /// mounts pass their exact use cell through this boundary, so no second lifecycle admission
+    /// can conflict after the catalog transaction has begun.
+    pub(crate) async fn spawn_with_pool_use<
+        A: AuthzHook + 'static,
+        V: VersionGraph + 'static,
+        F: Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>> + Send + 'static,
+    >(
+        pool: Arc<semio_framework_async::WorkerPool>,
+        pool_use: Arc<semio_framework_async::WorkerPoolUse>,
+        build: impl FnOnce() -> F + Send + 'static,
+        capacities: MailboxCapacities,
+    ) -> Result<ArtifactAuthority, ArtifactEngineOpenRejected> {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
-        let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
+        let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), ArtifactEngineOpenRejected>>();
         let (done_tx, done_rx) = db_actor::oneshot();
-        let handoff = Arc::new(ArtifactRunnerHandoff { pool: pool.clone(), terminal_job: std::sync::Mutex::new(None), close_runner: std::sync::Mutex::new(None), active_history: std::sync::atomic::AtomicBool::new(false) });
+        let handoff = Arc::new(ArtifactRunnerHandoff {
+            pool: pool.clone(),
+            _pool_use: pool_use.clone(),
+            terminal_job: std::sync::Mutex::new(None),
+            close_runner: std::sync::Mutex::new(None),
+            active_history: std::sync::atomic::AtomicBool::new(false),
+            terminal: std::sync::atomic::AtomicBool::new(false),
+        });
         let runner = Arc::new(ArtifactRunner {
             pool,
             address: address.clone(),
@@ -3972,10 +4310,27 @@ impl ArtifactAuthority {
         runner.schedule();
 
         match ready_rx.await {
-            Ok(Ok(())) => Ok(ArtifactAuthority { address, cancel, handoff, done: std::sync::Mutex::new(Some(done_rx)) }),
+            Ok(Ok(())) => Ok(ArtifactAuthority { address, cancel, handoff, _pool_use: pool_use, _done: std::sync::Mutex::new(Some(done_rx)) }),
             Ok(Err(err)) => Err(err),
-            Err(_) => Err(DbError::Closed),
+            Err(_) => Err(ArtifactEngineOpenRejected::BeforeWal(DbError::Closed)),
         }
+    }
+
+    /// 📓️ Nonblocking retained fixed-three decision append through this authority's
+    /// existing WAL owner. The opaque record can only be constructed by Store admission.
+    pub fn append_durable_group_decision_retained(
+        &self,
+        record: store::durable_group::DurableOwnedGroupJournalRecordV1,
+        cancelled: Arc<std::sync::atomic::AtomicBool>,
+        now_ms: u64,
+    ) -> db_actor::AskFuture<ArtifactMessage, Result<ArtifactDurableGroupJournalAppendV1, DbError>> {
+        self.address.ask(Priority::Command, |reply| ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms, reply })
+    }
+
+    /// 🔐️ Builds the Store journal port over this authority's clone-cheap mailbox address;
+    /// it never acquires or opens another WAL writer.
+    pub fn durable_group_journal_sink(&self, now_ms: u64) -> Box<dyn store::durable_group::DurableOwnedGroupJournalSinkV1> {
+        Box::new(ArtifactDurableGroupJournalSinkV1 { address: self.address.clone(), now_ms })
     }
 
     /// @emoji 📨️ Nonblocking retained submit cursor used by `db_engine::SubmitFuture`.
@@ -4049,14 +4404,13 @@ impl ArtifactAuthority {
         self.compact_retained(holder, consolidate_snapshots, budget, now_ms, cancelled).await?
     }
 
-    /// @emoji 🚪️ Closes the mailbox, cancels any future turn, and awaits the finite in-flight turn.
-    pub async fn shutdown(self) {
+    /// 🚪️ Requests closure and advances one finite retained runner turn. The authority remains
+    /// caller-owned until the returned terminal acknowledgement is `true`.
+    pub fn shutdown_step(&self) -> bool {
         self.address.close();
         (self.cancel)();
-        let done = self.done.lock().unwrap().take();
-        if let Some(done) = done {
-            let _ = done.await;
-        }
+        self.close_step();
+        self.handoff.terminal.load(std::sync::atomic::Ordering::Acquire)
     }
 }
 
@@ -4101,6 +4455,15 @@ mod tests {
     use super::*;
     use std::sync::Arc as StdArc;
 
+    async fn rejected_engine_open_error(mut rejected: ArtifactEngineOpenRejected) -> DbError {
+        loop {
+            match rejected.retry_close().await {
+                Ok(cause) => return cause,
+                Err(retained) => rejected = retained,
+            }
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn artifact_open_ignores_neutral_aborted_command_snapshot_and_cas() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
@@ -4116,6 +4479,29 @@ mod tests {
         assert!(engine.applied.is_empty());
         while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
         while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_engine_create_rejection_propagates_exact_wal_release_owner() {
+        let inner = StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let fault = crate::db_testkit::FaultStorage::new(inner).await;
+        fault.set_script(crate::db_testkit::FaultScript { fail_nth_write: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
+        let storage = StdArc::new(db_storage::DbBackend::Fault(Box::new(fault)));
+        let document = document_id().await;
+        let core_document = to_core_document_id(&document).await;
+        let rejected = match ArtifactEngine::create_retained(document, storage.clone(), ArtifactEngineConfig::default(), 0).await {
+            Err(rejected) => rejected,
+            Ok(mut engine) => {
+                engine.wal.close().await.unwrap();
+                panic!("faulted engine create was admitted");
+            }
+        };
+        assert!(matches!(rejected.error(), DbError::Io(_)));
+        assert!(rejected.has_retained_writer());
+        assert!(matches!(storage.wal().await.acquire_writer(&core_document).await, Err(DbError::Conflict(_))));
+        assert!(matches!(rejected_engine_open_error(rejected).await, DbError::Io(_)));
+        storage.wal().await.acquire_writer(&core_document).await.unwrap().release().await.unwrap();
+        eprintln!("[DEBUG] engine construction propagated the exact rejected WAL release owner until terminal close");
     }
 
     fn history_construction_test_lock() -> std::sync::MutexGuard<'static, ()> {
@@ -4251,13 +4637,12 @@ mod tests {
             drop(engine);
             assert!(rejected, "history admitted {}", row["name"]);
             let rejected = match ArtifactEngine::open_retained(document_id().await, backing, ArtifactEngineConfig::default(), 2).await {
-                Err(DbError::Corrupt(_)) => true,
+                Err(rejected) => matches!(rejected_engine_open_error(rejected).await, DbError::Corrupt(_)),
                 Ok((mut engine, _)) => {
                     while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
                     while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
                     false
                 }
-                Err(_) => false,
             };
             assert!(rejected, "opener admitted {}", row["name"]);
             eprintln!("[DEBUG] history and opener rejected authenticated committed projection and retired owners: {}", row["name"]);
@@ -4859,6 +5244,147 @@ mod tests {
     //#endregion 🔖️Outbox + CommitLog
 
     //#region 🔖️Actor
+    async fn journal_authority(
+    ) -> (ArtifactAuthority, StdArc<db_storage::DbBackend>, StdArc<semio_framework_async::WorkerPool>) {
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(
+            semio_framework_async::ProcessKind::InteractiveNative,
+            3,
+        )));
+        let storage = storage().await;
+        let engine_storage = storage.clone();
+        let authority = ArtifactAuthority::spawn(
+            pool.clone(),
+            move || ArtifactEngine::create_retained(protocol::ArtifactId("map-a".to_string()), engine_storage, ArtifactEngineConfig::default(), 0),
+            MailboxCapacities::uniform(16),
+        )
+        .await
+        .unwrap();
+        (authority, storage, pool)
+    }
+
+    fn journal_grant() -> store::ArtifactStoreOneItemGrant {
+        store::ArtifactStoreOneItemGrant {
+            maximum_items: 1,
+            maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,
+        }
+    }
+
+    fn close_journal_commit(commit: &mut dyn store::durable_group::DurableOwnedGroupJournalCommitV1) {
+        commit.begin_close();
+        for _ in 0..8 {
+            if commit.close_step(journal_grant()).unwrap() == store::SnapshotRetirementStep::Complete {
+                assert!(commit.terminal_is_empty());
+                return;
+            }
+        }
+        panic!("journal commit did not reach its terminal-empty witness");
+    }
+
+    async fn shutdown_journal_authority(authority: &ArtifactAuthority, pool: &semio_framework_async::WorkerPool) {
+        for _ in 0..10_000 {
+            if authority.shutdown_step() {
+                pool.shutdown();
+                return;
+            }
+            semio_framework_async::yield_once().await;
+        }
+        panic!("journal authority did not terminate");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_authority_durable_group_journal_commits_one_exact_fsync_event() {
+        let (authority, storage, pool) = journal_authority().await;
+        let record = store::durable_group::durable_owned_group_journal_test_record();
+        let canonical_pack = record.canonical_pack().to_vec();
+        let decision_sha256 = record.decision_sha256().to_string();
+        let anchor_sha256 = record.anchor_sha256().to_string();
+        let mut sink = authority.durable_group_journal_sink(7);
+        let mut commit = sink.begin_commit(canonical_pack.clone(), decision_sha256.clone());
+        let receipt = loop {
+            match commit.advance(journal_grant()).unwrap() {
+                store::durable_group::DurableOwnedGroupJournalAdvanceV1::Pending => semio_framework_async::yield_once().await,
+                store::durable_group::DurableOwnedGroupJournalAdvanceV1::Committed(receipt) => break receipt,
+                other => panic!("exact durable journal was not committed: {other:?}"),
+            }
+        };
+        assert_eq!(receipt.anchor_sha256, anchor_sha256);
+        assert_eq!(receipt.decision_sha256, decision_sha256);
+        close_journal_commit(commit.as_mut());
+        drop(commit);
+        drop(sink);
+        shutdown_journal_authority(&authority, &pool).await;
+
+        let wal_facet = storage.wal().await;
+        let mut replay = db_wal::replay_committed_document(
+            &wal_facet,
+            &ArtifactId::from("map-a"),
+            db_wal::WalCursorControl::new(
+                StdArc::new(std::sync::atomic::AtomicBool::new(false)),
+                std::time::Instant::now() + std::time::Duration::from_secs(30),
+                1_000_000,
+            )
+            .unwrap(),
+        )
+        .await
+        .unwrap();
+        let mut events = Vec::new();
+        loop {
+            let mut transaction = match replay.next_transaction_step().await.unwrap() {
+                db_wal::WalCommittedStep::Transaction(transaction) => transaction,
+                db_wal::WalCommittedStep::Yield => continue,
+                db_wal::WalCommittedStep::Done => break,
+            };
+            loop {
+                match transaction.next_record_step().unwrap() {
+                    db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Event(bytes)) => {
+                        let mut event = Vec::with_capacity(bytes.len());
+                        for fragment in bytes.fragments() {
+                            event.extend_from_slice(fragment);
+                        }
+                        events.push(event);
+                    }
+                    db_wal::WalCommittedRecordStep::Record(_) | db_wal::WalCommittedRecordStep::Yield => {}
+                    db_wal::WalCommittedRecordStep::Done => break,
+                }
+                while transaction.close_record_step().unwrap() {}
+            }
+            transaction.finish().unwrap();
+        }
+        while replay.close_owner_step().unwrap() {}
+        assert_eq!(events, vec![canonical_pack]);
+        assert_eq!(receipt.transaction_id, 1);
+        eprintln!("[DEBUG] typed authority journal committed one exact canonical Store decision through its retained WAL writer and forced Fsync");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_authority_durable_group_journal_cancellation_before_handoff_is_absent() {
+        let (authority, _storage, pool) = journal_authority().await;
+        let record = store::durable_group::durable_owned_group_journal_test_record();
+        let mut sink = authority.durable_group_journal_sink(9);
+        let mut commit = sink.begin_commit(record.canonical_pack().to_vec(), record.decision_sha256().to_string());
+        commit.cancel();
+        assert_eq!(commit.advance(journal_grant()).unwrap(), store::durable_group::DurableOwnedGroupJournalAdvanceV1::Absent);
+        close_journal_commit(commit.as_mut());
+        drop(commit);
+        drop(sink);
+        shutdown_journal_authority(&authority, &pool).await;
+        eprintln!("[DEBUG] cancellation before typed mailbox handoff proved absence and closed the retained journal owner");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_authority_durable_group_journal_rejects_hash_before_mailbox() {
+        let (authority, _storage, pool) = journal_authority().await;
+        let record = store::durable_group::durable_owned_group_journal_test_record();
+        let mut sink = authority.durable_group_journal_sink(11);
+        let mut commit = sink.begin_commit(record.canonical_pack().to_vec(), "0".repeat(64));
+        assert!(matches!(commit.advance(journal_grant()).unwrap(), store::durable_group::DurableOwnedGroupJournalAdvanceV1::Rejected(_)));
+        close_journal_commit(commit.as_mut());
+        drop(commit);
+        drop(sink);
+        shutdown_journal_authority(&authority, &pool).await;
+        eprintln!("[DEBUG] Store canonical hash admission rejected a forged decision before typed mailbox or WAL handoff");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn document_authority_submits_and_queries_over_finite_pool_turns() {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
@@ -4879,15 +5405,23 @@ mod tests {
         let generation = authority.snapshot_now(1).await.unwrap();
         assert_eq!(generation, 0);
 
-        authority.shutdown().await;
+        while !authority.shutdown_step() {
+            semio_framework_async::yield_once().await;
+        }
         pool.shutdown();
     }
 
     #[semio_framework_async_macros::async_test]
     async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
-        let result = ArtifactAuthority::spawn(pool.clone(), || async { Err::<ArtifactEngine<AllowAll, NullVersionGraph>, DbError>(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
-        assert!(matches!(result.await, Err(DbError::InvalidArgument(_))));
+        let result = ArtifactAuthority::spawn(pool.clone(), || async {
+            Err::<ArtifactEngine<AllowAll, NullVersionGraph>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string())))
+        }, MailboxCapacities::uniform(4));
+        let rejected = match result.await {
+            Err(rejected) => rejected,
+            Ok(_) => panic!("artifact authority admitted a rejected builder"),
+        };
+        assert!(matches!(rejected_engine_open_error(rejected).await, DbError::InvalidArgument(_)));
         pool.shutdown();
     }
 

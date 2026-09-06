@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "bindings", "profiles", "space", "document", "steps", "skips", "privacy", "routes"],
+  "properties": {
+    "schema": { "const": "semio.hub.directory-space-journey/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["journeyMs", "stepMs", "responseBytes", "commandRequestBytes", "administrationPageBytes", "socketWaitMs"],
+      "properties": {
+        "journeyMs": { "type": "integer", "minimum": 30000, "maximum": 600000 },
+        "stepMs": { "type": "integer", "minimum": 1000, "maximum": 60000 },
+        "responseBytes": { "const": 65536 },
+        "commandRequestBytes": { "const": 8192 },
+        "administrationPageBytes": { "const": 49152 },
+        "socketWaitMs": { "type": "integer", "minimum": 1000, "maximum": 30000 }
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eventPageDomain", "administrationDomain", "domainTerminator", "commandRequestSchema", "commandReceiptSchema", "eventPageSchema", "administrationPageSchema", "socketProtocol", "socketHelloSchema"],
+      "properties": {
+        "eventPageDomain": { "const": "semio/hub/directory-event-page/session-binding/v1" },
+        "administrationDomain": { "const": "semio/hub/directory-space-administration/session-binding/v1" },
+        "domainTerminator": { "const": "nul" },
+        "commandRequestSchema": { "const": "semio.directory.command-request.v1" },
+        "commandReceiptSchema": { "const": "semio.directory.command-receipt.v1" },
+        "eventPageSchema": { "const": "semio.directory.event-page.v1" },
+        "administrationPageSchema": { "const": "semio.directory.space-administration-page.v1" },
+        "socketProtocol": { "const": "semio.socket.v1" },
+        "socketHelloSchema": { "const": "semio.directory.events/v1" }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["a", "b"],
+      "properties": {
+        "a": { "$ref": "#/$defs/profile" },
+        "b": { "$ref": "#/$defs/profile" }
+      }
+    },
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "spaceKind", "visibility", "renamedName", "privateBName"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "spaceKind": { "enum": ["atelier", "studio", "archive"] },
+        "visibility": { "enum": ["private", "public"] },
+        "renamedName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "privateBName": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash", "bootstrapVersion", "bootstrapFrontier", "bootstrapSnapshotHash"],
+      "properties": {
+        "documentId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "artifactKind": { "type": "string", "minLength": 1 },
+        "artifactSchema": { "type": "string", "minLength": 1 },
+        "owner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pluginId", "packageId", "version", "packageHash"],
+          "properties": {
+            "pluginId": { "type": "string", "minLength": 1 },
+            "packageId": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 },
+            "packageHash": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "packSchemaHash": { "$ref": "#/$defs/sha256" },
+        "bootstrapVersion": { "type": "integer", "minimum": 1 },
+        "bootstrapFrontier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["headSeq", "commitSeq", "epoch"],
+          "properties": {
+            "headSeq": { "type": "integer", "minimum": 0 },
+            "commitSeq": { "type": "integer", "minimum": 0 },
+            "epoch": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "bootstrapSnapshotHash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "actor", "route", "method", "expect", "labels"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "actor": { "enum": ["a", "b", "both"] },
+          "route": { "type": "string", "pattern": "^/" },
+          "method": { "enum": ["GET", "POST", "DELETE"] },
+          "expect": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "outcome", "events", "result"],
+                "properties": {
+                  "kind": { "const": "receipt" },
+                  "outcome": { "enum": ["accepted", "previously-accepted", "secret-undeliverable"] },
+                  "events": { "type": "integer", "minimum": 0, "maximum": 4 },
+                  "result": { "enum": ["none", "invite"] }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "status", "emptyBody"],
+                "properties": {
+                  "kind": { "const": "status" },
+                  "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+                  "emptyBody": { "type": "boolean" }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "access", "hasInvites", "hasCapabilities", "memberRows"],
+                "properties": {
+                  "kind": { "const": "administration-page" },
+                  "access": { "enum": ["author", "member", "public"] },
+                  "hasInvites": { "type": "boolean" },
+                  "hasCapabilities": { "type": "boolean" },
+                  "memberRows": { "type": "integer", "minimum": 0, "maximum": 64 }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "ordered", "leaks"],
+                "properties": {
+                  "kind": { "const": "event-page" },
+                  "ordered": { "const": true },
+                  "leaks": { "const": 0 }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "protocol"],
+                "properties": {
+                  "kind": { "const": "socket-open" },
+                  "protocol": { "const": "semio.socket.v1" }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "sequences"],
+                "properties": {
+                  "kind": { "const": "wake" },
+                  "sequences": { "type": "integer", "minimum": 1, "maximum": 4 }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "code"],
+                "properties": {
+                  "kind": { "const": "close" },
+                  "code": { "const": 4401 }
+                }
+              }
+            ]
+          },
+          "labels": { "$ref": "#/$defs/labels" }
+        }
+      }
+    },
+    "skips": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "reason", "admissibleStatuses", "labels"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "reason": { "type": "string", "minLength": 24, "maxLength": 400 },
+          "admissibleStatuses": {
+            "type": "array",
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": { "type": "integer", "minimum": 100, "maximum": 599 }
+          },
+          "labels": { "$ref": "#/$defs/labels" }
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["forbiddenTraceSubstrings", "forbiddenPageSubstrings"],
+      "properties": {
+        "forbiddenTraceSubstrings": { "type": "array", "minItems": 4, "uniqueItems": true, "items": { "type": "string", "minLength": 5 } },
+        "forbiddenPageSubstrings": { "type": "array", "minItems": 4, "uniqueItems": true, "items": { "type": "string", "minLength": 5 } }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^/" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profileId", "subject", "displayName"],
+      "properties": {
+        "profileId": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "subject": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 8, "maxLength": 200 },
+        "de": { "type": "string", "minLength": 8, "maxLength": 200 }
+      }
+    }
+  }
+}

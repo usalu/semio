@@ -16787,6 +16787,16 @@ where
     P: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
+    /// 🪦️ Exact terminal-empty shallow-shell witness, strict on the ordinary path — the store must
+    /// have been retired down to an empty shell before it may be dropped.
+    ///
+    /// 🪲️ `|| std::thread::panicking()` is not a weakening of that witness: a `Drop` that panics
+    /// while an earlier panic is already unwinding is a double panic, which Rust escalates to
+    /// `panic in a destructor during cleanup` / `thread caused non-unwinding panic. aborting.` —
+    /// killing the whole test process and erasing libtest's summary for every other test in the
+    /// binary. Without this guard ANY failing assertion that still holds a live `ArtifactStore`
+    /// reports as a `SIGABRT` with no counts instead of as one ordinary test failure. See
+    /// `📓️fable-mcp-artifact-quick-recursion.md` §"the amplifier".
     fn drop(&mut self) {
         let terminal = self.envelope_detached
             && self.current_detached
@@ -16807,7 +16817,7 @@ where
             && self.pending_report.messages.is_empty()
             && self.pending_report.worst.is_none()
             && self.durable_group_root.is_none();
-        assert!(terminal, "artifact store reached Drop without its exact terminal-empty shallow-shell witness");
+        assert!(terminal || std::thread::panicking(), "artifact store reached Drop without its exact terminal-empty shallow-shell witness");
         unsafe {
             drop(std::mem::ManuallyDrop::take(&mut self.backbone));
             drop(std::mem::ManuallyDrop::take(&mut self.dag));
@@ -22797,14 +22807,14 @@ mod tests {
     }
     //#endregion 🧩️RetainedMemberPublicationLaws
 
-    struct DemoOneItemPreparationFactory {
+    pub(super) struct DemoOneItemPreparationFactory {
         footprint: ArtifactStoreOneItemFootprint,
         published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
         forge_digest: bool,
     }
 
     impl DemoOneItemPreparationFactory {
-        fn admissible() -> Self {
+        pub(super) fn admissible() -> Self {
             Self { footprint: ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 }, published_root: Arc::new(std::sync::Mutex::new(None)), forge_digest: false }
         }
 
@@ -23320,6 +23330,26 @@ mod tests {
             )
             .expect("publication admits");
         drop(publication);
+    }
+
+    /// 🪲️ A failing body that still holds a live, non-terminal `ArtifactStore` must surface as ONE
+    /// ordinary panic. Unguarded, the `Drop` witness fired during the unwind, and that double panic
+    /// became `thread caused non-unwinding panic. aborting.` — a `SIGABRT` that erased libtest's
+    /// summary for every other test in the binary. Sibling law to
+    /// `artifact_store_one_item_drop_rejects_an_unclosed_publication_owner` directly above, which
+    /// proves the witness stays strict when nothing is unwinding.
+    #[semio_framework_async_macros::async_test]
+    async fn a_panicking_body_holding_a_live_store_unwinds_instead_of_aborting_the_process() {
+        let store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "unwind-witness", DemoSnapshot { n: Some(0) }, None)).await;
+        let previous = std::panic::take_hook();
+        std::panic::set_hook(Box::new(|_| {}));
+        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+            let _live = store;
+            panic!("simulated assertion failure with a live store in scope");
+        }));
+        std::panic::set_hook(previous);
+        let payload = outcome.expect_err("the simulated failure must unwind, not abort the process");
+        assert_eq!(payload.downcast_ref::<String>().map(String::as_str), Some("simulated assertion failure with a live store in scope"));
     }
     //#endregion 📬️OneItemPublicationLaws
 
@@ -26534,15 +26564,54 @@ mod tests {
         ]
     }
 
+    /// @emoji 🎯️ Variant-exact `DslValue` equality. `Number`'s own `PartialEq` calls a fitting
+    /// `UInt`/`Int` pair equal, so it cannot witness that the wire preserved the WRITER's variant —
+    /// which is exactly what `TAG_UINT` versus `TAG_INT` decides, and what the canonical bytes and
+    /// every hash over them depend on. `Float` compares by bits so `-0.0` and `NaN` are exact too.
     // 🚫️async: E1 pure recursive comparison consumed inside sync `.all()`/`.is_some_and()` closures
     // that cannot themselves be async — see R9/R10 residue shape 1
-    fn dsl_value_numeric_insensitive_eq(a: &DslValue, b: &DslValue) -> bool {
+    fn dsl_value_variant_exact_eq(a: &DslValue, b: &DslValue) -> bool {
         match (a, b) {
-            (DslValue::Number(x), DslValue::Number(y)) => x == y,
-            (DslValue::Array(x), DslValue::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(a, b)| dsl_value_numeric_insensitive_eq(a, b)),
-            (DslValue::Object(x), DslValue::Object(y)) => x.len() == y.len() && x.iter().all(|(k, v)| y.iter().find(|(ok, _)| ok == k).is_some_and(|(_, ov)| dsl_value_numeric_insensitive_eq(v, ov))),
+            (DslValue::Number(crate::os_dsl::Number::UInt(x)), DslValue::Number(crate::os_dsl::Number::UInt(y))) => x == y,
+            (DslValue::Number(crate::os_dsl::Number::Int(x)), DslValue::Number(crate::os_dsl::Number::Int(y))) => x == y,
+            (DslValue::Number(crate::os_dsl::Number::Float(x)), DslValue::Number(crate::os_dsl::Number::Float(y))) => x.to_bits() == y.to_bits(),
+            (DslValue::Number(_), DslValue::Number(_)) => false,
+            (DslValue::Array(x), DslValue::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(a, b)| dsl_value_variant_exact_eq(a, b)),
+            (DslValue::Object(x), DslValue::Object(y)) => x.len() == y.len() && x.iter().all(|(k, v)| y.iter().find(|(ok, _)| ok == k).is_some_and(|(_, ov)| dsl_value_variant_exact_eq(v, ov))),
             _ => a == b,
         }
+    }
+
+    /// @emoji 🔣️ Reads one `semio.pack.dynamic-integer/v1` value node — integers arrive as exact
+    /// decimal STRINGS and floats as little-endian hex, so no fixture number ever passes through a
+    /// JSON `f64` on its way into the corpus.
+    // 🚫️async: E1 pure recursive fixture reader consumed inside sync iterator closures — see R9
+    fn dynamic_integer_fixture_value(node: &serde_json::Value) -> DslValue {
+        if let Some(text) = node.get("uint").and_then(|v| v.as_str()) {
+            return DslValue::uint(text.parse::<u64>().expect("corpus uint is an exact u64"));
+        }
+        if let Some(text) = node.get("int").and_then(|v| v.as_str()) {
+            return DslValue::int(text.parse::<i64>().expect("corpus int is an exact i64"));
+        }
+        if let Some(text) = node.get("f64LeHex").and_then(|v| v.as_str()) {
+            let mut bits = [0u8; 8];
+            for (index, byte) in bits.iter_mut().enumerate() {
+                *byte = u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("corpus f64LeHex byte");
+            }
+            return DslValue::Number(crate::os_dsl::Number::Float(f64::from_le_bytes(bits)));
+        }
+        if let Some(items) = node.get("list").and_then(|v| v.as_array()) {
+            return DslValue::Array(items.iter().map(dynamic_integer_fixture_value).collect());
+        }
+        if let Some(entries) = node.get("map").and_then(|v| v.as_array()) {
+            return DslValue::Object(entries.iter().map(|entry| (entry[0].as_str().expect("corpus map key").to_string(), dynamic_integer_fixture_value(&entry[1]))).collect());
+        }
+        panic!("unsupported corpus value node {node}");
+    }
+
+    // 🚫️async: E1 pure hex reader consumed inside sync iterator closures — see R9
+    fn dynamic_integer_fixture_bytes(hex: &str) -> Vec<u8> {
+        (0..hex.len() / 2).map(|index| u8::from_str_radix(&hex[index * 2..index * 2 + 2], 16).expect("corpus wireHex byte")).collect()
     }
 
     /// @emoji 🧾️ Hex-dumps `pack_rt::encode_pack_value` over a representative `DslValue`
@@ -26557,7 +26626,7 @@ mod tests {
             let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
             println!("[pack_value_fixture] {name} ({} bytes) -> {hex}", bytes.len());
             let decoded = pack_rt::decode_pack_value(&bytes).expect("decode_pack_value");
-            assert!(dsl_value_numeric_insensitive_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
+            assert!(dsl_value_variant_exact_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
         }
     }
 
@@ -26583,7 +26652,64 @@ mod tests {
             let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
             println!("[pack_wire_value_fixture] {name} ({} bytes) -> {hex}", bytes.len());
             let decoded = pack_rt::decode_wire_value(&bytes).expect("decode_wire_value");
-            assert!(dsl_value_numeric_insensitive_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
+            assert!(dsl_value_variant_exact_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
+        }
+    }
+
+    /// @emoji 🔢️ Exact-variant law for the dynamic `Shape::Value` grammar over the shared,
+    /// language-neutral `semio.pack.dynamic-integer/v1` corpus
+    /// (`💻️os/🧫️fixtures/🎒️pack-dynamic-integer-v1`, whose `wireHex` is independently generated
+    /// by a third-party LEB128 oracle). Asserts the emitted TAG, the exact `Number` variant, and
+    /// byte equality — `DslValue` equality alone cannot witness any of the three, because
+    /// `Number::PartialEq` calls `UInt(7)` and `Int(7)` equal while their wire tags differ.
+    #[semio_framework_async_macros::async_test]
+    async fn pack_wire_value_preserves_integer_variants_at_u64_i64_boundaries() {
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json")).expect("dynamic integer corpus parses");
+        assert_eq!(corpus["schema"].as_str(), Some("semio.pack.dynamic-integer/v1"));
+        assert_eq!(corpus["version"].as_u64(), Some(1));
+        let accept = corpus["accept"].as_array().expect("accept rows");
+        assert_eq!(accept.len(), 6, "the corpus is bounded at six accept rows");
+
+        for row in accept {
+            let id = row["id"].as_str().expect("row id");
+            let value = dynamic_integer_fixture_value(&row["value"]);
+            let expected = dynamic_integer_fixture_bytes(row["wireHex"].as_str().expect("row wireHex"));
+            let bytes = pack_rt::encode_wire_value(&value);
+            assert_eq!(bytes, expected, "{id}: encode_wire_value must be byte-exact against the neutral corpus");
+            let tag = bytes[4];
+            let expected_tag = match row["variant"].as_str() {
+                Some("uint") => 0x04u8,
+                Some("int") => 0x03,
+                Some("float") => 0x05,
+                Some("map") => 0x10,
+                other => panic!("{id}: unsupported corpus variant {other:?}"),
+            };
+            assert_eq!(tag, expected_tag, "{id}: the dynamic value's leading tag carries the writer's variant");
+            let decoded = pack_rt::decode_wire_value(&bytes).expect("decode_wire_value");
+            assert!(dsl_value_variant_exact_eq(&decoded, &value), "{id}: {decoded:?} is not variant-exact against {value:?}");
+            assert_eq!(pack_rt::encode_wire_value(&decoded), expected, "{id}: re-encoding the decoded value is canonical and idempotent");
+        }
+
+        assert!(matches!(pack_rt::decode_wire_value(&dynamic_integer_fixture_bytes("000101110403")).expect("uint 3"), DslValue::Number(crate::os_dsl::Number::UInt(3))));
+        assert!(matches!(pack_rt::decode_wire_value(&pack_rt::encode_wire_value(&DslValue::int(7))).expect("int 7"), DslValue::Number(crate::os_dsl::Number::Int(7))), "a positive Int keeps TAG_INT rather than collapsing onto TAG_UINT");
+        assert_ne!(pack_rt::encode_wire_value(&DslValue::int(7)), pack_rt::encode_wire_value(&DslValue::uint(7)), "Int(7) and UInt(7) are equal under Number::PartialEq but are distinct on the wire");
+        let beyond_exact_f64 = 9_007_199_254_740_993u64;
+        assert_ne!(beyond_exact_f64 as f64 as u64, beyond_exact_f64, "the f64 widening this law replaced is not injective past 2^53");
+
+        for row in corpus["reject"].as_array().expect("reject rows") {
+            let id = row["id"].as_str().expect("row id");
+            let bytes = dynamic_integer_fixture_bytes(row["wireHex"].as_str().expect("row wireHex"));
+            match row["outcome"].as_str() {
+                Some("decode-error") => {
+                    assert!(pack_rt::decode_wire_value(&bytes).is_err(), "{id}: a truncated or overlong varint must fail the reader");
+                }
+                Some("noncanonical") => {
+                    let decoded = pack_rt::decode_wire_value(&bytes).expect("the shared permissive varint reader admits redundant encodings");
+                    assert!(dsl_value_variant_exact_eq(&decoded, &dynamic_integer_fixture_value(&row["decodes"])), "{id}: {decoded:?} is not the documented decode");
+                    assert_ne!(pack_rt::encode_wire_value(&decoded), bytes, "{id}: a canonical-bytes caller rejects it because encode(decode(bytes)) != bytes");
+                }
+                other => panic!("{id}: unsupported corpus outcome {other:?}"),
+            }
         }
     }
     //#endregion 🔖️PackValueFixtures

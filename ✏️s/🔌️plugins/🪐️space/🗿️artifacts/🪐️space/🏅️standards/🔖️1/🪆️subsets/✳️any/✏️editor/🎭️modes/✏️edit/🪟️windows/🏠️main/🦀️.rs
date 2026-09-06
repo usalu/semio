@@ -10,7 +10,7 @@ use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
 use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{IconName, WindowKindDefinition};
+use semio_framework_plugin::{IconName, UiNode, WindowKindDefinition};
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants

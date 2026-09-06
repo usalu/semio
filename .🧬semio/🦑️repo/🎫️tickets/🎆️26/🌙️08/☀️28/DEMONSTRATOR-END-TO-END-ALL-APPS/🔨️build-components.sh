@@ -30,6 +30,7 @@ for pid in "$@"; do
       mkdir -p "$PARK/$(basename "$(dirname "$w")")"
       mv "$w" "$PARK/$(basename "$(dirname "$w")")/" 2>/dev/null && echo "    parked stale worker: $(basename "$(dirname "$w")")"
     done
+    [ -n "${CARGO_TARGET_DIR:-}" ] && mkdir -p "$CARGO_TARGET_DIR"
     echo "=== BUILD $pid attempt $attempt/$ATTEMPTS $(date '+%H:%M:%S') ==="
     SEMIO_PLUGIN_ONLY="$pid" bun "$DEV" plugin s > "$LOG/build-$pid.txt" 2>&1
     rc=$?
@@ -42,7 +43,11 @@ for pid in "$@"; do
     #                                         it is regenerated at the start of every attempt
     # Any of these makes the whole run untrustworthy, including the E0277 cascades they produce, so
     # retry on the MARKER rather than trying to prove the remaining errors are all cascades.
-    stale=$(grep -cE "^error: couldn't read |trailing characters at line " "$LOG/build-$pid.txt" 2>/dev/null)
+    #   4. couldn't create a temp dir / failed to create file encoder -- the CARGO_TARGET_DIR itself was
+    #      deleted mid-build by a peer sweep. Reads as a compiler error but is not one; the dir is
+    #      recreated on the next attempt. (Private `target-*` roots inside the repo get swept too, which
+    #      is why this build now uses a target dir OUTSIDE the repo.)
+    stale=$(grep -cE "^error: couldn't read |trailing characters at line |couldn't create a temp dir|failed to create file encoder" "$LOG/build-$pid.txt" 2>/dev/null)
     if [ "$stale" -gt 0 ] && [ "$attempt" -lt "$ATTEMPTS" ]; then
       cp "$LOG/build-$pid.txt" "$LOG/build-$pid.attempt$attempt.txt" 2>/dev/null
       echo "--- stale renamed path (x$stale); healer repairs within 45s, retrying ---"

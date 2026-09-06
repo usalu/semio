@@ -12,11 +12,13 @@ use crate::editor::raster::modes::edit;
 use crate::editor::raster::modes::edit::windows::{composite, navigator};
 use crate::editor::raster::presence::{RasterPresence, RasterPresenceMutation};
 use crate::editor::raster::terminology::raster_play_labels;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
-    UtilityCategory, UtilityDefinition, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
+    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use dsl::os_pack::json::Value;
 use std::collections::HashMap;
@@ -208,6 +210,426 @@ use crate::editor::raster::commands::{set_brush_opacity, set_brush_size};
 use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedCommands
+/// 🧵️ Every `RasterCommand` row, without exception — the retained route table, the manifest's
+/// `Migrated` classification list and `RasterCommand::TOOL_JOB_IDS` are the SAME sixteen ids, which is
+/// exactly what the framework's `validate_tool_job_rows` demands (`expected = TOOL_JOB_IDS ∩ migrated`
+/// must equal the proof set). Row order mirrors the `app_commands!` declaration order above.
+const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
+    "addLayer",
+    "dropLayerKind",
+    "setLayerVisible",
+    "toggleLayerVisible",
+    "deleteLayer",
+    "duplicateLayer",
+    "patchLayer",
+    "patchLayers",
+    "moveLayer",
+    "setBrushSize",
+    "setBrushOpacity",
+    "setCompositeViewport",
+    "setCamera",
+    "setCameraZoom",
+    "setActiveUtility",
+    "setLocale",
+];
+const RASTER_RETAINED_PAYLOAD_SCHEMA: &str = "raster.tool-command.v1";
+const RASTER_RETAINED_RAW_BYTES: usize = 65_536;
+const RASTER_RETAINED_WORK_ITEMS: usize = 4_096;
+/// 🛣️ Publication lanes per route, read off each handler's own `Emit` in `🎮️commands/*/🦀️.rs` — the
+/// nine layer verbs build `Emit { artifact_mutations, .. }`/`Emit::mutations(..)` over `RasterMutation`
+/// and never touch the config, while the seven session verbs build `Emit::config(..)` over
+/// `RasterConfigMutation` and never touch the document. No raster handler emits both lanes, a draft, a
+/// presence or a transient mutation, so no route declares more than one lane here.
+///
+/// 🎥️ `setCamera`/`setCameraZoom`/`setCompositeViewport`/`setActiveUtility`/`setLocale` stay session-only
+/// `ActionKind::View` declarations in `🔖️Manifest` (ticket 26/07/31 — camera is runtime state, never a
+/// document field, and there is no `RasterOperation::SetCamera`); `Config` is precisely the lane that
+/// says "this route publishes into the config store, not into artifact history".
+const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "dropLayerKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setLayerVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "toggleLayerVisible", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "deleteLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "duplicateLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchLayers", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "moveLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setBrushSize", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setBrushOpacity", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCompositeViewport", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+];
+
+fn raster_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(RASTER_RETAINED_RAW_BYTES, 4_096, 1, 262_144, 7_500)
+}
+
+/// 📏️ One bounded first step per retained route, admitted only while the WHOLE layer tree (groups and
+/// their nested children, via `flatten_raster_layers`) plus the asset pool plus this edit fit inside
+/// `RASTER_RETAINED_WORK_ITEMS`. `layers.len()` alone would understate a grouped document, so the
+/// recursive walk is used rather than the top-level count.
+fn raster_retained_extent(command: &RasterCommand, snapshot: &RasterSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    if !RASTER_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return None;
+    }
+    let items = crate::artifacts::raster::schema::flatten_raster_layers(&snapshot.layers).len().checked_add(snapshot.assets.len())?.checked_add(1)?;
+    (items <= RASTER_RETAINED_WORK_ITEMS).then_some(1)
+}
+
+fn raster_retained_reduce(
+    command: &RasterCommand,
+    snapshot: &RasterSnapshot,
+    config: &RasterConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<RasterMutation, RasterConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+/// 🏭️ The app-owned retained command job factory — `factory_type:` in the proof block below binds this
+/// exact Rust type to `EditorApp<RasterPlayApp>`, which is what turns a bare (and therefore
+/// `interactive-job.missing-owned-reducer`) proof into an exact-owner proof.
+struct RasterRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl RasterRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: RASTER_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for RasterRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<RasterPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<RasterPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        RASTER_RETAINED_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        raster_retained_contract()
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > RASTER_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Raster retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for RasterRetainedCommandJobFactory {
+    type Owner = EditorApp<RasterPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = RASTER_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = RASTER_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+/// 📬️ The document lane's one-item retained preparation. Without it every route declaring
+/// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract and
+/// stays dispatch-dead, no matter how it is classified.
+struct RasterStorePreparationFactory;
+
+struct RasterStorePreparation {
+    base: Option<store::SnapshotRead<RasterSnapshot>>,
+    mutation: Option<RasterMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutation> for RasterStorePreparationFactory {
+    fn preflight(&self, _mutation: &RasterMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Raster Store preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation>>, store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation>> {
+        let item_count = crate::artifacts::raster::schema::flatten_raster_layers(&request.base.get().layers).len().saturating_add(request.base.get().assets.len());
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || item_count > RASTER_RETAINED_WORK_ITEMS
+        {
+            return Err(request);
+        }
+        Ok(Box::new(RasterStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for RasterStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Raster preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Raster preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Raster preparation lost its Store authority".to_string())?;
+        let id = format!("raster-retained-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation],
+            inverse,
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
+            }],
+            description: self.description.take(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
+        };
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Raster preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+
+/// 📬️ The config lane's twin of {@link RasterStorePreparationFactory} — raster's seven session verbs
+/// (`setBrushSize`/`setBrushOpacity`/`setCompositeViewport`/`setCamera`/`setCameraZoom`/
+/// `setActiveUtility`/`setLocale`) publish into the config store, and the runtime rejects a `Config`
+/// publication contract outright when this factory is absent. `RasterConfig` is a whole-record config
+/// (`store::impl_whole_record_config!`), so its `Diff` is the config value itself.
+struct RasterConfigStorePreparationFactory;
+
+struct RasterConfigStorePreparation {
+    base: Option<store::SnapshotRead<RasterConfig>>,
+    mutation: Option<RasterConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<RasterConfig, RasterConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<RasterConfig, RasterConfigMutation> for RasterConfigStorePreparationFactory {
+    fn preflight(&self, _mutation: &RasterConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Raster config preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<RasterConfig, RasterConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<RasterConfig, RasterConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(RasterConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation> for RasterConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Raster config preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Raster config preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Raster config preparation lost its Store authority".to_string())?;
+        let id = format!("raster-config-retained-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation],
+            inverse,
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
+            }],
+            description: self.description.take(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
+        };
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<RasterConfig, RasterConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<RasterConfig, RasterConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Raster config preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
+
 //#region 🔖️RasterPlayApp
 /// 🧪️ B1: unit struct — every former `RasterConfig` field now lives in
 /// `crate::editor::raster::config::RasterConfig`, written through `RasterConfigMutation`s.
@@ -230,6 +652,66 @@ impl ArtifactEditor for RasterPlayApp {
 
     const DIALECT: Dialect = crate::artifacts::raster::RASTER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(RasterStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(RasterConfigStorePreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<RasterPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.raster.raster@1/*#editor",
+        document_schema: "raster.document",
+        factory: "RasterRetainedCommandJobFactory",
+        factory_type: RasterRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        tools: [
+            "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveUtility", "setLocale"
+        ]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(RasterRetainedCommandJobFactory::new(&controller_id))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !RASTER_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || raster_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("raster-retained-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, raster_retained_reduce, raster_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            RasterCommand::command_id,
+            RASTER_RETAINED_RAW_BYTES,
+            RASTER_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::artifacts::raster::spr::raster_envelope_decode_owner_bundle())
@@ -499,6 +981,32 @@ pub fn create_raster_app() -> AppDefinition {
                     ActionArgOption::new("adjustment", LocalizedLabel::native("Adjustment", "Anpassung")),
                 ]).required().default_value("pixel"),
             ])
+            // 🧵️ Phase-8 dispositions. Every id declared above is `Migrated`: each one is backed by the
+            // exact-owner `RasterRetainedCommandJobFactory` proof in `🧵️RetainedCommands`, so UI dispatch
+            // (which rejects anything that is not `Migrated`) and the release-blocking
+            // `validate_interactive_job_classification` gate both admit it. The kind is untouched — the six
+            // `ActionKind::View` rows above stay View/session-only (they publish into the CONFIG lane, see
+            // `RASTER_PUBLICATION_CONTRACTS`), exactly as the camera ticket 26/07/31 requires.
+            //
+            // 🧰️ `setActiveUtility` — the 16th `RasterCommand` row — is NOT listed here on purpose: it is
+            // framework-injected by `.utility(..)` inside `build_definition`, after this builder chain has
+            // run, and `ActionDefinition::resumable_framework_catalog` already classifies it `Migrated`.
+            // Calling `.action_interactive_job("setActiveUtility", ..)` here would silently match nothing.
+            .action_interactive_job("addLayer", InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropLayerKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLayerVisible", InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleLayerVisible", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteLayer", InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateLayer", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchLayer", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchLayers", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveLayer", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setBrushSize", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setBrushOpacity", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCompositeViewport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCameraZoom", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             // 🧰️ Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
             .utility(raster_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
             .utility(raster_utility("paintBrush", LocalizedLabel::native("Brush", "Pinsel"), "paintbrush", "Paint", UtilityCategory::Utilities))
@@ -517,7 +1025,7 @@ pub fn create_raster_app() -> AppDefinition {
 pub(crate) mod testkit {
     //! 🧪️ Shared harness for every `editor::raster` node's tests — mirrors TEMPLATE.md §7.
     use super::*;
-    use semio_framework_plugin::{testkit as framework_testkit, InvocationResult, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{testkit as framework_testkit, App, InvocationResult, VcsArtifactApp, ViewModel};
 
     pub type RasterApp = VcsArtifactApp<EditorApp<RasterPlayApp>>;
 
@@ -908,6 +1416,54 @@ mod tests {
             RasterCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "paintBrush".into() }),
             RasterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ]
+    }
+
+    /// ⚖️ LAW: raster's retained route table, its publication contracts, its bounded-first-step proofs,
+    /// `RasterCommand::TOOL_JOB_IDS` and the catalog's `Migrated` classifications are the SAME sixteen
+    /// ids — the exact join `validate_tool_job_rows` demands (`interactive-job.catalog-authority` /
+    /// `interactive-job.catalog-incomplete`). Mirrors block2d's
+    /// `retained_route_dispositions_are_exact_and_exhaustive`.
+    #[semio_framework_async_macros::async_test]
+    async fn retained_route_dispositions_are_exact_and_exhaustive() {
+        use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
+        use std::collections::BTreeSet;
+        assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 16);
+        assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 16);
+        assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 16);
+        assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
+        assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
+
+        let retained: BTreeSet<&str> = RASTER_RETAINED_TOOL_IDS.iter().copied().collect();
+        assert_eq!(retained, every_command().iter().map(RasterCommand::command_id).collect::<BTreeSet<_>>(), "every RasterCommand row must be a retained route");
+        assert_eq!(retained, RasterCommand::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>(), "the retained table must equal the generated tool-job id set");
+
+        // 🛣️ Lane discipline, read off the handlers: nine document verbs publish into the artifact lane,
+        // seven session verbs into the config lane, and no route publishes into both.
+        let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer"].into_iter().collect();
+        for tool_id in RASTER_RETAINED_TOOL_IDS {
+            let contract = RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
+            let expected = if artifact_lane.contains(tool_id) { ArtifactToolPublicationLane::Artifact } else { ArtifactToolPublicationLane::Config };
+            assert_eq!(contract.lanes, [expected].as_slice(), "{tool_id} publishes into exactly one lane");
+        }
+        assert!(<RasterPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
+        assert!(<RasterPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some(), "the Config lane is rejected outright without a config one-item preparation factory");
+
+        // 🧵️ Every retained id must be UI-dispatchable — including the framework-injected
+        // `setActiveUtility`, which `resumable_framework_catalog` classifies for us.
+        let definition = create_raster_app();
+        for tool_id in RASTER_RETAINED_TOOL_IDS {
+            let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} declared"));
+            assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id} must be UI-dispatchable");
+        }
+        // ⚖️ No declaration in raster's catalog may stay `Unclassified` — that is the release-blocking
+        // gate `validate_interactive_job_classification` enforces. Every action lands on a window kind
+        // (both app-declared and framework-injected ones), so this sweep sees the whole action surface.
+        for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
+            assert_ne!(action.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "action {} is unclassified", action.id);
+        }
+        for command in definition.commands.iter() {
+            assert_ne!(command.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "command {} is unclassified", command.id);
+        }
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.

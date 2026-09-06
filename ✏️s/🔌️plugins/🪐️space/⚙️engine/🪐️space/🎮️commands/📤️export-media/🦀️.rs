@@ -63,7 +63,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_emits_download_effect_and_import_requests_file_open() {
-        crate::engine::space::testkit::seed_draw_plugin();
+        crate::engine::space::testkit::seed_draw_plugin().await;
         semio_framework::register_format_descriptors([semio_framework::FormatDescriptor {
             kind_id: DWG_FORMAT_ID.into(),
             short_id: DWG_FORMAT_ID.into(),

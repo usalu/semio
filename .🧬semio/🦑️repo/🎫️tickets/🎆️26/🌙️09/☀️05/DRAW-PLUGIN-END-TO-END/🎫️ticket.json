@@ -1,0 +1,9 @@
+{
+  "title": "Draw Plugin End To End",
+  "emoji": "🖍️",
+  "status": "open",
+  "description": "Get the 🖍️draw plugin (crate semio-s-plugin-draw at ✏️s/🔌️plugins/🖍️draw, app draw editor + viewer over the 🖍️drawing artifact) working end to end: the crate checks natively and builds for wasm32-wasip2, its tests pass, the owner descriptor pair is regenerated and accepted by the registry check, the TS package is a real draw package with passing tests, and `🛠️dev✏️draw⚛️react` (port 6064) boots with the canvas window and panels rendering non-empty content and editor actions dispatching at runtime.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪269a4680-f11e-4675-83d8-76afcca78981"],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP failed to connect at session start (2026-09-05 23:55)."
+}

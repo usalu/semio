@@ -14,9 +14,9 @@ use crate::artifacts::drawing::{DrawingSnapshot, FillStyle, PathSegment};
 /// cross-format bridge functions live in `🚪️io/`).
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
-    DrawingCanvas as SemioDrawCanvas, DrawingLayer as SemioDrawLayer, DrawingNode as SemioDrawNode, DrawingStyle as SemioDrawStyle, PathSegment as SemioPathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
+    DrawCanvas as SemioDrawCanvas, DrawLayer as SemioDrawLayer, DrawNode as SemioDrawNode, DrawStyle as SemioDrawStyle, PathSegment as SemioPathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
 };
-use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::write_svg_xml;
+use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::write_svg_xml;
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 
 /// 🕳️ stdio_gap: `s.stdio.semio/v1/drawing` bridges only to svg/dxf/pdf (per the master plan's

@@ -1848,26 +1848,32 @@ export class ExactCargoLawError extends Error {
   }
 }
 
-function exactCargoExecutableFingerprint(path: string): { path: string; sha256: string } {
-  if (!isAbsolute(path) || lstatSync(path).isSymbolicLink()) throw new Error("Cargo executable must be one absolute regular file");
+/** 🔬️ Fingerprints one retained executable descriptor with bounded streaming and cancellation. */
+export function exactExecutableFingerprint(path: string, control: Readonly<{ cancelled?: () => boolean; progress?: (completed: number, total: number) => void }> = {}): { path: string; sha256: string; byteLength: number } {
+  const check = () => { if (control.cancelled?.()) throw new Error("Executable fingerprint cancelled"); };
+  check();
+  if (!isAbsolute(path) || lstatSync(path).isSymbolicLink()) throw new Error("Executable must be one absolute regular file");
   const canonical = realpathSync(path);
   const descriptor = openSync(canonical, "r");
   try {
     const before = fstatSync(descriptor);
-    if (!before.isFile() || before.size <= 0 || before.size > 8 * 1024 ** 3 || (process.platform !== "win32" && (before.mode & 0o111) === 0)) throw new Error("Cargo executable size or type denied");
+    const same = (other: typeof before) => other.isFile() && !other.isSymbolicLink() && other.dev === before.dev && other.ino === before.ino && other.size === before.size && other.mtimeMs === before.mtimeMs && other.ctimeMs === before.ctimeMs;
+    if (!before.isFile() || !same(lstatSync(canonical)) || before.size <= 0 || before.size > 8 * 1024 ** 3 || (process.platform !== "win32" && (before.mode & 0o111) === 0)) throw new Error("Executable size or type denied");
     const digest = createHash("sha256");
     const buffer = Buffer.alloc(64 * 1024);
     let count = 0;
     while (true) {
+      check();
       const length = readSync(descriptor, buffer);
       if (length === 0) break;
       digest.update(buffer.subarray(0, length));
       count += length;
-      if (count > before.size) throw new Error("Cargo executable changed while hashing");
+      if (count > before.size) throw new Error("Executable changed while hashing");
+      control.progress?.(count, before.size);
     }
     const after = fstatSync(descriptor);
-    if (count !== before.size || after.size !== before.size || after.mtimeMs !== before.mtimeMs || after.ino !== before.ino) throw new Error("Cargo executable changed while hashing");
-    return { path: canonical, sha256: digest.digest("hex") };
+    if (count !== before.size || !same(after) || !same(lstatSync(canonical))) throw new Error("Executable changed while hashing");
+    return { path: canonical, sha256: digest.digest("hex"), byteLength: count };
   } finally { closeSync(descriptor); }
 }
 
@@ -1909,7 +1915,7 @@ export async function runExactCargoLawProcess(command: string, args: string[], o
 }
 
 /** 🧪️ Compiles each explicit target once and executes only its hash-bound, exact-listed native laws. */
-export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = { probe: runExactCargoLawProcess, fingerprint: exactCargoExecutableFingerprint }): Promise<readonly ExactCargoLawReceipt[]> {
+export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = { probe: runExactCargoLawProcess, fingerprint: exactExecutableFingerprint }): Promise<readonly ExactCargoLawReceipt[]> {
   const configuredEnv = options.env ?? process.env;
   const artifactRoot = options.artifactDir ?? configuredEnv.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot || !isAbsolute(artifactRoot) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Exact Cargo laws require an absolute ticket-generated artifactDir or SEMIO_TEST_ARTIFACT_DIR");

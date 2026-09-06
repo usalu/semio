@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/db/durable-group-journal-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "record", "limits", "lifecycle", "cases", "nonClaims"],
+  "properties": {
+    "version": { "const": 1 },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "durability", "document", "decisionSha256", "anchorSha256"],
+      "properties": {
+        "kind": { "const": "event" },
+        "durability": { "const": "fsync" },
+        "document": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "decisionSha256": { "$ref": "#/$defs/hash" },
+        "anchorSha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["storeEventBytes", "walSegmentBytes", "successorHeaderBytes", "storeMaximumTransactionBytes", "storeMaximumSegmentBytes", "maximumEventBytes"],
+      "properties": {
+        "storeEventBytes": { "const": 491520 },
+        "walSegmentBytes": { "const": 507904 },
+        "successorHeaderBytes": { "type": "integer", "minimum": 1 },
+        "storeMaximumTransactionBytes": { "type": "integer", "minimum": 1 },
+        "storeMaximumSegmentBytes": { "type": "integer", "minimum": 1 },
+        "maximumEventBytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "lifecycle": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": { "enum": ["not-submitted", "awaiting", "rejected", "failed", "absent", "committed", "empty"] }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "expected", "mailboxTransfers", "walTransactions"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "expected": { "enum": ["committed", "absent", "rejected", "uncertain"] },
+          "mailboxTransfers": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "walTransactions": { "type": "integer", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "nonClaims": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": { "enum": ["decision-recovery", "inference-witness", "three-store-publication"] }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

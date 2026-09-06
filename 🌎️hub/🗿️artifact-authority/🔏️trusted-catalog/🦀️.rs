@@ -1169,6 +1169,11 @@ fn report_package_progress(context: &OperationContext<'_>, package_position: usi
     context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogLoading, completed_units, total_units })
 }
 
+/// 🏗️ Feature-gated real GIS Map profile builder, reachable from every crate target (see its module doc).
+#[cfg(all(feature = "test-support", feature = "native-artifact-execution"))]
+#[path = "🏗️test-support/🦀️.rs"]
+pub mod test_support;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1476,6 +1481,7 @@ mod tests {
     }
 
     /// 🧪️ Loads real GIS assembly metadata and native receipts around synthetic component bytes; component execution is outside this fixture.
+    #[cfg(feature = "native-artifact-execution")]
     async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> FixtureDirectory {
         let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
         semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().expect("GIS assembly"));
@@ -1540,6 +1546,7 @@ mod tests {
         fixture
     }
 
+    #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
     async fn gis_map_binding_constructs_from_loaded_catalog_and_retains_verified_bytes() {
         for (viewer, foreign_service) in [(false, false), (true, false), (false, true)] {

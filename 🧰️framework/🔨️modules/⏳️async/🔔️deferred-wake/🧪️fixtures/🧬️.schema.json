@@ -131,7 +131,7 @@
           "const": ["WorkerDeferredWakeTicket", "WorkerDeferredWakeRegistry", "PoolWork::DeferredWake", "WORKER_DEFERRED_WAKE_PARTITIONS", "WORKER_DEFERRED_WAKES_PER_PARTITION"]
         },
         "writer": {
-          "const": ["deferred_wake_ticket", "defer_wake", "restore_fault_waiter"]
+          "const": ["deferred_wake_ticket", "defer_wake", "restore_fault_waiter", "defer_fault_notifications"]
         }
       }
     }

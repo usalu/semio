@@ -35,9 +35,9 @@ const UNOBSERVABLE: &[&str] = &[];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "rename-layer" => (
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-shape-a-without-touching-its-id/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-shape-a-without-touching-its-id/🦠️mutation/🔣️.json"),
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-shape-a-without-touching-its-id/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-shape-a-ba5eed/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-shape-a-ba5eed/🦠️mutation/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-shape-a-ba5eed/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-locked" => (
             include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🧪️tests/🔒️locks-shape-a/📸️snapshot/⬅️before/🔣️.json"),

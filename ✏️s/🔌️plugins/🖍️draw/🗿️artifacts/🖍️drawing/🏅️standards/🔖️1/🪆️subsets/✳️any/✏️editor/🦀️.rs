@@ -39,7 +39,6 @@ pub use properties_panel::DRAWING_PLAY_BODY_PROPERTIES;
 pub const DRAWING_PLAY_CONTROLLER_ID: &str = "drawing-play";
 /// 🧰️ The utility the canvas returns to after committing a shape/draft/trace (first UtilityRef default).
 pub const DRAWING_DEFAULT_UTILITY: &str = "selectDirect";
-pub const DRAWING_PLAY_EXAMPLE_DEFAULT_ID: &str = "semio";
 /// 🕹️ The single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM interaction domain this app declares
 /// (granularity `stroke`, `HierarchyProvider::Flat`, methods Pick/Rectangle/Lasso).
 pub const DRAWING_INTERACTION_DOMAIN: &str = "strokes";
@@ -168,6 +167,21 @@ semio_framework_plugin::app_commands! {
 const DRAWING_GESTURE_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasCommitDraft", "canvasEscape"];
 const DRAWING_GESTURE_RAW_BYTES: usize = 8_192;
 const DRAWING_GESTURE_RETAINED_BYTES: usize = 32_768;
+
+/// 🛣️ One publication lane row per gesture route, read off each route's real `Emit` construction, not
+/// off its `ActionKind`: every gesture that reaches a commit does so through
+/// `commit_with_utility_reset`/`DrawingDraftQuery::advance` (artifact lane), and the two routes that
+/// additionally write `DrawingConfigMutation::SetTracePointerProgress` — `canvasPointerDown` through
+/// `advance_trace_pointer`, `canvasEscape` through its own trace cancellation — carry the config lane
+/// as well. Under-declaring a lane that is actually emitted faults at publication time.
+const DRAWING_GESTURE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasDoubleClick", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasCommitDraft", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "canvasEscape", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+];
 
 struct DrawingGestureOperationOwner {
     session: Option<DrawingSession>,
@@ -746,6 +760,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingGestureOpera
     type Owner = semio_framework_plugin::EditorApp<DrawingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = DRAWING_GESTURE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = DRAWING_GESTURE_PUBLICATION_CONTRACTS;
 }
 
 #[cfg(test)]
@@ -907,6 +922,495 @@ mod gesture_operation_owner_tests {
 }
 //#endregion 🧵️GestureOperationJobs
 
+//#region 🧵️BoundedCommands
+/// 🧵️ Every non-gesture `DrawingCommand` row, each reducing in one bounded first step through
+/// [`DrawingBoundedCommandJobFactory`]. Together with [`DRAWING_GESTURE_TOOL_IDS`] this covers the
+/// command enum exactly (pinned by `retained_route_dispositions_are_exact_and_exhaustive`): an id
+/// missing from both lists is unreachable from the client, because `validate_tool_job_rows` demands
+/// one proof row per `Migrated` generated id and `validate_ui_dispatch_classification` rejects
+/// anything that is not `Migrated`. `setActiveUtility` belongs here even though the manifest never
+/// declares it: the framework injects it — already classified `Migrated` — for every app with
+/// utilities, and registers no factory of its own for it.
+const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
+    "setSnapshot",
+    "commitDocument",
+    "setFixtureJson",
+    "setActiveExample",
+    "setSelectedOpacity",
+    "engagementSubmit",
+    "addLayer",
+    "dropLayerKind",
+    "moveLayer",
+    "deleteLayer",
+    "duplicateLayer",
+    "toggleLayerVisible",
+    "combineBoolean",
+    "patchLayer",
+    "patchLayers",
+    "setActiveUtility",
+    "setCamera",
+    "setCameraZoom",
+    "engagementInput",
+    "setLocale",
+];
+const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
+const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
+const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
+
+/// 🛣️ One publication lane row per bounded route, read off each handler's real `Emit` construction
+/// (`🎮️commands/*/🦀️.rs`). The four whole-document routes emit nothing but an `Effect::LoadDocument`
+/// — effects are not a store lane, so those are honestly `HostOnly`; the layer routes emit
+/// `DrawingMutation`s; the view routes emit `DrawingConfigMutation`s.
+const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSelectedOpacity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "dropLayerKind", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "duplicateLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLayerVisible", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "combineBoolean", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+];
+
+fn drawing_bounded_contract() -> semio_framework::ToolExecutionContract {
+    semio_framework::ToolExecutionContract::bounded_first_step(DRAWING_BOUNDED_RAW_BYTES, DRAWING_BOUNDED_WORK_ITEMS, 1, 262_144, 7_500)
+}
+
+/// 📏️ One work item per bounded dispatch, admitted only while the live document still fits the
+/// declared envelope — a gesture id or an oversized document answers `None`, which fails the route
+/// closed instead of publishing an unbounded step.
+fn drawing_bounded_extent(command: &DrawingCommand, snapshot: &DrawingSnapshot, _interaction: &::protocol::InteractionState) -> Option<usize> {
+    if !DRAWING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
+        return None;
+    }
+    let items = [snapshot.layers.len(), snapshot.assets.len()].into_iter().try_fold(1usize, |total, count| total.checked_add(count))?;
+    (items <= DRAWING_BOUNDED_WORK_ITEMS).then_some(1)
+}
+
+/// 🔁️ The bounded reducer runs the SAME `DrawingCommand::dispatch` the ordinary `ArtifactEditor::handle`
+/// route runs, seeded with the same framework-owned selection — migration is wiring, never a rewrite
+/// of a command body.
+fn drawing_bounded_reduce(
+    command: &DrawingCommand,
+    snapshot: &DrawingSnapshot,
+    config: &DrawingConfig,
+    history: &semio_framework_plugin::HistoryView,
+    interaction: &::protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &semio_framework_plugin::AppOperationContext,
+) -> Result<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>, Fault> {
+    if !DRAWING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.bounded.route"), "the bounded Drawing command owner rejects a gesture command"));
+    }
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let cfg = ConfigView { snapshot: config };
+    let mut session = DrawingSession::default();
+    session.interaction.ids = interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
+    command.dispatch(&doc, &cfg, &mut session)
+}
+
+struct DrawingBoundedCommandJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl DrawingBoundedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: DRAWING_BOUNDED_TOOL_IDS.iter().map(|tool| semio_framework::ToolFactoryKey::new(controller_id, *tool)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for DrawingBoundedCommandJobFactory {
+    type Payload = semio_framework_plugin::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<DrawingPlayApp>>;
+    type Job = semio_framework_plugin::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<DrawingPlayApp>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        DRAWING_BOUNDED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        drawing_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(semio_framework_plugin::ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() || input.declared_bytes() > DRAWING_BOUNDED_RAW_BYTES {
+            return Err((semio_framework::ToolJobFactoryError::new("bounded Drawing command ingress rejects a checkpoint or oversized wire owner"), input, checkpoint));
+        }
+        Ok(semio_framework_plugin::ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingBoundedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<DrawingPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = DRAWING_BOUNDED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = DRAWING_BOUNDED_PUBLICATION_CONTRACTS;
+}
+
+/// 🏗️ The bounded half of `DrawingPlayApp::build_tool_job` — one `BoundedArtifactCommandWork` per
+/// non-gesture route, refused outright when the id, the typed command and the live extent disagree.
+fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<DrawingPlayApp>>) -> Result<semio_framework::ToolOperationSpec, Fault> {
+    if request.command.command_id() != request.tool_id || drawing_bounded_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.bounded.tool-mismatch"), "bounded Drawing command does not match its exact registered tool or exceeds its declared extent"));
+    }
+    let tool_id = request.command.command_id();
+    let work: Box<dyn semio_framework_plugin::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>>> =
+        Box::new(semio_framework_plugin::BoundedArtifactCommandWork::new(tool_id, drawing_bounded_reduce, drawing_bounded_extent));
+    let operation_context = semio_framework_plugin::AppOperationContext {
+        app_instance_id: request.app_instance_id,
+        parent_document_id: request.parent_document_id.clone(),
+        operation_id: request.operation.operation.0,
+        generation: request.operation.generation.0,
+        canonical_base_revision: request.canonical_base_revision,
+    };
+    let payload = semio_framework_plugin::ArtifactRetainedCommandPayload::try_new(
+        *request.command,
+        request.snapshot,
+        request.config,
+        request.history,
+        request.interaction_state,
+        request.interaction_hover,
+        operation_context,
+        request.completion,
+        DrawingCommand::command_id,
+        DRAWING_BOUNDED_RAW_BYTES,
+        DRAWING_BOUNDED_WORK_ITEMS,
+        work,
+    )?;
+    Ok(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation))
+}
+//#endregion 🧵️BoundedCommands
+
+//#region 📬️StorePreparation
+/// 🧬️ Builds the single described edit both preparation lanes publish — the two differ only in their
+/// mutation type and id prefix.
+fn drawing_prepared_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> ::protocol::Edit<M> {
+    let id = format!("{prefix}-{}", authority.next_sequence_number());
+    ::protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![::protocol::MutationMeta {
+            mutation_id: Some(::protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(::protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: ::protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+struct DrawingArtifactStorePreparationFactory;
+
+struct DrawingArtifactStorePreparation {
+    base: Option<store::SnapshotRead<DrawingSnapshot>>,
+    mutation: Option<DrawingMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<DrawingSnapshot, DrawingMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutation> for DrawingArtifactStorePreparationFactory {
+    fn preflight(&self, _mutation: &DrawingMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("drawing-artifact-lane-or-description-envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<DrawingSnapshot, DrawingMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation>>, store::ArtifactStoreOneItemPreparationRequest<DrawingSnapshot, DrawingMutation>> {
+        let items = request.base.get().layers.len().saturating_add(request.base.get().assets.len());
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || items > DRAWING_BOUNDED_WORK_ITEMS
+        {
+            return Err(request);
+        }
+        Ok(Box::new(DrawingArtifactStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> for DrawingArtifactStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use ::protocol::Mutation as _;
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "drawing-artifact-base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "drawing-artifact-mutation-owner-missing".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = ::protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "drawing-artifact-authority-missing".to_string())?;
+        let edit = drawing_prepared_edit("drawing-artifact-bounded", mutation, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<DrawingSnapshot, DrawingMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<DrawingSnapshot, DrawingMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("drawing-artifact-base-retirement-rejected".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+
+struct DrawingConfigStorePreparationFactory;
+
+struct DrawingConfigStorePreparation {
+    base: Option<store::SnapshotRead<DrawingConfig>>,
+    mutation: Option<DrawingConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<DrawingConfig, DrawingConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<DrawingConfig, DrawingConfigMutation> for DrawingConfigStorePreparationFactory {
+    fn preflight(&self, _mutation: &DrawingConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("drawing-config-lane-or-description-envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<DrawingConfig, DrawingConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DrawingConfig, DrawingConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<DrawingConfig, DrawingConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(DrawingConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<DrawingConfig, DrawingConfigMutation> for DrawingConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use ::protocol::Mutation as _;
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "drawing-config-base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "drawing-config-mutation-owner-missing".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = ::protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "drawing-config-authority-missing".to_string())?;
+        let edit = drawing_prepared_edit("drawing-config-bounded", mutation, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<DrawingConfig, DrawingConfigMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<DrawingConfig, DrawingConfigMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("drawing-config-base-retirement-rejected".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
+
+//#region 🧾️ProofCatalogs
+/// 🧾️ One `bounded_first_step_tool_proofs!` invocation per owned factory — the macro emits the whole
+/// `bounded_first_step_tool_proofs()` body for a single factory, so an app with two factories declares
+/// two catalogs and concatenates them in its `ArtifactEditor` item (process3d/flow precedent).
+struct DrawingGestureProofs;
+impl DrawingGestureProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.draw.drawing@1/*#editor",
+        document_schema: "drawing.document",
+        factory: "DrawingGestureOperationJobFactory",
+        factory_type: DrawingGestureOperationJobFactory,
+        contract: semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
+        tools: ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasCommitDraft", "canvasEscape"]
+    }
+}
+
+struct DrawingBoundedProofs;
+impl DrawingBoundedProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.draw.drawing@1/*#editor",
+        document_schema: "drawing.document",
+        factory: "DrawingBoundedCommandJobFactory",
+        factory_type: DrawingBoundedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        tools: [
+            "setSnapshot", "commitDocument", "setFixtureJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
+            "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
+            "patchLayer", "patchLayers", "setActiveUtility", "setCamera", "setCameraZoom", "engagementInput", "setLocale"
+        ]
+    }
+}
+//#endregion 🧾️ProofCatalogs
+
 //#region 🔖️DrawingPlayApp
 pub(crate) fn drawing_document_revision(doc: &ArtifactView<'_, DrawingSnapshot>, _config: &DrawingConfig) -> String {
     doc.operation_optional().map(|operation| operation.canonical_base_revision_hex()).unwrap_or_else(|| "0".repeat(64))
@@ -992,21 +1496,16 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
-        owner_file: "✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.draw.drawing@1/*#editor",
-        document_schema: "drawing.document",
-        factory: "DrawingGestureOperationJobFactory",
-        factory_type: DrawingGestureOperationJobFactory,
-        tools: {
-            "canvasPointerDown" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
-            "canvasPointerMove" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
-            "canvasPointerUp" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
-            "canvasDoubleClick" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
-            "canvasCommitDraft" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
-            "canvasEscape" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
-        }
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(DrawingArtifactStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(DrawingConfigStorePreparationFactory))
+    }
+
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        DrawingGestureProofs::bounded_first_step_tool_proofs().into_iter().chain(DrawingBoundedProofs::bounded_first_step_tool_proofs()).collect()
     }
 
     fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
@@ -1015,10 +1514,14 @@ impl ArtifactEditor for DrawingPlayApp {
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(DrawingGestureOperationJobFactory::new(&controller))
+        registry.register(DrawingGestureOperationJobFactory::new(&controller))?;
+        registry.register(DrawingBoundedCommandJobFactory::new(&controller))
     }
 
-    async fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if DRAWING_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return drawing_bounded_tool_job(request).map(Some);
+        }
         if !DRAWING_GESTURE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -1044,26 +1547,26 @@ impl ArtifactEditor for DrawingPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::drawing::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> DrawingSnapshot {
+    fn initial_snapshot() -> DrawingSnapshot {
         crate::artifacts::drawing::schema::default_drawing_document("empty", None)
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(drawing_io())
     }
 
     /// 🎞️ `vector:out` (see `drawing_vector_media`) plus the inherited `document:out` default (the pack
     /// of `doc.snapshot`, replicated inline — overriding `export_media` shadows the trait's provided
     /// body for every port on this app, not just the new one).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, DrawingSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, DrawingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "vector:out" => drawing_vector_media(doc.snapshot),
             "document:out" => {
-                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -1079,11 +1582,11 @@ impl ArtifactEditor for DrawingPlayApp {
     // non-history reset path) instead.
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &DrawingCommand) -> &'static str {
+    fn command_id(command: &DrawingCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &DrawingCommand,
         doc: &ArtifactView<'_, DrawingSnapshot>,
         cfg: &ConfigView<'_, DrawingConfig>,
@@ -1099,11 +1602,11 @@ impl ArtifactEditor for DrawingPlayApp {
         command.dispatch(doc, cfg, &mut session)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, DrawingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, DrawingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         render_drawing_body(body_key, doc.snapshot, cfg.snapshot, &DrawingSession::default().preview())
     }
 
-    async fn render_with_instance_operation_owner(
+    fn render_with_instance_operation_owner(
         owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, DrawingSnapshot>,
@@ -1205,21 +1708,36 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(properties_panel::definition())
             // ✏️ Palette-visible content operations.
             .mutation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
+            .action_interactive_job("addLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .mutation("combineBoolean", LocalizedLabel::native("Combine Boolean", "Boolean kombinieren"))
+            .action_interactive_job("combineBoolean", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🔧️ Internal content operations — inspector/layer-panel/import-bound, not palette commands.
             .action_with(drawing_internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
+            .action_interactive_job("setSnapshot", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("commitDocument", LocalizedLabel::native("Commit Document", "Dokument übernehmen"), ActionKind::Mutation))
+            .action_interactive_job("commitDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation))
+            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("setSelectedOpacity", LocalizedLabel::native("Set Selected Opacity", "Deckkraft der Auswahl festlegen"), ActionKind::Mutation))
+            .action_interactive_job("setSelectedOpacity", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
+            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Mutation))
+            .action_interactive_job("dropLayerKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Mutation))
+            .action_interactive_job("moveLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Mutation))
+            .action_interactive_job("deleteLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Mutation))
+            .action_interactive_job("duplicateLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
+            .action_interactive_job("toggleLayerVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Mutation))
+            .action_interactive_job("patchLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation))
+            .action_interactive_job("patchLayers", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are pure View.
             .action_with(drawing_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation))
             .action_interactive_job("canvasPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -1238,10 +1756,14 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             // setInteractionGranularity auto-inject, never declared here (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .action_with(drawing_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
+            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 📷️ Camera — session-only runtime pose, never a document operation.
             .action_with(drawing_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
+            .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(drawing_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
             .utility(drawing_utility("selectLasso", LocalizedLabel::native("Lasso Select", "Lasso-Auswahl"), "lasso", "Select", UtilityCategory::Selection))
@@ -1285,14 +1807,10 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("escape", "canvasEscape")
             .keybinding("enter", "canvasCommitDraft")
             .default_layout(edit::layout())
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
-            // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the old
-            // `DRAWING_PLAY_EXAMPLE_DEFAULT_ID` app-level example registration and the no-op
-            // `.workflow("drawing", …)` call are dropped here (not silently: reported in this packet's
-            // migration report). The subset's own `📚️examples/🎬️demo` facet
-            // (`crate::artifacts::drawing::examples::...`, real content, pre-existing) is the modern,
-            // role-agnostic replacement surface for this.
+            // 📚️ Examples are declared once, on the subset (`🪆️subsets/✳️any/🦀️.rs`'s `examples()`,
+            // reached by the shell through `SubsetDeclaration.examples`), never a second time on this
+            // builder — `setActiveExample` resolves its `example_id` against that same slice, so the
+            // switcher's ids and the command's ids cannot drift apart.
             .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -1912,12 +2430,12 @@ mod tests {
         let projection = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
-        let vector = semio_framework_plugin::resolve_ready(DrawingPlayApp::export_media("vector:out", &doc)).expect("vector:out");
+        let vector = DrawingPlayApp::export_media("vector:out", &doc).expect("vector:out");
         let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
         assert_eq!(schema, "2d.drawing");
         assert!(json.starts_with("<svg"));
-        assert!(semio_framework_plugin::resolve_ready(DrawingPlayApp::export_media("document:out", &doc)).is_ok());
-        assert!(matches!(semio_framework_plugin::resolve_ready(DrawingPlayApp::export_media("unknown:out", &doc)), Err(MediaError::NotImplemented)));
+        assert!(DrawingPlayApp::export_media("document:out", &doc).is_ok());
+        assert!(matches!(DrawingPlayApp::export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
     }
 
     //#region 🔖️GesturePreview
@@ -1973,7 +2491,7 @@ mod tests {
             DrawingCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: default_drawing_document("cmd-doc", None) }),
             DrawingCommand::CommitDocument(commit_document::CommitDocument { snapshot: default_drawing_document("cmd-doc-2", None) }),
             DrawingCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
-            DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "semio".into() }),
+            DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
             DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.5 }),
             DrawingCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("Renamed \"layer\"".into()) }),
             DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }),
@@ -2082,5 +2600,78 @@ mod tests {
         }
     }
     //#endregion 🔖️WireGuards
+
+    //#region 🔖️CommandSurface
+    /// ⚖️ The dispatch law: the two owned factories partition the command enum exactly, every route
+    /// carries a publication contract, and every proof row has an owner. A regression in any of the
+    /// four lists below is exactly the class of defect that made twenty of draw's twenty-six commands
+    /// unreachable from the client.
+    #[semio_framework_async_macros::async_test]
+    async fn retained_route_dispositions_are_exact_and_exhaustive() {
+        use semio_framework_plugin::ArtifactOwnedToolJobFactory as _;
+
+        assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
+        assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 20);
+        let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).copied().collect::<Vec<_>>();
+        routes.sort_unstable();
+        let mut declared = every_command().await.into_iter().map(|command| command.command_id()).collect::<Vec<_>>();
+        declared.sort_unstable();
+        assert_eq!(routes, declared, "every declared command owns exactly one retained route, and no route names a command that does not exist");
+        assert_eq!(routes.windows(2).filter(|pair| pair[0] == pair[1]).count(), 0, "a tool id may be owned by exactly one factory");
+
+        assert_eq!(DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.len(), DRAWING_GESTURE_TOOL_IDS.len());
+        assert_eq!(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), DRAWING_BOUNDED_TOOL_IDS.len());
+        for contract in DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.iter().chain(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS) {
+            assert!(routes.contains(&contract.tool_id), "{} publishes without owning a route", contract.tool_id);
+            assert!(!contract.lanes.is_empty(), "{} declares no publication lane", contract.tool_id);
+            assert!(
+                !contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1,
+                "{} pairs HostOnly with another lane, which the registry rejects",
+                contract.tool_id
+            );
+        }
+
+        assert_eq!(<DrawingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), routes.len());
+        assert!(<DrawingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the artifact lane needs its one-item preparation authority");
+        assert!(<DrawingPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some(), "the config lane needs its one-item preparation authority");
+
+        let definition = create_drawing_app();
+        let classified = definition
+            .window_kinds
+            .iter()
+            .flat_map(|window| window.actions.iter())
+            .map(|action| (action.id.as_str(), action.semantics.execution.interactive_job))
+            .chain(definition.commands.iter().map(|command| (command.id.as_str(), command.semantics.execution.interactive_job)))
+            .collect::<Vec<_>>();
+        for route in &routes {
+            assert!(
+                classified.iter().any(|(id, classification)| id == route && *classification == semio_framework_plugin::InteractiveJobClassification::Migrated),
+                "{route} owns a retained route but the manifest does not classify it Migrated"
+            );
+        }
+    }
+
+    /// 🖼️ `setActiveExample` resolves against the registered catalogue rather than a hardcoded id, so
+    /// the switcher's ids load a document and an unregistered id faults instead of silently doing
+    /// nothing.
+    #[semio_framework_async_macros::async_test]
+    async fn set_active_example_resolves_the_registered_catalogue() {
+        let examples = crate::artifacts::drawing::standards::v1::subsets::any::examples();
+        assert!(examples.iter().any(|source| source.id() == "demo"), "the subset registers its demo example");
+        let doc = default_drawing_document("example-probe", None);
+        let history = semio_framework_plugin::HistoryView::default();
+        let config = DrawingConfig::default();
+        let view = ArtifactView::new(&doc, &history);
+        let cfg = ConfigView { snapshot: &config };
+        let mut session = DrawingSession::default();
+        for source in examples {
+            let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: source.id().into() }, &view, &cfg, &mut session).expect("a registered example id loads its document");
+            assert_eq!(emit.effects.len(), 1, "{} must load exactly one document", source.id());
+        }
+        let reset = set_active_example::handle(&set_active_example::SetActiveExample { example_id: String::new() }, &view, &cfg, &mut session).expect("the empty id resets to a blank drawing");
+        assert_eq!(reset.effects.len(), 1);
+        assert!(set_active_example::handle(&set_active_example::SetActiveExample { example_id: "semio".into() }, &view, &cfg, &mut session).is_err(), "an unregistered id faults instead of silently doing nothing");
+    }
+    //#endregion 🔖️CommandSurface
 }
 //#endregion 🧪️Tests

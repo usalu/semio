@@ -133,6 +133,70 @@ class WorkerDeferredWakeCheckScript extends BundleScript {
   }
 }
 
+/** 🔐️ Proves the cold pool-use lifecycle fence for native and cooperative schedulers. */
+class WorkerPoolUseCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-pool-use-check accepts only --native");
+    const owner = join(this.root, "../../🔐️use");
+    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧬️.schema.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    for (const row of fixture.cases) {
+      let state = "open";
+      let uses = 0;
+      let cells = 0;
+      for (const step of row.steps) {
+        if (step === "acquire") { assert.equal(state, "open", row.id); uses += 1; cells += 1; }
+        else if (step === "clone") { assert(uses > 0, row.id); cells += 1; }
+        else if (step === "drop") { assert(cells > 0, row.id); cells -= 1; if (cells === 0) uses -= 1; }
+        else if (step === "shutdown-busy") { assert(uses > 0, row.id); assert.equal(state, "open", row.id); }
+        else if (step === "shutdown") { assert.equal(uses, 0, row.id); assert.equal(state, "open", row.id); state = "stopped"; }
+        else if (step === "acquire-rejected") assert.notEqual(state, "open", row.id);
+        else if (step === "shutdown-idempotent") assert.equal(state, "stopped", row.id);
+      }
+      assert.equal(state, row.expected.state, row.id);
+      assert.equal(uses, row.expected.retainedUses, row.id);
+      assert.equal(state === "open", row.expected.executable, row.id);
+    }
+    for (const row of fixture.mountedCases) {
+      const retainedUses = row.externalUses + (row.pool === "open" && (row.database === "open" || row.database === "opening-non-runnable") ? 1 : 0);
+      const shutdown = retainedUses ? `busy-${retainedUses}` : "stopped";
+      assert.equal(shutdown, row.expectedShutdown, row.id);
+      if (row.authority === "ready") assert.equal(row.database, "open", row.id);
+      if (row.database === "terminal" || row.database === "absent") assert.equal(row.databaseActivities, "closed", row.id);
+    }
+    const source = readFileSync(join(owner, "../🦀️.rs"), "utf8");
+    for (const marker of ["pub struct WorkerPoolUse", "pub enum WorkerPoolShutdownError", "pub enum WorkerPoolUseError", "pub fn acquire_use(&self)", "retained_uses", "PoolLifecycleState::Closing", "PoolLifecycleState::Stopped"]) assert(source.includes(marker), `missing pool-use marker ${marker}`);
+    assert.equal(source.match(/pub fn shutdown\(&self\) -> Result<\(\), WorkerPoolShutdownError>/g)?.length, 2);
+    for (const law of ["worker_pool_use_native_busy_keeps_executor_running_until_final_release", "worker_pool_use_acquire_and_shutdown_linearize_exactly_once", "worker_pool_use_cooperative_busy_keeps_executor_running_until_final_release"]) assert(source.includes(`fn ${law}(`), `missing exact pool-use law ${law}`);
+    const engine = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs"), "utf8");
+    const artifact = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"), "utf8");
+    const sync = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs"), "utf8");
+    for (const marker of ["pool_use: Option<Arc<WorkerPoolUse>>", "let pool_use = pool.acquire_use()", "fn require_open_use(&self)", "self.pool_use.take()", "DatabaseRetainedActivityRejected::Closed", "DatabaseDocumentMountDriver::NonRunnable", "DatabaseShutdownBlock::Executor(kind)"]) assert(engine.includes(marker), `missing mounted pool-use marker ${marker}`);
+    assert.equal(engine.match(/_pool_use: Arc<WorkerPoolUse>/g)?.length, 4, "every retained Database capability/catalog state must own the use cell");
+    for (const marker of ["_pool_use: Arc<semio_framework_async::WorkerPoolUse>", "spawn_with_pool_use", "pool.acquire_use()"] ) assert(artifact.includes(marker), `missing authority pool-use marker ${marker}`);
+    for (const marker of ["_pool_use: std::sync::Arc<semio_framework_async::WorkerPoolUse>", "let pool_use = match pool.acquire_use()"] ) assert(sync.includes(marker), `missing sync-hello pool-use marker ${marker}`);
+    for (const law of ["database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack", "database_worker_pool_use_is_admitted_before_the_first_storage_probe", "database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer"]) assert(engine.includes(`fn ${law}(`), `missing mounted pool-use law ${law}`);
+    console.log(`worker-pool-use-independent-oracle: AJV=1 cases=${fixture.cases.length} mounted=${fixture.mountedCases.length} native=1 cooperative=1`);
+    if (segments[0] !== "--native") return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [{ package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: [
+        "native_pool::tests::worker_pool_use_native_busy_keeps_executor_running_until_final_release",
+        "native_pool::tests::worker_pool_use_acquire_and_shutdown_linearize_exactly_once",
+        "wasm_pool::cooperative_tests::worker_pool_use_cooperative_busy_keeps_executor_running_until_final_release",
+      ] }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) { console.log(`worker-pool-use-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    for (const receipt of receipts) console.log(`worker-pool-use-native-receipt: ${JSON.stringify(receipt)}`);
+  }
+}
+
 //#region 🦀️Checks
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -201,6 +265,6 @@ class PreviewGeneratedScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

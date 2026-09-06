@@ -3791,7 +3791,7 @@ mod tests {
     /// 📣️ A committed page cannot be overtaken on the live channel while it still owns the writer guard.
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     async fn directory_append_and_live_broadcast_share_one_writer_guard_and_projection_order() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📣️ordered-append-broadcast-v1/🔣️.json")).expect("language-neutral ordered publication fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧪️fixtures/📣️ordered-append-broadcast-v1/🔣️.json")).expect("language-neutral ordered publication fixture");
         assert_eq!(fixture["schema"], "semio.hub.directory.ordered-append-broadcast/v1");
         assert_eq!(fixture["cases"].as_array().expect("ordered publication cases").len(), 4);
 

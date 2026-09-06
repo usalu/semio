@@ -1,9 +1,9 @@
 //! 📄️ VCS play app panel — the document tree: checkpoints and alternatives of the seeded history.
 
 use crate::editor::vcs::terminology::VcsPlayLabels;
-use crate::editor::vcs::{ui_node_list, ui_value_map, ui_value_text, vcs_action, VCS_INTERACTION_HISTORY};
+use crate::editor::vcs::{ui_fixed_label, ui_node_list, ui_value_map, ui_value_text, vcs_action, VCS_INTERACTION_HISTORY};
 use semio_framework_plugin::{
-    tree_item_with_action, BuiltNode, HistoryView, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item_with_action, BuiltNode, HistoryView, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 
 //#region 🔖️Constants
@@ -39,7 +39,7 @@ pub fn render(history: &HistoryView, labels: &VcsPlayLabels) -> semio_framework_
         let action_args = ui_value_map([("checkpointId", ui_value_text(&column.checkpoint_id)?)])?;
         let mut node = tree_item_with_action(
             builder.item_id("checkpoint", &column.checkpoint_id)?,
-            Label::data(column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone())),
+            column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone()),
             Some(column.timestamp.clone()),
             vcs_action("checkoutCheckpoint", Some(action_args))?,
         )?;
@@ -61,15 +61,15 @@ pub fn render(history: &HistoryView, labels: &VcsPlayLabels) -> semio_framework_
         let count = history.columns.iter().filter(|column| column.alternative_ids.iter().any(|candidate| candidate == alternative_id.as_str())).count();
         let action_args = ui_value_map([("alternativeId", ui_value_text(alternative_id.as_str())?)])?;
         let mut node =
-            tree_item_with_action(builder.item_id("alternative", alternative_id.as_str())?, Label::data(alternative_id.as_str()), Some(format!("{count} {}", labels.checkpoints.as_str())), vcs_action("switchAlternative", Some(action_args))?)?;
+            tree_item_with_action(builder.item_id("alternative", alternative_id.as_str())?, alternative_id.as_str(), Some(format!("{count} {}", labels.checkpoints.as_str())), vcs_action("switchAlternative", Some(action_args))?)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
             props.icon = Some(UiText::try_from_str("git-branch").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "vcs alternative icon admission failed"))?);
         }
         Ok(node)
     }))?;
     builder
-        .section_or_placeholder("vcs-play-document.checkpoints", Some(labels.document.into()), true, checkpoint_items, labels.no_checkpoints)?
-        .section("vcs-play-document.alternatives", Some(labels.alternatives.into()), true, alternative_items)?
+        .section_or_placeholder("vcs-play-document.checkpoints", Some(ui_fixed_label(labels.document)?), true, checkpoint_items, labels.no_checkpoints.as_str())?
+        .section("vcs-play-document.alternatives", Some(ui_fixed_label(labels.alternatives)?), true, alternative_items)?
         .interaction_domain(VCS_INTERACTION_HISTORY)?
         .build()
 }
@@ -82,16 +82,16 @@ mod tests {
     use crate::editor::vcs::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]
-    fn document_lists_checkpoints() {
-        let mut instance = app();
-        let json = render_body(&mut instance, VCS_PLAY_BODY_DOCUMENT);
+    async fn document_lists_checkpoints() {
+        let mut instance = app().await;
+        let json = render_body(&mut instance, VCS_PLAY_BODY_DOCUMENT).await;
         assert!(json.contains("vcs-play-document.checkpoint"));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn vcs_labels_resolve_native_english_by_default() {
-        let mut instance = app();
-        let json = render_body(&mut instance, VCS_PLAY_BODY_DOCUMENT);
+    async fn vcs_labels_resolve_native_english_by_default() {
+        let mut instance = app().await;
+        let json = render_body(&mut instance, VCS_PLAY_BODY_DOCUMENT).await;
         assert!(json.contains("Alternatives"));
         assert!(json.contains("checkpoints"));
     }

@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn op_binary_round_trips_and_agrees_with_text() {
+    async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = crate::artifacts::vcs::mutations::change_counter(7);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");

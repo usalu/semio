@@ -2992,7 +2992,7 @@ export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, s
 
 //#region 🏠️🧳️PluginHostConfig
 /** 🏠️🧳️ Declares, for a plugin whose manifest offers a host-style multi-app experience (one app is the
- * landing/default view, another hosts other apps as spawned sub-instances — e.g. "s"'s home/studio
+ * landing/default view, another hosts other apps as spawned sub-instances — e.g. the `space` plugin's home/studio
  * pair), which app ids play which role. Callers resolve controller ids and default panel tabs from
  * the *loaded manifest*'s own `controllerId`/`panelTabs` on those apps rather than hardcoding separate
  * literals — this table only ever needs to carry app-id role assignments. A pluginFilter absent here

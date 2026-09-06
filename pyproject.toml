@@ -38,6 +38,9 @@ test = [
     "html5lib>=1.1",
     "steputils>=0.1",
     "ifcopenshell==0.8.4.post1",
+    "anastruct>=1.6.1",
+    "scikit-fem>=10.0.2",
+    "PyNiteFEA>=1.1.6",
 ]
 
 # 🧪️ This Pytest configuration is COMPOSE-SCOPED and must stay that way: `testpaths` names only

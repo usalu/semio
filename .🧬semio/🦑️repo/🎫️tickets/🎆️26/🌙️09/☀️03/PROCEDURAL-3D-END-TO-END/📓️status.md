@@ -1130,3 +1130,35 @@ processes, swap clear — the best conditions this ticket has seen.
 
 Descriptor is still `🔣️.json` Sep 4 11:17 / `🛂️.descriptor.semio` Sep 1 11:06, i.e. both still stale;
 nothing has regenerated them yet.
+
+## `describe` failed again at 4h — two causes found, both environmental (22:22)
+
+Second attempt ran the full 4-hour budget (18:22 → 22:22) and still died on
+`spawnSync cargo ETIMEDOUT`. That is not a slow build; it is a build that was never allowed to converge.
+Two independent causes, found by measuring rather than extending the budget again:
+
+**1. A peer wiped the shared target mid-build.** `target/wasm32-wasip2` is now **4.0 K with 0 dep
+artifacts** — it held 169 artifacts and 11 GB when the run started. So the 4 hours was spent repeatedly
+recompiling work that kept being deleted underneath it. This is the known shared-target-wipe hazard;
+extending the budget a third time would have failed the same way.
+
+**2. The `wasm-dev` profile carries debug info.** `Cargo.toml:258-260`:
+
+```toml
+[profile.wasm-dev]
+inherits = "dev"        # dev has debug = true
+codegen-units = 1
+```
+
+`codegen-units = 1` plus full debug info drives stdio's rustc to multi-GB and thrashes — and swap is
+critical again at **66.78 / 67.58 GB used, 800 MB free**.
+
+Relaunched with both addressed:
+- `CARGO_TARGET_DIR=target-gen3d` — this ticket's own dir, which peers do not wipe and which is already
+  warm from the 14:27 green check.
+- `CARGO_PROFILE_WASM_DEV_DEBUG=false` — cuts peak rustc memory by orders of magnitude. Safe for this
+  purpose: the descriptor is derived from the component's exports, not from its debug info.
+
+Note for anyone reading the green check above: that used `--profile debug` in the isolated dir, while
+`describe` uses `--profile wasm-dev`. Different profiles share no artifacts, which is why a green
+`cargo check` did not shorten `describe` at all.

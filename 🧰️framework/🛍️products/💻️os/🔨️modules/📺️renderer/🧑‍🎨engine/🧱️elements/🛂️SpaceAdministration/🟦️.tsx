@@ -237,7 +237,7 @@ export function SpaceAdministrationPane({ spaceId, phase, page, receiptSha256, c
     <section aria-labelledby="os-space-administration-title" data-space-id={spaceId} data-phase={phase} className="flex flex-col gap-4 p-4">
       <header className="flex items-center justify-between gap-2">
         <h2 id="os-space-administration-title" ref={headingRef} tabIndex={-1}>{`${labels.title} — ${spaceId}`}</h2>
-        <Button type="button" variant="outline" aria-label={labels.close} onClick={() => onIntent({ kind: "close" })}>{labels.close}</Button>
+        <Button icon="x" type="button" variant="outline" aria-label={labels.close} onClick={() => onIntent({ kind: "close" })}>{labels.close}</Button>
       </header>
 
       <p role="status" aria-live="polite" data-testid="os-space-administration-status" data-receipt={receiptSha256 ?? ""}>{status}</p>
@@ -264,6 +264,7 @@ export function SpaceAdministrationPane({ spaceId, phase, page, receiptSha256, c
                   <option value="spectator">{labels.spectator}</option>
                 </select>
                 <Button
+                  icon="trash-2"
                   type="button"
                   variant="outline"
                   aria-label={`${labels.remove}: ${row.userId}`}
@@ -276,7 +277,7 @@ export function SpaceAdministrationPane({ spaceId, phase, page, receiptSha256, c
             ))}
           </ul>
           {members.nextCursor === undefined ? null : (
-            <Button type="button" variant="outline" aria-label={`${labels.more}: ${labels.members}`} disabled={!dispatchable} onClick={() => onIntent({ kind: "page", cursor: members.nextCursor as string })}>
+            <Button icon="plus" type="button" variant="outline" aria-label={`${labels.more}: ${labels.members}`} disabled={!dispatchable} onClick={() => onIntent({ kind: "page", cursor: members.nextCursor as string })}>
               {labels.more}
             </Button>
           )}
@@ -291,11 +292,11 @@ export function SpaceAdministrationPane({ spaceId, phase, page, receiptSha256, c
             <option value="author">{labels.author}</option>
             <option value="spectator">{labels.spectator}</option>
           </select>
-          <Button type="button" variant="outline" aria-label={labels.issue} disabled={!capabilities.createInvite || !dispatchable} onClick={() => onIntent({ kind: "create-invite", role: inviteRole })}>
+          <Button icon="plus" type="button" variant="outline" aria-label={labels.issue} disabled={!capabilities.createInvite || !dispatchable} onClick={() => onIntent({ kind: "create-invite", role: inviteRole })}>
             {labels.issue}
           </Button>
           {inviteCapabilityPending === true ? (
-            <Button type="button" variant="outline" aria-label={labels.copy} disabled={inviteCapabilityStatus === "copying"} onClick={() => onIntent({ kind: "copy-invite-capability" })}>
+            <Button icon="link" type="button" variant="outline" aria-label={labels.copy} disabled={inviteCapabilityStatus === "copying"} onClick={() => onIntent({ kind: "copy-invite-capability" })}>
               {labels.copy}
             </Button>
           ) : null}
@@ -304,6 +305,7 @@ export function SpaceAdministrationPane({ spaceId, phase, page, receiptSha256, c
               <li key={row.inviteId} data-invite-id={row.inviteId} className="flex items-center gap-2">
                 <span>{`${row.inviteId} · ${roleLabel(row.role)} · ${row.revoked ? labels.revoked : row.accepted ? labels.accepted : labels.pending}`}</span>
                 <Button
+                  icon="x"
                   type="button"
                   variant="outline"
                   aria-label={`${labels.revoke}: ${row.inviteId}`}
@@ -316,7 +318,7 @@ export function SpaceAdministrationPane({ spaceId, phase, page, receiptSha256, c
             ))}
           </ul>
           {invites.nextCursor === undefined ? null : (
-            <Button type="button" variant="outline" aria-label={`${labels.more}: ${labels.invites}`} disabled={!dispatchable} onClick={() => onIntent({ kind: "page", cursor: invites.nextCursor as string })}>
+            <Button icon="plus" type="button" variant="outline" aria-label={`${labels.more}: ${labels.invites}`} disabled={!dispatchable} onClick={() => onIntent({ kind: "page", cursor: invites.nextCursor as string })}>
               {labels.more}
             </Button>
           )}

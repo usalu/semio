@@ -18,12 +18,18 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json` document shape and each kind's own
   committed `(before, mutation, after)` leaf fixture, and from
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
-  verb table. It imports nothing from the Rust it judges and transliterates none of it. Both
-  implementations now read the SAME committed bytes for those 34 kinds: every `(before, mutation,
-  after)` path is a declared `asset://` fixture rather than an `include_str!`-only literal, so the
-  plan pins its digest and a Python reference can resolve it. `commit-reconstruction` — the 35th kind
-  — and `identity-round-trip` both stay exactly as they were, asserted by the Rust subject alone, for
-  the reasons given below and in the module docstring.
+  verb table. It imports nothing from the Rust it judges and transliterates none of it.
+
+  📍️ WHERE A VECTOR LIVES IS THE FEATURE'S OWN ANSWER, not either implementation's. Each row of the
+  two differential outlines carries a `<vector>` — the `<kind directory>/🧪️tests/<case directory>`
+  pair as it stands ON DISK — and the scenario's doc string turns it into the three `asset://` URIs
+  that address the committed leaf. Both implementations resolve those URIs through the test context
+  at RUN time (`ctx.fixture_json` in Rust, `ctx.fixture_bytes` in Python), so both read the same
+  committed bytes, the plan pins their digests, and neither carries a transcribed copy of a fixture
+  path that can drift away from the directory it names. That drift is not hypothetical: the
+  2026-09-05 repo-wide path-shortening pass renamed every case directory here and left 99
+  compile-time `include_str!` literals and this feature's own Examples columns addressing names that
+  no longer existed. A path that appears exactly once, in the row that owns it, cannot repeat that.
 
   🔑 One real content-address hazard survives, narrowly: `create-asset` mints a NEW
   `assets.<key>.childId` via `std::collections::hash_map::DefaultHasher` — an algorithm the Rust
@@ -46,7 +52,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   `(before, mutation, after)` triple cannot carry. This case exercises it through its own documented
   refusal path instead, using a vector assembled ONCE from committed sibling content and kept in this
   case's own fixtures — local://⬅️commit-reconstruction-before.json is a byte copy of
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🎨️advances-the-job-to-texturing/📸️snapshot/⬅️before/🔣️.json`,
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🎨️advances-the-job-c1e878/📸️snapshot/⬅️before/🔣️.json`,
   local://🦠️commit-reconstruction-mutation.json pairs that leaf's committed `job` payload with
   `⭐replace-sparse`'s committed `sparse` payload (a plain point buffer, deliberately NOT a replayable
   staging handle), and local://➡️commit-reconstruction-after.json is the before-document unchanged,
@@ -54,55 +60,62 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   leave the scene untouched. Note also that `commit-reconstruction`'s own inverse restores only `job`
   and the six result slots — never `assets` or `durable_artifacts` — so the inverse law holds for this
   refusal vector and would NOT hold for a commit that published new assets; that is a real weakness of
-  the kind, recorded here rather than hidden by the vector that dodges it. Because this scenario
-  outline is not converted, the runner executes NO oracle role for it, and every assertion lives in
-  the subject handler, exactly as before.
+  the kind, recorded here rather than hidden by the vector that dodges it. Because this kind's two
+  scenarios carry no `<vector>` row, the runner executes NO oracle role for them, every assertion
+  lives in the subject handler, and the three `local://` fixtures above are the only committed bytes
+  either half reads by a name this feature does not carry.
 
   @id-mutate
   @level-exhaustive
   @mode-differential
   Scenario Outline: Applying <id> reaches its committed after-document
-    Given the committed before-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed specification vector for the <id> kind
+      """
+      {
+        "kind": "<id>",
+        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+      }
+      """
     When <id> is applied through apply_remodeling_mutation_json
     Then the resulting document is the committed after-document, the mutation moved it, and the two implementations agree
     Examples:
-      | id                        | dir                         | fixture                                                     |
-      | create-stream             | 🌱create-stream              | 🎥️adds-stream-c-bound-to-cam-b                                |
-      | delete-stream             | 🪓delete-stream              | 🚫️removes-stream-b-and-cascades-its-gcp-observation           |
-      | change-stream-sync        | ⏱️change-stream-sync        | ⏱️shifts-stream-a-sync-offset-to-minus-seven-and-a-half       |
-      | add-stream-frame          | ➕add-stream-frame           | 🎞️appends-a-third-frame-to-stream-a                           |
-      | remove-stream-frame       | ➖remove-stream-frame        | 🚫️removes-the-last-frame-of-stream-a                          |
-      | replace-stream-source     | 🔁replace-stream-source      | 🧹️clears-the-video-source-of-stream-a                         |
-      | create-asset              | 🧷create-asset               | 🖼️stores-a-new-jpeg-frame-asset                               |
-      | delete-asset              | 🗞️delete-asset              | 🗑️removes-asset-a-and-reports-its-stale-references            |
-      | create-camera-calibration | 🔭create-camera-calibration  | 📷️adds-the-cam-c-fisheye-calibration                          |
-      | update-camera-calibration | 🛠️update-camera-calibration | 🔍️refines-the-cam-a-focal-length-and-rms                      |
-      | delete-camera-calibration | 🚫delete-camera-calibration  | 🚫️removes-the-cam-b-calibration                               |
-      | create-rig-extrinsic      | ⛓️create-rig-extrinsic      | 🔗️adds-a-rig-extrinsic-for-cam-b                              |
-      | delete-rig-extrinsic      | ✂️delete-rig-extrinsic      | ✂️drops-the-cam-a-rig-extrinsic                               |
-      | update-rig-extrinsic      | 🔩update-rig-extrinsic       | 📍️retunes-the-cam-a-rig-translation                           |
-      | create-gcp                | 🧿create-gcp                 | 📍️adds-gcp-tower-with-one-observation                         |
-      | delete-gcp                | 🚮delete-gcp                 | 🚫️removes-gcp-corner-and-cascades-its-observation             |
-      | add-gcp-observation       | 🔎add-gcp-observation        | 🔎️adds-the-first-observation-to-gcp-ridge                     |
-      | remove-gcp-observation    | 🚷remove-gcp-observation     | 🚫️removes-the-only-observation-of-gcp-corner                  |
-      | update-ingest-params      | 🥣update-ingest-params       | 🔍️tightens-the-ingest-sharpness-gate                          |
-      | update-feature-params     | 🌠update-feature-params      | 🔎️switches-the-detector-to-akaze                              |
-      | update-match-params       | 🪢update-match-params        | 🌳️switches-the-matcher-to-a-kd-tree                           |
-      | update-sfm-params         | 🧮update-sfm-params          | 🎯️switches-the-robust-loss-to-cauchy                          |
-      | update-dense-params       | 🌁update-dense-params        | 🔬️raises-the-dense-resolution-and-confidence-gate             |
-      | update-mesh-params        | 🕸️update-mesh-params        | 🔳️doubles-the-texture-size-and-drops-the-watertight-guarantee |
-      | update-motion-params      | 🏎️update-motion-params      | 🏃️enables-motion-tracking                                     |
-      | update-geo-params         | 🌐update-geo-params          | 🌐️enables-georeferencing-with-an-origin                       |
-      | replace-job               | 🏗️replace-job               | 🎨️advances-the-job-to-texturing                               |
-      | replace-sparse            | ⭐replace-sparse             | ✨️swaps-in-an-uncolored-four-point-sparse-cloud               |
-      | replace-dense             | ☁️replace-dense             | ☁️swaps-in-a-two-point-classified-dense-cloud                 |
-      | replace-mesh-result       | 🧱replace-mesh-result        | 🕸️swaps-in-an-imported-untextured-mesh                        |
-      | replace-trajectory        | 🛣️replace-trajectory        | 🧹️clears-the-camera-trajectory                                |
-      | replace-tracks            | 🚂replace-tracks             | ⏸️replaces-the-moving-track-with-two-static-tracks            |
-      | replace-geo-products      | 🗾replace-geo-products       | 🗺️adds-the-dtm-and-ortho-rasters                              |
-      | replace-qc                | 🧾replace-qc                 | 📋️records-a-qc-report-carrying-a-watertight-summary           |
+      | id                        | vector                                                       |
+      | create-stream             | 🌱create-stream/🧪️tests/🎥️adds-stream-c-458900                |
+      | delete-stream             | 🪓delete-stream/🧪️tests/🚫️removes-stream-b-0f62a7             |
+      | change-stream-sync        | ⏱️change-stream-sync/🧪️tests/t038                            |
+      | add-stream-frame          | ➕add-stream-frame/🧪️tests/🎞️appends-a-third-8ac259           |
+      | remove-stream-frame       | ➖remove-stream-frame/🧪️tests/🚫️removes-the-last-304bdf       |
+      | replace-stream-source     | 🔁replace-stream-source/🧪️tests/🧹️clears-the-video-143f2b     |
+      | create-asset              | 🧷create-asset/🧪️tests/🖼️stores-a-new-d56283                  |
+      | delete-asset              | 🗞️delete-asset/🧪️tests/🗑️removes-asset-a-170889              |
+      | create-camera-calibration | 🔭create-camera-calibration/🧪️tests/📷️adds-the-cam-c-82c8fb   |
+      | update-camera-calibration | 🛠️update-camera-calibration/🧪️tests/🔍️refines-the-cam-0eaef0 |
+      | delete-camera-calibration | 🚫delete-camera-calibration/🧪️tests/🚫️removes-the-cam-f90b89  |
+      | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🧪️tests/🔗️adds-a-rig-2df5df           |
+      | delete-rig-extrinsic      | ✂️delete-rig-extrinsic/🧪️tests/✂️drops-the-cam-a-a1f8a2      |
+      | update-rig-extrinsic      | 🔩update-rig-extrinsic/🧪️tests/📍️retunes-the-cam-4ca5a2       |
+      | create-gcp                | 🧿create-gcp/🧪️tests/📍️adds-gcp-tower-d71a54                  |
+      | delete-gcp                | 🚮delete-gcp/🧪️tests/🚫️removes-gcp-209b7d                     |
+      | add-gcp-observation       | 🔎add-gcp-observation/🧪️tests/🔎️adds-the-first-05b1b5         |
+      | remove-gcp-observation    | 🚷remove-gcp-observation/🧪️tests/🚫️removes-the-only-f82e64    |
+      | update-ingest-params      | 🥣update-ingest-params/🧪️tests/🔍️tightens-the-499c47          |
+      | update-feature-params     | 🌠update-feature-params/🧪️tests/🔎️switches-the-423de9         |
+      | update-match-params       | 🪢update-match-params/🧪️tests/🌳️switches-the-652d03           |
+      | update-sfm-params         | 🧮update-sfm-params/🧪️tests/🎯️switches-the-7f0371             |
+      | update-dense-params       | 🌁update-dense-params/🧪️tests/🔬️raises-the-dense-ddb263       |
+      | update-mesh-params        | 🕸️update-mesh-params/🧪️tests/t039                            |
+      | update-motion-params      | 🏎️update-motion-params/🧪️tests/🏃️enables-motion-2444a3       |
+      | update-geo-params         | 🌐update-geo-params/🧪️tests/🌐️enables-georefere-18a68a        |
+      | replace-job               | 🏗️replace-job/🧪️tests/🎨️advances-the-job-c1e878              |
+      | replace-sparse            | ⭐replace-sparse/🧪️tests/✨️swaps-in-an-6d9ae4                 |
+      | replace-dense             | ☁️replace-dense/🧪️tests/☁️swaps-in-a-two-c688db              |
+      | replace-mesh-result       | 🧱replace-mesh-result/🧪️tests/🕸️swaps-in-an-f23e71            |
+      | replace-trajectory        | 🛣️replace-trajectory/🧪️tests/🧹️clears-the-d2f81a             |
+      | replace-tracks            | 🚂replace-tracks/🧪️tests/⏸️replaces-the-d40c68                |
+      | replace-geo-products      | 🗾replace-geo-products/🧪️tests/🗺️adds-the-dtm-and-64d5bb      |
+      | replace-qc                | 🧾replace-qc/🧪️tests/📋️records-a-qc-f5caf4                    |
 
   @id-mutate
   @level-exhaustive
@@ -119,50 +132,57 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-document
-    Given the committed before-document asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    Given the committed specification vector for the <id> kind
+      """
+      {
+        "kind": "<id>",
+        "before": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "asset://🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "after": "asset://🧬️schema/🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+      }
+      """
     When <id> and then every step of its own computed inverse are applied through undo_remodeling_mutation_json
     Then the document is the committed before-document again, member positions included, and the two implementations agree
     Examples:
-      | id                        | dir                         | fixture                                                     |
-      | create-stream             | 🌱create-stream              | 🎥️adds-stream-c-bound-to-cam-b                                |
-      | delete-stream             | 🪓delete-stream              | 🚫️removes-stream-b-and-cascades-its-gcp-observation           |
-      | change-stream-sync        | ⏱️change-stream-sync        | ⏱️shifts-stream-a-sync-offset-to-minus-seven-and-a-half       |
-      | add-stream-frame          | ➕add-stream-frame           | 🎞️appends-a-third-frame-to-stream-a                           |
-      | remove-stream-frame       | ➖remove-stream-frame        | 🚫️removes-the-last-frame-of-stream-a                          |
-      | replace-stream-source     | 🔁replace-stream-source      | 🧹️clears-the-video-source-of-stream-a                         |
-      | create-asset              | 🧷create-asset               | 🖼️stores-a-new-jpeg-frame-asset                               |
-      | delete-asset              | 🗞️delete-asset              | 🗑️removes-asset-a-and-reports-its-stale-references            |
-      | create-camera-calibration | 🔭create-camera-calibration  | 📷️adds-the-cam-c-fisheye-calibration                          |
-      | update-camera-calibration | 🛠️update-camera-calibration | 🔍️refines-the-cam-a-focal-length-and-rms                      |
-      | delete-camera-calibration | 🚫delete-camera-calibration  | 🚫️removes-the-cam-b-calibration                               |
-      | create-rig-extrinsic      | ⛓️create-rig-extrinsic      | 🔗️adds-a-rig-extrinsic-for-cam-b                              |
-      | delete-rig-extrinsic      | ✂️delete-rig-extrinsic      | ✂️drops-the-cam-a-rig-extrinsic                               |
-      | update-rig-extrinsic      | 🔩update-rig-extrinsic       | 📍️retunes-the-cam-a-rig-translation                           |
-      | create-gcp                | 🧿create-gcp                 | 📍️adds-gcp-tower-with-one-observation                         |
-      | delete-gcp                | 🚮delete-gcp                 | 🚫️removes-gcp-corner-and-cascades-its-observation             |
-      | add-gcp-observation       | 🔎add-gcp-observation        | 🔎️adds-the-first-observation-to-gcp-ridge                     |
-      | remove-gcp-observation    | 🚷remove-gcp-observation     | 🚫️removes-the-only-observation-of-gcp-corner                  |
-      | update-ingest-params      | 🥣update-ingest-params       | 🔍️tightens-the-ingest-sharpness-gate                          |
-      | update-feature-params     | 🌠update-feature-params      | 🔎️switches-the-detector-to-akaze                              |
-      | update-match-params       | 🪢update-match-params        | 🌳️switches-the-matcher-to-a-kd-tree                           |
-      | update-sfm-params         | 🧮update-sfm-params          | 🎯️switches-the-robust-loss-to-cauchy                          |
-      | update-dense-params       | 🌁update-dense-params        | 🔬️raises-the-dense-resolution-and-confidence-gate             |
-      | update-mesh-params        | 🕸️update-mesh-params        | 🔳️doubles-the-texture-size-and-drops-the-watertight-guarantee |
-      | update-motion-params      | 🏎️update-motion-params      | 🏃️enables-motion-tracking                                     |
-      | update-geo-params         | 🌐update-geo-params          | 🌐️enables-georeferencing-with-an-origin                       |
-      | replace-job               | 🏗️replace-job               | 🎨️advances-the-job-to-texturing                               |
-      | replace-sparse            | ⭐replace-sparse             | ✨️swaps-in-an-uncolored-four-point-sparse-cloud               |
-      | replace-dense             | ☁️replace-dense             | ☁️swaps-in-a-two-point-classified-dense-cloud                 |
-      | replace-mesh-result       | 🧱replace-mesh-result        | 🕸️swaps-in-an-imported-untextured-mesh                        |
-      | replace-trajectory        | 🛣️replace-trajectory        | 🧹️clears-the-camera-trajectory                                |
-      | replace-tracks            | 🚂replace-tracks             | ⏸️replaces-the-moving-track-with-two-static-tracks            |
-      | replace-geo-products      | 🗾replace-geo-products       | 🗺️adds-the-dtm-and-ortho-rasters                              |
-      | replace-qc                | 🧾replace-qc                 | 📋️records-a-qc-report-carrying-a-watertight-summary           |
+      | id                        | vector                                                       |
+      | create-stream             | 🌱create-stream/🧪️tests/🎥️adds-stream-c-458900                |
+      | delete-stream             | 🪓delete-stream/🧪️tests/🚫️removes-stream-b-0f62a7             |
+      | change-stream-sync        | ⏱️change-stream-sync/🧪️tests/t038                            |
+      | add-stream-frame          | ➕add-stream-frame/🧪️tests/🎞️appends-a-third-8ac259           |
+      | remove-stream-frame       | ➖remove-stream-frame/🧪️tests/🚫️removes-the-last-304bdf       |
+      | replace-stream-source     | 🔁replace-stream-source/🧪️tests/🧹️clears-the-video-143f2b     |
+      | create-asset              | 🧷create-asset/🧪️tests/🖼️stores-a-new-d56283                  |
+      | delete-asset              | 🗞️delete-asset/🧪️tests/🗑️removes-asset-a-170889              |
+      | create-camera-calibration | 🔭create-camera-calibration/🧪️tests/📷️adds-the-cam-c-82c8fb   |
+      | update-camera-calibration | 🛠️update-camera-calibration/🧪️tests/🔍️refines-the-cam-0eaef0 |
+      | delete-camera-calibration | 🚫delete-camera-calibration/🧪️tests/🚫️removes-the-cam-f90b89  |
+      | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🧪️tests/🔗️adds-a-rig-2df5df           |
+      | delete-rig-extrinsic      | ✂️delete-rig-extrinsic/🧪️tests/✂️drops-the-cam-a-a1f8a2      |
+      | update-rig-extrinsic      | 🔩update-rig-extrinsic/🧪️tests/📍️retunes-the-cam-4ca5a2       |
+      | create-gcp                | 🧿create-gcp/🧪️tests/📍️adds-gcp-tower-d71a54                  |
+      | delete-gcp                | 🚮delete-gcp/🧪️tests/🚫️removes-gcp-209b7d                     |
+      | add-gcp-observation       | 🔎add-gcp-observation/🧪️tests/🔎️adds-the-first-05b1b5         |
+      | remove-gcp-observation    | 🚷remove-gcp-observation/🧪️tests/🚫️removes-the-only-f82e64    |
+      | update-ingest-params      | 🥣update-ingest-params/🧪️tests/🔍️tightens-the-499c47          |
+      | update-feature-params     | 🌠update-feature-params/🧪️tests/🔎️switches-the-423de9         |
+      | update-match-params       | 🪢update-match-params/🧪️tests/🌳️switches-the-652d03           |
+      | update-sfm-params         | 🧮update-sfm-params/🧪️tests/🎯️switches-the-7f0371             |
+      | update-dense-params       | 🌁update-dense-params/🧪️tests/🔬️raises-the-dense-ddb263       |
+      | update-mesh-params        | 🕸️update-mesh-params/🧪️tests/t039                            |
+      | update-motion-params      | 🏎️update-motion-params/🧪️tests/🏃️enables-motion-2444a3       |
+      | update-geo-params         | 🌐update-geo-params/🧪️tests/🌐️enables-georefere-18a68a        |
+      | replace-job               | 🏗️replace-job/🧪️tests/🎨️advances-the-job-c1e878              |
+      | replace-sparse            | ⭐replace-sparse/🧪️tests/✨️swaps-in-an-6d9ae4                 |
+      | replace-dense             | ☁️replace-dense/🧪️tests/☁️swaps-in-a-two-c688db              |
+      | replace-mesh-result       | 🧱replace-mesh-result/🧪️tests/🕸️swaps-in-an-f23e71            |
+      | replace-trajectory        | 🛣️replace-trajectory/🧪️tests/🧹️clears-the-d2f81a             |
+      | replace-tracks            | 🚂replace-tracks/🧪️tests/⏸️replaces-the-d40c68                |
+      | replace-geo-products      | 🗾replace-geo-products/🧪️tests/🗺️adds-the-dtm-and-64d5bb      |
+      | replace-qc                | 🧾replace-qc/🧪️tests/📋️records-a-qc-f5caf4                    |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-document (subject-only)
     Given the committed before-document and mutation payload of the <id> specification vector
     When <id> and then every step of its own computed inverse are applied through undo_remodeling_mutation_json

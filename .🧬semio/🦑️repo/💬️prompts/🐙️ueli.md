@@ -579,8 +579,8 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 ---
 
 Every test must follow the convention `<parent>/🧪️tests/<test-name>/<implementation>` 
-Get rid of all legacy 
-e.g.
+Get rid of all legacy (such as *.test.* pattern etc)
+e.g. violations
 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏛️space-administration.test.tsx
 etc
 

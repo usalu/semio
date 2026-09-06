@@ -52,7 +52,7 @@ mod tests {
     use crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA;
 
     #[semio_framework_async_macros::async_test]
-    fn vcs_demo_projection_dsl_pack_equivalence() {
+    async fn vcs_demo_projection_dsl_pack_equivalence() {
         let projection = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&projection);
         let bytes = encode(&projection);
@@ -65,7 +65,7 @@ mod tests {
     /// existing pack round-trip law (same pattern as `mathematical`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[semio_framework_async_macros::async_test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 

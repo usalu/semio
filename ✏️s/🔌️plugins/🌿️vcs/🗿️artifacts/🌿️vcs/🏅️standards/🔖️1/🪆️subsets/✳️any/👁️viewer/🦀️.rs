@@ -7,7 +7,7 @@
 use crate::artifacts::vcs::{VcsSnapshot, VCS_DIALECT, VCS_DOCUMENT_SCHEMA};
 use crate::viewer::vcs::modes::view;
 use crate::viewer::vcs::modes::view::windows::history;
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactView, ComponentTree, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult};
 // 🚧️ SDK GAP: `InteractionView` is only reachable through `app`, not yet in the crate-root
 // re-export list (same gap the sibling editor surface's own note documents).
 use semio_framework_plugin::app::InteractionView;
@@ -69,10 +69,10 @@ impl ArtifactViewer for VcsViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            history::BODY_KEY => history::render(doc.history),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            history::BODY_KEY => history::render(doc.history).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -90,14 +90,14 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn create_vcs_viewer_builds_a_definition_for_the_viewer_role() {
+    async fn create_vcs_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_vcs_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, VCS_DIALECT.into());
     }
 
     #[semio_framework_async_macros::async_test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<VcsViewer as ArtifactViewer>::DIALECT, VCS_DIALECT);
     }
 }

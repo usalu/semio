@@ -9,6 +9,22 @@
     "family:os-kernel"
   ],
   "targets": {
+    "database-shutdown-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts database-shutdown-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "database-shutdown-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts database-shutdown-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "document-mount-single-flight-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts document-mount-single-flight-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "document-mount-single-flight-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts document-mount-single-flight-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
     "durable-owned-group-decision-check": {
       "executor": "nx:run-commands", "cache": false,
       "options": { "command": "bun ./📜️script.ts durable-owned-group-decision-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
@@ -16,6 +32,14 @@
     "durable-owned-group-decision-native-check": {
       "executor": "nx:run-commands", "cache": false,
       "options": { "command": "bun ./📜️script.ts durable-owned-group-decision-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "durable-group-journal-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts durable-group-journal-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "durable-group-journal-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts durable-group-journal-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
     },
     "wal-committed-compaction-check": {
       "executor": "nx:run-commands", "cache": false,

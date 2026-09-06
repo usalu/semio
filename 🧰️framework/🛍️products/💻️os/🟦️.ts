@@ -1098,9 +1098,12 @@ const JSON_BRIDGE_FIELD_ID = 1;
 
 /** 🌱️ `pack_value`'s wire tags actually reachable from a `DslValue` (`encode_dsl_value`/
  * `decode_dsl_value`, `pack/value/rs/lib.rs`'s `🔖️Tags` region) — the subset `PackValueCodec`
- * needs (no `Int`/`UInt`/`Bytes64`/`Enum`/... — a JSON value never produces those). */
+ * needs (no `Bytes64`/`Enum`/... — a dynamic value never produces those). `TAG_INT`/`TAG_UINT`
+ * carry a whole 64-bit integer exactly; a JS `number` can only ever be `TAG_F64`. */
 const PACK_TAG_FALSE = 0x01;
 const PACK_TAG_TRUE = 0x02;
+const PACK_TAG_INT = 0x03;
+const PACK_TAG_UINT = 0x04;
 const PACK_TAG_F64 = 0x05;
 const PACK_TAG_STR = 0x06;
 const PACK_TAG_STR_INLINE = 0x07;
@@ -1129,6 +1132,102 @@ function packByteCompare(a: string, b: string): number {
 }
 //#endregion 🔖️PackContainerPrimitives
 
+//#region 🔖️PackInteger
+/** 🔢️ A whole 64-bit dynamic integer, carrying the writer's `int`/`uint` form as well as its
+ * magnitude. A bare `bigint` would lose the form — Rust `Int(7)` and `UInt(7)` are equal under
+ * `Number::PartialEq` yet emit different tags and therefore different canonical bytes and hashes —
+ * and a JS `number` would lose magnitude past 2^53. Construct one only through {@link packInt} or
+ * {@link packUInt}: the codec accepts nothing else as an integer. */
+export type PackInteger = Readonly<{ readonly kind: "int" | "uint"; readonly value: bigint }>;
+
+/** 🌱️ Everything the dynamic pack grammar can carry. `number` is always `TAG_F64`; an exact
+ * integer is always a {@link PackInteger}. */
+export type PackValue = null | boolean | number | string | PackInteger | readonly PackValue[] | Readonly<Record<string, PackValue>>;
+
+const PACK_U64_MAX = (1n << 64n) - 1n;
+const PACK_I64_MIN = -(1n << 63n);
+const PACK_I64_MAX = (1n << 63n) - 1n;
+/** 🔒️ Module-private mint. Membership, not shape, is what makes a carrier an integer — an
+ * ordinary dynamic map `{ kind, value }` is otherwise indistinguishable from one. */
+const packIntegerMint = new WeakSet<object>();
+
+function packMintInteger(kind: "int" | "uint", value: bigint): PackInteger {
+  const carrier = Object.freeze({ kind, value });
+  packIntegerMint.add(carrier);
+  return carrier;
+}
+
+/** @emoji 🔢️ Mints a signed 64-bit dynamic integer (`-2^63 <= value <= 2^63-1`). */
+export function packInt(value: bigint): PackInteger {
+  if (typeof value !== "bigint" || value < PACK_I64_MIN || value > PACK_I64_MAX) throw new Error(`packInt: ${String(value)} is outside the exact i64 range`);
+  return packMintInteger("int", value);
+}
+
+/** @emoji 🔢️ Mints an unsigned 64-bit dynamic integer (`0 <= value <= 2^64-1`). */
+export function packUInt(value: bigint): PackInteger {
+  if (typeof value !== "bigint" || value < 0n || value > PACK_U64_MAX) throw new Error(`packUInt: ${String(value)} is outside the exact u64 range`);
+  return packMintInteger("uint", value);
+}
+
+/** @emoji 🔎️ True only for a carrier this module minted — never for a look-alike literal. */
+export function isPackInteger(value: unknown): value is PackInteger {
+  return typeof value === "object" && value !== null && packIntegerMint.has(value);
+}
+
+/** @emoji 🧬️ Structural-clone replacement. The mint is a `WeakSet`, so a raw `structuredClone`
+ * silently degrades every integer carrier into an ambiguous `{ kind, value }` map; this rebuilds
+ * them, and rejects the look-alikes a clone would have produced. */
+export function clonePackValue(value: PackValue): PackValue {
+  if (isPackInteger(value)) return value.kind === "uint" ? packUInt(value.value) : packInt(value.value);
+  if (Array.isArray(value)) return (value as readonly PackValue[]).map(clonePackValue);
+  if (value !== null && typeof value === "object") {
+    packRejectIntegerLookAlike(value);
+    return Object.fromEntries(Object.entries(value as Record<string, PackValue>).map(([key, entry]) => [key, clonePackValue(entry)]));
+  }
+  if (typeof value === "bigint") throw new Error("clonePackValue: a bare bigint is not a PackValue — mint it with packInt/packUInt");
+  return value;
+}
+
+function packRejectIntegerLookAlike(value: object): void {
+  if (typeof (value as { value?: unknown }).value === "bigint") throw new Error("PackValue: an unminted { value: bigint } object is ambiguous — mint it with packInt/packUInt or remove the bigint");
+}
+
+/** ✍️ Canonical unsigned LEB128 over the whole `u64` range — Pack-local on purpose, because
+ * `writeVarintU64` computes in `number` for bounded framing/counts and cannot reach 2^64. */
+function packWriteVarintBigInt(out: number[], value: bigint): void {
+  let remaining = value;
+  for (;;) {
+    const byte = Number(remaining & 0x7fn);
+    remaining >>= 7n;
+    if (remaining === 0n) {
+      out.push(byte);
+      return;
+    }
+    out.push(byte | 0x80);
+  }
+}
+
+/** 📖️ Inverse of {@link packWriteVarintBigInt} with `codec::read_varint_u64`'s exact ten-byte
+ * overflow rule: the tenth byte may not continue and may not carry a payload above 1. */
+function packReadVarintBigInt(bytes: Uint8Array, pos: [number]): bigint {
+  let result = 0n;
+  for (let index = 0; index < 10; index++) {
+    const byte = bytes[pos[0]];
+    if (byte === undefined) throw new Error("decodePackValue: truncated integer varint");
+    pos[0] += 1;
+    const payload = byte & 0x7f;
+    const more = (byte & 0x80) !== 0;
+    if (index === 9 && (more || payload > 1)) throw new Error("decodePackValue: overlong integer varint (exceeds 10 bytes / 64 bits)");
+    result |= BigInt(payload) << BigInt(index * 7);
+    if (!more) return result;
+  }
+  throw new Error("decodePackValue: overlong integer varint (exceeds 10 bytes)");
+}
+
+const packZigzagEncode = (value: bigint): bigint => (value < 0n ? (-value << 1n) - 1n : value << 1n);
+const packZigzagDecode = (raw: bigint): bigint => (raw >> 1n) ^ -(raw & 1n);
+//#endregion 🔖️PackInteger
+
 //#region 🔖️JsonValueTags
 /** 🔎️ `pack_value::build_symbols`, specialized to a JSON-bridge document (one `Shape::Value`
  * field — no `TableSoA`/`Statements` forced-symbol cases apply). Walks `value` counting only
@@ -1136,20 +1235,21 @@ function packByteCompare(a: string, b: string): number {
  * `DslValue::Object` case only walks entry VALUES); a string is interned (added to the symbol
  * table) iff its UTF-8 byte length is `<= 128` or it occurs `>= 2` times, matching `pack_value`'s
  * rule exactly (note: `.len()` on the Rust side is UTF-8 BYTE length, not char count). */
-function packCollectStrings(value: unknown, counts: Map<string, number>): void {
+function packCollectStrings(value: PackValue, counts: Map<string, number>): void {
   if (typeof value === "string") {
     counts.set(value, (counts.get(value) ?? 0) + 1);
     return;
   }
+  if (isPackInteger(value)) return;
   if (Array.isArray(value)) {
-    for (const item of value) packCollectStrings(item, counts);
+    for (const item of value as readonly PackValue[]) packCollectStrings(item, counts);
     return;
   }
   if (value !== null && typeof value === "object") {
-    for (const item of Object.values(value as Record<string, unknown>)) packCollectStrings(item, counts);
+    for (const item of Object.values(value as Record<string, PackValue>)) packCollectStrings(item, counts);
   }
 }
-function packBuildSymbols(value: unknown): string[] {
+function packBuildSymbols(value: PackValue): string[] {
   const counts = new Map<string, number>();
   packCollectStrings(value, counts);
   const encoder = new TextEncoder();
@@ -1197,15 +1297,13 @@ function packDecodeString(bytes: Uint8Array, symbols: readonly string[], pos: [n
   throw new Error(`decodePackValue: expected a string tag, found 0x${tag.toString(16)}`);
 }
 
-/** ✍️ `pack_value::encode_dsl_value` — the tag-prefixed encoding one JSON value recurses through.
- * `Number` always writes `TAG_F64` (`DslValue::Number` is always `f64`; `pack_rt`'s
- * `renormalize_whole_number_floats` is a SEPARATE opt-in helper for typed-struct consumers, never
- * called by `encode_json_value`/`decode_json_value`/`encode_wire_value`/`decode_wire_value`
- * themselves — verified empirically against real fixture bytes, see this region's header doc).
- * `-0` normalizes to `0` (byte-level parity
- * with Rust's `normalize_f64`; unobservable via `===` in JS either way). Object entries sort by
- * key BYTES with keys always forced inline, never a symref. */
-function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number>, out: number[]): void {
+/** ✍️ `pack_value::encode_dsl_value` — the tag-prefixed encoding one dynamic value recurses
+ * through. A JS `number` is `TAG_F64` because that is exactly what it is; an exact 64-bit integer
+ * arrives as a {@link PackInteger} and writes `TAG_UINT`/`TAG_INT` plus a canonical
+ * unsigned/zig-zag LEB128. `-0` keeps its sign bit, byte-for-byte with Rust's `normalize_f64`
+ * (which only folds `NaN`). Object entries sort by key BYTES with keys always forced inline,
+ * never a symref. */
+function packEncodeValue(value: PackValue, symbolIndex: ReadonlyMap<string, number>, out: number[]): void {
   if (value === null || value === undefined) {
     out.push(PACK_TAG_NULL);
     return;
@@ -1214,9 +1312,14 @@ function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number
     out.push(value ? PACK_TAG_TRUE : PACK_TAG_FALSE);
     return;
   }
+  if (isPackInteger(value)) {
+    out.push(value.kind === "uint" ? PACK_TAG_UINT : PACK_TAG_INT);
+    packWriteVarintBigInt(out, value.kind === "uint" ? value.value : packZigzagEncode(value.value));
+    return;
+  }
   if (typeof value === "number") {
     out.push(PACK_TAG_F64);
-    writeF64(out, value === 0 ? 0 : value);
+    writeF64(out, value);
     return;
   }
   if (typeof value === "string") {
@@ -1226,12 +1329,13 @@ function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number
   if (Array.isArray(value)) {
     out.push(PACK_TAG_LIST);
     writeVarintU64(out, value.length);
-    for (const item of value) packEncodeValue(item, symbolIndex, out);
+    for (const item of value as readonly PackValue[]) packEncodeValue(item, symbolIndex, out);
     return;
   }
   if (typeof value === "object") {
+    packRejectIntegerLookAlike(value);
     out.push(PACK_TAG_MAP);
-    const entries = Object.entries(value as Record<string, unknown>).sort((a, b) => packByteCompare(a[0], b[0]));
+    const entries = Object.entries(value as Record<string, PackValue>).sort((a, b) => packByteCompare(a[0], b[0]));
     writeVarintU64(out, entries.length);
     for (const [key, entryValue] of entries) {
       packEncodeStringInline(key, out);
@@ -1239,10 +1343,10 @@ function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number
     }
     return;
   }
-  throw new Error(`encodePackValue: unsupported JSON value of type ${typeof value}`);
+  throw new Error(`encodePackValue: unsupported dynamic value of type ${typeof value}`);
 }
 /** 📖️ Inverse of {@link packEncodeValue} — the TS twin of `pack_value::decode_dsl_value`. */
-function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [number]): unknown {
+function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [number]): PackValue {
   const tag = bytes[pos[0]]!;
   pos[0] += 1;
   switch (tag) {
@@ -1252,6 +1356,10 @@ function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [nu
       return false;
     case PACK_TAG_TRUE:
       return true;
+    case PACK_TAG_UINT:
+      return packUInt(packReadVarintBigInt(bytes, pos));
+    case PACK_TAG_INT:
+      return packInt(packZigzagDecode(packReadVarintBigInt(bytes, pos)));
     case PACK_TAG_F64:
       return readF64(bytes, pos);
     case PACK_TAG_STR: {
@@ -1268,13 +1376,13 @@ function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [nu
     }
     case PACK_TAG_LIST: {
       const count = readVarintU64(bytes, pos);
-      const items: unknown[] = [];
+      const items: PackValue[] = [];
       for (let i = 0; i < count; i++) items.push(packDecodeValue(bytes, symbols, pos));
       return items;
     }
     case PACK_TAG_MAP: {
       const count = readVarintU64(bytes, pos);
-      const entries: Record<string, unknown> = {};
+      const entries: Record<string, PackValue> = {};
       for (let i = 0; i < count; i++) {
         const key = packDecodeString(bytes, symbols, pos);
         entries[key] = packDecodeValue(bytes, symbols, pos);
@@ -1296,7 +1404,7 @@ function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [nu
  * segments, manifest, or footer — byte-exact against real Rust output (verified against the
  * `pack_wire_value_fixture_corpus_hex_dump` fixture corpus, `store/rs/lib.rs`'s
  * `🔖️PackValueFixtures` region). */
-export function encodePackValue(value: unknown): Uint8Array {
+export function encodePackValue(value: PackValue): Uint8Array {
   const symbols = packBuildSymbols(value);
   const symbolIndex = new Map(symbols.map((symbol, index) => [symbol, index] as const));
   const encoder = new TextEncoder();
@@ -1316,7 +1424,7 @@ export function encodePackValue(value: unknown): Uint8Array {
 }
 
 /** 📥️ TS twin of `store::pack_rt::decode_wire_value` — the inverse of {@link encodePackValue}. */
-export function decodePackValue(bytes: Uint8Array): unknown {
+export function decodePackValue(bytes: Uint8Array): PackValue {
   const pos: [number] = [0];
   const decoder = new TextDecoder();
   const symbolCount = readVarintU64(bytes, pos);
@@ -1328,7 +1436,7 @@ export function decodePackValue(bytes: Uint8Array): unknown {
   }
 
   const fieldCount = readVarintU64(bytes, pos);
-  let result: unknown = null;
+  let result: PackValue = null;
   for (let i = 0; i < fieldCount; i++) {
     const fieldId = readVarintU64(bytes, pos);
     const outerTag = bytes[pos[0]]!;
@@ -1343,7 +1451,7 @@ export function decodePackValue(bytes: Uint8Array): unknown {
 const PACK_B64_PREFIX = "pk:";
 
 /** @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string for `sessionStorage`/`ViewModel` string slots. */
-export function packValueToBase64(value: unknown): string {
+export function packValueToBase64(value: PackValue): string {
   const bytes = encodePackValue(value);
   let binary = "";
   for (let index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index]!);
@@ -1351,7 +1459,7 @@ export function packValueToBase64(value: unknown): string {
 }
 
 /** @emoji 📥️ Inverse of {@link packValueToBase64}. */
-export function packValueFromBase64(encoded: string): unknown {
+export function packValueFromBase64(encoded: string): PackValue {
   if (!encoded.startsWith(PACK_B64_PREFIX)) throw new Error("packValueFromBase64: expected pk: prefix");
   const binary = atob(encoded.slice(PACK_B64_PREFIX.length));
   const bytes = new Uint8Array(binary.length);
@@ -1360,7 +1468,7 @@ export function packValueFromBase64(encoded: string): unknown {
 }
 
 /** @emoji 🎯️ Plugin `handleAction` wire: pack-base64 `{ controllerId, action, args? }`. */
-export type ActionWire = { readonly controllerId: string; readonly action: string; readonly args?: unknown };
+export type ActionWire = { readonly controllerId: string; readonly action: string; readonly args?: PackValue };
 
 export function encodeActionWire(descriptor: ActionWire): string {
   return packValueToBase64(descriptor);
@@ -1368,11 +1476,15 @@ export function encodeActionWire(descriptor: ActionWire): string {
 
 /** @emoji 📥️ Inverse of {@link encodeActionWire}. */
 export function decodeActionWire(wire: string): ActionWire {
-  return packValueFromBase64(wire) as ActionWire;
+  const wireValue = packValueFromBase64(wire);
+  if (wireValue === null || typeof wireValue !== "object" || Array.isArray(wireValue) || isPackInteger(wireValue)) throw new Error("decodeActionWire: expected a dynamic map");
+  const record = wireValue as Readonly<Record<string, PackValue>>;
+  if (typeof record.controllerId !== "string" || typeof record.action !== "string") throw new Error("decodeActionWire: controllerId and action are required strings");
+  return record.args === undefined ? { controllerId: record.controllerId, action: record.action } : { controllerId: record.controllerId, action: record.action, args: record.args };
 }
 
 /** @emoji 🎬️ Decodes a component-scene `*Json` field when it carries {@link packValueToBase64} bytes. */
-export function decodeScenePackField(encoded: string): unknown {
+export function decodeScenePackField(encoded: string): PackValue {
   return packValueFromBase64(encoded);
 }
 
@@ -1384,10 +1496,57 @@ export function encodeMutationEnvelopesPack(envelopes: readonly MutationEnvelope
 /** @emoji 📥️ Inverse of {@link encodeMutationEnvelopesPack}. */
 export function decodeMutationEnvelopesPack(pack: string): MutationEnvelope[] {
   const wire = packValueFromBase64(pack);
-  if (!Array.isArray(wire) || !wire.every((entry) => typeof entry === "number")) {
-    throw new Error("decodeMutationEnvelopesPack: expected pack byte array");
+  if (!isPackByteVector(wire)) throw new Error("decodeMutationEnvelopesPack: expected pack byte array");
+  return decodeCausalEnvelopeBatch(wire, replicationPackCodec);
+}
+
+/** @emoji 🧮️ Projects a decoded {@link PackValue} onto strict JSON. An integer carrier survives
+ * only when its `bigint` fits a safe JS integer exactly, and then as a `number`; anything else
+ * throws rather than rounding. The descriptor pipeline is deliberately JSON-only — canonical-check
+ * and hash the raw `PackValue`, then project through this for JSON schema/pair comparison and JSON
+ * writing. Never the other way round: JSON never learns to carry an integer carrier. */
+export function packValueToExactJson(value: PackValue, path = "$"): unknown {
+  if (isPackInteger(value)) {
+    if (value.value < BigInt(Number.MIN_SAFE_INTEGER) || value.value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error(`packValueToExactJson: ${path} carries ${value.value}, which no JSON number represents exactly`);
+    return Number(value.value);
   }
-  return decodeCausalEnvelopeBatch(wire as readonly number[], replicationPackCodec);
+  if (Array.isArray(value)) return (value as readonly PackValue[]).map((item, index) => packValueToExactJson(item, `${path}[${index}]`));
+  if (value !== null && typeof value === "object") {
+    packRejectIntegerLookAlike(value);
+    return Object.fromEntries(Object.entries(value as Record<string, PackValue>).map(([key, entry]) => [key, packValueToExactJson(entry, `${path}.${key}`)]));
+  }
+  if (typeof value === "number" && !Number.isFinite(value)) throw new Error(`packValueToExactJson: ${path} carries ${value}, which no JSON number represents`);
+  if (value !== null && typeof value !== "boolean" && typeof value !== "number" && typeof value !== "string") throw new Error(`packValueToExactJson: ${path} carries an unsupported ${typeof value}`);
+  return value;
+}
+
+/** @emoji 🧱️ The one byte-vector boundary every artifact/envelope byte parser shares: each item
+ * must be a finite, safe, integral JS `number` in `0..255`. A `PackInteger` and a fractional or
+ * out-of-range `number` are both rejected rather than coerced. */
+export function isPackByteVector(value: PackValue): value is readonly number[] {
+  return Array.isArray(value) && (value as readonly PackValue[]).every((entry) => typeof entry === "number" && Number.isSafeInteger(entry) && entry >= 0 && entry <= 255);
+}
+
+/** @emoji 🔢️ Narrows one declared unsigned field to an exact JS integer, or `null`. A `TAG_UINT`
+ * carrier and a plain integral `number` both qualify; a signed carrier, a fraction, and anything
+ * beyond `Number.MAX_SAFE_INTEGER` do not — an out-of-range value is a rejection, never a rounding. */
+export function packUIntSafeOrNull(value: PackValue): number | null {
+  if (isPackInteger(value)) return value.kind === "uint" && value.value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value.value) : null;
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+/** @emoji 🔢️ Throwing form of {@link packUIntSafeOrNull} for a required schema field. */
+export function asPackUIntSafe(value: PackValue, name: string): number {
+  const parsed = packUIntSafeOrNull(value);
+  if (parsed === null) throw new Error(`${name}: expected an exact unsigned integer within the safe JS range`);
+  return parsed;
+}
+
+/** @emoji 🔢️ {@link asPackUIntSafe} additionally bounded to `u32`. */
+export function asPackUInt32(value: PackValue, name: string): number {
+  const parsed = asPackUIntSafe(value, name);
+  if (parsed > 0xffff_ffff) throw new Error(`${name}: ${parsed} exceeds the declared u32 range`);
+  return parsed;
 }
 //#endregion 🔖️PublicApi
 //#endregion 🔖️PackValueCodec
@@ -2951,32 +3110,34 @@ if (import.meta.vitest) {
       return out;
     }
 
-    // 🔬️ Ground truth captured verbatim from `cargo test -p semio-framework-os-kernel-store
+    // 🔬️ Ground truth captured verbatim from `cargo test -p semio-framework-os-kernel
     // pack_wire_value_fixture_corpus_hex_dump -- --nocapture` (`store/rs/lib.rs`'s
     // `🔖️PackValueFixtures` region) — the REAL bytes `pack_rt::encode_wire_value` produces (the
     // `encode_record_body`-backed sibling of `encode_json_value`, see this file's
     // `🔖️PackValueCodec` header doc for why the container-backed encoding was replaced).
     // `encode_record_body`'s grammar has no compression anywhere it is fully deterministic, so
     // both `encodePackValue` and `decodePackValue` are asserted BYTE-EXACT against these, unlike
-    // the old DEFLATE-backed encoding this replaced (which was only decode-exact).
-    const packValueFixtures: ReadonlyArray<readonly [string, unknown, string]> = [
+    // the old DEFLATE-backed encoding this replaced (which was only decode-exact). The corpus's
+    // integer rows are `DslValue::uint`/`int` on the Rust side and therefore `TAG_UINT`/`TAG_INT`
+    // here — a JS `number` is `TAG_F64` and could not carry them.
+    const packValueFixtures: ReadonlyArray<readonly [string, PackValue, string]> = [
       ["null", null, "0001011112"],
       ["bool_true", true, "0001011102"],
       ["bool_false", false, "0001011101"],
-      ["int_zero", 0, "00010111050000000000000000"],
-      ["int_negative_one", -1, "0001011105000000000000f0bf"],
+      ["int_zero", packUInt(0n), "000101110400"],
+      ["int_negative_one", packInt(-1n), "000101110301"],
       ["float_pi", 3.14, "00010111051f85eb51b81e0940"],
       ["float_whole_number", 2.0, "00010111050000000000000040"],
       ["string_empty", "", "01000101110600"],
       ["string_escapes", 'hello\nworld with "quotes"', "011968656c6c6f0a776f726c642077697468202271756f746573220101110600"],
       ["array_empty", [], "000101110c00"],
-      ["array_ints", [1, 2, 3], "000101110c0305000000000000f03f050000000000000040050000000000000840"],
+      ["array_ints", [packUInt(1n), packUInt(2n), packUInt(3n)], "000101110c03040104020403"],
       ["object_empty", {}, "000101111000"],
-      ["object_mixed", { a: 1, b: [true, null] }, "00010111100207016105000000000000f03f0701620c020212"],
+      ["object_mixed", { a: packUInt(1n), b: [true, null] }, "00010111100207016104010701620c020212"],
       [
         "nested_deep",
-        { a: { b: { c: [1, 2, { d: "leaf" }] } } },
-        "01046c6561660101111001070161100107016210010701630c0305000000000000f03f05000000000000004010010701640600",
+        { a: { b: { c: [packUInt(1n), packUInt(2n), { d: "leaf" }] } } },
+        "01046c6561660101111001070161100107016210010701630c030401040210010701640600",
       ],
     ];
 
@@ -2990,6 +3151,101 @@ if (import.meta.vitest) {
 
     it.each(packValueFixtures)("round-trips %s through encodePackValue/decodePackValue", (_name, value) => {
       expect(decodePackValue(encodePackValue(value))).toEqual(value);
+    });
+  });
+
+  describe("@semio-tech/framework-os PackValueCodec dynamic integers", () => {
+    function bytesToHex(bytes: Uint8Array): string {
+      return Array.from(bytes)
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+    function hexToBytes(hex: string): Uint8Array {
+      const out = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < out.length; i++) out[i] = Number.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+      return out;
+    }
+    // 🔣️ The shared, language-neutral corpus both hosts read — see
+    // `💻️os/🧫️fixtures/🎒️pack-dynamic-integer-v1`. Its `wireHex` is generated by an independent
+    // BigInt/LEB128 oracle and asserted by the native law
+    // `pack_wire_value_preserves_integer_variants_at_u64_i64_boundaries`.
+    function corpusValue(node: Record<string, any>): PackValue {
+      if (typeof node.uint === "string") return packUInt(BigInt(node.uint));
+      if (typeof node.int === "string") return packInt(BigInt(node.int));
+      if (typeof node.f64LeHex === "string") return new DataView(hexToBytes(node.f64LeHex).buffer).getFloat64(0, true);
+      if (Array.isArray(node.list)) return node.list.map(corpusValue);
+      if (Array.isArray(node.map)) return Object.fromEntries((node.map as [string, Record<string, any>][]).map(([key, value]) => [key, corpusValue(value)]));
+      throw new Error(`unsupported corpus node ${JSON.stringify(node)}`);
+    }
+
+    it("validates the neutral corpus against its own schema", async () => {
+      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const [{ default: corpus }, { default: schema }] = await Promise.all([import("./🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json"), import("./🧫️fixtures/🎒️pack-dynamic-integer-v1/🧬️.schema.json")]);
+      expect(new Ajv2020({ strict: true, allErrors: true }).compile(schema)(corpus)).toBe(true);
+      expect(corpus.accept).toHaveLength(6);
+      expect(corpus.reject.map((row: { id: string }) => row.id)).toEqual(["truncated-u64", "u64-overflow", "nonminimal-u64", "nonminimal-zigzag-i64"]);
+    });
+
+    it("encodes and decodes every accepted corpus row byte-exactly with its exact carrier kind", async () => {
+      const { default: corpus } = await import("./🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
+      for (const row of corpus.accept) {
+        const value = corpusValue(row.value);
+        expect(bytesToHex(encodePackValue(value)), row.id).toBe(row.wireHex);
+        const decoded = decodePackValue(hexToBytes(row.wireHex));
+        expect(decoded, row.id).toEqual(value);
+        if (row.variant === "uint" || row.variant === "int") {
+          expect(isPackInteger(decoded)).toBe(true);
+          expect((decoded as PackInteger).kind).toBe(row.variant);
+          expect((decoded as PackInteger).value).toBe(BigInt(row.value[row.variant]));
+        }
+        expect(bytesToHex(encodePackValue(decoded)), row.id).toBe(row.wireHex);
+      }
+    });
+
+    it("rejects every corpus reject row at the documented boundary", async () => {
+      const { default: corpus } = await import("./🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
+      for (const row of corpus.reject) {
+        const bytes = hexToBytes(row.wireHex);
+        if (row.outcome === "decode-error") expect(() => decodePackValue(bytes), row.id).toThrow();
+        else {
+          const decoded = decodePackValue(bytes);
+          expect(decoded, row.id).toEqual(corpusValue(row.decodes));
+          expect(bytesToHex(encodePackValue(decoded)), row.id).not.toBe(row.wireHex);
+        }
+      }
+    });
+
+    it("keeps int and uint distinct, survives nesting, and refuses unminted carriers", () => {
+      expect(bytesToHex(encodePackValue(packInt(7n)))).not.toBe(bytesToHex(encodePackValue(packUInt(7n))));
+      expect((decodePackValue(encodePackValue(packInt(7n))) as PackInteger).kind).toBe("int");
+      const nested = { u: packUInt((1n << 64n) - 1n), rows: [packInt(-(2n ** 63n)), { deep: packUInt(2n ** 53n + 1n) }] };
+      const round = decodePackValue(encodePackValue(nested)) as Record<string, PackValue>;
+      expect(round).toEqual(nested);
+      expect(bytesToHex(encodePackValue(round))).toBe(bytesToHex(encodePackValue(nested)));
+      expect(isPackInteger({ kind: "uint", value: 1n })).toBe(false);
+      expect(() => encodePackValue({ kind: "uint", value: 1n } as unknown as PackValue)).toThrow("unminted");
+      expect(() => packUInt(-1n)).toThrow("u64");
+      expect(() => packInt(2n ** 63n)).toThrow("i64");
+      expect(() => packUInt(2n ** 64n)).toThrow("u64");
+    });
+
+    it("clones carriers structurally and projects only safe integers onto JSON", () => {
+      const source = { id: packUInt(2n ** 53n + 1n), rows: [packInt(-7n)] };
+      const cloned = clonePackValue(source) as typeof source;
+      expect(cloned).toEqual(source);
+      expect(isPackInteger(cloned.id)).toBe(true);
+      expect(isPackInteger((structuredClone(source) as typeof source).id)).toBe(false);
+      expect(packValueToExactJson({ safe: packUInt(9007199254740991n), signed: packInt(-7n), plain: 1.5 })).toEqual({ safe: 9007199254740991, signed: -7, plain: 1.5 });
+      expect(() => packValueToExactJson({ big: packUInt(2n ** 53n + 1n) })).toThrow("exactly");
+      expect(isPackByteVector([0, 255])).toBe(true);
+      expect(isPackByteVector([packUInt(1n)])).toBe(false);
+      expect(isPackByteVector([1.5])).toBe(false);
+      expect(isPackByteVector([256])).toBe(false);
+    });
+
+    it("keeps a negative zero's sign bit, byte-for-byte with Rust normalize_f64", () => {
+      expect(bytesToHex(encodePackValue(-0))).toBe("00010111050000000000000080");
+      expect(Object.is(decodePackValue(hexToBytes("00010111050000000000000080")), -0)).toBe(true);
     });
   });
 

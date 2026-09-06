@@ -25,7 +25,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_visibility_relays_the_directory_command() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::new_app().await;
         let result = app.dispatch_typed(SpaceIndexCommand::SetVisibility(SetVisibility { visibility: "public".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set visibility");
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
