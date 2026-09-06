@@ -18,16 +18,16 @@ pub struct ChangeLinkPath {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeLinkPath {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "link-path", kind: "change-link-path", record: "ChangedLinkPath" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_link_path(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_link_path(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change link \"{}\" path", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
@@ -35,7 +35,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeLinkPath {
 
 
 //#region 🔗ChangeLinkPath
-pub async fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(link) = base.links.iter().find(|link| link.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Link \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -51,7 +51,7 @@ pub async fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapsh
 
 
 //#region 🔗ChangeLinkPath
-pub async fn inverse_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.links.iter().find(|link| link.id == payload.id) {
         Some(link) => vec![LayoutMutation::ChangeLinkPath(ChangeLinkPath { id: payload.id.clone(), new_path: link.path.clone() })],
         None => Vec::new(),

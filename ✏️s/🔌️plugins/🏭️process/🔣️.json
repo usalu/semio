@@ -15,6 +15,199 @@
     }
   ],
   "contributions": {
+    "composerEntries": [
+      {
+        "reads": [
+          {
+            "artifactKind": "s.process.process3d",
+            "standard": "1",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.dwg",
+            "standard": "ac1018",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.gltf",
+            "standard": "2.0",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.ifc",
+            "standard": "4",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.obj",
+            "standard": "3.0",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.png",
+            "standard": "1.2",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.step",
+            "standard": "ap214",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.stl",
+            "standard": "ascii",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          }
+        ],
+        "writes": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
+    "ioEntries": [
+      {
+        "counterpart": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.dwg",
+          "standard": "ac1018",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.gltf",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.ifc",
+          "standard": "4",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.obj",
+          "standard": "3.0",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.png",
+          "standard": "1.2",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.step",
+          "standard": "ap214",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.stl",
+          "standard": "ascii",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
     "panels": [
       {
         "bodyKey": "process.play.document",
@@ -135,9 +328,9 @@
   "descriptorVersion": 1,
   "execution": "isolated",
   "hashes": {
-    "coreWasmSha256": "63e4f7d59977ac763a86abbc6c3e0e51e0cbb4ee3aa0556685d4f8c04729e7b8",
-    "descriptorSha256": "5797c6564c2600528f82605534cc116069f5b5c1fffcecd53b46449f3d9526a6",
-    "wasmSha256": "adf1fc2a97ec390e8c2e6f26f474fbcb211e63d5ca7a45e8eb930c6db934abeb"
+    "coreWasmSha256": "5185c035e07360b13b3b31fc41b544196b636efd3e0478c4deb6fccbc094bda6",
+    "descriptorSha256": "81d51e3e8633cac0a1fc726da5c29a1e3eba88462e79c66536e101578b047bc3",
+    "wasmSha256": "62570c3b700cb6930423670f0446bced2b3daf1a5dd1944ccb96412056939d17"
   },
   "manifest": {
     "apps": [
@@ -4798,6 +4991,7 @@
     "topicContributions": [],
     "version": "0.1.0"
   },
+  "packageId": "semio:process",
   "quotas": {},
   "role": "plugin"
 }

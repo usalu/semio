@@ -4,7 +4,7 @@
     "kind": "event",
     "durability": "fsync",
     "document": "map-a",
-    "decisionSha256": "e73f56dcf3fb6d51a2464b12dd338a75053574a45edbc2649b2d7a23b8fda181",
+    "decisionSha256": "02d8a15a394fbd354736256f29c21c9e6eeb799d74e14983d6fd011ea92cf635",
     "anchorSha256": "8fa0d6568bd058b287a2969948d051c65b73028bc4065219422cc37b3aa7ec88"
   },
   "limits": {
@@ -32,5 +32,21 @@
     { "id": "foreign-document", "recordKinds": ["event"], "transaction": "committed", "replayDocument": "foreign", "expected": "rejected" },
     { "id": "aborted-event", "recordKinds": ["event"], "transaction": "aborted", "replayDocument": "matching", "expected": "ignored" }
   ],
-  "nonClaims": ["decision-recovery", "inference-witness", "three-store-publication"]
+  "committedRecovery": {
+    "authority": {
+      "consumer": "db-wal-witness",
+      "recordEscape": false,
+      "receiptSource": "derived",
+      "cancelAfterCommit": false,
+      "errorSurface": "retaining-fault",
+      "terminalHandoff": "stores-and-ack-once"
+    },
+    "cases": [
+      { "id": "pre-mutation-frontier-rejection", "frontier": "foreign", "expected": "fault", "mutations": 0, "returnedStoreOwners": 3 },
+      { "id": "all-base", "frontier": "base", "expected": "complete", "mutations": 3, "returnedStoreOwners": 3 },
+      { "id": "all-post", "frontier": "post", "expected": "already-applied", "mutations": 0, "returnedStoreOwners": 3 },
+      { "id": "mixed-frontier", "frontier": "mixed", "expected": "fault", "mutations": 0, "returnedStoreOwners": 3 }
+    ]
+  },
+  "nonClaims": ["production-recovery-consumer", "inference-witness", "hub-approval"]
 }

@@ -2555,7 +2555,7 @@ impl RendererAssetProbe {
     fn step(&mut self) -> RendererAssetProbeStep {
         match self.phase {
             RendererAssetProbePhase::Reading => {
-                let page = match self.owner().decode_page() {
+                let page = match self.owner.as_ref().expect("asset probe owns response").decode_page() {
                     Ok(Some(page)) => page,
                     Ok(None) => return self.finish_probe(),
                     Err(_) => return self.fault("asset response page cursor lost exact ownership"),
@@ -3160,7 +3160,7 @@ pub(crate) mod kernel_runtime {
     use semio_framework_actor::{
         intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, JobOperation, JobProgressIdentity, JobProgressKind, JobProgressLiveAuthority, JobProgressOverlayStore, JobProgressReceipt,
         JobProgressRejected, JobPublication, JobReplayFault, JobReplayLog, JobReplayPublicationKind, JobReplayPublicationPolicy, JobReplayRecordHeader, JobReplayRequest, JobReplayRoute, JobReplayStep, JobTurn, Lane, Origin, PackageHash, PackageId,
-        Payload,
+        Payload, JOB_PROGRESS_ACTIVE_CAPACITY,
     };
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
@@ -3444,6 +3444,8 @@ pub(crate) mod kernel_runtime {
             status,
             fuel_used: result.usage.fuel,
             command_ingress: serde_json::from_slice(&result.command_ingress).map_err(|error| format!("kernel: decode command ingress: {error}"))?,
+            lifecycle_receipt: result.lifecycle_receipt,
+            ui_patch_receipt: result.ui_patch_receipt,
         })
     }
 
@@ -3575,16 +3577,21 @@ pub(crate) mod kernel_runtime {
                 drop(self.wasm_path.take().expect("create request path is present"));
                 return (self.terminal_is_empty(), 1, length);
             }
+            let mut released = None;
             for field in [&mut self.plugin_id, &mut self.app_id] {
                 if let Some(length) = field.as_ref().map(String::len) {
                     if length > maximum_bytes {
                         return (false, 0, 0);
                     }
                     drop(field.take().expect("create request string is present"));
-                    return (self.terminal_is_empty(), 1, length);
+                    released = Some(length);
+                    break;
                 }
             }
-            (true, 0, 0)
+            match released {
+                Some(length) => (self.terminal_is_empty(), 1, length),
+                None => (true, 0, 0),
+            }
         }
 
         fn terminal_is_empty(&self) -> bool {
@@ -5293,13 +5300,13 @@ pub(crate) mod kernel_runtime {
             if !persistent_command_completion_port_ready() {
                 return Err("persistent command completion submit/poll/cancel authority is not admitted".to_string());
             }
-            let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| fault.to_string())?;
+            let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| fault.describe())?;
             for command in commands {
                 let seq = next_seq()?;
-                let command = protocol::encode_app_command(&command).await.map_err(|fault| fault.to_string())?;
+                let command = protocol::encode_app_command(&command).await.map_err(|fault| fault.describe())?;
                 if let Err((fault, rejected)) = envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance, seq, command }) {
                     self.queue.enqueue_retained(KernelRequest::CloseRejectedCommandBuild { key: u64::from(instance), owner: semio_framework::kernel::RejectedCommandBuild::new(envelopes, rejected) }, Arc::new(ResponseSlot::default())).await;
-                    return Err(fault.to_string());
+                    return Err(fault.describe());
                 }
             }
             let reservation = reserve_seq()?;
@@ -5311,7 +5318,7 @@ pub(crate) mod kernel_runtime {
                 }
                 Err((fault, owners)) => {
                     self.queue.enqueue_retained(KernelRequest::CloseRejectedCommandBuild { key: u64::from(instance), owner: semio_framework::kernel::RejectedCommandBuild::from_admitted(owners) }, Arc::new(ResponseSlot::default())).await;
-                    return Err(fault.to_string());
+                    return Err(fault.describe());
                 }
             };
             let driver = semio_framework::kernel::CommandBatchDriver::new(generation, batch);
@@ -5412,6 +5419,10 @@ pub(crate) mod kernel_runtime {
         closing: Option<UiDocumentLease>,
         exchange_closing: Option<UiDocumentLease>,
         patch_close_complete: bool,
+        /// 🎫️ The authority the guest issued with the patch this surface is currently applying —
+        /// `TurnResult::ui_patch_receipt`, which `ActorUiPatchReceipt::validate_pairing` pins 1:1 to
+        /// the turn's single patch. A rejection has to echo it back on `Event::PatchRejected`.
+        patch_receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>,
     }
 
     impl RetainedSurface {
@@ -5427,6 +5438,7 @@ pub(crate) mod kernel_runtime {
                 closing: None,
                 exchange_closing: None,
                 patch_close_complete: false,
+                patch_receipt: None,
             }
         }
 
@@ -5681,7 +5693,8 @@ pub(crate) mod kernel_runtime {
                 return false;
             }
             if let Some(state) = self.state.as_mut() {
-                if let Some(id) = state.nodes.keys().next().copied() {
+                let next_node = state.nodes.keys().next().copied();
+                if let Some(id) = next_node {
                     drop(state.nodes.remove(&id));
                     return false;
                 }
@@ -5780,6 +5793,9 @@ pub(crate) mod kernel_runtime {
         revision: UiRevision,
         reason: ui_contract::UiText,
         patch: Option<KernelUiPatch>,
+        /// 🎫️ The issued-patch authority the guest must see back on `Event::PatchRejected`; `None`
+        /// when the rejection has no admitted turn behind it (a surface that never reached a slot).
+        receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>,
     }
 
     struct PendingSurfaceRejectionRegistry {
@@ -7004,7 +7020,7 @@ pub(crate) mod kernel_runtime {
             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
             // broker/asset-preload pipeline lands (A2b/T1 territory, not this packet's).
             let open = Event::InstanceOpen {
-                instance: semio_framework::kernel::PluginInstanceId(instance_id.to_string()),
+                request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
                 app_id: semio_framework::kernel::AppInstanceId(app_id),
                 actor: "local".to_string(),
                 config: Vec::new(),
@@ -7300,8 +7316,14 @@ pub(crate) mod kernel_runtime {
             let Some(&actor) = self.instances.get(&instance) else {
                 return Err(format!("kernel: instance {instance} is not registered"));
             };
+            // 🎫️ `Event::PatchRejected` carries the issued-patch authority the guest minted with the
+            // patch. A rejection with no authority behind it (a surface the registry could not admit
+            // at all, so no turn ever reached a slot) has nothing to reject back and stays a local
+            // registry entry rather than a fabricated receipt.
             if let Some(rejection) = self.pending_rejections.take_instance_one(instance) {
-                events.insert(0, Event::PatchRejected { surface: rejection.surface.0, revision: rejection.revision.0, reason: rejection.reason.to_string() });
+                if let Some(receipt) = rejection.receipt {
+                    events.insert(0, Event::PatchRejected { receipt, surface: rejection.surface.0.as_str().to_string(), revision: rejection.revision.0, reason: rejection.reason.to_string() });
+                }
             }
             self.run_turn(actor, instance, events).await
         }
@@ -7323,7 +7345,7 @@ pub(crate) mod kernel_runtime {
                     return Err("kernel: retained and queued command close registries are saturated; caller owner remains in the queue close lane".to_string());
                 }
                 self.queued_command_closes.insert_admitted(key, generation, driver);
-                self.queued_command_closes.begin_close(key, generation).map_err(|fault| fault.to_string())?;
+                self.queued_command_closes.begin_close(key, generation).map_err(|fault| fault.describe())?;
                 let _ = self.command_maintenance_step();
                 return Err("kernel: previous cancelled command owner is closing; incoming exact batch moved to the queued close lane".to_string());
             }
@@ -7332,7 +7354,7 @@ pub(crate) mod kernel_runtime {
             }
             self.retained_command_closes.insert_admitted(key, generation, driver);
             let Some(&actor) = self.instances.get(&instance) else {
-                self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.to_string())?;
+                self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.describe())?;
                 let _ = self.command_maintenance_step();
                 return Err(format!("kernel: instance {instance} is not registered; exact command owner entered bounded close"));
             };
@@ -7355,14 +7377,14 @@ pub(crate) mod kernel_runtime {
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault.to_string());
+                        return Err(fault.describe());
                     }
                     Err(fault) => {
                         self.command_document_closes.release(&mut destinations);
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault.to_string());
+                        return Err(fault.describe());
                     }
                 };
                 let events = match page {
@@ -7374,7 +7396,7 @@ pub(crate) mod kernel_runtime {
                     self.command_document_closes.begin_close_batch(key, generation);
                     let _ = self.retained_command_closes.begin_close(key, generation);
                     let _ = self.command_maintenance_step();
-                    return Err(fault.to_string());
+                    return Err(fault.describe());
                 }
                 let outcome = match self.run_turn(actor, instance, events).await {
                     Ok(outcome) => outcome,
@@ -7396,7 +7418,7 @@ pub(crate) mod kernel_runtime {
                     self.command_document_closes.begin_close_batch(key, generation);
                     let _ = self.retained_command_closes.begin_close(key, generation);
                     let _ = self.command_maintenance_step();
-                    return Err(fault.to_string());
+                    return Err(fault.describe());
                 }
                 let progress = match self.retained_command_closes.with_driver_mut(key, generation, |driver| driver.observe(&command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)) {
                     Ok(Ok(progress)) => progress,
@@ -7404,13 +7426,13 @@ pub(crate) mod kernel_runtime {
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault.to_string());
+                        return Err(fault.describe());
                     }
                     Err(fault) => {
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault.to_string());
+                        return Err(fault.describe());
                     }
                 };
                 combined.frames.extend(frames);
@@ -7422,14 +7444,14 @@ pub(crate) mod kernel_runtime {
                             self.command_document_closes.begin_close_batch(key, generation);
                             let _ = self.retained_command_closes.begin_close(key, generation);
                             let _ = self.command_maintenance_step();
-                            return Err(fault.to_string());
+                            return Err(fault.describe());
                         }
                         self.command_document_closes.publish_batch(key, generation, &mut combined.surfaces);
                         return Ok(combined);
                     }
                     semio_framework::kernel::CommandBatchProgress::Faulted => {
                         self.command_document_closes.begin_close_batch(key, generation);
-                        self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.to_string())?;
+                        self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.describe())?;
                         let _ = self.command_maintenance_step();
                         return Err("kernel: command ingress faulted; exact driver and surface-document owners entered incremental close".to_string());
                     }
@@ -7575,6 +7597,8 @@ pub(crate) mod kernel_runtime {
                                 ui_patches: Vec::new(),
                                 effects: Vec::new(),
                                 command_ingress: Vec::new(),
+                                lifecycle_receipt: None,
+                                ui_patch_receipt: None,
                                 next_wake: None,
                                 status: semio_framework_actor::TurnStatus::Faulted { detail: message.as_bytes().to_vec() },
                                 usage: semio_framework_actor::Usage::default(),
@@ -7639,8 +7663,9 @@ pub(crate) mod kernel_runtime {
                 effects.push(effect);
             }
             let mut surfaces = UiFixedList::default();
+            let patch_receipt = result.ui_patch_receipt;
             loop {
-                match result.ui_patches.try_transfer_one(|patch| self.apply_ui_patch(instance, patch)) {
+                match result.ui_patches.try_transfer_one(|patch| self.apply_ui_patch(instance, patch, patch_receipt)) {
                     semio_framework::kernel::UiTurnPatchTransfer::Empty => break,
                     semio_framework::kernel::UiTurnPatchTransfer::Transferred(()) => {}
                     semio_framework::kernel::UiTurnPatchTransfer::Refused => return Err("renderer retained patch admission refused without consuming the exact turn owner".to_string()),
@@ -7650,7 +7675,7 @@ pub(crate) mod kernel_runtime {
             Ok(ExchangeOutcome { frames, surfaces, effects, command_ingress: result.command_ingress })
         }
 
-        fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch) -> Result<(), KernelUiPatch> {
+        fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch, receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>) -> Result<(), KernelUiPatch> {
             let surface = patch.surface.clone();
             let index = match self.retained.try_admit(instance, surface.clone()) {
                 Ok(index) => index,
@@ -7659,7 +7684,7 @@ pub(crate) mod kernel_runtime {
                         return Err(patch);
                     };
                     let generation = reservation.generation();
-                    let rejection = PendingSurfaceRejection { generation, instance, surface, revision: UiRevision::default(), reason: ui_contract::UiText::try_from_str("retained surface capacity exhausted").unwrap_or_default(), patch: Some(patch) };
+                    let rejection = PendingSurfaceRejection { generation, instance, surface, revision: UiRevision::default(), reason: ui_contract::UiText::try_from_str("retained surface capacity exhausted").unwrap_or_default(), patch: Some(patch), receipt };
                     match self.pending_rejections.try_admit(rejection) {
                         Ok(()) => {
                             let _ = reservation.commit();
@@ -7672,13 +7697,14 @@ pub(crate) mod kernel_runtime {
                 }
             };
             let Some(slot) = self.retained.slots[index].as_mut() else { return Err(patch) };
+            slot.owner.patch_receipt = receipt;
             let rejected = slot.owner.admit_patch(patch).err().and_then(|patch| slot.owner.rejected_patches.try_push(patch).err());
             if let Some(patch) = rejected {
                 let Ok(reservation) = reserve_seq() else {
                     return Err(patch);
                 };
                 let generation = reservation.generation();
-                let rejection = PendingSurfaceRejection { generation, instance, surface, revision: UiRevision::default(), reason: ui_contract::UiText::try_from_str("retained patch queues exhausted").unwrap_or_default(), patch: Some(patch) };
+                let rejection = PendingSurfaceRejection { generation, instance, surface, revision: UiRevision::default(), reason: ui_contract::UiText::try_from_str("retained patch queues exhausted").unwrap_or_default(), receipt, patch: Some(patch) };
                 match self.pending_rejections.try_admit(rejection) {
                     Ok(()) => {
                         let _ = reservation.commit();
@@ -7741,7 +7767,7 @@ pub(crate) mod kernel_runtime {
                 if retained.patch.is_some() || !retained.queued_patches.is_empty() {
                     if let Some(rejection) = retained.advance_patch_one() {
                         let reason = rejection.1.to_string();
-                        let owner = PendingSurfaceRejection { generation, instance, surface: surface.clone(), revision: rejection.0, reason: rejection.1, patch: None };
+                        let owner = PendingSurfaceRejection { generation, instance, surface: surface.clone(), revision: rejection.0, reason: rejection.1, patch: None, receipt: retained.patch_receipt };
                         let _ = self.pending_rejections.try_upsert(owner);
                         if requested.is_some() && retained.published.is_none() {
                             return Err(reason);
@@ -7928,9 +7954,15 @@ pub(crate) mod kernel_runtime {
                     let (terminal, processed, released) = event.close_step(maximum_bytes);
                     (terminal, processed, released, 0)
                 }
-                KernelRequest::AdvanceRetained { .. } | KernelRequest::MountProductReplay { .. } | KernelRequest::RetireProductReplay { .. } | KernelRequest::RetireProductReplayRefusal { .. } | KernelRequest::AdvanceProductReplay { .. } => {
-                    (true, 1, 0, 0)
-                }
+                // 🎫️ `AcknowledgeTypedOperationResult` joins this arm for the same reason the others
+                // are here: `command_credits` reports `(0, 0)` for it, so it owns no retained page or
+                // byte claim and a shutdown slice retires it whole in one step.
+                KernelRequest::AdvanceRetained { .. }
+                | KernelRequest::MountProductReplay { .. }
+                | KernelRequest::RetireProductReplay { .. }
+                | KernelRequest::RetireProductReplayRefusal { .. }
+                | KernelRequest::AdvanceProductReplay { .. }
+                | KernelRequest::AcknowledgeTypedOperationResult { .. } => (true, 1, 0, 0),
                 KernelRequest::CloseRejectedEvents { owner } => {
                     let (terminal, processed) = owner.close_step();
                     (terminal, processed, 0, 0)
@@ -8186,6 +8218,7 @@ pub(crate) mod kernel_runtime {
                         revision: UiRevision(index as u64),
                         reason: ui_contract::UiText::try_from_str("capacity").expect("bounded reason"),
                         patch: Some(retained_patch(surface, 0, index as u64 + 1)),
+                        receipt: None,
                     })
                     .expect("maximum pending rejection");
             }
@@ -8198,6 +8231,7 @@ pub(crate) mod kernel_runtime {
                     revision: UiRevision(999),
                     reason: ui_contract::UiText::try_from_str("capacity").expect("bounded reason"),
                     patch: Some(retained_patch(surface, 0, 999)),
+                    receipt: None,
                 })
                 .expect_err("maximum plus one rejection");
             assert_eq!(rejected.patch.as_ref().map(|patch| patch.revision), Some(UiRevision(999)));
@@ -9261,7 +9295,7 @@ pub mod scale_bench {
 
     fn instance_open_event(record: &RegistryRecord, instance_id: u32) -> Event {
         Event::InstanceOpen {
-            instance: PluginInstanceId(instance_id.to_string()),
+            request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
             app_id: AppInstanceId(record.id.clone()),
             actor: "bench".to_string(),
             config: serde_json::to_vec(&record.scale_fixture).unwrap_or_default(),
@@ -9435,6 +9469,8 @@ pub mod scale_bench {
                                 ui_patches: Vec::new(),
                                 effects: Vec::new(),
                                 command_ingress: Vec::new(),
+                                lifecycle_receipt: None,
+                                ui_patch_receipt: None,
                                 next_wake: None,
                                 status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
                                 usage: semio_framework_actor::Usage::default(),
@@ -9491,6 +9527,8 @@ pub mod scale_bench {
                                     ui_patches: Vec::new(),
                                     effects: Vec::new(),
                                     command_ingress: Vec::new(),
+                                    lifecycle_receipt: None,
+                                    ui_patch_receipt: None,
                                     next_wake: None,
                                     status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
                                     usage: semio_framework_actor::Usage::default(),
@@ -10111,9 +10149,9 @@ mod async_boundary_tests {
     const MANIFEST_SOURCE: &str = include_str!("../📦️packages/🦀️rust/Cargo.toml");
     const WINT_APP_SOURCE: &str = include_str!("../🪟️winit-app/🦀️.rs");
     const OS_HOST_SOURCE: &str = include_str!("../🏠️os-host/🦀️.rs");
-    const GPU_SOURCE: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs");
-    const DRAW_SOURCE: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs");
-    const PREPARED_SOURCE: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs");
+    const GPU_SOURCE: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🖥️gpu.rs");
+    const DRAW_SOURCE: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/✍️draw.rs");
+    const PREPARED_SOURCE: &str = include_str!("../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️prepared.rs");
     const ENGINE_CANVAS_SOURCE: &str = include_str!("../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
 
     #[test]
@@ -11498,7 +11536,7 @@ enum RuntimeApply {
     },
     RestoreInteraction(Option<AppInteractionState>),
     #[cfg(not(target_arch = "wasm32"))]
-    PluginReload(Option<Result<Vec<ProgramBridgeEntry>, String>>),
+    PluginReload(Option<Result<Vec<program_bridge::ProgramBridgeEntry>, String>>),
 }
 
 impl RuntimeApply {
@@ -11831,7 +11869,7 @@ struct RuntimeMailboxInner {
     #[cfg(not(target_arch = "wasm32"))]
     native_asset_https: Arc<semio_framework_os_services::HttpPool>,
     #[cfg(not(target_arch = "wasm32"))]
-    native_asset_http_runtime: Arc<semio_framework_async::TokioHostRuntime>,
+    native_asset_http_runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
     #[cfg(not(target_arch = "wasm32"))]
     native_asset_http_scope: semio_framework_async::ScopeHandle,
     #[cfg(not(target_arch = "wasm32"))]
@@ -11952,7 +11990,7 @@ impl RuntimeMailbox {
         let (native_asset_http, native_asset_https, native_asset_http_runtime, native_asset_http_scope, native_asset_http_cancel) = {
             use semio_framework_async::HostAsyncRuntime;
             let pool = renderer_worker_pool();
-            let runtime = Arc::new(semio_framework_async::TokioHostRuntime::with_pool(pool.clone()));
+            let runtime = Arc::new(semio_framework_os_services::TokioHostRuntime::with_pool(pool.clone()));
             let scope = runtime.open_scope_now(semio_framework_async::ScopeOwner::Service("renderer_asset_http"), None);
             let compute = Arc::new(semio_framework_os_services::ComputePool::with_pool(2, pool));
             let http_transport = Arc::new(semio_framework_os_services::SocketHttpTransport::new(compute.clone(), runtime.clone(), scope.clone()));
@@ -12368,7 +12406,8 @@ impl RuntimeMailbox {
                 Err(fetch) => mailbox.retain_native_asset_blocked(fetch),
             }
             if let Err(error) = result {
-                mailbox.record_frame_fault(error);
+                log_debug(&format!("native renderer asset fetch failed: {error}"));
+                mailbox.record_frame_fault("native renderer asset fetch failed");
             }
             mailbox.0.native_asset_fetching.store(false, Ordering::Release);
             if let Some(waker) = mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
@@ -13646,13 +13685,13 @@ impl FrameTransaction {
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }
-                    if let Err(fault) = engine_canvas::node_graph_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, wheel.ctrl, &mut app.input) {
-                        app.input.record_action_fault(fault);
+                    if let Err(fault) = engine_canvas::node_graph_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, wheel.ctrl, &mut interaction.input) {
+                        interaction.input.record_action_fault(fault);
                         runtime.record_frame_fault("node graph wheel action admission failed");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }
-                    app.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
+                    interaction.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
                 }
                 AppFrameTransactionStep::Pending
             }
@@ -13680,8 +13719,8 @@ impl FrameTransaction {
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }
-                    if let Err(fault) = engine_canvas::tiled_map_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, wheel.ctrl, &mut app.input) {
-                        app.input.record_action_fault(fault);
+                    if let Err(fault) = engine_canvas::tiled_map_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, wheel.ctrl, &mut interaction.input) {
+                        interaction.input.record_action_fault(fault);
                         runtime.record_frame_fault("tiled map wheel action admission failed");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
@@ -13714,8 +13753,8 @@ impl FrameTransaction {
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }
-                    if let Err(fault) = scenes::puzzle_board_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, &mut app.input) {
-                        app.input.record_action_fault(fault);
+                    if let Err(fault) = scenes::puzzle_board_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, &mut interaction.input) {
+                        interaction.input.record_action_fault(fault);
                         runtime.record_frame_fault("board wheel action admission failed");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
@@ -14974,7 +15013,12 @@ async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut
         if bytes.is_empty() || bytes.len() > WORLD_ASSET_RESPONSE_PAGE_BYTES {
             return Err("native renderer HTTP asset returned an invalid response page".into());
         }
-        push_renderer_asset_page(fetch, bytes)?;
+        // 📄️ `push_renderer_asset_page` admits the zero-copy `RetainedJobPayload` the native I/O
+        // path produces. An HTTP body chunk is a plain `Vec<u8>` with no retained-page source
+        // mounted behind it, so this fails closed with that helper's own verdict instead of
+        // fabricating a payload the transport never owned — the same rejection the helper already
+        // returns for every populated page.
+        return Err("native renderer HTTP asset page requires a zero-copy retained-page handoff that is not mounted".into());
     }
     if !mailbox.seal_renderer_asset_response(fetch) {
         return Err("native renderer HTTP asset could not seal its exact byte claim".into());
@@ -15007,8 +15051,9 @@ impl AppRuntime {
             }
             return;
         }
-        let Some(program) = self.shell.plugins.get(self.native_hot_swap_cursor % self.shell.plugins.len().max(1)) else { return };
+        let cursor = self.native_hot_swap_cursor % self.shell.plugins.len().max(1);
         self.native_hot_swap_cursor = self.native_hot_swap_cursor.wrapping_add(1);
+        let Some(program) = self.shell.plugins.get(cursor) else { return };
         let Some(path) = program.wasm_artifact_path().map(std::path::Path::to_path_buf) else { return };
         let mut paths = semio_framework_os_services::NativePathSet::new();
         if paths.try_push(path).is_err() {
@@ -15116,7 +15161,8 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::Hover;
             }
             FrameBuildPhase::Hover => {
-                self.input.update_hover(self.last_pointer_x, self.last_pointer_y);
+                let (hover_x, hover_y) = (self.last_pointer_x, self.last_pointer_y);
+                self.input.update_hover(hover_x, hover_y);
                 cursor.phase = FrameBuildPhase::InputFrame;
             }
             FrameBuildPhase::InputFrame => {
@@ -15910,18 +15956,18 @@ impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
 /// the process with `fatal runtime error: stack overflow` the first time a probe document is
 /// committed — no stack size survives it. See `📓️fable-mcp-artifact-quick-recursion.md`.
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::ToValue for NativeSocketProbeSnapshot {
-    fn to_value(&self) -> store::os_store::DslValue {
-        store::os_store::DslValue::String(self.0.clone())
+impl store::ToValue for NativeSocketProbeSnapshot {
+    fn to_value(&self) -> store::DslValue {
+        store::DslValue::String(self.0.clone())
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::FromValue for NativeSocketProbeSnapshot {
-    fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
+impl store::FromValue for NativeSocketProbeSnapshot {
+    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
         match value {
-            store::os_store::DslValue::String(text) => Ok(Self(text)),
-            other => Err(store::os_store::ValueError::new(format!("expected a string, found {other:?}"))),
+            store::DslValue::String(text) => Ok(Self(text)),
+            other => Err(store::ValueError::new(format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -15931,8 +15977,8 @@ impl store::os_store::FromValue for NativeSocketProbeSnapshot {
 struct NativeSocketProbeDiff(String);
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::MutationDiff<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
-    fn apply(&self, _base: &NativeSocketProbeSnapshot) -> store::os_store::MutationApplyResult<NativeSocketProbeSnapshot> {
+impl store::os_spr::command::MutationDiff<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
+    fn apply(&self, _base: &NativeSocketProbeSnapshot) -> store::os_spr::command::MutationApplyResult<NativeSocketProbeSnapshot> {
         Ok(NativeSocketProbeSnapshot(self.0.clone()))
     }
 
@@ -15944,18 +15990,18 @@ impl store::os_store::MutationDiff<NativeSocketProbeSnapshot> for NativeSocketPr
 /// 🌉️ Hand-written — same transparent-newtype shape, and the same no-`to_dsl_value` recursion rule,
 /// as [`NativeSocketProbeSnapshot`]'s impl above.
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::ToValue for NativeSocketProbeDiff {
-    fn to_value(&self) -> store::os_store::DslValue {
-        store::os_store::DslValue::String(self.0.clone())
+impl store::ToValue for NativeSocketProbeDiff {
+    fn to_value(&self) -> store::DslValue {
+        store::DslValue::String(self.0.clone())
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::FromValue for NativeSocketProbeDiff {
-    fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
+impl store::FromValue for NativeSocketProbeDiff {
+    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
         match value {
-            store::os_store::DslValue::String(text) => Ok(Self(text)),
-            other => Err(store::os_store::ValueError::new(format!("expected a string, found {other:?}"))),
+            store::DslValue::String(text) => Ok(Self(text)),
+            other => Err(store::ValueError::new(format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -15967,7 +16013,7 @@ enum NativeSocketProbeMutation {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-const NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR: store::os_store::MutationLeafDescriptor = store::os_store::MutationLeafDescriptor {
+const NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR: store::os_spr::command::MutationLeafDescriptor = store::os_spr::command::MutationLeafDescriptor {
     schema_version: 1,
     owner: "framework/os/renderer/wgpu/native-socket-probe",
     semantic_kind: "set",
@@ -15977,25 +16023,25 @@ const NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR: store::os_store::MutationLeafDesc
     payload_schema: "native.socket-grant.probe/v1",
     text_opcode: None,
     binary_tag: None,
-    invertibility: store::os_store::MutationInvertibility::ExplicitMutation,
-    diff_participation: store::os_store::MutationDiffParticipation::Detect,
-    outcome_classes: &[store::os_store::MutationOutcomeClass::Applied],
-    composition: store::os_store::MutationComposition::Atomic,
-    required_language_surfaces: &[store::os_store::MutationLanguageSurface::Rust],
+    invertibility: store::os_spr::command::MutationInvertibility::ExplicitMutation,
+    diff_participation: store::os_spr::command::MutationDiffParticipation::Detect,
+    outcome_classes: &[store::os_spr::command::MutationOutcomeClass::Applied],
+    composition: store::os_spr::command::MutationComposition::Atomic,
+    required_language_surfaces: &[store::os_spr::command::MutationLanguageSurface::Rust],
 };
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::Mutation<NativeSocketProbeSnapshot> for NativeSocketProbeMutation {
+impl store::os_spr::command::Mutation<NativeSocketProbeSnapshot> for NativeSocketProbeMutation {
     type Diff = NativeSocketProbeDiff;
-    const DESCRIPTORS: &'static [store::os_store::MutationLeafDescriptor] = &[NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR];
+    const DESCRIPTORS: &'static [store::os_spr::command::MutationLeafDescriptor] = &[NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR];
 
-    fn descriptor(&self) -> &'static store::os_store::MutationLeafDescriptor {
+    fn descriptor(&self) -> &'static store::os_spr::command::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
 
-    fn diff(&self, _base: &NativeSocketProbeSnapshot) -> store::os_store::MutationOutcome<NativeSocketProbeDiff> {
+    fn diff(&self, _base: &NativeSocketProbeSnapshot) -> store::os_spr::command::MutationOutcome<NativeSocketProbeDiff> {
         let Self::Set(value) = self;
-        store::os_store::MutationOutcome::new(NativeSocketProbeDiff(value.clone()))
+        store::os_spr::command::MutationOutcome::new(NativeSocketProbeDiff(value.clone()))
     }
 
     fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Vec<Self> {
@@ -16008,23 +16054,23 @@ impl store::os_store::Mutation<NativeSocketProbeSnapshot> for NativeSocketProbeM
 /// the one descriptor's own `aggregate_variant` rather than a second copy of the string. Same
 /// no-`to_dsl_value` recursion rule as [`NativeSocketProbeSnapshot`]'s impl above.
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::ToValue for NativeSocketProbeMutation {
-    fn to_value(&self) -> store::os_store::DslValue {
+impl store::ToValue for NativeSocketProbeMutation {
+    fn to_value(&self) -> store::DslValue {
         let Self::Set(value) = self;
-        store::os_store::DslValue::object([(NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant.to_string(), store::os_store::DslValue::String(value.clone()))])
+        store::DslValue::object([(NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant.to_string(), store::DslValue::String(value.clone()))])
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::FromValue for NativeSocketProbeMutation {
-    fn from_value(value: store::os_store::DslValue) -> Result<Self, store::os_store::ValueError> {
-        let store::os_store::DslValue::Object(entries) = value else {
-            return Err(store::os_store::ValueError::new(format!("expected a one-key `{}` object, found {value:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant)));
+impl store::FromValue for NativeSocketProbeMutation {
+    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
+        let store::DslValue::Object(entries) = value else {
+            return Err(store::ValueError::new(format!("expected a one-key `{}` object, found {value:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant)));
         };
-        match <[(String, store::os_store::DslValue); 1]>::try_from(entries) {
-            Ok([(key, store::os_store::DslValue::String(text))]) if key == NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant => Ok(Self::Set(text)),
-            Ok([(key, payload)]) => Err(store::os_store::ValueError::new(format!("expected variant `{}` with a string payload, found `{key}` with {payload:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant))),
-            Err(entries) => Err(store::os_store::ValueError::new(format!("expected exactly one variant key, found {}", entries.len()))),
+        match <[(String, store::DslValue); 1]>::try_from(entries) {
+            Ok([(key, store::DslValue::String(text))]) if key == NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant => Ok(Self::Set(text)),
+            Ok([(key, payload)]) => Err(store::ValueError::new(format!("expected variant `{}` with a string payload, found `{key}` with {payload:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant))),
+            Err(entries) => Err(store::ValueError::new(format!("expected exactly one variant key, found {}", entries.len()))),
         }
     }
 }
@@ -16044,27 +16090,27 @@ fn native_socket_probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third
     let diff = NativeSocketProbeDiff(value.clone());
     let mutation = NativeSocketProbeMutation::Set(value);
 
-    assert_eq!(serde_json::Value::from(store::os_store::ToValue::to_value(&snapshot)), probe["snapshotEncoding"]);
-    assert_eq!(serde_json::Value::from(store::os_store::ToValue::to_value(&diff)), probe["diffEncoding"]);
-    assert_eq!(serde_json::Value::from(store::os_store::ToValue::to_value(&mutation)), probe["mutationEncoding"]);
+    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&snapshot)), probe["snapshotEncoding"]);
+    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&diff)), probe["diffEncoding"]);
+    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&mutation)), probe["mutationEncoding"]);
     assert_eq!(serde_json::to_value(&snapshot).expect("serde oracle"), probe["snapshotEncoding"]);
     assert_eq!(serde_json::to_value(&diff).expect("serde oracle"), probe["diffEncoding"]);
     assert_eq!(serde_json::to_value(&mutation).expect("serde oracle"), probe["mutationEncoding"]);
 
-    assert_eq!(<NativeSocketProbeSnapshot as store::os_store::FromValue>::from_value(store::os_store::ToValue::to_value(&snapshot)).expect("snapshot round trip"), snapshot);
-    assert_eq!(<NativeSocketProbeDiff as store::os_store::FromValue>::from_value(store::os_store::ToValue::to_value(&diff)).expect("diff round trip"), diff);
-    assert_eq!(<NativeSocketProbeMutation as store::os_store::FromValue>::from_value(store::os_store::ToValue::to_value(&mutation)).expect("mutation round trip"), mutation);
+    assert_eq!(<NativeSocketProbeSnapshot as store::FromValue>::from_value(store::ToValue::to_value(&snapshot)).expect("snapshot round trip"), snapshot);
+    assert_eq!(<NativeSocketProbeDiff as store::FromValue>::from_value(store::ToValue::to_value(&diff)).expect("diff round trip"), diff);
+    assert_eq!(<NativeSocketProbeMutation as store::FromValue>::from_value(store::ToValue::to_value(&mutation)).expect("mutation round trip"), mutation);
 
     for rejected in probe["rejectedSnapshotEncodings"].as_array().expect("fixture snapshot rejections") {
-        assert!(<NativeSocketProbeSnapshot as store::os_store::FromValue>::from_value(store::os_store::DslValue::from(rejected)).is_err(), "snapshot must reject {rejected}");
+        assert!(<NativeSocketProbeSnapshot as store::FromValue>::from_value(store::DslValue::from(rejected)).is_err(), "snapshot must reject {rejected}");
     }
     for rejected in probe["rejectedMutationEncodings"].as_array().expect("fixture mutation rejections") {
-        assert!(<NativeSocketProbeMutation as store::os_store::FromValue>::from_value(store::os_store::DslValue::from(rejected)).is_err(), "mutation must reject {rejected}");
+        assert!(<NativeSocketProbeMutation as store::FromValue>::from_value(store::DslValue::from(rejected)).is_err(), "mutation must reject {rejected}");
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::OpText for NativeSocketProbeMutation {
+impl store::os_spr::command::OpText for NativeSocketProbeMutation {
     fn print_op(&self) -> String {
         let Self::Set(value) = self;
         value.clone()
@@ -16076,14 +16122,14 @@ impl store::os_store::OpText for NativeSocketProbeMutation {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::OpBinary for NativeSocketProbeMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, store::os_store::ProtocolError> {
+impl store::os_spr::command::OpBinary for NativeSocketProbeMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, store::os_spr::ProtocolError> {
         let Self::Set(value) = self;
         Ok(value.as_bytes().to_vec())
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, store::os_store::ProtocolError> {
-        String::from_utf8(bytes.to_vec()).map(Self::Set).map_err(|error| store::os_store::ProtocolError::Malformed { what: "native-socket-probe-op", offset: 0, detail: error.to_string() })
+    fn decode_op(bytes: &[u8]) -> Result<Self, store::os_spr::ProtocolError> {
+        String::from_utf8(bytes.to_vec()).map(Self::Set).map_err(|error| store::os_spr::ProtocolError::Malformed { what: "native-socket-probe-op", offset: 0, detail: error.to_string() })
     }
 }
 

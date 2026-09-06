@@ -24,7 +24,7 @@ pub struct SetActiveExample {
 /// outright — see `📓️taxonomy.md`'s forbidden vocabulary), so loading a named example builds
 /// `editor::wires::reset_wires_document_effect` (a `Effect::LoadDocument`, outside undo history)
 /// instead of an `artifact_mutations` entry.
-pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifacts::wires::WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifacts::wires::WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
         metabolism_wires_example_snapshot().map_err(|error| {
             let message = if error.target.is_empty() { error.message.clone() } else { format!("{} at {}", error.message, error.target.join(".")) };

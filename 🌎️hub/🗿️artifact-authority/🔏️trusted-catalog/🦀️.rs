@@ -7,15 +7,19 @@ use directory::os_store::{self, ArtifactCodec};
 use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor, PackageRole, Version};
 use semio_framework_hash::{Hasher, Sha256};
 use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tokio::io::AsyncReadExt;
 
 #[path = "🌐️browser-actor/🦀️.rs"]
 mod browser_actor;
 use browser_actor::BundleBrowserActor;
+#[path = "🛡️opened-root/🦀️.rs"]
+mod opened_root;
+use opened_root::{TrustedCatalogDataRoot, TrustedCatalogGenerationRoot, TrustedCatalogRelativePath};
+#[cfg(all(test, unix))]
+use opened_root::create_fifo_fixture;
 use directory::os_directory::schema::{DocumentBrowserActorSourceV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES};
 
 /// 🧯️ Maximum accepted serialized bundle bytes.
@@ -165,6 +169,14 @@ struct Bundle {
     packages: Vec<BundlePackage>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct TrustedCatalogCurrentPointer {
+    profile_id: String,
+    generation_id: String,
+    bundle_sha256: String,
+}
+
 #[derive(Debug)]
 struct SelectedTrustedBundleV1 {
     package_indices: Vec<usize>,
@@ -184,6 +196,22 @@ impl NativeCodecBinding {
     /// 🪢️ Binds a native executable without deriving package identity from plugin identity.
     pub fn new(plugin_id: impl Into<String>, package_id: impl Into<String>, artifact_kind: impl Into<String>, codec: ArtifactCodec) -> Self {
         Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), codec }
+    }
+
+    pub(super) fn plugin_id(&self) -> &str {
+        &self.plugin_id
+    }
+
+    pub(super) fn package_id(&self) -> &str {
+        &self.package_id
+    }
+
+    pub(super) fn artifact_kind(&self) -> &str {
+        &self.artifact_kind
+    }
+
+    pub(super) fn codec(&self) -> &ArtifactCodec {
+        &self.codec
     }
 }
 
@@ -426,16 +454,49 @@ impl TrustedArtifactCatalog for Arc<VerifiedTrustedCatalog> {
 pub struct TrustedCatalogLoader;
 
 impl TrustedCatalogLoader {
-    /// 🛡️ Verifies the complete selected closure before atomically registering any native codec.
-    pub async fn load(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
-        Self::load_selected(bundle_path, profile_id, providers, context).await
+    /// 🛡️ Opens the current immutable generation beneath one server-owned Hub data root.
+    pub async fn load_current(data_path: &Path, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<Option<VerifiedTrustedCatalog>, AuthorityError> {
+        if !data_path.try_exists().map_err(catalog_error)? {
+            return Ok(None);
+        }
+        let data_root = TrustedCatalogDataRoot::open_server_owned(data_path)?;
+        let Some(current_file) = data_root.open_current()? else {
+            return Ok(None);
+        };
+        let current_bytes = current_file.read_bounded(64 * 1024, context).await?;
+        let current: TrustedCatalogCurrentPointer = serde_json::from_slice(&current_bytes).map_err(catalog_error)?;
+        let mut canonical = serde_json::to_vec(&current).map_err(catalog_error)?;
+        canonical.push(b'\n');
+        if canonical != current_bytes || current.profile_id.is_empty() || current.profile_id.len() > TRUSTED_IDENTITY_MAX_BYTES {
+            return Err(catalog("trusted catalog current pointer is not exact canonical metadata"));
+        }
+        decode_digest(&current.generation_id, "trusted generation id")?;
+        let expected_bundle_sha256 = decode_digest(&current.bundle_sha256, "trusted bundle sha256")?;
+        let generation_root = data_root.open_generation(&current.generation_id)?;
+        let bundle_path = TrustedCatalogRelativePath::parse("trusted-catalog.json")?;
+        let bundle_bytes = generation_root.read_regular(&bundle_path, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
+        if sha256(&bundle_bytes, context).await? != expected_bundle_sha256 {
+            return Err(catalog("trusted bundle differs from the current pointer digest"));
+        }
+        let verified = Self::load_selected(&generation_root, bundle_path, bundle_bytes, &current.profile_id, providers, context).await?;
+        if verified.generation_id() != current.generation_id {
+            return Err(catalog("trusted current pointer generation differs from the selected profile"));
+        }
+        Ok(Some(verified))
     }
 
-    async fn load_selected(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+    #[cfg(any(test, feature = "test-support"))]
+    pub(crate) async fn load_fixture(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+        let path = std::fs::canonicalize(bundle_path).map_err(catalog_error)?;
+        let fixture_root = path.parent().ok_or_else(|| catalog("bundle has no containing directory"))?;
+        let generation_root = TrustedCatalogGenerationRoot::open_fixture_owned(fixture_root)?;
+        let bundle_path = TrustedCatalogRelativePath::parse(path.file_name().and_then(|name| name.to_str()).ok_or_else(|| catalog("fixture bundle name is not UTF-8"))?)?;
+        let bundle_bytes = generation_root.read_regular(&bundle_path, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
+        Self::load_selected(&generation_root, bundle_path, bundle_bytes, profile_id, providers, context).await
+    }
+
+    async fn load_selected(root: &TrustedCatalogGenerationRoot, bundle_path: TrustedCatalogRelativePath, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
-        let bundle_path = tokio::fs::canonicalize(bundle_path).await.map_err(|error| catalog_error(error))?;
-        let root = bundle_path.parent().ok_or_else(|| catalog("bundle has no containing directory"))?.to_path_buf();
-        let bundle_bytes = read_bounded(&bundle_path, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
         let bundle: Bundle = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
         let SelectedTrustedBundleV1 { package_indices: order, profile } = validate_bundle(&bundle, profile_id)?;
         let order_len = u64::try_from(order.len()).map_err(|error| catalog_error(error))?;
@@ -461,16 +522,16 @@ impl TrustedCatalogLoader {
         let mut codecs = Vec::new();
         let mut open_targets = Vec::new();
         let mut registration_codecs = Vec::new();
-        let mut resolved_paths = BTreeSet::from([bundle_path.clone()]);
+        let mut resolved_paths = BTreeSet::from([bundle_path]);
 
         for (position, index) in order.into_iter().enumerate() {
             context.checkpoint()?;
             let record = &bundle.packages[index];
-            let component_path = contained_path(&root, &record.component.path).await?;
+            let component_path = TrustedCatalogRelativePath::parse(&record.component.path)?;
             if !resolved_paths.insert(component_path.clone()) {
-                return Err(catalog("trusted file resolves to a path already used by the selected closure"));
+                return Err(catalog("trusted file path is already used by the selected closure"));
             }
-            let component_bytes = read_bounded(&component_path, TRUSTED_COMPONENT_MAX_BYTES, context).await?;
+            let component_bytes = root.read_regular(&component_path, TRUSTED_COMPONENT_MAX_BYTES, context).await?;
             retained_component_bytes = retained_component_bytes
                 .checked_add(u64::try_from(component_bytes.len()).map_err(catalog_error)?)
                 .filter(|bytes| *bytes <= TRUSTED_COMPONENT_CLOSURE_MAX_BYTES)
@@ -481,11 +542,11 @@ impl TrustedCatalogLoader {
             verify_digest(&record.component.blake3, component_blake3, "component blake3")?;
             report_package_progress(context, position, 1, total_units)?;
 
-            let descriptor_path = contained_path(&root, &record.descriptor.path).await?;
+            let descriptor_path = TrustedCatalogRelativePath::parse(&record.descriptor.path)?;
             if !resolved_paths.insert(descriptor_path.clone()) {
-                return Err(catalog("trusted file resolves to a path already used by the selected closure"));
+                return Err(catalog("trusted file path is already used by the selected closure"));
             }
-            let descriptor_bytes = read_bounded(&descriptor_path, TRUSTED_DESCRIPTOR_MAX_BYTES, context).await?;
+            let descriptor_bytes = root.read_regular(&descriptor_path, TRUSTED_DESCRIPTOR_MAX_BYTES, context).await?;
             retained_descriptor_bytes = retained_descriptor_bytes
                 .checked_add(u64::try_from(descriptor_bytes.len()).map_err(catalog_error)?)
                 .filter(|bytes| *bytes <= TRUSTED_DESCRIPTOR_CLOSURE_MAX_BYTES)
@@ -501,11 +562,11 @@ impl TrustedCatalogLoader {
             record.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &hex_lower(&component_sha256), descriptor_byte_sha256: &hex_lower(&descriptor_sha256) }, package_actor_renderer(record))?;
             let browser_actor_bytes = if let Some(file) = record.browser_actor.file() {
                 retained_browser_actor_bytes = retained_browser_actor_bytes.checked_add(file.byte_length).filter(|bytes| *bytes <= TRUSTED_BROWSER_ACTOR_CLOSURE_MAX_BYTES).ok_or(AuthorityError::ResourceLimit("trusted browser actor closure byte"))?;
-                let actor_path = contained_path(&root, &file.path).await?;
+                let actor_path = TrustedCatalogRelativePath::parse(&file.path)?;
                 if !resolved_paths.insert(actor_path.clone()) {
                     return Err(catalog("trusted browser actor path is already used by the selected closure"));
                 }
-                let bytes = read_bounded(&actor_path, file.byte_length, context).await?;
+                let bytes = root.read_regular(&actor_path, file.byte_length, context).await?;
                 verify_length(file.byte_length, bytes.len())?;
                 verify_digest(&file.sha256, sha256(&bytes, context).await?, "browser actor sha256")?;
                 Some(Arc::<[u8]>::from(bytes))
@@ -1090,52 +1151,6 @@ fn validate_descriptor(record: &BundlePackage, descriptor: &PackageDescriptor, p
     Ok(())
 }
 
-async fn contained_path(root: &Path, relative: &str) -> Result<PathBuf, AuthorityError> {
-    if relative.is_empty()
-        || relative.len() > TRUSTED_RELATIVE_PATH_MAX_BYTES
-        || relative.contains('\\')
-        || Path::new(relative).is_absolute()
-        || Path::new(relative).components().any(|component| matches!(component, Component::ParentDir | Component::RootDir | Component::Prefix(_)))
-    {
-        return Err(catalog("trusted file path is not a bounded relative path"));
-    }
-    let path = tokio::fs::canonicalize(root.join(relative)).await.map_err(catalog_error)?;
-    if !path.starts_with(root) {
-        return Err(catalog("trusted file path escapes the bundle root"));
-    }
-    Ok(path)
-}
-
-async fn read_bounded(path: &Path, maximum: u64, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {
-    context.checkpoint()?;
-    let metadata = tokio::fs::metadata(path).await.map_err(catalog_error)?;
-    if !metadata.is_file() || metadata.len() == 0 || metadata.len() > maximum {
-        return Err(catalog("trusted file is empty, non-regular, or exceeds its fixed byte boundary"));
-    }
-    let capacity = usize::try_from(metadata.len()).map_err(catalog_error)?;
-    let mut file = tokio::fs::File::open(path).await.map_err(catalog_error)?;
-    let mut bytes = Vec::with_capacity(capacity);
-    let mut chunk = [0u8; 64 * 1024];
-    loop {
-        context.checkpoint()?;
-        let read = file.read(&mut chunk).await.map_err(catalog_error)?;
-        if read == 0 {
-            break;
-        }
-        let next = bytes.len().checked_add(read).ok_or_else(|| AuthorityError::ResourceLimit("trusted file byte"))?;
-        if u64::try_from(next).map_err(catalog_error)? > maximum {
-            return Err(catalog("trusted file changed beyond its fixed byte boundary while reading"));
-        }
-        bytes.extend_from_slice(&chunk[..read]);
-        semio_framework_async::yield_once().await;
-    }
-    context.checkpoint()?;
-    if bytes.is_empty() {
-        return Err(catalog("trusted file became empty while reading"));
-    }
-    Ok(bytes)
-}
-
 async fn dual_hash(bytes: &[u8], context: &OperationContext<'_>) -> Result<([u8; 32], [u8; 32]), AuthorityError> {
     let mut sha256 = Sha256::new();
     let mut blake3 = Hasher::new();
@@ -1238,6 +1253,7 @@ mod tests {
     use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
     use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
     use directory::os_store::{document_codec, ArtifactPackFiles, ArtifactTextFiles, VcsError};
+    use std::io::Write;
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     use std::sync::Mutex;
 
@@ -1551,6 +1567,34 @@ mod tests {
         fixture
     }
 
+    #[cfg(unix)]
+    fn fixture_file_link(target: &Path, link: &Path) {
+        std::os::unix::fs::symlink(target, link).expect("create fixture file symlink");
+    }
+
+    #[cfg(windows)]
+    fn fixture_file_link(target: &Path, link: &Path) {
+        std::os::windows::fs::symlink_file(target, link).expect("create fixture file reparse point");
+    }
+
+    #[cfg(unix)]
+    fn fixture_directory_link(target: &Path, link: &Path) {
+        std::os::unix::fs::symlink(target, link).expect("create fixture directory symlink");
+    }
+
+    #[cfg(windows)]
+    fn fixture_directory_link(target: &Path, link: &Path) {
+        std::os::windows::fs::symlink_dir(target, link).expect("create fixture directory reparse point");
+    }
+
+    async fn assert_linked_fixture_denied(fixture: &FixtureDirectory) {
+        let provider = FixtureProviderSource::new(vec![fixture.binding()]);
+        let result = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &provider, &TestControl::new().context()).await;
+        assert!(result.is_err(), "linked trusted closure unexpectedly loaded");
+        assert!(provider.calls.lock().expect("provider calls").is_empty(), "provider observed linked bytes");
+        assert!(document_codec(&fixture.schema).await.expect("codec registry").is_none(), "linked bytes published a codec");
+    }
+
     /// 🧪️ Loads real GIS assembly metadata and native receipts around synthetic component bytes; component execution is outside this fixture.
     #[cfg(feature = "native-artifact-execution")]
     async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> FixtureDirectory {
@@ -1593,7 +1637,7 @@ mod tests {
             let app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Viewer && app.dialect.artifact_kind == "s.gis.gismap").expect("actual Map viewer");
             target["surfaceId"] = app.id.clone().into();
             target["appId"] = app.id.clone().into();
-            target["windowKindId"] = app.window_kinds.first().expect("actual viewer window").id.clone().into();
+            target["windowKindId"] = app.window_kinds.first().id.clone().into();
             target["role"] = "viewer".into();
             target["grant"]["write"] = false.into();
         }
@@ -1625,7 +1669,7 @@ mod tests {
         for (viewer, foreign_service) in [(false, false), (true, false), (false, true)] {
             let fixture = prepared_gis_binding_fixture(viewer, foreign_service).await;
             let control = TestControl::new();
-            let catalog = Arc::new(TrustedCatalogLoader::load(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.expect("catalog loaded with real GIS receipts"));
+            let catalog = Arc::new(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.expect("catalog loaded with real GIS receipts"));
             let result = crate::inference::verified_gis_map_binding(catalog.clone());
             if foreign_service {
                 assert!(matches!(result, Err(crate::inference::InferenceErrorV1::Denied)));
@@ -1639,7 +1683,7 @@ mod tests {
                 let retained = catalog.packages()[0].component_bytes().to_vec();
                 let digest = binding.digest().to_owned();
                 std::fs::write(fixture.component_path(0), b"tampered").expect("mutate fixture backing component");
-                assert!(TrustedCatalogLoader::load(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.is_err());
+                assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.is_err());
                 drop(catalog);
                 assert_eq!(binding.catalog().packages()[0].component_bytes(), retained);
                 assert_eq!(binding.digest(), digest);
@@ -1675,7 +1719,7 @@ mod tests {
     }
 
     async fn load_fixture(fixture: &FixtureDirectory, bindings: &[NativeCodecBinding], context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
-        TrustedCatalogLoader::load_selected(&fixture.bundle_path, "fixture", &FixtureProviderSource::new(bindings.to_vec()), context).await
+        TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &FixtureProviderSource::new(bindings.to_vec()), context).await
     }
 
     #[tokio::test]
@@ -1689,7 +1733,7 @@ mod tests {
         let unselected = NativeCodecBinding::new("unselected", "semio:unselected", "fixture.unselected", fixture_codec(&format!("{}.unselected", single.schema), [0x11; 32]));
         let mut source = FixtureProviderSource::new(vec![single.binding(), unselected]);
         source.exact_pool = false;
-        let catalog = TrustedCatalogLoader::load_selected(&single.bundle_path, "fixture", &source, &TestControl::new().context()).await.expect("selected-only catalog");
+        let catalog = TrustedCatalogLoader::load_fixture(&single.bundle_path, "fixture", &source, &TestControl::new().context()).await.expect("selected-only catalog");
         assert_eq!(*source.calls.lock().expect("calls"), ["semio:fixture-editor"]);
         assert_eq!(catalog.packages().len(), 1);
         assert_eq!(catalog.codec_count(), 1);
@@ -1697,7 +1741,7 @@ mod tests {
 
         let mut pair = prepared_fixture();
         let source = FixtureProviderSource::new(pair.make_two_codec_bindings());
-        let catalog = TrustedCatalogLoader::load_selected(&pair.bundle_path, "fixture", &source, &TestControl::new().context()).await.expect("complete selected closure");
+        let catalog = TrustedCatalogLoader::load_fixture(&pair.bundle_path, "fixture", &source, &TestControl::new().context()).await.expect("complete selected closure");
         assert_eq!(*source.calls.lock().expect("calls"), ["semio:fixture-base", "semio:fixture-editor"]);
         assert_eq!(catalog.packages().len(), 2);
         assert_eq!(catalog.codec_count(), 2);
@@ -1758,7 +1802,7 @@ mod tests {
             if hostile == "registry-conflict" {
                 os_store::register_document_codec(fixture_codec(&fixture.schema, [0x22; 32])).await.expect("prior immutable owner");
             }
-            assert!(TrustedCatalogLoader::load_selected(&fixture.bundle_path, "fixture", &source, &TestControl::new().context()).await.is_err(), "{hostile}");
+            assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &source, &TestControl::new().context()).await.is_err(), "{hostile}");
             assert_eq!(*source.calls.lock().expect("calls"), ["semio:fixture-base", "semio:fixture-editor"], "{hostile}");
             assert!(document_codec(&format!("{}.base", fixture.schema)).await.expect("registry").is_none(), "{hostile} published first provider");
             let existing = document_codec(&fixture.schema).await.expect("registry");
@@ -1769,7 +1813,7 @@ mod tests {
             }
         }
         let fixture = prepared_fixture();
-        assert!(TrustedCatalogLoader::load(&fixture.bundle_path, "fixture", &NativeCodecProviderSetV1::linked(), &TestControl::new().context()).await.is_err());
+        assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &NativeCodecProviderSetV1::linked(), &TestControl::new().context()).await.is_err());
         assert!(document_codec(&fixture.schema).await.expect("registry").is_none());
     }
 
@@ -1781,7 +1825,7 @@ mod tests {
         let descriptor_path = invalid.root.join(invalid.bundle["packages"][0]["descriptor"]["path"].as_str().expect("descriptor path"));
         std::fs::write(descriptor_path, b"invalid descriptor").expect("hostile descriptor bytes");
         let source = FixtureProviderSource::new(vec![invalid.binding()]);
-        assert!(TrustedCatalogLoader::load_selected(&invalid.bundle_path, "fixture", &source, &TestControl::new().context()).await.is_err());
+        assert!(TrustedCatalogLoader::load_fixture(&invalid.bundle_path, "fixture", &source, &TestControl::new().context()).await.is_err());
         assert!(source.calls.lock().expect("calls").is_empty());
         assert!(document_codec(&invalid.schema).await.expect("registry").is_none());
 
@@ -1791,7 +1835,7 @@ mod tests {
             control.cancelled.store(before, Ordering::SeqCst);
             let mut source = FixtureProviderSource::new(fixture.make_two_codec_bindings());
             source.cancel_after_preview = Some(&control);
-            let result = TrustedCatalogLoader::load_selected(&fixture.bundle_path, "fixture", &source, &control.context()).await;
+            let result = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &source, &control.context()).await;
             assert!(matches!(result, Err(AuthorityError::Cancelled)));
             let calls = source.calls.lock().expect("calls").clone();
             assert_eq!(calls, if before { Vec::<String>::new() } else { vec!["semio:fixture-base".into()] });
@@ -2027,7 +2071,7 @@ mod tests {
             let control = ActorControl { control: TestControl::new(), cancel_after_descriptor: law["cancelAfterDescriptor"].as_bool().unwrap() };
             let provider = FixtureProviderSource::new(vec![fixture.binding()]);
             let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
-            let result = TrustedCatalogLoader::load(&fixture.bundle_path, "fixture", &provider, &context).await;
+            let result = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &provider, &context).await;
             let accepted = law["accepted"].as_bool().unwrap();
             assert_eq!(result.is_ok(), accepted, "{}", law["id"]);
             assert_eq!(document_codec(&fixture.schema).await.unwrap().is_some(), accepted, "{} codec publication", law["id"]);
@@ -2050,6 +2094,121 @@ mod tests {
             }
         }
         eprintln!("[DEBUG] trusted browser actor loader:8 neutral body/cancellation vectors; retained synthetic bytes never executed");
+    }
+
+    #[tokio::test]
+    async fn trusted_catalog_opened_root_rejects_linked_roots_leaves_intermediates_and_actors() {
+        let leaf = prepared_fixture();
+        let leaf_path = leaf.component_path(0);
+        let leaf_target = leaf.root.join("components/retained-component.wasm");
+        std::fs::write(&leaf_target, std::fs::read(&leaf_path).expect("read component")).expect("write retained component");
+        std::fs::remove_file(&leaf_path).expect("remove component leaf");
+        fixture_file_link(&leaf_target, &leaf_path);
+        assert_linked_fixture_denied(&leaf).await;
+
+        let intermediate = prepared_fixture();
+        let components = intermediate.root.join("components");
+        let retained_components = intermediate.root.join("retained-components");
+        std::fs::rename(&components, &retained_components).expect("retain component directory");
+        fixture_directory_link(&retained_components, &components);
+        assert_linked_fixture_denied(&intermediate).await;
+
+        let actor = prepared_fixture();
+        let actor_path = actor.root.join("browser/closed-actor.mjs");
+        let actor_target = actor.root.join("browser/retained-actor.mjs");
+        std::fs::write(&actor_target, std::fs::read(&actor_path).expect("read actor")).expect("write retained actor");
+        std::fs::remove_file(&actor_path).expect("remove actor leaf");
+        fixture_file_link(&actor_target, &actor_path);
+        assert_linked_fixture_denied(&actor).await;
+
+        let owner_fixture = prepared_fixture();
+        let actual_data = owner_fixture.root.join("owned-data");
+        std::fs::create_dir(&actual_data).expect("create owned data root");
+        let linked_data = owner_fixture.root.join("linked-data");
+        fixture_directory_link(&actual_data, &linked_data);
+        let canonical_owner_root = std::fs::canonicalize(&owner_fixture.root).expect("canonical fixture-owned parent root");
+        assert!(TrustedCatalogDataRoot::open_server_owned(&canonical_owner_root.join("linked-data")).is_err(), "linked initial data root was admitted");
+
+        let trusted = actual_data.join("trusted-catalog");
+        std::fs::create_dir(&trusted).expect("create trusted root");
+        let current_target = actual_data.join("retained-current.json");
+        std::fs::write(&current_target, b"{}\n").expect("write current target");
+        fixture_file_link(&current_target, &trusted.join("current.json"));
+        let canonical_data = std::fs::canonicalize(&actual_data).expect("canonical fixture-owned data root");
+        let data_root = TrustedCatalogDataRoot::open_server_owned(&canonical_data).expect("open fixture-owned data root");
+        assert!(data_root.open_current().is_err(), "linked current pointer was admitted");
+
+        let generations = trusted.join("generations");
+        std::fs::create_dir(&generations).expect("create generations root");
+        let retained_generation = trusted.join("retained-generation");
+        std::fs::create_dir(&retained_generation).expect("create retained generation");
+        let generation_id = "ab".repeat(32);
+        fixture_directory_link(&retained_generation, &generations.join(&generation_id));
+        assert!(data_root.open_generation(&generation_id).is_err(), "linked generation root was admitted");
+    }
+
+    #[tokio::test]
+    async fn trusted_catalog_opened_handle_is_swap_stable_bounded_and_cancel_safe() {
+        let fixture = prepared_fixture();
+        let canonical_root = std::fs::canonicalize(&fixture.root).expect("canonical fixture-owned generation root");
+        let root = TrustedCatalogGenerationRoot::open_fixture_owned(&canonical_root).expect("opened generation root");
+        let relative = TrustedCatalogRelativePath::parse(fixture.bundle["packages"][0]["component"]["path"].as_str().expect("component path")).expect("relative component path");
+        let opened = root.open_regular(&relative).expect("open retained component handle");
+        let component_path = fixture.component_path(0);
+        std::fs::rename(&component_path, fixture.root.join("original-component.wasm")).expect("retain opened component inode");
+        std::fs::write(&component_path, b"xyz").expect("write substituted component path");
+        assert_eq!(opened.read_bounded(3, &TestControl::new().context()).await.expect("read retained handle"), b"abc");
+        let provider = FixtureProviderSource::new(vec![fixture.binding()]);
+        assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &provider, &TestControl::new().context()).await.is_err(), "substituted component digest loaded");
+        assert!(provider.calls.lock().expect("provider calls").is_empty());
+        assert!(document_codec(&fixture.schema).await.expect("codec registry").is_none());
+
+        let zero_path = fixture.root.join("zero.bin");
+        std::fs::write(&zero_path, []).expect("write zero file");
+        let zero = root.open_regular(&TrustedCatalogRelativePath::parse("zero.bin").expect("zero path")).expect("open zero file");
+        assert!(zero.read_bounded(1, &TestControl::new().context()).await.is_err());
+
+        let over_path = fixture.root.join("over.bin");
+        std::fs::write(&over_path, b"abcd").expect("write over-bound file");
+        let over = root.open_regular(&TrustedCatalogRelativePath::parse("over.bin").expect("over path")).expect("open over-bound file");
+        assert!(over.read_bounded(3, &TestControl::new().context()).await.is_err());
+
+        let growth_path = fixture.root.join("growth.bin");
+        std::fs::write(&growth_path, b"abc").expect("write growth file");
+        let growth = root.open_regular(&TrustedCatalogRelativePath::parse("growth.bin").expect("growth path")).expect("open growth file");
+        std::fs::OpenOptions::new().append(true).open(&growth_path).expect("open growth writer").write_all(b"d").expect("grow opened file");
+        assert!(growth.read_bounded(4, &TestControl::new().context()).await.is_err(), "opened handle admitted growth within the caller maximum");
+
+        #[cfg(unix)]
+        {
+            let fifo_path = fixture.root.join("special.fifo");
+            create_fifo_fixture(&fifo_path).expect("create FIFO fixture");
+            assert!(root.open_regular(&TrustedCatalogRelativePath::parse("special.fifo").expect("FIFO path")).is_err(), "opened root admitted a blocking special-file leaf");
+        }
+
+        struct CancelAfterTwoCheckpoints(AtomicUsize);
+        impl AuthorityOperationControl for CancelAfterTwoCheckpoints {
+            fn now_ms(&self) -> u64 { 0 }
+            fn is_cancelled(&self) -> bool { self.0.fetch_add(1, Ordering::SeqCst) >= 2 }
+            fn report(&self, _progress: AuthorityProgress) {}
+        }
+        let large_path = fixture.root.join("large.bin");
+        std::fs::write(&large_path, vec![7u8; 64 * 1024 + 1]).expect("write multi-chunk file");
+        let large = root.open_regular(&TrustedCatalogRelativePath::parse("large.bin").expect("large path")).expect("open multi-chunk file");
+        let cancel = CancelAfterTwoCheckpoints(AtomicUsize::new(0));
+        let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &cancel);
+        assert!(matches!(large.read_bounded(64 * 1024 + 1, &context).await, Err(AuthorityError::Cancelled)));
+    }
+
+    #[test]
+    fn trusted_catalog_relative_paths_match_the_neutral_no_link_corpus() {
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🛡️opened-root/🔣️.json")).expect("opened-root corpus");
+        let rows = corpus["relativePaths"].as_array().expect("relative path rows");
+        assert_eq!(rows.len(), 15);
+        for row in rows {
+            let value = row["value"].as_str().expect("relative path value");
+            assert_eq!(TrustedCatalogRelativePath::parse(value).is_ok(), row["accepted"].as_bool().expect("relative path acceptance"), "{}", row["id"]);
+        }
     }
 
     #[test]
@@ -2173,9 +2332,7 @@ mod tests {
 
         let mut bundle: Bundle = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
         bundle.packages[0].component.path = "../escape.wasm".to_string();
-        let control = TestControl::new();
-        let runtime = tokio::runtime::Runtime::new().expect("runtime");
-        let error = runtime.block_on(contained_path(Path::new("."), &bundle.packages[0].component.path)).expect_err("escaping path");
+        let error = TrustedCatalogRelativePath::parse(&bundle.packages[0].component.path).expect_err("escaping path");
         assert!(error.to_string().contains("relative path"));
     }
 

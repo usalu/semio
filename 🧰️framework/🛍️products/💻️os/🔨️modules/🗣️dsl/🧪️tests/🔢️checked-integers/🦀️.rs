@@ -64,7 +64,11 @@ fn binary_record(ordinal: u64, record: &RecordValue) -> Vec<u8> {
 async fn fields_match_neutral_boundaries_and_serde() {
     let mut checked = 0;
     for row in vectors().integers {
-        let expected = match usize::BITS { 32 => row.accepted32, 64 => row.accepted64, bits => panic!("unsupported pointer width {bits}") };
+        let expected = match usize::BITS {
+            32 => row.accepted32,
+            64 => row.accepted64,
+            bits => panic!("unsupported pointer width {bits}"),
+        };
         macro_rules! check_type {
             ($ty:ty, $wide:ty, $variant:ident) => {{
                 let actual = row.decimal.parse::<$wide>().map_err(|error| error.to_string()).and_then(|value| <$ty as DslField>::from_value(&FieldValue::$variant(value)));
@@ -140,7 +144,9 @@ async fn derived_records_reject_text_integer_overflow() {
         let decoded = IndexRecord::__dsl_from_record(&record);
         assert_eq!(decoded.is_ok(), row.accepted, "{text}");
         assert_eq!(IndexOperation::from_named_record("set-index", &record).is_ok(), row.accepted, "{text}");
-        if let Ok(value) = decoded { assert_eq!(u64::from(value.index), wide); }
+        if let Ok(value) = decoded {
+            assert_eq!(u64::from(value.index), wide);
+        }
     }
 }
 

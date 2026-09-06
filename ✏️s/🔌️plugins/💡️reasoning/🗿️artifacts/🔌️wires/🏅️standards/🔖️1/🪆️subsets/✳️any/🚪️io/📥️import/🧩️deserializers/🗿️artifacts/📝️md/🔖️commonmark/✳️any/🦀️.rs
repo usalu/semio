@@ -16,7 +16,7 @@ pub struct MdIntoWires;
 impl Deserializer<WiresSnapshot> for MdIntoWires {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    fn deserialize(payload: &IoPayload) -> IoResult<WiresSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<WiresSnapshot> {
         let _ = STDIO_MD_DOCUMENT_SCHEMA;
         let md = match payload {
             IoPayload::Binary(bytes) => <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("MdIntoWires: md decode failed: {error}"), diagnostics: Vec::new() })?,

@@ -22,7 +22,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
 /// shape: the host activates one instance whenever a `program::artifact_kind().id` artifact is
 /// opened, this plugin's actor runs `Isolated`, and it asks the broker for document write access.
-pub async fn plugin() -> Result<Plugin<ArchitectApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<ArchitectApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<ArchitectApps>::builder("architect")
         .label("Architect")
         .version("0.1.0")

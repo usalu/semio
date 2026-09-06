@@ -22,10 +22,10 @@ pub enum ShootingViewCommand {
 }
 
 impl protocol::OpBinary for ShootingViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(ShootingViewCommand::Noop)
     }
 }
@@ -49,7 +49,7 @@ impl ArtifactViewer for ShootingViewer {
     const DIALECT: Dialect = SHOOTING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> ShootingSnapshot {
+    fn initial_snapshot() -> ShootingSnapshot {
         crate::artifacts::shooting::schema::default_snapshot()
     }
 
@@ -57,7 +57,7 @@ impl ArtifactViewer for ShootingViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to shot") is a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -67,7 +67,7 @@ impl ArtifactViewer for ShootingViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             scene::BODY_KEY => scene::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -77,7 +77,7 @@ impl ArtifactViewer for ShootingViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_shooting_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_shooting_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(SHOOTING_DIALECT).document(["semio", "shooting"]).icon_id("camera").mode_def(view::definition()).default_mode_id(view::SHOOTING_VIEW_MODE_VIEW).window_kind_def(scene::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

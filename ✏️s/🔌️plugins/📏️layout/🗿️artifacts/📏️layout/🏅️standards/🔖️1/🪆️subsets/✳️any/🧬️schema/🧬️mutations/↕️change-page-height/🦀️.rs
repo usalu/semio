@@ -18,16 +18,16 @@ pub struct ChangePageHeight {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageHeight {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "page-height", kind: "change-page-height", record: "ChangedPageHeight" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_page_height(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_page_height(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change page \"{}\" height", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
@@ -35,7 +35,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageHeight {
 
 
 //#region ↕️ChangePageHeight
-pub async fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -51,7 +51,7 @@ pub async fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSn
 
 
 //#region ↕️ChangePageHeight
-pub async fn inverse_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::ChangePageHeight(ChangePageHeight { id: payload.id.clone(), new_height: page.height })],
         None => Vec::new(),

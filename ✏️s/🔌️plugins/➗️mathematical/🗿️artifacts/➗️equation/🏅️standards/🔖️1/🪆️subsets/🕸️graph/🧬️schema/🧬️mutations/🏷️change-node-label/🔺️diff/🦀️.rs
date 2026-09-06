@@ -3,7 +3,7 @@
 use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ChangeNodeLabel, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::ChangeNodeLabel, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     let mut graph = equation_graph(base);
     let Some(existing) = graph.nodes.iter().find(|node| node.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);

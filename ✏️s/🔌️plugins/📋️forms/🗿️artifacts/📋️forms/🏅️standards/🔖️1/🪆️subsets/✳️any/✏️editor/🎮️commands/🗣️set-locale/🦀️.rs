@@ -11,7 +11,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     Ok(Emit::config(vec![FormsConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 

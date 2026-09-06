@@ -406,6 +406,7 @@ pub mod artifacts {
                 #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
                 mod component;
                 pub use component::*;
+                #[cfg(test)]
                 #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
                 mod tests;
             }
@@ -501,6 +502,7 @@ pub mod editor {
                 #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
                 mod component;
                 pub use component::*;
+                #[cfg(test)]
                 #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
                 mod tests;
             }

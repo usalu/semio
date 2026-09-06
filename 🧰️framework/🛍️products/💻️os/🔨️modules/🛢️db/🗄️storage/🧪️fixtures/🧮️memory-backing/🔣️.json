@@ -5,6 +5,10 @@
   "controllerCredit": { "items": 1, "controls": 1, "bytesFormula": "wake-plus-two-usize" },
   "closeWhileAdmitted": false,
   "sequentialTasks": 128,
+  "retainedPageResults": 44,
+  "sameSlotReuseBeforeOldResultClose": true,
+  "taskSlotReleasedWhileResultRetained": true,
+  "droppedResultRetirement": "mounted-io-maintenance",
   "retry": { "maximumAttempts": 8, "timerDelayMs": 1, "terminalAfterQueueRelease": true },
   "tables": [
     { "name": "wal", "slots": 64 },

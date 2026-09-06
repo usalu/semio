@@ -14,7 +14,7 @@ pub const ARCHITECT_BODY_GRAPH: &str = "architect.graph";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_GRAPH.into(),
         label: LocalizedLabel::native("Graph", "Graph"),
@@ -51,7 +51,7 @@ pub struct GraphCamera {
 //#endregion 🔖️Camera
 
 //#region 🔖️Render
-pub async fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let count = program.elements.len().max(1);
     let radius = 220.0;
     let center_x = 320.0;
@@ -94,7 +94,7 @@ pub async fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) 
 /// and `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `dag`'s main window's and `space`'s workflow window's identical gap.
-pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let camera = GraphCamera { x: cfg.graph_camera_x, y: cfg.graph_camera_y, zoom: cfg.graph_camera_zoom };
     let (nodes, edges) = graph_media_json(program, &camera);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };

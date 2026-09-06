@@ -10,7 +10,7 @@ pub(crate) const ARCHITECT_BODY_REPORT: &str = "architect.report";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub(crate) async fn definition() -> WindowKindDefinition {
+pub(crate) fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_REPORT.into(),
         label: LocalizedLabel::native("Report", "Bericht"),
@@ -33,7 +33,7 @@ pub(crate) async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub(crate) async fn render(cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(report) = parse_active_report(cfg) else {
         return ui_text(Label::data("Run validation, analysis, or report to populate this panel."));
     };

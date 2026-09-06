@@ -35,19 +35,19 @@ impl Default for EquationInference {
 }
 
 impl protocol::Inference<EquationSnapshot> for EquationInference {
-    async fn infer(snapshot: &EquationSnapshot) -> Self {
+    fn infer(snapshot: &EquationSnapshot) -> Self {
         Self { topology: compute_equation_topology(&crate::artifacts::equation::equation_graph(snapshot)), roots: compute_equation_roots(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<EquationSnapshot> for EquationInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.mathematical.equation.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.mathematical.equation.inference.topology", reads: &["notation", "results", "computed"] }, protocol::InferenceFieldSpec { id: "s.mathematical.equation.inference.roots", reads: &["equation"] }]
     }
 }
@@ -76,7 +76,7 @@ impl ArtifactInferrer for EquationInferrer {
 /// 💡️ Registers `s.mathematical.equation.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `equation_artifact_schema_descriptor`'s
 /// registration.
-pub async fn equation_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn equation_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.mathematical.equation.inference",
         inference: schema::FacetLeaves {

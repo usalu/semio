@@ -7,7 +7,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
-async fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<FormMutation> {
+fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<FormMutation> {
     let value = create_form_id("opt");
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
@@ -24,7 +24,7 @@ pub struct AddQuestionOption {
     pub label: String,
 }
 
-pub async fn handle(payload: &AddQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(payload: &AddQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     match add_question_option(doc.snapshot, &payload.question_id, &payload.label) {
         Some(operation) => Ok(Emit::mutations(vec![operation])),
         None => Ok(Emit::default()),
@@ -40,7 +40,7 @@ mod tests {
     use crate::editor::forms::FormsCommand;
     use AddQuestionOption;
 
-    async fn single_or_multi_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
+    fn single_or_multi_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::editor::forms::commands::add_question::AddQuestion { kind: "single".into(), step_id: None }));
         crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "single").expect("single question").id
     }

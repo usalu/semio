@@ -1,0 +1,58 @@
+{
+  "schema": "semio.mcp.canonical-checkpoint-resource.fixture/v1",
+  "limits": { "pairBytes": 4194304, "textBytes": 6291456, "metadataBytes": 16384 },
+  "selector": {
+    "artifactKind": "s.gis.gismap",
+    "artifactSchema": "gis.map",
+    "hostile": [
+      { "name": "wrong-kind", "artifactKind": "note.document", "artifactSchema": "gis.map" },
+      { "name": "wrong-schema", "artifactKind": "s.gis.gismap", "artifactSchema": "note.document@1" },
+      { "name": "wrong-kind-and-schema", "artifactKind": "note.document", "artifactSchema": "note.document@1" }
+    ]
+  },
+  "resource": {
+    "uri": "semio://workspace/scopes/space%3Aalpha/doc%3Atokyo/checkpoint",
+    "mimeType": "application/json",
+    "value": {
+      "schema": "semio.mcp.canonical-checkpoint-resource/v1",
+      "scope": { "spaceId": "space:alpha", "documentId": "doc:tokyo" },
+      "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+      "activeCheckpointId": "2222222222222222222222222222222222222222222222222222222222222222",
+      "etag": "\"7135321061d8ca1c40e085b4b89e856be0b59018827c3d33dbebee2a197271d8\"",
+      "authorityGeneration": 7,
+      "catalogGeneration": 9,
+      "frontier": {
+        "documentId": "doc:tokyo",
+        "headEditOrdinal": 7,
+        "headEditId": "edit:7",
+        "lastCommitSeq": 6,
+        "chainHash": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "pack": {
+        "byteLength": 5,
+        "sha256": "37a74a7a85b6aa70d6d6b826b93e91565daf3a42aa51ae3c5db1f5f6129c1deb",
+        "base64": "AxQlNkc="
+      },
+      "spr": {
+        "byteLength": 3,
+        "sha256": "0f1f4a255a81a102cf68ab6209128f7b266ecad4d85d154e2d4dbe2646984e0b",
+        "base64": "ByRB"
+      }
+    }
+  },
+  "hostile": [
+    "same-document-other-space",
+    "wrong-descriptor-digest",
+    "wrong-checkpoint",
+    "wrong-etag",
+    "wrong-frontier",
+    "wrong-pack-length",
+    "wrong-pack-hash",
+    "wrong-pack-base64",
+    "wrong-spr-length",
+    "wrong-spr-hash",
+    "wrong-spr-base64",
+    "over-text-limit"
+  ],
+  "lifecycle": ["cancel", "deadline", "revoke-before-publish", "descriptor-refresh-before-publish"]
+}

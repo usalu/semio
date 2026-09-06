@@ -6,6 +6,6 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub async fn inverse(payload: &super::CreateStorageRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::CreateStorageRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::DeleteStorageRequirement(super::super::delete_storage_requirement::DeleteStorageRequirement { id: payload.storage_requirement.header.id.clone() })]
 }

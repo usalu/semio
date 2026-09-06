@@ -8,7 +8,7 @@ pub const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -26,7 +26,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// summary now; the per-selected-question kind editor (label/kind/required/options/vector fields/…,
 /// driven by `patchQuestions`/`patchQuestionOptions`/`patchVectorField`) that used to read
 /// `cfg.selected_ids` is gone with it.
-pub async fn render(spec: &FormsSnapshot) -> UiNode {
+pub fn render(spec: &FormsSnapshot) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "forms-play-inspector.summary".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),

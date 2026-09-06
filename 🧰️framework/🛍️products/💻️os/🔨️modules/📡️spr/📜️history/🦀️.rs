@@ -2326,17 +2326,9 @@ mod tests {
     /// 🔢️ Checks canonical origin bytes against an independent test-only serde representation.
     #[semio_framework_async_macros::async_test]
     async fn mutation_origin_canonical_json_is_byte_identical_between_serde_json_and_pack_json() {
-        let origin = crate::os_spr::MutationOrigin::Contributed {
-            plugin_id: "s.stdio.mesh".to_string(),
-            mutation_id: crate::os_spr::SchemaId("mesh/v1".to_string()),
-            payload_hash: crate::os_spr::PayloadHash(core::array::from_fn(|index| index as u8)),
-        };
-        let oracle = ContributedOriginOracle {
-            kind: "contributed".to_string(),
-            plugin_id: "s.stdio.mesh".to_string(),
-            mutation_id: "mesh/v1".to_string(),
-            payload_hash: core::array::from_fn(|index| index as u8),
-        };
+        let origin =
+            crate::os_spr::MutationOrigin::Contributed { plugin_id: "s.stdio.mesh".to_string(), mutation_id: crate::os_spr::SchemaId("mesh/v1".to_string()), payload_hash: crate::os_spr::PayloadHash(core::array::from_fn(|index| index as u8)) };
+        let oracle = ContributedOriginOracle { kind: "contributed".to_string(), plugin_id: "s.stdio.mesh".to_string(), mutation_id: "mesh/v1".to_string(), payload_hash: core::array::from_fn(|index| index as u8) };
         let via_serde = serde_json::to_string(&oracle).expect("serde_json encodes independent origin oracle");
         let via_pack = crate::os_pack::json::to_json_string(&origin);
         assert_eq!(via_serde, via_pack, "canonical origin bytes must match the independent oracle");

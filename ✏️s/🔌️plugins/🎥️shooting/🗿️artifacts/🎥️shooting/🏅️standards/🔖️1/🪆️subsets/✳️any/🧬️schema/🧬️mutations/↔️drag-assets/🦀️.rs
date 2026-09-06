@@ -17,16 +17,16 @@ pub struct DragAssets {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for DragAssets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "assets", kind: "drag-assets", record: "DraggedAssets" };
-    async fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Drag {} asset(s)", self.asset_ids.len())
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         self.asset_ids.clone()
     }
 }

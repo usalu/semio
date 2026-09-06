@@ -6,7 +6,7 @@ use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure
-pub async fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
+pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
     let shot = crate::artifacts::shooting::schema::active_shot(snapshot);
     WindowMeasure::Select {
         id: "shooting.measure.shape".into(),

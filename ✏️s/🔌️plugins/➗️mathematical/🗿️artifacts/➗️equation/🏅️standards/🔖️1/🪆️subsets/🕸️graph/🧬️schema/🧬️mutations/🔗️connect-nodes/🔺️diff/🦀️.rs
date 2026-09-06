@@ -6,7 +6,7 @@ use crate::artifacts::equation::{equation_children_from_state, equation_geometry
 /// 🔺️ A duplicate edge `id` is Fatal `duplicate-id`, matching `create-node`'s handling. A missing
 /// endpoint node is Error `target-missing`. A parallel edge (same source/target as an existing
 /// edge, under a fresh id) is Warning `no-op` — parallel edges are forbidden in this graph model.
-pub async fn diff(payload: &super::ConnectNodes, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::ConnectNodes, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     let mut graph = equation_graph(base);
     if graph.edges.iter().any(|edge| edge.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.id), [payload.id.clone()]);

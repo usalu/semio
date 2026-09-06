@@ -16,7 +16,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

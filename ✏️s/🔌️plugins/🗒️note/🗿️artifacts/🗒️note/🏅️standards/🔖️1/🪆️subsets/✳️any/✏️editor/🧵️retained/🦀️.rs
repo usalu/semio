@@ -469,7 +469,7 @@ pub fn register(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<NotePla
     registry.register(NoteCommandJobFactory::new(&controller))
 }
 
-pub async fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
     if !NOTE_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
         return Ok(None);
     }

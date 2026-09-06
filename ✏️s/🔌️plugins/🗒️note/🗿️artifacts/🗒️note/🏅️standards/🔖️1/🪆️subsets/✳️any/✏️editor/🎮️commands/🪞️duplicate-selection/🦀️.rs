@@ -20,7 +20,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the clones used to also become the new
 /// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 /// framework's own injected `interactionSelect` handling, never by an app command's `Emit`.
-async fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crate::artifacts::note::schema::NoteIdOwner) -> Emit<NoteMutation, NoteConfigMutation> {
+fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crate::artifacts::note::schema::NoteIdOwner) -> Emit<NoteMutation, NoteConfigMutation> {
     let mut source_ids = Vec::new();
     let mut blocks = Vec::new();
     for source_id in ids {
@@ -43,6 +43,6 @@ async fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mu
 #[dsl(keyword = "duplicate-selection")]
 pub struct DuplicateSelection {}
 
-pub async fn handle(_payload: &DuplicateSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(_payload: &DuplicateSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(duplicate_blocks(doc.snapshot, &ctx.selected_block_ids, &mut ctx.id_owner))
 }

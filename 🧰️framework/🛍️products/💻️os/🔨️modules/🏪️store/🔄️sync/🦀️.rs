@@ -13,11 +13,14 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
+use crate::os_dsl::{DslValue, FromValue as FromValueTrait, ToValue as ToValueTrait, ValueError};
 use crate::os_spr::PresencePeer;
-use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, RuntimeFrontierSummary, ServerFrame};
+use crate::os_spr::{
+    decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair,
+    ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, RuntimeFrontierSummary, ServerFrame,
+};
 use crate::os_spr::{ActorId, MutationId};
 use crate::os_store::{ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote};
-use crate::os_dsl::{DslValue, FromValue as FromValueTrait, ToValue as ToValueTrait, ValueError};
 use semio_framework_value_derive::{FromValue, ToValue};
 use tokio::sync::{broadcast, mpsc};
 
@@ -1137,8 +1140,7 @@ impl ArtifactHost {
     }
 
     pub fn local_hub_ready(&self) -> bool {
-        self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
-            && self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+        self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() && self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
     }
 
     /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
@@ -1154,19 +1156,7 @@ impl ArtifactHost {
         let (event_tx, _event_rx) = broadcast::channel(256);
         let document_cancel = self.cancel.child_now();
         #[cfg(not(target_arch = "wasm32"))]
-        let runner = spawn_actor(
-            self.pool.clone(),
-            generation,
-            config,
-            remote,
-            cmd_rx,
-            event_tx.clone(),
-            self.credential.clone(),
-            self.socket_grant_source.clone(),
-            document_execution_target_lease,
-            document_cancel.clone(),
-        )
-        .await;
+        let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone(), self.credential.clone(), self.socket_grant_source.clone(), document_execution_target_lease, document_cancel.clone()).await;
         // 🌉️ Narrowed to match `mod wasm_actor`'s own gate: it is a browser WebSocket/`web_sys`
         // bridge, and `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too. On the WASI
         // component target neither actor exists — `native_actor` is `tokio_tungstenite`/
@@ -1380,12 +1370,7 @@ mod native_actor {
         }
 
         fn on_progress(&mut self, progress: ArtifactBootstrapProgress) {
-            let _ = self.events.send(ArtifactEvent::BootstrapProgress {
-                received_bytes: progress.received_bytes,
-                total_bytes: progress.total_bytes,
-                received_chunks: progress.received_chunks,
-                total_chunks: progress.total_chunks,
-            });
+            let _ = self.events.send(ArtifactEvent::BootstrapProgress { received_bytes: progress.received_bytes, total_bytes: progress.total_bytes, received_chunks: progress.received_chunks, total_chunks: progress.total_chunks });
         }
     }
 
@@ -1940,13 +1925,7 @@ mod native_actor {
         async fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
             self.abort_artifact_bootstrap();
             self.requeue_pending_batches();
-            self.emit(ArtifactEvent::Conflict(MutationMessage {
-                level: crate::os_dsl::Severity::Error,
-                code: crate::os_dsl::FaultCode::new("artifactBootstrap"),
-                message: detail.into(),
-                target: vec![self.document_id.clone()],
-                op_index: None,
-            }));
+            self.emit(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
             self.semio_hub = None;
             self.clear_socket_epoch();
             self.schedule_reconnect().await;
@@ -1995,28 +1974,14 @@ mod native_actor {
                 self.schedule_reconnect().await;
                 return;
             };
-            let expectation = crate::os_directory::client::DocumentSocketExpectationV1 {
-                artifact_schema: schema,
-                pack_schema_hash,
-                requested_surface_id: surface,
-                lease: self.document_execution_target_lease.clone(),
-            };
+            let expectation = crate::os_directory::client::DocumentSocketExpectationV1 { artifact_schema: schema, pack_schema_hash, requested_surface_id: surface, lease: self.document_execution_target_lease.clone() };
             let client_instance_id = format!("native-document-{:016x}", self.hlc_seed);
             let operation_cancel = self.operation_cancel.child_now();
             self.set_remote_state(RemoteState::Connecting).await;
             self.connect_future = Some(Box::pin(async move {
-                let ctx = semio_framework_async::OperationContext {
-                    actor: 0,
-                    generation: 0,
-                    trace: semio_framework_async::TraceId(0),
-                    lane: 1,
-                    deadline_ms: None,
-                    cancel: operation_cancel,
-                    capability: None,
-                };
+                let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: operation_cancel, capability: None };
                 let admission_ctx = ctx.clone();
-                let admission =
-                    tokio::task::spawn_blocking(move || source.admit_document_socket(&admission_ctx, &space_id, &document_id, &expectation, &client_instance_id, 5_000)).await.map_err(|_| ())?.map_err(|_| ())?;
+                let admission = tokio::task::spawn_blocking(move || source.admit_document_socket(&admission_ctx, &space_id, &document_id, &expectation, &client_instance_id, 5_000)).await.map_err(|_| ())?.map_err(|_| ())?;
                 if ctx.cancel.is_cancelled_now() || admission.authority.expires_at_unix_ms <= now_ms().await {
                     return Err(());
                 }
@@ -2072,14 +2037,7 @@ mod native_actor {
                     self.socket_authority = Some(authority);
                     self.session_color = None;
                     self.backoff_ms = 500;
-                    let hello = ClientFrame::SocketHelloV1 {
-                        wire_version: 1,
-                        protocol_version: 1,
-                        schema: self.schema.clone(),
-                        pack_schema_hash,
-                        resume_token: self.resume_token.clone(),
-                        frontier: self.server_frontier.clone(),
-                    };
+                    let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: self.schema.clone(), pack_schema_hash, resume_token: self.resume_token.clone(), frontier: self.server_frontier.clone() };
                     self.send_client_frame(hello, Lane::Command).await;
                 }
                 Err(()) => {
@@ -2102,12 +2060,10 @@ mod native_actor {
                 return;
             }
             match message {
-                Some(Ok(Message::Binary(bytes))) => {
-                    match decode_server_frame(&bytes).await {
-                        Ok((_lane, frame)) => self.on_hub_frame(frame).await,
-                        Err(error) => self.fail_artifact_bootstrap(format!("malformed hub frame: {error}")).await,
-                    }
-                }
+                Some(Ok(Message::Binary(bytes))) => match decode_server_frame(&bytes).await {
+                    Ok((_lane, frame)) => self.on_hub_frame(frame).await,
+                    Err(error) => self.fail_artifact_bootstrap(format!("malformed hub frame: {error}")).await,
+                },
                 Some(Ok(Message::Ping(payload))) => {
                     self.send_raw(Message::Pong(payload)).await;
                 }
@@ -2145,13 +2101,7 @@ mod native_actor {
             let required_tail_frontier = bootstrap.required_tail_frontier.clone();
             let pack_schema_hash = bootstrap.pack_schema_hash;
             let mut control = self.bootstrap_control(started_at);
-            let assembler = match ArtifactBootstrapAssembler::new(
-                bootstrap.clone(),
-                bootstrap.descriptor_hash,
-                ArtifactBootstrapLimits::default(),
-                Some(ARTIFACT_BOOTSTRAP_DEADLINE_MS),
-                &mut control,
-            ) {
+            let assembler = match ArtifactBootstrapAssembler::new(bootstrap.clone(), bootstrap.descriptor_hash, ArtifactBootstrapLimits::default(), Some(ARTIFACT_BOOTSTRAP_DEADLINE_MS), &mut control) {
                 Ok(assembler) => assembler,
                 Err(error) => {
                     self.fail_artifact_bootstrap(error.to_string()).await;
@@ -3414,6 +3364,7 @@ mod native_actor {
                 },
                 component: crate::os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
                 descriptor: crate::os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
+                browser_actor: crate::os_directory::DocumentExecutionTargetBrowserActorV1::None,
                 artifact: crate::os_directory::DocumentOpenArtifactV1 { kind: "fixture".into(), schema: "fixture/v1".into(), pack_schema_hash: "66".repeat(32) },
                 parent_dialect: crate::os_directory::DocumentOpenParentDialectV1 { artifact_kind: "fixture".into(), standard: "1".into(), subset: "*".into() },
                 surface: crate::os_directory::DocumentOpenSurfaceV1 {
@@ -3573,12 +3524,7 @@ mod wasm_actor {
         }
 
         fn on_progress(&mut self, progress: ArtifactBootstrapProgress) {
-            let _ = self.events.send(ArtifactEvent::BootstrapProgress {
-                received_bytes: progress.received_bytes,
-                total_bytes: progress.total_bytes,
-                received_chunks: progress.received_chunks,
-                total_chunks: progress.total_chunks,
-            });
+            let _ = self.events.send(ArtifactEvent::BootstrapProgress { received_bytes: progress.received_bytes, total_bytes: progress.total_bytes, received_chunks: progress.received_chunks, total_chunks: progress.total_chunks });
         }
     }
 
@@ -4807,7 +4753,6 @@ mod tests {
             crate::os_spr::MutationOutcome::new(match self {
                 DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
             })
-            
         }
 
         fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
@@ -4873,10 +4818,7 @@ mod tests {
         use futures::StreamExt;
         use tokio_tungstenite::tungstenite::Message;
 
-        async fn connect(
-            actor: &mut native_actor::ArtifactActor,
-            receipt_actor: &str,
-        ) -> tokio_tungstenite::WebSocketStream<tokio::net::TcpStream> {
+        async fn connect(actor: &mut native_actor::ArtifactActor, receipt_actor: &str) -> tokio_tungstenite::WebSocketStream<tokio::net::TcpStream> {
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind test socket");
             let url = format!("ws://{}", listener.local_addr().expect("test socket address"));
             let accepted = tokio::spawn(async move {
@@ -4944,13 +4886,7 @@ mod tests {
         assert!(envelopes.iter().all(|envelope| envelope.actor.0 == fresh));
         assert!(tokio::time::timeout(std::time::Duration::from_millis(30), socket.next()).await.is_err(), "each queued mutation is sent exactly once after Session");
         assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), true, 1, Vec::new()));
-        actor
-            .inject_hub_frame(ServerFrame::Ack {
-                batch_id,
-                stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }],
-                frontier: bootstrap_frontier("demo", 3, "after-session", 3, 0x66),
-            })
-            .await;
+        actor.inject_hub_frame(ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: bootstrap_frontier("demo", 3, "after-session", 3, 0x66) }).await;
         assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), true, 0, Vec::new()));
 
         actor.fail_test_connection().await;
@@ -5002,12 +4938,7 @@ mod tests {
         let local = sample_operation_envelope("pending-local", 8).await;
         actor.queue_test_outbox(vec![local.clone(), local.clone()]);
         actor.inject_bootstrap_local_replay_failure();
-        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome {
-            session_id: "session-bootstrap".into(),
-            resume_token: "resume-bootstrap".into(),
-            server_frontier: required.clone(),
-            bootstrap: Bootstrap::ArtifactBootstrap(bootstrap),
-        };
+        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap".into(), resume_token: "resume-bootstrap".into(), server_frontier: required.clone(), bootstrap: Bootstrap::ArtifactBootstrap(bootstrap) };
 
         actor.inject_hub_frame(welcome(bootstrap.clone())).await;
         let first = channel.receive().await.expect("baseline queue");
@@ -5079,12 +5010,7 @@ mod tests {
         let (inline_bootstrap, pair) = demo_artifact_bootstrap(true).await;
         let (mut chunked_bootstrap, _) = demo_artifact_bootstrap(false).await;
         let required = inline_bootstrap.required_tail_frontier.clone();
-        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome {
-            session_id: "session-bootstrap".into(),
-            resume_token: "resume-bootstrap".into(),
-            server_frontier: required.clone(),
-            bootstrap: Bootstrap::ArtifactBootstrap(bootstrap),
-        };
+        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap".into(), resume_token: "resume-bootstrap".into(), server_frontier: required.clone(), bootstrap: Bootstrap::ArtifactBootstrap(bootstrap) };
 
         let (mut inline_actor, mut inline_channel) = actor_pair("native-bootstrap-inline").await;
         inline_actor.inject_hub_frame(welcome(inline_bootstrap)).await;
@@ -5100,17 +5026,13 @@ mod tests {
         let descriptor_hash = chunked_bootstrap.descriptor_hash;
         let (mut chunked_actor, mut chunked_channel) = actor_pair("native-bootstrap-chunked").await;
         chunked_actor.inject_hub_frame(welcome(chunked_bootstrap.clone())).await;
-        chunked_actor
-            .inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: 0, bytes: crate::os_spr::ArtifactBootstrapChunkBytes::try_from_slice(&chunks[0]).expect("bounded chunk") })
-            .await;
+        chunked_actor.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: 0, bytes: crate::os_spr::ArtifactBootstrapChunkBytes::try_from_slice(&chunks[0]).expect("bounded chunk") }).await;
         chunked_actor.cancel_test_bootstrap();
         assert!(chunked_channel.receive().await.expect("cancelled staging").is_empty(), "cancellation commits no partial pair");
 
         chunked_actor.inject_hub_frame(welcome(chunked_bootstrap)).await;
         for (index, chunk) in chunks.iter().enumerate() {
-            chunked_actor
-                .inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: index as u32, bytes: crate::os_spr::ArtifactBootstrapChunkBytes::try_from_slice(chunk).expect("bounded chunk") })
-                .await;
+            chunked_actor.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: index as u32, bytes: crate::os_spr::ArtifactBootstrapChunkBytes::try_from_slice(chunk).expect("bounded chunk") }).await;
             if index + 1 < chunks.len() {
                 assert!(chunked_channel.receive().await.expect("staged chunk").is_empty(), "chunks stay invisible before done");
             }
@@ -5190,12 +5112,10 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() {
-        use crate::os_directory::client::{
-            DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, HubSocketGrantSource, LocalHubCredential, SocketGrantReceiptV1,
-        };
+        use crate::os_directory::client::{DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, HubSocketGrantSource, LocalHubCredential, SocketGrantReceiptV1};
         use crate::os_directory::{
-            DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1,
-            DocumentOpenSurfaceV1, DocumentScope,
+            DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1,
+            DocumentScope,
         };
         use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -5224,7 +5144,9 @@ mod tests {
                         expires_at_ms: i64::MAX,
                     },
                     authority: DocumentSocketAuthorityV1 {
+                        admitted_lease: expectation.lease.clone(),
                         hub_origin: self.trusted_origin.clone(),
+                        browser_actor: crate::os_directory::DocumentOpenBrowserActorV1::None,
                         expires_at_unix_ms: u64::try_from(i64::MAX).expect("positive max"),
                         scope: DocumentScope::new(space_id, document_id),
                         descriptor_digest_v1: "4".repeat(64),
@@ -5383,7 +5305,8 @@ mod tests {
         //#endregion 🔖️ClientFrame
 
         //#region 🔖️ServerFrame
-        check_server(&fixtures_dir, "🔗️server-welcome-tail/💾️.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command).await;
+        check_server(&fixtures_dir, "🔗️server-welcome-tail/💾️.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command)
+            .await;
         check_server(
             &fixtures_dir,
             "📸️server-welcome-snapshot-inline/💾️.bin",
@@ -5878,13 +5801,7 @@ mod tests {
             // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
             let host_b = ArtifactHost::new(test_pool());
             let channels_b = host_b
-                .open(ArtifactActorConfig {
-                    document_id: "catchup".into(),
-                    schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }],
-                    watch_external: false,
-                    actor: "B".into(),
-                })
+                .open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
                 .await;
             let key_b = channels_b.document_key.clone();
             let mut events_b = host_b.subscribe_key(&key_b).await;
@@ -5927,13 +5844,7 @@ mod tests {
 
             let host_a = ArtifactHost::new(test_pool());
             let channels_a = host_a
-                .open(ArtifactActorConfig {
-                    document_id: "drain".into(),
-                    schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }],
-                    watch_external: false,
-                    actor: "A".into(),
-                })
+                .open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() })
                 .await;
             let mut store_a = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor A fixture");
             let key_a = channels_a.document_key.clone();
@@ -5961,13 +5872,7 @@ mod tests {
             let base_url = format!("ws://{addr}");
             let host = ArtifactHost::new(test_pool());
             let channels = host
-                .open(ArtifactActorConfig {
-                    document_id: "outcome".into(),
-                    schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }],
-                    watch_external: false,
-                    actor: "A".into(),
-                })
+                .open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() })
                 .await;
             let key = channels.document_key.clone();
             let mut events = host.subscribe_key(&key).await;
@@ -6006,13 +5911,7 @@ mod tests {
 
             let host_b = ArtifactHost::new(test_pool());
             let channels_b = host_b
-                .open(ArtifactActorConfig {
-                    document_id: "preview".into(),
-                    schema: "demo/v1".into(),
-                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }],
-                    watch_external: false,
-                    actor: "B".into(),
-                })
+                .open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
                 .await;
             let key_a = channels_a.document_key.clone();
             let key_b = channels_b.document_key.clone();

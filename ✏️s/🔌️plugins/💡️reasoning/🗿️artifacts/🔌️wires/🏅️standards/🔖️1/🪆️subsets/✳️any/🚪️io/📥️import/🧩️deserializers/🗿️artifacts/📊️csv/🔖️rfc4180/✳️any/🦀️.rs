@@ -22,7 +22,7 @@ pub struct CsvIntoWires;
 impl Deserializer<WiresSnapshot> for CsvIntoWires {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<WiresSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<WiresSnapshot> {
         let _ = STDIO_CSV_DOCUMENT_SCHEMA;
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "CsvIntoWires: expected a binary csv payload".to_string(), diagnostics: Vec::new() });

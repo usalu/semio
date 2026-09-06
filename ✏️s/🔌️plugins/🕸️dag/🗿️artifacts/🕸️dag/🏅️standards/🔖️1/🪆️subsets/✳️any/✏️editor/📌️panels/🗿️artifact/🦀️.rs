@@ -11,7 +11,7 @@ pub const DAG_PLAY_BODY_DOCUMENT: &str = "dag.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -28,7 +28,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// tree's selection/hover presence from that domain (`.interaction_domain`) and prunes stale ids
 /// through that same topology, so no per-item click action is declared here anymore (clicks are
 /// translated into `interactionSelect` generically)?.
-pub async fn render(document: &DagSnapshot, labels: &DagPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &DagSnapshot, labels: &DagPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let scene = crate::artifacts::dag::dag_working_scene(document);
     let node_items = crate::editor::dag::ui_node_list(
         scene.nodes.iter().map(|node| tree_item_desc(node.id.clone(), semio_framework_plugin::Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }), Some(dag_node_kind_tag(&node.kind).into()))),

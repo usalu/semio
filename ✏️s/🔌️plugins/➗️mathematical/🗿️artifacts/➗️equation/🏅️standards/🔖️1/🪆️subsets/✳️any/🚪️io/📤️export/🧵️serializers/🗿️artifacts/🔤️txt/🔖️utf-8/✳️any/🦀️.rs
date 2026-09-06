@@ -14,7 +14,7 @@ pub struct EquationIntoTxt;
 impl Serializer<EquationSnapshot> for EquationIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &EquationSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &EquationSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "txt export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

@@ -49,7 +49,7 @@ export const Procedural: Story = { args: { plugin: "procedural" } satisfies OsBo
 export const Process: Story = { args: { plugin: "process" } satisfies OsBootHostProps };
 export const Puzzle: Story = { args: { plugin: "puzzle" } satisfies OsBootHostProps };
 export const Raster: Story = { args: { plugin: "raster" } satisfies OsBootHostProps };
-export const ReasoningMindmap: Story = { args: { plugin: "reasoning-mindmap" } satisfies OsBootHostProps };
+export const Reasoning: Story = { args: { plugin: "reasoning" } satisfies OsBootHostProps };
 export const Remodel: Story = { args: { plugin: "remodel" } satisfies OsBootHostProps };
 export const Sequence: Story = { args: { plugin: "sequence" } satisfies OsBootHostProps };
 export const Shooting: Story = { args: { plugin: "shooting" } satisfies OsBootHostProps };
@@ -94,12 +94,12 @@ const EXPORTED_STORIES: Record<string, Story> = {
   Process,
   Puzzle,
   Raster,
-  ReasoningMindmap,
+  Reasoning,
   Remodel,
-  S,
   Sequence,
   Shooting,
   Sourcing,
+  Space,
   Stdio,
   Trinity,
   Vcs,

@@ -71,7 +71,7 @@ pub struct LayoutSnapshot {
 /// 🧷️ Real "empty" constructor used as the parse/decode starting point (mirrors cad's
 /// `empty_cad_snapshot`) — `default_document()` at `crate::artifacts::layout::schema` seeds a full
 /// demo document instead, so this can't reuse a `Default` impl (this type has none).
-pub(crate) async fn empty_layout_snapshot() -> LayoutSnapshot {
+pub(crate) fn empty_layout_snapshot() -> LayoutSnapshot {
     LayoutSnapshot {
         schema: String::new(),
         name: String::new(),
@@ -96,44 +96,44 @@ pub(crate) async fn empty_layout_snapshot() -> LayoutSnapshot {
 /// (the working reference for a composite subset's child-handle primitives): a handle is exactly two
 /// strings (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the child's own
 /// content.
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
+pub(crate) fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-pub(crate) async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 
-pub(crate) async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-pub(crate) async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
-pub(crate) async fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
+pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
     match c {
         Some(c) => enc_child(c),
         None => "[]".to_string(),
     }
 }
-pub(crate) async fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
+pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
     if s == "[]" {
         return Ok(None);
     }
@@ -148,16 +148,16 @@ pub(crate) async fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactCh
 /// `enc_str`/`dec_str` convention (see cad's identically-named region for precedent). `referenced_model`
 /// (an `Option<store::ArtifactLink>`) uses the same helper — `ArtifactLink`/`LinkPin`/`BlobRef` are
 /// themselves plain `Serialize`/`Deserialize`, so no bespoke hex/bracket encoder was needed for it.
-async fn enc_json<T: Serialize>(value: &T) -> String {
+fn enc_json<T: Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("LayoutSnapshot structured fields are always JSON-serializable"))
 }
-async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️JsonFieldPrimitives
 
 //#region 🔖️TextPrimitives
-async fn print_layout_snapshot_body(s: &LayoutSnapshot) -> String {
+fn print_layout_snapshot_body(s: &LayoutSnapshot) -> String {
     format!(
         "schema={}\nname={}\ngrid={}\nparagraphStyles={}\ncharacterStyles={}\nstories={}\nlinks={}\nparentPages={}\nspreads={}\npages={}\nprintTarget={}\ndataFieldsJson={}\nbackgroundDrawing={}\nreferencedModel={}",
         enc_str(&s.schema),
@@ -176,7 +176,7 @@ async fn print_layout_snapshot_body(s: &LayoutSnapshot) -> String {
         enc_json(&s.referenced_model),
     )
 }
-async fn parse_layout_snapshot_body(body: &str) -> Result<LayoutSnapshot, String> {
+fn parse_layout_snapshot_body(body: &str) -> Result<LayoutSnapshot, String> {
     let mut snapshot = empty_layout_snapshot();
     let mut saw_schema = false;
     for line in body.lines() {
@@ -225,36 +225,36 @@ async fn parse_layout_snapshot_body(body: &str) -> Result<LayoutSnapshot, String
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
     write_str_lp(out, &r.to_uri());
 }
-async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
-async fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
-async fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
+fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
     match c {
         Some(c) => {
             out.push(1);
@@ -263,20 +263,20 @@ async fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S
         None => out.push(0),
     }
 }
-async fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
+fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         _ => Ok(Some(read_child(reader)?)),
     }
 }
-async fn write_json<T: Serialize>(out: &mut Vec<u8>, value: &T) {
+fn write_json<T: Serialize>(out: &mut Vec<u8>, value: &T) {
     write_str_lp(out, &serde_json::to_string(value).expect("LayoutSnapshot structured fields are always JSON-serializable"));
 }
-async fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     serde_json::from_str(&read_str_lp(reader)?).map_err(|e| e.to_string())
 }
 
-async fn encode_layout_snapshot_binary(s: &LayoutSnapshot) -> Vec<u8> {
+fn encode_layout_snapshot_binary(s: &LayoutSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
@@ -295,7 +295,7 @@ async fn encode_layout_snapshot_binary(s: &LayoutSnapshot) -> Vec<u8> {
     write_json(&mut out, &s.referenced_model);
     out
 }
-async fn decode_layout_snapshot_binary(bytes: &[u8]) -> Result<LayoutSnapshot, String> {
+fn decode_layout_snapshot_binary(bytes: &[u8]) -> Result<LayoutSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -329,17 +329,17 @@ async fn decode_layout_snapshot_binary(bytes: &[u8]) -> Result<LayoutSnapshot, S
 /// this crate).
 impl store::ArtifactDsl for LayoutSnapshot {
     const EXTENSION: &'static str = "layout";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         LAYOUT_DOCUMENT_SCHEMA
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_layout_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = print_layout_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -347,13 +347,13 @@ impl store::ArtifactDsl for LayoutSnapshot {
 }
 
 impl store::ArtifactPack for LayoutSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_layout_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -370,7 +370,7 @@ mod round_trip_tests {
     use super::*;
     use crate::artifacts::layout::{LayoutBounds, Page, PageColumns, PageMargins};
 
-    async fn sample_with_composition() -> LayoutSnapshot {
+    fn sample_with_composition() -> LayoutSnapshot {
         let mut snapshot = empty_layout_snapshot();
         snapshot.schema = LAYOUT_DOCUMENT_SCHEMA.into();
         snapshot.name = "Composed".into();

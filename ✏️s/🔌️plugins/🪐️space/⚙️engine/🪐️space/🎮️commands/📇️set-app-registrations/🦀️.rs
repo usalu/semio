@@ -17,6 +17,6 @@ pub struct SetAppRegistrations {
 /// dispatch-only per the per-app recipe (command files parse + delegate, they don't call OS-host
 /// registration APIs directly).
 pub fn handle(payload: &SetAppRegistrations, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    crate::engine::space::engine::apply_app_registrations(&payload.json);
+    semio_framework_plugin::resolve_ready(crate::engine::space::engine::apply_app_registrations(&payload.json));
     Ok(Emit::default())
 }

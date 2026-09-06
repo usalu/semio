@@ -52,7 +52,7 @@ pub struct LayoutDrawingChild {
 /// the drawing content being wrapped so peers converge on replay instead of minting a random id.
 /// `source_tag` disambiguates which import path produced the content (`"dwg"`/`"dxf"`/`"svg"`) so two
 /// different-format imports of otherwise-identical geometry don't collide on the same child id.
-pub async fn background_drawing_child_handle(source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
+pub fn background_drawing_child_handle(source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(content).expect("SemioDrawingSnapshot is always JSON-serializable");
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -67,7 +67,7 @@ pub async fn background_drawing_child_handle(source_tag: &str, content: &SemioDr
 
 /// 🔎️ The one accessor every render/export call site funnels through; `None` only when the
 /// document has no snapshot-owned `background_drawing` record.
-pub async fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDrawingSnapshot> {
+pub fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDrawingSnapshot> {
     snapshot.background_drawing.as_ref().map(|child| child.content.clone())
 }
 
@@ -226,19 +226,19 @@ pub enum Frame {
 }
 
 impl Frame {
-    pub async fn id(&self) -> &str {
+    pub fn id(&self) -> &str {
         match self {
             Frame::Rect { id, .. } | Frame::Text { id, .. } | Frame::Image { id, .. } => id,
         }
     }
 
-    pub async fn bounds(&self) -> &LayoutBounds {
+    pub fn bounds(&self) -> &LayoutBounds {
         match self {
             Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
         }
     }
 
-    pub async fn kind_str(&self) -> &str {
+    pub fn kind_str(&self) -> &str {
         match self {
             Frame::Rect { .. } => "rect",
             Frame::Text { .. } => "text",
@@ -246,7 +246,7 @@ impl Frame {
         }
     }
 
-    pub async fn visible(&self) -> bool {
+    pub fn visible(&self) -> bool {
         match self {
             Frame::Rect { visible, .. } | Frame::Text { visible, .. } | Frame::Image { visible, .. } => visible.unwrap_or(true),
         }
@@ -583,19 +583,19 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 
 //#region 🔖️CollectionSupport
 impl Identified<String> for Page {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
 
 impl Identified<String> for TextStory {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
 
 impl Identified<String> for ImageLink {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
@@ -643,7 +643,7 @@ pub struct PagePatch {
 
 /// 🩹️ Pure field-apply for a {@link FramePatch} onto a {@link Frame} — no inverse capture (every
 /// semantic mutation computes its own inverse from `base` directly; see `↩️inverse` triad leaves).
-async fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
+fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
     {
         let bounds = match frame {
             Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
@@ -683,7 +683,7 @@ async fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
 }
 
 impl Patchable<PagePatch> for Page {
-    async fn apply_patch(&mut self, patch: &PagePatch) {
+    fn apply_patch(&mut self, patch: &PagePatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -733,7 +733,7 @@ impl Patchable<PagePatch> for Page {
         }
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<PagePatch> {
+    fn diff_patch(&self, other: &Self) -> Option<PagePatch> {
         let mut patch = PagePatch::default();
         let mut changed = false;
         if self.name != other.name {
@@ -784,13 +784,13 @@ pub struct TextStoryPatch {
 }
 
 impl Patchable<TextStoryPatch> for TextStory {
-    async fn apply_patch(&mut self, patch: &TextStoryPatch) {
+    fn apply_patch(&mut self, patch: &TextStoryPatch) {
         if let Some(content) = &patch.content {
             self.content = content.clone();
         }
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
+    fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
         (self.content != other.content).then(|| TextStoryPatch { content: Some(other.content.clone()) })
     }
 }
@@ -803,13 +803,13 @@ pub struct ImageLinkPatch {
 }
 
 impl Patchable<ImageLinkPatch> for ImageLink {
-    async fn apply_patch(&mut self, patch: &ImageLinkPatch) {
+    fn apply_patch(&mut self, patch: &ImageLinkPatch) {
         if let Some(path) = &patch.path {
             self.path = path.clone();
         }
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<ImageLinkPatch> {
+    fn diff_patch(&self, other: &Self) -> Option<ImageLinkPatch> {
         (self.path != other.path).then(|| ImageLinkPatch { path: Some(other.path.clone()) })
     }
 }
@@ -839,7 +839,7 @@ pub struct FramePatch {
 mod tests {
     use super::*;
 
-    async fn rect_frame(id: &str, visible: Option<bool>) -> Frame {
+    fn rect_frame(id: &str, visible: Option<bool>) -> Frame {
         Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
     }
 

@@ -7,7 +7,7 @@ use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDe
 use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::{quat_from_axis_angle, quat_mul, ShootingAssetPatch};
 
-pub async fn diff(payload: &RotateAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub fn diff(payload: &RotateAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if [payload.ax, payload.ay, payload.az, payload.angle].iter().any(|value| !value.is_finite()) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rotation axis-angle must be finite, got ({}, {}, {}, {}).", payload.ax, payload.ay, payload.az, payload.angle), payload.asset_ids.clone());
     }

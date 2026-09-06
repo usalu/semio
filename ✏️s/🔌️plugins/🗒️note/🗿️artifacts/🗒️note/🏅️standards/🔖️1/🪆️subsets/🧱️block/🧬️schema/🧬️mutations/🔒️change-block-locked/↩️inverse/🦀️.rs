@@ -4,7 +4,7 @@ use crate::artifacts::note::schema::mutations::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ChangeBlockLocked, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(payload: &ChangeBlockLocked, base: &NoteSnapshot) -> Vec<NoteMutation> {
     let Some(block) = crate::artifacts::note::schema::find_block(&base.blocks, &payload.id) else { return Vec::new() };
     let old = match block {
         crate::artifacts::note::NoteBlockNode::Text { locked, .. }

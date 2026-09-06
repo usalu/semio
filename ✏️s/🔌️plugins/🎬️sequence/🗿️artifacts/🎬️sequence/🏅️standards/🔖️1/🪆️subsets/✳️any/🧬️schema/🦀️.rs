@@ -46,17 +46,17 @@ impl Default for SequenceArtifact {
 
 impl SequenceArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> SequenceSnapshot {
+    pub fn to_snapshot(&self) -> SequenceSnapshot {
         SequenceSnapshot { schema: self.schema.clone(), content: self.content.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
         Self { schema: snapshot.schema, content: snapshot.content, last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: SequenceSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: SequenceSnapshot) {
         self.schema = snapshot.schema;
         self.content = snapshot.content;
     }
@@ -65,7 +65,7 @@ impl SequenceArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.sequence.sequence` — twenty handcrafted schema leaves.
-pub async fn sequence_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn sequence_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.sequence.sequence",
         artifact: schema::FacetLeaves {
@@ -106,7 +106,7 @@ pub async fn sequence_artifact_schema_descriptor() -> schema::ArtifactSchemaDesc
 /// for the framework-generic call site that contractually requires JSON (`App::example`'s manifest
 /// `document_json` is loaded via `serde_json::from_str` by `ArtifactApp::load_document`'s default impl)
 /// — out of scope to change, since both are defined in `framework/plugin`.
-pub async fn sequence_example_json() -> String {
+pub fn sequence_example_json() -> String {
     let fixture = <SequenceSnapshot as ArtifactDsl>::parse_dsl(&default_snapshot().print_dsl()).expect("default_snapshot round-trips through its own DSL");
     serde_json::to_string(&fixture).expect("default_snapshot is a static, hand-built value with no non-finite floats or non-UTF8 keys")
 }

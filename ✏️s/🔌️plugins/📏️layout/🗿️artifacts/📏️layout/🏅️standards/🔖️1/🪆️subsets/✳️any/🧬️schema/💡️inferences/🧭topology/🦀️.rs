@@ -21,7 +21,7 @@ pub struct LayoutTopology {
 impl LayoutTopology {
     /// 🈳️ The topology of an empty document (no parent pages, spreads, or pages) — trivially
     /// cycle-free since there are no nodes to form a cycle among.
-    pub async fn empty() -> Self {
+    pub fn empty() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -30,7 +30,7 @@ impl LayoutTopology {
 //#region 🔖️Compute
 /// 🧭️ Builds the parent-page/spread/page composition graph (via `Page::spreadId`/`parentPageId`)
 /// and topologically sorts it.
-pub async fn compute_layout_topology(parent_pages: &[ParentPage], spreads: &[Spread], pages: &[Page]) -> LayoutTopology {
+pub fn compute_layout_topology(parent_pages: &[ParentPage], spreads: &[Spread], pages: &[Page]) -> LayoutTopology {
     let mut nodes: Vec<String> = Vec::new();
     let mut edges: Vec<(String, String)> = Vec::new();
 
@@ -57,7 +57,7 @@ pub async fn compute_layout_topology(parent_pages: &[ParentPage], spreads: &[Spr
 /// 🧮️ Kahn's algorithm: a stable (declaration-order-first) topological sort that also yields each
 /// node's longest-path depth from a root, and reports `cycleFree = false` when the queue drains
 /// before every node is visited (the unvisited remainder is exactly the cyclic subgraph).
-async fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> LayoutTopology {
+fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> LayoutTopology {
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
@@ -111,7 +111,7 @@ async fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> L
 mod tests {
     use super::*;
 
-    async fn page(id: &str, spread_id: &str, parent_page_id: Option<&str>) -> Page {
+    fn page(id: &str, spread_id: &str, parent_page_id: Option<&str>) -> Page {
         serde_json::from_value(serde_json::json!({
             "id": id, "name": id, "spreadId": spread_id, "parentPageId": parent_page_id,
             "width": 210.0, "height": 297.0,
@@ -122,11 +122,11 @@ mod tests {
         .expect("valid page json")
     }
 
-    async fn spread(id: &str, page_ids: Vec<&str>) -> Spread {
+    fn spread(id: &str, page_ids: Vec<&str>) -> Spread {
         Spread { id: id.into(), name: id.into(), page_ids: page_ids.into_iter().map(String::from).collect() }
     }
 
-    async fn parent_page(id: &str) -> ParentPage {
+    fn parent_page(id: &str) -> ParentPage {
         ParentPage { id: id.into(), name: id.into(), width: 210.0, height: 297.0, layer_ids: Vec::new(), layers: Vec::new(), frames: Vec::new() }
     }
 

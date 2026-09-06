@@ -113,7 +113,7 @@ pub fn module_registry() -> Registry {
 // #endregion 🔖️Helpers
 
 //#region 🔖️Bundle
-const EXTENSION_ID: &str = "imperative-extension-core";
+const EXTENSION_ID: &str = "imperative-extension-effect";
 const MODULE_VERSION: &str = "0.1.0";
 
 /// 🧩️ Host contribution entry for the core imperative module.
@@ -134,7 +134,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
 #[cfg(target_arch = "wasm32")]
 fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
-    semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Core", MODULE_VERSION)
+    semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Effect", MODULE_VERSION)
         .extends("imperative")
         .mode(semio_framework_plugin::ExecutionMode::Linked)
         .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {

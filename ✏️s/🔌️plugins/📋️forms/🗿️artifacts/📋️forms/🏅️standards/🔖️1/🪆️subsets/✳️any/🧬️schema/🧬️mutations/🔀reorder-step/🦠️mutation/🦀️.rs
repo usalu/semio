@@ -17,16 +17,16 @@ pub struct ReorderStep {
 impl MutationKind<FormsSnapshot, FormMutation> for ReorderStep {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "step", kind: "reorder-step", record: "ReorderedStep" };
 
-    async fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_reorder_step(self, base)
     }
-    async fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
+    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_reorder_step(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Reorder step \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

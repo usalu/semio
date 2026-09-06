@@ -45,6 +45,7 @@ pub mod error {
 //#region 🔖️Model
 pub mod model {
     pub use ::directory::os_directory::DocumentScope;
+    use ::directory::os_directory::ArtifactHash;
     use serde::{Deserialize, Serialize};
 
     /// @emoji 🔗️ A revocable, expiring, anonymous read grant for exactly one space/document.
@@ -399,6 +400,52 @@ pub mod model {
     pub enum DirectoryCommandClaimV1 {
         Claimed(DirectoryCommandReceiptRecord),
         Existing(DirectoryCommandReceiptRecord),
+        Conflict,
+    }
+
+    /// 🧾️ Durable state of one authenticated checkpoint-publication correlation.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum CheckpointPublicationDispositionV1 {
+        Pending,
+        Completed,
+    }
+
+    /// 🆕️ One author-scoped exact-command claim before expensive materialization begins.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct NewCheckpointPublicationClaimV1 {
+        pub actor_user_id: String,
+        pub correlation_id: String,
+        pub command_sha256: String,
+        pub claimed_at: i64,
+    }
+
+    /// 📣️ Exact checkpoint identity completed atomically with the public checkpoint event.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct CheckpointPublicationCompletionV1 {
+        pub actor_user_id: String,
+        pub correlation_id: String,
+        pub command_sha256: String,
+        pub checkpoint_id: ArtifactHash,
+        pub completed_at: i64,
+    }
+
+    /// 🧾️ Durable author/correlation/digest identity and its exact successful result.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct CheckpointPublicationReceiptRecordV1 {
+        pub actor_user_id: String,
+        pub correlation_id: String,
+        pub command_sha256: String,
+        pub disposition: CheckpointPublicationDispositionV1,
+        pub checkpoint_id: Option<ArtifactHash>,
+        pub claimed_at: i64,
+        pub completed_at: Option<i64>,
+    }
+
+    /// 🔐️ Closed atomic claim outcome; unequal digests never share a correlation.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum CheckpointPublicationClaimV1 {
+        Claimed(CheckpointPublicationReceiptRecordV1),
+        Existing(CheckpointPublicationReceiptRecordV1),
         Conflict,
     }
 
@@ -1084,6 +1131,31 @@ pub(crate) fn validate_directory_command_claim(claim: &NewDirectoryCommandReceip
     }
     if claim.command_sha256.len() != 64 || !claim.command_sha256.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
         return Err(DirectoryError::Conflict("command digest must be 64 lowercase hex digits".into()));
+    }
+    Ok(())
+}
+
+/// 🛡️ Admits one durable author/correlation/exact-command checkpoint publication identity.
+pub(crate) fn validate_checkpoint_publication_claim(claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<()> {
+    validate_bounded_auth_text(&claim.actor_user_id, "checkpoint publication actor", AUTH_TEXT_MAX_BYTES)?;
+    if claim.correlation_id.len() != 32 || claim.correlation_id.bytes().all(|byte| byte == b'0') || !claim.correlation_id.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+        return Err(DirectoryError::Conflict("checkpoint publication correlation must be 32 lowercase nonzero hex digits".into()));
+    }
+    if claim.command_sha256.len() != 64 || claim.command_sha256.bytes().all(|byte| byte == b'0') || !claim.command_sha256.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+        return Err(DirectoryError::Conflict("checkpoint publication command digest must be 64 lowercase nonzero hex digits".into()));
+    }
+    Ok(())
+}
+
+pub(crate) fn validate_checkpoint_publication_completion(completion: &CheckpointPublicationCompletionV1) -> DirectoryResult<()> {
+    validate_checkpoint_publication_claim(&NewCheckpointPublicationClaimV1 {
+        actor_user_id: completion.actor_user_id.clone(),
+        correlation_id: completion.correlation_id.clone(),
+        command_sha256: completion.command_sha256.clone(),
+        claimed_at: completion.completed_at,
+    })?;
+    if completion.checkpoint_id.0 == [0; 32] {
+        return Err(DirectoryError::Conflict("checkpoint publication completion has an empty checkpoint id".into()));
     }
     Ok(())
 }
@@ -1976,8 +2048,41 @@ impl DirectoryService {
         let mut clock = self.write.lock().await;
         let decision = decide_verified_checkpoint(self.dir.as_ref(), &actor, &checkpoint, &mut clock).await?;
         let persisted = match decision.events.as_slice() {
-            [] => self.dir.append_reserved_artifact_checkpoint(None, &checkpoint, &reservation, now_ms).await?,
-            [event] => self.dir.append_reserved_artifact_checkpoint(Some(event), &checkpoint, &reservation, now_ms).await?,
+            [] => self.dir.append_reserved_artifact_checkpoint(None, &checkpoint, &reservation, None, now_ms).await?,
+            [event] => self.dir.append_reserved_artifact_checkpoint(Some(event), &checkpoint, &reservation, None, now_ms).await?,
+            _ => return Err(DirectoryError::Backend("verified checkpoint decision emitted more than one event".into())),
+        };
+        Ok(self.publish_persisted_locked(&clock, persisted))
+    }
+
+    /// 🆔️ Claims one durable author/correlation/exact-command publication identity.
+    pub async fn claim_or_read_checkpoint_publication(&self, claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<CheckpointPublicationClaimV1> {
+        self.dir.claim_or_read_checkpoint_publication(claim).await
+    }
+
+    /// 🧹️ Releases only this author's still-pending publication claim after pre-append failure.
+    pub async fn release_checkpoint_publication(&self, actor_user_id: &str, correlation_id: &str, command_sha256: &str) -> DirectoryResult<()> {
+        self.dir.release_checkpoint_publication(actor_user_id, correlation_id, command_sha256).await
+    }
+
+    /// 📣️ Completes the exact durable claim in the same backend transaction as checkpoint/event publication.
+    pub async fn publish_reserved_artifact_checkpoint_and_complete_checkpoint_publication(
+        &self,
+        actor: DirectoryActor,
+        checkpoint: ArtifactCheckpoint,
+        reservation: ArtifactCasReservation,
+        completion: CheckpointPublicationCompletionV1,
+        now_ms: u64,
+    ) -> DirectoryResult<Vec<DirectoryEvent>> {
+        validate_checkpoint_publication_completion(&completion)?;
+        if completion.checkpoint_id != checkpoint.checkpoint_id {
+            return Err(DirectoryError::Conflict("checkpoint publication completion differs from the verified checkpoint".into()));
+        }
+        let mut clock = self.write.lock().await;
+        let decision = decide_verified_checkpoint(self.dir.as_ref(), &actor, &checkpoint, &mut clock).await?;
+        let persisted = match decision.events.as_slice() {
+            [event] => self.dir.append_reserved_artifact_checkpoint(Some(event), &checkpoint, &reservation, Some(&completion), now_ms).await?,
+            [] => return Err(DirectoryError::Conflict("checkpoint publication claim cannot complete without a new checkpoint event".into())),
             _ => return Err(DirectoryError::Backend("verified checkpoint decision emitted more than one event".into())),
         };
         Ok(self.publish_persisted_locked(&clock, persisted))
@@ -2307,7 +2412,14 @@ pub trait HubDirectory: Send + Sync + 'static {
         Err(DirectoryError::Backend("artifact CAS ledger is unavailable for this backend".into()))
     }
     /// ⚛️ Consumes one live exact reservation with the public/private checkpoint commit.
-    async fn append_reserved_artifact_checkpoint(&self, _event: Option<&NewDirectoryEvent>, _checkpoint: &ArtifactCheckpoint, _reservation: &ArtifactCasReservation, _now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
+    async fn append_reserved_artifact_checkpoint(
+        &self,
+        _event: Option<&NewDirectoryEvent>,
+        _checkpoint: &ArtifactCheckpoint,
+        _reservation: &ArtifactCasReservation,
+        _completion: Option<&CheckpointPublicationCompletionV1>,
+        _now_ms: u64,
+    ) -> DirectoryResult<Vec<DirectoryEvent>> {
         Err(DirectoryError::Backend("artifact CAS ledger is unavailable for this backend".into()))
     }
     /// 🧹️ Reads a bounded page of private historical object candidates for sweeping.
@@ -2381,6 +2493,15 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// 🧹️ Releases one claimed key whose command failed before any durable event was appended.
     async fn release_directory_command_receipt(&self, _actor_user_id: &str, _request_id: &str) -> DirectoryResult<()> {
         Err(DirectoryError::Backend("directory command receipts are unavailable for this backend".into()))
+    }
+
+    /// 🆔️ Atomically claims or reads one author/correlation/exact-command checkpoint publication.
+    async fn claim_or_read_checkpoint_publication(&self, _claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<CheckpointPublicationClaimV1> {
+        Err(DirectoryError::Backend("checkpoint publication receipts are unavailable for this backend".into()))
+    }
+    /// 🧹️ Releases an equal still-pending claim; a substituted digest never removes its owner.
+    async fn release_checkpoint_publication(&self, _actor_user_id: &str, _correlation_id: &str, _command_sha256: &str) -> DirectoryResult<()> {
+        Err(DirectoryError::Backend("checkpoint publication receipts are unavailable for this backend".into()))
     }
     //#endregion
 
@@ -2847,14 +2968,21 @@ impl HubDirectory for HubDirectories {
         }
     }
 
-    async fn append_reserved_artifact_checkpoint(&self, event: Option<&NewDirectoryEvent>, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
+    async fn append_reserved_artifact_checkpoint(
+        &self,
+        event: Option<&NewDirectoryEvent>,
+        checkpoint: &ArtifactCheckpoint,
+        reservation: &ArtifactCasReservation,
+        completion: Option<&CheckpointPublicationCompletionV1>,
+        now_ms: u64,
+    ) -> DirectoryResult<Vec<DirectoryEvent>> {
         match self {
             #[cfg(feature = "sqlite")]
-            Self::Sqlite(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, now_ms).await,
+            Self::Sqlite(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, completion, now_ms).await,
             #[cfg(feature = "postgres")]
-            Self::Postgres(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, now_ms).await,
+            Self::Postgres(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, completion, now_ms).await,
             #[cfg(feature = "neo4j")]
-            Self::Neo4j(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, now_ms).await,
+            Self::Neo4j(inner) => inner.append_reserved_artifact_checkpoint(event, checkpoint, reservation, completion, now_ms).await,
         }
     }
 
@@ -3064,6 +3192,61 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.list_admin_operation_audit(after_sequence, limit).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.list_admin_operation_audit(after_sequence, limit).await,
+        }
+    }
+
+    async fn claim_or_read_directory_command_receipt(&self, claim: &NewDirectoryCommandReceipt) -> DirectoryResult<DirectoryCommandClaimV1> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.claim_or_read_directory_command_receipt(claim).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.claim_or_read_directory_command_receipt(claim).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.claim_or_read_directory_command_receipt(claim).await,
+        }
+    }
+
+    async fn complete_directory_command_receipt(&self, completion: &DirectoryCommandReceiptCompletion) -> DirectoryResult<DirectoryCommandReceiptRecord> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.complete_directory_command_receipt(completion).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.complete_directory_command_receipt(completion).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.complete_directory_command_receipt(completion).await,
+        }
+    }
+
+    async fn release_directory_command_receipt(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.release_directory_command_receipt(actor_user_id, request_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.release_directory_command_receipt(actor_user_id, request_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.release_directory_command_receipt(actor_user_id, request_id).await,
+        }
+    }
+
+    async fn claim_or_read_checkpoint_publication(&self, claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<CheckpointPublicationClaimV1> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.claim_or_read_checkpoint_publication(claim).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.claim_or_read_checkpoint_publication(claim).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.claim_or_read_checkpoint_publication(claim).await,
+        }
+    }
+
+    async fn release_checkpoint_publication(&self, actor_user_id: &str, correlation_id: &str, command_sha256: &str) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.release_checkpoint_publication(actor_user_id, correlation_id, command_sha256).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.release_checkpoint_publication(actor_user_id, correlation_id, command_sha256).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.release_checkpoint_publication(actor_user_id, correlation_id, command_sha256).await,
         }
     }
 
@@ -4606,7 +4789,7 @@ mod tests {
         assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 2);
         let returned_ids: BTreeSet<_> = results.iter().map(|result| result.as_ref().expect("same-user claim result")[0].id.as_str()).collect();
         assert_eq!(returned_ids.len(), 1, "the second service returns the original immutable event");
-        let events = primary.events_since(0, DIRECTORY_EVENT_PAGE_MAX).await.expect("durable events");
+        let events = primary.events_since(0, DIRECTORY_EVENT_READ_MAX).await.expect("durable events");
         let redeemed: Vec<_> = events.iter().filter(|event| matches!(event.body, DirectoryEventBody::InviteRedeemed { .. })).collect();
         assert_eq!(redeemed.len(), 1);
         assert_eq!(primary.list_invites("default").await.expect("claimed invite")[0].accepted_at, Some(redeemed[0].recorded_at_ms));
@@ -4630,7 +4813,7 @@ mod tests {
         assert_eq!(contested_results.iter().filter(|result| result.is_ok()).count(), 1);
         assert_eq!(contested_results.iter().filter(|result| matches!(result, Err(DirectoryError::Conflict(message)) if message == "invite already accepted")).count(), 1);
         let contested_event = primary
-            .events_since(0, DIRECTORY_EVENT_PAGE_MAX)
+            .events_since(0, DIRECTORY_EVENT_READ_MAX)
             .await
             .expect("contested durable events")
             .into_iter()
@@ -4652,9 +4835,9 @@ mod tests {
         assert_eq!(reopened_retry[0].id, redeemed[0].id);
         let reopened_contested = reopened_service.redeem_invite(user_actor(&contested_user), &contested.capability, &contested_user).await.expect("restart contested winner retry");
         assert_eq!(reopened_contested[0].id, contested_event.id);
-        let before = reopened.events_since(0, DIRECTORY_EVENT_PAGE_MAX).await.expect("events before rebuild");
+        let before = reopened.events_since(0, DIRECTORY_EVENT_READ_MAX).await.expect("events before rebuild");
         reopened.rebuild_projections().await.expect("rebuild projections");
-        let after = reopened.events_since(0, DIRECTORY_EVENT_PAGE_MAX).await.expect("events after rebuild");
+        let after = reopened.events_since(0, DIRECTORY_EVENT_READ_MAX).await.expect("events after rebuild");
         assert_eq!(before, after);
         assert_eq!(after.iter().filter(|event| matches!(event.body, DirectoryEventBody::InviteRedeemed { .. })).count(), 2);
         assert_eq!(reopened.list_members("default").await.expect("rebuilt membership").iter().filter(|(user, _)| user.id == invited.id).count(), 1);
@@ -4700,18 +4883,14 @@ mod tests {
         let service = DirectoryService::new(directory.clone(), 16);
         assert!(matches!(service.redeem_invite(user_actor("u-invite-failure"), &issued.capability, "u-invite-failure").await, Err(DirectoryError::Backend(_))));
         assert_eq!(directory.list_invites("default").await.expect("invite after rollback")[0].accepted_at, None);
-        assert_eq!(directory.events_since(0, DIRECTORY_EVENT_PAGE_MAX).await.expect("events after rollback").iter().filter(|event| matches!(event.body, DirectoryEventBody::InviteRedeemed { .. })).count(), 0);
+        assert_eq!(directory.events_since(0, DIRECTORY_EVENT_READ_MAX).await.expect("events after rollback").iter().filter(|event| matches!(event.body, DirectoryEventBody::InviteRedeemed { .. })).count(), 0);
         assert_eq!(directory.get_role("default", "u-invite-failure").await.expect("membership after rollback"), None);
         let HubDirectories::Sqlite(backend) = directory.as_ref() else { panic!("invite rollback law requires SQLite") };
         backend.clear_invite_projection_failure().expect("clear projection failure");
         let redeemed = service.redeem_invite(user_actor("u-invite-failure"), &issued.capability, "u-invite-failure").await.expect("retry exact invite");
         assert_eq!(redeemed.len(), 1);
         assert_eq!(directory.get_role("default", "u-invite-failure").await.expect("membership after retry"), Some(SpaceRole::Spectator));
-        backend
-            .lock()
-            .expect("sqlite corruption fixture lock")
-            .execute("UPDATE hub_space_invite SET accepted_event_id = 'missing-event' WHERE id = ?1", [&issued.record.id])
-            .expect("install corrupt acceptance marker");
+        backend.install_invite_acceptance_marker_for_test(&issued.record.id, "missing-event").expect("install corrupt acceptance marker");
         assert!(matches!(service.redeem_invite(user_actor("u-invite-failure"), &issued.capability, "u-invite-failure").await, Err(DirectoryError::Backend(_))));
     }
 

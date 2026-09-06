@@ -10,6 +10,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "export-package")]
 pub struct ExportPackage {}
 
-pub async fn handle(_payload: &ExportPackage, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(_payload: &ExportPackage, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     Err(Fault::from("layout-export-job-only"))
 }

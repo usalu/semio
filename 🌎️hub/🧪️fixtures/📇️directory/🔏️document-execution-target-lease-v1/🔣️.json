@@ -51,6 +51,19 @@
       "role": "viewer",
       "rendererTarget": "wasm"
     },
+    "browserActor": {
+      "kind": "closed-browser-actor",
+      "schema": "semio.os.closed-browser-actor.v1",
+      "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1",
+      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "sourceComponentSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
+      "sourceDescriptorByteSha256": "0aa4c78847b0ae7835bb85b8e5871d2088167bbfac622af41240ef6635aa946b",
+      "policySha256": "4141414141414141414141414141414141414141414141414141414141414141",
+      "importInterfaces": [
+        "semio:framework/host-async@1.0.0",
+        "semio:framework/pure@1.0.0"
+      ]
+    },
     "grant": {
       "read": true,
       "write": false,
@@ -134,6 +147,20 @@
     "descriptor": {
       "sha256": "0aa4c78847b0ae7835bb85b8e5871d2088167bbfac622af41240ef6635aa946b",
       "byteLength": 607
+    },
+    "browserActor": {
+      "kind": "closed-browser-actor",
+      "schema": "semio.os.closed-browser-actor.v1",
+      "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1",
+      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "sourceComponentSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
+      "sourceDescriptorByteSha256": "0aa4c78847b0ae7835bb85b8e5871d2088167bbfac622af41240ef6635aa946b",
+      "policySha256": "4141414141414141414141414141414141414141414141414141414141414141",
+      "importInterfaces": [
+        "semio:framework/host-async@1.0.0",
+        "semio:framework/pure@1.0.0"
+      ],
+      "byteLength": 3
     },
     "artifact": {
       "kind": "s.gis.gismap",
@@ -712,6 +739,115 @@
       "stage": "publication",
       "kind": "caller-module",
       "value": "blob:https://attacker.invalid/module",
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-kind",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.kind",
+      "value": "none",
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-schema",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.schema",
+      "value": "unknown",
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-codegenPolicy",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.codegenPolicy",
+      "value": "unknown",
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-sha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.sha256",
+      "value": "4242424242424242424242424242424242424242424242424242424242424242",
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-sourceComponentSha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.sourceComponentSha256",
+      "value": "4242424242424242424242424242424242424242424242424242424242424242",
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-sourceDescriptorByteSha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.sourceDescriptorByteSha256",
+      "value": "4242424242424242424242424242424242424242424242424242424242424242",
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-policySha256",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.policySha256",
+      "value": "4242424242424242424242424242424242424242424242424242424242424242",
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-importInterfaces",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.importInterfaces",
+      "value": [
+        "semio:framework/pure@1.0.0"
+      ],
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-byteLength",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.byteLength",
+      "value": 0,
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-missing",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor",
+      "value": null,
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-order",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.importInterfaces",
+      "value": [
+        "semio:framework/pure@1.0.0",
+        "semio:framework/host-async@1.0.0"
+      ],
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-oversize",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.byteLength",
+      "value": 67108865,
+      "expected": "unpublished"
+    },
+    {
+      "name": "actor-private-path",
+      "stage": "manifest",
+      "kind": "manifest-field",
+      "path": "browserActor.path",
+      "value": "browser/closed-actor.mjs",
       "expected": "unpublished"
     }
   ]

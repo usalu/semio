@@ -43,26 +43,26 @@ impl Default for DagArtifact {
 
 impl DagArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> DagSnapshot {
+    pub fn to_snapshot(&self) -> DagSnapshot {
         DagSnapshot { schema: self.schema.clone(), content: self.content.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: DagSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: DagSnapshot) -> Self {
         Self { schema: snapshot.schema, content: snapshot.content, selected_node_ids: Vec::new(), camera: DagCamera::default(), locale: "en-US".into() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: DagSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: DagSnapshot) {
         self.schema = snapshot.schema;
         self.content = snapshot.content;
     }
 
     /// 📸️ Live nodes/edges off this artifact's `content` child — mirrors `DagSnapshot::nodes`/`edges`.
-    pub async fn nodes(&self) -> Vec<DagNodeSpec> {
+    pub fn nodes(&self) -> Vec<DagNodeSpec> {
         self.to_snapshot().nodes()
     }
-    pub async fn edges(&self) -> Vec<DagFixtureEdge> {
+    pub fn edges(&self) -> Vec<DagFixtureEdge> {
         self.to_snapshot().edges()
     }
 }
@@ -70,7 +70,7 @@ impl DagArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.dag.dag` — twenty handcrafted schema leaves.
-pub async fn dag_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn dag_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.dag.dag",
         artifact: schema::FacetLeaves {
@@ -138,11 +138,11 @@ impl std::error::Error for DagPlayError {}
 /// 🔀️ Pure document helpers over `DagSnapshot`/`DagNodeSpec`. Relocated from the deleted `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — none of these take an app-runtime
 /// parameter, so per the region → destination map they belong beside the schema types they operate on.
-pub async fn split_endpoint(endpoint: &str) -> (String, String) {
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub async fn document_to_workflow(document: &DagSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn document_to_workflow(document: &DagSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let scene = crate::artifacts::dag::dag_working_scene(document);
     let nodes: Vec<NodeGraphNodeRecord> = scene
         .nodes
@@ -171,12 +171,12 @@ pub async fn document_to_workflow(document: &DagSnapshot) -> (Vec<NodeGraphNodeR
     (nodes, edges)
 }
 
-pub async fn next_node_id(document: &DagSnapshot) -> String {
+pub fn next_node_id(document: &DagSnapshot) -> String {
     let max = document.nodes().iter().filter_map(|node| node.id.strip_prefix('n').and_then(|suffix| suffix.parse::<u64>().ok())).max().unwrap_or(0);
     format!("n{}", max + 1)
 }
 
-pub async fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpec {
+pub fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpec {
     let mut node = match kind {
         "slider" => DagNodeSpec {
             id: id.into(),
@@ -245,7 +245,7 @@ pub async fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagN
 }
 
 /// 🔗️ Builds the `DagFixtureEdge` connecting two ports, or `Err` if it would introduce a cycle.
-pub async fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagFixtureEdge, DagPlayError> {
+pub fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagFixtureEdge, DagPlayError> {
     let edges = document.edges();
     let existing: Vec<(String, String)> = edges
         .iter()
@@ -267,7 +267,7 @@ pub async fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_p
 /// (a plain `&str`, not a `serde_json::Value` — the typed command carries the raw UI input string
 /// directly, so numeric fields parse it themselves instead of round-tripping through a JSON value that
 /// would always classify it as a JSON string).
-pub async fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&str>) -> Option<DagNodePatch> {
+pub fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&str>) -> Option<DagNodePatch> {
     match field {
         "name" => raw_value.map(|value| DagNodePatch { name: Some(value.into()), ..Default::default() }),
         "value" | "min" | "max" if matches!(node.kind, DagNodeKind::Slider { .. }) => {
@@ -293,7 +293,7 @@ pub async fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Op
 /// lives here rather than being duplicated per consumer. `delete-node`'s own diff/inverse already
 /// captures the cascade (every edge touching the node), so this is one mutation per node, not one
 /// per node PLUS one per severed edge.
-pub async fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]) -> Vec<DagMutation> {
+pub fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]) -> Vec<DagMutation> {
     document.nodes().iter().filter(|node| node_ids.contains(&node.id)).map(|node| delete_node(node.id.clone())).collect()
 }
 //#endregion 🔖️DocumentHelpers

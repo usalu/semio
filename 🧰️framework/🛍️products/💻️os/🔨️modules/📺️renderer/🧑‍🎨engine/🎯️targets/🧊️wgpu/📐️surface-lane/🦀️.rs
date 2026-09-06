@@ -97,7 +97,7 @@ impl InteractiveJob for SurfaceResizeJob {
             return StepOutcome::Cancelled;
         }
         let Some(request) = self.request else {
-            return StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::Checkpoint), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::Commit) });
+            return StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitState), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
         };
         match self.phase {
             ResizePhase::LogicalWidth => {
@@ -122,7 +122,7 @@ impl InteractiveJob for SurfaceResizeJob {
                 self.phase = ResizePhase::Complete;
             }
             ResizePhase::Complete => {
-                return StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::Checkpoint), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::Commit) });
+                return StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitState), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
             }
             ResizePhase::Closing => return StepOutcome::Cancelled,
         }
@@ -131,7 +131,7 @@ impl InteractiveJob for SurfaceResizeJob {
             self.begin_close();
             StepOutcome::Cancelled
         } else if self.phase == ResizePhase::Complete {
-            StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::Checkpoint), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::Commit) })
+            StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitState), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
         } else {
             StepOutcome::Yield
         }

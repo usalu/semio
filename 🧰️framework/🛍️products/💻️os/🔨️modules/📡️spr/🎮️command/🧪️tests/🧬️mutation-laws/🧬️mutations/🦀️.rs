@@ -1,16 +1,21 @@
 use super::{Counter, CounterDiff};
-use crate::os_spr::{OpText, OpBinary, ProtocolError};
+use crate::os_spr::{OpBinary, OpText, ProtocolError};
 use serde::{Deserialize, Serialize};
 
-#[path = "➕️add-counter/🦀️.rs"] mod add_counter;
+#[path = "➕️add-counter/🦀️.rs"]
+mod add_counter;
 pub use add_counter::AddCounter;
-#[path = "✌️add-counter-twice/🦀️.rs"] mod add_counter_twice;
+#[path = "✌️add-counter-twice/🦀️.rs"]
+mod add_counter_twice;
 pub use add_counter_twice::AddCounterTwice;
-#[path = "4️⃣add-counter-four-times/🦀️.rs"] mod add_counter_four_times;
+#[path = "4️⃣add-counter-four-times/🦀️.rs"]
+mod add_counter_four_times;
 pub use add_counter_four_times::AddCounterFourTimes;
-#[path = "🌐️add-counter-then-notify-foreign/🦀️.rs"] mod add_counter_then_notify_foreign;
+#[path = "🌐️add-counter-then-notify-foreign/🦀️.rs"]
+mod add_counter_then_notify_foreign;
 pub use add_counter_then_notify_foreign::AddCounterThenNotifyForeign;
-#[path = "🔢️add-counter-sequence/🦀️.rs"] mod add_counter_sequence;
+#[path = "🔢️add-counter-sequence/🦀️.rs"]
+mod add_counter_sequence;
 pub use add_counter_sequence::AddCounterSequence;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::Mutations, dsl_derive::DslOps, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -57,7 +62,9 @@ impl OpBinary for CounterMutation {
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, ProtocolError> {
         let mut reader = crate::os_pack::ByteReader::new(bytes);
-        if reader.read_u8()? != 1 { return Err(ProtocolError::Malformed { what: "op format", offset: 0, detail: "unsupported counter op format".into() }); }
+        if reader.read_u8()? != 1 {
+            return Err(ProtocolError::Malformed { what: "op format", offset: 0, detail: "unsupported counter op format".into() });
+        }
         let ordinal = usize::try_from(reader.read_varint_u64()?).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index exceeds platform width".into() })?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal).ok_or_else(|| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index out of range".into() })?;

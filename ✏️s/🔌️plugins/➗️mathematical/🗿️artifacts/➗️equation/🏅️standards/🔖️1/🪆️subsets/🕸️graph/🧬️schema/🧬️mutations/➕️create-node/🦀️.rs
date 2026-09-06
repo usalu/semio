@@ -18,16 +18,16 @@ pub struct CreateNode {
 impl protocol::MutationKind<EquationSnapshot, EquationMutation> for CreateNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    async fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
-        super::inverse::inverse(self, base).await
+    fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
+        super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create node \"{}\"", self.label)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

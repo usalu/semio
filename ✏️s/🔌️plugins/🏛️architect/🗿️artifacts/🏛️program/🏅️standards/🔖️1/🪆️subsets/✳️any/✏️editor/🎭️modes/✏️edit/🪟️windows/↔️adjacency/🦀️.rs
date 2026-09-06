@@ -15,7 +15,7 @@ pub const ARCHITECT_BODY_ADJACENCY: &str = "architect.adjacency";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_ADJACENCY.into(),
         label: LocalizedLabel::native("Adjacency", "Adjazenz"),
@@ -41,7 +41,7 @@ pub async fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// @emoji 🔺️ Signature adjacency matrix — triangle glyph strip plus lower-triangle pair rows.
-pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let matrix = adjacency_matrix(program);
     let n = matrix.element_ids.len();
     if n == 0 {

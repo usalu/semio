@@ -7,7 +7,7 @@ use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::fi
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::ResizeNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
+pub fn inverse(payload: &super::ResizeNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
     let Some(node) = find_board_node(base, &payload.node_id) else { return Vec::new() };
     let old_radius = payload.new_radius.and(node.get("radius").and_then(|value| value.as_f64()));
     let old_width = payload.new_width.and(node.get("width").and_then(|value| value.as_f64()));

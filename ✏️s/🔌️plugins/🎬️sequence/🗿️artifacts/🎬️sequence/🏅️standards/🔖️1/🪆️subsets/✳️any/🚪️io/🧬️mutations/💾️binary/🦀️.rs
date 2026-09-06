@@ -18,12 +18,12 @@ use protocol::OpBinary;
 
 //#region 🔖️OpText
 /// 📦️ Encodes a `SequenceMutation` to its binary state-patch form.
-pub async fn encode_op(mutation: &SequenceMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(mutation: &SequenceMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     mutation.encode_op()
 }
 
 /// 📖️ Decodes a `SequenceMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<SequenceMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<SequenceMutation, protocol::ProtocolError> {
     SequenceMutation::decode_op(bytes)
 }
 //#endregion 🔖️OpText
@@ -44,7 +44,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), mutation);
     }
 
-    async fn move_step_for_test() -> SequenceMutation {
+    fn move_step_for_test() -> SequenceMutation {
         crate::artifacts::sequence::schema::mutations::move_step("step-1".into(), 42.0, -6.5)
     }
 

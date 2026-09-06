@@ -17,13 +17,13 @@ pub struct RenameGovernance {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameGovernance {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "governance", kind: "rename-governance", record: "RenamedGovernance" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename governance framework to \"{}\"", self.new_framework)
     }
 }

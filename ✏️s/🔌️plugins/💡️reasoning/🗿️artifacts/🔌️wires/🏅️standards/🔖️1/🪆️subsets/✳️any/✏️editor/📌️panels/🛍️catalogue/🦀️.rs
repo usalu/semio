@@ -11,7 +11,7 @@ const WIRES_PLAY_CATALOGUE_TAB_ID: &str = "framework.panel.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(WIRES_PLAY_CATALOGUE_TAB_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -23,7 +23,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn wires_kind_catalog_entries(wires: &DslValue, key: &str) -> Vec<DslValue> {
+fn wires_kind_catalog_entries(wires: &DslValue, key: &str) -> Vec<DslValue> {
     wires
         .get("kindCatalogs")
         .and_then(|value| value.get(key))
@@ -33,11 +33,11 @@ async fn wires_kind_catalog_entries(wires: &DslValue, key: &str) -> Vec<DslValue
         .unwrap_or_default()
 }
 
-async fn catalog_kind_label(entry: &DslValue) -> String {
+fn catalog_kind_label(entry: &DslValue) -> String {
     entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-async fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let mut items = UiFixedList::default();
     for (index, entry) in entries.iter().enumerate() {
         let kind_id = entry.get("id").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "wires catalogue kind id missing"))?;
@@ -52,7 +52,7 @@ async fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &
     Ok(items)
 }
 
-pub async fn render(wires: &DslValue, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(wires: &DslValue, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let namespace = PanelTreeBuilder::new("wires-play-kinds")?;
     let identity_entries = wires_kind_catalog_entries(wires, "identityKinds");
     let relationship_entries = wires_kind_catalog_entries(wires, "relationshipKinds");

@@ -23,30 +23,34 @@ use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode,
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 
 /// 🧵️ Worker-safe retained cell used by renderer state that may resume on any shared-pool worker.
-struct WorkerCell<T> {
+/// 🔓️ `pub(crate)`: the Shell's native `CHROME_PREFS` static (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:16117`)
+/// holds one and named the type bare, which never resolved outside this module.
+pub(crate) struct WorkerCell<T> {
     inner: OnceLock<Mutex<T>>,
 }
 
 impl<T> WorkerCell<T> {
-    const fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Self { inner: OnceLock::new() }
     }
 }
 
 impl<T: Default> WorkerCell<T> {
-    fn state(&self) -> &Mutex<T> {
+    pub(crate) fn state(&self) -> &Mutex<T> {
         self.inner.get_or_init(|| Mutex::new(T::default()))
     }
 
-    fn borrow(&self) -> MutexGuard<'_, T> {
+    /// 🔒️ Crate-visible like `state`: `🐚️Shell/🎯️targets/🧊️wgpu`'s `with_chrome_prefs` drives this
+    /// cell through the same `with`/`borrow_mut` shape as the thread-local twin it replaces.
+    pub(crate) fn borrow(&self) -> MutexGuard<'_, T> {
         self.state().lock().expect("worker interpreter state")
     }
 
-    fn borrow_mut(&self) -> MutexGuard<'_, T> {
+    pub(crate) fn borrow_mut(&self) -> MutexGuard<'_, T> {
         self.borrow()
     }
 
-    fn with<R>(&self, apply: impl FnOnce(&Self) -> R) -> R {
+    pub(crate) fn with<R>(&self, apply: impl FnOnce(&Self) -> R) -> R {
         apply(self)
     }
 }
@@ -533,8 +537,8 @@ fn decode_drop_payload(payload: &DragPayload) -> Option<serde_json::Map<String, 
 /// `framework/renderer/react/index.tsx`'s `dispatchUiAction` merge order exactly.
 fn merge_action_args(existing: Option<&semio_framework::DslValue>, patch: serde_json::Map<String, Value>) -> Option<semio_framework::DslValue> {
     let mut base = match existing {
-        Some(dsl) => match semio_framework::from_dsl_value::<Value>(dsl.clone()) {
-            Ok(Value::Object(map)) => map,
+        Some(dsl) => match Value::from(dsl) {
+            Value::Object(map) => map,
             _ => serde_json::Map::new(),
         },
         None => serde_json::Map::new(),
@@ -1310,7 +1314,11 @@ pub fn render_ui_document_step(
                         }
                     } else {
                         match document.read_node_page(next_page) {
-                            Ok(Some(page)) if engine.apply_document_page(window_id, page, &mut step).is_ok() => {}
+                            Ok(Some(page)) => {
+                                if engine.apply_document_page(window_id, page, &mut step).is_err() {
+                                    cursor.phase = UiDocumentFramePhase::Fault;
+                                }
+                            }
                             _ => cursor.phase = UiDocumentFramePhase::Fault,
                         }
                     }
@@ -1856,7 +1864,7 @@ pub fn apply_ui_image_bytes(id: &str, url: &str, bytes: &[u8]) {
         size = measured;
         measured.map(|(width, height)| (width, height, Vec::new())).ok_or_else(Vec::new)
     };
-    let decode = |_| {
+    let decode = |_: &[u8]| {
         let decoded = if svg { std::str::from_utf8(bytes).ok().and_then(rasterize_svg_to_rgba).map(|(pixels, _, _)| pixels) } else { decode_raster_bytes(bytes).map(|(pixels, _, _)| pixels) };
         decoded
     };

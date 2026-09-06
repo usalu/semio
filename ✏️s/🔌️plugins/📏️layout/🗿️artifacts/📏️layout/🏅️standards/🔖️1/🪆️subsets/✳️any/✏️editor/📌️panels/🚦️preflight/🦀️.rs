@@ -17,7 +17,7 @@ pub const LAYOUT_PLAY_PREFLIGHT_TAB_ID: &str = "layout.panel.preflight";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(LAYOUT_PLAY_PREFLIGHT_TAB_ID.into()), label: LocalizedLabel::native("Preflight", "Preflight"), group: PanelGroup::Workbench, body_key: Some(LAYOUT_PLAY_BODY_PREFLIGHT.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -35,7 +35,7 @@ pub struct PreflightIssue {
     pub page_id: Option<String>,
 }
 
-async fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str {
+fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str {
     if let Some(state) = link.state.as_deref() {
         return state;
     }
@@ -48,7 +48,7 @@ async fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str 
     "ok"
 }
 
-async fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
+fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
     let paragraph = paragraph_style_id.and_then(|id| doc.paragraph_styles.iter().find(|style| style.id == id)).or_else(|| doc.paragraph_styles.first());
     let (mut family, mut size) = paragraph.map_or_else(|| ("Layout Sans".into(), 12.0), |style| (style.font_family.clone(), style.font_size));
     if let Some(character_id) = character_style_id {
@@ -66,7 +66,7 @@ async fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str
 
 /// 🚦️ Runs every preflight check over the document, returning the flat issue list — shared by this
 /// panel's tree and the export package's zip manifest.
-pub async fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
+pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
         let resolved = crate::artifacts::layout::schema::resolve_page(doc, page);
@@ -202,7 +202,7 @@ fn layout_tree_item(
     Ok(item)
 }
 
-pub async fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let labels = layout_labels(cfg);
     let issues = run_layout_preflight(doc, labels);
     let mut items = UiFixedList::default();

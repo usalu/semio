@@ -18,16 +18,16 @@ pub struct CreateKnowledgeRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateKnowledgeRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "knowledge-record", kind: "create-knowledge-record", record: "CreatedKnowledgeRecord" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create knowledge record \"{}\"", self.knowledge_record.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.knowledge_record.header.id.0.clone()]
     }
 }

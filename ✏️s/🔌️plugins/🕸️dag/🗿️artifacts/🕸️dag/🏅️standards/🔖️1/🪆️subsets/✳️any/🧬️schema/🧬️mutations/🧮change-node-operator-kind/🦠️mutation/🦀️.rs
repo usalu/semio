@@ -14,23 +14,23 @@ pub struct ChangeNodeOperatorKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_node_operator_kind(id: String, new_operator_kind: Option<String>) -> DagMutation {
+pub fn change_node_operator_kind(id: String, new_operator_kind: Option<String>) -> DagMutation {
     DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id, new_operator_kind })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeOperatorKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-operator-kind", record: "ChangedNodeOperatorKind" };
 
-    async fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change node \"{}\" operator kind", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

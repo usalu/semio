@@ -13,7 +13,7 @@ pub struct SetAlgorithm {
     pub seed: Option<String>,
 }
 
-pub async fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
+pub fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
     let mut graph = crate::artifacts::equation::equation_graph(doc.snapshot);
     graph.algorithm = payload.algorithm.clone();
     graph.algorithm_seed = payload.seed.clone();
@@ -30,7 +30,7 @@ mod tests {
     use crate::editor::equation::EquationCommand;
     use pack::json::{self, Value};
 
-    async fn node_graph_edit(operation: Value) -> EquationCommand {
+    fn node_graph_edit(operation: Value) -> EquationCommand {
         EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: json::to_string(&json::array([operation])) })
     }
 

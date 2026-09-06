@@ -6,6 +6,6 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub async fn inverse(payload: &super::CreateServiceRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::CreateServiceRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::DeleteServiceRequirement(super::super::delete_service_requirement::DeleteServiceRequirement { id: payload.service_requirement.header.id.clone() })]
 }

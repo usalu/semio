@@ -17,7 +17,7 @@ pub fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapshot>, _
     let projection = doc.snapshot;
     match projection.graph.nodes.iter().find(|row| row.id == payload.node_id) {
         Some(node) => {
-            crate::ensure_space_fixtures_registered();
+            semio_framework_plugin::resolve_ready(crate::ensure_space_fixtures_registered());
             let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
             let schema_json = json::object([("schema".to_string(), json::Value::from(schema.as_str()))]).to_string();
             let bindings = resolve_future(workflow_parameter_bindings_to_os(&projection.parameter_bindings));

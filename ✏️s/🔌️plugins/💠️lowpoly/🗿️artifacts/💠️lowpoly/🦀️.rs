@@ -335,6 +335,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.lowpoly.lowpoly.composer.format-6", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
         ("s.lowpoly.lowpoly.composer.format-7", "composer", "s.stdio.gltf@2.0/*", &[("dialect", "s.stdio.gltf@2.0/*")], None),
         ("s.lowpoly.lowpoly.composer.format-8", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
+        ("s.lowpoly.lowpoly.composer.format-9", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
         ("s.lowpoly.lowpoly.grammar.1", "grammar", "lowpoly.document", &[("grammar", "lowpoly.document")], None),
         ("s.lowpoly.lowpoly.grammar.2", "grammar", "lowpoly.op", &[("grammar", "lowpoly.op")], None),
         ("s.lowpoly.lowpoly.grammar.3", "grammar", "lowpoly.diff", &[("grammar", "lowpoly.diff")], None),

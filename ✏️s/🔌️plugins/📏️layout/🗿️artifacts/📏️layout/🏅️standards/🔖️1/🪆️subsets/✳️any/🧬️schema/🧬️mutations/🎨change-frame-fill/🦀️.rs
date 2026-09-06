@@ -20,16 +20,16 @@ pub struct ChangeFrameFill {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameFill {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-fill", kind: "change-frame-fill", record: "ChangedFrameFill" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_fill(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_frame_fill(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change frame \"{}\" fill", self.frame_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]
     }
 }
@@ -37,7 +37,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameFill {
 
 
 //#region 🎨ChangeFrameFill
-pub async fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.page_id), [payload.page_id.clone()]);
     };
@@ -64,7 +64,7 @@ pub async fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnap
 
 
 //#region 🎨ChangeFrameFill
-pub async fn inverse_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };

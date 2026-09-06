@@ -14,7 +14,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     Ok(Emit::config(vec![DagConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 

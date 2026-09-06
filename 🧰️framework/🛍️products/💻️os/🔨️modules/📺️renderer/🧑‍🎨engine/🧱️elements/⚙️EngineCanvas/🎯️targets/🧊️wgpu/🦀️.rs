@@ -3015,19 +3015,19 @@ impl MapTileRequestCursor {
     }
 }
 
-fn queue_map_tile_fetch_step(surface_id: &str, scene: &ui_wgpu::wgpu::TiledMapScene, host: &MapHost, cursor: &mut Option<MapTileRequestCursor>) {
-    if cursor.as_ref().is_none_or(|cursor| !cursor.matches(scene, host)) {
+fn queue_map_tile_fetch_step(surface_id: &str, scene: &ui_wgpu::wgpu::TiledMapScene, host: &MapHost, slot: &mut Option<MapTileRequestCursor>) {
+    if slot.as_ref().is_none_or(|cursor| !cursor.matches(scene, host)) {
         match MapTileRequestCursor::new(scene, host) {
-            Ok(next) => *cursor = Some(next),
+            Ok(next) => *slot = Some(next),
             Err(fault) => {
                 MAP_TILE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault));
                 return;
             }
         }
     }
-    let Some(cursor) = cursor.as_mut() else { return };
+    let Some(cursor) = slot.as_mut() else { return };
     let Some((vector, tile)) = cursor.current() else {
-        *cursor = MapTileRequestCursor::new(scene, host).ok();
+        *slot = MapTileRequestCursor::new(scene, host).ok();
         return;
     };
     let key = format!("{}/{}/{}", tile.z, tile.x, tile.y);

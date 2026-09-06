@@ -17,9 +17,7 @@ use crate::engine::space::engine::parameter_entity_id;
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::{ui_value_map, ui_value_text, S_PLAY_PARAMETERS_TAB_ID};
 use semio_framework_os::{WorkflowParameter, WorkflowSnapshot};
-use semio_framework_plugin::{
-    ActionId, Buildable, HasBase, HasChildren, IconName, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
-};
+use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, IconName, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL};
 use semio_framework_ui_contract::{InputKind, Label, Trigger};
 
 //#region 🔖️Manifest
@@ -278,7 +276,8 @@ mod tests {
         let config = crate::engine::space::config::SpaceConfig::default();
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale);
         let node = render(&projection, labels).expect("render");
-        let json = pack::to_json_string(&node);
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node })
+            .expect("parameters tree projection");
         assert!(json.contains("addParameter"), "header must carry the add-parameter action: {json}");
         assert!(json.contains("parameter"), "empty parameter count copy must render: {json}");
     }

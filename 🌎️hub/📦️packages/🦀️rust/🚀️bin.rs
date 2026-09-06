@@ -23,21 +23,25 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
 use directory::os_directory::{
-    self, directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1,
-    AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
-    DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
-    DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1,
-    DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1,
-    DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1,
-    DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1,
-    PublicSpaceViewV1, SpaceView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES,
-    DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
+    self, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1,
+    AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES, CHECKPOINT_PUBLICATION_DEADLINE_MS, CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES,
+    CheckpointPublicationBlobV1, CheckpointPublicationCommandV1, CheckpointPublicationCurrentV1, CheckpointPublicationFrontierV1, CheckpointPublicationReceiptV1, ConnectionView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES,
+    DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS,
+    DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES,
+    DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
+    DOCUMENT_OPEN_PLAN_MAX_TTL_MS, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1,
+    DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1,
+    DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1,
+    DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1,
+    DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1,
+    DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactCheckpoint, SpaceView, descriptor_digest_v1,
+    directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event,
 };
 use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
 use directory::{DslValue, FromValue, ToValue};
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
+use protocol::{AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame, decode_client_frame, encode_server_frame};
 use semio_framework_async::ShardedMap;
 use semio_framework_hash::Sha256;
 #[cfg(feature = "neo4j")]
@@ -46,43 +50,47 @@ use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
 use semio_hub::artifact_authority::chunk_cas::PostgresArtifactChunkCasStorage;
 #[cfg(feature = "sqlite")]
 use semio_hub::artifact_authority::chunk_cas::SqliteArtifactChunkCasStorage;
-#[cfg(test)]
-use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, MemoryArtifactChunkCasStorage};
 use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
+#[cfg(test)]
+use semio_hub::artifact_authority::chunk_cas::{MemoryArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
 #[cfg(feature = "native-artifact-execution")]
 use semio_hub::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use semio_hub::artifact_authority::trusted_catalog::{NativeCodecProviderSourceV1, TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedTrustedCatalog};
 #[cfg(test)]
-use semio_hub::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, ImmutableArtifactBlobStore};
-use semio_hub::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CheckpointPublicationOrchestrator, OperationContext, ValidatingCanonicalArtifactAuthority};
+use semio_hub::artifact_authority::{ArtifactBlobIntegrity, ImmutableArtifactBlobStore};
+use semio_hub::artifact_authority::{
+    ArtifactPair, AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CanonicalArtifactAuthority, CheckpointPublicationOrchestrator, CheckpointRequest, OperationContext, ValidatingCanonicalArtifactAuthority,
+    VerifiedCheckpointPublisher,
+};
 use semio_hub::directory::error::DirectoryError;
 #[cfg(test)]
 use semio_hub::directory::model::AuthSessionIssue;
 use semio_hub::directory::model::{
-    AdminOperationAuditRecord, AuthSessionKind, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, DocumentScope, NewAdminOperationAuditRecord,
-    NewDirectoryCommandReceipt, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
+    AdminOperationAuditRecord, AuthSessionKind, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion,
+    DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, DocumentScope, NewAdminOperationAuditRecord, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole,
+    SyncSessionRecord,
 };
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::{
-    directory_command_result_kind, replay_directory_command_receipt, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CommandResult, DirectoryCommandExecutionV1, DirectoryService, HubDirectories, HubDirectory,
-    HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, CAPABILITY_MAX_TTL_SECS, DIRECTORY_EVENT_READ_MAX,
-    DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX,
+    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CAPABILITY_MAX_TTL_SECS, CommandResult,
+    DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, DirectoryCommandExecutionV1, DirectoryService, HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress,
+    SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX, directory_command_result_kind, published_artifact_checkpoint, replay_directory_command_receipt,
 };
-use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
+use semio_hub::directory::{AUTH_TEXT_MAX_BYTES, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, identity_subject_digest};
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 use semio_hub::inference::runtime::{HubInferenceRuntimeV1, UnavailableGisMapApprovalCommitterV1};
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 use semio_hub::inference::sqlite::InferenceJobLedgerV1;
 #[cfg(feature = "native-artifact-execution")]
-use semio_hub::inference::{verified_gis_map_binding, VerifiedGisMapArtifactBindingV1};
+use semio_hub::inference::{VerifiedGisMapArtifactBindingV1, verified_gis_map_binding};
 #[cfg(test)]
 use semio_hub::lag_rebootstrap::decode_canonical_checkpoint_pair;
 use semio_hub::lag_rebootstrap::{
-    append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag, CanonicalPairTerminal, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage,
-    RebootstrapTransferControl, VerifiedRebootstrapSource, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, REBOOTSTRAP_DEADLINE_MS,
+    CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, CanonicalPairTerminal, REBOOTSTRAP_DEADLINE_MS, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage, RebootstrapTransferControl, VerifiedRebootstrapSource,
+    append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag,
 };
-use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
+use semio_hub::local_bootstrap::{InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS, serve_local_bootstrap};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
@@ -400,17 +408,20 @@ impl DocumentOpenCatalogAuthorityV1 for VerifiedTrustedCatalog {
     }
 }
 
-async fn configured_artifact_authority(bundle_path: Option<std::path::PathBuf>, profile: Option<String>, providers: Option<&dyn NativeCodecProviderSourceV1>) -> Result<Option<ConfiguredArtifactAuthority>, AuthorityError> {
-    let (bundle_path, profile) = match (bundle_path, profile) {
-        (None, None) => return Ok(None),
-        (Some(bundle_path), Some(profile)) => (bundle_path, profile),
-        _ => return Err(AuthorityError::Catalog("OS_HUB_TRUSTED_CATALOG_BUNDLE and OS_HUB_TRUSTED_CATALOG_PROFILE must be configured together".to_string())),
+async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>) -> Result<Option<ConfiguredArtifactAuthority>, AuthorityError> {
+    if providers.is_none() && data_dir.join("trusted-catalog/current.json").try_exists().map_err(|error| AuthorityError::Catalog(error.to_string()))? {
+        return Err(AuthorityError::Catalog("configured trusted catalog requires the native-artifact-execution provider".into()));
+    }
+    let Some(providers) = providers else {
+        return Ok(None);
     };
-    let providers = providers.ok_or_else(|| AuthorityError::Catalog("configured trusted catalog requires the native-artifact-execution provider".into()))?;
     let control = StartupCatalogControl;
     let started = control.now_ms();
     let context = OperationContext::new(started.saturating_add(30_000), AuthorityLimits::maximum(), &control);
-    let catalog = Arc::new(TrustedCatalogLoader::load(&bundle_path, &profile, providers, &context).await?);
+    let Some(catalog) = TrustedCatalogLoader::load_current(data_dir, providers, &context).await? else {
+        return Ok(None);
+    };
+    let catalog = Arc::new(catalog);
     let authority = Arc::new(ValidatingCanonicalArtifactAuthority::new(catalog.clone()));
     Ok(Some(ConfiguredArtifactAuthority { catalog, authority }))
 }
@@ -544,6 +555,9 @@ struct TestLiveGate {
     directory_event_page_read_admitted: tokio::sync::Semaphore,
     directory_event_page_read_release: tokio::sync::Semaphore,
     directory_event_page_control: Mutex<Option<Arc<DirectoryEventPageHttpControl>>>,
+    checkpoint_publication_pause_enabled: std::sync::atomic::AtomicBool,
+    checkpoint_publication_admitted: tokio::sync::Semaphore,
+    checkpoint_publication_release: tokio::sync::Semaphore,
 }
 
 #[cfg(test)]
@@ -579,6 +593,9 @@ impl Default for TestLiveGate {
             directory_event_page_read_admitted: tokio::sync::Semaphore::new(0),
             directory_event_page_read_release: tokio::sync::Semaphore::new(0),
             directory_event_page_control: Mutex::new(None),
+            checkpoint_publication_pause_enabled: std::sync::atomic::AtomicBool::new(false),
+            checkpoint_publication_admitted: tokio::sync::Semaphore::new(0),
+            checkpoint_publication_release: tokio::sync::Semaphore::new(0),
         }
     }
 }
@@ -602,6 +619,7 @@ struct TestDocumentOpenCatalog {
     open_targets: Box<[VerifiedDocumentOpenSelectionV1]>,
     component: std::sync::Arc<[u8]>,
     descriptor: std::sync::Arc<[u8]>,
+    browser_actor: Option<std::sync::Arc<[u8]>>,
 }
 
 #[cfg(test)]
@@ -615,7 +633,7 @@ impl DocumentOpenCatalogAuthorityV1 for TestDocumentOpenCatalog {
             return None;
         }
         let selection = DocumentOpenCatalogAuthorityV1::resolve_document_open(self, descriptor, requested_surface_id, writable)?;
-        Some(VerifiedExecutionTargetAssets { selection, component: std::sync::Arc::clone(&self.component), descriptor: std::sync::Arc::clone(&self.descriptor), browser_actor: None })
+        Some(VerifiedExecutionTargetAssets { selection, component: std::sync::Arc::clone(&self.component), descriptor: std::sync::Arc::clone(&self.descriptor), browser_actor: self.browser_actor.clone() })
     }
 
     fn resolve_document_open(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool) -> Option<VerifiedDocumentOpenSelectionV1> {
@@ -650,6 +668,7 @@ enum SocketBindingKeyV1 {
     Session(String),
     Membership { user_id: String, space_id: String },
     Share(String),
+    DocumentWrite(DocumentScope),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1153,6 +1172,7 @@ struct DocumentOpenPlanAuthorityV1 {
     artifact: DocumentOpenArtifactV1,
     parent_dialect: semio_framework::ArtifactDialect,
     surface: DocumentOpenSurfaceV1,
+    browser_actor: os_directory::DocumentOpenBrowserActorV1,
     grant: DocumentOpenGrantV1,
     checkpoint: Option<DocumentOpenCheckpointV1>,
     revalidation: DocumentOpenRevalidationV1,
@@ -1163,6 +1183,9 @@ struct DocumentOpenPlanAuthorityV1 {
 
 impl DocumentOpenPlanAuthorityV1 {
     fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+        self.browser_actor
+            .validate(os_directory::DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
+            .map_err(|_| DocumentOpenPlanErrorCodeV1::Stale)?;
         let descriptor_digest = os_directory::descriptor_digest_v1(&self.descriptor).map_err(|_| DocumentOpenPlanErrorCodeV1::Stale)?;
         let descriptor_digest = os_directory::hex_lower(&descriptor_digest.0);
         let descriptor_matches = self.descriptor.space_id == self.scope.space_id
@@ -1208,6 +1231,7 @@ impl DocumentOpenPlanAuthorityV1 {
             artifact: self.artifact.clone(),
             parent_dialect: DocumentOpenParentDialectV1 { artifact_kind: self.parent_dialect.artifact_kind.clone(), standard: self.parent_dialect.standard.clone(), subset: self.parent_dialect.subset.clone() },
             surface: self.surface.clone(),
+            browser_actor: self.browser_actor.clone(),
             grant: self.grant,
             checkpoint: self.checkpoint.clone(),
             revalidation: self.revalidation,
@@ -1472,7 +1496,7 @@ struct HubState {
     artifact_cas: Arc<ArtifactChunkCasStores>,
     directory: Arc<HubDirectories>,
     rebootstrap: Arc<VerifiedRebootstrapSource>,
-    _artifact_authority: Option<Arc<HubArtifactAuthority>>,
+    artifact_authority: Option<Arc<HubArtifactAuthority>>,
     verified_catalog: Option<Arc<VerifiedTrustedCatalog>>,
     #[cfg(feature = "native-artifact-execution")]
     gis_map_binding: Option<Arc<VerifiedGisMapArtifactBindingV1>>,
@@ -1482,7 +1506,7 @@ struct HubState {
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     inference_runtime: Option<Arc<HubInferenceRuntimeV1>>,
     openable_catalog: Option<Arc<dyn DocumentOpenCatalogAuthorityV1>>,
-    _artifact_publication: Arc<HubArtifactPublication>,
+    artifact_publication: Arc<HubArtifactPublication>,
     artifact_maintenance: Arc<ArtifactCasMaintenanceSupervisor>,
     /// @emoji 🏭️ Wave 1.B: the single serialized directory writer (contract §C1's decider laws +
     /// dense event `seq`) built once over `directory` at startup — see `semio_hub::directory::
@@ -2315,6 +2339,7 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
         artifact: selected.artifact,
         parent_dialect: selected.parent_dialect,
         surface: selected.surface,
+        browser_actor: selected.browser_actor,
         grant: selected.grant,
         checkpoint,
         revalidation: DocumentOpenRevalidationV1 { directory_revision, membership_generation: directory_revision, session_generation, share_generation },
@@ -2404,9 +2429,14 @@ async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: S
     }
     let catalog = state.openable_catalog.as_ref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::CatalogUnavailable))?;
     if catalog.generation_id() != authority.catalog.generation_id
-        || catalog
-            .resolve_document_open(&authority.descriptor, Some(&authority.surface.surface_id), authority.grant.write)
-            .is_none_or(|selected| selected.package != authority.package || selected.artifact != authority.artifact || selected.parent_dialect != authority.parent_dialect || selected.surface != authority.surface || selected.grant != authority.grant)
+        || catalog.resolve_document_open(&authority.descriptor, Some(&authority.surface.surface_id), authority.grant.write).is_none_or(|selected| {
+            selected.package != authority.package
+                || selected.artifact != authority.artifact
+                || selected.parent_dialect != authority.parent_dialect
+                || selected.surface != authority.surface
+                || selected.browser_actor != authority.browser_actor
+                || selected.grant != authority.grant
+        })
     {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
@@ -2426,6 +2456,7 @@ enum DocumentExecutionTargetAssetV1 {
     Manifest,
     Component,
     Descriptor,
+    BrowserActor,
 }
 
 /// 🛡️ One protected document-scoped execution-target read. Every call re-authenticates the exact
@@ -2484,6 +2515,16 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
     if component_byte_length == 0 || component_byte_length > DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES || descriptor_byte_length == 0 || descriptor_byte_length > DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable));
     }
+    let browser_actor_byte_length = assets.browser_actor.as_ref().map(|bytes| u64::try_from(bytes.len())).transpose().map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
+    let browser_actor = assets
+        .selection
+        .browser_actor
+        .to_lease(
+            os_directory::DocumentBrowserActorSourceV1 { component_sha256: &assets.selection.package.component_sha256, descriptor_byte_sha256: &assets.selection.package.descriptor_byte_sha256 },
+            assets.selection.surface.renderer_target.as_str(),
+            browser_actor_byte_length,
+        )
+        .map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
     let fields = DocumentExecutionTargetLeaseFieldsV1 {
         schema: "semio.os.document-execution-target-lease/v1".into(),
         version: 1,
@@ -2493,6 +2534,7 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
         package: assets.selection.package.clone(),
         component: DocumentExecutionTargetComponentV1 { sha256: assets.selection.package.component_sha256.clone(), blake3: assets.selection.package.component_blake3.clone(), byte_length: component_byte_length },
         descriptor: DocumentExecutionTargetDescriptorV1 { sha256: assets.selection.package.descriptor_byte_sha256.clone(), byte_length: descriptor_byte_length },
+        browser_actor,
         artifact: assets.selection.artifact.clone(),
         parent_dialect: DocumentOpenParentDialectV1 { artifact_kind: assets.selection.parent_dialect.artifact_kind.clone(), standard: assets.selection.parent_dialect.standard.clone(), subset: assets.selection.parent_dialect.subset.clone() },
         surface: assets.selection.surface.clone(),
@@ -2536,6 +2578,7 @@ async fn issue_document_execution_target(
             DocumentExecutionTargetAssetV1::Manifest => DirectoryJson(fields).into_response(),
             DocumentExecutionTargetAssetV1::Component => document_execution_target_bytes(&assets.component),
             DocumentExecutionTargetAssetV1::Descriptor => document_execution_target_bytes(&assets.descriptor),
+            DocumentExecutionTargetAssetV1::BrowserActor => document_execution_target_bytes(assets.browser_actor.as_deref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?),
         })
     })
     .await
@@ -2572,6 +2615,14 @@ async fn issue_document_execution_target_descriptor(
     request: axum::extract::Request,
 ) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
     issue_document_execution_target(DocumentExecutionTargetAssetV1::Descriptor, uri, space_id, document_id, state, request).await
+}
+async fn issue_document_execution_target_browser_actor(
+    OriginalUri(uri): OriginalUri,
+    Path((space_id, document_id)): Path<(String, String)>,
+    State(state): State<HubState>,
+    request: axum::extract::Request,
+) -> Result<axum::response::Response, DocumentOpenPlanRouteError> {
+    issue_document_execution_target(DocumentExecutionTargetAssetV1::BrowserActor, uri, space_id, document_id, state, request).await
 }
 //#endregion 🪪️ExecutionTargetLease
 
@@ -2973,6 +3024,504 @@ async fn head_blob(Path((space_id, hash)): Path<(String, String)>, headers: Head
     }
 }
 //#endregion Blobs
+
+//#region 📣️CheckpointPublication
+struct CheckpointPublicationHttpControl {
+    cancelled: std::sync::atomic::AtomicBool,
+    progress: Mutex<Option<AuthorityProgress>>,
+}
+
+impl CheckpointPublicationHttpControl {
+    fn new() -> Self {
+        Self { cancelled: std::sync::atomic::AtomicBool::new(false), progress: Mutex::new(None) }
+    }
+
+    fn cancel(&self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+    }
+}
+
+impl AuthorityOperationControl for CheckpointPublicationHttpControl {
+    fn now_ms(&self) -> u64 {
+        SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
+    }
+
+    fn is_cancelled(&self) -> bool {
+        self.cancelled.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    fn report(&self, progress: AuthorityProgress) {
+        if progress.completed_units <= progress.total_units {
+            *self.progress.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(progress);
+        }
+    }
+}
+
+struct CheckpointPublicationHttpRequest {
+    control: Arc<CheckpointPublicationHttpControl>,
+    complete: bool,
+}
+
+struct CheckpointPublicationClaimGuardV1 {
+    service: Arc<DirectoryService>,
+    actor_user_id: String,
+    correlation_id: String,
+    command_sha256: String,
+    complete: bool,
+}
+
+impl CheckpointPublicationClaimGuardV1 {
+    fn new(service: Arc<DirectoryService>, claim: &NewCheckpointPublicationClaimV1) -> Self {
+        Self {
+            service,
+            actor_user_id: claim.actor_user_id.clone(),
+            correlation_id: claim.correlation_id.clone(),
+            command_sha256: claim.command_sha256.clone(),
+            complete: false,
+        }
+    }
+
+    fn complete(&mut self) {
+        self.complete = true;
+    }
+
+    async fn release(&mut self) {
+        if !self.complete
+            && self
+                .service
+                .release_checkpoint_publication(&self.actor_user_id, &self.correlation_id, &self.command_sha256)
+                .await
+                .is_ok()
+        {
+            self.complete = true;
+        }
+    }
+}
+
+impl Drop for CheckpointPublicationClaimGuardV1 {
+    fn drop(&mut self) {
+        if self.complete {
+            return;
+        }
+        let service = self.service.clone();
+        let actor_user_id = self.actor_user_id.clone();
+        let correlation_id = self.correlation_id.clone();
+        let command_sha256 = self.command_sha256.clone();
+        tokio::spawn(async move {
+            let _ = service.release_checkpoint_publication(&actor_user_id, &correlation_id, &command_sha256).await;
+        });
+    }
+}
+
+impl CheckpointPublicationHttpRequest {
+    fn new(control: Arc<CheckpointPublicationHttpControl>) -> Self {
+        Self { control, complete: false }
+    }
+
+    fn complete(&mut self) {
+        self.complete = true;
+    }
+}
+
+impl Drop for CheckpointPublicationHttpRequest {
+    fn drop(&mut self) {
+        if !self.complete {
+            self.control.cancel();
+        }
+    }
+}
+
+fn checkpoint_publication_current_matches(expected: &CheckpointPublicationCurrentV1, current: Option<&PublishedArtifactCheckpoint>) -> bool {
+    match (expected, current) {
+        (CheckpointPublicationCurrentV1::None, None) => true,
+        (CheckpointPublicationCurrentV1::Active { checkpoint_id, baseline_frontier }, Some(current)) => {
+            current.checkpoint_id.hex() == *checkpoint_id && baseline_frontier.artifact_frontier().as_ref() == Some(&current.baseline_frontier)
+        }
+        _ => false,
+    }
+}
+
+fn checkpoint_publication_artifact_frontier(scope: &DocumentScope, snapshot: &db::CheckpointPublicationSnapshot) -> Option<ArtifactFrontier> {
+    Some(ArtifactFrontier {
+        document_id: scope.document_id.clone(),
+        head_edit_ordinal: snapshot.frontier.head_seq,
+        head_edit_id: snapshot.head_edit_id.as_ref()?.0.clone(),
+        last_commit_seq: snapshot.frontier.commit_seq,
+        chain_hash: ArtifactHash(snapshot.frontier.chain_hash),
+    })
+}
+
+fn checkpoint_publication_snapshot_matches(scope: &DocumentScope, command: &CheckpointPublicationCommandV1, snapshot: &db::CheckpointPublicationSnapshot) -> bool {
+    let Some(expected) = command.baseline_frontier.artifact_frontier() else { return false };
+    snapshot.authority_generation != 0
+        && snapshot.frontier.document == db_artifact_id(scope)
+        && snapshot.frontier.head_seq == command.expected_document_frontier.head_seq
+        && snapshot.frontier.commit_seq == command.expected_document_frontier.commit_seq
+        && snapshot.frontier.epoch == command.expected_document_frontier.epoch
+        && checkpoint_publication_artifact_frontier(scope, snapshot).as_ref() == Some(&expected)
+}
+
+fn checkpoint_publication_replay_matches(scope: &DocumentScope, command: &CheckpointPublicationCommandV1, checkpoint: &PublishedArtifactCheckpoint) -> bool {
+    checkpoint.scope == *scope
+        && checkpoint.descriptor_digest_v1.hex() == command.descriptor_digest_v1
+        && command.baseline_frontier.artifact_frontier().as_ref() == Some(&checkpoint.baseline_frontier)
+        && checkpoint.pack.sha256.hex() == command.pack.sha256
+        && checkpoint.pack.byte_length == command.pack.byte_length
+        && checkpoint.spr.sha256.hex() == command.spr.sha256
+        && checkpoint.spr.byte_length == command.spr.byte_length
+        && match &command.expected_current {
+            CheckpointPublicationCurrentV1::None => checkpoint.parent_checkpoint_id.is_none(),
+            CheckpointPublicationCurrentV1::Active { checkpoint_id, .. } => checkpoint.parent_checkpoint_id.is_some_and(|parent| parent.hex() == *checkpoint_id),
+        }
+}
+
+fn checkpoint_publication_receipt(command: &CheckpointPublicationCommandV1, checkpoint: PublishedArtifactCheckpoint) -> Response {
+    let receipt = CheckpointPublicationReceiptV1 {
+        schema: "semio.hub.checkpoint-publication-receipt/v1".into(),
+        correlation_id: command.correlation_id.clone(),
+        checkpoint,
+    };
+    let mut response = DirectoryJson(receipt).into_response();
+    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("private, no-store"));
+    response
+}
+
+async fn checkpoint_publication_blob(state: &HubState, reference: &os_directory::CheckpointPublicationBlobV1, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {
+    context.checkpoint()?;
+    let content_hash = parse_content_hash(&reference.sha256).ok_or(AuthorityError::BlobIntegrity("input"))?;
+    let pages = state.db.storage().await.payload().await.get(&content_hash).await.map_err(|_| AuthorityError::Store("checkpoint input blob unavailable".into()))?;
+    let bytes = db_io_pages_into_http_bytes(pages).await.map_err(|_| AuthorityError::Store("checkpoint input blob unavailable".into()))?;
+    context.checkpoint()?;
+    if u64::try_from(bytes.len()).ok() != Some(reference.byte_length) || ArtifactHash(Sha256::digest(bytes.as_ref())).hex() != reference.sha256 {
+        return Err(AuthorityError::BlobIntegrity("input"));
+    }
+    Ok(bytes.to_vec())
+}
+
+fn checkpoint_publication_error_status(error: &AuthorityError) -> StatusCode {
+    match error {
+        AuthorityError::Cancelled => StatusCode::SERVICE_UNAVAILABLE,
+        AuthorityError::DeadlineExceeded => StatusCode::GATEWAY_TIMEOUT,
+        AuthorityError::ResourceLimit(_) | AuthorityError::PairResourceLimit(_) => StatusCode::PAYLOAD_TOO_LARGE,
+        AuthorityError::InvalidDescriptor(_) | AuthorityError::InvalidScope | AuthorityError::InvalidFrontier | AuthorityError::InvalidParentCheckpoint | AuthorityError::InvalidOperationOrder | AuthorityError::InvalidLimits
+        | AuthorityError::Codec { .. } | AuthorityError::CodecIdentityMismatch => StatusCode::BAD_REQUEST,
+        AuthorityError::Catalog(_) | AuthorityError::Store(_) => StatusCode::SERVICE_UNAVAILABLE,
+        AuthorityError::BlobIntegrity(_) | AuthorityError::Publication(_) => StatusCode::CONFLICT,
+    }
+}
+
+struct FencedCheckpointPublisherV1 {
+    state: HubState,
+    handle: db::ArtifactHandle,
+    subject: SocketSubjectV1,
+    audience: SocketAudienceV1,
+    descriptor: DocumentDescriptor,
+    descriptor_digest: ArtifactHash,
+    expected_current: CheckpointPublicationCurrentV1,
+    expected_snapshot: db::CheckpointPublicationSnapshot,
+    completion: CheckpointPublicationCompletionV1,
+}
+
+impl FencedCheckpointPublisherV1 {
+    fn publication_error() -> AuthorityError {
+        AuthorityError::Publication("checkpoint publication authority changed".into())
+    }
+
+    async fn authority_is_current(&self) -> Result<bool, AuthorityError> {
+        if self.subject.revalidate(self.state.directory.as_ref(), &self.audience, now_ms()).await != SocketBindingValidityV1::Active {
+            return Ok(false);
+        }
+        let SocketAudienceV1::Document(scope) = &self.audience else { return Ok(false) };
+        let descriptor = self.state.directory.get_document_descriptor(scope).await.map_err(|_| Self::publication_error())?;
+        let current = self.state.directory.get_active_artifact_checkpoint(scope).await.map_err(|_| Self::publication_error())?;
+        let snapshot = self.handle.checkpoint_publication_snapshot().await.map_err(|_| Self::publication_error())?;
+        Ok(descriptor.as_ref() == Some(&self.descriptor)
+            && descriptor.as_ref().and_then(|value| descriptor_digest_v1(value).ok()) == Some(self.descriptor_digest)
+            && checkpoint_publication_current_matches(&self.expected_current, current.as_ref())
+            && snapshot == self.expected_snapshot)
+    }
+}
+
+impl VerifiedCheckpointPublisher for FencedCheckpointPublisherV1 {
+    async fn reserve(
+        &self,
+        plan: &semio_hub::artifact_authority::chunk_cas::ArtifactCasOwnershipPlanV1,
+        context: &OperationContext<'_>,
+    ) -> Result<semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation, AuthorityError> {
+        context.checkpoint()?;
+        if !self.authority_is_current().await? {
+            return Err(Self::publication_error());
+        }
+        HubVerifiedCheckpointPublisher::new(self.state.directory_service.clone(), self.state.artifact_cas.clone(), "system:artifact-authority").reserve(plan, context).await
+    }
+
+    async fn publish_reserved(
+        &self,
+        checkpoint: &os_directory::ArtifactCheckpoint,
+        reservation: &semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation,
+        context: &OperationContext<'_>,
+    ) -> Result<(), AuthorityError> {
+        context.checkpoint()?;
+        let authorization = tokio::time::timeout(std::time::Duration::from_secs(2), self.state.socket_binding_gates.acquire_record(&self.subject, &self.audience))
+            .await
+            .map_err(|_| Self::publication_error())?;
+        let SocketAudienceV1::Document(scope) = &self.audience else { return Err(Self::publication_error()) };
+        let document_write = tokio::time::timeout(
+            std::time::Duration::from_secs(2),
+            self.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())).lock_owned(),
+        )
+        .await
+        .map_err(|_| Self::publication_error())?;
+        context.checkpoint()?;
+        if !self.authority_is_current().await?
+            || checkpoint.scope != *scope
+            || checkpoint.descriptor_digest_v1 != self.descriptor_digest
+            || checkpoint.baseline_frontier != checkpoint_publication_artifact_frontier(scope, &self.expected_snapshot).ok_or_else(Self::publication_error)?
+        {
+            return Err(Self::publication_error());
+        }
+        let mut completion = self.completion.clone();
+        completion.checkpoint_id = checkpoint.checkpoint_id;
+        completion.completed_at = i64::try_from(context.now_ms()).map_err(|_| Self::publication_error())?;
+        let result = self
+            .state
+            .directory_service
+            .publish_reserved_artifact_checkpoint_and_complete_checkpoint_publication(
+                DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() },
+                checkpoint.clone(),
+                reservation.clone(),
+                completion,
+                context.now_ms(),
+            )
+            .await
+            .map_err(|error| AuthorityError::Publication(semio_hub::artifact_authority::adapters::bounded_message(error)));
+        drop(document_write);
+        drop(authorization);
+        result
+    }
+}
+
+async fn checkpoint_publication_response(
+    state: &HubState,
+    scope: &DocumentScope,
+    subject: &SocketSubjectV1,
+    audience: &SocketAudienceV1,
+    command: CheckpointPublicationCommandV1,
+    completion: CheckpointPublicationCompletionV1,
+    control: &CheckpointPublicationHttpControl,
+) -> Response {
+    let deadline_ms = control.now_ms().saturating_add(CHECKPOINT_PUBLICATION_DEADLINE_MS);
+    let limits = AuthorityLimits { max_operations: 1, max_operation_bytes: 1, max_pair_bytes: CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES };
+    let context = OperationContext::new(deadline_ms, limits, control);
+    if let Err(error) = context.checkpoint() {
+        return checkpoint_publication_error_status(&error).into_response();
+    }
+
+    let authorization = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(subject, audience)).await {
+        Ok(guards) => guards,
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+    };
+    let document_write = match tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())).lock_owned(),
+    )
+    .await
+    {
+        Ok(guard) => guard,
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+    };
+    if subject.revalidate(state.directory.as_ref(), audience, now_ms()).await != SocketBindingValidityV1::Active {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
+    let descriptor = match state.directory.get_document_descriptor(scope).await {
+        Ok(Some(descriptor)) => descriptor,
+        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+    };
+    let descriptor_digest = match descriptor_digest_v1(&descriptor) {
+        Ok(digest) if digest.hex() == command.descriptor_digest_v1 => digest,
+        Ok(_) => return StatusCode::CONFLICT.into_response(),
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+    };
+    let handle = match state.ensure_document(&db_artifact_id(scope)).await {
+        Ok(handle) => handle,
+        Err(error) => return db_error_status(&error).into_response(),
+    };
+    let snapshot = match handle.checkpoint_publication_snapshot().await {
+        Ok(snapshot) if checkpoint_publication_snapshot_matches(scope, &command, &snapshot) => snapshot,
+        Ok(_) => return StatusCode::CONFLICT.into_response(),
+        Err(error) => return db_error_status(&error).into_response(),
+    };
+    let current = match state.directory.get_active_artifact_checkpoint(scope).await {
+        Ok(current) if checkpoint_publication_current_matches(&command.expected_current, current.as_ref()) => current,
+        Ok(_) => return StatusCode::CONFLICT.into_response(),
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+    };
+    let base_frontier = match checkpoint_publication_artifact_frontier(scope, &snapshot) {
+        Some(frontier) => frontier,
+        None => return StatusCode::CONFLICT.into_response(),
+    };
+    drop(document_write);
+    drop(authorization);
+
+    let pack = match checkpoint_publication_blob(state, &command.pack, &context).await {
+        Ok(bytes) => bytes,
+        Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+    };
+    let spr = match checkpoint_publication_blob(state, &command.spr, &context).await {
+        Ok(bytes) => bytes,
+        Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+    };
+    let Some(authority) = state.artifact_authority.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
+    let request = CheckpointRequest {
+        descriptor: descriptor.clone(),
+        scope: scope.clone(),
+        parent_checkpoint_id: current.as_ref().map(|checkpoint| checkpoint.checkpoint_id),
+        base_frontier,
+        input_pair: ArtifactPair { pack, spr },
+        operations: Vec::new(),
+    };
+    let candidate = match authority.materialize_checkpoint(request, &context).await {
+        Ok(candidate) => candidate,
+        Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+    };
+    #[cfg(test)]
+    if let Some(gate) = state.live_gate.as_ref().filter(|gate| gate.checkpoint_publication_pause_enabled.load(std::sync::atomic::Ordering::Acquire)) {
+        gate.checkpoint_publication_admitted.add_permits(1);
+        let _ = gate.checkpoint_publication_release.acquire().await;
+        if let Err(error) = context.checkpoint() {
+            return checkpoint_publication_error_status(&error).into_response();
+        }
+    }
+    let publisher = FencedCheckpointPublisherV1 {
+        state: state.clone(),
+        handle,
+        subject: subject.clone(),
+        audience: audience.clone(),
+        descriptor,
+        descriptor_digest,
+        expected_current: command.expected_current.clone(),
+        expected_snapshot: snapshot,
+        completion,
+    };
+    let publication = CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(state.artifact_cas.clone()), publisher);
+    let published = match publication.publish_candidate(candidate, &context).await {
+        Ok(published) => published,
+        Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+    };
+    checkpoint_publication_receipt(&command, published_artifact_checkpoint(&published.checkpoint))
+}
+
+async fn post_checkpoint_publication(
+    Path((space_id, document_id)): Path<(String, String)>,
+    OriginalUri(uri): OriginalUri,
+    headers: HeaderMap,
+    State(state): State<HubState>,
+    body: Bytes,
+) -> Response {
+    if uri.query().is_some()
+        || headers.get_all(axum::http::header::CONTENT_TYPE).iter().count() != 1
+        || headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()) != Some("application/json")
+    {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+    let command_source = match std::str::from_utf8(&body) {
+        Ok(source) => source,
+        Err(_) => return StatusCode::BAD_REQUEST.into_response(),
+    };
+    let command = match CheckpointPublicationCommandV1::parse_canonical_json(command_source) {
+        Some(command) => command,
+        None => return StatusCode::BAD_REQUEST.into_response(),
+    };
+    let scope = DocumentScope::new(space_id, document_id);
+    let (subject, _) = match authenticate_document_socket_subject(&state, &scope, &headers).await {
+        Ok(value) => value,
+        Err(_) => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+    match &subject {
+        SocketSubjectV1::Session { role: Some(SpaceRole::Author), .. } => {}
+        SocketSubjectV1::Session { .. } => return StatusCode::FORBIDDEN.into_response(),
+        SocketSubjectV1::Share { .. } => return StatusCode::UNAUTHORIZED.into_response(),
+    }
+    let actor_user_id = match &subject {
+        SocketSubjectV1::Session { user_id, .. } => user_id.clone(),
+        SocketSubjectV1::Share { .. } => return StatusCode::UNAUTHORIZED.into_response(),
+    };
+    let command_sha256 = os_directory::hex_lower(&Sha256::digest(command_source.as_bytes()));
+    let claim = NewCheckpointPublicationClaimV1 {
+        actor_user_id,
+        correlation_id: command.correlation_id.clone(),
+        command_sha256: command_sha256.clone(),
+        claimed_at: now_ms(),
+    };
+    let claimed = match state.directory_service.claim_or_read_checkpoint_publication(&claim).await {
+        Ok(CheckpointPublicationClaimV1::Claimed(_)) => true,
+        Ok(CheckpointPublicationClaimV1::Conflict) => return StatusCode::CONFLICT.into_response(),
+        Ok(CheckpointPublicationClaimV1::Existing(record)) => {
+            if record.disposition != CheckpointPublicationDispositionV1::Completed {
+                return StatusCode::CONFLICT.into_response();
+            }
+            let Some(checkpoint_id) = record.checkpoint_id else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
+            let descriptor = match state.directory.get_document_descriptor(&scope).await {
+                Ok(Some(descriptor)) => descriptor,
+                Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+                Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+            };
+            if descriptor_digest_v1(&descriptor).ok().map(|digest| digest.hex()).as_deref() != Some(command.descriptor_digest_v1.as_str()) {
+                return StatusCode::CONFLICT.into_response();
+            }
+            return match state.directory.get_artifact_checkpoint(&scope, checkpoint_id).await {
+                Ok(Some(checkpoint)) if checkpoint_publication_replay_matches(&scope, &command, &checkpoint) => checkpoint_publication_receipt(&command, checkpoint),
+                Ok(_) => StatusCode::CONFLICT.into_response(),
+                Err(_) => StatusCode::SERVICE_UNAVAILABLE.into_response(),
+            };
+        }
+        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+    };
+    debug_assert!(claimed);
+    let mut claim_guard = CheckpointPublicationClaimGuardV1::new(state.directory_service.clone(), &claim);
+    let completion = CheckpointPublicationCompletionV1 {
+        actor_user_id: claim.actor_user_id.clone(),
+        correlation_id: claim.correlation_id.clone(),
+        command_sha256,
+        checkpoint_id: ArtifactHash([0; 32]),
+        completed_at: 0,
+    };
+    let audience = SocketAudienceV1::Document(scope.clone());
+    let control = Arc::new(CheckpointPublicationHttpControl::new());
+    let mut request = CheckpointPublicationHttpRequest::new(control.clone());
+    let subject_for_operation = subject.clone();
+    let audience_for_operation = audience.clone();
+    let operation = checkpoint_publication_response(&state, &scope, &subject_for_operation, &audience_for_operation, command, completion, control.as_ref());
+    tokio::pin!(operation);
+    let monitored = async {
+        loop {
+            tokio::select! {
+                response = &mut operation => break response,
+                _ = tokio::time::sleep(std::time::Duration::from_millis(50)) => {
+                    if subject.revalidate(state.directory.as_ref(), &audience, now_ms()).await != SocketBindingValidityV1::Active {
+                        control.cancel();
+                    }
+                }
+            }
+        }
+    };
+    let response = match tokio::time::timeout(std::time::Duration::from_millis(CHECKPOINT_PUBLICATION_DEADLINE_MS.saturating_add(100)), monitored).await {
+        Ok(response) => response,
+        Err(_) => {
+            control.cancel();
+            StatusCode::GATEWAY_TIMEOUT.into_response()
+        }
+    };
+    if response.status().is_success() {
+        claim_guard.complete();
+    } else {
+        claim_guard.release().await;
+    }
+    request.complete();
+    response
+}
+//#endregion 📣️CheckpointPublication
 //#endregion 🔖️Rest
 
 //#region 🔖️WebSocket
@@ -3017,7 +3566,12 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
     let Some(catalog) = state.openable_catalog.as_ref() else { return SocketBindingValidityV1::Unavailable };
     if catalog.generation_id() != authority.catalog.generation_id
         || catalog.resolve_document_open(&descriptor, Some(&authority.surface.surface_id), authority.grant.write).is_none_or(|selection| {
-            selection.package != authority.package || selection.artifact != authority.artifact || selection.parent_dialect != authority.parent_dialect || selection.surface != authority.surface || selection.grant != authority.grant
+            selection.package != authority.package
+                || selection.artifact != authority.artifact
+                || selection.parent_dialect != authority.parent_dialect
+                || selection.surface != authority.surface
+                || selection.browser_actor != authority.browser_actor
+                || selection.grant != authority.grant
         })
     {
         return SocketBindingValidityV1::Unauthorized;
@@ -3292,6 +3846,7 @@ async fn handle_client_frame(
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason, messages: Vec::new() }) }], frontier };
                 return sender.send(encode(&ack).await).await.is_ok();
             }
+            let _document_write = state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(DocumentScope::new(space_id, document_id))).lock_owned().await;
             let (ack, relay) = submit_commands(handle, actor, batch_id, envelopes, state.merge_policy).await;
             if let Some(commands_frame) = relay {
                 let _ = fanout.send(commands_frame);
@@ -3984,11 +4539,7 @@ async fn authorize_directory_command(state: &HubState, actor_user_id: &str, admi
         DirectoryCommand::CreateSpace { .. } => Ok(()),
         DirectoryCommand::DeleteSpace { space_id } | DirectoryCommand::ArchiveSpace { space_id } => {
             let space = state.directory.get_space(space_id).await.map_err(directory_error_status)?.ok_or(StatusCode::NOT_FOUND)?;
-            if space.owner_user_id == actor_user_id {
-                Ok(())
-            } else {
-                Err(StatusCode::FORBIDDEN)
-            }
+            if space.owner_user_id == actor_user_id { Ok(()) } else { Err(StatusCode::FORBIDDEN) }
         }
         DirectoryCommand::RenameSpace { space_id, .. }
         | DirectoryCommand::SetVisibility { space_id, .. }
@@ -4543,11 +5094,7 @@ impl DirectoryEventPageHttpControl {
     }
 
     fn checkpoint(&self) -> Result<(), StatusCode> {
-        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
-            Err(StatusCode::SERVICE_UNAVAILABLE)
-        } else {
-            Ok(())
-        }
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) { Err(StatusCode::SERVICE_UNAVAILABLE) } else { Ok(()) }
     }
 
     fn cancel(&self) {
@@ -4796,11 +5343,7 @@ async fn socket_directory_message_visible(state: &HubState, record: &SocketGrant
         DirectoryStreamMessage::Heartbeat { .. } => false,
         DirectoryStreamMessage::RebootstrapRequired { control } => directory_space_access_for_user(state, &control.scope.space_id, Some(user_id)).await.is_member(),
     };
-    if visible {
-        SocketBindingValidityV1::Active
-    } else {
-        SocketBindingValidityV1::Unauthorized
-    }
+    if visible { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -6381,11 +6924,16 @@ fn router(state: HubState) -> Router {
         .route("/spaces/{space_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
         .route("/spaces/{space_id}/documents/{id}", get(get_document_status))
         .route("/spaces/{space_id}/documents/{document_id}/active-checkpoint/pair", get(get_active_checkpoint_pair))
+        .route(
+            "/spaces/{space_id}/documents/{document_id}/checkpoint-publications",
+            post(post_checkpoint_publication).layer(DefaultBodyLimit::max(CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES)),
+        )
         .route("/spaces/{space_id}/documents/{id}/open-plan", post(issue_document_open_plan))
         .route("/spaces/{space_id}/documents/{id}/socket-grants", post(issue_document_plan_socket_grant))
         .route("/spaces/{space_id}/documents/{id}/execution-target/manifest", post(issue_document_execution_target_manifest))
         .route("/spaces/{space_id}/documents/{id}/execution-target/component", post(issue_document_execution_target_component))
         .route("/spaces/{space_id}/documents/{id}/execution-target/descriptor", post(issue_document_execution_target_descriptor))
+        .route("/spaces/{space_id}/documents/{id}/execution-target/browser-actor", post(issue_document_execution_target_browser_actor))
         .route("/spaces/{space_id}/documents/{id}/socket/v1", get(document_ws_v1))
         // 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
         // for why this must cover the whole router, not just `/directory/*`.
@@ -6542,12 +7090,7 @@ async fn main() -> Result<(), HubError> {
     let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = Some(&native_codec_providers);
     #[cfg(not(feature = "native-artifact-execution"))]
     let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = None;
-    let artifact_authority = configured_artifact_authority(
-        std::env::var("OS_HUB_TRUSTED_CATALOG_BUNDLE").ok().filter(|value| !value.is_empty()).map(std::path::PathBuf::from),
-        std::env::var("OS_HUB_TRUSTED_CATALOG_PROFILE").ok().filter(|value| !value.is_empty()),
-        native_codec_provider,
-    )
-    .await?;
+    let artifact_authority = configured_artifact_authority(&data_dir, native_codec_provider).await?;
     let db = Arc::new(connect_db(&data_dir).await?);
     let directory = connect_directory(&data_dir).await?;
     // 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
@@ -6604,14 +7147,14 @@ async fn main() -> Result<(), HubError> {
         artifact_cas,
         directory: directory.clone(),
         rebootstrap,
-        _artifact_authority: artifact_authority.map(|configured| configured.authority),
+        artifact_authority: artifact_authority.map(|configured| configured.authority),
         verified_catalog,
         #[cfg(feature = "native-artifact-execution")]
         gis_map_binding,
         #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
         inference_runtime,
         openable_catalog,
-        _artifact_publication: artifact_publication,
+        artifact_publication,
         artifact_maintenance: artifact_maintenance.clone(),
         directory_service,
         admin_subjects,
@@ -6813,37 +7356,39 @@ mod tests {
         assert!(examined > 16);
     }
     use tokio_tungstenite::connect_async;
-    use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message as WsMessage};
+    use tokio_tungstenite::tungstenite::{Message as WsMessage, client::IntoClientRequest};
 
     /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
 
     #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
-    async fn trusted_catalog_startup_is_opt_in_and_partial_configuration_fails_closed() {
-        assert!(configured_artifact_authority(None, None, Some(&NativeCodecProviderSetV1::linked())).await.expect("unconfigured authority").is_none());
-        let error = match configured_artifact_authority(Some(std::path::PathBuf::from("bundle.json")), None, Some(&NativeCodecProviderSetV1::linked())).await {
-            Ok(_) => panic!("partial trusted-catalog configuration unexpectedly succeeded"),
-            Err(error) => error,
-        };
-        assert!(error.to_string().contains("must be configured together"));
+    async fn trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root() {
+        let data_root = std::fs::canonicalize(tempdir("unconfigured-trusted-catalog")).expect("canonical fixture-owned data root");
+        assert!(configured_artifact_authority(&data_root, Some(&NativeCodecProviderSetV1::linked())).await.expect("unconfigured authority").is_none());
+        std::fs::remove_dir_all(data_root).expect("remove unconfigured trusted catalog fixture");
     }
 
     #[tokio::test]
     async fn configured_catalog_without_a_native_provider_fails_closed() {
-        assert!(configured_artifact_authority(None, None, None).await.expect("unconfigured headless authority").is_none());
-        let error = match configured_artifact_authority(Some(std::path::PathBuf::from("bundle.json")), Some("fixture".into()), None).await {
+        let unconfigured = tempdir("unconfigured-headless-catalog");
+        assert!(configured_artifact_authority(&unconfigured, None).await.expect("unconfigured headless authority").is_none());
+        std::fs::create_dir_all(unconfigured.join("trusted-catalog")).expect("trusted catalog directory");
+        std::fs::write(unconfigured.join("trusted-catalog/current.json"), b"{}\n").expect("configured current pointer");
+        let error = match configured_artifact_authority(&unconfigured, None).await {
             Ok(_) => panic!("configured trusted catalog unexpectedly admitted without its native provider"),
             Err(error) => error,
         };
         assert!(error.to_string().contains("requires the native-artifact-execution provider"));
+        std::fs::remove_dir_all(unconfigured).expect("remove headless trusted catalog fixture");
     }
 
     #[cfg(feature = "native-artifact-execution")]
-    fn native_openable_stdio_bundle() -> (std::path::PathBuf, std::path::PathBuf) {
+    fn native_openable_stdio_bundle() -> std::path::PathBuf {
         let root = tempdir("native-openable-stdio");
-        std::fs::create_dir_all(root.join("components")).expect("stdio component directory");
-        std::fs::create_dir_all(root.join("descriptors")).expect("stdio descriptor directory");
+        let stage = root.join("generation-stage");
+        std::fs::create_dir_all(stage.join("components")).expect("stdio component directory");
+        std::fs::create_dir_all(stage.join("descriptors")).expect("stdio descriptor directory");
         let component = b"abc";
         let component_sha256 = os_directory::hex_lower(&Sha256::digest(component));
         let component_blake3 = blake3::hash(component).to_hex().to_string();
@@ -6935,16 +7480,26 @@ mod tests {
             "path":"closed-actor.mjs", "byteLength":component.len(), "sha256":component_sha256,
             "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":descriptor_sha256, "policySha256":"41".repeat(32), "importInterfaces":[]
         });
-        std::fs::write(root.join("closed-actor.mjs"), component).expect("synthetic actor, never executed");
+        std::fs::write(stage.join("closed-actor.mjs"), component).expect("synthetic actor, never executed");
         let carried = serde_json::to_vec(&bundle).expect("provisional stdio bundle");
         let (selected_closure_sha256, generation_id) = semio_hub::artifact_authority::trusted_catalog::trusted_profile_digests_json(&carried, "stdio-native-openable-v1").expect("stdio profile digests");
         bundle["profiles"][0]["selectedClosureSha256"] = selected_closure_sha256.into();
         bundle["profiles"][0]["generationId"] = generation_id.into();
-        std::fs::write(root.join("components/stdio.wasm"), component).expect("write stdio component");
-        std::fs::write(root.join("descriptors/stdio.descriptor.semio"), descriptor_bytes).expect("write stdio descriptor");
-        let bundle_path = root.join("trusted-catalog.json");
-        std::fs::write(&bundle_path, serde_json::to_vec_pretty(&bundle).expect("stdio bundle json")).expect("write stdio bundle");
-        (root, bundle_path)
+        std::fs::write(stage.join("components/stdio.wasm"), component).expect("write stdio component");
+        std::fs::write(stage.join("descriptors/stdio.descriptor.semio"), descriptor_bytes).expect("write stdio descriptor");
+        let bundle_bytes = serde_json::to_vec_pretty(&bundle).expect("stdio bundle json");
+        std::fs::write(stage.join("trusted-catalog.json"), &bundle_bytes).expect("write stdio bundle");
+        let trusted_root = root.join("trusted-catalog");
+        let generations = trusted_root.join("generations");
+        std::fs::create_dir_all(&generations).expect("trusted generation owner");
+        let generation = bundle["profiles"][0]["generationId"].as_str().expect("generation id");
+        std::fs::rename(stage, generations.join(generation)).expect("publish trusted generation");
+        let bundle_sha256 = os_directory::hex_lower(&Sha256::digest(&bundle_bytes));
+        let current_bytes = format!(r#"{{"profileId":"stdio-native-openable-v1","generationId":"{generation}","bundleSha256":"{bundle_sha256}"}}
+"#)
+        .into_bytes();
+        std::fs::write(trusted_root.join("current.json"), current_bytes).expect("publish current pointer");
+        std::fs::canonicalize(root).expect("canonical fixture-owned data root")
     }
 
     #[cfg(feature = "native-artifact-execution")]
@@ -6959,13 +7514,13 @@ mod tests {
         assert_eq!(unavailable_json["features"]["openPlan"], false);
 
         let providers = NativeCodecProviderSetV1::linked();
-        let (root, bundle_path) = native_openable_stdio_bundle();
-        let configured = configured_artifact_authority(Some(bundle_path), Some("stdio-native-openable-v1".into()), Some(&providers)).await.expect("verified stdio authority").expect("configured stdio authority");
+        let root = native_openable_stdio_bundle();
+        let configured = configured_artifact_authority(&root, Some(&providers)).await.expect("verified stdio authority").expect("configured stdio authority");
         assert_eq!(configured.catalog.codec_count(), 26);
         assert_eq!(configured.catalog.open_target_count(), 1);
         let mut ready = test_state().await;
         ready.openable_catalog = Some(configured.catalog.clone());
-        ready._artifact_authority = Some(configured.authority);
+        ready.artifact_authority = Some(configured.authority);
         ready.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
         let ready_addr = spawn_server(ready).await;
         let readiness = raw_http_get(ready_addr, "/readyz", &[]).await;
@@ -7063,14 +7618,14 @@ mod tests {
             artifact_cas,
             directory,
             rebootstrap,
-            _artifact_authority: None,
+            artifact_authority: None,
             verified_catalog: None,
             #[cfg(feature = "native-artifact-execution")]
             gis_map_binding: None,
             #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
             inference_runtime: None,
             openable_catalog: None,
-            _artifact_publication: artifact_publication,
+            artifact_publication,
             artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
             directory_service,
             admin_subjects: Arc::from([]),
@@ -7123,14 +7678,14 @@ mod tests {
             artifact_cas,
             directory,
             rebootstrap,
-            _artifact_authority: None,
+            artifact_authority: None,
             verified_catalog: None,
             #[cfg(feature = "native-artifact-execution")]
             gis_map_binding: None,
             #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
             inference_runtime: None,
             openable_catalog: None,
-            _artifact_publication: artifact_publication,
+            artifact_publication,
             artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
             directory_service,
             admin_subjects: Arc::from([]),
@@ -7251,6 +7806,185 @@ mod tests {
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({})).await.unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    struct CheckpointPublicationFixture {
+        state: HubState,
+        author: TestIssuedSession,
+        spectator: TestIssuedSession,
+        scope: DocumentScope,
+        handle: db::ArtifactHandle,
+        command: CheckpointPublicationCommandV1,
+        pack: Vec<u8>,
+        spr: Vec<u8>,
+        catalog_root: std::path::PathBuf,
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    fn checkpoint_publication_command(
+        correlation_id: &str,
+        descriptor: &DocumentDescriptor,
+        snapshot: &db::CheckpointPublicationSnapshot,
+        expected_current: CheckpointPublicationCurrentV1,
+        pack: &[u8],
+        spr: &[u8],
+    ) -> CheckpointPublicationCommandV1 {
+        let head_edit_id = snapshot.head_edit_id.as_ref().expect("committed checkpoint tip").0.clone();
+        CheckpointPublicationCommandV1 {
+            schema: "semio.hub.checkpoint-publication-command/v1".into(),
+            correlation_id: correlation_id.into(),
+            descriptor_digest_v1: descriptor_digest_v1(descriptor).expect("descriptor digest").hex(),
+            expected_document_frontier: os_directory::DocumentFrontier {
+                head_seq: snapshot.frontier.head_seq,
+                commit_seq: snapshot.frontier.commit_seq,
+                epoch: snapshot.frontier.epoch,
+            },
+            expected_current,
+            baseline_frontier: CheckpointPublicationFrontierV1 {
+                document_id: descriptor.document_id.clone(),
+                head_edit_ordinal: snapshot.frontier.head_seq,
+                head_edit_id,
+                last_commit_seq: snapshot.frontier.commit_seq,
+                chain_sha256: os_directory::hex_lower(&snapshot.frontier.chain_hash),
+            },
+            pack: CheckpointPublicationBlobV1 { sha256: os_directory::hex_lower(&Sha256::digest(pack)), byte_length: pack.len() as u64 },
+            spr: CheckpointPublicationBlobV1 { sha256: os_directory::hex_lower(&Sha256::digest(spr)), byte_length: spr.len() as u64 },
+        }
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    async fn checkpoint_publication_fixture(label: &str) -> CheckpointPublicationFixture {
+        let catalog_root = native_openable_stdio_bundle();
+        let providers = NativeCodecProviderSetV1::linked();
+        let configured = configured_artifact_authority(&catalog_root, Some(&providers)).await.expect("load stdio publication catalog").expect("configured publication catalog");
+        let selection = configured.catalog.selected_document_open().expect("selected stdio JSON target").clone();
+        let mut state = test_state().await;
+        let author = issue_test_session(&state, &format!("checkpoint-{label}-author@example.test")).await;
+        let spectator = issue_test_session(&state, &format!("checkpoint-{label}-spectator@example.test")).await;
+        let space_id = create_space_for_test(&state, &author.user_id, &format!("Checkpoint {label}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space_id, &format!("checkpoint-{label}-author@example.test"), DirectorySpaceRole::Author).await;
+        upsert_member_for_test(&state, &space_id, &format!("checkpoint-{label}-spectator@example.test"), DirectorySpaceRole::Spectator).await;
+        let scope = DocumentScope::new(space_id, format!("checkpoint-{label}"));
+        let descriptor = DocumentDescriptor {
+            space_id: scope.space_id.clone(),
+            document_id: scope.document_id.clone(),
+            artifact_kind: selection.artifact.kind,
+            artifact_schema: selection.artifact.schema,
+            owner: os_directory::DocumentOwner {
+                plugin_id: selection.package.plugin_id,
+                package_id: selection.package.package_id,
+                version: selection.package.version,
+                package_hash: selection.package.component_sha256,
+            },
+            pack_schema_hash: selection.artifact.pack_schema_hash,
+            bootstrap_version: 1,
+            bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
+            bootstrap_snapshot_hash: "33".repeat(32),
+        };
+        state
+            .directory_service
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() })
+            .await
+            .expect("announce selected publication document");
+        state.artifact_authority = Some(configured.authority);
+        state.openable_catalog = Some(configured.catalog);
+        let document = db_artifact_id(&scope);
+        let handle = state.ensure_document(&document).await.expect("publication document actor");
+        let batch = db::document::CommandBatch::new(vec![sample_envelope(&format!("checkpoint-{label}-edit-1"), &WireArtifactId(document.0.clone())).await]).await.expect("publication command batch");
+        handle
+            .submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() })
+            .await
+            .expect("publication actor response")
+            .expect("publication edit accepted");
+        let snapshot = handle.checkpoint_publication_snapshot().await.expect("publication actor snapshot");
+        let snapshot_value = semio_s_plugin_stdio::artifacts::json::schema::snapshot::demo_json_snapshot();
+        let pack = <semio_s_plugin_stdio::artifacts::json::JsonSnapshot as directory::os_store::ArtifactPack>::encode_pack(&snapshot_value);
+        let spr = directory::os_store::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
+        let command = checkpoint_publication_command("1234567890abcdef1234567890abcdef", &descriptor, &snapshot, CheckpointPublicationCurrentV1::None, &pack, &spr);
+        CheckpointPublicationFixture { state, author, spectator, scope, handle, command, pack, spr, catalog_root }
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    #[tokio::test]
+    async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog() {
+        use semio_hub::artifact_authority::trusted_catalog::test_support;
+
+        let artifact_root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned checkpoint process artifact root"));
+        let destination = artifact_root.join("checkpoint-publication-process-fixture");
+        let stage = artifact_root.join(format!(".checkpoint-publication-process-fixture-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&stage);
+        let _ = std::fs::remove_dir_all(&destination);
+        std::fs::create_dir_all(&stage).expect("create process fixture stage");
+
+        let profile = test_support::verified_gis_map_test_profile(&test_support::unique_profile_root("checkpoint-process")).await.expect("verified GIS Map process profile");
+        let selection = profile.binding().selection();
+        assert_eq!((selection.artifact.kind.as_str(), selection.artifact.schema.as_str()), ("s.gis.gismap", "gis.map"));
+        let source = profile.bundle_path().parent().expect("profile bundle parent");
+        let bundle_bytes = std::fs::read(profile.bundle_path()).expect("read verified profile bundle");
+        let bundle: serde_json::Value = serde_json::from_slice(&bundle_bytes).expect("decode verified profile bundle");
+        let generation_id = bundle["profiles"][0]["generationId"].as_str().expect("verified generation id");
+        let generation = stage.join("data/trusted-catalog/generations").join(generation_id);
+        std::fs::create_dir_all(&generation).expect("create trusted generation");
+        for name in ["component.wasm", "descriptor.semio", "closed-actor.mjs", "trusted-catalog.json"] {
+            std::fs::copy(source.join(name), generation.join(name)).unwrap_or_else(|error| panic!("copy verified {name}: {error}"));
+        }
+        let bundle_sha256 = os_directory::hex_lower(&Sha256::digest(&bundle_bytes));
+        std::fs::create_dir_all(stage.join("data/trusted-catalog")).expect("create trusted current owner");
+        std::fs::write(
+            stage.join("data/trusted-catalog/current.json"),
+            format!(r#"{{"profileId":"{}","generationId":"{generation_id}","bundleSha256":"{bundle_sha256}"}}
+"#, test_support::GIS_MAP_TEST_PROFILE_ID),
+        )
+        .expect("write trusted current pointer");
+
+        let pack = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
+        let spr = directory::os_store::empty_document_spr("", &selection.artifact.schema).await;
+        let diff = db::document::encode_pathmap_json(&serde_json::json!({ "checkpoint-process": "committed" })).await.expect("encode process mutation diff");
+        let inverse = db::document::encode_pathmap_json(&serde_json::json!({ "checkpoint-process": null })).await.expect("encode process mutation inverse");
+        let payload = stage.join("payload");
+        std::fs::create_dir_all(&payload).expect("create process payload owner");
+        for (name, bytes) in [("pack.bin", pack.as_slice()), ("spr.bin", spr.as_slice()), ("diff.bin", diff.as_slice()), ("inverse.bin", inverse.as_slice())] {
+            std::fs::write(payload.join(name), bytes).unwrap_or_else(|error| panic!("write process {name}: {error}"));
+        }
+        let fixture = serde_json::json!({
+            "schema": "semio.hub.checkpoint-publication-process-fixture/v1",
+            "profileId": test_support::GIS_MAP_TEST_PROFILE_ID,
+            "generationId": generation_id,
+            "documentId": "mcp-cold-gis-map",
+            "mutationId": "mcp-cold-gis-map-edit-1",
+            "package": {
+                "pluginId": selection.package.plugin_id.as_str(),
+                "packageId": selection.package.package_id.as_str(),
+                "version": selection.package.version.as_str(),
+                "componentSha256": selection.package.component_sha256.as_str()
+            },
+            "artifact": {
+                "kind": selection.artifact.kind.as_str(),
+                "schema": selection.artifact.schema.as_str(),
+                "packSchemaHash": selection.artifact.pack_schema_hash.as_str()
+            },
+            "surfaceId": selection.surface.surface_id.as_str(),
+            "payload": {
+                "pack": { "path": "payload/pack.bin", "byteLength": pack.len(), "sha256": os_directory::hex_lower(&Sha256::digest(&pack)) },
+                "spr": { "path": "payload/spr.bin", "byteLength": spr.len(), "sha256": os_directory::hex_lower(&Sha256::digest(&spr)) },
+                "diff": { "path": "payload/diff.bin", "schema": db::document::DB_PATHMAP_SCHEMA },
+                "inverse": { "path": "payload/inverse.bin", "schema": db::document::DB_PATHMAP_SCHEMA }
+            }
+        });
+        std::fs::write(stage.join("fixture.json"), serde_json::to_vec_pretty(&fixture).expect("encode process fixture")).expect("write process fixture receipt");
+        std::fs::rename(&stage, &destination).expect("publish process fixture atomically");
+        assert!(destination.join("data/trusted-catalog/current.json").is_file());
+        assert_eq!(std::fs::read(destination.join("payload/pack.bin")).expect("read retained GIS pack"), pack);
+        assert_eq!(std::fs::read(destination.join("payload/spr.bin")).expect("read retained GIS SPR"), spr);
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    async fn put_checkpoint_publication_blob(addr: SocketAddr, scope: &DocumentScope, token: &str, bytes: &[u8]) {
+        let hash = os_directory::hex_lower(&Sha256::digest(bytes));
+        let authorization = format!("Bearer {token}");
+        let response = raw_http_request(addr, "PUT", &format!("/spaces/{}/blobs/{hash}", scope.space_id), &[("Authorization", authorization.as_str()), ("Content-Type", "application/octet-stream")], bytes).await;
+        assert_eq!(response.status, 200, "checkpoint input blob lands before publication: {}", String::from_utf8_lossy(&response.body));
     }
 
     #[test]
@@ -7433,22 +8167,13 @@ mod tests {
             document_id: document_id.clone(),
             artifact_kind: selection.artifact.kind.clone(),
             artifact_schema: selection.artifact.schema.clone(),
-            owner: os_directory::DocumentOwner {
-                plugin_id: selection.package.plugin_id.clone(),
-                package_id: selection.package.package_id.clone(),
-                version: selection.package.version.clone(),
-                package_hash: selection.package.component_sha256.clone(),
-            },
+            owner: os_directory::DocumentOwner { plugin_id: selection.package.plugin_id.clone(), package_id: selection.package.package_id.clone(), version: selection.package.version.clone(), package_hash: selection.package.component_sha256.clone() },
             pack_schema_hash: selection.artifact.pack_schema_hash.clone(),
             bootstrap_version: 1,
             bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
             bootstrap_snapshot_hash: "33".repeat(32),
         };
-        state
-            .directory_service
-            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#test", author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor })
-            .await
-            .expect("announce GIS Map document");
+        state.directory_service.execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#test", author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor }).await.expect("announce GIS Map document");
         let snapshot_pack = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
         publish_gis_checkpoint_for_test(&state, &space_id, &document_id, &snapshot_pack).await;
         (GisMapInferenceFixture { state, profile, space_id, document_id, snapshot_pack, ledger_path }, author, spectator)
@@ -7522,13 +8247,8 @@ mod tests {
         assert_eq!(receipt["proposalState"], "offered");
         let job_id = receipt["jobId"].as_str().expect("server-minted job id").to_owned();
         let expected_proposal = fixture["proposalCanonical"].as_str().expect("canonical proposal").replace(fixture["sampleJobId"].as_str().expect("sample job"), &job_id);
-        assert_eq!(
-            receipt["proposalHash"].as_str().expect("offered proposal hash"),
-            semio_hub::inference::sha256(expected_proposal.as_bytes()),
-            "the server's canonical CreateRegion bytes must equal the neutral corpus literal for this job"
-        );
-        let page: serde_json::Value =
-            serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner event page");
+        assert_eq!(receipt["proposalHash"].as_str().expect("offered proposal hash"), semio_hub::inference::sha256(expected_proposal.as_bytes()), "the server's canonical CreateRegion bytes must equal the neutral corpus literal for this job");
+        let page: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner event page");
         assert_eq!(page["schema"], "semio.hub.inference-job-events/v1");
         assert_eq!(page["stale"], false);
         assert_eq!(page["cancelRequested"], false);
@@ -7538,13 +8258,11 @@ mod tests {
         assert!(cursors.windows(2).all(|pair| pair[1] == pair[0] + 1), "the progress cursor is monotonic and dense: {cursors:?}");
         assert!(cursors.len() as u64 <= fixture["limits"]["progressMaxCursor"].as_u64().expect("cursor bound"), "progress is bounded");
         assert_eq!(page["nextCursor"].as_u64().expect("next cursor"), cursors.last().copied().unwrap_or(0));
-        let cancelled: serde_json::Value =
-            serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/cancel")), &headers, &[]).await.body).expect("cancel page");
+        let cancelled: serde_json::Value = serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/cancel")), &headers, &[]).await.body).expect("cancel page");
         assert_eq!(cancelled["cancelRequested"], true, "cancellation is durably requested before any terminal effect");
         assert_eq!(cancelled["proposalState"], "cancelled", "a cancelled offer retires its private proposal");
         assert_eq!(cancelled["proposalHash"], serde_json::Value::Null, "no private proposal survives cancellation");
-        let after: serde_json::Value =
-            serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("retired page");
+        let after: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("retired page");
         assert!(after["events"].as_array().expect("events").iter().any(|row| row["kind"] == "cancel-requested"));
         let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": receipt["proposalHash"] }).to_string();
         let denied = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
@@ -7573,11 +8291,7 @@ mod tests {
         let denied_code = fixture["visibility"].as_array().expect("visibility").iter().find(|row| row["role"] == "peer-author-same-space").expect("peer row")["expectedCode"].clone();
         for (role, header) in [("peer-author-same-space", peer_bearer.as_str()), ("viewer", spectator_bearer.as_str())] {
             let headers = [("Authorization", header), ("Content-Type", "application/json")];
-            for (method, suffix, body) in [
-                ("GET", format!("/{job_id}/events?after=0"), String::new()),
-                ("POST", format!("/{job_id}/cancel"), String::new()),
-                ("POST", format!("/{job_id}/approval"), approval.clone()),
-            ] {
+            for (method, suffix, body) in [("GET", format!("/{job_id}/events?after=0"), String::new()), ("POST", format!("/{job_id}/cancel"), String::new()), ("POST", format!("/{job_id}/approval"), approval.clone())] {
                 let response = raw_http_request(addr, method, &inference_route(&space_id, &document_id, &suffix), &headers, body.as_bytes()).await;
                 assert_eq!(response.status, 403, "{role} reached {method} {suffix}");
                 let published: serde_json::Value = serde_json::from_slice(&response.body).expect("closed denial");
@@ -7605,10 +8319,8 @@ mod tests {
         let addr = spawn_server(bound.state.clone()).await;
         let bearer = format!("Bearer {}", author.token);
         let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
-        let receipt: serde_json::Value = serde_json::from_slice(
-            &raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("33333333333333333333333333333333").as_bytes()).await.body,
-        )
-        .expect("job receipt");
+        let receipt: serde_json::Value =
+            serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("33333333333333333333333333333333").as_bytes()).await.body).expect("job receipt");
         let job_id = receipt["jobId"].as_str().expect("job id").to_owned();
         let proposal_hash = receipt["proposalHash"].as_str().expect("offered hash").to_owned();
         let wrong = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": "9".repeat(64) }).to_string();
@@ -7623,8 +8335,7 @@ mod tests {
         assert_eq!(u64::from(unavailable.status), expected["status"].as_u64().expect("status"), "{}", String::from_utf8_lossy(&unavailable.body));
         let published: serde_json::Value = serde_json::from_slice(&unavailable.body).expect("closed error");
         assert_eq!(published["code"], expected["code"], "a Map with composed children must fail closed, never auto-apply");
-        let page: serde_json::Value =
-            serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner page");
+        let page: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner page");
         assert_eq!(page["proposalState"], "offered", "a refused publication never marks the proposal approved");
         let kinds: Vec<&str> = page["events"].as_array().expect("events").iter().map(|row| row["kind"].as_str().expect("kind")).collect();
         assert!(kinds.contains(&"approval-prepared"), "the outbox row is durably prepared before publication is attempted");
@@ -7639,14 +8350,9 @@ mod tests {
         let addr = spawn_server(bound.state.clone()).await;
         let bearer = format!("Bearer {}", author.token);
         let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
-        let first: serde_json::Value = serde_json::from_slice(
-            &raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("55555555555555555555555555555555").as_bytes()).await.body,
-        )
-        .expect("job receipt");
-        let repeated: serde_json::Value = serde_json::from_slice(
-            &raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("55555555555555555555555555555555").as_bytes()).await.body,
-        )
-        .expect("repeated job receipt");
+        let first: serde_json::Value = serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("55555555555555555555555555555555").as_bytes()).await.body).expect("job receipt");
+        let repeated: serde_json::Value =
+            serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("55555555555555555555555555555555").as_bytes()).await.body).expect("repeated job receipt");
         assert_eq!(first["jobId"], repeated["jobId"], "one scoped request id can only ever mint one job");
         assert_eq!(first["proposalHash"], repeated["proposalHash"], "a replayed request never re-executes the service");
         let job_id = first["jobId"].as_str().expect("job id").to_owned();
@@ -7655,8 +8361,7 @@ mod tests {
             let response = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
             assert_eq!(response.status, 503, "attempt {attempt} must reach the same fail-closed publication boundary");
         }
-        let page: serde_json::Value =
-            serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner page");
+        let page: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner page");
         let prepared = page["events"].as_array().expect("events").iter().filter(|row| row["kind"] == "approval-prepared").count();
         assert_eq!(prepared, 1, "three duplicate approvals reconcile to exactly one prepared envelope");
         assert_eq!(page["events"].as_array().expect("events").iter().filter(|row| row["kind"] == "succeeded").count(), 1, "the job succeeded exactly once");
@@ -7664,8 +8369,7 @@ mod tests {
         let reopened = semio_hub::inference::sqlite::InferenceJobLedgerV1::open(&bound.ledger_path).expect("the durable ledger reopens after a restart");
         restarted.inference_runtime = Some(Arc::new(HubInferenceRuntimeV1::new(bound.profile.binding().clone(), Arc::new(reopened), Arc::new(UnavailableGisMapApprovalCommitterV1))));
         let restarted_addr = spawn_server(restarted).await;
-        let recovered: serde_json::Value =
-            serde_json::from_slice(&raw_http_get(restarted_addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("recovered owner page");
+        let recovered: serde_json::Value = serde_json::from_slice(&raw_http_get(restarted_addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("recovered owner page");
         let recovered_kinds: Vec<&str> = recovered["events"].as_array().expect("events").iter().map(|row| row["kind"].as_str().expect("kind")).collect();
         assert_eq!(recovered_kinds.iter().filter(|kind| **kind == "approval-prepared").count(), 1, "restart recovery finds exactly one prepared envelope");
         assert_eq!(recovered_kinds.iter().filter(|kind| **kind == "succeeded").count(), 1, "restart never re-executes an already-offered job");
@@ -8157,6 +8861,7 @@ mod tests {
                 subset: fixture.valid_plan.parent_dialect.subset.clone(),
             },
             surface: fixture.valid_plan.surface.clone(),
+            browser_actor: fixture.valid_plan.browser_actor.clone(),
             grant: fixture.valid_plan.grant,
             checkpoint: fixture.valid_plan.checkpoint.clone(),
             revalidation: fixture.valid_plan.revalidation,
@@ -8198,6 +8903,7 @@ mod tests {
             generation_id,
             component: TEST_EXECUTION_TARGET_COMPONENT_BYTES.into(),
             descriptor: TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES.into(),
+            browser_actor: None,
             open_targets: vec![
                 VerifiedDocumentOpenSelectionV1 {
                     package: package.clone(),
@@ -8277,6 +8983,7 @@ mod tests {
             authority.artifact = selected.artifact;
             authority.parent_dialect = selected.parent_dialect;
             authority.surface = selected.surface;
+            authority.browser_actor = selected.browser_actor;
             authority.grant = selected.grant;
         }
         authority.checkpoint = None;
@@ -8548,9 +9255,64 @@ mod tests {
         assert_eq!(descriptor_body.status, 200);
         assert_eq!(descriptor_body.body, TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES);
 
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json")).expect("closed actor neutral corpus");
+        let mut closed_selection = state.openable_catalog.as_ref().unwrap().resolve_document_open(&descriptor, Some("surface.test.editor"), true).unwrap();
+        closed_selection.surface.renderer_target = os_directory::DocumentOpenRendererTargetV1::Wasm;
+        let mut actor_json = corpus["plan"]["browserActor"].clone();
+        actor_json["sha256"] = serde_json::json!(os_directory::hex_lower(&Sha256::digest(b"abc")));
+        actor_json["sourceComponentSha256"] = serde_json::json!(closed_selection.package.component_sha256);
+        actor_json["sourceDescriptorByteSha256"] = serde_json::json!(closed_selection.package.descriptor_byte_sha256);
+        closed_selection.browser_actor = directory::os_pack::json::from_json_str(&actor_json.to_string()).expect("closed actor fixture");
+        let expected_actor = closed_selection
+            .browser_actor
+            .to_lease(os_directory::DocumentBrowserActorSourceV1 { component_sha256: &closed_selection.package.component_sha256, descriptor_byte_sha256: &closed_selection.package.descriptor_byte_sha256 }, "wasm", Some(3))
+            .expect("closed actor lease");
+        let mut closed_state = state.clone();
+        closed_state.openable_catalog = Some(Arc::new(TestDocumentOpenCatalog {
+            generation_id: "88".repeat(32),
+            open_targets: vec![closed_selection.clone()].into_boxed_slice(),
+            component: TEST_EXECUTION_TARGET_COMPONENT_BYTES.into(),
+            descriptor: TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES.into(),
+            browser_actor: Some(Arc::from(&b"abc"[..])),
+        }));
+        let closed_addr = spawn_server(closed_state.clone()).await;
+        let closed_manifest = raw_http_request(closed_addr, "POST", &format!("{root}/manifest"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(closed_manifest.status, 200);
+        let closed_text = String::from_utf8(closed_manifest.body).expect("closed manifest UTF-8");
+        let closed_fields: DocumentExecutionTargetLeaseFieldsV1 = directory::os_pack::json::from_json_str(&closed_text).expect("closed manifest");
+        closed_fields.validate().expect("closed manifest bound");
+        assert_eq!(closed_fields.browser_actor, expected_actor);
+        for private in ["path", "moduleUrl", "actorBytes", "receipt", "sessionId", "client:execution-target"] {
+            assert!(!closed_text.contains(&format!("\"{private}\"")));
+        }
+        assert!(!closed_text.contains(&token));
+        let closed_plan = raw_http_request(closed_addr, "POST", &format!("/spaces/{STUDIO}/documents/{document_id}/open-plan"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(closed_plan.status, 200);
+        let closed_plan: DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&closed_plan.body).unwrap()).expect("closed plan");
+        assert_eq!(closed_plan.browser_actor, closed_selection.browser_actor);
+        let actor_body = raw_http_request(closed_addr, "POST", &format!("{root}/browser-actor"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(actor_body.status, 200);
+        assert_eq!(actor_body.body, b"abc");
+        let absent_actor = raw_http_request(addr, "POST", &format!("{root}/browser-actor"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+        assert_eq!(absent_actor.status, 503);
+        assert_ne!(absent_actor.body, b"abc");
+        for (selection, browser_actor) in [(closed_selection, None), (state.openable_catalog.as_ref().unwrap().resolve_document_open(&descriptor, Some("surface.test.editor"), true).unwrap(), Some(Arc::from(&b"abc"[..])))] {
+            let mut invalid_state = state.clone();
+            invalid_state.openable_catalog = Some(Arc::new(TestDocumentOpenCatalog {
+                generation_id: "99".repeat(32),
+                open_targets: vec![selection].into_boxed_slice(),
+                component: TEST_EXECUTION_TARGET_COMPONENT_BYTES.into(),
+                descriptor: TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES.into(),
+                browser_actor,
+            }));
+            let invalid_addr = spawn_server(invalid_state).await;
+            let invalid = raw_http_request(invalid_addr, "POST", &format!("{root}/manifest"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+            assert_eq!(invalid.status, 503, "actor identity/body presence mismatch");
+        }
+
         // 🚫 Unauthenticated, foreign-scope, foreign-surface, query-smuggled, oversized and
         // non-JSON requests never reach a byte.
-        for asset in ["manifest", "component", "descriptor"] {
+        for asset in ["manifest", "component", "descriptor", "browser-actor"] {
             let route = format!("{root}/{asset}");
             let anonymous = raw_http_request(addr, "POST", &route, &[("Content-Type", "application/json")], intent_body("surface.test.editor").as_bytes()).await;
             assert_eq!(anonymous.status, 401, "{asset} served an unauthenticated caller");
@@ -10972,6 +11734,190 @@ mod tests {
         assert_eq!(stale.status, 401);
         assert!(stale.body.is_empty());
         assert_eq!(gate.directory_event_page_read_admitted.available_permits(), 0, "bad query and pre-read authentication failures perform no directory event scan");
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
+    async fn checkpoint_publication_route_is_author_owned_actor_fenced_idempotent_and_cancellation_safe() {
+        let fixture = checkpoint_publication_fixture("idempotency").await;
+        let addr = spawn_server(fixture.state.clone()).await;
+        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.pack).await;
+        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.spr).await;
+        let route = format!("/spaces/{}/documents/{}/checkpoint-publications", fixture.scope.space_id, fixture.scope.document_id);
+        let body = directory::os_pack::json::to_json_string(&fixture.command);
+        let author = format!("Bearer {}", fixture.author.token);
+        let spectator = format!("Bearer {}", fixture.spectator.token);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Content-Type", "application/json")], body.as_bytes()).await.status, 401);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", spectator.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await.status, 403);
+
+        let accepted = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await;
+        assert_eq!(accepted.status, 200, "author checkpoint publication: {}", String::from_utf8_lossy(&accepted.body));
+        assert!(accepted.headers.to_ascii_lowercase().contains("cache-control: private, no-store"));
+        let receipt: CheckpointPublicationReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&accepted.body).expect("publication receipt UTF-8")).expect("canonical publication receipt");
+        assert_eq!(receipt.correlation_id, fixture.command.correlation_id);
+        assert_eq!(receipt.checkpoint.scope, fixture.scope);
+        assert_eq!(receipt.checkpoint.pack.sha256.hex(), fixture.command.pack.sha256);
+        assert_eq!(receipt.checkpoint.spr.sha256.hex(), fixture.command.spr.sha256);
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 1);
+
+        let replay = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await;
+        assert_eq!(replay.status, 200);
+        assert_eq!(replay.body, accepted.body, "a lost-response retry returns the identical durable receipt");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("replay checkpoint count"), 1, "retry emits no second checkpoint event");
+        let command_sha256 = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
+        let durable = fixture
+            .state
+            .directory
+            .claim_or_read_checkpoint_publication(&NewCheckpointPublicationClaimV1 {
+                actor_user_id: fixture.author.user_id.clone(),
+                correlation_id: fixture.command.correlation_id.clone(),
+                command_sha256: command_sha256.clone(),
+                claimed_at: now_ms(),
+            })
+            .await
+            .expect("durable publication receipt");
+        let CheckpointPublicationClaimV1::Existing(durable) = durable else { panic!("completed publication must be durable") };
+        assert_eq!(durable.disposition, CheckpointPublicationDispositionV1::Completed);
+        assert_eq!(durable.checkpoint_id, Some(receipt.checkpoint.checkpoint_id));
+
+        let mut substituted = fixture.command.clone();
+        substituted.spr.byte_length += 1;
+        let substituted = directory::os_pack::json::to_json_string(&substituted);
+        let conflict = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], substituted.as_bytes()).await;
+        assert_eq!(conflict.status, 409, "same author/correlation with a different exact command conflicts");
+        assert!(conflict.body.is_empty());
+        std::fs::remove_dir_all(fixture.catalog_root).expect("remove publication catalog fixture");
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
+    async fn checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before_publication() {
+        let mut fixture = checkpoint_publication_fixture("fence").await;
+        let gate = Arc::new(TestLiveGate::default());
+        gate.checkpoint_publication_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        fixture.state.live_gate = Some(gate.clone());
+        let other_space = create_space_for_test(&fixture.state, &fixture.author.user_id, "Checkpoint other scope", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&fixture.state, &other_space, "checkpoint-fence-author@example.test", DirectorySpaceRole::Author).await;
+        let descriptor = fixture.state.directory.get_document_descriptor(&fixture.scope).await.expect("publication descriptor read").expect("publication descriptor");
+        let mut other_descriptor = descriptor.clone();
+        other_descriptor.space_id = other_space.clone();
+        fixture
+            .state
+            .directory_service
+            .execute(
+                DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) },
+                DirectoryCommand::AnnounceDocument { descriptor: other_descriptor },
+            )
+            .await
+            .expect("announce same-id other-space document");
+        let addr = spawn_server(fixture.state.clone()).await;
+        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.pack).await;
+        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.spr).await;
+        let authorization = format!("Bearer {}", fixture.author.token);
+        let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
+
+        let mut cross_scope = fixture.command.clone();
+        cross_scope.correlation_id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".into();
+        let cross_scope = directory::os_pack::json::to_json_string(&cross_scope);
+        let cross = raw_http_request(addr, "POST", &format!("/spaces/{other_space}/documents/{}/checkpoint-publications", fixture.scope.document_id), &headers, cross_scope.as_bytes()).await;
+        assert_eq!(cross.status, 409, "route scope cannot borrow another space's selected descriptor/frontier");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("source scope checkpoint count"), 0);
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&DocumentScope::new(&other_space, &fixture.scope.document_id)).await.expect("other scope checkpoint count"), 0);
+
+        let route = format!("/spaces/{}/documents/{}/checkpoint-publications", fixture.scope.space_id, fixture.scope.document_id);
+        let body = directory::os_pack::json::to_json_string(&fixture.command);
+        let queued = tokio::spawn({
+            let route = route.clone();
+            let body = body.clone();
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.expect("publication fence admission deadline").expect("publication fence admission").forget();
+        let write = fixture.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(fixture.scope.clone())).lock_owned().await;
+        let document = db_artifact_id(&fixture.scope);
+        let batch = db::document::CommandBatch::new(vec![sample_envelope("checkpoint-fence-edit-2", &WireArtifactId(document.0)).await]).await.expect("queued write batch");
+        fixture
+            .handle
+            .submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() })
+            .await
+            .expect("queued write actor response")
+            .expect("queued write accepted");
+        drop(write);
+        gate.checkpoint_publication_release.add_permits(1);
+        let queued = queued.await.expect("queued publication response");
+        assert_eq!(queued.status, 409, "the final actor snapshot fence rejects a write committed during materialization");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("stale publication count"), 0);
+        let failed_digest = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
+        let failed_claim = NewCheckpointPublicationClaimV1 {
+            actor_user_id: fixture.author.user_id.clone(),
+            correlation_id: fixture.command.correlation_id.clone(),
+            command_sha256: failed_digest.clone(),
+            claimed_at: now_ms(),
+        };
+        assert!(
+            matches!(fixture.state.directory.claim_or_read_checkpoint_publication(&failed_claim).await.expect("reclaim failed publication"), CheckpointPublicationClaimV1::Claimed(_)),
+            "a returned failure synchronously releases its durable claim for a corrected retry"
+        );
+        fixture
+            .state
+            .directory
+            .release_checkpoint_publication(&failed_claim.actor_user_id, &failed_claim.correlation_id, &failed_digest)
+            .await
+            .expect("release test reclaim");
+
+        let current = fixture.handle.checkpoint_publication_snapshot().await.expect("current publication snapshot");
+        let descriptor_command = checkpoint_publication_command("cccccccccccccccccccccccccccccccc", &descriptor, &current, CheckpointPublicationCurrentV1::None, &fixture.pack, &fixture.spr);
+        let descriptor_body = directory::os_pack::json::to_json_string(&descriptor_command);
+        let descriptor_swap = tokio::spawn({
+            let route = route.clone();
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], descriptor_body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.expect("descriptor fence admission deadline").expect("descriptor fence admission").forget();
+        let mut changed_descriptor = descriptor.clone();
+        changed_descriptor.bootstrap_version = changed_descriptor.bootstrap_version.saturating_add(1);
+        fixture
+            .state
+            .directory_service
+            .execute(
+                DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) },
+                DirectoryCommand::AnnounceDocument { descriptor: changed_descriptor },
+            )
+            .await
+            .expect("replace publication descriptor");
+        gate.checkpoint_publication_release.add_permits(1);
+        let descriptor_swap = descriptor_swap.await.expect("descriptor-swapped publication response");
+        assert_eq!(descriptor_swap.status, 409, "the final selected-descriptor fence rejects a replacement during materialization");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("descriptor-swapped publication count"), 0);
+        fixture
+            .state
+            .directory_service
+            .execute(
+                DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) },
+                DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() },
+            )
+            .await
+            .expect("restore publication descriptor");
+
+        let mut cancellation = checkpoint_publication_command("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", &descriptor, &current, CheckpointPublicationCurrentV1::None, &fixture.pack, &fixture.spr);
+        cancellation.schema = "semio.hub.checkpoint-publication-command/v1".into();
+        let cancellation = directory::os_pack::json::to_json_string(&cancellation);
+        let capability = SessionCapability::parse(&fixture.author.token).expect("publication session capability");
+        let session = fixture.state.directory.authenticate_session(&capability).await.expect("publication session lookup").expect("publication session");
+        let revoked = tokio::spawn({
+            let route = route.clone();
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], cancellation.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.expect("revocation fence admission deadline").expect("revocation fence admission").forget();
+        fixture.state.directory.revoke_auth_session(&session.id, "checkpoint-publication-test", None, "checkpoint-publication-test").await.expect("revoke publication session").expect("revoked publication session");
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        gate.checkpoint_publication_release.add_permits(1);
+        let revoked = revoked.await.expect("revoked publication response");
+        assert_eq!(revoked.status, 503, "revocation cancels the request-local authority operation");
+        assert!(revoked.body.is_empty());
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("cancelled publication count"), 0);
+        std::fs::remove_dir_all(fixture.catalog_root).expect("remove publication fence catalog fixture");
     }
 
     // 🔬️ WS duplex fan-out over the real wire-v2 protocol: A's committed command reaches B on its

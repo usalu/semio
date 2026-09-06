@@ -23,7 +23,7 @@ fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_nam
     let port = semio_framework_os::open_folder_space_backbone(folder_path)?;
     let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
     let entry = create_os_space(name, SpaceKind::Atelier, SpaceVisibility::Private, owner, port.clone())?;
-    crate::register_studio_port(&entry.id, port);
+    semio_framework_plugin::resolve_ready(crate::register_studio_port(&entry.id, port));
     Ok(entry)
 }
 

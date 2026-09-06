@@ -503,3 +503,188 @@ Port 6078 has never bound. **No browser observation has been made, and none is c
 script aborts in `assertPluginCatalogComplete` *before* Vite starts when the plugin build fails, so a
 failed wasm build yields no server at all — there is no partial-credit path where the shell is up but
 the plugin is missing.
+
+## ✅ ROOT CAUSE FOUND — why lowpoly could never boot, in any session
+
+`Plugin::builder("lowpoly")…try_build()` **fails inside the wasm guest**. Extracted the real message
+by running the framework's own descriptor probe against the freshly materialized component:
+
+```
+node --experimental-wasm-jspi --input-type=module --eval '<PLUGIN_DESCRIPTOR_PROBE_SOURCE>' \
+  🧑‍💻dev/🔌️plugin-modules/💠️lowpoly/semio_s_plugin_lowpoly_component.js
+```
+
+The descriptor came back 376 bytes — the `assembly-failed` fallback manifest
+(`🔌️plugin/🦀️.rs:29449`), whose `label` field carries the fault:
+
+> **`no declared composer capability owns the runtime claims`**
+
+### The defect
+
+`PluginBuilder::declare(…).composers(entries)` requires a declared `"composer"` capability whose
+`dialect` claim matches **every** entry's `writes` coordinate.
+
+- `🚪️io/🦀️.rs:254-268` `entries()` registers **10** composers: the native `LowpolyAnyComposer`
+  plus las, ply, png, json, dwg, stl, gltf, obj, **txt**.
+- `🗿️artifacts/💠️lowpoly/🦀️.rs:329-337` declared only **9** rows: native + format-1..8.
+
+`s.stdio.txt@utf-8/*` was registered but never declared, so its runtime claim was owned by nothing,
+`try_build()` returned `PluginAssemblyError{code:"artifact-definition.runtime-capability"}`, the
+guest emitted the `assembly-failed` manifest, and `finalizePluginDescriptor` threw
+`Plugin descriptor assembly failed`. **The plugin could never be materialized, so the dev server
+could never start** — no amount of build budget or machine capacity would ever have fixed it.
+
+Fixed by adding the missing row (matching the exact precedent documented in `🗒️note`'s own
+`declaration()`, which hit this identical bug and resolved it the same way — declare the row rather
+than delete the working composer):
+
+```rust
+("s.lowpoly.lowpoly.composer.format-9", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
+```
+
+Declared composer rows: 9 → **10**, now set-equal with `entries()`.
+
+### Why no earlier round caught it
+
+It is invisible to `cargo check`, `cargo clippy` and `cargo test` — the crate compiles perfectly
+(0 errors, 103 warnings). It only manifests **after a full `wasm32-wasip2` component build plus jco
+transpile plus the JSPI describe probe**, which is why three prior rounds of static work reported
+lowpoly healthy. `note`'s comment says the same thing about its own instance: it "was silently
+failing assembly … never surfaced before because nothing checked `try_build()`'s `Result` against a
+real assertion."
+
+## Two more build-gating defects fixed this round
+
+1. **16 dangling `#[path]` refs in lowpoly's own test tree** (`📦️packages/🦀️rust/🦀️.rs`). A peer
+   renamed every mutation test-case dir to a truncated+hash form
+   (`⛵️inserts-obj-mast-between-hull-and-fin` → `⛵️inserts-obj-mast-c60a92`) without updating the
+   references, which broke `cargo test` with `couldn't read`. Remapped all 16 by matching each
+   `🧪️tests` dir's single remaining candidate on its leading emoji — verified unambiguous
+   (16 safe / 0 ambiguous) before writing. `🔎️scan-dangling-path-refs.py` now reports lowpoly 0.
+2. **56 stale `🧵️plugin-worker.js` files.** That filename is a retired build artifact; the current
+   dev script asserts its absence in both `assertPluginOutputChildren` (plugin-modules) and
+   `assertExtensionOutputsFresh` (extensions), so every boot aborted before compiling. Confirmed all
+   56 gitignored and none tracked by git before deleting. The allowlist is exactly
+   `🟨️.js` (`PLUGIN_HOST_SHIM_FILE`), `🌉️bridge.js` (`MODULE_BRIDGE_FILE`), the three component
+   files, `🔣️.json`, `🛂️.descriptor.semio`, plus `interfaces/`.
+
+## Machine event — every `target*` directory was wiped
+
+Mid-round, **all** cargo target dirs vanished at once: the shared 34 GB `target/`, this ticket's
+11 GB `target-lowpoly-e2e` and `target-lowpoly-boot`, and every peer's (`target-gen3d`,
+`target-sourcing-e2e`, …). Not disk pressure — 233 GB free. It destroyed a completed 103-minute wasm
+build and an in-flight `cargo test`. A private `CARGO_TARGET_DIR` protects against *lock contention*
+but **not** against a repo-wide `target*` sweep.
+
+Silver lining: the machine went quiet afterwards (load 275 → 7.7, 1.4 GB free RAM), and on a quiet
+box the same work is ~10× faster — 67 crates in 7 minutes versus hours, and lowpoly's wasm in
+**38m42s** versus 103m.
+
+## ✅ GATE 6 (partial) — the lowpoly app BOOTS and is OBSERVED IN A BROWSER
+
+First time in this ticket's history. `http://localhost:6078` returns **HTTP 200**, `<title>semio · os</title>`,
+and the React shell mounts as **`semio · lowpoly`**.
+
+Observed in the browser (accessibility tree + screenshot), not inferred:
+
+| Element | Evidence |
+|---|---|
+| App identity | `semio · lowpoly` |
+| Surface role | `Editor` |
+| **Both declared modes** | `Edit` (active) and `Paint` — exactly the two modes lowpoly declares |
+| **The Model window** | tab `lowpoly-main` = `LOWPOLY_PLAY_WINDOW_MAIN`, later labelled `Model` |
+| Shell chrome | Artifact, Catalogue, Layers, Inspection, Fullscreen, Display, Command, Settings, Marketplace, History |
+| Plugin actually loaded | console names the live actor `lowpoly#1` and its module `/🔌️plugin-modules/💠️lowpoly/🌉️bridge.js` |
+
+So the whole chain works end to end: crate → wasm32-wasip2 component → jco transpile → descriptor
+assembly → plugin materialization → registry → Vite → React shell → **plugin instantiated as a live
+actor**. That chain has never completed before in this ticket.
+
+### The one remaining defect: the interactive step ceiling
+
+The Model window renders a fault instead of geometry. Decoded from the wire bytes:
+
+```json
+{"code":"plugin.internal.interactive-ceiling",
+ "message":"runtime live cleanup faulted for instance 1: the turn overran the interactive step
+            ceiling [interactive-ceiling] (elapsed 10300us, ceiling 8000us)",
+ "origin":"plugin","retryable":false,"severity":"error"}
+```
+
+Confirmed **reproducible, not transient**: a reload cleared the first one, but the console shows the
+actor trapping every turn, with elapsed rising to **11500us** against the same **8000us** ceiling.
+Every render turn traps, which is why the viewport is empty.
+
+This is a **latency-budget** failure, not a logic defect. The plugin is built with `wasm-dev`, which
+inherits `[profile.dev]` — `opt-level = 0`. Lowpoly's first turn tessellates the seeded unit-box mesh
+and builds the World3d scene, and unoptimized wasm needs 10-11.5 ms to do it against an 8 ms
+interactive contract. It is 2-3.5 ms over, i.e. the right order of magnitude for an `opt-level = 0`
+penalty rather than an algorithmic problem.
+
+Fix in flight: rebuild the plugin wasm with `CARGO_PROFILE_WASM_DEV_OPT_LEVEL=2`, keeping
+`CODEGEN_UNITS=16` so the build itself stays parallel (the full `wasm-release` profile would also
+work — `SEMIO_PLUGIN_PROFILE` exists — but its `lto = "thin"` + `codegen-units = 1` make it far
+slower to produce). Not yet verified.
+
+### How the boot was finally reached — the wgpu detour
+
+`buildEngineWasm` runs **only** for the react renderer (`renderer !== "react" → return`), but
+lowpoly's playground engine set includes the wgpu renderer crate, and
+`semio-framework-os-renderer-wgpu` currently has **15 errors** from a peer's in-flight work
+(E0499/E0502 borrow errors, `ShellSpaceAdministrationPhaseV1` not found, `Rc<…>` not `Send`). That
+aborted the whole pipeline before Vite could start, and its trunk server bound **6178** serving
+`404`/0 bytes.
+
+Worked around without touching the peer's code: built the three engines react actually needs
+directly (`🗺️surface`, `✍️editor`, `🌊️flow/🫀️core`), then booted with `SKIP_ENGINE_BUILD=1`.
+Note the engine outputs now land in `🕸️bindings/`, not `pkg/` — another casualty of the rename wave,
+and the reason a `pkg/`-based existence check reports them missing when they are in fact present.
+`🌊️flow/🫀️core` also fails a *post*-build bundling step on `Could not resolve
+"../../🕸️bindings/flow_core.js"`, but its wasm (`flow_core_bg.wasm`, 39.61 MiB) is produced
+successfully before that, which is what the boot needs.
+
+## interactive-ceiling FIXED — and what it uncovered next
+
+Fixed by scoping the optimization to the plugin rather than the whole profile, added to root
+`Cargo.toml`:
+
+```toml
+[profile.wasm-dev.package.semio-s-plugin-lowpoly]
+opt-level = 2
+```
+
+Scoped deliberately: `semio-s-plugin-stdio` is the io layer, **not** on the render path, and raising
+`opt-level` profile-wide made stdio's wasm compile balloon past **100 minutes** without finishing,
+versus ~5 minutes at `opt-level = 0`. Evidence the override took effect: lowpoly's component wasm
+dropped **34 MB → 27 MB**, and **no `interactive-ceiling` fault appears in the live console buffer
+any more**. That fault is gone.
+
+### Two faults now stand between the boot and rendered geometry
+
+1. **`plugin.descriptor-unavailable: /🔌️plugin-modules/🗄️stdio/🔣️.json (HTTP 404)`** → the shell
+   logs `program load failed stdio` and then `Framework OS boot failed`. stdio's plugin-module
+   directory exists but holds only an **Aug 18** component (`…core.wasm`, 377 MB) with **no**
+   `🔣️.json` and no `🛂️.descriptor.semio` — it was never re-materialized. Repo-wide, only **38 of
+   59** plugin-module directories have a `🔣️.json`, so this is a pre-existing gap, not something
+   this ticket caused. It matters here because lowpoly's io layer declares `s.stdio.*` dialects, so
+   the shell resolves stdio as part of lowpoly's catalog.
+2. **`plugin.reactor-close-authority`** — "guest lifecycle turn exceeded strict time authority;
+   receipt retained", raised at `handler/first-step` for `lowpoly#1`. A *different, stricter* timing
+   gate than the interactive-step ceiling, on the lifecycle turn. Plausibly downstream of (1): the
+   first step waits on a program load that 404s.
+
+`SEMIO_PLUGIN_ONLY` matches exactly one `pluginId` (`📜️script.ts:525-531`) — no list form — so
+stdio needs its own build pass. One is running now; stdio's component is the largest in the repo.
+
+## Verification scoreboard (current, honest)
+
+| # | Gate | State |
+|---|---|---|
+| 1 | `cargo check -p semio-s-plugin-lowpoly --lib` | ✅ **GREEN** — `Finished` in 78m12s, 0 errors, 0 `couldn't read`, 103 lowpoly + 1483 stdio warnings |
+| 2 | `--target wasm32-wasip2` | ✅ **GREEN** — `Finished wasm-dev`, `catalog build summary: 1/1 crate(s) produced .wasm` |
+| 3 | `cargo clippy -- -D warnings` | ❌ **NOT RUN** |
+| 4 | `cargo test --lib` | ❌ **NOT PASSING** — the 16 dangling `#[path]` refs that broke it are fixed, but no completed run since |
+| 5 | `test discover` + TS suite + ajv | ✅ **GREEN** — 240 cases, 4 lowpoly ids, `@semio-tech/lowpoly-js:test` exit 0, 85/85 fixtures |
+| 6 | browser boot | 🟡 **PARTIAL** — app boots and is observed: `semio · lowpoly`, Edit/Paint modes, `lowpoly-main`/`Model` window, plugin live as actor `lowpoly#1`. **Geometry does not render**; blocked on the stdio descriptor 404 + lifecycle time authority. Examples switching and command dispatch **not yet exercised**. |
+
+Nothing above is claimed beyond what was observed.

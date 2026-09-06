@@ -5,7 +5,7 @@ use crate::artifacts::equation::{equation_children_from_state, equation_geometry
 //#region 🔖️Diff
 /// 🔺️ A duplicate `id` is Fatal `duplicate-id` — an id-keyed entity that already exists cannot be
 /// "created" again.
-pub async fn diff(payload: &super::CreateNode, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::CreateNode, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     let mut graph = equation_graph(base);
     if graph.nodes.iter().any(|node| node.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.id), [payload.id.clone()]);

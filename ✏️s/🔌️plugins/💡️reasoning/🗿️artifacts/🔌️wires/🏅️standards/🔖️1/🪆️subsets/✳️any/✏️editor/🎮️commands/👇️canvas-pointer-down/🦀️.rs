@@ -20,7 +20,7 @@ pub struct CanvasPointerDown {
 /// a hit no longer writes `WiresConfigMutation::SetSelection` directly, it asks the host to
 /// redispatch `interactionSelect` for the "graph" domain's "node" granularity — the in-flight drag
 /// state (`SetDrag`) stays a plain config mutation since it is genuinely app-specific.
-pub async fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     match payload.id.as_deref().filter(|id| find_board_node(document, id).is_some()) {
         Some(id) => Ok(Emit {

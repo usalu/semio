@@ -6,7 +6,7 @@ use crate::editor::note::terminology::NotePlayLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub async fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasure {
+pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: "note-navigator-measures.grid-visible".into(),
         icon_id: "layout-grid".into(),

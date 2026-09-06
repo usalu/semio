@@ -13,7 +13,7 @@ pub const ARCHITECT_BODY_REGISTER: &str = "architect.register";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_REGISTER.into(),
         label: LocalizedLabel::native("Register", "Register"),
@@ -58,7 +58,7 @@ struct RegisterBlockItem {
     kind: String,
 }
 
-pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     let register = active_register(cfg);
     let entities = register_entities(program, register);
     if entities.is_empty() {

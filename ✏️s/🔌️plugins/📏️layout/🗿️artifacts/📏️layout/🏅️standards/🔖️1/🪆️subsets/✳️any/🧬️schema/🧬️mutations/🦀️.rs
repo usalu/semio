@@ -65,15 +65,15 @@ mod tests {
 
     const SAMPLE: &str = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
 
-    async fn sample_doc() -> LayoutSnapshot {
+    fn sample_doc() -> LayoutSnapshot {
         serde_json::from_str(SAMPLE).expect("sample doc")
     }
 
-    async fn new_rect(id: &str) -> Frame {
+    fn new_rect(id: &str) -> Frame {
         Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 }, locked: None, visible: None, fill: Some([0.1, 0.2, 0.3, 1.0]), stroke: None }
     }
 
-    async fn new_text(id: &str) -> Frame {
+    fn new_text(id: &str) -> Frame {
         Frame::Text {
             id: id.into(),
             layer_id: "layer-1".into(),
@@ -88,7 +88,7 @@ mod tests {
         }
     }
 
-    async fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapshot {
+    fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapshot {
         let forward = operation.diff(doc).diff().apply(doc).expect("valid mutation diff");
         let backs = operation.inverse(doc);
         let mut restored = forward.clone();

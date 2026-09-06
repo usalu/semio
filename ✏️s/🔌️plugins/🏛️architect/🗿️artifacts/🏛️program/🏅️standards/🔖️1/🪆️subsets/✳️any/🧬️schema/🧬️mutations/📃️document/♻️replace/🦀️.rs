@@ -19,16 +19,16 @@ pub struct ReplaceDocument {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceDocument {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "document", kind: "replace-document", record: "ReplacedDocument" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace document \"{}\"", self.document.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.document.header.id.0.clone()]
     }
 }

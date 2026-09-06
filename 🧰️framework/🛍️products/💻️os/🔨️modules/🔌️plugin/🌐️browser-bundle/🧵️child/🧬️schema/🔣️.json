@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/os/browser-actor-child-v1.json",
+  "title": "Browser Actor Child Containment V1",
+  "description": "One dedicated child, fixed first-party entrypoint, bounded child-local WASI diagnostics and clock, no document or network host authority. These are intentional buffer limits, not a browser heap quota or a security sandbox.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "limits",
+    "modules",
+    "laws",
+    "wireRows",
+    "ownerFaults"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.os.browser-actor-child-containment/v1"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actors",
+        "actorBytes",
+        "messageBytes",
+        "outputBytes",
+        "bootMs",
+        "loadMs",
+        "invokeMs",
+        "wasiOutputBytes",
+        "wasiOutputWrites"
+      ],
+      "properties": {
+        "actors": {
+          "const": 2
+        },
+        "actorBytes": {
+          "const": 67108864
+        },
+        "messageBytes": {
+          "const": 262144
+        },
+        "outputBytes": {
+          "const": 1048576
+        },
+        "bootMs": {
+          "const": 10000
+        },
+        "loadMs": {
+          "const": 5000
+        },
+        "invokeMs": {
+          "const": 2000
+        },
+        "wasiOutputBytes": {
+          "const": 65536
+        },
+        "wasiOutputWrites": {
+          "const": 128
+        }
+      }
+    },
+    "modules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normal",
+        "loadLoop",
+        "activationFailure",
+        "wasi"
+      ],
+      "properties": {
+        "normal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "loadLoop": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "activationFailure": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "wasi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "laws": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "static-child",
+          "verified-transfer",
+          "round-trip",
+          "pre-transfer-bound",
+          "aggregate-capacity",
+          "tight-loop-invoke",
+          "tight-loop-load",
+          "activation-failure",
+          "digest-denial",
+          "single-flight",
+          "output-bound",
+          "effect-denial",
+          "abort-retirement",
+          "fresh-generation",
+          "wasi-clock",
+          "wasi-output",
+          "wasi-output-bound",
+          "wasi-exit"
+        ]
+      }
+    },
+    "wireRows": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "$ref": "#/$defs/wireRow"
+      }
+    },
+    "ownerFaults": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "constructor-failure",
+          "boot-init-denial",
+          "load-transfer-failure",
+          "invoke-transfer-failure",
+          "abort-during-hash",
+          "synchronous-source-consumption",
+          "child-load-shape",
+          "child-invoke-shape",
+          "child-rehash-after-transfer"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "nonce",
+        "generation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.browser-actor-child/v1"
+        },
+        "nonce": {
+          "type": "string",
+          "pattern": "^[0-9a-f-]{36}$"
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        }
+      }
+    },
+    "value": {
+      "description": "Structured-clone values: null, boolean, finite number, UTF-8 string, signed/unsigned 64-bit bigint, ordinary ArrayBuffer or exact Uint8Array, arrays and plain own-data records. No SharedArrayBuffer, accessors, symbols, cycles, repeated object aliases, detached/resizable or sliced buffers. Depth <= 32; nodes <= 4096; charged encoded bytes include framing."
+    },
+    "protocol": {
+      "description": "Every message repeats the exact binding and has no unknown fields. Parent: init(port, actorId); load(bytes,sha256); invoke(sequence,path,args); close. Child: ready; loaded(byteLength,sha256); result(sequence,value); transferred(sequence,detached); rejected(sequence); fault. One monotonically increasing sequence and one pending invocation. No effect-resolution or capability-bearing message exists in this deny-all bridge."
+    },
+    "wireRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "at",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "enum": [
+            "loaded",
+            "result",
+            "transferred"
+          ]
+        },
+        "patch": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "nonce": {
+              "type": "string"
+            },
+            "generation": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "ready"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unexpected": {
+              "const": true
+            },
+            "detached": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "duplicate": {
+          "const": true
+        },
+        "valueCase": {
+          "enum": [
+            "non-finite",
+            "alias",
+            "oversized"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "ignored",
+            "closed"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "patch"
+          ],
+          "properties": {
+            "patch": {}
+          }
+        },
+        {
+          "required": [
+            "duplicate"
+          ],
+          "properties": {
+            "duplicate": {}
+          }
+        },
+        {
+          "required": [
+            "valueCase"
+          ],
+          "properties": {
+            "valueCase": {}
+          }
+        }
+      ]
+    }
+  }
+}

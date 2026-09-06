@@ -106,7 +106,7 @@ pub const ARCHITECT_INTERACTION_GRANULARITY_ENTITY: &str = "entity";
 /// replace variant — see `📓️taxonomy.md`'s forbidden vocabulary), so import/exchange flows build a
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry —
 /// same mechanism `✏️s/🔌️plugins/🗒️note`'s `reset_document_effect` already established.
-pub async fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plugin::Effect {
+pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ProgramSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<ProgramSnapshot, ProgramMutation>(ARCHITECT_PROGRAM_SCHEMA, ARCHITECT_APP_ID, document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("architect program document spr encode is infallible for a fresh, edit-free envelope");
@@ -149,7 +149,7 @@ pub mod behavior {
 
     //#region ↔️AdjacencyMutations
     /// ➕️ Upserts an adjacency row with normalized endpoints; replaces same pair if present.
-    pub async fn set_adjacency(program: &mut ProgramSnapshot, mut adjacency: Adjacency) {
+    pub fn set_adjacency(program: &mut ProgramSnapshot, mut adjacency: Adjacency) {
         let (a, b) = normalize_pair(&adjacency.element_a_id, &adjacency.element_b_id);
         adjacency.element_a_id = a;
         adjacency.element_b_id = b;
@@ -162,7 +162,7 @@ pub mod behavior {
     }
 
     /// ➖️ Removes an adjacency by id or by normalized element pair.
-    pub async fn clear_adjacency(program: &mut ProgramSnapshot, id: &EntityId) {
+    pub fn clear_adjacency(program: &mut ProgramSnapshot, id: &EntityId) {
         if let Some(index) = program.adjacencies.iter().position(|row| &row.header.id == id) {
             program.adjacencies.remove(index);
             return;
@@ -184,7 +184,7 @@ pub mod behavior {
     }
 
     /// 🧩️ Applies a template record and returns replayable `ProgramMutation`s.
-    pub async fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) -> Vec<ProgramMutation> {
+    pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) -> Vec<ProgramMutation> {
         let mut operations = Vec::new();
         let mut element_ids = Vec::new();
         for field in &template.default_fields {
@@ -500,7 +500,7 @@ pub mod behavior {
 
     //#region 📄️ReportRecord
     /// 📝️ Builds a report and appends a `ReportRecord` to the program.
-    pub async fn build_report_and_record(program: &mut ProgramSnapshot, kind: ReportKind) -> crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport {
+    pub fn build_report_and_record(program: &mut ProgramSnapshot, kind: ReportKind) -> crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport {
         let report = build_report(program, kind);
         let record = ReportRecord {
             header: EntityHeader::new(EntityId::new_serial("report", "report"), report.title.clone()),
@@ -530,7 +530,7 @@ pub mod behavior {
 
     //#region 🔬️AnalysisRecord
     /// 📝️ Runs analysis and appends an `AnalysisRecord` to the program.
-    pub async fn run_analysis_and_record(program: &mut ProgramSnapshot, kind: AnalysisKind) -> crate::artifacts::program::standards::v1::subsets::any::schema::inferences::AnalysisResult {
+    pub fn run_analysis_and_record(program: &mut ProgramSnapshot, kind: AnalysisKind) -> crate::artifacts::program::standards::v1::subsets::any::schema::inferences::AnalysisResult {
         let result = run_analysis(program, kind);
         let record = AnalysisRecord {
             header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),
@@ -570,7 +570,7 @@ pub mod behavior {
         Upsert,
     }
 
-    async fn csv_snapshot_to_rows(snapshot: &stdio_csv::CsvSnapshot) -> Result<Vec<RegisterCsvRow>, PluginError> {
+    fn csv_snapshot_to_rows(snapshot: &stdio_csv::CsvSnapshot) -> Result<Vec<RegisterCsvRow>, PluginError> {
         let mut records = snapshot.records.iter();
         let header = records.next().ok_or_else(|| PluginError::Csv("empty delimited file".into()))?;
         let header_values: Vec<&str> = header.fields.iter()?.map(|f| f.value.as_str()).collect();
@@ -590,12 +590,12 @@ pub mod behavior {
 
     /// 📥️ Decodes CSV via stdio's real RFC 4180 codec, then merges rows into matching
     /// register collections via `MergeStrategy`.
-    pub async fn import_registers_csv(program: &mut ProgramSnapshot, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+    pub fn import_registers_csv(program: &mut ProgramSnapshot, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
         let snapshot = stdio_csv::schema::snapshot::decode_csv_with(csv, true);
         import_rows(program, csv_snapshot_to_rows(&snapshot)?, strategy)
     }
 
-    async fn tsv_snapshot_to_rows(snapshot: &stdio_tsv::TsvSnapshot) -> Result<Vec<RegisterCsvRow>, PluginError> {
+    fn tsv_snapshot_to_rows(snapshot: &stdio_tsv::TsvSnapshot) -> Result<Vec<RegisterCsvRow>, PluginError> {
         let mut records = snapshot.records.iter();
         let header = records.next().ok_or_else(|| PluginError::Csv("empty delimited file".into()))?;
         let header_values: Vec<&str> = header.iter().map(|s| s.as_str()).collect();
@@ -614,14 +614,14 @@ pub mod behavior {
 
     /// 📥️ Decodes TSV via stdio's real IANA TSV codec, then merges rows into matching
     /// register collections via `MergeStrategy`.
-    pub async fn import_registers_tsv(program: &mut ProgramSnapshot, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+    pub fn import_registers_tsv(program: &mut ProgramSnapshot, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
         let snapshot = stdio_tsv_engine::decode_tsv(tsv);
         import_rows(program, tsv_snapshot_to_rows(&snapshot)?, strategy)
     }
 
     /// 🔀️ Applies `MergeStrategy` upsert semantics to already-decoded rows — shared by the
     /// CSV and TSV import paths, the decode step itself lives entirely in stdio's real codecs.
-    async fn import_rows(program: &mut ProgramSnapshot, rows: Vec<RegisterCsvRow>, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+    fn import_rows(program: &mut ProgramSnapshot, rows: Vec<RegisterCsvRow>, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
         let mut touched = Vec::new();
         let mut seen: HashSet<(String, EntityId)> = HashSet::new();
         for row in rows {
@@ -641,7 +641,7 @@ pub mod behavior {
         Ok(touched)
     }
 
-    async fn register_contains(program: &ProgramSnapshot, register: &str, id: &EntityId) -> bool {
+    fn register_contains(program: &ProgramSnapshot, register: &str, id: &EntityId) -> bool {
         match register {
             "elements" => program.elements.iter().any(|e| &e.header.id == id),
             "stakeholders" => program.stakeholders.iter().any(|s| &s.header.id == id),
@@ -652,7 +652,7 @@ pub mod behavior {
         }
     }
 
-    async fn remove_register_item(program: &mut ProgramSnapshot, register: &str, id: &EntityId) {
+    fn remove_register_item(program: &mut ProgramSnapshot, register: &str, id: &EntityId) {
         match register {
             "elements" => program.elements.retain(|e| &e.header.id != id),
             "stakeholders" => program.stakeholders.retain(|s| &s.header.id != id),
@@ -663,7 +663,7 @@ pub mod behavior {
         }
     }
 
-    async fn upsert_register_row(program: &mut ProgramSnapshot, row: RegisterCsvRow) -> Result<(), PluginError> {
+    fn upsert_register_row(program: &mut ProgramSnapshot, row: RegisterCsvRow) -> Result<(), PluginError> {
         match row.register.as_str() {
             "elements" => upsert_element(program, row),
             "stakeholders" => upsert_stakeholder(program, row),
@@ -677,7 +677,7 @@ pub mod behavior {
         Ok(())
     }
 
-    async fn upsert_element(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+    fn upsert_element(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
         if let Some(element) = program.elements.iter_mut().find(|e| e.header.id == row.id) {
             element.header.name = row.name;
             return;
@@ -712,7 +712,7 @@ pub mod behavior {
         });
     }
 
-    async fn upsert_stakeholder(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+    fn upsert_stakeholder(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
         if let Some(stakeholder) = program.stakeholders.iter_mut().find(|s| s.header.id == row.id) {
             stakeholder.header.name = row.name;
             return;
@@ -746,7 +746,7 @@ pub mod behavior {
         });
     }
 
-    async fn upsert_requirement(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+    fn upsert_requirement(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
         if let Some(requirement) = program.requirements.iter_mut().find(|r| r.header.id == row.id) {
             requirement.header.name = row.name;
             if !row.source.is_empty() {
@@ -779,7 +779,7 @@ pub mod behavior {
         });
     }
 
-    async fn upsert_relationship_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+    fn upsert_relationship_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
         if program.relationships.iter().any(|r| r.header.id == row.id) {
             return;
         }
@@ -813,7 +813,7 @@ pub mod behavior {
         });
     }
 
-    async fn upsert_adjacency_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+    fn upsert_adjacency_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
         if program.adjacencies.iter().any(|a| a.header.id == row.id) {
             return;
         }
@@ -869,7 +869,7 @@ pub mod behavior {
     }
 
     /// 🔗️ Builds a forward trace chain from `root_id` following kind-appropriate links.
-    pub async fn trace_chain(program: &mut ProgramSnapshot, root_id: &EntityId) -> TraceChain {
+    pub fn trace_chain(program: &mut ProgramSnapshot, root_id: &EntityId) -> TraceChain {
         embed_requirement_traces(program);
         let adjacency = trace_adjacency(&program.traces);
         let mut visited = HashSet::new();
@@ -894,13 +894,13 @@ pub mod behavior {
     }
 
     /// 🔍️ Finds trace links touching `entity_id` (from or to).
-    pub async fn trace_links_for(program: &mut ProgramSnapshot, entity_id: &EntityId) -> Vec<TraceLink> {
+    pub fn trace_links_for(program: &mut ProgramSnapshot, entity_id: &EntityId) -> Vec<TraceLink> {
         embed_requirement_traces(program);
         program.traces.iter().filter(|link| &link.from_id == entity_id || &link.to_id == entity_id).cloned().collect()
     }
 
     /// ↩️ Reverse impact trace — entities that depend on or satisfy `target_id`.
-    pub async fn trace_impact(program: &mut ProgramSnapshot, target_id: &EntityId) -> ImpactTrace {
+    pub fn trace_impact(program: &mut ProgramSnapshot, target_id: &EntityId) -> ImpactTrace {
         embed_requirement_traces(program);
         let mut upstream = HashSet::new();
         let mut links = Vec::new();
@@ -923,12 +923,12 @@ pub mod behavior {
     }
 
     /// ➕️ Appends a trace link to the plugin trace register.
-    pub async fn add_trace_link(program: &mut ProgramSnapshot, from_id: EntityId, to_id: EntityId, kind: TraceKind) {
+    pub fn add_trace_link(program: &mut ProgramSnapshot, from_id: EntityId, to_id: EntityId, kind: TraceKind) {
         program.traces.push(TraceLink::new(from_id, to_id, kind));
     }
 
     /// 🧷️ Copies requirement-embedded trace links into the plugin trace register.
-    async fn embed_requirement_traces(program: &mut ProgramSnapshot) {
+    fn embed_requirement_traces(program: &mut ProgramSnapshot) {
         for requirement in &program.requirements {
             for link in &requirement.trace_links {
                 if program.traces.iter().any(|t| t.id == link.id) {
@@ -939,11 +939,11 @@ pub mod behavior {
         }
     }
 
-    async fn follows_kind_chain(kind: &TraceKind) -> bool {
+    fn follows_kind_chain(kind: &TraceKind) -> bool {
         !matches!(kind, TraceKind::FullAuditTrail)
     }
 
-    async fn trace_adjacency(traces: &[TraceLink]) -> HashMap<EntityId, Vec<TraceLink>> {
+    fn trace_adjacency(traces: &[TraceLink]) -> HashMap<EntityId, Vec<TraceLink>> {
         let mut map: HashMap<EntityId, Vec<TraceLink>> = HashMap::new();
         for link in traces {
             map.entry(link.from_id.clone()).or_default().push(link.clone());
@@ -1161,26 +1161,26 @@ impl ArtifactEditor for ArchitectPlayApp {
     const DIALECT: Dialect = crate::artifacts::program::ARCHITECT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::architect::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> ProgramSnapshot {
+    fn initial_snapshot() -> ProgramSnapshot {
         sample_plugin()
     }
 
-    async fn initial_config() -> ArchitectConfig {
+    fn initial_config() -> ArchitectConfig {
         ArchitectConfig { active_register: "elements".into(), ..ArchitectConfig::default() }
     }
 
-    async fn command_id(command: &ArchitectCommand) -> &'static str {
+    fn command_id(command: &ArchitectCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `ArchitectCommand` — React/wgpu still speak the
     /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
     /// `OpBinary` bytes directly (mirrors `gis2d`'s `command_from_action`).
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<ArchitectCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<ArchitectCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
         match action {
@@ -1232,7 +1232,7 @@ impl ArtifactEditor for ArchitectPlayApp {
     /// reaches `handle` (see `dispatch_action`'s reserved-verb interception), and every remaining
     /// command derives its ids from explicit args, not the live selection (mirrors `note`'s
     /// `app_commands!`-dispatched leaves that never needed `InteractionView` either).
-    async fn handle(
+    fn handle(
         command: &ArchitectCommand,
         doc: &ArtifactView<'_, ProgramSnapshot>,
         cfg: &ConfigView<'_, ArchitectConfig>,
@@ -1243,7 +1243,7 @@ impl ArtifactEditor for ArchitectPlayApp {
         command.dispatch(doc, cfg)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let program = doc.snapshot;
         let config = cfg.snapshot;
         match body_key {
@@ -1262,7 +1262,7 @@ impl ArtifactEditor for ArchitectPlayApp {
 //#endregion 🔖️ArchitectPlayApp
 
 //#region 🔖️Manifest
-pub async fn create_architect_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::program::ARCHITECT_DIALECT)
             .document(["semio", "architect"])
             .icon_id("architect")
@@ -1395,7 +1395,7 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<ArchitectPlayApp>` builds it.
     pub type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>>;
 
-    pub async fn new_app() -> ArchitectApp {
+    pub fn new_app() -> ArchitectApp {
         sdk_new_app::<EditorApp<ArchitectPlayApp>>()
     }
 
@@ -1403,20 +1403,20 @@ pub(crate) mod testkit {
     /// still take `fn() -> App` (the pre-migration manifest wrapper), unchanged for this ticket —
     /// `create_architect_app` now returns `AppDefinition`, so wrap it in a throwaway `App` (empty
     /// examples) rather than widen the framework testkit signature.
-    pub async fn architect_app_manifest_for_testkit() -> App {
+    pub fn architect_app_manifest_for_testkit() -> App {
         App { definition: create_architect_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub async fn app_with_registry() -> ArchitectApp {
+    pub fn app_with_registry() -> ArchitectApp {
         new_app_with_registry::<EditorApp<ArchitectPlayApp>>(architect_app_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut ArchitectApp, body_key: &str) -> String {
+    pub fn render(app: &mut ArchitectApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
@@ -1429,11 +1429,11 @@ pub(crate) mod testkit {
     /// fields in that crate, so this crate's own tests cannot construct one; no `ArchitectCommand`
     /// row reads the "program" domain's live selection (see `handle`'s own doc comment), so
     /// `dispatch`'s plain 2-arg shape (no `ctx`) already carries everything every handler needs.
-    pub async fn drive(command: &ArchitectCommand, program: &ProgramSnapshot) -> Emit<ProgramMutation, ArchitectConfigMutation> {
+    pub fn drive(command: &ArchitectCommand, program: &ProgramSnapshot) -> Emit<ProgramMutation, ArchitectConfigMutation> {
         drive_with_config(command, program, &ArchitectPlayApp::initial_config())
     }
 
-    pub async fn drive_with_config(command: &ArchitectCommand, program: &ProgramSnapshot, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
+    pub fn drive_with_config(command: &ArchitectCommand, program: &ProgramSnapshot, config: &ArchitectConfig) -> Emit<ProgramMutation, ArchitectConfigMutation> {
         let history = HistoryView::empty();
         let doc = ArtifactView::new(program, &history);
         let cfg = ConfigView { snapshot: config };
@@ -1442,7 +1442,7 @@ pub(crate) mod testkit {
 
     /// 🧮️ Folds an `Emit`'s `config_mutations` onto a base `ArchitectConfig` — mirrors what
     /// `VcsArtifactApp`'s config store does when it dispatches them.
-    pub async fn config_after(emit: &Emit<ProgramMutation, ArchitectConfigMutation>, base: &ArchitectConfig) -> ArchitectConfig {
+    pub fn config_after(emit: &Emit<ProgramMutation, ArchitectConfigMutation>, base: &ArchitectConfig) -> ArchitectConfig {
         use protocol::Mutation;
         let mut next = base.clone();
         for operation in &emit.config_mutations {
@@ -1451,7 +1451,7 @@ pub(crate) mod testkit {
         next
     }
 
-    pub async fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
         let history = HistoryView::empty();
         ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config })
     }
@@ -1471,7 +1471,7 @@ mod tests {
 
     //#region 🔖️CommandSurface
     /// 🎯️ One value per `app_commands!` row — the fixture behind the wire laws below.
-    async fn every_command() -> Vec<ArchitectCommand> {
+    fn every_command() -> Vec<ArchitectCommand> {
         vec![
             ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }),
             ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: None }),

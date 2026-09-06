@@ -7,7 +7,7 @@ use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::fi
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::MoveNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
+pub fn inverse(payload: &super::MoveNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
     match find_board_node(base, &payload.node_id) {
         Some(node) => {
             let (old_x, old_y) = node_position(&node);

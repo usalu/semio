@@ -11,14 +11,14 @@ use crate::artifacts::program::ProgramSnapshot;
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
-pub async fn register() {}
+pub fn register() {}
 
-pub async fn serialize(snapshot: &ProgramSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &ProgramSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let value = dsl::json::from_dsl_value(&dsl::ToValue::to_value(snapshot));
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub async fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

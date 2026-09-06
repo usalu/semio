@@ -2280,8 +2280,8 @@ struct TableCellButtonPayload {
 /// 🔗️ Merges `patch` into `base`'s existing args (rather than replacing them), so a stepper/button cell keeps its row-identifying args (e.g. `objectId`) alongside the delta/click patch.
 fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor {
     let mut args = match &base.args {
-        Some(dsl) => match semio_framework::from_dsl_value::<Value>(dsl.clone()) {
-            Ok(Value::Object(map)) => map.clone(),
+        Some(dsl) => match Value::from(dsl) {
+            Value::Object(map) => map,
             _ => serde_json::Map::new(),
         },
         None => serde_json::Map::new(),

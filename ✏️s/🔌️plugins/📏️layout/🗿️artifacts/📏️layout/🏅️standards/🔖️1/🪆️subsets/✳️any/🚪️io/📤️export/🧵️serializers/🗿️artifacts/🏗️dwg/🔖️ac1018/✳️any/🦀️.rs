@@ -3,7 +3,7 @@ use crate::artifacts::layout::LayoutSnapshot;
 use semio_s_plugin_stdio::artifacts::dwg::schema::snapshot::decode_dwg;
 use semio_s_plugin_stdio::artifacts::dwg::DwgSnapshot;
 
-pub async fn register() {}
+pub fn register() {}
 
 /// 🩹️ 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining Part A: the old body
 /// constructed a `DwgSnapshot { bytes, section_names, sections, decode_status: SentinelOnly, .. }`
@@ -14,7 +14,7 @@ pub async fn register() {}
 /// text is SVG (see the sibling `🎨️svg` serializer in this directory), so render it to SVG and
 /// decode it through the real `svg_to_polylines` -> artifact `polylines_to_dwg_bytes` -> `decode_dwg` pipeline -- a genuine (if
 /// minimal) decode rather than a fabricated status.
-pub async fn serialize(from: &LayoutSnapshot) -> Result<DwgSnapshot, store::PackError> {
+pub fn serialize(from: &LayoutSnapshot) -> Result<DwgSnapshot, store::PackError> {
     let text = <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from);
     let bytes = semio_framework_os::svg_to_polylines(&text).and_then(|paths| semio_s_plugin_stdio::artifacts::dwg::polylines_to_dwg_bytes(paths.iter().map(|path| (path.layer.as_str(), path.vertices.as_slice(), path.closed)))).map_err(store::PackError::Schema)?;
     decode_dwg(&bytes).map_err(store::PackError::Schema)

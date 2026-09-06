@@ -18,23 +18,23 @@ pub struct ChangeEraserRadius {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_eraser_radius(new_radius: Option<f64>) -> NoteMutation {
+pub fn change_eraser_radius(new_radius: Option<f64>) -> NoteMutation {
     NoteMutation::ChangeEraserRadius(ChangeEraserRadius { new_radius })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeEraserRadius {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "eraser-radius", kind: "change-eraser-radius", record: "ChangedEraserRadius" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change eraser radius to {:?}", self.new_radius)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

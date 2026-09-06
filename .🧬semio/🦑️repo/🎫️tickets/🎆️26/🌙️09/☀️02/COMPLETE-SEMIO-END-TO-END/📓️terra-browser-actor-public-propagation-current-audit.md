@@ -1,0 +1,41 @@
+# Browser Actor Public Propagation — Current Audit
+
+## Scope and verdict
+
+Read-only review of the current actor propagation patch. The examined production authority path is complete for **metadata identity**: plan, lease manifest, Hub revalidation, native retained authority, and browser comparison all carry the mandatory actor field and compare it as a whole. I found no route that exposes the retained actor bytes, no caller-selected actor path/URL, and no partial actor equality predicate.
+
+This is not actor activation qualification. The worker retains only component and descriptor buffers; the actor record is validated metadata at this point. That is the correct fail-closed state until the separate contained-worker delivery slice lands.
+
+## Exact propagation evidence
+
+| Boundary | Current mechanism | Result |
+|---|---|---|
+| Shared plan/lease parsing | Mandatory `browserActor` is parsed against the parsed package component/descriptor digests and renderer at [schema TS](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1101) and [lease TS](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1221); Rust validates the same relation at [plan](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:1523) and [lease](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:1648). | Missing/foreign fields or renderer inversion deny before a plan/manifest is accepted. |
+| Shared equality | TypeScript calls `sameDocumentBrowserActorV1` from its one lease relation at [schema TS](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1326); it compares kind, schema, codegen policy, actor/source/policy digests, ordered interfaces and lease-length presence/value at [actor twin](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts:98). Rust compares the derived full lease (`PartialEq`) at [schema Rust](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:1746). | No subset actor predicate found. `none` can only parse for React/WGPU and cannot carry a length. |
+| Catalog selection and retained bytes | Catalog loading validates actor source/renderer, reads the bounded actor body, verifies declared length/SHA-256, and retains it before provider preview at [trusted catalog](/Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:500). A Wasm selection must match its retained closed actor and nonempty bounded body at [asset selection](/Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:380). | The public selection contains path-free actor identity; the raw path is not exported. |
+| Hub plan, exchange, socket revalidation | Issuance carries the selected actor at [Hub](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2314); socket-grant exchange and live socket revalidation require `selected.browser_actor == authority.browser_actor` at [exchange](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2411) and [socket](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:3039). The execution-target manifest derives actor length only from retained actor bytes and calls `to_lease` at [Hub](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2498). | Reconnecting with a catalog actor substitution is rejected, as are invalid source/renderer/length combinations. |
+| Native client | Native admission parses/validates the complete plan, projects its actor with the compared manifest length, and retains the plan actor in `DocumentSocketAuthorityV1` at [native client](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs:1129). `matches_lease_fields` projects then performs full shared equality at [native client](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs:433). | It has no actor-body fetch or actor activation path, so cannot manufacture an executable actor from manifest metadata. |
+| Browser worker | The manifest is parsed before any body request and is compared against a projection of the authenticated plan including closed actor byte length at [worker](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:729). The live private lease repeats full equality at [worker](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:782). | A caller-provided `installedTarget` cannot authorize Wasm: the non-React branch first mints a private verified lease, then uses only its fields. |
+
+## Route and body boundary
+
+The Hub enum has exactly `Manifest`, `Component`, and `Descriptor` at [Hub](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2435), and its sole dispatch deliberately returns only those two byte bodies at [Hub](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:2557). The router exposes the same three POST routes at [Hub](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:6399). The worker hard-allowlist independently admits only those three path suffixes at [worker](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:594).
+
+Thus actor metadata is in the plan/manifest, but there is **no actor-body route** and the worker's `DocumentExecutionTargetLease` owns no actor buffer ([worker](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:533)). This is an intentional containment boundary, not a missing route to fill early.
+
+## Qualification and one bounded gap
+
+Existing coverage is substantial but split:
+
+- The language-neutral 49-case actor corpus is consumed by the Rust actor law at [actor test](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🦀️.rs:195), while the Hub source selector names it at [script](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:3499).
+- The trusted loader covers retained closed bytes and cancellation-before-publication at [catalog law](/Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1999).
+- The native client neutral manifest law mutates individual manifest fields and uses the full relation at [native law](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs:2312).
+- The browser worker does the same before private lease publication at [worker law](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4827).
+
+P1 qualification gap: the Hub binary route law currently obtains its openable selection from `TestDocumentOpenCatalog`, which hardcodes `browser_actor: None` at [Hub](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:599). Therefore the actual authenticated Hub HTTP test at [Hub](/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:8497) does not yet prove a `closed-browser-actor` manifest response. This is not a route bypass: catalog/native/browser tests cover the pieces, and no actor bytes are served. It is the narrow missing composed acceptance.
+
+Add one row using the same test catalog with a retained three-byte actor and a Wasm selection. POST `/execution-target/manifest`; decode `DocumentExecutionTargetLeaseFieldsV1`; require every closed actor identity field plus `byte_length == 3`, exact package source hashes, and no `path`, actor body bytes, receipt, grant, session ID, or client instance text in the response. POSTing an invented `/execution-target/browser-actor` must be 404/405 with no body. This captures both actor propagation and the intended no-new-body-route policy without attempting activation.
+
+## No current P0
+
+No current source path examined accepts a closed actor under React/WGPU, a `none` actor under Wasm, an actor whose source digests differ from the selected package, a noncanonical interface ordering, or an actor-only manifest substitution. The actor body remains retained catalog state and is not publicly deliverable until the dedicated Worker containment and activation work is ready.

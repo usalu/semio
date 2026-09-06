@@ -1285,7 +1285,7 @@ fn advance_prepared(generation: u64, mut session: TryValueSession) -> Emit<FormM
 }
 
 /// ⏱️ Advances one bounded scan/copy/vector slice and queues the next generation-checked prefix.
-pub async fn advance_try_value(payload: &SetTryValueStep, config: &FormsConfig) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn advance_try_value(payload: &SetTryValueStep, config: &FormsConfig) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let Some(mut session) = take_session(payload) else { return Ok(Emit::default()) };
     let target_index = session.rewrite.as_ref().map_or(0, TryValueRewrite::target_index);
     let checkpoint = session.rewrite.as_ref().map_or(session.prepared_cursor as u64, TryValueRewrite::checkpoint);
@@ -1379,7 +1379,7 @@ pub struct SetTryValueStep {
 //#endregion 🔖️Payloads
 
 //#region 🔖️Handlers
-async fn start_try_value(payload: &SetTryValue, operation: &semio_framework_plugin::AppOperationContext, config: &FormsConfig, input: ChunkedSource) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+fn start_try_value(payload: &SetTryValue, operation: &semio_framework_plugin::AppOperationContext, config: &FormsConfig, input: ChunkedSource) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     if payload.key.len() > 512 {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("forms.try-value.key-too-large"), "the Forms try-value key exceeds 512 UTF-8 bytes"));
     }
@@ -1497,7 +1497,7 @@ async fn start_try_value(payload: &SetTryValue, operation: &semio_framework_plug
     })
 }
 
-pub async fn handle(payload: &SetTryValue, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(payload: &SetTryValue, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     if payload.value_json.is_none() && payload.option_value.is_none() {
         return Ok(Emit::default());
     }
@@ -1511,10 +1511,10 @@ pub async fn handle(payload: &SetTryValue, doc: &ArtifactView<'_, FormsSnapshot>
     let Some(input) = stage_command_input(operation, "setTryValue", input_id, payload.input_index.unwrap_or(0), input_count, chunk)? else {
         return Ok(Emit::default());
     };
-    start_try_value(payload, &input.operation, cfg.snapshot, input.source).await
+    start_try_value(payload, &input.operation, cfg.snapshot, input.source)
 }
 
-pub async fn handle_step(payload: &SetTryValueStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle_step(payload: &SetTryValueStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let operation = doc.operation()?;
     if payload.app_id.len() > 10
         || payload.document_id.len() > 256
@@ -1527,10 +1527,10 @@ pub async fn handle_step(payload: &SetTryValueStep, doc: &ArtifactView<'_, Forms
     {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("forms.try-value.checkpoint-invalid"), "the Forms continuation identity is invalid or stale"));
     }
-    if let Some(result) = crate::editor::forms::commands::set_try_values::advance_if_bulk(payload, cfg.snapshot).await {
+    if let Some(result) = crate::editor::forms::commands::set_try_values::advance_if_bulk(payload, cfg.snapshot) {
         return result;
     }
-    advance_try_value(payload, cfg.snapshot).await
+    advance_try_value(payload, cfg.snapshot)
 }
 //#endregion 🔖️Handlers
 
@@ -1552,7 +1552,7 @@ mod tests {
         semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: document_id.into(), operation_id, generation: 1, canonical_base_revision: [0; 32] }
     }
 
-    async fn app_with_document_id(id: &str) -> FormsApp {
+    fn app_with_document_id(id: &str) -> FormsApp {
         let mut app = forms_app_with_registry().await;
         let mut snapshot = app.snapshot().await.expect("Forms snapshot");
         snapshot.id = id.into();

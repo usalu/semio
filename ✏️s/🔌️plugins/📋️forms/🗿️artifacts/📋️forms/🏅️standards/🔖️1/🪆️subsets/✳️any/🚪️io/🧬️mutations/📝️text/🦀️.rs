@@ -20,10 +20,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️ScalarCodec
 /// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space, so every
 /// other scalar's text form stays space-free and tokenizable by [`tokenize_args`].
-async fn enc_str(s: &str) -> String {
+fn enc_str(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
-async fn dec_str(s: &str) -> Result<String, String> {
+fn dec_str(s: &str) -> Result<String, String> {
     let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();
@@ -41,32 +41,32 @@ async fn dec_str(s: &str) -> Result<String, String> {
     }
     Ok(out)
 }
-async fn enc_opt_str(s: &Option<String>) -> String {
+fn enc_opt_str(s: &Option<String>) -> String {
     match s {
         Some(v) => enc_str(v),
         None => "-".to_string(),
     }
 }
-async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
+fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     if s == "-" {
         Ok(None)
     } else {
         Ok(Some(dec_str(s)?))
     }
 }
-async fn enc_usize(v: usize) -> String {
+fn enc_usize(v: usize) -> String {
     v.to_string()
 }
-async fn dec_usize(s: &str) -> Result<usize, String> {
+fn dec_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn enc_opt_usize(v: &Option<usize>) -> String {
+fn enc_opt_usize(v: &Option<usize>) -> String {
     match v {
         Some(x) => enc_usize(*x),
         None => "-".to_string(),
     }
 }
-async fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
+fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
     if s == "-" {
         Ok(None)
     } else {
@@ -78,7 +78,7 @@ async fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
 //#region 🔖️Tokenizer
 /// 🔡️ Splits `key=value` tokens on plain spaces, EXCEPT spaces inside a `"..."` quoted value —
 /// needed because step titles/block labels/JSON payloads may contain spaces.
-async fn tokenize_args(rest: &str) -> Vec<String> {
+fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -108,7 +108,7 @@ async fn tokenize_args(rest: &str) -> Vec<String> {
     }
     tokens
 }
-async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
+fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
     tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
@@ -117,22 +117,22 @@ async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, Str
 /// 🌳️ Whole-`FormStep`/`FormQuestion` text form — a quoted JSON string (both already derive
 /// `ToValue`/`FromValue`) rather than a second handcrafted step/block grammar; `enc_str`/
 /// `dec_str`'s backslash/quote escaping round-trips it byte-for-byte.
-async fn enc_step(step: &FormStep) -> String {
+fn enc_step(step: &FormStep) -> String {
     enc_str(&dsl::os_pack::json::to_json_string(step))
 }
-async fn dec_step(s: &str) -> Result<FormStep, String> {
+fn dec_step(s: &str) -> Result<FormStep, String> {
     dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
-async fn enc_block(block: &FormQuestion) -> String {
+fn enc_block(block: &FormQuestion) -> String {
     enc_str(&dsl::os_pack::json::to_json_string(block))
 }
-async fn dec_block(s: &str) -> Result<FormQuestion, String> {
+fn dec_block(s: &str) -> Result<FormQuestion, String> {
     dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️StructCodec
 
 //#region 🔖️OpText
-async fn print_forms_mutation(mutation: &FormMutation) -> String {
+fn print_forms_mutation(mutation: &FormMutation) -> String {
     match mutation {
         FormMutation::CreateStep(p) => format!("create-step step={} index={}", enc_step(&p.step), enc_opt_usize(&p.index)),
         FormMutation::DeleteStep(p) => format!("delete-step id={}", enc_str(&p.id)),
@@ -147,7 +147,7 @@ async fn print_forms_mutation(mutation: &FormMutation) -> String {
     }
 }
 
-async fn parse_forms_mutation(line: &str) -> Result<FormMutation, String> {
+fn parse_forms_mutation(line: &str) -> Result<FormMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args = parse_args(rest)?;
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("forms mutation: missing arg '{k}' for '{keyword}'"));
@@ -167,26 +167,26 @@ async fn parse_forms_mutation(line: &str) -> Result<FormMutation, String> {
 }
 
 impl protocol::OpText for FormMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_forms_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_forms_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
 
 //#region 🔖️OpBinaryCodec
-async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
-async fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
+fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
     match s {
         Some(v) => {
             out.push(1);
@@ -195,14 +195,14 @@ async fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
         None => out.push(0),
     }
 }
-async fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_bin(reader)?)),
         other => Err(format!("bad option tag {other}")),
     }
 }
-async fn write_opt_usize_bin(out: &mut Vec<u8>, v: &Option<usize>) {
+fn write_opt_usize_bin(out: &mut Vec<u8>, v: &Option<usize>) {
     match v {
         Some(x) => {
             out.push(1);
@@ -211,7 +211,7 @@ async fn write_opt_usize_bin(out: &mut Vec<u8>, v: &Option<usize>) {
         None => out.push(0),
     }
 }
-async fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize>, String> {
+fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
@@ -220,7 +220,7 @@ async fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option
 }
 
 impl protocol::OpBinary for FormMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             FormMutation::CreateStep(_) => 0,
             FormMutation::DeleteStep(_) => 1,
@@ -276,7 +276,7 @@ impl protocol::OpBinary for FormMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -339,7 +339,7 @@ impl protocol::OpBinary for FormMutation {
 //#region 🔖️DemoCases
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<FormMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<FormMutation> {
     let step = FormStep { id: "s1".into(), title: "Step One".into(), description: Some("A \"quoted\" description".into()), blocks: Vec::new() };
     let block = FormQuestion {
         id: "b1".into(),

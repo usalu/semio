@@ -200,7 +200,7 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
   }
   if (assembly.includes("begin_member_apply_one") || assembly.includes("group_id:") || !assembly.includes("begin_apply_one(")) throw new Error("Store durable assembly admits a caller group or catalog factory shortcut");
   const journal = storeSource.slice(storeSource.indexOf("DurableOwnedThreeStoreCommitPhaseV1::StartingJournal =>"), storeSource.indexOf("DurableOwnedThreeStoreCommitPhaseV1::Journal =>"));
-  if ((journal.match(/sink\.begin_commit\(/gu) ?? []).length !== 1) throw new Error("Store durable journal does not begin exactly once");
+  if (!journal.includes("sink.as_deref_mut()") || (journal.match(/\.begin_commit\(/gu) ?? []).length !== 1) throw new Error("Store durable journal does not begin exactly once");
   const gisSource = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
   for (const builder of ["gis_map_parent_one_item_preparation_factory", "gis_map_drawing_one_item_preparation_factory", "gis_map_value_one_item_preparation_factory"]) {
     if (!gisSource.includes(builder)) throw new Error(`GIS exact preparation port missing ${builder}`);

@@ -261,6 +261,7 @@
         "artifact",
         "parentDialect",
         "surface",
+        "browserActor",
         "grant",
         "checkpoint",
         "revalidation"
@@ -420,6 +421,9 @@
             }
           }
         },
+        "browserActor": {
+          "$ref": "https://semio.tech/schemas/os/document-browser-actor-v1.json#/$defs/lease"
+        },
         "grant": {
           "type": "object",
           "additionalProperties": false,
@@ -463,6 +467,7 @@
         "artifact",
         "parentDialect",
         "surface",
+        "browserActor",
         "grant",
         "checkpoint",
         "revalidation"
@@ -586,6 +591,9 @@
               "const": "react"
             }
           }
+        },
+        "browserActor": {
+          "$ref": "https://semio.tech/schemas/os/document-browser-actor-v1.json#/$defs/plan"
         },
         "grant": {
           "type": "object",

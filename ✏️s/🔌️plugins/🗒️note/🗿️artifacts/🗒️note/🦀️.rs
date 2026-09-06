@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 /// machinery this comment block's own `"composer"` rows once cross-checked against is deleted
 /// (`🚪️io/🦀️.rs`'s `io()` replaces it); the capability rows themselves are inert now, kept
 /// only because nothing on this pass's boundary reads or removes `definition()`'s callers.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.note.note.standard.v1", "standard", "1", &[], None),
@@ -141,7 +141,7 @@ impl Default for NoteCamera {
     }
 }
 
-pub async fn default_zoom() -> f64 {
+pub fn default_zoom() -> f64 {
     1.0
 }
 
@@ -311,7 +311,7 @@ pub struct NoteTextChild {
 /// paragraph for whatever ran since the last separator, even an empty one). `NoteTextRun.underline`
 /// has no equivalent mark in stdio's closed
 /// bold/italic/code/link vocabulary and is dropped on the way in — real, honestly-lossy, not fabricated.
-pub async fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> SemioTextSnapshot {
+pub fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> SemioTextSnapshot {
     let mut runs = Vec::new();
     for (index, paragraph) in paragraphs.iter().enumerate() {
         if index > 0 {
@@ -337,7 +337,7 @@ pub async fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> 
 /// 🌉 Inverse of [`text_snapshot_from_paragraphs`] — splits the flat run list back into paragraphs on
 /// every marks-free/language-free `"\n"` separator run. See that function's doc comment for the one
 /// honestly-lossy edge case (empty paragraph list vs. one paragraph with zero runs).
-pub async fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTextParagraph> {
+pub fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTextParagraph> {
     let mut paragraphs = Vec::new();
     let mut current = Vec::new();
     for run in &snapshot.runs {
@@ -358,7 +358,7 @@ pub async fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<
 /// `(child_id, target)` for identical `(block_id, paragraphs)`, a different pair once either changes;
 /// mirrors writer's `document_child_handle`/cad's `cad_model_child_handle`, keyed by `block_id` (not
 /// content alone) so two distinct blocks never collide on the same child slot.
-pub async fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+pub fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(paragraphs).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -374,13 +374,13 @@ pub async fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagr
 
 //#region 🔖️TextChildren
 /// 🔎 Reads the durable paragraphs owned by the text-child record.
-pub async fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
+pub fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
     handle.paragraphs.clone()
 }
 
 /// 🏗️ Mints a new content-addressed handle and stores its paragraphs in the same snapshot-owned
 /// record used by mutation-diff, fixture, and converter builders.
-pub async fn note_text_child_record(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+pub fn note_text_child_record(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
     note_text_child_handle(block_id, paragraphs)
 }
 //#endregion 🔖️TextChildren
@@ -414,7 +414,7 @@ pub struct NoteTextParagraph {
     pub runs: Vec<NoteTextRun>,
 }
 
-pub async fn default_true() -> bool {
+pub fn default_true() -> bool {
     true
 }
 

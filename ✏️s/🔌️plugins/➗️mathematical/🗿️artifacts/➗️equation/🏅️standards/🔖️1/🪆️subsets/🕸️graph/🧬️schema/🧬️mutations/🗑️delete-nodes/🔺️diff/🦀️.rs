@@ -3,7 +3,7 @@
 use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::DeleteNodes, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::DeleteNodes, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     let mut graph = equation_graph(base);
     let existing: Vec<String> = payload.ids.iter().filter(|id| graph.nodes.iter().any(|node| &node.id == *id)).cloned().collect();
     if existing.is_empty() {

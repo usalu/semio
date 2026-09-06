@@ -79,10 +79,28 @@ deadlock continues to time out rather than being hidden.
   `Arc<WorkerPoolUse>` through private `try_prepare_with_use` boundaries; the
   standalone retained APIs still acquire their own exact use. The source
   oracle requires exactly one acquisition in `open_with` and checks every
-  internal handoff. Create-catalog also performs an idempotent release check
-  after its physical driver relinquishes poll authority, closing the
-  completion-consumption/worker-tail interleaving. This correction postdates
-  `tE5UHu` and remains native-pending.
+  internal handoff. A subsequent retained-owner audit found that acknowledging
+  create-catalog success from the worker tail was too early: the public result
+  could still be dropped without `into_parts`, placing itself in terminal
+  retirement after the state had been marked finished. Only `into_parts` now
+  acknowledges a successful result; dropping an unconsumed resolved result
+  retains the same state/use and exposes its exact terminal drain owner. The
+  new exact law proves pool shutdown stays busy until that owner is drained.
+  `Database::hello_retained` also passes the Database-owned use through the new
+  `DatabaseSyncHelloFuture::try_submit_with_use` boundary instead of discarding
+  it and minting an independently invisible use. These corrections postdate
+  `tE5UHu` and remain native-pending.
+- Root receipt `D9sh1b/00` passed mount laws 1–14 and then failed the resolved
+  create-catalog result-drop law because its explicit terminal loop completed
+  1,024 cooperative yields before the deferred `now + 1ms` callback became
+  eligible. `DatabaseCreateCatalogTerminalHandle::close_step` now atomically
+  claims the idle driver and performs one bounded retirement turn directly;
+  autonomous result-Drop still arms the callback route, while explicit cleanup
+  no longer depends on wall-clock passage. The final explicit turn clears the
+  no-op callback latch after all retained owners and the pool use are released.
+  This correction is source-qualified pending a native rerun. The earlier
+  `CemxLK/00` database-shutdown deadline was not reproduced by `D9sh1b`; it is
+  recorded as non-reproduced rather than resolved.
 - Current registered source receipt is GREEN with `AJV=1 cases=10 waiters=32 owner-futures=1`; the strict driver fixture now also contains three neutral interleavings, including hard-refusal retention.
 - Terra's independent current-source review found the coalesced sole-poller, generation, join, and retained-refusal flow coherent. Its one P0 finding was the post-terminal catalog/sync/checkpoint escape; the current source fences those calls through `require_open_use` and preserves typed retained rejections. This correction is source-qualified and remains native-pending with laws 12–14.
 
@@ -102,13 +120,14 @@ deadlock continues to time out rather than being hidden.
 12. `db_engine::tests::database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack`
 13. `db_engine::tests::database_worker_pool_use_is_admitted_before_the_first_storage_probe`
 14. `db_engine::tests::database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer`
-15. `db_artifact::tests::artifact_runner_terminal_authority_latch_preserves_external_job_and_one_resume`
-16. `db_artifact::tests::artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn`
-17. `db_artifact::tests::artifact_runner_terminal_close_returns_exact_cursor_until_retained_wake`
-18. `db_artifact::tests::artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close`
-19. `db_artifact::tests::artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner`
-20. `db_artifact::tests::artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry`
-21. `db_artifact::tests::artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity`
+15. `db_engine::tests::database_create_catalog_resolved_drop_retains_use_until_terminal_drain`
+16. `db_artifact::tests::artifact_runner_terminal_authority_latch_preserves_external_job_and_one_resume`
+17. `db_artifact::tests::artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn`
+18. `db_artifact::tests::artifact_runner_terminal_close_returns_exact_cursor_until_retained_wake`
+19. `db_artifact::tests::artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close`
+20. `db_artifact::tests::artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner`
+21. `db_artifact::tests::artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry`
+22. `db_artifact::tests::artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity`
 
 ## Nonclaims
 

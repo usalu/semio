@@ -3165,20 +3165,23 @@ async function dumpReactStructure(page: import("playwright").Page): Promise<Pari
   return JSON.parse(json as unknown as string) as ParityDump;
 }
 
-/** 🧊️Calls the wasm-bindgen introspection hooks exposed by `framework/os/renderer/wgpu/rs/lib.rs` region
- * `🔬️Introspection`. Reachable at `window.wasmBindings.dumpStructure()`/`dumpFrameStats()` — Trunk's
- * dev-server boot glue (`framework/os/renderer/wgpu/js/🟦️.ts`) attaches the wasm module's exports there
- * (the same path `semioWgpuMount`/`uploadIconAtlas` already use), NOT a bespoke global. Returns an
- * empty dump (never throws) when the hooks aren't present yet, so triage can distinguish "not booted"
- * from "no hooks" via `DUMP-EMPTY`. */
+/** 🧊️Calls the wasm-bindgen introspection hooks exposed by the renderer's `🗣️Interpreter/🎯️targets/🧊️wgpu`
+ * region `🔬️IntrospectionExports`. They read `UI_ENGINE`, a thread-local that lives inside the dedicated
+ * `semio-frame-worker`, so the UI isolate reaches them over the transport's introspection message pair and
+ * `🚀️browser-boot/🟦️.ts` publishes that async shim as `window.semioWgpuIntrospection` once the Worker
+ * reports `booted`. Deliberately NOT `window.wasmBindings`: Trunk publishes a second, never-booted
+ * UI-thread instantiation of the same module under that name, whose `dumpStructure` traps on an
+ * uninitialised engine and appears seconds before the Worker is ready. Returns an empty dump (never throws)
+ * when the hooks aren't present yet, so triage can distinguish "not booted" from "no hooks" via
+ * `DUMP-EMPTY`. */
 async function dumpWgpuStructure(page: import("playwright").Page): Promise<ParityDump> {
-  const json = await page.evaluate(() => (window as unknown as { wasmBindings?: { dumpStructure?: () => string } }).wasmBindings?.dumpStructure?.());
+  const json = await page.evaluate(async () => await (window as unknown as { semioWgpuIntrospection?: { dumpStructure?: () => Promise<string> } }).semioWgpuIntrospection?.dumpStructure?.());
   if (!json) return { viewport: { w: 0, h: 0, dpr: 1 }, focusPath: null, nodes: [] };
   return JSON.parse(json) as ParityDump;
 }
 
 async function dumpWgpuFrameStats(page: import("playwright").Page): Promise<{ readonly drawCalls: number; readonly quads: number; readonly glyphs: number } | null> {
-  const json = await page.evaluate(() => (window as unknown as { wasmBindings?: { dumpFrameStats?: () => string } }).wasmBindings?.dumpFrameStats?.());
+  const json = await page.evaluate(async () => await (window as unknown as { semioWgpuIntrospection?: { dumpFrameStats?: () => Promise<string> } }).semioWgpuIntrospection?.dumpFrameStats?.());
   if (!json) return null;
   const stats = JSON.parse(json) as { readonly drawCalls: number; readonly quadCount: number; readonly glyphCount: number };
   return { drawCalls: stats.drawCalls, quads: stats.quadCount, glyphs: stats.glyphCount };
@@ -3547,7 +3550,7 @@ async function triageParityBoot(page: import("playwright").Page, renderer: Parit
   }
   if (pageErrors.some((e) => /NoCompatibleDevice|WebGPU/i.test(e))) return { status: "ENV-FAIL", detail: pageErrors.join(" | ") };
   try {
-    await page.waitForFunction(() => typeof (window as unknown as { wasmBindings?: { dumpStructure?: unknown } }).wasmBindings?.dumpStructure === "function", { timeout: PARITY_BOOT_TIMEOUT_MS });
+    await page.waitForFunction(() => typeof (window as unknown as { semioWgpuIntrospection?: { dumpStructure?: unknown } }).semioWgpuIntrospection?.dumpStructure === "function", { timeout: PARITY_BOOT_TIMEOUT_MS });
   } catch {
     const stale = staleBridgeHit();
     return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "BOOT-TIMEOUT", detail: "wgpu introspection hook never appeared" };

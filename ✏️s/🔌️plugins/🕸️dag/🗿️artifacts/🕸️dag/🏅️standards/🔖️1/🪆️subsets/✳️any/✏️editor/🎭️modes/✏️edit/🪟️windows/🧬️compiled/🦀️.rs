@@ -16,7 +16,7 @@ const DAG_PLAY_SURFACE_COMPILED: &str = "dag.play.compiled-dag";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: DAG_PLAY_WINDOW_COMPILED.into(),
         label: LocalizedLabel::native("DSL", "DSL"),
@@ -38,7 +38,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &DagSnapshot, camera: &DagCamera) -> UiNode {
+pub fn render(document: &DagSnapshot, camera: &DagCamera) -> UiNode {
     let fixture = dag_fixture_from_document(&infinite_board_port_directed_dag::DagSnapshot::from(document), camera.clone());
     build_text_editor_scene(DAG_PLAY_SURFACE_COMPILED, DAG_PLAY_APP_ID, TextEditorScene::base(dag_fixture_to_wire_literal(&fixture), Some("wire".into()), None))
 }

@@ -27,7 +27,7 @@ impl Default for DagTopology {
 /// 🧭 Kahn's algorithm over `nodes`/`edges`, deterministic via `BTreeMap`/sorted-adjacency
 /// iteration order; nodes left over after the queue drains (a cycle) are appended in id order so
 /// `topo_order` always stays a total permutation of every node id.
-pub async fn compute_dag_topology(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagTopology {
+pub fn compute_dag_topology(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagTopology {
     let ids: BTreeSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
     let mut indegree: BTreeMap<String, u32> = ids.iter().cloned().map(|id| (id, 0)).collect();
     let mut adjacency: BTreeMap<String, Vec<String>> = ids.iter().cloned().map(|id| (id, Vec::new())).collect();
@@ -84,11 +84,11 @@ pub async fn compute_dag_topology(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge
 mod tests {
     use super::*;
 
-    async fn node(id: &str) -> DagNodeSpec {
+    fn node(id: &str) -> DagNodeSpec {
         DagNodeSpec { id: id.into(), ..Default::default() }
     }
 
-    async fn edge(id: &str, source: &str, target: &str) -> DagFixtureEdge {
+    fn edge(id: &str, source: &str, target: &str) -> DagFixtureEdge {
         DagFixtureEdge { id: id.into(), source: source.into(), target: target.into(), ..Default::default() }
     }
 

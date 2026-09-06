@@ -308,7 +308,10 @@ impl DrawList {
         (self.prepared_items, self.prepared_bytes)
     }
 
-    pub(crate) fn retire_step(&mut self) -> bool {
+    /// ♻️ One bounded retirement slice of a retained draw list. `pub`, not `pub(crate)`: the wgpu
+    /// renderer owns the previous frame's `DrawList` across a frame boundary and drives this ladder
+    /// itself — the same contract `prepared.rs`'s `retire_step` already exposes.
+    pub fn retire_step(&mut self) -> bool {
         if let Some(pass) = self.scene_passes.last_mut() {
             if let Some(draw) = pass.textured_draws.last_mut() {
                 if let Some(instance) = draw.instances.last_mut() {

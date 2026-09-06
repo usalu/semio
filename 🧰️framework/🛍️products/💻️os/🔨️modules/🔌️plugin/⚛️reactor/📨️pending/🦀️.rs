@@ -158,6 +158,14 @@ impl PendingPatchAuthority {
         Ok(step)
     }
 
+    pub(super) fn preflight_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+        if let Some(closing) = self.closing_instances.iter().flatten().find(|closing| closing.key.instance() == key.instance()) {
+            return if closing.key == key { Ok(()) } else { Err("pending patch reservation belongs to another allocation") };
+        }
+        if self.closing_instances.iter().all(Option::is_some) { return Err("pending patch close reservations are full"); }
+        Ok(())
+    }
+
     pub(super) fn reserve_close_instance(&mut self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         if let Some(closing) = self.closing_instances.iter().flatten().find(|closing| closing.key.instance() == key.instance()) {
             return if closing.key == key { Ok(()) } else { Err("pending patch reservation belongs to another allocation") };

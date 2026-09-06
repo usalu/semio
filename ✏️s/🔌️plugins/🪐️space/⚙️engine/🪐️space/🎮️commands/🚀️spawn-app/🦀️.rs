@@ -4,7 +4,6 @@ use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "spawn-app")]
 pub struct SpawnApp {
@@ -125,9 +124,16 @@ mod tests {
     async fn undo_redo_round_trip_on_spawn() {
         use semio_framework_plugin::{testkit, VcsArtifactApp};
         seed_draw_plugin().await;
-        let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default()).await;
+        let mut app = VcsArtifactApp::<crate::engine::space::SpaceApp>::new(crate::engine::space::SpaceApp::default()).await;
         let before = app.snapshot().expect("projection").graph.nodes.len();
-        testkit::assert_undo_redo_round_trip(&mut app, SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 80.0, y: 80.0 }), |app| app.snapshot().expect("projection").graph.nodes.len(), before, before + 1).await;
+        testkit::assert_undo_redo_round_trip(
+            &mut app,
+            SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 80.0, y: 80.0 }),
+            |app| app.snapshot().expect("projection").graph.nodes.len(),
+            before,
+            before + 1,
+        )
+        .await;
     }
 }
 //#endregion 🧪️Tests

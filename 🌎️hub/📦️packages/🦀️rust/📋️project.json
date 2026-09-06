@@ -119,12 +119,20 @@
       }
     },
     "admin-presence-target-recovery-source-check": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts admin-presence-target-recovery-check source" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-presence-target-recovery-check source"
+      }
     },
     "admin-presence-target-recovery-native-check": {
-      "executor": "nx:run-commands", "cache": false,
-      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts admin-presence-target-recovery-check native" }
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-presence-target-recovery-check native"
+      }
     },
     "presence-lease-source-check": {
       "executor": "nx:run-commands",
@@ -305,7 +313,10 @@
     "execution-target-native-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "cwd": "🌎️hub/📦️packages/🦀️rust", "command": "bun ./📜️script.ts execution-target-relay-check --native" }
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts execution-target-relay-check --native"
+      }
     },
     "browser-broker-check": {
       "executor": "nx:run-commands",
@@ -395,6 +406,30 @@
         "command": "bun ./📜️script.ts open-plan-server-check"
       }
     },
+    "browser-actor-child-worker-containment-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-actor-child-worker-containment-check"
+      }
+    },
+    "browser-actor-gis-describe-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-actor-gis-describe-check"
+      }
+    },
+    "browser-actor-document-reservation-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts browser-actor-document-reservation-check"
+      }
+    },
     "browser-document-open-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -449,6 +484,46 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts document-browser-actor-identity-check --catalog-native"
+      }
+    },
+    "checkpoint-publication-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts checkpoint-publication-check source"
+      }
+    },
+    "checkpoint-publication-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts checkpoint-publication-check native"
+      }
+    },
+    "checkpoint-publication-process-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts checkpoint-publication-check process"
+      }
+    },
+    "trusted-catalog-opened-root-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-catalog-opened-root-check"
+      }
+    },
+    "trusted-catalog-opened-root-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-catalog-opened-root-check --native"
       }
     },
     "trusted-stdio-gis-bootstrap": {

@@ -12,7 +12,11 @@ pub struct CounterDiff {
 
 impl CounterDiff {
     pub fn delta(delta: i64) -> Self {
-        if delta == 0 { Self::default() } else { Self { deltas: vec![delta] } }
+        if delta == 0 {
+            Self::default()
+        } else {
+            Self { deltas: vec![delta] }
+        }
     }
 
     pub fn from_wide(mut delta: i128) -> Self {
@@ -31,7 +35,9 @@ impl MutationDiff<i64> for CounterDiff {
         self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))
     }
 
-    fn absorb(&mut self, other: Self) { self.deltas.extend(other.deltas); }
+    fn absorb(&mut self, other: Self) {
+        self.deltas.extend(other.deltas);
+    }
 }
 
 impl DiffAlgebra<i64> for CounterDiff {
@@ -39,9 +45,13 @@ impl DiffAlgebra<i64> for CounterDiff {
         Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() }
     }
 
-    fn between(base: &i64, other: &i64) -> Self { Self::from_wide(i128::from(*other) - i128::from(*base)) }
+    fn between(base: &i64, other: &i64) -> Self {
+        Self::from_wide(i128::from(*other) - i128::from(*base))
+    }
 
-    fn is_empty(&self) -> bool { self.deltas.iter().all(|delta| *delta == 0) }
+    fn is_empty(&self) -> bool {
+        self.deltas.iter().all(|delta| *delta == 0)
+    }
 }
 //#endregion 🔺️StructuralDiff
 
@@ -57,10 +67,14 @@ mod tests {
     use super::*;
     use crate::os_spr::{Mutation, MutationLeaf, OpText};
 
-    fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("law fixture") }
+    fn fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("law fixture")
+    }
 
     pub(crate) fn assert_leaf<T>(index: usize, wrap: fn(T) -> CounterMutation, descriptor: &str)
-    where T: MutationLeaf + OpText + protocol::value::ToValue + protocol::value::FromValue + serde::Serialize + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug {
+    where
+        T: MutationLeaf + OpText + protocol::value::ToValue + protocol::value::FromValue + serde::Serialize + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug,
+    {
         let fixtures = fixture();
         let row = &fixtures["mutations"][index];
         let value = serde_json::from_value::<T>(row["payload"].clone()).expect("direct payload");

@@ -18,7 +18,7 @@ pub mod set_adjacency_field {
         pub value_json: String,
     }
 
-    pub async fn handle(payload: &SetAdjacencyField, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAdjacencyField, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let Ok(value) = dsl::json::from_json_str::<Value>(&payload.value_json) else {
             return Ok(Emit::default());
         };
@@ -48,7 +48,7 @@ pub mod set_adjacency_kind {
         pub cycle: bool,
     }
 
-    pub async fn handle(payload: &SetAdjacencyKind, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAdjacencyKind, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
         let a = EntityId(payload.element_a_id.clone());
         let b = EntityId(payload.element_b_id.clone());
@@ -91,7 +91,7 @@ pub mod set_adjacency_filter {
         pub kind: Option<String>,
     }
 
-    pub async fn handle(payload: &SetAdjacencyFilter, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
+    pub fn handle(payload: &SetAdjacencyFilter, _doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let mut next = cfg.snapshot.clone();
         next.adjacency_kind_filter = payload.kind.as_deref().and_then(adjacency_kind_from_id);
         Ok(Emit::config(snapshot(next)))

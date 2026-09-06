@@ -249,11 +249,6 @@ fn db_io_operation_detach_task(operation: u64, credit: DbIoCredit) -> Result<(),
     db_io_operation_try_release_locked(&mut ledger, index)
 }
 
-fn db_io_operation_terminal_is_empty(operation: u64) -> bool {
-    let ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    db_io_operation_slot(&ledger, operation).is_none()
-}
-
 fn db_io_operation_add_result_lease(operation: u64) -> Result<(), DbError> {
     let mut ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let index = db_io_operation_slot(&ledger, operation).ok_or_else(|| DbError::Internal("DB I/O result lost aggregate operation".to_string()))?;
@@ -269,11 +264,11 @@ fn db_io_operation_add_result_lease(operation: u64) -> Result<(), DbError> {
     Ok(())
 }
 
-fn db_io_operation_return_result_lease(operation: u64) -> Result<(), DbError> {
+fn db_io_operation_return_result_lease(operation: u64, retained_credit: DbIoCredit) -> Result<(), DbError> {
     let mut ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let index = db_io_operation_slot(&ledger, operation).ok_or_else(|| DbError::Internal("DB I/O result handback lost aggregate operation".to_string()))?;
     ledger.slots[index].result_leases = ledger.slots[index].result_leases.checked_sub(1).ok_or_else(|| DbError::Internal("DB I/O result lease returned twice".to_string()))?;
-    let credit = db_io_result_lease_credit();
+    let credit = db_io_result_lease_credit().checked_add(retained_credit).ok_or(DbError::LimitExceeded("DB I/O retained result handback credit"))?;
     ledger.slots[index].live = ledger.slots[index].live.checked_sub(credit).ok_or_else(|| DbError::Internal("DB I/O result lease credit returned twice".to_string()))?;
     ledger.totals = ledger.totals.checked_sub(credit).ok_or_else(|| DbError::Internal("DB I/O process result lease credit returned twice".to_string()))?;
     db_io_operation_try_release_locked(&mut ledger, index)
@@ -1481,7 +1476,7 @@ pub struct DbIoPages {
     first_offset: usize,
     total_len: usize,
     shell_returned: bool,
-    result_handback: Option<DbIoTaskHandle>,
+    result_handback: Option<DbIoResultHandback>,
 }
 
 impl DbIoPages {
@@ -1612,8 +1607,8 @@ impl DbIoPages {
                 self.shell_returned = true;
                 return Ok(Some(0));
             }
-            if let Some(handle) = self.result_handback {
-                db_io_result_handback(handle)?;
+            if let Some(handback) = self.result_handback {
+                db_io_result_handback(handback)?;
                 self.result_handback = None;
                 return Ok(Some(0));
             }
@@ -1846,7 +1841,7 @@ impl std::fmt::Debug for DbIoText {
 pub struct DbIoU64List {
     values: Option<Box<[u64]>>,
     len: u16,
-    result_handback: Option<DbIoTaskHandle>,
+    result_handback: Option<DbIoResultHandback>,
 }
 
 impl DbIoU64List {
@@ -1901,8 +1896,8 @@ impl DbIoU64List {
             if self.values.take().is_some() {
                 return true;
             }
-            if let Some(handle) = self.result_handback {
-                if db_io_result_handback(handle).is_ok() {
+            if let Some(handback) = self.result_handback {
+                if db_io_result_handback(handback).is_ok() {
                     self.result_handback = None;
                     return true;
                 }
@@ -2080,7 +2075,7 @@ pub struct DbIoLeaseResult {
     pub holder: DbIoText,
     pub fence: EpochFence,
     pub expires_at_ms: u64,
-    result_handback: Option<DbIoTaskHandle>,
+    result_handback: Option<DbIoResultHandback>,
 }
 
 impl DbIoLeaseResult {
@@ -2089,8 +2084,8 @@ impl DbIoLeaseResult {
     }
 
     fn handback_step(&mut self) -> bool {
-        let Some(handle) = self.result_handback else { return false };
-        if db_io_result_handback(handle).is_err() {
+        let Some(handback) = self.result_handback else { return false };
+        if db_io_result_handback(handback).is_err() {
             return false;
         }
         self.result_handback = None;
@@ -2339,6 +2334,13 @@ impl DbIoTask {
 }
 
 impl DbIoResult {
+    fn retained_credit(&self) -> DbIoCredit {
+        match self {
+            Self::List(list) if list.values.is_some() => DbIoCredit { pages: 0, bytes: DB_IO_LIST_BACKING_BYTES, items: DB_IO_LIST_ITEMS, controls: 0 },
+            _ => DbIoCredit::default(),
+        }
+    }
+
     fn close_step(&mut self) -> Result<Option<usize>, DbError> {
         match self {
             Self::WalWriter(_) => {
@@ -2369,23 +2371,23 @@ impl DbIoResult {
         }
     }
 
-    fn attach_result_handback(&mut self, handle: DbIoTaskHandle) -> bool {
+    fn attach_result_handback(&mut self, handback: DbIoResultHandback) -> bool {
         match self {
             Self::WalWriter(_) => false,
             Self::Pages(pages) => {
-                pages.result_handback = Some(handle);
+                pages.result_handback = Some(handback);
                 true
             }
             Self::OptionalCatalog(Some((pages, _))) => {
-                pages.result_handback = Some(handle);
+                pages.result_handback = Some(handback);
                 true
             }
             Self::List(list) => {
-                list.result_handback = Some(handle);
+                list.result_handback = Some(handback);
                 true
             }
             Self::Lease(lease) | Self::OptionalLease(Some(lease)) => {
-                lease.result_handback = Some(handle);
+                lease.result_handback = Some(handback);
                 true
             }
             Self::Unit | Self::Length(_) | Self::WalSegmentState(_) | Self::OptionalLength(_) | Self::Exists(_) | Self::Hash(_) | Self::Fence(_) | Self::OptionalCatalog(None) | Self::OptionalLease(None) => false,
@@ -2894,9 +2896,18 @@ fn db_io_poll_rejected_backend_on_lane_io(index: usize, generation: u64) {
     }
     if terminal {
         let mut registry = db_io_rejected_backends().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let pool_use = (registry.slots[index].generation == generation).then(|| std::mem::replace(&mut registry.slots[index], DbIoRejectedBackendSlot::empty()).pool_use).flatten();
+        let pool_use = if registry.slots[index].generation == generation {
+            registry.slots[index].scheduled = true;
+            registry.slots[index].pool_use.take()
+        } else {
+            None
+        };
         drop(registry);
         drop(pool_use);
+        let mut registry = db_io_rejected_backends().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if registry.slots[index].generation == generation && registry.slots[index].scheduled {
+            registry.slots[index] = DbIoRejectedBackendSlot::empty();
+        }
     } else {
         let _ = db_io_request_rejected_backend_close(index, generation);
     }
@@ -2995,11 +3006,7 @@ pub(crate) fn register_db_io_backend_prepared_with_use(
 
 fn db_io_backend_credit(executor: &dyn DbIoTaskExecutor) -> DbIoCredit {
     let base = DbIoCredit { pages: 0, bytes: executor.owner_backing_bytes(), items: 1, controls: 1 };
-    if executor.supports_writer_authority() {
-        base.checked_add(writer::release::controller_credit()).expect("fixed writer controller credit")
-    } else {
-        base
-    }
+    base.checked_add(writer::release::controller_credit()).expect("fixed DB I/O maintenance controller credit")
 }
 
 fn register_db_io_backend_reserved_with_use(
@@ -3032,11 +3039,16 @@ fn register_db_io_backend_reserved_with_use(
     registry.next_generation += 1;
     let control = db_io_backend_control(kind, slot, generation);
     if executor.supports_writer_authority() {
-        if let Err(error) = executor.bind_writer_control(control).and_then(|()| writer::release::install_controller(control, pool.clone())) {
+        if let Err(error) = executor.bind_writer_control(control) {
             drop(registry);
             let retirement = rollback.commit(executor, owner_operation, owner_credit, pool, pool_use);
             return Err(DbIoBackendAdmittedFailure { cause: error, retirement });
         }
+    }
+    if let Err(error) = writer::release::install_controller(control, pool.clone()) {
+        drop(registry);
+        let retirement = rollback.commit(executor, owner_operation, owner_credit, pool, pool_use);
+        return Err(DbIoBackendAdmittedFailure { cause: error, retirement });
     }
     drop(rollback);
     registry.free_read = (registry.free_read + 1) % DB_IO_BACKEND_CONTROLS;
@@ -3513,7 +3525,7 @@ pub struct DbIoFault {
     pub kind: DbIoFaultKind,
     pub cause: DbIoFaultCause,
     pub detail: DbIoText,
-    result_handback: Option<DbIoTaskHandle>,
+    result_handback: Option<DbIoResultHandback>,
 }
 
 impl std::fmt::Debug for DbIoFault {
@@ -3523,9 +3535,9 @@ impl std::fmt::Debug for DbIoFault {
 }
 
 impl DbIoFault {
-    pub fn into_db_error(self) -> DbError {
+    pub fn into_db_error(mut self) -> DbError {
         let detail = self.detail.as_str().to_string();
-        match self.cause {
+        let error = match self.cause {
             DbIoFaultCause::Io => DbError::Io(detail),
             DbIoFaultCause::NotFound => DbError::NotFound(detail),
             DbIoFaultCause::AlreadyExists => DbError::AlreadyExists(detail),
@@ -3541,7 +3553,9 @@ impl DbIoFault {
             DbIoFaultCause::Unauthorized => DbError::Unauthorized(detail),
             DbIoFaultCause::Unimplemented(detail) => DbError::Unimplemented(detail),
             DbIoFaultCause::Internal => DbError::Internal(detail),
-        }
+        };
+        while self.close_step() {}
+        error
     }
 
     pub fn close_step(&mut self) -> bool {
@@ -3583,6 +3597,12 @@ struct DbIoTaskHandle {
     operation: u64,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct DbIoResultHandback {
+    handle: DbIoTaskHandle,
+    retained_credit: DbIoCredit,
+}
+
 struct DbIoTaskSlot {
     generation: u64,
     operation: u64,
@@ -3602,6 +3622,7 @@ struct DbIoTaskSlot {
     backend: Option<DbIoBackendControl>,
     counted: bool,
     aggregate_credit: DbIoCredit,
+    result_retained_credit: DbIoCredit,
     aggregate_returned: bool,
     async_ready: bool,
     async_detached: bool,
@@ -3633,6 +3654,7 @@ impl DbIoTaskSlot {
             backend: None,
             counted: false,
             aggregate_credit: DbIoCredit { pages: 0, bytes: 0, items: 0, controls: 0 },
+            result_retained_credit: DbIoCredit { pages: 0, bytes: 0, items: 0, controls: 0 },
             aggregate_returned: false,
             async_ready: false,
             async_detached: false,
@@ -3783,6 +3805,7 @@ fn db_io_allocate_task(mut task: DbIoTask) -> Result<DbIoTaskHandle, (DbError, D
         backend: Some(backend),
         counted: true,
         aggregate_credit,
+        result_retained_credit: DbIoCredit::default(),
         aggregate_returned: false,
         async_ready: false,
         async_detached: false,
@@ -4163,6 +4186,7 @@ pub struct DbIoTaskOperation {
 /// @emoji 🎟️ Generation-qualified terminal lease retained by its aggregate operation.
 pub struct DbIoResultLease {
     handle: DbIoTaskHandle,
+    retained_credit: DbIoCredit,
     result: Option<DbIoResult>,
     transferred: bool,
 }
@@ -4184,13 +4208,20 @@ enum DbIoLostOwner {
     ExternalBytes(DbIoExternalBytes),
     ArtifactId(DbIoArtifactId),
     Backend { owner: Option<Box<dyn DbIoTaskExecutor>>, operation: u64, credit: DbIoCredit, pool: Option<Arc<WorkerPool>>, pool_use: Option<Arc<WorkerPoolUse>> },
-    ResultLease { handle: DbIoTaskHandle, result: Option<DbIoResult> },
+    ResultLease { handback: DbIoResultHandback, result: Option<DbIoResult> },
 }
 
 static DB_IO_LOST_OWNERS: std::sync::Mutex<[Option<DbIoLostOwner>; DB_IO_LOST_OWNER_SLOTS]> = std::sync::Mutex::new([const { None }; DB_IO_LOST_OWNER_SLOTS]);
 static DB_IO_LOST_OWNER_OVERFLOW: std::sync::Mutex<[Option<DbIoLostOwner>; DB_IO_LOST_OWNER_OVERFLOW_SLOTS]> = std::sync::Mutex::new([const { None }; DB_IO_LOST_OWNER_OVERFLOW_SLOTS]);
 static DB_IO_LOST_OWNER_QUARANTINE: std::sync::Mutex<[Option<DbIoLostOwner>; DB_IO_LOST_OWNER_OVERFLOW_SLOTS]> = std::sync::Mutex::new([const { None }; DB_IO_LOST_OWNER_OVERFLOW_SLOTS]);
 static DB_IO_RETIREMENT_PRESSURE_FAULT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static DB_IO_LOST_OWNER_WAKE_REQUESTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn db_io_request_lost_owner_maintenance() {
+    if !DB_IO_LOST_OWNER_WAKE_REQUESTED.swap(true, std::sync::atomic::Ordering::AcqRel) {
+        writer::release::request_any_controller();
+    }
+}
 
 fn db_io_try_park_lost_owner(owner: DbIoLostOwner) -> Result<(), DbIoLostOwner> {
     let mut owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -4202,19 +4233,38 @@ fn db_io_try_park_lost_owner(owner: DbIoLostOwner) -> Result<(), DbIoLostOwner> 
 }
 
 fn db_io_park_lost_owner(owner: DbIoLostOwner) -> Result<(), DbIoLostOwner> {
-    if let Err(owner) = db_io_try_park_lost_owner(owner) {
-        DB_IO_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
-        let mut overflow = DB_IO_LOST_OWNER_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(slot) = overflow.iter_mut().find(|slot| slot.is_none()) {
-            *slot = Some(owner);
+    let owner = match db_io_try_park_lost_owner(owner) {
+        Ok(()) => {
+            db_io_request_lost_owner_maintenance();
             return Ok(());
         }
-        drop(overflow);
-        let mut quarantine = DB_IO_LOST_OWNER_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(slot) = quarantine.iter_mut().find(|slot| slot.is_none()) else { return Err(owner) };
+        Err(owner) => owner,
+    };
+    DB_IO_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
+    let mut overflow = DB_IO_LOST_OWNER_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(slot) = overflow.iter_mut().find(|slot| slot.is_none()) {
         *slot = Some(owner);
+        drop(overflow);
+        db_io_request_lost_owner_maintenance();
+        return Ok(());
     }
+    drop(overflow);
+    let mut quarantine = DB_IO_LOST_OWNER_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(slot) = quarantine.iter_mut().find(|slot| slot.is_none()) else { return Err(owner) };
+    *slot = Some(owner);
+    drop(quarantine);
+    db_io_request_lost_owner_maintenance();
     Ok(())
+}
+
+pub(super) fn db_io_lost_owner_maintenance_batch() -> Result<bool, DbError> {
+    DB_IO_LOST_OWNER_WAKE_REQUESTED.store(false, std::sync::atomic::Ordering::Release);
+    for _ in 0..DB_IO_LOST_OWNER_SLOTS {
+        if !db_io_lost_owner_close_step()? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 
 fn db_io_lost_owner_close_step() -> Result<bool, DbError> {
@@ -4301,7 +4351,7 @@ fn db_io_lost_owner_close_opportunity(owner: &mut DbIoLostOwner) -> Result<bool,
                 }
             }
         }
-        DbIoLostOwner::ResultLease { handle, result } => {
+        DbIoLostOwner::ResultLease { handback, result } => {
             if let Some(owner) = result.as_mut() {
                 if owner.close_step()?.is_some() {
                     return Ok(false);
@@ -4309,7 +4359,7 @@ fn db_io_lost_owner_close_opportunity(owner: &mut DbIoLostOwner) -> Result<bool,
                 *result = None;
                 return Ok(false);
             }
-            db_io_result_handback(*handle)?;
+            db_io_result_handback(*handback)?;
             true
         }
     };
@@ -4319,8 +4369,9 @@ fn db_io_lost_owner_close_opportunity(owner: &mut DbIoLostOwner) -> Result<bool,
 impl DbIoResultLease {
     pub fn into_result(mut self) -> Result<DbIoResult, DbError> {
         let mut result = self.result.take().ok_or_else(|| DbError::Internal("DB I/O result lease consumed twice".to_string()))?;
-        if !result.attach_result_handback(self.handle) {
-            db_io_result_handback(self.handle)?;
+        let handback = DbIoResultHandback { handle: self.handle, retained_credit: self.retained_credit };
+        if !result.attach_result_handback(handback) {
+            db_io_result_handback(handback)?;
         }
         self.transferred = true;
         Ok(result)
@@ -4333,8 +4384,10 @@ impl Drop for DbIoResultLease {
             return;
         }
         if self.result.is_some() {
-            if let Err(DbIoLostOwner::ResultLease { handle, result }) = db_io_park_lost_owner(DbIoLostOwner::ResultLease { handle: self.handle, result: self.result.take() }) {
-                self.handle = handle;
+            let handback = DbIoResultHandback { handle: self.handle, retained_credit: self.retained_credit };
+            if let Err(DbIoLostOwner::ResultLease { handback, result }) = db_io_park_lost_owner(DbIoLostOwner::ResultLease { handback, result: self.result.take() }) {
+                self.handle = handback.handle;
+                self.retained_credit = handback.retained_credit;
                 self.result = result;
             }
         }
@@ -4342,9 +4395,15 @@ impl Drop for DbIoResultLease {
     }
 }
 
-fn db_io_result_handback(handle: DbIoTaskHandle) -> Result<(), DbError> {
-    db_io_operation_return_result_lease(handle.operation)?;
-    db_io_enqueue_close(handle)
+fn db_io_result_handback(handback: DbIoResultHandback) -> Result<(), DbError> {
+    db_io_operation_return_result_lease(handback.handle.operation, handback.retained_credit)?;
+    let owner = DB_IO_TASK_SLOTS[handback.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let task_is_live = db_io_slot_matches(&owner, handback.handle);
+    drop(owner);
+    if task_is_live {
+        db_io_enqueue_close(handback.handle)?;
+    }
+    Ok(())
 }
 
 /// @emoji 🌐️ Exact task/backend lease driven by an async-native platform executor after Lane::Io admission.
@@ -4501,20 +4560,13 @@ impl DbIoTaskOperation {
         let handle = self.handle;
         match self.await {
             Ok(lease) => {
-                db_io_wait_task_retirement(handle, true).await?;
                 let result = lease.into_result()?;
-                let retained = {
-                    let ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    db_io_operation_slot(&ledger, handle.operation).is_some_and(|index| ledger.slots[index].result_leases != 0)
-                };
-                if !retained {
-                    db_io_wait_task_retirement(handle, false).await?;
-                }
+                db_io_wait_task_retirement(handle).await?;
                 Ok(result)
             }
             Err(fault) => {
                 let error = fault.into_db_error();
-                db_io_wait_task_retirement(handle, false).await?;
+                db_io_wait_task_retirement(handle).await?;
                 Err(error)
             }
         }
@@ -4641,28 +4693,34 @@ impl DbIoTaskOperation {
             let mut owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if !db_io_slot_matches(&owner, self.handle) {
                 drop(owner);
-                db_io_operation_return_result_lease(self.handle.operation)?;
+                db_io_operation_return_result_lease(self.handle.operation, DbIoCredit::default())?;
                 let owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                 return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.handle.generation), actual: crate::db_ids::GenerationId(owner.generation) });
             }
             let Some(terminal) = owner.terminal.take() else {
                 drop(owner);
-                db_io_operation_return_result_lease(self.handle.operation)?;
+                db_io_operation_return_result_lease(self.handle.operation, DbIoCredit::default())?;
                 return Err(DbError::Internal("DB I/O terminal owner changed during exact take".to_string()));
             };
+            let retained_credit = match &terminal {
+                DbIoTerminal::Result(result) => result.retained_credit(),
+                _ => DbIoCredit::default(),
+            };
+            owner.result_retained_credit = retained_credit;
             owner.phase = DbIoTaskPhase::Closing;
-            terminal
+            (terminal, retained_credit)
         };
         self.resolved = true;
+        let (terminal, retained_credit) = terminal;
         Ok(Some(match terminal {
-            DbIoTerminal::Result(result) => Ok(DbIoResultLease { handle: self.handle, result: Some(result), transferred: false }),
+            DbIoTerminal::Result(result) => Ok(DbIoResultLease { handle: self.handle, retained_credit, result: Some(result), transferred: false }),
             DbIoTerminal::Fault(mut fault) => {
-                fault.result_handback = Some(self.handle);
+                fault.result_handback = Some(DbIoResultHandback { handle: self.handle, retained_credit });
                 Err(fault)
             }
             DbIoTerminal::Cancelled(None) => {
                 let mut fault = db_io_literal_fault(DbIoFaultKind::Cancelled, DbIoFaultCause::Closed, "DB I/O task cancelled");
-                fault.result_handback = Some(self.handle);
+                fault.result_handback = Some(DbIoResultHandback { handle: self.handle, retained_credit });
                 Err(fault)
             }
             DbIoTerminal::Cancelled(Some(_)) => return Err(DbError::Internal("DB I/O cancellation result escaped retained close".to_string())),
@@ -4703,11 +4761,11 @@ impl Future for DbIoTaskOperation {
     }
 }
 
-async fn db_io_wait_task_retirement(handle: DbIoTaskHandle, result_retained: bool) -> Result<(), DbError> {
-    std::future::poll_fn(|context| {
+async fn db_io_wait_task_retirement(handle: DbIoTaskHandle) -> Result<(), DbError> {
+    std::future::poll_fn(move |context| {
         db_io_maintenance_step()?;
         let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if !db_io_slot_matches(&owner, handle) || result_retained && owner.backend_cleanup_done && owner.task.is_none() && !owner.backend_admitted && owner.backend_to_close.is_none() {
+        if !db_io_slot_matches(&owner, handle) {
             return std::task::Poll::Ready(Ok(()));
         }
         context.waker().wake_by_ref();
@@ -4885,22 +4943,9 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
         return Ok(Some(0));
     }
     if !owner.aggregate_returned {
-        let retained = {
-            let ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            db_io_operation_slot(&ledger, handle.operation).is_some_and(|index| ledger.slots[index].result_leases != 0)
-        };
-        if retained {
-            drop(owner);
-            db_io_rotate_close_head(handle)?;
-            return Ok(Some(0));
-        }
-        db_io_operation_detach_task(handle.operation, owner.aggregate_credit)?;
+        let task_credit = owner.aggregate_credit.checked_sub(owner.result_retained_credit).ok_or_else(|| DbError::Internal("DB I/O retained result credit exceeded its task aggregate".to_string()))?;
+        db_io_operation_detach_task(handle.operation, task_credit)?;
         owner.aggregate_returned = true;
-        return Ok(Some(0));
-    }
-    if !db_io_operation_terminal_is_empty(handle.operation) {
-        drop(owner);
-        db_io_rotate_close_head(handle)?;
         return Ok(Some(0));
     }
     *owner = DbIoTaskSlot::empty();
@@ -8665,15 +8710,22 @@ mod db_io_retained_fixtures {
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         let (started_tx, started_rx) = std::sync::mpsc::channel();
         let (release_tx, release_rx) = std::sync::mpsc::channel();
-        pool.try_submit(
-            Lane::Interactive,
-            Box::new(move || {
-                started_tx.send(()).expect("refusal blocker start");
-                release_rx.recv().expect("refusal blocker release");
-            }),
-        )
-        .ok()
-        .expect("refusal blocker admission");
+        let mut blocker: Job = Box::new(move || {
+            started_tx.send(()).expect("refusal blocker start");
+            release_rx.recv().expect("refusal blocker release");
+        });
+        let admission_deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            match pool.try_submit(Lane::Interactive, blocker) {
+                Ok(()) => break,
+                Err(error) if error.kind() == WorkerSubmitErrorKind::Contended => {
+                    assert!(std::time::Instant::now() < admission_deadline, "refusal blocker queue remained contended");
+                    blocker = error.into_job();
+                    std::thread::yield_now();
+                }
+                Err(error) => panic!("refusal blocker admission failed: {:?}", error.kind()),
+            }
+        }
         started_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("sole worker occupied");
 
         let (control, turns) = register_writer_controller_law_on(DbIoExecutorMode::BlockingLane, pool.clone());
@@ -8880,6 +8932,7 @@ mod db_io_retained_fixtures {
         pattern_modulo: usize,
         pattern_addend: usize,
         lengths: Vec<usize>,
+        fault_conversion_retires_result_lease: bool,
         fault_categories: Vec<FaultCategoryFixture>,
     }
 
@@ -9341,6 +9394,9 @@ mod db_io_retained_fixtures {
             let actual_error = fault.into_db_error();
             assert_eq!(actual_error, expected_error);
             assert_eq!(fault_category_oracle(&actual_error), expected_category);
+            let ledger = lock(db_io_operation_ledger());
+            assert_eq!(ledger.slots[db_io_operation_slot(&ledger, handle.operation).unwrap()].result_leases == 0, fixture.fault_conversion_retires_result_lease);
+            drop(ledger);
             drain_control_tasks(control).await;
         }
 
@@ -10229,8 +10285,9 @@ mod db_io_retained_fixtures {
         let operation = submit_db_io_task(task).unwrap_or_else(|(error, _)| panic!("{error}"));
         let mut lease = operation.await.unwrap();
         let handle = lease.handle;
-        db_io_wait_task_retirement(handle, true).await.unwrap();
-        let mut owner = DbIoLostOwner::ResultLease { handle, result: lease.result.take() };
+        db_io_wait_task_retirement(handle).await.unwrap();
+        let handback = DbIoResultHandback { handle, retained_credit: lease.retained_credit };
+        let mut owner = DbIoLostOwner::ResultLease { handback, result: lease.result.take() };
         lease.transferred = true;
         drop(lease);
         let mut trace = Vec::new();
@@ -10308,14 +10365,10 @@ mod db_io_retained_fixtures {
 
     struct LostOwnerPressureLawSlots;
 
-    fn retire_lost_owner_pressure_slots<const N: usize>(
-        slots: &std::sync::Mutex<[Option<DbIoLostOwner>; N]>,
-    ) {
+    fn retire_lost_owner_pressure_slots<const N: usize>(slots: &std::sync::Mutex<[Option<DbIoLostOwner>; N]>) {
         let mut slots = slots.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for slot in slots.iter_mut() {
-            let Some(DbIoLostOwner::Fault(owner)) = slot.as_mut() else {
-                panic!("lost-owner pressure row changed its exact fault sentinel")
-            };
+            let Some(DbIoLostOwner::Fault(owner)) = slot.as_mut() else { panic!("lost-owner pressure row changed its exact fault sentinel") };
             while owner.close_step() {}
             *slot = None;
         }
@@ -10485,9 +10538,14 @@ mod db_io_retained_fixtures {
         for index in 0..fixture["sequentialTasks"].as_u64().unwrap() {
             assert_eq!(storage.segment_len(&document, 0).await.unwrap_or_else(|error| panic!("sequential task {index} lost capacity with one retained result: {error}")), 0);
             assert_eq!(retained.as_slice(), &[0], "task retirement must preserve the caller-owned list");
-            let handle = retained.result_handback.unwrap();
+            let handback = retained.result_handback.unwrap();
+            let task_slot = DB_IO_TASK_SLOTS[handback.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert_eq!(!db_io_slot_matches(&task_slot, handback.handle), fixture["taskSlotReleasedWhileResultRetained"].as_bool().unwrap());
+            drop(task_slot);
             let ledger = lock(db_io_operation_ledger());
-            assert!(ledger.slots[db_io_operation_slot(&ledger, handle.operation).unwrap()].live.bytes >= DB_IO_LIST_TRANSIENT_BYTES);
+            let operation = &ledger.slots[db_io_operation_slot(&ledger, handback.handle.operation).unwrap()];
+            assert_eq!(operation.result_leases, 1);
+            assert!(operation.live.bytes >= DB_IO_LIST_BACKING_BYTES + db_io_result_lease_credit().bytes);
         }
         while retained.close_step() {}
         assert!(retained.values.is_none());
@@ -10495,6 +10553,71 @@ mod db_io_retained_fixtures {
         storage.close().await.unwrap();
         close_db_io_backend(storage.control).await.unwrap();
         assert!(db_io_operation_slot(&lock(db_io_operation_ledger()), owner_operation).is_none());
+        assert_eq!(ledger_witness(), before);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exact_credit() {
+        let _serial = fixture_serial();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
+        const RETAINED_PAGE_RESULTS: usize = 44;
+        assert_eq!(fixture["retainedPageResults"].as_u64().unwrap() as usize, RETAINED_PAGE_RESULTS);
+        assert_eq!(fixture["sameSlotReuseBeforeOldResultClose"], true);
+        let before = ledger_witness();
+        let storage = MemoryStorage::new(db_io_test_pool()).await.unwrap();
+        let document = ArtifactId("memory-retained-pages-aba".into());
+        let writer = storage.acquire_writer(&document).await.unwrap();
+        storage.create_segment(&writer, 0).await.unwrap();
+        assert_eq!(storage.append(&writer, 0, pages(&[0xa7])).await.unwrap(), 1);
+        let steady = ledger_witness();
+        let mut retained: [Option<DbIoPages>; RETAINED_PAGE_RESULTS] = std::array::from_fn(|_| None);
+        for owner in &mut retained {
+            let pages = storage.read(&document, 0, ByteRange { offset: 0, len: 1 }).await.unwrap();
+            assert_eq!(pages, [0xa7]);
+            let handback = pages.result_handback.expect("retained page result has exact task handback");
+            let task = DB_IO_TASK_SLOTS[handback.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert!(!db_io_slot_matches(&task, handback.handle), "page result must outlive its retired task slot");
+            drop(task);
+            *owner = Some(pages);
+        }
+        let held = ledger_witness();
+        assert_eq!(held.0.pages, steady.0.pages + RETAINED_PAGE_RESULTS);
+        assert!(held.0.bytes > steady.0.bytes);
+        assert!(held.0.items >= steady.0.items + RETAINED_PAGE_RESULTS);
+        assert!(held.0.controls >= steady.0.controls + RETAINED_PAGE_RESULTS);
+        let old_handle = retained[0].as_ref().unwrap().result_handback.unwrap().handle;
+        let mut reused = None;
+        for _ in 0..DB_IO_OPERATION_ITEMS * 2 {
+            let operation = submit_db_io_task(DbIoTask::WalLength { backend: storage.control, document: memory_document(&document).unwrap(), index: 0 }).unwrap_or_else(|(error, _)| panic!("same-slot probe rejected: {error}"));
+            if operation.handle.slot == old_handle.slot {
+                reused = Some(operation);
+                break;
+            }
+            assert!(matches!(operation.finish().await.unwrap(), DbIoResult::Length(1)));
+        }
+        let reused = reused.expect("task allocator did not reuse the retired page-result slot");
+        assert_ne!(reused.handle.generation, old_handle.generation);
+        assert_ne!(reused.handle.operation, old_handle.operation);
+        let reused_before = {
+            let task = DB_IO_TASK_SLOTS[reused.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert!(db_io_slot_matches(&task, reused.handle));
+            (task.generation, task.operation, task.phase)
+        };
+        drain_pages(retained[0].take().unwrap());
+        let reused_after = {
+            let task = DB_IO_TASK_SLOTS[reused.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert!(db_io_slot_matches(&task, reused.handle));
+            (task.generation, task.operation, task.phase)
+        };
+        assert_eq!(reused_after, reused_before, "stale page-result handback changed a reused task slot");
+        assert!(matches!(reused.finish().await.unwrap(), DbIoResult::Length(1)));
+        for owner in retained.into_iter().flatten() {
+            drain_pages(owner);
+        }
+        assert_eq!(ledger_witness(), steady);
+        writer.release().await.unwrap();
+        storage.close().await.unwrap();
+        close_db_io_backend(storage.control).await.unwrap();
         assert_eq!(ledger_witness(), before);
     }
 

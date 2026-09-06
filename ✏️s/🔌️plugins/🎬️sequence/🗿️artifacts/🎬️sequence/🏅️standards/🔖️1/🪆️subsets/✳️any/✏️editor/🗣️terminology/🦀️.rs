@@ -42,7 +42,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn sequence_play_labels(cfg: &SequenceConfig) -> &'static SequenceLabels {
+pub fn sequence_play_labels(cfg: &SequenceConfig) -> &'static SequenceLabels {
     semio_framework_plugin::resolve_labels_for_locale::<SequenceLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers

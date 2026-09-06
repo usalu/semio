@@ -6,7 +6,7 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo by reconnecting the captured edge. Missing target ⇒ nothing to undo.
-pub async fn inverse(payload: &super::DisconnectAdjacency, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DisconnectAdjacency, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     match base.adjacencies.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::ConnectAdjacency { adjacency: existing.clone() })],
         None => Vec::new(),

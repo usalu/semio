@@ -18,7 +18,7 @@ pub struct PdfIntoNote;
 impl Deserializer<NoteSnapshot> for PdfIntoNote {
     const FROM: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PdfIntoNote: expected a binary pdf payload".to_string(), diagnostics: Vec::new() });
         };

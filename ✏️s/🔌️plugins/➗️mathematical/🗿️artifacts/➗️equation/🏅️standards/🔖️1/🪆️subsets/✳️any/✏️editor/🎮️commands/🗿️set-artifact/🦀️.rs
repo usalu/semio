@@ -18,7 +18,7 @@ pub struct SetArtifact {
     pub geometry: EquationGeometry,
 }
 
-pub async fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
+pub fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
     let Ok(graph) = crate::artifacts::equation::dsl::math_graph_from_dsl(payload.graph.clone()) else {
         return Ok(Emit::default());
     };

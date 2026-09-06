@@ -28,10 +28,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️ScalarCodec
 /// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space, so every
 /// other scalar's text form stays space-free and tokenizable by [`tokenize_args`].
-async fn enc_str(s: &str) -> String {
+fn enc_str(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
-async fn dec_str(s: &str) -> Result<String, String> {
+fn dec_str(s: &str) -> Result<String, String> {
     let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();
@@ -49,45 +49,45 @@ async fn dec_str(s: &str) -> Result<String, String> {
     }
     Ok(out)
 }
-async fn enc_opt_str(s: &Option<String>) -> String {
+fn enc_opt_str(s: &Option<String>) -> String {
     match s {
         Some(v) => enc_str(v),
         None => "-".to_string(),
     }
 }
-async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
+fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     if s == "-" {
         Ok(None)
     } else {
         Ok(Some(dec_str(s)?))
     }
 }
-async fn enc_f64(v: f64) -> String {
+fn enc_f64(v: f64) -> String {
     format!("{v}")
 }
-async fn dec_f64(s: &str) -> Result<f64, String> {
+fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
-async fn enc_usize(v: usize) -> String {
+fn enc_usize(v: usize) -> String {
     v.to_string()
 }
-async fn dec_usize(s: &str) -> Result<usize, String> {
+fn dec_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-async fn enc_bool(v: bool) -> String {
+fn enc_bool(v: bool) -> String {
     v.to_string()
 }
-async fn dec_bool(s: &str) -> Result<bool, String> {
+fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "true" => Ok(true),
         "false" => Ok(false),
         other => Err(format!("bad bool {other:?}")),
     }
 }
-async fn enc_points(points: &[EquationPoint]) -> String {
+fn enc_points(points: &[EquationPoint]) -> String {
     format!("[{}]", points.iter().map(|p| format!("{},{}", p.x, p.y)).collect::<Vec<_>>().join(";"))
 }
-async fn dec_points(s: &str) -> Result<Vec<EquationPoint>, String> {
+fn dec_points(s: &str) -> Result<Vec<EquationPoint>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected bracketed point list, got {s:?}"))?;
     if inner.is_empty() {
         return Ok(Vec::new());
@@ -105,7 +105,7 @@ async fn dec_points(s: &str) -> Result<Vec<EquationPoint>, String> {
 //#region 🔖️Tokenizer
 /// 🔡️ Splits `key=value` tokens on plain spaces, EXCEPT spaces inside a `"..."` quoted value —
 /// needed because node labels/algorithm ids may contain spaces.
-async fn tokenize_args(rest: &str) -> Vec<String> {
+fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -135,7 +135,7 @@ async fn tokenize_args(rest: &str) -> Vec<String> {
     }
     tokens
 }
-async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
+fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
     tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
@@ -145,16 +145,16 @@ async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, Str
 /// string (`pack::json::to_json_string`/`from_json_str`, over `EquationGraph`'s own
 /// `ToValue`/`FromValue`) rather than a second handcrafted graph grammar; `enc_str`/`dec_str`'s
 /// backslash/quote escaping round-trips it byte-for-byte.
-async fn enc_graph(graph: &EquationGraph) -> String {
+fn enc_graph(graph: &EquationGraph) -> String {
     enc_str(&pack::json::to_json_string(graph))
 }
-async fn dec_graph(s: &str) -> Result<EquationGraph, String> {
+fn dec_graph(s: &str) -> Result<EquationGraph, String> {
     pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️GraphCodec
 
 //#region 🔖️OpText
-async fn print_equation_mutation(mutation: &EquationMutation) -> String {
+fn print_equation_mutation(mutation: &EquationMutation) -> String {
     match mutation {
         EquationMutation::ChangeGraphDirected(p) => format!("change-graph-directed new-directed={}", enc_bool(p.new_directed)),
         EquationMutation::UpdateGraphAlgorithm(p) => format!("update-graph-algorithm new-algorithm={} new-algorithm-seed={}", enc_str(&p.new_algorithm), enc_opt_str(&p.new_algorithm_seed)),
@@ -174,7 +174,7 @@ async fn print_equation_mutation(mutation: &EquationMutation) -> String {
     }
 }
 
-async fn parse_equation_mutation(line: &str) -> Result<EquationMutation, String> {
+fn parse_equation_mutation(line: &str) -> Result<EquationMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args = parse_args(rest)?;
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("equation mutation: missing arg '{k}' for '{keyword}'"));
@@ -199,26 +199,26 @@ async fn parse_equation_mutation(line: &str) -> Result<EquationMutation, String>
 }
 
 impl protocol::OpText for EquationMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_equation_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_equation_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
 
 //#region 🔖️OpBinaryCodec
-async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
-async fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
+fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
     match s {
         Some(v) => {
             out.push(1);
@@ -227,27 +227,27 @@ async fn write_opt_str_bin(out: &mut Vec<u8>, s: &Option<String>) {
         None => out.push(0),
     }
 }
-async fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_bin(reader)?)),
         other => Err(format!("bad option tag {other}")),
     }
 }
-async fn write_points_bin(out: &mut Vec<u8>, points: &[EquationPoint]) {
+fn write_points_bin(out: &mut Vec<u8>, points: &[EquationPoint]) {
     store::pack_rt::write_varint_u64(out, points.len() as u64);
     for point in points {
         out.extend_from_slice(&point.x.to_le_bytes());
         out.extend_from_slice(&point.y.to_le_bytes());
     }
 }
-async fn read_points_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<EquationPoint>, String> {
+fn read_points_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<EquationPoint>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| Ok(EquationPoint { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())? })).collect()
 }
 
 impl protocol::OpBinary for EquationMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             EquationMutation::ChangeGraphDirected(_) => 0,
             EquationMutation::UpdateGraphAlgorithm(_) => 1,
@@ -322,7 +322,7 @@ impl protocol::OpBinary for EquationMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
@@ -401,7 +401,7 @@ impl protocol::OpBinary for EquationMutation {
 //#region 🔖️DemoCases
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<EquationMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<EquationMutation> {
     vec![
         EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: false }),
         EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: "bfs".into(), new_algorithm_seed: Some("a b".into()) }),

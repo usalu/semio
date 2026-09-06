@@ -25,7 +25,7 @@ const SEQUENCE_VIEW_DEFAULT_HEIGHT: f64 = 56.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SEQUENCE_VIEW_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Sequence", "Sequenz"),
@@ -46,7 +46,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
+fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
     NodeGraphNodeRecord {
         id: step.id.clone(),
         label: Some(format!("{} ({})", step.id, step.kind)),
@@ -66,7 +66,7 @@ async fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
 /// 👁️ Pure `SequenceSnapshot -> UiNode` read: default viewport (a viewer has no persisted
 /// per-session camera), no selection/drag overlay, `editable: Some(false)` (contract §2.2's
 /// structural read-only guarantee, mirrored here at the scene level too).
-pub async fn render(document: &SequenceSnapshot) -> UiNode {
+pub fn render(document: &SequenceSnapshot) -> UiNode {
     let fixture = document.to_fixture();
     let nodes: Vec<NodeGraphNodeRecord> = fixture.steps.iter().map(step_node).collect();
     let edges: Vec<NodeGraphEdgeRecord> =

@@ -22,16 +22,16 @@ pub struct UpdatePageMargins {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageMargins {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "page-margins", kind: "update-page-margins", record: "UpdatedPageMargins" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_page_margins(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_update_page_margins(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Update page \"{}\" margins", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
@@ -39,7 +39,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageMargins {
 
 
 //#region 📐UpdatePageMargins
-pub async fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -61,7 +61,7 @@ pub async fn diff_update_page_margins(payload: &UpdatePageMargins, base: &Layout
 
 
 //#region 📐UpdatePageMargins
-pub async fn inverse_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::UpdatePageMargins(UpdatePageMargins { id: payload.id.clone(), top: page.margins.top, right: page.margins.right, bottom: page.margins.bottom, left: page.margins.left })],
         None => Vec::new(),

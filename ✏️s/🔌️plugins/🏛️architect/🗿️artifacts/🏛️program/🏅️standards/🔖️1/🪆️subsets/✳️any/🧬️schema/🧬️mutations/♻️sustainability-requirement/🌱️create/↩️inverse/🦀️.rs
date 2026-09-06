@@ -6,6 +6,6 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub async fn inverse(payload: &super::CreateSustainabilityRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::CreateSustainabilityRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::DeleteSustainabilityRequirement(super::super::delete_sustainability_requirement::DeleteSustainabilityRequirement { id: payload.sustainability_requirement.header.id.clone() })]
 }

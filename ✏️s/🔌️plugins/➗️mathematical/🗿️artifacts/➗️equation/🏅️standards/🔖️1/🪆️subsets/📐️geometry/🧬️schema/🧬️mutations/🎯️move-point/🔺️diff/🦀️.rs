@@ -3,7 +3,7 @@
 use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::MovePoint, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::MovePoint, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     let mut geometry = equation_geometry(base);
     let Some(existing) = geometry.points.get(payload.index) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Point at index {} does not exist.", payload.index), [payload.index.to_string()]);

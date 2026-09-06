@@ -18,16 +18,16 @@ pub struct RenamePage {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for RenamePage {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "page", kind: "rename-page", record: "RenamedPage" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rename_page(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_rename_page(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename page to \"{}\"", self.new_name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
@@ -35,7 +35,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RenamePage {
 
 
 //#region 🏷️RenamePage
-pub async fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -51,7 +51,7 @@ pub async fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> pr
 
 
 //#region 🏷️RenamePage
-pub async fn inverse_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::RenamePage(RenamePage { id: payload.id.clone(), new_name: page.name.clone() })],
         None => Vec::new(),

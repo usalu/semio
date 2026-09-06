@@ -30,7 +30,7 @@ pub struct SequenceDetectedMutation {
 pub type SequenceMutationDetector = for<'a> fn(&SequenceDetectionContext<'a>) -> Vec<SequenceDetectedMutation>;
 
 /// 🔀️ Assembles ordered leaf-owned detection contributions without concrete mutation branches.
-pub async fn sequence_snapshot_mutations(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceMutation> {
+pub fn sequence_snapshot_mutations(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceMutation> {
     let context = SequenceDetectionContext {
         before,
         after,
@@ -58,11 +58,11 @@ pub const KINDS: &[&str] = &[
 ];
 
 /// ▶️ Applies `mutation` via its diff.
-pub async fn apply_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> protocol::MutationApplyResult<SequenceSnapshot> {
+pub fn apply_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> protocol::MutationApplyResult<SequenceSnapshot> {
     protocol::MutationDiff::apply(mutation.diff(snapshot).diff(), snapshot)
 }
 
-pub async fn inverse_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> Vec<SequenceMutation> {
+pub fn inverse_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> Vec<SequenceMutation> {
     mutation.inverse(snapshot)
 }
 
@@ -125,7 +125,7 @@ mod tests {
         }
     }
 
-    async fn round_trip(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {
+    fn round_trip(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {
         let (forward, _messages) = vcs::apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(snapshot);

@@ -21,7 +21,7 @@ pub const BODY_KEY: &str = <TableWindowKit as WindowKit>::KIND_ID;
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::equation::create_equation_viewer`.
 /// The read-only `window_kind()` variant (never `editable_window_kind()`, which would declare the
 /// `set-cell` command a viewer cannot dispatch).
-pub async fn definition() -> semio_framework_plugin::WindowKindDefinition {
+pub fn definition() -> semio_framework_plugin::WindowKindDefinition {
     TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -30,7 +30,7 @@ pub async fn definition() -> semio_framework_plugin::WindowKindDefinition {
 /// 👁️ Pure `EquationSnapshot -> UiNode` read: one row per point, in document order — the same
 /// artifact-level `equation_geometry` helper the editor's own Geometry window reads, since that
 /// function lives at the ARTIFACT level (outside both surfaces), not behind the editor module.
-pub async fn render(document: &EquationSnapshot) -> UiNode {
+pub fn render(document: &EquationSnapshot) -> UiNode {
     let geometry = equation_geometry(document);
     let view = TableView { columns: vec!["#".into(), "x".into(), "y".into()], rows: geometry.points.iter().enumerate().map(|(index, point)| vec![index.to_string(), format!("{}", point.x), format!("{}", point.y)]).collect() };
     TableWindowKit::render(&view)

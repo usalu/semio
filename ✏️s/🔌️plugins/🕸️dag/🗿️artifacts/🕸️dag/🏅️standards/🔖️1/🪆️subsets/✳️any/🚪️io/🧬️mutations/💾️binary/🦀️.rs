@@ -18,12 +18,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `DagMutation` to its binary command form.
-pub async fn encode_op(operation: &DagMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &DagMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `DagMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<DagMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<DagMutation, protocol::ProtocolError> {
     DagMutation::decode_op(bytes)
 }
 

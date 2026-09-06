@@ -29,7 +29,7 @@
 /// document database over `FsStorage`.
 pub use crate::db_engine::{
     take_database_capability_open_terminal, take_database_catalog_read_terminal, take_next_database_capability_open_terminal, ArtifactHandle, ArtifactHistoryTerminalConstructionFault, ArtifactHistoryTerminalHandle, ArtifactSpec, CatalogEntry,
-    CatalogView, CommandReceipt, Consistency, Database, DatabaseCapabilityOpenCloseStep, DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenProgress, DatabaseCapabilityOpenRejected, DatabaseCapabilityOpenResult,
+    CatalogView, CheckpointPublicationSnapshot, CommandReceipt, Consistency, Database, DatabaseCapabilityOpenCloseStep, DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenProgress, DatabaseCapabilityOpenRejected, DatabaseCapabilityOpenResult,
     DatabaseCapabilityOpenTerminalHandle, DatabaseCapabilityOpenTerminalResult, DatabaseCatalogReadCloseStep, DatabaseCatalogReadFuture, DatabaseCatalogReadProgress, DatabaseCatalogReadRejected, DatabaseCatalogReadResult,
     DatabaseCatalogReadTerminalHandle, DatabaseCatalogReadTerminalResult, DatabaseCatalogRootKey, DatabaseDocumentOpenRejected, DatabaseRetainedActivityRejected, DatabaseShutdownBlock, DatabaseShutdownControl, DatabaseShutdownPhase, DatabaseShutdownProgress, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryResultEntry, QueryStream, SecurityAuthzHook, SnapshotFuture,
     SnapshotKind, SnapshotReceipt, SubmitFuture,

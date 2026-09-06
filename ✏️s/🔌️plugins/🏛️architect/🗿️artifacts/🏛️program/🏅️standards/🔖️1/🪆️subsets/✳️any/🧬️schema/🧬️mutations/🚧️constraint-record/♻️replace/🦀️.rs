@@ -19,16 +19,16 @@ pub struct ReplaceConstraintRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceConstraintRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "constraint-record", kind: "replace-constraint-record", record: "ReplacedConstraintRecord" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace constraint record \"{}\"", self.constraint_record.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.constraint_record.header.id.0.clone()]
     }
 }

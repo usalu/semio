@@ -24,7 +24,7 @@ pub struct AddBlock {
 // selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 // framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
 // lowpoly's `add-primitive`).
-pub async fn handle(payload: &AddBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &AddBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let block = create_block_by_kind(&mut ctx.id_owner, &payload.kind, payload.x, payload.y);
     Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::create_block(block, None, None)]))
 }

@@ -64,7 +64,14 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   }
   const source = readFileSync(join(root, "🦀️.rs"), "utf8");
   if (!source.includes(`include_bytes!("../${fixture.receipts[0].protocolPath}")`) || source.includes("vcs.document")) throw new Error("VCS receipt module does not pin its exact protocol bytes without the retired kind");
-  console.log(`vcs-native-codec-oracle: receipts=${fixture.receipts.length} hostile=${fixture.hostile.length} ajv+node+webcrypto=1; no catalog activation or VCS execution claim`);
+  const appBase = join(owner, "🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
+  const config = readFileSync(join(appBase, "🎚️config/🦀️.rs"), "utf8");
+  const presence = readFileSync(join(appBase, "👥️presence/🦀️.rs"), "utf8");
+  const history = readFileSync(join(appBase, "🎭️modes/✏️edit/🪟️windows/📜️history/🦀️.rs"), "utf8");
+  if (config.match(/schema_version: 1,/gu)?.length !== 2 || !config.includes('semantic_kind: "set-locale"') || !config.includes("MutationOutcomeClass::Warning") || !config.includes("fn descriptor(&self)")) throw new Error("VCS config mutation metadata is incomplete");
+  if (presence.match(/schema_version: 1,/gu)?.length !== 1 || !presence.includes('semantic_kind: "noop"') || !presence.includes("MutationInvertibility::SelfInvertible") || !presence.includes("fn descriptor(&self)")) throw new Error("VCS presence mutation metadata is incomplete");
+  if (!readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8").includes("semio-framework-ui-scene =") || !history.includes("use semio_framework_ui_scene::GraphTimelineScene;") || history.includes("semio_framework_ui_scene::GraphTimelineScene {")) throw new Error("VCS timeline scene does not use its declared first-party scene dependency");
+  console.log(`vcs-native-codec-oracle: receipts=${fixture.receipts.length} hostile=${fixture.hostile.length} ajv+node+webcrypto=1 dependency-coherence=3; no catalog activation or VCS execution claim`);
 }
 
 /** 🪤 Exact native VCS receipt proof; it does not activate a hub catalog or link a provider. */

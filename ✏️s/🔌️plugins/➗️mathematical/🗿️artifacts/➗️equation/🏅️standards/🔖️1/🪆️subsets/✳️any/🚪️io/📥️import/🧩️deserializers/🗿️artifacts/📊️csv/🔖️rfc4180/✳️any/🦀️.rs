@@ -17,7 +17,7 @@ pub struct CsvIntoEquation;
 impl Deserializer<EquationSnapshot> for CsvIntoEquation {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<EquationSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<EquationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "CsvIntoEquation: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
         };

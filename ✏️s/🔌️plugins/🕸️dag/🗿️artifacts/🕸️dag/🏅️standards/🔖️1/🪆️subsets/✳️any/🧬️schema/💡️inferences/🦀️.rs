@@ -22,7 +22,7 @@ pub struct DagInference {
 }
 
 impl protocol::Inference<DagSnapshot> for DagInference {
-    async fn infer(snapshot: &DagSnapshot) -> Self {
+    fn infer(snapshot: &DagSnapshot) -> Self {
         let scene = crate::artifacts::dag::dag_working_scene(snapshot);
         Self { topology: compute_dag_topology(&scene.nodes, &scene.edges) }
     }
@@ -39,13 +39,13 @@ impl Default for DagInference {
 }
 
 impl protocol::InferenceSpec<DagSnapshot> for DagInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.dag.dag.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.dag.dag.inference.topology", reads: &["content"] }]
     }
 }
@@ -69,7 +69,7 @@ impl ArtifactInferrer for DagInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.dag.dag.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `dag_artifact_schema_descriptor`'s registration.
-pub async fn dag_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn dag_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.dag.dag.inference",
         inference: schema::FacetLeaves {
@@ -90,7 +90,7 @@ mod tests {
     use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec};
     use protocol::Inference;
 
-    async fn chain_snapshot() -> DagSnapshot {
+    fn chain_snapshot() -> DagSnapshot {
         let a = DagNodeSpec { id: "a".into(), ..Default::default() };
         let b = DagNodeSpec { id: "b".into(), ..Default::default() };
         let edges = vec![DagFixtureEdge { id: "e1".into(), source: "a".into(), target: "b".into(), ..Default::default() }];

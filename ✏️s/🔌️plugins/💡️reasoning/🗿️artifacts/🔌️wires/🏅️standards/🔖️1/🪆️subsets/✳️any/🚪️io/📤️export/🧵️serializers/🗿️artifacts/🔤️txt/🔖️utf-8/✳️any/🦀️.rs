@@ -14,7 +14,7 @@ pub struct WiresIntoTxt;
 impl Serializer<WiresSnapshot> for WiresIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "txt export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

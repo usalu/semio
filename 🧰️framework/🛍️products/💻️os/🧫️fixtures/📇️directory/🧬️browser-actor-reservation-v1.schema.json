@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/os/document-browser-actor-reservation-v1.json",
+  "title": "Document Browser Actor Reservation V1",
+  "description": "A private, non-wire document owner reserves the fixed child only from a live verified lease and its exchanged socket grant. The exact state/lease/runtime key and generation are rechecked after boot; no body route or activation is introduced.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "lifecycle",
+    "bodyRequests",
+    "loadedActors"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.os.document-browser-actor-reservation/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "expected",
+          "created"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "closed",
+              "none",
+              "no-lease",
+              "dropped-lease",
+              "ungranted-lease",
+              "expired-grant",
+              "foreign-scope",
+              "stale-state",
+              "duplicate",
+              "close-during-reserve",
+              "replace-during-reserve",
+              "factory-failure",
+              "foreign-origin",
+              "foreign-schema",
+              "foreign-surface",
+              "grant-expired-during-reserve"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "reserved",
+              "none",
+              "denied"
+            ]
+          },
+          "created": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "child-close-before-lease-wipe",
+          "scope-reopen-increases-generation",
+          "same-document-two-spaces",
+          "direct-lease-drop-closes-child",
+          "authenticated-actor-identity",
+          "single-use-private-grant",
+          "plan-expiry-closes-child"
+        ]
+      }
+    },
+    "bodyRequests": {
+      "const": 0
+    },
+    "loadedActors": {
+      "const": 0
+    }
+  }
+}

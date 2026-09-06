@@ -12,7 +12,7 @@ pub const ARCHITECT_BODY_INSPECTION: &str = "architect.inspection";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -29,7 +29,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// tell which entity is currently selected — it always shows the document-wide register summary
 /// now; the per-selected-entity typed inspector branches (element/stakeholder/adjacency/
 /// requirement/risk/generic, keyed off the deleted `cfg.selected_ids`) are gone with it.
-pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "architect-inspection.summary".into(),
         label: Label::data("ProgramSnapshot"),

@@ -19,7 +19,7 @@ pub type FormDiff = FormsDiff;
 /// `FormsStepsDelta` exactly as before and applies it here; only the CALLER now sources `items`
 /// from the working-scene accessor (`forms_steps`/`forms_artifact_steps`) instead of a snapshot
 /// field, and wraps the result into composed children via [`forms_diff_from_delta`] below.
-pub async fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> Vec<FormStep> {
+pub fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> Vec<FormStep> {
     let mut next = items.to_vec();
     for id in &delta.removed {
         next.retain(|item| item.id != *id);
@@ -58,7 +58,7 @@ pub async fn apply_steps_delta(items: &[FormStep], delta: &FormsStepsDelta) -> V
 /// `FormsStepsDelta` applied against `base`'s working-scene steps — the standard way every
 /// mutation triad's `diff_*` function produces its result (replaces the old
 /// `FormsDiff{steps: Some(delta), ..}` literal).
-pub async fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot) -> FormsDiff {
+pub fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot) -> FormsDiff {
     let next_steps = apply_steps_delta(&forms_steps(base), &delta);
     let (structure, results) = forms_children_from_steps(&next_steps);
     FormsDiff { structure: Some(structure), results: Some(results), ..Default::default() }
@@ -66,7 +66,7 @@ pub async fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot)
 
 impl FormsDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &FormsArtifact) -> protocol::MutationApplyResult<FormsArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &FormsArtifact) -> protocol::MutationApplyResult<FormsArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
@@ -108,7 +108,7 @@ impl FormsDiff {
 }
 
 impl MutationDiff<FormsSnapshot> for FormsDiff {
-    async fn apply(&self, snapshot: &FormsSnapshot) -> protocol::MutationApplyResult<FormsSnapshot> {
+    fn apply(&self, snapshot: &FormsSnapshot) -> protocol::MutationApplyResult<FormsSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
@@ -132,7 +132,7 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -159,7 +159,7 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
 /// 🔎️ Sparse diff between two full snapshots, expressed via the SAME granular
 /// `FormsStepsDelta` every mutation triad builds — never a whole-document replace (that vocabulary
 /// is banned; see `FormsDiff`'s own doc comment for the composition-era shape).
-pub async fn sparse_diff_between(before: &FormsSnapshot, after: &FormsSnapshot) -> FormsDiff {
+pub fn sparse_diff_between(before: &FormsSnapshot, after: &FormsSnapshot) -> FormsDiff {
     if before == after {
         return FormsDiff::default();
     }
@@ -190,7 +190,7 @@ pub async fn sparse_diff_between(before: &FormsSnapshot, after: &FormsSnapshot) 
 /// the sparse delta itself (e.g. a future real `ArtifactView::with_children` seam, or diagnostics),
 /// kept alongside [`sparse_diff_between`] though the latter no longer stores it on `FormsDiff`
 /// (composed children are whole-slot-replace at the wire level; see this file's `apply`/`absorb`).
-pub async fn steps_collection_delta(before: &[FormStep], after: &[FormStep]) -> FormsStepsDelta {
+pub fn steps_collection_delta(before: &[FormStep], after: &[FormStep]) -> FormsStepsDelta {
     let before_ids: std::collections::BTreeSet<_> = before.iter().map(|s| s.id.as_str()).collect();
     let after_ids: std::collections::BTreeSet<_> = after.iter().map(|s| s.id.as_str()).collect();
     let removed: Vec<String> = before_ids.difference(&after_ids).map(|id| (*id).to_string()).collect();

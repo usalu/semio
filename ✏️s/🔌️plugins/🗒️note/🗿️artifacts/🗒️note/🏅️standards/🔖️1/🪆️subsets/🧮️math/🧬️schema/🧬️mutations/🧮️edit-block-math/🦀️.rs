@@ -20,23 +20,23 @@ pub struct EditBlockMath {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn edit_block_math(id: String, new_tex: String) -> NoteMutation {
+pub fn edit_block_math(id: String, new_tex: String) -> NoteMutation {
     NoteMutation::EditBlockMath(EditBlockMath { id, new_tex })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockMath {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-math", kind: "edit-block-math", record: "EditedBlockMath" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Edit block \"{}\" math", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

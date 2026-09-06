@@ -17,23 +17,23 @@ pub struct ReplaceNodeKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_node_kind(id: String, new_kind: DagNodeKind) -> DagMutation {
+pub fn replace_node_kind(id: String, new_kind: DagNodeKind) -> DagMutation {
     DagMutation::ReplaceNodeKind(ReplaceNodeKind { id, new_kind })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ReplaceNodeKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "node", kind: "replace-node-kind", record: "ReplacedNodeKind" };
 
-    async fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace node \"{}\" kind", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

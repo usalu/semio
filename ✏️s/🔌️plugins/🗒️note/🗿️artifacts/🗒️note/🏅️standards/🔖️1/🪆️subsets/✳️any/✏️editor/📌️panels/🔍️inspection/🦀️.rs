@@ -11,7 +11,7 @@ pub const NOTE_PLAY_BODY_PROPERTIES: &str = "note.play.properties";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -28,7 +28,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// can no longer tell which blocks are selected — it always shows the document-wide summary now; the
 /// per-selected-block detail branch (name/x/y/width/height/visible/locked, driven by `patchBlocks`)
 /// that used to read `cfg.selected_block_ids` is gone with it.
-pub async fn render(document: &NoteSnapshot, active_utility_id: &str, _labels: &NotePlayLabels) -> UiNode {
+pub fn render(document: &NoteSnapshot, active_utility_id: &str, _labels: &NotePlayLabels) -> UiNode {
     ui_stack_vertical(vec![
         ui_text(Label::data(format!("Schema: {}", document.schema))),
         ui_text(Label::data(format!("Blocks: {}", flatten_blocks(&document.blocks).len()))),

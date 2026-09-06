@@ -38,7 +38,7 @@ const SHOOTING_VIEW_FALLBACK_MESH_KIND: &str = "box";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::shooting::create_shooting_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Scene", "Szene"),
@@ -59,7 +59,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn camera_json(camera: &ShootingCamera) -> String {
+fn camera_json(camera: &ShootingCamera) -> String {
     let mut value = json!({
         "position": vec3(camera.position),
         "target": vec3(camera.target),
@@ -73,7 +73,7 @@ async fn camera_json(camera: &ShootingCamera) -> String {
     value.to_string()
 }
 
-async fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
+fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
     if asset.url.is_empty() {
         None
     } else {
@@ -81,7 +81,7 @@ async fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
     }
 }
 
-async fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
+fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
     let mut urls = HashSet::new();
     for asset in &snapshot.assets {
         if let Some(url) = resolve_asset_mesh_url(asset) {
@@ -93,7 +93,7 @@ async fn collect_mesh_urls(snapshot: &ShootingSnapshot) -> Vec<String> {
 
 /// 👁️ Read-only twin of the editor's `world_instances_json`: no selection/hover highlight at all (a
 /// viewer has no interaction domain bound to this window), just each asset's real placed mesh.
-async fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
+fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
     let instances: Vec<Value> = snapshot
         .assets
         .iter()
@@ -119,11 +119,11 @@ async fn world_instances_json(snapshot: &ShootingSnapshot) -> String {
     Value::from(instances).to_string()
 }
 
-async fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
+fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
     world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_VIEW_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(snapshot))
 }
 
-async fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
+fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
     let scene = &snapshot.scene;
     let mut value = json!({
         "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color.as_str() },
@@ -139,13 +139,13 @@ async fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
     value.to_string()
 }
 
-async fn shooting_frame_json(shot: &ShootingShot) -> String {
+fn shooting_frame_json(shot: &ShootingShot) -> String {
     json!({ "width": shot.width, "height": shot.height, "shape": shot.shape.as_str(), "badge": true }).to_string()
 }
 
 /// 👁️ Pure `ShootingSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
 /// camera), real scene lighting/asset placement/active-shot frame straight off the document.
-pub async fn render(snapshot: &ShootingSnapshot) -> UiNode {
+pub fn render(snapshot: &ShootingSnapshot) -> UiNode {
     let camera = ShootingCamera::default();
     build_world_3d_scene(
         SURFACE_ID,

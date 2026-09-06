@@ -217,7 +217,7 @@ fn building_storey_contribution() -> ArtifactContribution {
     let contribution = semio_framework::io::resolve_ready(ArtifactContribution::builder(CAD_ARTIFACT_KIND));
     let contribution = semio_framework::io::resolve_ready(contribution.mutation::<CadSnapshot, CadMutation, CreateBuildingStorey>(CAD_DOCUMENT_SCHEMA, 1, 1));
     let contribution = semio_framework::io::resolve_ready(contribution.inference_service(building_structure_summary_service()));
-    semio_framework::io::resolve_ready(contribution.build())
+    contribution.build()
 }
 //#endregion 🔖️Composite
 

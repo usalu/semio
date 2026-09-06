@@ -19,16 +19,16 @@ pub struct ReplaceBenchmarkRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceBenchmarkRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "benchmark-record", kind: "replace-benchmark-record", record: "ReplacedBenchmarkRecord" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace benchmark record \"{}\"", self.benchmark_record.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.benchmark_record.header.id.0.clone()]
     }
 }

@@ -1293,31 +1293,15 @@ async fn retained_compaction_under_lease(
         let index_document_bytes = index_document.0.capacity();
         database_compaction_observe_backing(ledger, 1, index_document_bytes, "database compaction index document backing")?;
         let handle = db_index::IndexHandle::new(&index_storage, index_document, kind).await;
-        let stats = loop {
-            let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_COMPACTION_TURN_MS);
-            let mut control = match handle.retained_operation_control(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL) {
-                Ok(control) => control,
-                Err(error) => break Err(error),
-            };
-            match handle.compact(&mut control).await {
-                Ok(stats) => break Ok(stats),
-                Err(DbError::LimitExceeded("index cursor fuel")) => {
-                    if let Err(error) = compaction_opportunity(cancelled).await {
-                        break Err(error);
-                    }
-                }
-                Err(DbError::Unavailable(message)) if message == "index cursor deadline reached" => {
-                    if let Err(error) = compaction_opportunity(cancelled).await {
-                        break Err(error);
-                    }
-                }
-                Err(DbError::Unavailable(message)) if message == "index cursor cancelled" => break Err(DbError::Closed),
-                Err(error) => break Err(error),
-            }
-        };
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_COMPACTION_TURN_MS);
+        let mut control = handle.retained_operation_control(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL)?;
+        let stats = handle.compact(&mut control).await;
         drop(handle);
         ledger.release(1, index_document_bytes)?;
-        let stats = stats?;
+        let stats = match stats {
+            Err(DbError::Unavailable(message)) if message == "index cursor cancelled" => return Err(DbError::Closed),
+            result => result?,
+        };
         report.index_reports.push(IndexKindReport { kind, stats })?;
     }
     drop(index_storage);

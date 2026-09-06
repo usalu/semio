@@ -14,7 +14,7 @@ pub const SHOOTING_PLAY_BODY_INSPECTION: &str = "shooting.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -26,7 +26,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspectorFieldGroup {
+fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspectorFieldGroup {
     let width_mixed = ui_inspector_mixed_number(&[shot.width as f64]);
     let height_mixed = ui_inspector_mixed_number(&[shot.height as f64]);
     UiInspectorFieldGroup {
@@ -142,7 +142,7 @@ async fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> U
 /// group it rendered — are DELETED: asset selection is the framework-owned `"assets"` interaction
 /// domain now, and `render` has no `InteractionView` parameter (unlike `handle`/`copy_fragment`/
 /// `cut_operations`), so it is unreachable here. Documented reduced-fidelity gap.
-pub async fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> UiNode {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> UiNode {
     if !cfg.selected_shot_ids.is_empty() {
         let shot_id = &cfg.selected_shot_ids[0];
         if let Some(shot) = snapshot.shots.iter().find(|entry| &entry.id == shot_id) {

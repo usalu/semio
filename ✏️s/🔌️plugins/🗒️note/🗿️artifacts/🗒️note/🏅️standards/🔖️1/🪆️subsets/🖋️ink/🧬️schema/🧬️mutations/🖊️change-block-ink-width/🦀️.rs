@@ -20,23 +20,23 @@ pub struct ChangeBlockInkWidth {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_block_ink_width(id: String, new_stroke_width: f64) -> NoteMutation {
+pub fn change_block_ink_width(id: String, new_stroke_width: f64) -> NoteMutation {
     NoteMutation::ChangeBlockInkWidth(ChangeBlockInkWidth { id, new_stroke_width })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockInkWidth {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-ink-width", kind: "change-block-ink-width", record: "ChangedBlockInkWidth" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change block \"{}\" ink width to {}", self.id, self.new_stroke_width)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

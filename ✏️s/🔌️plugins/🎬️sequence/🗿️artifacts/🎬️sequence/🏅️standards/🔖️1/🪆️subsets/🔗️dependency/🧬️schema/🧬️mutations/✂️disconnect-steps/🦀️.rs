@@ -17,23 +17,23 @@ pub struct DisconnectSteps {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn disconnect_steps(id: String) -> SequenceMutation {
+pub fn disconnect_steps(id: String) -> SequenceMutation {
     SequenceMutation::DisconnectSteps(DisconnectSteps { id })
 }
 
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for DisconnectSteps {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "steps", kind: "disconnect-steps", record: "DisconnectedSteps" };
 
-    async fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
+    fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Disconnect edge \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

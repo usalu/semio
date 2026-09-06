@@ -12,12 +12,12 @@ use crate::artifacts::layout::LayoutSnapshot;
 pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
 
 /// 📖️ Parses `.layout` DSL text into a `LayoutSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<LayoutSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<LayoutSnapshot, store::TextError> {
     <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `LayoutSnapshot` back to `.layout` DSL text.
-pub async fn print_dsl(document: &LayoutSnapshot) -> String {
+pub fn print_dsl(document: &LayoutSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -27,7 +27,7 @@ mod tests {
     use super::*;
     use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
-    async fn minimal_document_with_character_style() -> LayoutSnapshot {
+    fn minimal_document_with_character_style() -> LayoutSnapshot {
         LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "Empty".into(),
@@ -46,7 +46,7 @@ mod tests {
         }
     }
 
-    async fn overrides_frame_flags_document() -> LayoutSnapshot {
+    fn overrides_frame_flags_document() -> LayoutSnapshot {
         LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "Flags".into(),

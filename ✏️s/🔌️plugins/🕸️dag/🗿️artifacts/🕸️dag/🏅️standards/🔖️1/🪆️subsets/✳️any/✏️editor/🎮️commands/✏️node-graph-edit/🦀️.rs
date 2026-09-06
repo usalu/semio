@@ -36,15 +36,15 @@ pub struct NodeGraphEdit {
 /// `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — reachable only
 /// through that macro-generated path (`DagPlayApp::handle` always routes this command through `apply`
 /// below instead), so its `DeleteSelection` sub-op degrades to treating the selection as empty.
-pub async fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     apply_to(payload, doc, cfg, &[])
 }
 
-pub async fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     apply_to(payload, doc, cfg, &interaction.selection("graph").ids)
 }
 
-async fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
     let mut artifact_mutations: Vec<DagMutation> = Vec::new();
     let mut config_mutations: Vec<DagConfigMutation> = Vec::new();

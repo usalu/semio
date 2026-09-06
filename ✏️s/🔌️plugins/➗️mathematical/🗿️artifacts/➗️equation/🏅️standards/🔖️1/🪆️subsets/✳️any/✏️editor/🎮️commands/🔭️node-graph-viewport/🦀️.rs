@@ -15,6 +15,6 @@ pub struct NodeGraphViewport {
     pub camera: EquationCamera,
 }
 
-pub async fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
+pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
     Ok(Emit::config(vec![EquationConfigMutation::SetCamera { camera: payload.camera.clone() }]))
 }

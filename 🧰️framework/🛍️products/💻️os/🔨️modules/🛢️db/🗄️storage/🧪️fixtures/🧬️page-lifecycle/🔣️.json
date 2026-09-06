@@ -2,6 +2,7 @@
   "pattern_modulo": 251,
   "pattern_addend": 1,
   "lengths": [1, 4096, 4097],
+  "fault_conversion_retires_result_lease": true,
   "fault_categories": [
     { "category": "io" },
     { "category": "not_found" },

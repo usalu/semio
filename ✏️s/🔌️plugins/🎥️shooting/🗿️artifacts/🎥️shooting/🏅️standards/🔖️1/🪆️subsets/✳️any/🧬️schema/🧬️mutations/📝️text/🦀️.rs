@@ -20,10 +20,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️OpText
 impl protocol::OpText for ShootingMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         dsl::os_pack::json::from_json_str(line).map_err(|e| store::__rt::field_error(format!("invalid shooting mutation line: {e}")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         dsl::os_pack::json::to_json_string(self)
     }
 }
@@ -31,10 +31,10 @@ impl protocol::OpText for ShootingMutation {
 
 //#region 🔖️OpBinary
 impl protocol::OpBinary for ShootingMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(dsl::os_pack::json::to_json_string(self).into_bytes())
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let json_value = dsl::os_pack::json::parse_bytes(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })?;
         let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
         dsl::FromValue::from_value(dsl_value).map_err(|e: dsl::ValueError| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })

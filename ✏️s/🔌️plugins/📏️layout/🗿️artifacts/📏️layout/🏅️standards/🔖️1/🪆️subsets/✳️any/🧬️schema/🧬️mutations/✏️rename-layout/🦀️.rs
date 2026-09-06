@@ -16,13 +16,13 @@ pub struct RenameLayout {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for RenameLayout {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "layout", kind: "rename-layout", record: "RenamedLayout" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rename_layout(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_rename_layout(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename document to \"{}\"", self.new_name)
     }
 }
@@ -30,7 +30,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RenameLayout {
 
 
 //#region ✏️RenameLayout
-pub async fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.name == payload.new_name {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Layout already has that name.");
     }
@@ -40,7 +40,7 @@ pub async fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -
 
 
 //#region ✏️RenameLayout
-pub async fn inverse_rename_layout(_payload: &RenameLayout, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_rename_layout(_payload: &RenameLayout, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     vec![LayoutMutation::RenameLayout(RenameLayout { new_name: base.name.clone() })]
 }
 //#endregion ✏️RenameLayout

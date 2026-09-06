@@ -91,13 +91,6 @@ export interface InitOutput {
     readonly dispose: (a: number, b: number) => void;
     readonly tessellate: (a: number, b: number, c: number) => [number, number];
     readonly semio_plugin_bundle_installer_link_shim: () => void;
-    readonly __wbg_dagsnapshotvcs_free: (a: number, b: number) => void;
-    readonly dagsnapshotvcs_create: () => any;
-    readonly dagsnapshotvcs_dispatchBinary: (a: number, b: number, c: number) => any;
-    readonly dagsnapshotvcs_dispatchText: (a: number, b: number, c: number) => any;
-    readonly dagsnapshotvcs_envelopeJson: (a: number) => any;
-    readonly dagsnapshotvcs_generation: (a: number) => any;
-    readonly dagsnapshotvcs_snapshotJson: (a: number) => any;
     readonly __wbg_dagsession_free: (a: number, b: number) => void;
     readonly dagsession_attachCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
     readonly dagsession_drawLodLabel: (a: number) => [number, number];
@@ -121,6 +114,13 @@ export interface InitOutput {
     readonly dagsession_setSize: (a: number, b: number, c: number, d: number) => void;
     readonly dagsession_setWheelZoomActive: (a: number, b: number) => void;
     readonly dagsession_takePendingOpenInstanceId: (a: number) => [number, number];
+    readonly __wbg_dagsnapshotvcs_free: (a: number, b: number) => void;
+    readonly dagsnapshotvcs_create: () => any;
+    readonly dagsnapshotvcs_dispatchBinary: (a: number, b: number, c: number) => any;
+    readonly dagsnapshotvcs_dispatchText: (a: number, b: number, c: number) => any;
+    readonly dagsnapshotvcs_envelopeJson: (a: number) => any;
+    readonly dagsnapshotvcs_generation: (a: number) => any;
+    readonly dagsnapshotvcs_snapshotJson: (a: number) => any;
     readonly __wbg_kernelhost_free: (a: number, b: number) => void;
     readonly kernelhost_activate: (a: number, b: number, c: number) => any;
     readonly kernelhost_complete: (a: number, b: number, c: number, d: number, e: number, f: bigint) => any;
@@ -132,7 +132,7 @@ export interface InitOutput {
     readonly wasm_bindgen_458697782d79938e___convert__closures_____invoke___wasm_bindgen_458697782d79938e___JsValue__core_7a2330d63e03cc2c___result__Result_____wasm_bindgen_458697782d79938e___JsError___true_: (a: number, b: number, c: any) => [number, number];
     readonly wasm_bindgen_458697782d79938e___convert__closures_____invoke___js_sys_9fa0e33012cbccdb___Function_fn_wasm_bindgen_458697782d79938e___JsValue_____wasm_bindgen_458697782d79938e___sys__Undefined___js_sys_9fa0e33012cbccdb___Function_fn_wasm_bindgen_458697782d79938e___JsValue_____wasm_bindgen_458697782d79938e___sys__Undefined_______true_: (a: number, b: number, c: any, d: any) => void;
     readonly wasm_bindgen_458697782d79938e___convert__closures_____invoke___wasm_bindgen_458697782d79938e___JsValue______true_: (a: number, b: number, c: any) => void;
-    readonly wasm_bindgen_458697782d79938e___convert__closures_____invoke___wgpu_33d95a066e6fae68___backend__webgpu__webgpu_sys__gen_GpuUncapturedErrorEvent__GpuUncapturedErrorEvent______true_: (a: number, b: number, c: any) => void;
+    readonly wasm_bindgen_458697782d79938e___convert__closures_____invoke___wgpu_4c98722cbb2ca842___backend__webgpu__webgpu_sys__gen_GpuUncapturedErrorEvent__GpuUncapturedErrorEvent______true_: (a: number, b: number, c: any) => void;
     readonly wasm_bindgen_458697782d79938e___convert__closures_____invoke___bool__true_: (a: number, b: number) => number;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

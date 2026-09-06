@@ -21,7 +21,7 @@ pub struct FormsTopology {
 //#endregion 🔖️Topology
 
 //#region 🔖️Compute
-async fn collect_condition_vars(expr: &FormExpr, names: &mut Vec<String>) {
+fn collect_condition_vars(expr: &FormExpr, names: &mut Vec<String>) {
     match expr {
         FormExpr::Const { .. } => {}
         FormExpr::Var { name } => names.push(name.clone()),
@@ -40,7 +40,7 @@ async fn collect_condition_vars(expr: &FormExpr, names: &mut Vec<String>) {
 
 /// 🧭️ Builds the step/block dependency graph (declaration order + condition-var reads) and
 /// topologically sorts it.
-pub async fn compute_forms_topology(steps: &[FormStep]) -> FormsTopology {
+pub fn compute_forms_topology(steps: &[FormStep]) -> FormsTopology {
     let mut nodes: Vec<String> = Vec::new();
     let mut edges: Vec<(String, String)> = Vec::new();
     let mut block_ids: HashSet<String> = HashSet::new();
@@ -82,7 +82,7 @@ pub async fn compute_forms_topology(steps: &[FormStep]) -> FormsTopology {
 /// 🧮️ Kahn's algorithm: a stable (declaration-order-first) topological sort that also yields each
 /// node's longest-path depth from a root, and reports `cycleFree = false` when the queue drains
 /// before every node is visited (the unvisited remainder is exactly the cyclic subgraph).
-async fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> FormsTopology {
+fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> FormsTopology {
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
@@ -137,7 +137,7 @@ mod tests {
     use super::*;
     use crate::artifacts::forms::FormQuestion;
 
-    async fn block(id: &str, condition: Option<FormExpr>) -> FormQuestion {
+    fn block(id: &str, condition: Option<FormExpr>) -> FormQuestion {
         FormQuestion {
             id: id.into(),
             label: id.into(),
@@ -162,7 +162,7 @@ mod tests {
         }
     }
 
-    async fn step(id: &str, blocks: Vec<FormQuestion>) -> FormStep {
+    fn step(id: &str, blocks: Vec<FormQuestion>) -> FormStep {
         FormStep { id: id.into(), title: id.into(), description: None, blocks }
     }
 

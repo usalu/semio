@@ -1,0 +1,118 @@
+{
+  "schema": "semio.os.document-browser-actor-session-activation/v1",
+  "progressStage": "browser-actor",
+  "cases": [
+    {
+      "name": "before-session",
+      "bodies": 0,
+      "loads": 0,
+      "describes": 0,
+      "activated": 0
+    },
+    {
+      "name": "valid-session",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 1,
+      "activated": 1
+    },
+    {
+      "name": "socket-close-during-body",
+      "bodies": 1,
+      "loads": 0,
+      "describes": 0,
+      "activated": 0
+    },
+    {
+      "name": "socket-replaced-during-load",
+      "bodies": 2,
+      "loads": 2,
+      "describes": 1,
+      "activated": 1
+    },
+    {
+      "name": "descriptor-mismatch",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 1,
+      "activated": 0
+    },
+    {
+      "name": "same-document-other-space",
+      "bodies": 2,
+      "loads": 2,
+      "describes": 2,
+      "activated": 2
+    },
+    {
+      "name": "wrong-session",
+      "bodies": 0,
+      "loads": 0,
+      "describes": 0,
+      "activated": 0
+    },
+    {
+      "name": "body-hash-mismatch",
+      "bodies": 1,
+      "loads": 0,
+      "describes": 0,
+      "activated": 0
+    },
+    {
+      "name": "scope-change-at-headers",
+      "bodies": 1,
+      "loads": 0,
+      "describes": 0,
+      "activated": 0
+    },
+    {
+      "name": "client-replaced-during-load",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 0,
+      "activated": 0
+    },
+    {
+      "name": "descriptor-noncanonical",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 1,
+      "activated": 0
+    },
+    {
+      "name": "descriptor-result-shape",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 1,
+      "activated": 0
+    },
+    {
+      "name": "client-change-after-describe",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 1,
+      "activated": 0
+    },
+    {
+      "name": "duplicate-session-during-load",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 0,
+      "activated": 0
+    },
+    {
+      "name": "socket-close-after-describe",
+      "bodies": 1,
+      "loads": 1,
+      "describes": 1,
+      "activated": 0
+    },
+    {
+      "name": "client-change-during-progress",
+      "bodies": 1,
+      "loads": 0,
+      "describes": 0,
+      "activated": 0
+    }
+  ]
+}

@@ -22,10 +22,10 @@ pub enum DagViewCommand {
 }
 
 impl protocol::OpBinary for DagViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(DagViewCommand::Noop)
     }
 }
@@ -49,7 +49,7 @@ impl ArtifactViewer for DagViewer {
     const DIALECT: Dialect = DAG_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> DagSnapshot {
+    fn initial_snapshot() -> DagSnapshot {
         default_snapshot()
     }
 
@@ -57,11 +57,11 @@ impl ArtifactViewer for DagViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// pan) is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -71,7 +71,7 @@ impl ArtifactViewer for DagViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_dag_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_dag_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(DAG_DIALECT)
         .document(["semio", "mathematical", "graph", "port", "directed", "dag"])
         .icon_id("dag")

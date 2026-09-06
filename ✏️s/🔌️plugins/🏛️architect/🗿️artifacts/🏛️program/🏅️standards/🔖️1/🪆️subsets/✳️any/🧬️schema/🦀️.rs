@@ -189,7 +189,7 @@ impl Default for ProgramArtifact {
 
 impl ProgramArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::program::ProgramSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::program::ProgramSnapshot {
         crate::artifacts::program::ProgramSnapshot {
             schema: self.schema.clone(),
             meta: self.meta.clone(),
@@ -265,7 +265,7 @@ impl ProgramArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::program::ProgramSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::program::ProgramSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             meta: snapshot.meta,
@@ -352,7 +352,7 @@ impl ProgramArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::program::ProgramSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::program::ProgramSnapshot) {
         self.schema = snapshot.schema;
         self.meta = snapshot.meta;
         self.project = snapshot.project;
@@ -429,7 +429,7 @@ impl ProgramArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.architect.program` — twenty handcrafted schema leaves.
-pub async fn program_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn program_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.architect.program",
         artifact: schema::FacetLeaves {
@@ -480,19 +480,19 @@ pub mod derived_construction {
         type Snapshot = ProgramSnapshot;
         type Mutation = ProgramMutation;
         type Diff = ProgramDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: ProgramSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<ProgramSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -500,12 +500,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <ProgramDiff as protocol::MutationDiff<ProgramSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -533,11 +533,11 @@ pub mod derived_analysis {
         type Parts = ProgramParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.architect.program", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = ProgramParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -584,7 +584,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `⚙️engine/↔️adjacency` topic (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a
 /// pure document helper with no `&mut` and no app coupling, so it lands on the schema root
 /// alongside the artifact's other handcrafted document primitives.
-pub async fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) {
+pub fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) {
     let (left, right) = orient_endpoints::<&str, Undirected>(&a.0, &b.0);
     (EntityId(left.to_string()), EntityId(right.to_string()))
 }

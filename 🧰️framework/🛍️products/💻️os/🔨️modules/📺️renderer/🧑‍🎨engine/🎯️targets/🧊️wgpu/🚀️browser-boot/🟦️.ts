@@ -1,7 +1,7 @@
 //#region 🧲️PlatformBoot
 /** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
-import { BrowserFrameTransport, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport, type BrowserFrameIntrospectionProbe, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs.ts";
 
 const RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
@@ -49,6 +49,26 @@ function canvasElement(): HTMLCanvasElement {
   canvas.setAttribute("aria-label", locale() === "de" ? "Semio Arbeitsfläche" : "Semio workspace");
   canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none;outline:none;";
   return canvas;
+}
+
+/** @emoji 🔬️ `window.semioWgpuIntrospection.dumpStructure()`/`dumpFrameStats()` — the readiness beacon and
+ * the structural oracle the parity harness (`🧑‍💻dev/…/📜️script.ts` `triageParityBoot`/`dumpWgpuStructure`)
+ * addresses. Deliberately NOT `window.wasmBindings`: Trunk publishes its own UI-thread instantiation of the
+ * renderer under that name (see `🌐️.html`), and that instance never boots, so its `dumpStructure` traps on
+ * an uninitialised `UI_ENGINE`. The real exports live in `semio-frame-worker` beside the thread-local they
+ * read, so this is an async shim over the transport's introspection pair. It is attached only once the
+ * Worker reports `booted`, which is what makes waiting for the function a truthful boot gate; each call
+ * answers `""` rather than throwing when the dump is unavailable, so a probe reads an empty dump instead of
+ * a page error. */
+export const WGPU_INTROSPECTION_GLOBAL = "semioWgpuIntrospection";
+
+type WgpuIntrospection = { readonly dumpStructure: () => Promise<string>; readonly dumpFrameStats: () => Promise<string> };
+
+function attachIntrospectionBindings(transport: BrowserFrameTransport): () => void {
+  const probe = (kind: BrowserFrameIntrospectionProbe) => async () => (await transport.introspect(kind)) ?? "";
+  const host = window as unknown as { semioWgpuIntrospection?: WgpuIntrospection };
+  host.semioWgpuIntrospection = { dumpStructure: probe("structure"), dumpFrameStats: probe("frame-stats") };
+  return () => delete host.semioWgpuIntrospection;
 }
 
 function statusElement(root: HTMLElement): HTMLElement {
@@ -176,6 +196,7 @@ async function mount(root: HTMLElement): Promise<void> {
     throw new Error(`worker-construction-failed: ${error instanceof Error ? error.message : String(error)}`);
   }
   let cleanupInput = () => {};
+  let detachIntrospection = () => {};
   const transport = new BrowserFrameTransport({
     worker,
     boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, hub: descriptor.hub },
@@ -184,6 +205,7 @@ async function mount(root: HTMLElement): Promise<void> {
     onProgress: (stage, progress) => { status.textContent = `${stage} ${Math.round(progress * 100)}%`; },
     onReady: () => {
       status.remove();
+      detachIntrospection = attachIntrospectionBindings(transport);
       cleanupInput = wireInput(canvas, transport);
       transport.enqueueReplaceable({ kind: "resize", width, height, dpr });
       canvas.focus({ preventScroll: true });
@@ -195,6 +217,7 @@ async function mount(root: HTMLElement): Promise<void> {
     },
     onFault: (code: BrowserFrameWorkerFaultCode, detail) => {
       cleanupInput();
+      detachIntrospection();
       renderFault(root, code, detail);
     },
   });
@@ -209,6 +232,7 @@ async function mount(root: HTMLElement): Promise<void> {
   window.addEventListener("pagehide", () => {
     resize.disconnect();
     cleanupInput();
+    detachIntrospection();
     setInteractiveJobPort(previousInteractiveJobPort);
     transport.close();
   }, { once: true });

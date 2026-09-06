@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `move-node` operations — shared by both
 /// `ForceLayout` and `Reorganize`.
-async fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
+fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
     let mut board = crate::artifacts::wires::wires_working_board(document);
     force_layout_board(&mut board);
     fixture_nodes(&board)
@@ -36,7 +36,7 @@ async fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation>
 #[dsl(keyword = "force-layout")]
 pub struct ForceLayout {}
 
-pub async fn handle(_payload: &ForceLayout, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub fn handle(_payload: &ForceLayout, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     Ok(Emit::mutations(force_layout_operations(doc.snapshot)))
 }
 

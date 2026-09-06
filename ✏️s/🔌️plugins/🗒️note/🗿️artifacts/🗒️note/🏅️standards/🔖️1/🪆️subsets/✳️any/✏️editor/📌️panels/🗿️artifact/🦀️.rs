@@ -14,7 +14,7 @@ pub const NOTE_PLAY_BODY_DOCUMENT: &str = "note.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -62,7 +62,7 @@ fn add_block_args(kind: &str) -> semio_framework_plugin::UiAssemblyResult<UiValu
     Ok(UiValue::Map(args.finish()))
 }
 
-pub async fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut items = UiFixedList::default();
     for (kind, label, icon) in [("text", labels.add_text, "type"), ("table", labels.add_table, "table-2"), ("math", labels.add_math, "note-math"), ("image", labels.add_image, "image"), ("group", labels.add_group, "folder-plus")] {
         let action = ActionFactory::new(NOTE_PLAY_CONTROLLER_ID).action("addBlock", Some(add_block_args(kind)?))?;

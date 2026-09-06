@@ -17,7 +17,7 @@ pub struct DwgIntoNote;
 impl Deserializer<NoteSnapshot> for DwgIntoNote {
     const FROM: Dialect = DWG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "DwgIntoNote: expected a binary dwg payload".to_string(), diagnostics: Vec::new() });
         };

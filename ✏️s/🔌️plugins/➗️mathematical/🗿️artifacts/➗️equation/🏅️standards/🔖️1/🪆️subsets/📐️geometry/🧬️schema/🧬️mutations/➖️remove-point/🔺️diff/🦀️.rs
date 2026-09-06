@@ -4,7 +4,7 @@ use crate::artifacts::equation::{equation_children_from_state, equation_geometry
 
 //#region 🔖️Diff
 /// 🔺️ Out-of-range `index` is Error `target-missing`.
-pub async fn diff(payload: &super::RemovePoint, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::RemovePoint, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     let mut geometry = equation_geometry(base);
     if payload.index >= geometry.points.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Point at index {} does not exist.", payload.index), [payload.index.to_string()]);

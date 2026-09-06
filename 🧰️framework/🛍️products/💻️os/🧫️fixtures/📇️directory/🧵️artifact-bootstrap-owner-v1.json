@@ -1,0 +1,77 @@
+{
+  "schema": "semio.os.artifact-bootstrap-owner/v1",
+  "cases": [
+    {
+      "name": "valid",
+      "installed": true
+    },
+    {
+      "name": "client-after-hash",
+      "installed": false
+    },
+    {
+      "name": "schema-after-hash",
+      "installed": false
+    },
+    {
+      "name": "space-after-hash",
+      "installed": false
+    },
+    {
+      "name": "attempt-after-hash",
+      "installed": false
+    },
+    {
+      "name": "socket-after-hash",
+      "installed": false
+    },
+    {
+      "name": "assembler-after-hash",
+      "installed": false
+    },
+    {
+      "name": "client-during-progress",
+      "installed": false
+    },
+    {
+      "name": "chunked-assembler-after-hash",
+      "installed": false
+    },
+    {
+      "name": "chunked-socket-after-hash",
+      "installed": false
+    },
+    {
+      "name": "lease-valid",
+      "installed": true
+    },
+    {
+      "name": "lease-descriptor",
+      "installed": false
+    },
+    {
+      "name": "lease-aggregate",
+      "installed": false
+    },
+    {
+      "name": "lease-baseline",
+      "installed": false
+    },
+    {
+      "name": "lease-missing-checkpoint",
+      "installed": false
+    },
+    {
+      "name": "lease-scope",
+      "installed": false
+    },
+    {
+      "name": "lease-kind",
+      "installed": false
+    },
+    {
+      "name": "lease-drop-after-hash",
+      "installed": false
+    }
+  ]
+}

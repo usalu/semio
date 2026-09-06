@@ -50,7 +50,7 @@ enum DagMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for DagMutationDsl {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -61,7 +61,7 @@ impl OpText for DagMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -70,20 +70,20 @@ impl OpText for DagMutationDsl {
 }
 
 impl protocol::OpBinary for DagMutationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-async fn json_of<T: dsl::ToValue>(value: &T) -> String {
+fn json_of<T: dsl::ToValue>(value: &T) -> String {
     dsl::json::to_json_string(value)
 }
 
-async fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
+fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
     match mutation {
         DagMutation::CreateNode(payload) => DagMutationDsl::CreateNode { node_json: json_of(&payload.node) },
         DagMutation::DeleteNode(payload) => DagMutationDsl::DeleteNode { id: payload.id.clone() },
@@ -102,7 +102,7 @@ async fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
     }
 }
 
-async fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
+fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
     match mutation {
         DagMutationDsl::CreateNode { node_json } => create_node(dsl::json::from_json_str::<DagNodeSpec>(&node_json).expect("dag mutation dsl `node_json` must decode")),
         DagMutationDsl::DeleteNode { id } => delete_node(id),
@@ -124,11 +124,11 @@ async fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
 }
 
 impl OpText for DagMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(dag_mutation_from_dsl(<DagMutationDsl as OpText>::parse_op(line)?))
     }
 
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         <DagMutationDsl as OpText>::print_op(&dag_mutation_to_dsl(self))
     }
 }
@@ -136,11 +136,11 @@ impl OpText for DagMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `DagMutationDsl` already derives `OpBinary` via
 /// `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for DagMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dag_mutation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(dag_mutation_from_dsl(DagMutationDsl::decode_op(bytes)?))
     }
 }
@@ -151,7 +151,7 @@ impl protocol::OpBinary for DagMutation {
 mod tests {
     use super::*;
 
-    async fn sample_node(id: &str) -> DagNodeSpec {
+    fn sample_node(id: &str) -> DagNodeSpec {
         crate::artifacts::dag::schema::default_node_for_kind("note", id, 0.0, 0.0)
     }
 
@@ -179,7 +179,7 @@ mod tests {
         }
     }
 
-    async fn every_mutation() -> Vec<DagMutation> {
+    fn every_mutation() -> Vec<DagMutation> {
         vec![
             create_node(sample_node("node-1")),
             delete_node("node-1".into()),

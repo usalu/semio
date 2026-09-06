@@ -16,7 +16,7 @@ pub struct FormsIntoJson;
 impl Serializer<FormsSnapshot> for FormsIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn serialize(from: &FormsSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &FormsSnapshot) -> IoResult<IoPayload> {
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
         let text = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&from.to_value()));
         Ok(IoOutcome::clean(IoPayload::Binary(text.into_bytes())))

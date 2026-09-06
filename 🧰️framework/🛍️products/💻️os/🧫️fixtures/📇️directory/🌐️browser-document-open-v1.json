@@ -57,6 +57,9 @@
       "role": "editor",
       "rendererTarget": "react"
     },
+    "browserActor": {
+      "kind": "none"
+    },
     "grant": {
       "read": true,
       "write": true,
@@ -150,6 +153,9 @@
       "windowKindId": "window.document",
       "role": "editor",
       "rendererTarget": "react"
+    },
+    "browserActor": {
+      "kind": "none"
     },
     "grant": {
       "read": true,

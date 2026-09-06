@@ -54,7 +54,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn shooting_play_labels(cfg: &ShootingConfig) -> &'static ShootingLabels {
+pub fn shooting_play_labels(cfg: &ShootingConfig) -> &'static ShootingLabels {
     semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers

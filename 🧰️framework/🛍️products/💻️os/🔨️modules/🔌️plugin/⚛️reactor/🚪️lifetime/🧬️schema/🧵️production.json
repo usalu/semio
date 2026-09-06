@@ -1,0 +1,104 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "open",
+    "cases",
+    "contracts"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "open": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activation_generation",
+        "instance_id",
+        "request_sequence"
+      ],
+      "properties": {
+        "activation_generation": {
+          "const": 41
+        },
+        "instance_id": {
+          "const": 7
+        },
+        "request_sequence": {
+          "const": 8
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "exact",
+          "live",
+          "capacity",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "exact": {
+            "type": "boolean"
+          },
+          "live": {
+            "type": "boolean"
+          },
+          "capacity": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capturedBeforeLive",
+        "singleNativeAdmission",
+        "exactLeaseRetained",
+        "nativeRetiredBeforeReceipt",
+        "releaseAfterExactAck",
+        "collisionPreservesOwner",
+        "failedTurnRetainsAck"
+      ],
+      "properties": {
+        "capturedBeforeLive": {
+          "const": true
+        },
+        "singleNativeAdmission": {
+          "const": true
+        },
+        "exactLeaseRetained": {
+          "const": true
+        },
+        "nativeRetiredBeforeReceipt": {
+          "const": true
+        },
+        "releaseAfterExactAck": {
+          "const": true
+        },
+        "collisionPreservesOwner": {
+          "const": true
+        },
+        "failedTurnRetainsAck": {
+          "const": true
+        }
+      }
+    }
+  }
+}

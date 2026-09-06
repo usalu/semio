@@ -1,18 +1,18 @@
 //! 🚪️ IO s.layout (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
 }
-pub async fn layout_to_wire(from: &crate::artifacts::layout::LayoutSnapshot) -> Vec<u8> {
+pub fn layout_to_wire(from: &crate::artifacts::layout::LayoutSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
-pub async fn layout_from_wire(bytes: &[u8]) -> Result<crate::artifacts::layout::LayoutSnapshot, store::PackError> {
+pub fn layout_from_wire(bytes: &[u8]) -> Result<crate::artifacts::layout::LayoutSnapshot, store::PackError> {
     <crate::artifacts::layout::LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
-pub async fn pack_err_as_text(err: store::PackError) -> store::TextError {
+pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
     store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
 }
 //#region 🎹️DerivedComposition
@@ -34,11 +34,11 @@ pub mod derived_composition {
         type Snapshot = LayoutSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_DWG, DEP_DXF, DEP_JSON, DEP_SVG]
         }
 
-        async fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -177,7 +177,7 @@ const SVG_FORMAT_STANDARD: &str = "1.1";
 /// 📐️ A closed axis-aligned rectangle as `MoveTo` + three `LineTo`s + `Close` — the shared
 /// "rects-as-paths" primitive both `layout_snapshot_to_semio_drawing` (page/frame rects) and the app
 /// engine's `display_list_to_semio_drawing` (rendered display-list rects) build on.
-pub async fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSegment> {
+pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSegment> {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     vec![
         PathSegment::MoveTo { to: SemioPoint2 { x, y } },
@@ -191,7 +191,7 @@ pub async fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<
 /// 📐️ Recovers a rect's `(x, y, width, height)` from a `MoveTo`/`LineTo`×3/`Close` path — the exact
 /// inverse of `rect_path_segments`, used to read `dwg_drawing_to_semio_drawing`'s output back into
 /// `Page` boundaries.
-async fn path_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
+fn path_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     let mut max_x = f64::NEG_INFINITY;
@@ -213,7 +213,7 @@ async fn path_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     any.then(|| (min_x, min_y, max_x - min_x, max_y - min_y))
 }
 
-async fn semio_rgba_from_channels(channels: [f32; 4]) -> SemioRgba {
+fn semio_rgba_from_channels(channels: [f32; 4]) -> SemioRgba {
     SemioRgba { r: channels[0], g: channels[1], b: channels[2], a: channels[3] }
 }
 
@@ -221,7 +221,7 @@ async fn semio_rgba_from_channels(channels: [f32; 4]) -> SemioRgba {
 /// (`io_dispatch`, never a hand-rolled string). `stdio_gaps`: this is the only DWG/SVG bridge stdio
 /// registers for the `drawing` subset today (svg/dxf/pdf per the master plan's own lattice) — see
 /// `layout_document_json_from_dwg` below for the DWG-import side of that gap.
-pub async fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String, String> {
+pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String, String> {
     let key = IoKey {
         artifact_kind: DRAWING_DIALECT.artifact_kind.to_string(),
         standard: DRAWING_DIALECT.standard.0.to_string(),
@@ -252,7 +252,7 @@ pub async fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<
 /// its layers are merged in first (behind every page layer), so an
 /// imported DWG/DXF/SVG trace an author draws pages on top of actually reaches SVG export instead of
 /// only ever informing page-boundary framing at import time.
-async fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
+fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
     const PAGE_GAP: f64 = 24.0;
     let mut styles = vec![DrawStyle { name: "page".into(), fill: None, stroke: Some(SemioRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
     let mut layers = Vec::with_capacity(doc.pages.len());
@@ -299,7 +299,7 @@ async fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingS
     SemioDrawingSnapshot { schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(), canvas: DrawCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) }, styles, layers }
 }
 
-pub async fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+pub fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
     let doc: LayoutSnapshot = serde_json::from_value(value.clone()).map_err(|e| format!("layout document: {e}"))?;
     let drawing = layout_snapshot_to_semio_drawing(&doc);
     let width = drawing.canvas.width.round() as u32;
@@ -309,7 +309,7 @@ pub async fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, 
 }
 
 /// 📥️ Extracts axis-aligned rectangular boundaries from closed 4-vertex `LwPolyline`s and frames one page per rectangle, falling back to a single page framed to the drawing extents. Reads an already-decoded `DwgDrawing` (real geometry, not raw bytes) — see `dwg_drawing_to_semio_drawing` for how this feeds the shared `DrawNode` shape.
-async fn dwg_rect_pages(drawing: &DwgDrawing) -> Vec<(f64, f64, f64, f64)> {
+fn dwg_rect_pages(drawing: &DwgDrawing) -> Vec<(f64, f64, f64, f64)> {
     let mut rects = Vec::new();
     for entity in &drawing.entities {
         let DwgGeometry::LwPolyline { closed: true, vertices, .. } = &entity.geometry else { continue };
@@ -336,7 +336,7 @@ async fn dwg_rect_pages(drawing: &DwgDrawing) -> Vec<(f64, f64, f64, f64)> {
 /// does — it still avoids hand-rolling anything by funneling the already-decoded `DwgDrawing`
 /// geometry through the real, schema-owning `SemioDrawingSnapshot`/`DrawNode` shape instead of a
 /// bespoke tuple list, symmetric with the export direction above.
-async fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
+fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
     let children: Vec<DrawNode> = dwg_rect_pages(drawing).into_iter().map(|(x, y, width, height)| DrawNode::Path { segments: rect_path_segments(x, y, width, height), style: None }).collect();
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
@@ -351,7 +351,7 @@ async fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnaps
 /// to read `path_bounds` back out of it for page framing, then discard the rest of the decoded DWG
 /// geometry entirely. It now also mints a real content-addressed `background_drawing` composed child
 /// whose snapshot-owned record retains the full drawing — nothing imported is thrown away anymore.
-pub async fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let drawing_snapshot = dwg_drawing_to_semio_drawing(drawing);
     let background_child = crate::artifacts::layout::background_drawing_child_handle("dwg", &drawing_snapshot);
     let root_children: &[DrawNode] = match drawing_snapshot.layers.first().map(|layer| &layer.root) {
@@ -416,7 +416,7 @@ pub async fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value
 /// file's own tests and the app engine's scene tests (both call through `compose_svg_from_drawing`).
 /// Widened from `pub(crate)` to `pub`: the app engine is now a cross-module second caller.
 #[cfg(test)]
-pub async fn ensure_stdio_semio_drawing_registered() {
+pub fn ensure_stdio_semio_drawing_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::register);
 }
@@ -535,7 +535,7 @@ pub mod io_registry {
     const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId("*") };
     const LAYOUT_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::layout::LayoutSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::layout::LayoutSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == LAYOUT_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => LayoutAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -557,7 +557,7 @@ pub mod io_registry {
     }
 
     const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-    async fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::layout::io::export::serializers::artifacts::svg::v1_1::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -565,7 +565,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::layout::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -574,7 +574,7 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES
             .get_or_init(|| {
                 vec![

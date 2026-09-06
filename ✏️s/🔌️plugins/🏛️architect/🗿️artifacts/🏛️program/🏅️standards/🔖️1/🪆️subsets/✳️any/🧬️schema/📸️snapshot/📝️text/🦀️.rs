@@ -21,12 +21,12 @@ use crate::artifacts::program::ProgramSnapshot;
 pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
 
 /// 🗣️ Parses an Architect program from its textual DSL representation.
-pub async fn parse(text: &str) -> Result<ProgramSnapshot, store::TextError> {
+pub fn parse(text: &str) -> Result<ProgramSnapshot, store::TextError> {
     <ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an Architect program in its canonical textual DSL representation.
-pub async fn print(document: &ProgramSnapshot) -> String {
+pub fn print(document: &ProgramSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 

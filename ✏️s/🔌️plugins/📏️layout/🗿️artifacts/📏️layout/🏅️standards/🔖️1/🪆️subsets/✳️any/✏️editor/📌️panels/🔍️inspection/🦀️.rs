@@ -11,7 +11,7 @@ pub const LAYOUT_PLAY_BODY_INSPECTION: &str = "layout.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -31,7 +31,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// against and always falls through to the document summary below — the same gap gis2d's and
 /// puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed here (framework
 /// file, out of this crate's remit).
-pub async fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
+pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "layout-play-inspector.empty".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),

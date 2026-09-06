@@ -14,13 +14,13 @@ pub struct ChangeSceneSunAzimuth {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneSunAzimuth {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-sun-azimuth", kind: "change-scene-sun-azimuth", record: "ChangedSceneSunAzimuth" };
-    async fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change sun azimuth to {}", self.new_azimuth)
     }
 }

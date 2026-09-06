@@ -20,12 +20,12 @@ use crate::artifacts::layout::schema::mutations::text::LayoutMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `LayoutMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &LayoutMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &LayoutMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `LayoutMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError> {
     LayoutMutation::decode_op(bytes)
 }
 

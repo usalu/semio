@@ -6,7 +6,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ReplaceAssetPayload, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+pub fn diff(payload: &ReplaceAssetPayload, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     let Some(existing) = base.assets.get(&payload.key) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.key), [payload.key.clone()]);
     };

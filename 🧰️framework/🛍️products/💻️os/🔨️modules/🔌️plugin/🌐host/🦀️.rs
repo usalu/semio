@@ -42,7 +42,6 @@ pub use body::BodyReader;
 /// that routing step lives in `wit_bridge`, so this is gated identically (native never reaches it).
 // 🚫️async: E1 pure decode consumed by `⚛️reactor/🦀️.rs`'s sync `world actor` boundary —
 // `dsl::{decode_fault_bytes,encode_fault_bytes}` are both plain `fn`, zero suspension here — R9.
-#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
     match outcome {
         RequestOutcome::Ok(bytes) => Ok(bytes),

@@ -39,7 +39,7 @@ enum NoteCanvasEvent {
 /// (`move`/`resize`) and flag (`visible`/`locked`/`name`) fields are compared generically; an `Ink`
 /// block's `points`/bbox move together as one `edit-block-ink-stroke` (an authored stroke, never
 /// split into a move+resize pair) unless only its `stroke_width` changed.
-async fn block_update_mutations(id: &str, before: &NoteBlockNode, after: &NoteBlockNode) -> Vec<NoteMutation> {
+fn block_update_mutations(id: &str, before: &NoteBlockNode, after: &NoteBlockNode) -> Vec<NoteMutation> {
     let mut ops = Vec::new();
     let (bx, by, bw, bh) = block_bounds(before);
     let (ax, ay, aw, ah) = block_bounds(after);
@@ -75,7 +75,7 @@ async fn block_update_mutations(id: &str, before: &NoteBlockNode, after: &NoteBl
 /// collapse to the id's net before→after change, matching the old whole-snapshot diff's coalescing),
 /// one `create-asset`/`replace-asset-payload` per changed asset key. The empty vec means no content
 /// changed (e.g. a gesture that ended where it began).
-async fn note_ops_from_canvas_events(document: &NoteSnapshot, events: &[NoteCanvasEvent]) -> Vec<NoteMutation> {
+fn note_ops_from_canvas_events(document: &NoteSnapshot, events: &[NoteCanvasEvent]) -> Vec<NoteMutation> {
     let mut next = document.clone();
     let mut added: Vec<(String, Option<String>, Option<usize>)> = Vec::new();
     let mut removed: Vec<String> = Vec::new();
@@ -146,7 +146,7 @@ pub struct InkApplyEvents {
 // `InteractionState` now, only ever mutated by the framework's own injected `interactionSelect`
 // handling, never by an app command's `Emit`; the field stays on the wire (the ink-canvas host still
 // sends it) but is no longer acted on.
-pub async fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let document = doc.snapshot;
     let events: Vec<NoteCanvasEvent> = serde_json::from_str(&payload.events_json).unwrap_or_default();
     let mut config_mutations = Vec::new();

@@ -16,7 +16,7 @@ use protocol::{Identified, MutationDiff, Patchable};
 //#region 🔖️Apply
 impl ProgramDiff {
     /// 🧬️ Apply every field entry onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &ProgramArtifact) -> protocol::MutationApplyResult<ProgramArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &ProgramArtifact) -> protocol::MutationApplyResult<ProgramArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -273,10 +273,10 @@ impl ProgramDiff {
 }
 
 impl MutationDiff<ProgramSnapshot> for ProgramDiff {
-    async fn apply(&self, base: &ProgramSnapshot) -> protocol::MutationApplyResult<ProgramSnapshot> {
+    fn apply(&self, base: &ProgramSnapshot) -> protocol::MutationApplyResult<ProgramSnapshot> {
         self.apply_to_artifact(&ProgramArtifact::from_snapshot(base.clone())).map(|artifact| artifact.to_snapshot()).map_err(|error| error.under(["artifact"]))
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -1145,7 +1145,7 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
     }
 }
 
-async fn apply_collection_delta<T, P>(items: &mut Vec<T>, added: &[T], removed: &[String], patched: &[(String, P)], reordered: &Option<Vec<String>>) -> protocol::MutationApplyResult<()>
+fn apply_collection_delta<T, P>(items: &mut Vec<T>, added: &[T], removed: &[String], patched: &[(String, P)], reordered: &Option<Vec<String>>) -> protocol::MutationApplyResult<()>
 where
     T: Identified<EntityId> + Clone + Patchable<P>,
     P: Clone,

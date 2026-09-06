@@ -6,7 +6,7 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
-pub async fn inverse(payload: &super::DeleteSustainabilityRequirement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DeleteSustainabilityRequirement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     match base.sustainability.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateSustainabilityRequirement(super::super::create_sustainability_requirement::CreateSustainabilityRequirement { sustainability_requirement: existing.clone() })],
         None => Vec::new(),

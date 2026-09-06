@@ -14,7 +14,7 @@ pub struct FormsIntoXlsx;
 impl Serializer<FormsSnapshot> for FormsIntoXlsx {
     const INTO: Dialect = XLSX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &FormsSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &FormsSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "FormsIntoXlsx: not implemented".to_string(), diagnostics: Vec::new() })
     }
 }

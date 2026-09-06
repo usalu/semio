@@ -13,13 +13,13 @@ pub const ARCHITECT_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: ARCHITECT_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     create_default_layout(
         &[adjacency::ARCHITECT_WINDOW_ADJACENCY.into(), graph::ARCHITECT_WINDOW_GRAPH.into(), register::ARCHITECT_WINDOW_REGISTER.into(), report::ARCHITECT_WINDOW_REPORT.into()],
         "row",

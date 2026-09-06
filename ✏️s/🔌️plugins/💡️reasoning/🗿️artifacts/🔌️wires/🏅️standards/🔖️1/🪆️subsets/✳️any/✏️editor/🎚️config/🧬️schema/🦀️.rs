@@ -17,7 +17,7 @@ pub struct WiresConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 `s.reasoning.wires`'s config and presence schema, owned by this leaf.
-pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.reasoning.wires",
         config: ::schema::FacetLeaves {

@@ -53,7 +53,7 @@ pub use graph_window::MATH_PLAY_BODY_GRAPH;
 /// `create_equation_app` declares via `.artifact_kind(...)` (`computation.equation`), plus one
 /// extra output port: `result:out`, the current graph+geometry projection as a generic data value
 /// (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
-pub async fn equation_io() -> semio_framework_plugin::AppIo {
+pub fn equation_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: MATH_DOCUMENT_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
@@ -76,7 +76,7 @@ pub async fn equation_io() -> semio_framework_plugin::AppIo {
 //#region 🔖️Scene
 /// 🖼️ An empty `UiComponentSceneNode` shell for a body key, ready for its `node_graph`/`canvas_2d` field
 /// to be filled in — shared by both `🎭️modes/✏️edit/🪟️windows/*` renderers.
-pub async fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
+pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
         surface_id: surface_id.into(),
         controller_id: MATH_APP_ID.into(),
@@ -106,7 +106,7 @@ pub async fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind
 
 //#region 🔖️GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
-pub async fn algorithm_overlay(graph: &EquationGraph) -> std::collections::HashMap<String, String> {
+pub fn algorithm_overlay(graph: &EquationGraph) -> std::collections::HashMap<String, String> {
     use graph::algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
 
     let index = IdIndex::from_ids(graph.nodes.iter().map(|n| n.id.as_str()));
@@ -159,7 +159,7 @@ pub async fn algorithm_overlay(graph: &EquationGraph) -> std::collections::HashM
     overlay
 }
 
-pub async fn workflow_json(graph: &EquationGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn workflow_json(graph: &EquationGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let overlay = algorithm_overlay(graph);
     let nodes: Vec<NodeGraphNodeRecord> = graph
         .nodes
@@ -176,7 +176,7 @@ pub async fn workflow_json(graph: &EquationGraph) -> (Vec<NodeGraphNodeRecord>, 
 //#endregion 🔖️GraphAlgorithms
 
 //#region 🔖️Geometry
-pub async fn geometry_layers_json(geometry: &EquationGeometry) -> String {
+pub fn geometry_layers_json(geometry: &EquationGeometry) -> String {
     let points: Vec<geometry::Point> = geometry.points.iter().map(|p| geometry::Point::new(p.x, p.y)).collect();
     let hull = geometry::convex_hull(&points);
     let centroid = geometry::polygon_centroid(&hull);
@@ -1277,26 +1277,26 @@ impl ArtifactEditor for EquationPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::equation::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> EquationSnapshot {
+    fn initial_snapshot() -> EquationSnapshot {
         EquationSnapshot::default()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(equation_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
-    async fn command_id(command: &EquationCommand) -> &'static str {
+    fn command_id(command: &EquationCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &EquationCommand,
         doc: &ArtifactView<'_, EquationSnapshot>,
         cfg: &ConfigView<'_, EquationConfig>,
@@ -1311,7 +1311,7 @@ impl ArtifactEditor for EquationPlayApp {
     /// components/SCC group/BFS distance — the port recipe's `computation.equation`-kinded output);
     /// `"document:out"` replicates `ArtifactApp::export_media`'s default whole-document-pack behavior
     /// (unreachable once this override exists).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, EquationSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, EquationSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
                 let graph = crate::artifacts::equation::equation_graph(doc.snapshot);
@@ -1329,7 +1329,7 @@ impl ArtifactEditor for EquationPlayApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, EquationConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, EquationConfig>) -> UiNode {
         match body_key {
             MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::artifacts::equation::equation_graph(doc.snapshot), &cfg.snapshot.camera),
             MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::artifacts::equation::equation_geometry(doc.snapshot)),
@@ -1351,7 +1351,7 @@ impl ArtifactEditor for EquationPlayApp {
 /// in the migration report). The subset's own `📚️examples/🎬️demo` facet
 /// (`crate::artifacts::equation::examples::...`, real content, pre-existing) is the modern,
 /// role-agnostic replacement surface for example registration.
-pub async fn create_equation_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(EQUATION_DIALECT)
         .document(["semio", "equation"])
         .artifact_kind(crate::artifacts::equation::artifact_kind())
@@ -1412,7 +1412,7 @@ pub(crate) mod testkit {
     pub type MathApp = VcsArtifactApp<EditorApp<EquationPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn math_app() -> MathApp {
+    pub fn math_app() -> MathApp {
         new_app::<EditorApp<EquationPlayApp>>()
     }
 
@@ -1420,20 +1420,20 @@ pub(crate) mod testkit {
     /// definition, examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still
     /// expects — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub async fn equation_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn equation_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_equation_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn math_app_with_registry() -> MathApp {
+    pub fn math_app_with_registry() -> MathApp {
         new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut MathApp, body_key: &str) -> String {
+    pub fn render(app: &mut MathApp, body_key: &str) -> String {
         // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
         // `Debug` gives every test caller here the same "does the render mention X" substring check.
         format!("{:?}", app.render(body_key, None, &ViewModel::default()).expect("render"))
@@ -1669,7 +1669,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<EquationCommand> {
+    pub(super) fn every_command() -> Vec<EquationCommand> {
         vec![
             EquationCommand::SetArtifact(set_artifact::SetArtifact {
                 graph: crate::artifacts::equation::dsl::math_graph_to_dsl(&crate::artifacts::equation::EquationGraph::default()),

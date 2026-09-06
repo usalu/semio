@@ -37,7 +37,7 @@ pub fn default_imperative_contributions_json() -> String {
 pub fn bootstrap_imperative_runtime() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        imperative_engine::register_native_imperative_module("imperative-extension-core", crate::extensions::effect::register);
+        imperative_engine::register_native_imperative_module("imperative-extension-effect", crate::extensions::effect::register);
         imperative_engine::register_native_imperative_module("imperative-extension-math", crate::extensions::math::register);
         imperative_engine::register_native_imperative_module("imperative-extension-text", crate::extensions::text::register);
         imperative_engine::register_native_imperative_module("imperative-extension-logic", crate::extensions::logic::register);

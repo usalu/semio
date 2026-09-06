@@ -15,16 +15,16 @@ pub struct CreateSavedCamera {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for CreateSavedCamera {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "saved-camera", kind: "create-saved-camera", record: "CreatedSavedCamera" };
-    async fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create saved camera \"{}\"", self.saved_camera.label)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.saved_camera.id.clone()]
     }
 }

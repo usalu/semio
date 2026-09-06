@@ -7,11 +7,25 @@
  * and from each plugin crate's own `📜️script.ts describe` (see that script's own doc for the exact
  * invocation convention every migrated plugin crate follows).
  */
-import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, readdirSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, parseExtensionCargoManifest, readStableBuildFile, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import {
+  BundleScript,
+  ScriptRouter,
+  buildBudgetMs,
+  devToolingEnv,
+  parseExtensionCargoManifest,
+  readStableBuildFile,
+  resolveWorkspaceBin,
+  runBundleScriptMain,
+  runCargoTestBudgeted,
+  runExactCargoLawProcess,
+  runCmd,
+  runCmdStatus,
+  resolveTestLevel,
+} from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { verifyDescriptorPairBytesV1, verifyFreshCatalogPackageV1 } from "../../../📇️registry/📜️script.ts";
 
 const CRATE_NAME = "semio-framework-plugin-describe";
@@ -41,6 +55,7 @@ export type FreshComponentReceiptV1 = Readonly<{
 }>;
 
 export type FreshBuildControlV1 = Readonly<{
+  diagnosticsRoot?: string;
   cancelled(): boolean;
   remainingMs(): number;
   checkpoint(stage: string, completed: number, total: number): void;
@@ -98,9 +113,7 @@ export function pluginWasmArtifactPath(repoRoot: string, packageName: string, pr
 
 /** @emoji 🧩 Builds one exact plugin component and returns cargo's fresh output path. */
 export function buildPluginComponent(repoRoot: string, packageName: string, rootCdylib = false, budgetMs = buildBudgetMs()): string {
-  const buildArgs = rootCdylib
-    ? ["rustc", "-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-dev"]
-    : ["build", "-p", packageName, "--target", "wasm32-wasip2", "--profile", "wasm-dev"];
+  const buildArgs = rootCdylib ? ["rustc", "-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-dev"] : ["build", "-p", packageName, "--target", "wasm32-wasip2", "--profile", "wasm-dev"];
   runCmd("cargo", buildArgs, { cwd: repoRoot, env: devToolingEnv(), budgetMs });
   const component = pluginWasmArtifactPath(repoRoot, packageName);
   if (!existsSync(component)) throw new Error(`cargo did not produce ${component}`);
@@ -256,25 +269,52 @@ function freshCheckpoint(control: FreshBuildControlV1, stage: string, completed:
 
 async function freshRun(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: FreshBuildControlV1, stage: string, completed: number, total: number): Promise<void> {
   freshCheckpoint(control, stage, completed, total);
-  const child = spawn(command, args, { cwd, env, stdio: "inherit", windowsHide: true });
-  let settled = false;
-  let failure: Error | undefined;
-  child.once("error", (error) => { failure = error; settled = true; });
-  child.once("close", (code, signal) => {
-    if (code !== 0) failure = new Error(`${command} ${args.join(" ")} exited with ${signal ?? code}`);
-    settled = true;
-  });
-  while (!settled) {
-    await new Promise((wake) => setTimeout(wake, Math.min(100, Math.max(1, control.remainingMs()))));
-    if (control.cancelled() || control.remainingMs() <= 0) {
-      child.kill("SIGTERM");
-      await new Promise((wake) => setTimeout(wake, 100));
-      if (!settled) child.kill("SIGKILL");
-      throw new Error(control.cancelled() ? `fresh component cancelled at ${stage}` : `fresh component deadline exceeded at ${stage}`);
+  const budgetMs = control.remainingMs();
+  if (!Number.isSafeInteger(budgetMs) || budgetMs <= 0 || budgetMs > 86_400_000) throw new Error("fresh process budget must be 1..86400000ms");
+  const retained = control.diagnosticsRoot !== undefined;
+  const root = control.diagnosticsRoot ?? tmpdir();
+  if (!isAbsolute(root) || (retained && !root.split(/[\\/]/u).includes("🗑️generated"))) throw new Error("fresh process evidence root must be an absolute ticket-generated directory");
+  const info = lstatSync(root);
+  if (!info.isDirectory() || info.isSymbolicLink()) throw new Error("fresh process evidence root must be a regular directory");
+  if (command === "cargo" && args.some((arg) => arg === "--message-format" || arg.startsWith("--message-format="))) throw new Error("fresh Cargo diagnostics format is producer-owned");
+  const argv = command === "cargo" ? [...args, "--message-format=json"] : args;
+  const trace = mkdtempSync(join(root, "fresh-process-"));
+  const evidence = retained ? trace : "ephemeral";
+  if (retained) console.log("fresh-component-process: stage=" + stage + " evidence=" + evidence);
+  try {
+    const result = await runExactCargoLawProcess(command, argv, {
+      cwd,
+      env,
+      budgetMs,
+      maxOutputBytes: 64 * 1024 * 1024,
+      stdoutPath: join(trace, "stdout.jsonl"),
+      stderrPath: join(trace, "stderr.txt"),
+      cancelled: () => control.cancelled(),
+    });
+    const reason = result.reason ?? "exit";
+    writeFileSync(join(trace, "outcome.json"), JSON.stringify({ schema: "semio.plugin.fresh-process/v1", stage, command, args: argv, cargoTargetDir: env.CARGO_TARGET_DIR ?? null, status: result.status, signal: result.signal, reason }) + "\n", {
+      flag: "wx",
+      mode: 0o600,
+    });
+    if (result.status !== 0 || result.signal !== null || reason !== "exit") {
+      const errors: string[] = [];
+      for (const line of result.stdout.split("\n")) {
+        try {
+          const record = JSON.parse(line);
+          if (record?.reason === "compiler-message" && record.message?.level === "error") {
+            const rendered = record.message.rendered ?? record.message.message;
+            if (typeof rendered === "string") errors.push(rendered.slice(0, 6000));
+          }
+        } catch {}
+        if (errors.length >= 3) break;
+      }
+      const detail = (errors.length ? errors.join("\n") : result.stderr || result.stdout).slice(-6000);
+      throw new Error("fresh component " + reason + " at " + stage + " (status=" + result.status + ", signal=" + result.signal + "); evidence=" + evidence + "\n" + detail);
     }
+    freshCheckpoint(control, stage, completed + 1, total);
+  } finally {
+    if (!retained) rmSync(trace, { recursive: true, force: true });
   }
-  if (failure) throw failure;
-  freshCheckpoint(control, stage, completed + 1, total);
 }
 
 function freshRoot(path: string, label: string): string {
@@ -315,7 +355,14 @@ function freshStage(bytes: Uint8Array, destination: string, control: FreshBuildC
 }
 
 /** 🪪️ Verifies descriptor outputs against the raw snapshot retained before extraction. */
-async function captureFreshComponentInputs(repoRoot: string, request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId">, componentBytes: Uint8Array, coreBytes: Uint8Array, paths: { descriptorPack: string; descriptorJson: string }, control: FreshBuildControlV1) {
+async function captureFreshComponentInputs(
+  repoRoot: string,
+  request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId">,
+  componentBytes: Uint8Array,
+  coreBytes: Uint8Array,
+  paths: { descriptorPack: string; descriptorJson: string },
+  control: FreshBuildControlV1,
+) {
   const admission = { remaining: 2 * FRESH_DESCRIPTOR_MAX_BYTES };
   const check = () => freshCheckpoint(control, "verify", 5, 8);
   let descriptorJsonBytes: Uint8Array | undefined, descriptorBytes: Uint8Array | undefined;
@@ -326,11 +373,28 @@ async function captureFreshComponentInputs(repoRoot: string, request: Pick<Fresh
     const projected = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(descriptorJsonBytes)) as Record<string, any>;
     const componentSha256 = createHash("sha256").update(componentBytes).digest("hex");
     const coreSha256 = createHash("sha256").update(coreBytes).digest("hex");
-    if (projected.packageId !== request.componentPackageId || projected.manifest?.pluginId !== request.pluginId || typeof projected.manifest?.version !== "string" || projected.manifest.version.length === 0 || projected.role !== "plugin") throw new Error("fresh descriptor identity differs from the exact component request");
-    verifyFreshCatalogPackageV1(descriptorJsonBytes, descriptorBytes, { pluginId: request.pluginId, packageId: request.componentPackageId, version: projected.manifest.version, role: "plugin", execution: "isolated", wasmSha256: componentSha256, coreWasmSha256: coreSha256 });
+    if (projected.packageId !== request.componentPackageId || projected.manifest?.pluginId !== request.pluginId || typeof projected.manifest?.version !== "string" || projected.manifest.version.length === 0 || projected.role !== "plugin")
+      throw new Error("fresh descriptor identity differs from the exact component request");
+    verifyFreshCatalogPackageV1(descriptorJsonBytes, descriptorBytes, {
+      pluginId: request.pluginId,
+      packageId: request.componentPackageId,
+      version: projected.manifest.version,
+      role: "plugin",
+      execution: "isolated",
+      wasmSha256: componentSha256,
+      coreWasmSha256: coreSha256,
+    });
     const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
     check();
-    const result = { componentBytes, descriptorBytes, componentSha256, componentBlake3: blake3Hex(componentBytes), descriptorSha256: createHash("sha256").update(descriptorBytes).digest("hex"), coreSha256, version: projected.manifest.version as string };
+    const result = {
+      componentBytes,
+      descriptorBytes,
+      componentSha256,
+      componentBlake3: blake3Hex(componentBytes),
+      descriptorSha256: createHash("sha256").update(descriptorBytes).digest("hex"),
+      coreSha256,
+      version: projected.manifest.version as string,
+    };
     complete = true;
     return result;
   } finally {
@@ -341,7 +405,9 @@ async function captureFreshComponentInputs(repoRoot: string, request: Pick<Fresh
 
 /** 🫴️ Loans a private bounded copy once and drains its consumer before retiring the capability. */
 async function withFreshComponentLease<T>(component: Uint8Array, control: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>): Promise<T> {
-  let open = true, used = false, pending: Promise<unknown> | undefined;
+  let open = true,
+    used = false,
+    pending: Promise<unknown> | undefined;
   const lease: FreshComponentLeaseV1 = Object.freeze({
     consume<R>(consumer: (bytes: Uint8Array) => Promise<R>): Promise<R> {
       if (!open) return Promise.reject(new Error("fresh component lease expired"));
@@ -383,10 +449,18 @@ async function withFreshComponentLease<T>(component: Uint8Array, control: FreshB
 }
 
 /** 🧊️ Stages verified inputs, settles their required derivation and retires every source owner. */
-async function stageFreshComponentInputs<T>(request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId">, snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>>, stageRoot: string, witExports: readonly string[], control: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>): Promise<FreshComponentProducedV1<T>> {
+async function stageFreshComponentInputs<T>(
+  request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId">,
+  snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>>,
+  stageRoot: string,
+  witExports: readonly string[],
+  control: FreshBuildControlV1,
+  derive: (lease: FreshComponentLeaseV1) => Promise<T>,
+): Promise<FreshComponentProducedV1<T>> {
   const ownedFiles: string[] = [];
   try {
-    const componentPath = join(stageRoot, "component.wasm"), descriptorPath = join(stageRoot, "descriptor.semio");
+    const componentPath = join(stageRoot, "component.wasm"),
+      descriptorPath = join(stageRoot, "descriptor.semio");
     const stagedComponent = freshStage(snapshot.componentBytes, componentPath, control, "stage-component", 5, 8);
     ownedFiles.push(componentPath);
     const stagedDescriptor = freshStage(snapshot.descriptorBytes, descriptorPath, control, "stage-descriptor", 6, 8);
@@ -414,12 +488,21 @@ async function stageFreshComponentInputs<T>(request: Pick<FreshComponentRequestV
 }
 
 /** 🧬️ Builds and stages verified inputs, requiring derivation before its private raw owner retires. */
-export async function produceFreshComponentV1<T>(repoRoot: string, request: FreshComponentRequestV1, freshTargetRoot: string, packageStageRoot: string, control: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>): Promise<FreshComponentProducedV1<T>> {
+export async function produceFreshComponentV1<T>(
+  repoRoot: string,
+  request: FreshComponentRequestV1,
+  freshTargetRoot: string,
+  packageStageRoot: string,
+  control: FreshBuildControlV1,
+  derive: (lease: FreshComponentLeaseV1) => Promise<T>,
+): Promise<FreshComponentProducedV1<T>> {
   if (typeof derive !== "function") throw new Error("fresh component derivation callback is required");
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.pluginId) || !/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.componentPackageId) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.cargoPackage) || !/^[a-z0-9_]+\.wasm$/u.test(request.outputName)) throw new Error("fresh component request identity is not canonical");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.pluginId) || !/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.componentPackageId) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.cargoPackage) || !/^[a-z0-9_]+\.wasm$/u.test(request.outputName))
+    throw new Error("fresh component request identity is not canonical");
   const targetRoot = freshRoot(freshTargetRoot, "fresh component target root");
   const stageRoot = freshRoot(packageStageRoot, "fresh component stage root");
   if (freshPathIsWithin(targetRoot, stageRoot) || freshPathIsWithin(stageRoot, targetRoot)) throw new Error("fresh component target and stage roots must be disjoint");
+  if (control.diagnosticsRoot && (freshPathIsWithin(targetRoot, resolve(control.diagnosticsRoot)) || freshPathIsWithin(stageRoot, resolve(control.diagnosticsRoot)))) throw new Error("fresh process evidence must outlive target and stage cleanup");
   const workRoot = join(targetRoot, ".semio-fresh-component-work");
   mkdirSync(workRoot, { mode: 0o700 });
   const env = devToolingEnv({ CARGO_TARGET_DIR: targetRoot, CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", SCCACHE_DISABLE: "1" });
@@ -519,17 +602,32 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
   assert(artifactRoot?.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
   const evidence = mkdtempSync(join(artifactRoot, "fresh-component-staging-"));
-  const component = Buffer.from(fixture.componentHex, "hex"), core = Buffer.from(fixture.coreHex, "hex");
+  const component = Buffer.from(fixture.componentHex, "hex"),
+    core = Buffer.from(fixture.coreHex, "hex");
   const descriptor = {
-    descriptorVersion: 1, packageId: "semio:gis", role: "plugin",
+    descriptorVersion: 1,
+    packageId: "semio:gis",
+    role: "plugin",
     manifest: { pluginId: "gis", label: "GIS", version: "0.1.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [], dependencies: [], contributions: [] },
-    activationEvents: [], capabilityRequests: [], extensionPoints: [], execution: "isolated", quotas: {}, contributions: {}, assets: [],
+    activationEvents: [],
+    capabilityRequests: [],
+    extensionPoints: [],
+    execution: "isolated",
+    quotas: {},
+    contributions: {},
+    assets: [],
     hashes: { wasmSha256: fixture.componentSha256, coreWasmSha256: createHash("sha256").update(core).digest("hex"), descriptorSha256: "" },
   };
   descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor)).digest("hex");
   const descriptorBytes = encodePackValue(descriptor);
   const paths = { component: join(evidence, "component.wasm"), core: join(evidence, "core.wasm"), descriptorPack: join(evidence, "descriptor.semio"), descriptorJson: join(evidence, "descriptor.json") };
-  for (const [key, bytes] of [["component", component], ["core", core], ["descriptorPack", descriptorBytes], ["descriptorJson", Buffer.from(JSON.stringify(descriptor))]] as const) writeFileSync(paths[key], bytes);
+  for (const [key, bytes] of [
+    ["component", component],
+    ["core", core],
+    ["descriptorPack", descriptorBytes],
+    ["descriptorJson", Buffer.from(JSON.stringify(descriptor))],
+  ] as const)
+    writeFileSync(paths[key], bytes);
   const control: FreshBuildControlV1 = { cancelled: () => false, remainingMs: () => 60_000, checkpoint() {} };
   const capturedComponent = readStableBuildFile(paths.component, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => {});
   const capturedCore = readStableBuildFile(paths.core, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => {});
@@ -540,7 +638,10 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
   assert.equal(snapshot.componentBlake3, fixture.componentBlake3);
   assert.equal(snapshot.componentSha256, Buffer.from(await crypto.subtle.digest("SHA-256", component)).toString("hex"));
   assert.deepEqual(Buffer.from(snapshot.descriptorBytes), Buffer.from(descriptorBytes));
-  for (const path of Object.values(paths)) { renameSync(path, path + ".retained"); writeFileSync(path, "replaced-source"); }
+  for (const path of Object.values(paths)) {
+    renameSync(path, path + ".retained");
+    writeFileSync(path, "replaced-source");
+  }
   const destination = join(evidence, "staged.semio");
   const staged = freshStage(snapshot.descriptorBytes, destination, control, "stage-descriptor", 6, 8);
   assert.equal(staged.sha256, Buffer.from(await crypto.subtle.digest("SHA-256", descriptorBytes)).toString("hex"));
@@ -551,7 +652,24 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
   assert.equal(createHash("sha256").update(snapshot.componentBytes).digest("hex"), fixture.componentSha256);
   const cancelled = join(evidence, "cancelled.semio");
   let checkpoints = 0;
-  assert.throws(() => freshStage(snapshot.descriptorBytes, cancelled, { ...control, cancelled: () => checkpoints >= 2, checkpoint() { checkpoints++; } }, "stage-descriptor", 6, 8), /cancelled/);
+  assert.throws(
+    () =>
+      freshStage(
+        snapshot.descriptorBytes,
+        cancelled,
+        {
+          ...control,
+          cancelled: () => checkpoints >= 2,
+          checkpoint() {
+            checkpoints++;
+          },
+        },
+        "stage-descriptor",
+        6,
+        8,
+      ),
+    /cancelled/,
+  );
   assert.equal(checkpoints, 2);
   assert.equal(existsSync(cancelled), false);
   writeFileSync(paths.component, component);
@@ -567,11 +685,11 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
   };
   let retainedLease: FreshComponentLeaseV1 | undefined, retainedLoan: Uint8Array | undefined;
   const source = cloneSnapshot();
-  const produced = await handoff("loan-success", source, control, async lease => {
+  const produced = await handoff("loan-success", source, control, async (lease) => {
     retainedLease = lease;
     assert.deepEqual(Object.keys(lease), ["consume"]);
     assert(Object.isFrozen(lease));
-    const digest = await lease.consume(async bytes => {
+    const digest = await lease.consume(async (bytes) => {
       retainedLoan = bytes;
       assert.notEqual(bytes.buffer, source.componentBytes.buffer);
       const sha256 = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
@@ -579,46 +697,88 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
       assert.deepEqual(Buffer.from(source.componentBytes), component);
       return sha256;
     });
-    await assert.rejects(lease.consume(async () => "second"), /already consumed/);
+    await assert.rejects(
+      lease.consume(async () => "second"),
+      /already consumed/,
+    );
     return digest;
   });
   assert.equal(produced.derived, produced.receipt.component.sha256);
   assert.equal(produced.receipt.component.sha256, fixture.componentSha256);
   assert.deepEqual(readFileSync(join(evidence, "loan-success/component.wasm")), component);
   assert.deepEqual(Object.keys(produced.receipt).sort(), ["component", "coreSha256", "descriptor", "packageId", "pluginId", "version", "witExports"]);
-  assert(retainedLoan!.every(byte => byte === 0));
-  assert(source.componentBytes.every(byte => byte === 0));
-  assert(source.descriptorBytes.every(byte => byte === 0));
-  await assert.rejects(retainedLease!.consume(async () => "late"), /expired/);
+  assert(retainedLoan!.every((byte) => byte === 0));
+  assert(source.componentBytes.every((byte) => byte === 0));
+  assert(source.descriptorBytes.every((byte) => byte === 0));
+  await assert.rejects(
+    retainedLease!.consume(async () => "late"),
+    /expired/,
+  );
   const rejectedSource = cloneSnapshot();
   let rejectedLoan: Uint8Array | undefined;
-  await assert.rejects(handoff("loan-rejected", rejectedSource, control, lease => lease.consume(async bytes => { rejectedLoan = bytes; throw new Error("derive sentinel"); })), /^Error: derive sentinel$/);
-  assert(rejectedLoan!.every(byte => byte === 0));
-  assert(rejectedSource.componentBytes.every(byte => byte === 0));
-  assert(rejectedSource.descriptorBytes.every(byte => byte === 0));
+  await assert.rejects(
+    handoff("loan-rejected", rejectedSource, control, (lease) =>
+      lease.consume(async (bytes) => {
+        rejectedLoan = bytes;
+        throw new Error("derive sentinel");
+      }),
+    ),
+    /^Error: derive sentinel$/,
+  );
+  assert(rejectedLoan!.every((byte) => byte === 0));
+  assert(rejectedSource.componentBytes.every((byte) => byte === 0));
+  assert(rejectedSource.descriptorBytes.every((byte) => byte === 0));
   assert.deepEqual(readdirSync(join(evidence, "loan-rejected")), []);
   for (const when of ["before-consume", "after-consume"] as const) {
-    let stop = false, invoked = false;
+    let stop = false,
+      invoked = false;
     const cancelledSource = cloneSnapshot();
-    await assert.rejects(handoff(`loan-cancel-${when}`, cancelledSource, { ...control, cancelled: () => stop }, async lease => {
-      if (when === "before-consume") stop = true;
-      return await lease.consume(async () => { invoked = true; stop = true; return "must not publish"; });
-    }), /cancelled/);
+    await assert.rejects(
+      handoff(`loan-cancel-${when}`, cancelledSource, { ...control, cancelled: () => stop }, async (lease) => {
+        if (when === "before-consume") stop = true;
+        return await lease.consume(async () => {
+          invoked = true;
+          stop = true;
+          return "must not publish";
+        });
+      }),
+      /cancelled/,
+    );
     assert.equal(invoked, when === "after-consume");
-    assert(cancelledSource.componentBytes.every(byte => byte === 0));
-    assert(cancelledSource.descriptorBytes.every(byte => byte === 0));
+    assert(cancelledSource.componentBytes.every((byte) => byte === 0));
+    assert(cancelledSource.descriptorBytes.every((byte) => byte === 0));
     assert.deepEqual(readdirSync(join(evidence, `loan-cancel-${when}`)), []);
   }
   for (const failure of [false, true]) {
     const unawaitedSource = cloneSnapshot();
-    let release!: () => void, entered!: () => void, settled = false, loan: Uint8Array | undefined;
-    const gate = new Promise<void>(resolve => { release = resolve; });
-    const running = new Promise<void>(resolve => { entered = resolve; });
-    const operation = handoff(`loan-unawaited-${failure}`, unawaitedSource, control, async lease => {
-      void lease.consume(async bytes => { loan = bytes; entered(); await gate; if (failure) throw new Error("unawaited sentinel"); return "done"; });
+    let release!: () => void,
+      entered!: () => void,
+      settled = false,
+      loan: Uint8Array | undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const running = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const operation = handoff(`loan-unawaited-${failure}`, unawaitedSource, control, async (lease) => {
+      void lease.consume(async (bytes) => {
+        loan = bytes;
+        entered();
+        await gate;
+        if (failure) throw new Error("unawaited sentinel");
+        return "done";
+      });
       return "callback finished";
     });
-    void operation.then(() => { settled = true; }, () => { settled = true; });
+    void operation.then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      },
+    );
     await running;
     await Promise.resolve();
     assert.equal(settled, false);
@@ -626,14 +786,94 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
     release();
     if (failure) await assert.rejects(operation, /^Error: unawaited sentinel$/);
     else assert.equal((await operation).derived, "callback finished");
-    assert(loan!.every(byte => byte === 0));
-    assert(unawaitedSource.componentBytes.every(byte => byte === 0));
+    assert(loan!.every((byte) => byte === 0));
+    assert(unawaitedSource.componentBytes.every((byte) => byte === 0));
     if (failure) assert.deepEqual(readdirSync(join(evidence, `loan-unawaited-${failure}`)), []);
   }
   snapshot.componentBytes.fill(0);
   capturedCore.fill(0);
   snapshot.descriptorBytes.fill(0);
   console.log(`fresh-component-staging: AJV=1 WebCrypto=1 Pack=1 BLAKE3=1 laws=${fixture.laws.length} evidence=${evidence}`);
+}
+
+/** 🧪️ Qualifies fresh producer diagnostics and bounded real process retirement without Cargo. */
+export async function testFreshComponentProcessV1(repoRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const { default: deepEqual } = await import("fast-deep-equal");
+  const fixtureRoot = resolve(import.meta.dir, "../../🧪️fixtures/🧵️fresh-process");
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
+  const evidence = mkdtempSync(join(artifactRoot, "fresh-process-laws-"));
+  for (const row of fixture.cases) {
+    const root = join(evidence, row.name);
+    mkdirSync(root);
+    const started = Date.now(),
+      checkpoints: number[] = [];
+    const deadline = started + (row.mode === "timeout" ? 150 : 10_000);
+    const control: FreshBuildControlV1 = {
+      diagnosticsRoot: root,
+      cancelled: () => row.mode === "pre-cancel" || (row.mode === "cancel" && Date.now() - started >= 150),
+      remainingMs: () => deadline - Date.now(),
+      checkpoint: (_stage, completed) => {
+        checkpoints.push(completed);
+      },
+    };
+    const script =
+      row.mode === "exit"
+        ? "process.stdout.write(" + JSON.stringify(row.stdout) + "); process.stderr.write(" + JSON.stringify(row.stderr) + "); process.exitCode=" + row.exitCode
+        : row.mode === "flood"
+          ? "const {writeSync}=require('node:fs'); const b=Buffer.alloc(65536,120); for(let n=0;n<=1024;n++) writeSync(1,b); setInterval(()=>{},1000)"
+          : "setInterval(()=>{},1000)";
+    let failure: Error | undefined;
+    try {
+      await freshRun(
+        row.mode === "missing" ? join(root, "absent-executable") : process.execPath,
+        ["-e", script],
+        repoRoot,
+        { ...process.env, SEMIO_TEST_ARTIFACT_DIR: join(root, "must-not-use-ambient-evidence"), CARGO_TARGET_DIR: root },
+        control,
+        row.name,
+        0,
+        1,
+      );
+    } catch (error) {
+      failure = error as Error;
+    }
+    assert(Date.now() - started < 6000, row.name + " bounded retirement");
+    if (row.mode === "pre-cancel") {
+      assert(failure?.message.includes(row.diagnostic));
+      assert.deepEqual(readdirSync(root), []);
+      continue;
+    }
+    const traces = readdirSync(root);
+    assert.equal(traces.length, 1, row.name + " retained process trace");
+    const trace = join(root, traces[0]!);
+    const outcome = JSON.parse(readFileSync(join(trace, "outcome.json"), "utf8"));
+    assert.equal(outcome.reason, row.reason);
+    assert.equal(outcome.stage, row.name);
+    assert.equal(outcome.cargoTargetDir, root);
+    const stdout = readFileSync(join(trace, "stdout.jsonl"), "utf8"),
+      stderr = readFileSync(join(trace, "stderr.txt"), "utf8");
+    assert(Buffer.byteLength(stdout) + Buffer.byteLength(stderr) <= fixture.maxOutputBytes);
+    if (row.mode === "exit") {
+      assert(deepEqual({ stdout, stderr, status: outcome.status }, { stdout: row.stdout, stderr: row.stderr, status: row.exitCode }), row.name + " independent transcript oracle");
+      assert.equal(outcome.signal, null);
+    }
+    if (row.name === "success") {
+      assert.equal(failure, undefined);
+      assert.deepEqual(checkpoints, [0, 1]);
+    } else {
+      assert(failure?.message.includes(row.diagnostic), row.name + " surfaced cause: " + failure?.message);
+      assert(failure.message.includes(trace), row.name + " exact trace location");
+      assert(failure.message.length <= fixture.diagnosticChars + trace.length + 500);
+      assert.deepEqual(checkpoints, [0]);
+    }
+  }
+  console.log("fresh-component-process: AJV=1 fast-deep-equal=3 runtime-laws=" + fixture.cases.length + " evidence=" + evidence);
 }
 
 if (import.meta.main) {

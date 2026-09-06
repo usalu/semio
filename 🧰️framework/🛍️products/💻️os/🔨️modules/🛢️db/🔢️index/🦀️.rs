@@ -117,6 +117,7 @@ pub struct IndexCursorControl {
     cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
     deadline: std::time::Instant,
     fuel: usize,
+    cooperative: Option<(std::time::Duration, usize)>,
 }
 
 impl IndexCursorControl {
@@ -124,7 +125,15 @@ impl IndexCursorControl {
         if fuel == 0 {
             return Err(DbError::LimitExceeded("index cursor fuel"));
         }
-        Ok(Self { cancelled, deadline, fuel })
+        Ok(Self { cancelled, deadline, fuel, cooperative: None })
+    }
+
+    fn retained(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+        let duration = deadline.saturating_duration_since(std::time::Instant::now());
+        if fuel == 0 || duration.is_zero() {
+            return Err(DbError::LimitExceeded("index cursor retained budget"));
+        }
+        Ok(Self { cancelled, deadline, fuel, cooperative: Some((duration, fuel)) })
     }
 
     pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
@@ -140,7 +149,13 @@ impl IndexCursorControl {
         if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
             return Err(DbError::Unavailable("index cursor cancelled".to_string()));
         }
-        if std::time::Instant::now() >= self.deadline {
+        let now = std::time::Instant::now();
+        if (now >= self.deadline || self.fuel == 0) && self.cooperative.is_some() {
+            let (duration, fuel) = self.cooperative.expect("checked retained index budget");
+            std::thread::yield_now();
+            self.deadline = std::time::Instant::now() + duration;
+            self.fuel = fuel;
+        } else if now >= self.deadline {
             return Err(DbError::Unavailable("index cursor deadline reached".to_string()));
         }
         self.fuel = self.fuel.checked_sub(1).ok_or(DbError::LimitExceeded("index cursor fuel"))?;
@@ -876,7 +891,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
 
     /// 🧵️ Mounts a parent job's exact cancellation/deadline authority for retained index work.
     pub fn retained_operation_control(&self, cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<IndexCursorControl, DbError> {
-        IndexCursorControl::new(cancelled, deadline, fuel)
+        IndexCursorControl::retained(cancelled, deadline, fuel)
     }
 
     pub fn cancel(&self) {

@@ -16,7 +16,7 @@ pub const LAYOUT_PLAY_SURFACE_BLUEPRINT: &str = "layout.play.blueprint";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::layout::create_layout_app`. `options.measures`
 /// stays empty: layout declares no config-derived chrome measures for this window.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into(),
         label: LocalizedLabel::native("Blueprint", "Entwurf"),
@@ -37,7 +37,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> UiNode {
+pub fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> UiNode {
     let camera = &config.camera;
     build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, true), snapshot: None })
 }

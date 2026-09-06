@@ -18,16 +18,16 @@ pub struct CreateStep {
 impl MutationKind<FormsSnapshot, FormMutation> for CreateStep {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
-    async fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_create_step(self, base)
     }
-    async fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
+    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_create_step(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create step \"{}\"", self.step.title)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.step.id.clone()]
     }
 }

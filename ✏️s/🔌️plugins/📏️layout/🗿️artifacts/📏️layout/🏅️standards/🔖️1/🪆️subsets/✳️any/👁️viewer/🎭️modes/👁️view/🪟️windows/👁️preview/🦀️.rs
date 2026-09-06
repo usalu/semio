@@ -25,7 +25,7 @@ const LAYOUT_VIEW_CONTROLLER_ID: &str = "layout-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::layout::create_layout_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -46,7 +46,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
+fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     json!([
         { "kind": "move", "to": [x, y] },
         { "kind": "line", "to": [x + width, y] },
@@ -56,7 +56,7 @@ async fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     ])
 }
 
-async fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> Value {
+fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> Value {
     let mut layer = json!({ "id": id.into(), "segments": segments });
     if let Some(color) = fill {
         layer["fill"] = json!({ "color": color });
@@ -71,7 +71,7 @@ async fn host_layer(id: impl Into<String>, segments: &Value, fill: Option<[f32; 
 /// page background, one rect layer per visible resolved frame — real fill/stroke for `Frame::Rect`,
 /// an outline rect for `Frame::Text` (no glyph layout, see this file's own doc), a placeholder tint
 /// for `Frame::Image` (matches the editor's own unresolved-link placeholder color).
-async fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
+fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
     let Some(page) = doc.pages.first() else {
         return "[]".into();
     };
@@ -93,7 +93,7 @@ async fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
 
 /// 👁️ Fixed default camera every render — a viewer has no persisted per-session camera (`Config =
 /// NoConfig`), matching cad's viewer's documented "default camera/sun" simplification.
-pub async fn render(doc: &LayoutSnapshot) -> UiNode {
+pub fn render(doc: &LayoutSnapshot) -> UiNode {
     build_canvas_2d_scene(SURFACE_ID, LAYOUT_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc), snapshot: None })
 }
 //#endregion 🔖️Render

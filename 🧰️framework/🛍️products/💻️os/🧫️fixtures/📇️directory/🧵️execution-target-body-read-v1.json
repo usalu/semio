@@ -1,0 +1,147 @@
+{
+  "schema": "semio.os.execution-target-body-read/v1",
+  "deadlineMs": 80,
+  "completionMs": 500,
+  "cases": [
+    {
+      "name": "success",
+      "outcome": "fulfilled",
+      "locked": false,
+      "chunkWiped": true
+    },
+    {
+      "name": "short",
+      "outcome": "rejected",
+      "locked": false,
+      "chunkWiped": true
+    },
+    {
+      "name": "oversize",
+      "outcome": "rejected",
+      "locked": false,
+      "chunkWiped": true
+    },
+    {
+      "name": "pending-abort",
+      "outcome": "rejected",
+      "locked": false,
+      "chunkWiped": true
+    },
+    {
+      "name": "pending-deadline",
+      "outcome": "rejected",
+      "locked": false,
+      "chunkWiped": true
+    },
+    {
+      "name": "stale-after-read",
+      "outcome": "rejected",
+      "locked": false,
+      "chunkWiped": true
+    },
+    {
+      "name": "abort-at-eof",
+      "outcome": "rejected",
+      "locked": false,
+      "chunkWiped": true
+    }
+  ],
+  "ownership": [
+    {
+      "name": "component-scope",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "component-origin",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "component-schema",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "component-surface",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "component-client",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "hash-abort",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "hash-surface",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "grant-eof-abort",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "grant-eof-stale",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "open-plan-pending-abort",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "manifest-pending-abort",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "component-pending-abort",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "descriptor-pending-abort",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "socket-grants-pending-abort",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "superseded-open",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    },
+    {
+      "name": "status-owner-change",
+      "outcome": "rejected",
+      "lease": false,
+      "reservation": false
+    }
+  ]
+}

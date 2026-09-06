@@ -101,12 +101,12 @@ pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations
 
 //#region 🔖️Helpers
 /// ▶️ Applies `mutation` via its diff — the sole apply path now (no hand-written match dispatch).
-pub async fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationApplyResult<NoteSnapshot> {
+pub fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationApplyResult<NoteSnapshot> {
     let (diff, _messages) = mutation.diff(snapshot).into_parts();
     MutationDiff::apply(&diff, snapshot)
 }
 
-pub async fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Vec<NoteMutation> {
+pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Vec<NoteMutation> {
     mutation.inverse(snapshot)
 }
 //#endregion 🔖️Helpers
@@ -238,7 +238,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
-    async fn sample_snapshot() -> NoteSnapshot {
+    fn sample_snapshot() -> NoteSnapshot {
         let mut snapshot = crate::artifacts::note::schema::empty_note_snapshot();
         snapshot.blocks.push(NoteBlockNode::Text {
             id: "b1".into(),
@@ -274,7 +274,7 @@ mod tests {
         snapshot
     }
 
-    async fn round_trip(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> NoteSnapshot {
+    fn round_trip(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> NoteSnapshot {
         let forward = apply_note_mutation(snapshot, mutation).expect("valid mutation diff");
         let mut restored = forward.clone();
         for back in mutation.inverse(snapshot) {

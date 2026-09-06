@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/imperative-extension-core-rust",
+  "name": "@semio-tech/imperative-extension-effect-rust",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
     "default": [

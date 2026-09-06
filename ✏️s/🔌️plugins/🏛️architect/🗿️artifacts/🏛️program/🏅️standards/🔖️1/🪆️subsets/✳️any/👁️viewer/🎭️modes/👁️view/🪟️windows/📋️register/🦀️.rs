@@ -18,7 +18,7 @@ pub const ARCHITECT_VIEW_BODY_REGISTER: &str = "architect.view.register";
 
 //#region 🔖️Definition
 /// 👁️ Stitched into the viewer manifest by `crate::viewer::architect::create_architect_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_VIEW_WINDOW_REGISTER.into(),
         label: LocalizedLabel::native("Register Overview", "Register-Übersicht"),
@@ -43,22 +43,22 @@ pub async fn definition() -> WindowKindDefinition {
 /// 👁️ Local tree-node helpers, mirroring the sibling surface's own presentation factories in shape —
 /// deliberately NOT reused from there (a viewer must never depend on the sibling surface, see this
 /// file's own doc comment); this is intentional, minimal duplication, not an oversight.
-async fn view_tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
+fn view_tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
     UiTreeItemNode::base(id, Label::data(label.into()))
 }
 
-async fn view_tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
+fn view_tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
     UiTreeSectionNode { id: id.into(), label: label.map(Label::data), default_open: Some(true), presence: UiPresence::default(), items }
 }
 
-async fn view_tree_node(sections: Vec<UiTreeSectionNode>) -> UiNode {
+fn view_tree_node(sections: Vec<UiTreeSectionNode>) -> UiNode {
     UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), interaction_domain: None, drop_action: None, menu: None })
 }
 
 /// 👁️ Pure `ProgramSnapshot -> UiNode` read: every non-empty register's entity count plus its
 /// draft/approved split, one tree section per register, sourced entirely from the shared artifact-level
 /// `status_summary` inference (no config, no selection state).
-pub async fn render(program: &ProgramSnapshot) -> UiNode {
+pub fn render(program: &ProgramSnapshot) -> UiNode {
     let summary = status_summary(program);
     if summary.total_entities == 0 {
         return ui_text(Label::data("No entities in this program yet."));

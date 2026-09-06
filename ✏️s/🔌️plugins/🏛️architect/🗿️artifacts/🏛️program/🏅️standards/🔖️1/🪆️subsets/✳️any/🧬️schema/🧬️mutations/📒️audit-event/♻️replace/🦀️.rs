@@ -19,16 +19,16 @@ pub struct ReplaceAuditEvent {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceAuditEvent {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "audit-event", kind: "replace-audit-event", record: "ReplacedAuditEvent" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace audit event \"{}\"", self.audit_event.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.audit_event.header.id.0.clone()]
     }
 }

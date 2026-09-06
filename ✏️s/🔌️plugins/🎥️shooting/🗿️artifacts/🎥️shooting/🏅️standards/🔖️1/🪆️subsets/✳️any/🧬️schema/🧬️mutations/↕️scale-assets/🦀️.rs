@@ -17,16 +17,16 @@ pub struct ScaleAssets {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for ScaleAssets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "scale", entity: "assets", kind: "scale-assets", record: "ScaledAssets" };
-    async fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Scale {} asset(s)", self.asset_ids.len())
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         self.asset_ids.clone()
     }
 }

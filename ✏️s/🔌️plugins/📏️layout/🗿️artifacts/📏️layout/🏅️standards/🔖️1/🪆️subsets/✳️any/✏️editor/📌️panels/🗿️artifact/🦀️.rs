@@ -15,7 +15,7 @@ pub const LAYOUT_PLAY_BODY_DOCUMENT: &str = "layout.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -27,7 +27,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️RowIds
-async fn frame_icon(kind: &str) -> &str {
+fn frame_icon(kind: &str) -> &str {
     match kind {
         "rect" => "square",
         "text" => "type",
@@ -36,31 +36,31 @@ async fn frame_icon(kind: &str) -> &str {
     }
 }
 
-async fn page_row_id(page_id: &str) -> String {
+fn page_row_id(page_id: &str) -> String {
     format!("layout-document.page.{page_id}")
 }
 
-async fn layer_row_id(page_id: &str, layer_id: &str) -> String {
+fn layer_row_id(page_id: &str, layer_id: &str) -> String {
     format!("layout-document.layer.{page_id}.{layer_id}")
 }
 
-async fn spread_row_id(spread_id: &str) -> String {
+fn spread_row_id(spread_id: &str) -> String {
     format!("layout-document.spread.{spread_id}")
 }
 
-async fn parent_page_row_id(parent_page_id: &str) -> String {
+fn parent_page_row_id(parent_page_id: &str) -> String {
     format!("layout-document.parentPage.{parent_page_id}")
 }
 
-async fn story_row_id(story_id: &str) -> String {
+fn story_row_id(story_id: &str) -> String {
     format!("layout-document.story.{story_id}")
 }
 
-async fn link_row_id(link_id: &str) -> String {
+fn link_row_id(link_id: &str) -> String {
     format!("layout-document.link.{link_id}")
 }
 
-async fn style_row_id(style_id: &str) -> String {
+fn style_row_id(style_id: &str) -> String {
     format!("layout-document.style.{style_id}")
 }
 //#endregion 🔖️RowIds
@@ -114,7 +114,7 @@ fn selection_args(ids: impl IntoIterator<Item = String>, merge: &str) -> semio_f
 /// interaction domain; `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?` below has the framework's
 /// renderer translate row hover into `interactionHover` and stamp presence from `InteractionState`,
 /// replacing the deleted `.selected()?`/`.highlighted()?`/`.selection_change()` calls.
-pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let spread_items = ui_node_list(doc.spreads.iter().map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None)))?;
 
     let page_items = ui_node_list(doc.pages.iter().map(|page| {

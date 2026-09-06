@@ -18,13 +18,13 @@ pub struct ChangeDataFields {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeDataFields {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "data-fields", kind: "change-data-fields", record: "ChangedDataFields" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_data_fields(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_data_fields(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Change data fields".into()
     }
 }
@@ -32,7 +32,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeDataFields {
 
 
 //#region 🧾ChangeDataFields
-pub async fn diff_change_data_fields(payload: &ChangeDataFields, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_change_data_fields(payload: &ChangeDataFields, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.data_fields_json == payload.new_json {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Data fields are already set to that value.");
     }
@@ -42,7 +42,7 @@ pub async fn diff_change_data_fields(payload: &ChangeDataFields, base: &LayoutSn
 
 
 //#region 🧾ChangeDataFields
-pub async fn inverse_change_data_fields(_payload: &ChangeDataFields, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_data_fields(_payload: &ChangeDataFields, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     vec![LayoutMutation::ChangeDataFields(ChangeDataFields { new_json: base.data_fields_json.clone() })]
 }
 //#endregion 🧾ChangeDataFields

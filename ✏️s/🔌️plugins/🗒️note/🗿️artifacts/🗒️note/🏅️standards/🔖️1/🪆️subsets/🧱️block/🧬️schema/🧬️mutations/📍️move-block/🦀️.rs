@@ -21,23 +21,23 @@ pub struct MoveBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn move_block(id: String, new_x: f64, new_y: f64) -> NoteMutation {
+pub fn move_block(id: String, new_x: f64, new_y: f64) -> NoteMutation {
     NoteMutation::MoveBlock(MoveBlock { id, new_x, new_y })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for MoveBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block", record: "MovedBlock" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Move block \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

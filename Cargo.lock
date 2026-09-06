@@ -6998,6 +6998,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",

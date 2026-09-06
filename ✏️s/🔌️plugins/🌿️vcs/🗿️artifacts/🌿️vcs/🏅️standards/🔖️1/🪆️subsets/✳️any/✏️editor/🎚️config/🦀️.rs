@@ -152,6 +152,48 @@ impl protocol::OpBinary for VcsDemoConfigMutation {
 impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
     type Diff = VcsDemoConfig;
 
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄️snapshot",
+            semantic_kind: "snapshot",
+            display_name: "Snapshot",
+            emoji: "📄️",
+            aggregate_variant: "Snapshot",
+            payload_schema: "🔣️.schema.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::Warning],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale",
+            semantic_kind: "set-locale",
+            display_name: "Set Locale",
+            emoji: "🗣️",
+            aggregate_variant: "SetLocale",
+            payload_schema: "🔣️.schema.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::Warning],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::SetLocale { .. } => &Self::DESCRIPTORS[1],
+        }
+    }
+
     fn diff(&self, base: &VcsDemoConfig) -> protocol::MutationOutcome<VcsDemoConfig> {
         let mut next = base.clone();
         match self {
@@ -202,6 +244,9 @@ mod tests {
     async fn vcs_demo_config_operation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig { locale: "de-DE".into() } });
         store::os_store::test_support::assert_op_line_round_trip(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() });
+        assert_eq!(<VcsDemoConfigMutation as Mutation<VcsDemoConfig>>::DESCRIPTORS.len(), 2);
+        assert_eq!(VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig::default() }.descriptor().aggregate_variant, "Snapshot");
+        assert_eq!(VcsDemoConfigMutation::SetLocale { value: "de-DE".into() }.descriptor().semantic_kind, "set-locale");
     }
 
     /// ⏪️ `backwards()` always returns a `Snapshot` of the pre-operation config, so applying it after

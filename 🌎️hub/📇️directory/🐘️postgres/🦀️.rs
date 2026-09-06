@@ -15,7 +15,8 @@ use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
     active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire,
-    directory_command_result_kind_from_str, directory_command_result_kind_str, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory,
+    directory_command_result_kind_from_str, directory_command_result_kind_str, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion,
+    validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory,
     InviteCapability,
     InviteRedemptionPreflight, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
     ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, UNCONTROLLED_PROJECTION_REBUILD,
@@ -197,6 +198,16 @@ CREATE TABLE IF NOT EXISTS hub_directory_command_receipt (
     claimed_at BIGINT NOT NULL,
     completed_at BIGINT,
     PRIMARY KEY (actor_user_id, request_id)
+);
+CREATE TABLE IF NOT EXISTS hub_checkpoint_publication_receipt (
+    actor_user_id TEXT NOT NULL,
+    correlation_id TEXT NOT NULL,
+    command_sha256 TEXT NOT NULL,
+    disposition TEXT NOT NULL,
+    checkpoint_id BYTEA,
+    claimed_at BIGINT NOT NULL,
+    completed_at BIGINT,
+    PRIMARY KEY (actor_user_id, correlation_id)
 );
 CREATE TABLE IF NOT EXISTS hub_admin_operation_audit (
     sequence BIGSERIAL PRIMARY KEY,
@@ -1279,6 +1290,57 @@ impl HubDirectory for PostgresDirectory {
         Ok(())
     }
 
+    async fn claim_or_read_checkpoint_publication(&self, claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<CheckpointPublicationClaimV1> {
+        validate_checkpoint_publication_claim(claim)?;
+        let mut tx = self.pool.begin().await.map_err(backend)?;
+        let existing: Option<CheckpointPublicationReceiptRowV1> = sqlx_core::query_as::query_as(
+            "SELECT actor_user_id, correlation_id, command_sha256, disposition, checkpoint_id, claimed_at, completed_at FROM hub_checkpoint_publication_receipt WHERE actor_user_id = $1 AND correlation_id = $2 FOR UPDATE",
+        )
+        .bind(&claim.actor_user_id)
+        .bind(&claim.correlation_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(backend)?;
+        if let Some(row) = existing {
+            let record = checkpoint_publication_receipt_from_row(row)?;
+            tx.rollback().await.map_err(backend)?;
+            return Ok(if record.command_sha256 == claim.command_sha256 { CheckpointPublicationClaimV1::Existing(record) } else { CheckpointPublicationClaimV1::Conflict });
+        }
+        sqlx_core::query::query(
+            "INSERT INTO hub_checkpoint_publication_receipt(actor_user_id, correlation_id, command_sha256, disposition, checkpoint_id, claimed_at, completed_at) VALUES ($1,$2,$3,'pending',NULL,$4,NULL)",
+        )
+        .bind(&claim.actor_user_id)
+        .bind(&claim.correlation_id)
+        .bind(&claim.command_sha256)
+        .bind(claim.claimed_at)
+        .execute(&mut *tx)
+        .await
+        .map_err(backend)?;
+        tx.commit().await.map_err(backend)?;
+        Ok(CheckpointPublicationClaimV1::Claimed(CheckpointPublicationReceiptRecordV1 {
+            actor_user_id: claim.actor_user_id.clone(),
+            correlation_id: claim.correlation_id.clone(),
+            command_sha256: claim.command_sha256.clone(),
+            disposition: CheckpointPublicationDispositionV1::Pending,
+            checkpoint_id: None,
+            claimed_at: claim.claimed_at,
+            completed_at: None,
+        }))
+    }
+
+    async fn release_checkpoint_publication(&self, actor_user_id: &str, correlation_id: &str, command_sha256: &str) -> DirectoryResult<()> {
+        sqlx_core::query::query(
+            "DELETE FROM hub_checkpoint_publication_receipt WHERE actor_user_id = $1 AND correlation_id = $2 AND command_sha256 = $3 AND disposition = 'pending'",
+        )
+        .bind(actor_user_id)
+        .bind(correlation_id)
+        .bind(command_sha256)
+        .execute(&self.pool)
+        .await
+        .map_err(backend)?;
+        Ok(())
+    }
+
     async fn append_admin_operation_audit(&self, fact: &NewAdminOperationAuditRecord) -> DirectoryResult<AdminOperationAuditRecord> {
         validate_admin_operation_audit(fact)?;
         let terminal = fact.phase != "accepted";
@@ -1749,7 +1811,14 @@ impl HubDirectory for PostgresDirectory {
         Ok(reservation)
     }
 
-    async fn append_reserved_artifact_checkpoint(&self, event: Option<&NewDirectoryEvent>, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, current_now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
+    async fn append_reserved_artifact_checkpoint(
+        &self,
+        event: Option<&NewDirectoryEvent>,
+        checkpoint: &ArtifactCheckpoint,
+        reservation: &ArtifactCasReservation,
+        completion: Option<&CheckpointPublicationCompletionV1>,
+        current_now_ms: u64,
+    ) -> DirectoryResult<Vec<DirectoryEvent>> {
         validate_artifact_cas_publication_v1(&reservation.plan, checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
         if let Some(event) = event {
             validate_verified_checkpoint_append(event, checkpoint)?;
@@ -1837,6 +1906,23 @@ impl HubDirectory for PostgresDirectory {
             .await
             .map_err(backend)?;
         cas_project_publish(&mut tx, reservation, generation).await?;
+        if let Some(completion) = completion {
+            validate_checkpoint_publication_completion(completion)?;
+            let updated = sqlx_core::query::query(
+                "UPDATE hub_checkpoint_publication_receipt SET disposition = 'completed', checkpoint_id = $4, completed_at = $5 WHERE actor_user_id = $1 AND correlation_id = $2 AND command_sha256 = $3 AND disposition = 'pending'",
+            )
+            .bind(&completion.actor_user_id)
+            .bind(&completion.correlation_id)
+            .bind(&completion.command_sha256)
+            .bind(completion.checkpoint_id.0.as_slice())
+            .bind(completion.completed_at)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
+            if updated.rows_affected() != 1 {
+                return Err(DirectoryError::Conflict("checkpoint publication claim is missing, substituted, or already completed".into()));
+            }
+        }
         tx.commit().await.map_err(backend)?;
         Ok(vec![full])
     }
@@ -2180,6 +2266,25 @@ type AuthSessionRow = (String, String, Vec<u8>, String, String, Vec<u8>, i64, i6
 type AuthAuditRow = (String, i64, String, Option<String>, Option<String>, Option<String>, Option<String>, String, Option<String>, String, String);
 const DIRECTORY_COMMAND_RECEIPT_SELECT: &str = "actor_user_id, request_id, command_sha256, result_kind, disposition, event_seq_first, event_seq_last, receipt_sha256, claimed_at, completed_at";
 type DirectoryCommandReceiptRow = (String, String, String, String, String, Option<i64>, Option<i64>, Option<String>, i64, Option<i64>);
+type CheckpointPublicationReceiptRowV1 = (String, String, String, String, Option<Vec<u8>>, i64, Option<i64>);
+
+fn checkpoint_publication_receipt_from_row(row: CheckpointPublicationReceiptRowV1) -> DirectoryResult<CheckpointPublicationReceiptRecordV1> {
+    let disposition = match row.3.as_str() {
+        "pending" => CheckpointPublicationDispositionV1::Pending,
+        "completed" => CheckpointPublicationDispositionV1::Completed,
+        other => return Err(DirectoryError::Backend(format!("unknown checkpoint publication disposition '{other}'"))),
+    };
+    let checkpoint_id = row.4.map(|bytes| bytes.try_into().map(ArtifactHash).map_err(|_| DirectoryError::Backend("checkpoint publication id is not 32 bytes".into()))).transpose()?;
+    Ok(CheckpointPublicationReceiptRecordV1 {
+        actor_user_id: row.0,
+        correlation_id: row.1,
+        command_sha256: row.2,
+        disposition,
+        checkpoint_id,
+        claimed_at: row.5,
+        completed_at: row.6,
+    })
+}
 
 fn directory_command_receipt_from_row(row: DirectoryCommandReceiptRow) -> DirectoryResult<DirectoryCommandReceiptRecord> {
     let disposition = match row.4.as_str() {

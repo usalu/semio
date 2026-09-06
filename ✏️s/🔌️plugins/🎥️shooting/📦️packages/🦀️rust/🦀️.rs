@@ -810,6 +810,7 @@ pub mod artifacts {
                 #[path = "../../🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
                 mod component;
                 pub use component::*;
+                #[cfg(test)]
                 #[path = "../../🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
                 mod tests;
             }

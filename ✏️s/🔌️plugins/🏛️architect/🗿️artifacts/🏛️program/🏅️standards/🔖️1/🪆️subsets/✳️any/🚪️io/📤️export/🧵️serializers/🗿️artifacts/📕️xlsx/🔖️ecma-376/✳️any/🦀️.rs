@@ -3,7 +3,7 @@ use crate::artifacts::program::ProgramSnapshot;
 pub use semio_s_plugin_stdio::artifacts::xlsx::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxSnapshot, XlsxWorkbook};
 use std::collections::BTreeSet;
 
-pub async fn register() {}
+pub fn register() {}
 
 fn export_error(message: impl Into<String>) -> store::TextError {
     store::TextError::new(message.into(), dsl::TextSpan::at(1, 1))
@@ -19,8 +19,8 @@ fn cell_value(value: &dsl::DslValue) -> Result<XlsxCellValue, store::TextError> 
     }
 }
 
-pub async fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, store::TextError> {
-    let tables = crate::artifacts::program::io::program_export_tables(snapshot).await.map_err(export_error)?;
+pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, store::TextError> {
+    let tables = crate::artifacts::program::io::program_export_tables(snapshot).map_err(export_error)?;
     let mut sheets = Vec::with_capacity(tables.len());
     for table in tables {
         let columns: Vec<String> = table.rows.iter().flat_map(|row| row.iter().map(|(key, _)| key.clone())).collect::<BTreeSet<_>>().into_iter().collect();
@@ -40,12 +40,12 @@ pub async fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, store
     Ok(XlsxSnapshot::from_parts(Default::default(), XlsxWorkbook { sheets, shared_strings: Vec::new() }))
 }
 
-pub async fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<XlsxSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot).await?))
+pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+    Ok(<XlsxSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }
 
-pub async fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
-    let workbook = serialize(snapshot).await?;
+pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+    let workbook = serialize(snapshot)?;
     semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&workbook).map_err(|error| export_error(format!("program->xlsx: {error}")))
 }
 

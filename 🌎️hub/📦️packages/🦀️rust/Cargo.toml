@@ -64,3 +64,4 @@ neo4rs = { version = "0.8", optional = true }
 blake3 = "1"
 tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
+directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["testkit"] }

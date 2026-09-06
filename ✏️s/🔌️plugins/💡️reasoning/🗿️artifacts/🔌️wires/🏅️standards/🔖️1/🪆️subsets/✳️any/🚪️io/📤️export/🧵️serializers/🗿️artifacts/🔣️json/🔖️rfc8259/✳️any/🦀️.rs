@@ -14,7 +14,7 @@ pub struct WiresIntoJson;
 impl Serializer<WiresSnapshot> for WiresIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
         let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(from));
         let text = dsl::os_pack::json::to_string_pretty(&value);
         Ok(IoOutcome::clean(IoPayload::Text(text)))

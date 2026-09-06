@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/os/execution-target-body-read-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "deadlineMs", "completionMs", "cases", "ownership"],
+  "properties": {
+    "schema": {
+      "const": "semio.os.execution-target-body-read/v1"
+    },
+    "deadlineMs": {
+      "const": 80
+    },
+    "completionMs": {
+      "const": 500
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "outcome", "locked", "chunkWiped"],
+        "properties": {
+          "name": {
+            "enum": ["success", "short", "oversize", "pending-abort", "pending-deadline", "stale-after-read", "abort-at-eof"]
+          },
+          "outcome": {
+            "enum": ["fulfilled", "rejected"]
+          },
+          "locked": {
+            "const": false
+          },
+          "chunkWiped": {
+            "const": true
+          }
+        }
+      }
+    },
+    "ownership": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "outcome", "lease", "reservation"],
+        "properties": {
+          "name": {
+            "enum": [
+              "component-scope",
+              "component-origin",
+              "component-schema",
+              "component-surface",
+              "component-client",
+              "hash-abort",
+              "hash-surface",
+              "grant-eof-abort",
+              "grant-eof-stale",
+              "open-plan-pending-abort",
+              "manifest-pending-abort",
+              "component-pending-abort",
+              "descriptor-pending-abort",
+              "socket-grants-pending-abort",
+              "superseded-open",
+              "status-owner-change"
+            ]
+          },
+          "outcome": {
+            "const": "rejected"
+          },
+          "lease": {
+            "const": false
+          },
+          "reservation": {
+            "const": false
+          }
+        }
+      }
+    }
+  }
+}

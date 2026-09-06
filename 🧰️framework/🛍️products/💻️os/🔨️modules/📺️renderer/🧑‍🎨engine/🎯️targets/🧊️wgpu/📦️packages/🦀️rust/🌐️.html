@@ -4,6 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Semio Wgpu</title>
+    <!-- 🔬️ Trunk appends its own module here that instantiates the renderer a SECOND time on the UI thread
+         and publishes that never-booted instance as `window.wasmBindings` (measured: neither `data-type=
+         "worker"` nor `data-wasm-no-import` suppresses it in trunk 0.21.14). The renderer's `UI_ENGINE`
+         thread-local lives in the frame Worker, so calling that copy traps with a wasm "memory access out
+         of bounds" — which is why the introspection beacon is `window.semioWgpuIntrospection`, owned by
+         `🚀️browser-boot/🟦️.ts` over the Worker seam, and never `wasmBindings`. -->
     <link data-trunk rel="rust" href="Cargo.toml" data-wasm-opt="z" data-type="worker" data-bindgen-target="web" />
     <link data-trunk rel="copy-dir" href="../../../../../../🧑‍💻dev/🔌️plugin-modules" data-target-path="🔌️plugin-modules" />
     <link data-trunk rel="copy-dir" href="../../../../../../../../../🔨️modules/🖼️assets" data-target-path="🖼️assets" />

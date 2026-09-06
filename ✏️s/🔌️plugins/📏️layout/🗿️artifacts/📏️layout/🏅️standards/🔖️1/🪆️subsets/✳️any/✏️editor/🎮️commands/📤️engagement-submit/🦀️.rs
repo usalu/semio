@@ -14,7 +14,7 @@ pub struct EngagementSubmit {
 }
 
 /// 🐚️ Redispatches typed export intents so the exact public action enters its resumable job.
-pub async fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let typed = payload.value.trim();
     let action = if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
         Some(("exportPng", Some(serde_json::json!({ "pageId": null }))))

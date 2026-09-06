@@ -4,8 +4,8 @@ use super::ScaleAssets;
 use crate::artifacts::shooting::mutations::ShootingMutation;
 use crate::artifacts::shooting::ShootingSnapshot;
 
-pub async fn inverse(payload: &ScaleAssets, _base: &ShootingSnapshot) -> Vec<ShootingMutation> {
-    async fn reciprocal(value: f64) -> f64 {
+pub fn inverse(payload: &ScaleAssets, _base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    fn reciprocal(value: f64) -> f64 {
         if value.abs() < 1e-8 {
             1.0
         } else {

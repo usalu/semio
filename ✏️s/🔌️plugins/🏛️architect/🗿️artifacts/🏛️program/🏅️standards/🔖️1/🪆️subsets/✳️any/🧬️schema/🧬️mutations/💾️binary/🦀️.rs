@@ -11,12 +11,12 @@ use crate::artifacts::program::schema::mutations::text::ProgramMutation;
 use protocol::OpBinary;
 
 /// 📡️ Encodes an Architect operation for transport or persistence.
-pub async fn encode_op(operation: &ProgramMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &ProgramMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📥️ Decodes an Architect operation from its transport representation.
-pub async fn decode_op(bytes: &[u8]) -> Result<ProgramMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<ProgramMutation, protocol::ProtocolError> {
     ProgramMutation::decode_op(bytes)
 }
 

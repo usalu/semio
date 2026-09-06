@@ -1,0 +1,145 @@
+{
+  "schema": "semio.os.browser-actor-child-containment/v1",
+  "limits": {
+    "actors": 2,
+    "actorBytes": 67108864,
+    "messageBytes": 262144,
+    "outputBytes": 1048576,
+    "bootMs": 10000,
+    "loadMs": 5000,
+    "invokeMs": 2000,
+    "wasiOutputBytes": 65536,
+    "wasiOutputWrites": 128
+  },
+  "modules": {
+    "normal": "export async function activate(identity, port) { return { async invoke(path, args) { switch (path[0]) { case 'echo': return args[0]; case 'loop': while (true) {} case 'wait': return new Promise(() => {}); case 'oversize': return new ArrayBuffer(1048577); case 'effect': port.dispatch({kind:'forged',actorId:identity.actorId}); return 'forbidden'; default: throw new Error('unknown'); } }, async close() {}, progress() { return { phase: 'open' }; } }; }",
+    "loadLoop": "while (true) {} export async function activate() { throw new Error('unreachable'); }",
+    "activationFailure": "export async function activate() { throw new Error('fixture activation failure'); }",
+    "wasi": "export async function activate(identity, port) { return { async invoke(path) { switch(path[0]) { case 'clock': { const a=port.wasi.nowNs(), b=port.wasi.nowNs(); return typeof a==='bigint' && a>=0n && b>=a; } case 'output': { const bytes=new Uint8Array([65,66]); port.wasi.write('stdout',bytes); bytes.fill(90); port.wasi.write('stderr',new Uint8Array([67,68])); return true; } case 'bound': port.wasi.write('stdout',new Uint8Array(65537)); return false; case 'exit': port.wasi.exit('ok'); return false; } }, async close() {} }; }"
+  },
+  "laws": [
+    "static-child",
+    "verified-transfer",
+    "round-trip",
+    "pre-transfer-bound",
+    "aggregate-capacity",
+    "tight-loop-invoke",
+    "tight-loop-load",
+    "activation-failure",
+    "digest-denial",
+    "single-flight",
+    "output-bound",
+    "effect-denial",
+    "abort-retirement",
+    "fresh-generation",
+    "wasi-clock",
+    "wasi-output",
+    "wasi-output-bound",
+    "wasi-exit"
+  ],
+  "wireRows": [
+    {
+      "name": "wrong-nonce",
+      "at": "result",
+      "patch": {
+        "nonce": "00000000-0000-0000-0000-000000000000"
+      },
+      "expected": "ignored"
+    },
+    {
+      "name": "wrong-generation",
+      "at": "result",
+      "patch": {
+        "generation": "18446744073709551615"
+      },
+      "expected": "ignored"
+    },
+    {
+      "name": "duplicate-ready",
+      "at": "loaded",
+      "patch": {
+        "kind": "ready"
+      },
+      "expected": "closed"
+    },
+    {
+      "name": "duplicate-loaded",
+      "at": "loaded",
+      "duplicate": true,
+      "expected": "closed"
+    },
+    {
+      "name": "duplicate-result",
+      "at": "result",
+      "duplicate": true,
+      "expected": "closed"
+    },
+    {
+      "name": "duplicate-transferred",
+      "at": "transferred",
+      "duplicate": true,
+      "expected": "closed"
+    },
+    {
+      "name": "result-extra-key",
+      "at": "result",
+      "patch": {
+        "unexpected": true
+      },
+      "expected": "closed"
+    },
+    {
+      "name": "result-future-sequence",
+      "at": "result",
+      "patch": {
+        "sequence": 9999
+      },
+      "expected": "closed"
+    },
+    {
+      "name": "result-old-sequence",
+      "at": "result",
+      "patch": {
+        "sequence": 0
+      },
+      "expected": "closed"
+    },
+    {
+      "name": "result-non-finite",
+      "at": "result",
+      "valueCase": "non-finite",
+      "expected": "closed"
+    },
+    {
+      "name": "result-alias",
+      "at": "result",
+      "valueCase": "alias",
+      "expected": "closed"
+    },
+    {
+      "name": "result-oversized",
+      "at": "result",
+      "valueCase": "oversized",
+      "expected": "closed"
+    },
+    {
+      "name": "detached-count-mismatch",
+      "at": "transferred",
+      "patch": {
+        "detached": 1
+      },
+      "expected": "closed"
+    }
+  ],
+  "ownerFaults": [
+    "constructor-failure",
+    "boot-init-denial",
+    "load-transfer-failure",
+    "invoke-transfer-failure",
+    "abort-during-hash",
+    "synchronous-source-consumption",
+    "child-load-shape",
+    "child-invoke-shape",
+    "child-rehash-after-transfer"
+  ]
+}

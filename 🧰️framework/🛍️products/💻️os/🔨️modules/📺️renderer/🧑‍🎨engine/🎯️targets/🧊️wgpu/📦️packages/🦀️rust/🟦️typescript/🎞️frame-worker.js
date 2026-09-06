@@ -18899,7 +18899,7 @@ var _catalog_default2 = {
     { pluginId: "process-extension-wood", directoryName: "🪓️process-extension-wood" },
     { pluginId: "puzzle", directoryName: "🧩️puzzle" },
     { pluginId: "raster", directoryName: "🖨️raster" },
-    { pluginId: "reasoning-mindmap", directoryName: "💡️reasoning-mindmap" },
+    { pluginId: "reasoning", directoryName: "💡️reasoning" },
     { pluginId: "remodel", directoryName: "📸️remodel" },
     { pluginId: "sequence", directoryName: "🎬️sequence" },
     { pluginId: "shooting", directoryName: "🎥️shooting" },
@@ -19023,9 +19023,9 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "animate", packageId: "semio:animate", cratePath: "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_animate.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:animate.present"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", coreWasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", descriptorSha256: "12a912e82f98d54f405262123150f41035a15234332a1abc971062ac7e973b17" } },
   { pluginId: "architect", packageId: "semio:architect", cratePath: "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_architect.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:data.program"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2301bc724c96c3f6ea698bc1eba4feb50a0b0b4d1dfdbffa94a912c7e9dab510", coreWasmSha256: "2301bc724c96c3f6ea698bc1eba4feb50a0b0b4d1dfdbffa94a912c7e9dab510", descriptorSha256: "09d0f7320243a4aa38d5c83fa7d0a75ed398756edcb093c848adf515d1c1c4d8" } },
   { pluginId: "block", packageId: "semio:block", cratePath: "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_block.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [] },
-  { pluginId: "cad", packageId: "semio:cad", cratePath: "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.cad"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "919ca3b975a3d0786fd750f95f138b65239223402b91fd765379edc3cea1bb42", coreWasmSha256: "d884d1a39ca11fd8f82249bd71ac50075bd49e59d6f3b214db1556656a9f4aa0", descriptorSha256: "2953136523691dc1e5277832dbf615f83c6c798e7125cec1414feaaf317818ad" } },
+  { pluginId: "cad", packageId: "semio:cad", cratePath: "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_cad.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.cad"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "3fb18c84bafa0d38deb34003d0202f79be775ee3c0eba894f980770c6b3a9f99", coreWasmSha256: "a3298941a7db3a4030134a222ce03a0a8cb9a1723e71ac21e0a3c5b1d81adeb5", descriptorSha256: "f982e24ca2f7cfb4f079faf5bdea070a904153dd32506ea2350ab19849725016" } },
   { pluginId: "dag", packageId: "semio:dag", cratePath: "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_dag.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:graph.dag"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "55c9da9026706dbcd47277335eda53abf66e3ecf19fd848280a95b7a531f51e2", coreWasmSha256: "55c9da9026706dbcd47277335eda53abf66e3ecf19fd848280a95b7a531f51e2", descriptorSha256: "53d81f2b0927fbc1383cccb1c989a5fe190fd98ea582786bd6ea1846aea5258d" } },
-  { pluginId: "demonstrator", packageId: "semio:demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_demonstrator.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["forms.questionKind", "flow.extension", "process.machines"], dependsOn: ["cad", "gis", "procedural", "process", "puzzle", "sourcing", "stdio"], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "e39095467e06ec3d2fd45543e73bdcfa12d03e4a5a941d9145cd46f570d0ae63", coreWasmSha256: "e39095467e06ec3d2fd45543e73bdcfa12d03e4a5a941d9145cd46f570d0ae63", descriptorSha256: "72e0822284f68c9fd9fa60552db84cd489b1ca9c770adf389dd6e17cb57a2ff3" } },
+  { pluginId: "demonstrator", packageId: "semio:demonstrator", cratePath: "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_demonstrator.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["forms.questionKind", "flow.extension", "process.machines"], dependsOn: ["cad", "gis", "procedural", "process", "puzzle", "sourcing", "stdio"], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "b2dd0e6e4a3d937bb1f47f1b371fde667bfd168039d882074523fb256edc2ec3", coreWasmSha256: "73537f6a0dfd9006a1a96bb8a407e071873858f04b6f17b98361d819fa66ca48", descriptorSha256: "75e9f3f89a13332860959e65b02e2d0cc6c55314b622a6aa1d94b534b7dd3cf5" } },
   { pluginId: "draw", packageId: "semio:draw", cratePath: "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_draw.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["draw-fsm", "stdio"], activationEvents: ["on-artifact-kind:2d.drawing"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "4bccf647dd64b0d6088e7338a25e7ed1326a412f44660459f0d6c9cab0e79714", coreWasmSha256: "4bccf647dd64b0d6088e7338a25e7ed1326a412f44660459f0d6c9cab0e79714", descriptorSha256: "b9d12f23271b085b41da39d7ba395ea78604cab8006b6b00e1ee39aa5265a1bd" } },
   { pluginId: "energy", packageId: "semio:energy", cratePath: "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_energy.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:data.model"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "1c0f620a5d442096c9683acf7095f470375c8b7efa0821076d8e548b8d706f20", coreWasmSha256: "1c0f620a5d442096c9683acf7095f470375c8b7efa0821076d8e548b8d706f20", descriptorSha256: "383853b475b0308336f8088fe067d27fa2f525b21349d70b080b07aa86ae2ec1" } },
   { pluginId: "fem", packageId: "semio:fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_fem.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:computation.fem2d", "on-artifact-kind:computation.fem3d"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "924176ed3c2bd2415f14218d6671a485db3d06931f2b47e67c5170f715661e13", coreWasmSha256: "924176ed3c2bd2415f14218d6671a485db3d06931f2b47e67c5170f715661e13", descriptorSha256: "f0c10888f9dc7101c596b0e8b837fcbd439cb031738dd233e767cc8ad59f6fdb" } },
@@ -19034,16 +19034,16 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "gis", packageId: "semio:gis", cratePath: "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_gis.wasm", role: "plugin", capabilities: ["documents.write", "shell.navigate"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:s.gis.gismap"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "662a9f85feed22a7efceef285407e0da8cd5af574a182872d5218c3955770ade", coreWasmSha256: "7e5c3bd0570f88a893b88f968af607550acc550915c3b165b5ca3e6aa78693f4", descriptorSha256: "9907f9a60510b04450dd8fb48557d59264cfefa965b9fd7eeb6a3b12abdf318f" } },
   { pluginId: "imperative", packageId: "semio:imperative", cratePath: "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_imperative.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:computation.procedure"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "32cdff3f114c8390f85c3f7ed928525d25ed52be15b147cbfa58ec64a0e4234f", coreWasmSha256: "32cdff3f114c8390f85c3f7ed928525d25ed52be15b147cbfa58ec64a0e4234f", descriptorSha256: "7dc6bc0885b16f4a552ecdf5e1757da8d336efebcb81b603c87341ae25a66506" } },
   { pluginId: "layout", packageId: "semio:layout", cratePath: "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_layout.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.layout"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "dfde964f079e83c8f8cc67873cd495448be7a06ac8f6776e8585aef4b4f5b0bc", coreWasmSha256: "dfde964f079e83c8f8cc67873cd495448be7a06ac8f6776e8585aef4b4f5b0bc", descriptorSha256: "66358711ac5cd24af7edebf20ba9e40c3a7d96bb9e28ba19bc9d548b62c026db" } },
-  { pluginId: "lowpoly", packageId: "semio:lowpoly", cratePath: "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_lowpoly.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["cad", "stdio"], activationEvents: ["on-artifact-kind:3d.lowpoly"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "95f9ac4920995ae69e8807c90be68082694a15b2466910d3cf257476a8940c02", coreWasmSha256: "95f9ac4920995ae69e8807c90be68082694a15b2466910d3cf257476a8940c02", descriptorSha256: "2e2e5e1e43988b270aa356d10fca3608c594faa7b7f6a47b9c1efa93fbb45751" } },
+  { pluginId: "lowpoly", packageId: "semio:lowpoly", cratePath: "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_lowpoly.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["cad", "stdio"], activationEvents: ["on-artifact-kind:3d.lowpoly"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2f1fb53b0df83472f989cefcc5f6d45281d7128f8f6d338638b2b830565e03d3", coreWasmSha256: "6512a90775022fd4695d6688b848155582ae7da1fe204baf7a0904b971928d10", descriptorSha256: "b77ec71d7abb709d311b872b8786fe7ee496ff76fef5143e08c62abbf084fc5f" } },
   { pluginId: "mathematical", packageId: "semio:mathematical", cratePath: "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_mathematical.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:computation.equation"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "0b801ea2f23f760c1b8b2b24a7f137af965cc5825da11065cac51cd179b14716", coreWasmSha256: "0b801ea2f23f760c1b8b2b24a7f137af965cc5825da11065cac51cd179b14716", descriptorSha256: "824b2c80a380ac3cebb2c39ec5ff9b95282fb98e6888f6c91293f85e0263b227" } },
   { pluginId: "norm", packageId: "semio:norm", cratePath: "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_norm.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["fem", "stdio"], activationEvents: ["on-artifact-kind:computation.norm.din4108", "on-artifact-kind:computation.norm.din16798", "on-artifact-kind:computation.norm.din18599", "on-artifact-kind:computation.norm.en1990", "on-artifact-kind:computation.norm.en1991", "on-artifact-kind:computation.norm.en1992", "on-artifact-kind:computation.norm.en1993", "on-artifact-kind:computation.norm.en1994", "on-artifact-kind:computation.norm.en1995", "on-artifact-kind:computation.norm.en1996", "on-artifact-kind:computation.norm.en1997", "on-artifact-kind:computation.norm.en1998", "on-artifact-kind:computation.norm.en1999", "on-artifact-kind:computation.norm.iso16757", "on-artifact-kind:computation.norm.vdi3805"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "ee09ede9e0a96f42d31342b2e646edfb17b05f3d63b47315148774eb9f99dbfc", coreWasmSha256: "ee09ede9e0a96f42d31342b2e646edfb17b05f3d63b47315148774eb9f99dbfc", descriptorSha256: "dbca604de90af12da82cb423792a4ced55422e75c1f1baee863caf898f0295c3" } },
   { pluginId: "note", packageId: "semio:note", cratePath: "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_note.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.note"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "a60a593e311b5e4b6e366884638095c8dec2aa0e6bed9792163d6f2cef35a5b7", coreWasmSha256: "a60a593e311b5e4b6e366884638095c8dec2aa0e6bed9792163d6f2cef35a5b7", descriptorSha256: "1b8c29c800f1fd38f95f6754ec982585b59595a60ddf06fdbbadb6738850a093" } },
   { pluginId: "playbook", packageId: "semio:playbook", cratePath: "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_playbook.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["playbook.blockKind"], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [] },
-  { pluginId: "procedural", packageId: "semio:procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.generation", "on-artifact-kind:3d.generation"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "b2fd9e6fe4a7830aee74f76f46c41fc65afa281412ceeb3755243c2c85f6fab3", coreWasmSha256: "2729d913c941b800095b866985b230ba2100c8c369cf5a542faaf0a66a4e7e34", descriptorSha256: "c4cfb223e1b3bbe866e241ff651df57f629a7ba5b143432787bfe74c68aef69a" } },
-  { pluginId: "process", packageId: "semio:process", cratePath: "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_process.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["process.machines"], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.process"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "adf1fc2a97ec390e8c2e6f26f474fbcb211e63d5ca7a45e8eb930c6db934abeb", coreWasmSha256: "63e4f7d59977ac763a86abbc6c3e0e51e0cbb4ee3aa0556685d4f8c04729e7b8", descriptorSha256: "5797c6564c2600528f82605534cc116069f5b5c1fffcecd53b46449f3d9526a6" } },
+  { pluginId: "procedural", packageId: "semio:procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.generation", "on-artifact-kind:3d.generation"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "a4b1a6de783274a944e81de8dbde56c940ff3324dd4f6e224ad10639f4a277fa", coreWasmSha256: "ae8a8711cfea218edd04202386b958bd281e99b319f55d35c7759c32ce56a5b5", descriptorSha256: "6fa825912ed345053bf423e5ea05c18021cdd8da3265c575bb1125401f8770c2" } },
+  { pluginId: "process", packageId: "semio:process", cratePath: "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_process.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["process.machines"], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.process"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "62570c3b700cb6930423670f0446bced2b3daf1a5dd1944ccb96412056939d17", coreWasmSha256: "5185c035e07360b13b3b31fc41b544196b636efd3e0478c4deb6fccbc094bda6", descriptorSha256: "81d51e3e8633cac0a1fc726da5c29a1e3eba88462e79c66536e101578b047bc3" } },
   { pluginId: "puzzle", packageId: "semio:puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_puzzle.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog", "shell.clipboard"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.puzzle", "on-artifact-kind:3d.puzzle", "on-artifact-kind:5d.puzzle"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "c14691a67f841304f485d9bae4392b7eaef8a4c4ef06f02ad747498843370aca", coreWasmSha256: "8288bc0a8d5b3a0c4465f3c4ad76e61d537aed5dfdcc1d38a458bc030e20b22b", descriptorSha256: "f330b52c948b57173841e3a08df1a8aea4453cc12d7ae2cec2f4f8eb09dae677" } },
   { pluginId: "raster", packageId: "semio:raster", cratePath: "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_raster.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.raster"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", coreWasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", descriptorSha256: "26760a5a3c146b1612a8e8036c877f91a17c13cef425b94a174127df3e33bd94" } },
-  { pluginId: "reasoning-mindmap", packageId: "semio:reasoning-mindmap", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_reasoning_mindmap.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:graph.wires"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", coreWasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", descriptorSha256: "eb21b2587a19242762803823f748628b1eb1553c783f6281dfee25ac72706f93" } },
+  { pluginId: "reasoning", packageId: "semio:reasoning", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_reasoning_mindmap.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:graph.wires"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", coreWasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", descriptorSha256: "eb21b2587a19242762803823f748628b1eb1553c783f6281dfee25ac72706f93" } },
   { pluginId: "remodel", packageId: "semio:remodel", cratePath: "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_remodel.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.remodel"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "77ef3c98d134f1164cdd388911333b0618bcec94fead7c11ad6fdd24abb125b5", coreWasmSha256: "77ef3c98d134f1164cdd388911333b0618bcec94fead7c11ad6fdd24abb125b5", descriptorSha256: "1e1dded5a4979ce72c0ff11f4e12e8336df93784c89c0f53b0ee573b694fbe62" } },
   { pluginId: "sequence", packageId: "semio:sequence", cratePath: "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_sequence.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["imperative-control", "imperative-effect", "imperative-math", "imperative-text", "stdio"], activationEvents: ["on-artifact-kind:computation.sequence"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "bbcf24176893beb37e0dcdf36f658f52a62b8a5e48163130cd5f02371b2a6a79", coreWasmSha256: "bbcf24176893beb37e0dcdf36f658f52a62b8a5e48163130cd5f02371b2a6a79", descriptorSha256: "5c5ee126f62f14b60a81d95575c85186db47ec9b7712d0e56d5ba6b2a032088a" } },
   { pluginId: "shooting", packageId: "semio:shooting", cratePath: "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_shooting.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.shooting"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2e16eed70a875e078501c439d8f05c162163f1193bcaee4f11b41f0b2f2eed01", coreWasmSha256: "2e16eed70a875e078501c439d8f05c162163f1193bcaee4f11b41f0b2f2eed01", descriptorSha256: "ad86c4d9cf0730ae4b512389898962bb9eefd1f631f8543d7fd8143be3276129" } },
@@ -19139,7 +19139,7 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "puzzle3d", pluginId: "puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", app: "s.puzzle.puzzle3d@1/*#editor", aliases: ["3d", "puzzle 3d"], ports: { react: 6013, wgpu: 6113 }, examples: ["🌲️concrete-forest", "🏗️nakagin-capsule-tower"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json" }, { kind: "static-dir", route: "/infinite-fixture", root: "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures" }] },
   { variant: "puzzle5d", pluginId: "puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", app: "s.puzzle.puzzle5d@1/*#editor", aliases: ["5d", "puzzle 5d"], ports: { react: 6014, wgpu: 6114 }, examples: ["🌙️capsule-dream", "🌲️concrete-forest", "🏗️nakagin-capsule-tower"], engines: [], assets: [] },
   { variant: "raster", pluginId: "raster", cratePath: "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: ["🎬️demo", "🎬️demo-session"], engines: ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"], assets: [] },
-  { variant: "reasoning-wires", pluginId: "reasoning-mindmap", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: ["🎬️demo"], engines: [], assets: [] },
+  { variant: "reasoning-wires", pluginId: "reasoning", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: ["🎬️demo"], engines: [], assets: [] },
   { variant: "remodel", pluginId: "remodel", cratePath: "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: ["🎬️demo", "🎬️demo-session", "🛰️synthetic-orbit"], engines: [], assets: [] },
   { variant: "s", pluginId: "space", cratePath: "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", aliases: [], ports: { react: 6070, wgpu: 6066 }, userPorts: { react: [6072, 6073], wgpu: [6067, 6068] }, examples: ["🎬️demo"], engines: [], assets: [] },
   { variant: "sequence", pluginId: "sequence", cratePath: "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: ["🎬️demo"], engines: [], assets: [] },
@@ -21134,6 +21134,8 @@ var DOCUMENT_BROWSER_ACTOR_INTERFACES = Object.freeze([
 /* ../../../../../../📇️directory/🧬️schema/🟦️.ts */
 var DIRECTORY_EVENT_PAGE_MAX_BYTES = 64 * 1024;
 var DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES = 48 * 1024;
+var CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES = 8 * 1024;
+var CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES = 1024 * 1024;
 var DIRECTORY_COMMAND_REQUEST_MAX_BYTES = 8 * 1024;
 var DIRECTORY_COMMAND_RECEIPT_MAX_BYTES = 64 * 1024;
 var DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES = 48 * 1024;
@@ -23442,19 +23444,21 @@ function meshAssetTransportUrl(url, catalog = MESH_DELIVERY_CATALOG) {
 /* ../../🎞️frame-worker/🟦️.ts */
 var WORKER_STEP_BUDGET_MS = 8;
 var BOOT_HEARTBEAT_MS = 2;
-var PLUGIN_BOOT_CAPACITY = 32;
+var PLUGIN_BOOT_CAPACITY = PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length;
 var PLUGIN_MANIFEST_CODE_UNIT_CAPACITY = 64 * 1024;
 var ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
 var ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
-function ownedStep(stage, callback) {
+var INTROSPECTION_STEP_BUDGET_MS = 64;
+var BROWSER_OWNED_SUSPENSION_BUDGET_MS = 1000;
+function ownedStep(stage, callback, budgetMs = WORKER_STEP_BUDGET_MS) {
   const startedAt = performance.now();
   const value = callback();
   const duration = performance.now() - startedAt;
-  if (duration >= WORKER_STEP_BUDGET_MS)
-    throw new Error(`worker-boot-step-overrun: ${stage} took ${duration.toFixed(3)} ms`);
+  if (duration >= budgetMs)
+    throw new Error(`worker-boot-step-overrun: ${stage} took ${duration.toFixed(3)} ms against a ${budgetMs} ms budget`);
   return value;
 }
-async function monitoredSuspension(stage, operation) {
+async function monitoredSuspension(stage, operation, blockBudgetMs = WORKER_STEP_BUDGET_MS) {
   let lastBeat = performance.now();
   let maximumBlockMs = 0;
   const heartbeat = setInterval(() => {
@@ -23463,12 +23467,12 @@ async function monitoredSuspension(stage, operation) {
     lastBeat = now;
   }, BOOT_HEARTBEAT_MS);
   try {
-    const result3 = await ownedStep(`${stage}:start`, operation);
+    const result3 = await ownedStep(`${stage}:start`, operation, blockBudgetMs);
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (closed || closing)
       throw new Error(`worker-boot-cancelled: ${stage}`);
-    if (maximumBlockMs >= WORKER_STEP_BUDGET_MS)
-      throw new Error(`worker-boot-step-overrun: ${stage} blocked the Worker for ${maximumBlockMs.toFixed(3)} ms`);
+    if (maximumBlockMs >= blockBudgetMs)
+      throw new Error(`worker-boot-step-overrun: ${stage} blocked the Worker for ${maximumBlockMs.toFixed(3)} ms against a ${blockBudgetMs} ms budget`);
     return result3;
   } finally {
     clearInterval(heartbeat);
@@ -23482,6 +23486,7 @@ async function macrotask() {
 var scope = self;
 var lifecycle = 0;
 var runtime;
+var bindings;
 var interactiveJobs;
 var closed = false;
 var closing = false;
@@ -23495,6 +23500,18 @@ var closeOwner2 = "runtime";
 var assetPumping = false;
 var assetAbort;
 scope.onmessage = (event) => void receive(event.data);
+scope.onerror = (event) => {
+  const error = event instanceof ErrorEvent ? event : undefined;
+  const stack = error?.error instanceof Error ? `
+${error.error.stack ?? ""}` : "";
+  requestFault("worker-uncaught", `${error?.message ?? "uncaught worker error"} (${error?.filename ?? "?"}:${error?.lineno ?? 0}:${error?.colno ?? 0})${stack}`);
+  return true;
+};
+scope.onunhandledrejection = (event) => {
+  const reason = event.reason;
+  requestFault("worker-unhandled-rejection", reason instanceof Error ? `${reason.message}
+${reason.stack ?? ""}` : String(reason));
+};
 async function receive(message) {
   if (message.kind === "boot") {
     await boot(message);
@@ -23506,6 +23523,10 @@ async function receive(message) {
     if (closed || closing)
       return;
     beginClose();
+    return;
+  }
+  if (message.kind === "introspect") {
+    answerIntrospection(message);
     return;
   }
   if (closed || closing || failed || quarantined)
@@ -23541,6 +23562,28 @@ async function receive(message) {
       scheduleAssetPump();
   } catch (error) {
     fault("frame-runtime-fault", error instanceof Error ? error.message : String(error));
+  }
+}
+function answerIntrospection(message) {
+  const respond = (json, detail) => post({ kind: "introspection", lifecycle, requestId: message.requestId, probe: message.probe, json, ...detail === undefined ? {} : { detail } });
+  if (closed)
+    return;
+  if (!runtime || !bindings) {
+    respond(null, "renderer bindings are not mounted in this Worker");
+    return;
+  }
+  const hook = message.probe === "structure" ? bindings.dumpStructure : bindings.dumpFrameStats;
+  if (!hook) {
+    respond(null, `renderer bindings expose no ${message.probe} introspection export`);
+    return;
+  }
+  const startedAt = performance.now();
+  try {
+    const json = hook();
+    const duration = performance.now() - startedAt;
+    respond(json, duration >= INTROSPECTION_STEP_BUDGET_MS ? `${message.probe} introspection took ${duration.toFixed(3)} ms` : undefined);
+  } catch (error) {
+    respond(null, error instanceof Error ? error.message : String(error));
   }
 }
 async function closeRuntime() {
@@ -23587,6 +23630,29 @@ function beginClose() {
   interactiveJobs?.close();
   closeRuntime();
 }
+async function mountPluginHandles(targets) {
+  const mounted = [];
+  for (let index = 0;index < targets.length; index++) {
+    const target = targets[index];
+    const share = 0.3 + 0.3 * (index / Math.max(1, targets.length));
+    progress(`plugin:${target.pluginId}`, share);
+    await macrotask();
+    try {
+      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+      ownedStep(`plugin-manifest:${target.pluginId}`, () => {
+        const manifest = JSON.stringify(module.manifest);
+        if (manifest.length > PLUGIN_MANIFEST_CODE_UNIT_CAPACITY)
+          throw new Error(`plugin-manifest-credits: ${target.pluginId} exceeds ${PLUGIN_MANIFEST_CODE_UNIT_CAPACITY} code units`);
+      });
+      mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
+    } catch (error) {
+      if (closed || closing)
+        throw error;
+      progress(`plugin-fault:${target.pluginId}: ${error instanceof Error ? error.message : String(error)}`, share);
+    }
+  }
+  return mounted;
+}
 async function boot(message) {
   if (runtime || lifecycle !== 0) {
     fault("duplicate-boot", "the frame Worker accepts exactly one boot lifecycle");
@@ -23595,17 +23661,18 @@ async function boot(message) {
   lifecycle = message.lifecycle;
   try {
     progress("renderer-module", 0.05);
-    const bindings = await monitoredSuspension("renderer-module", () => import(message.bindingsModuleUrl));
-    if (bindings.default) {
+    const loaded = await monitoredSuspension("renderer-module", () => import(message.bindingsModuleUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    bindings = loaded;
+    if (loaded.default) {
       progress("wasm-instance", 0.15);
-      await monitoredSuspension("wasm-instance", () => bindings.default(message.bindingsWasmUrl));
+      await monitoredSuspension("wasm-instance", () => loaded.default(message.bindingsWasmUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     }
-    if (!bindings.semioWgpuWorkerBootstrap)
+    if (!loaded.semioWgpuWorkerBootstrap)
       throw new Error("renderer bindings missing semioWgpuWorkerBootstrap");
     ownedStep("runtime-environment", () => {
-      bindings.semioWgpuSetAppRole?.(message.appRole);
+      loaded.semioWgpuSetAppRole?.(message.appRole);
       if (message.hub)
-        bindings.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
+        loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
     });
     progress("plugin-graph", 0.25);
     const bootPlan = ownedStep("plugin-graph", () => resolvePlaygroundBoot(PLUGIN_CATALOG, message.pluginVariant));
@@ -23613,23 +23680,11 @@ async function boot(message) {
       throw new Error(`plugin-credits: boot plan exceeds ${PLUGIN_BOOT_CAPACITY} plugins`);
     for (const error of bootPlan.dependencyErrors)
       progress(pluginGraphErrorMessage(error, message.locale), 0.3);
-    const plugins = [];
-    for (let index = 0;index < bootPlan.plugins.length; index++) {
-      const target = bootPlan.plugins[index];
-      progress(`plugin:${target.pluginId}`, 0.3 + 0.3 * (index / Math.max(1, bootPlan.plugins.length)));
-      await macrotask();
-      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl));
-      ownedStep(`plugin-manifest:${target.pluginId}`, () => {
-        const manifest = JSON.stringify(module.manifest);
-        if (manifest.length > PLUGIN_MANIFEST_CODE_UNIT_CAPACITY)
-          throw new Error(`plugin-manifest-credits: ${target.pluginId} exceeds ${PLUGIN_MANIFEST_CODE_UNIT_CAPACITY} code units`);
-      });
-      plugins.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
-    }
+    const plugins = await mountPluginHandles(bootPlan.plugins);
     if (plugins.length === 0)
       throw new Error(`no wasm plugin modules found for variant ${message.pluginVariant}`);
     progress("renderer-runtime", 0.65);
-    let bootstrap = await monitoredSuspension("gpu-platform", () => bindings.semioWgpuWorkerBootstrap(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })));
+    let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     while (true) {
       await macrotask();
       const step13 = ownedStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()));

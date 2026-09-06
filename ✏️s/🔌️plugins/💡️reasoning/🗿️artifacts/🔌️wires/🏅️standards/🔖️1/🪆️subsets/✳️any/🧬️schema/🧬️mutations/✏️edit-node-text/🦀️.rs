@@ -19,23 +19,23 @@ pub struct EditNodeText {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn edit_node_text(node_id: String, new_text: String) -> WiresMutation {
+pub fn edit_node_text(node_id: String, new_text: String) -> WiresMutation {
     WiresMutation::EditNodeText(EditNodeText { node_id, new_text })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for EditNodeText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "node", kind: "edit-node-text", record: "EditedNodeText" };
 
-    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
-        super::diff::diff(self, base).await
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+        super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
-        super::inverse::inverse(self, base).await
+    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+        super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Edit node \"{}\" text to \"{}\"", self.node_id, self.new_text)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]
     }
 }

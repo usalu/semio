@@ -19,12 +19,12 @@ use crate::artifacts::equation::op::EquationMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `EquationMutation` to its binary command form.
-pub async fn encode_op(operation: &EquationMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &EquationMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `EquationMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<EquationMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<EquationMutation, protocol::ProtocolError> {
     EquationMutation::decode_op(bytes)
 }
 

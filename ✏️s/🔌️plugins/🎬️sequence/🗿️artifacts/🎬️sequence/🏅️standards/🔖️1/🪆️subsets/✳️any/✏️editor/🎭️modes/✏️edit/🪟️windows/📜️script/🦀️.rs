@@ -13,7 +13,7 @@ const SEQUENCE_PLAY_SURFACE_SCRIPT: &str = "sequence.play.script";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SEQUENCE_PLAY_WINDOW_SCRIPT.into(),
         label: LocalizedLabel::native("Script", "Skript"),
@@ -34,7 +34,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
+pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
     let host = host_from_snapshot(fixture);
     let mut text = host.compile_text();
     if !config.last_run_json.is_empty() {

@@ -9,7 +9,7 @@ use dsl::os_pack::json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
-async fn patch_vector_field(spec: &FormsSnapshot, question_id: &str, field_key: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
+fn patch_vector_field(spec: &FormsSnapshot, question_id: &str, field_key: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
     update_block_operation(spec, question_id, |question| {
         let mut fields = question.fields.take().unwrap_or_default();
         if let Some(entry) = fields.iter_mut().find(|item| item.key == field_key) {
@@ -33,7 +33,7 @@ pub struct PatchVectorField {
     pub value_json: String,
 }
 
-pub async fn handle(payload: &PatchVectorField, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(payload: &PatchVectorField, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let raw_value = parse_value_json(&payload.value_json);
     match patch_vector_field(doc.snapshot, &payload.question_id, &payload.field_key, &payload.field, &raw_value) {
         Some(operation) => Ok(Emit::amend(vec![operation], format!("patch-vector:{}:{}:{}", payload.question_id, payload.field_key, payload.field))),
@@ -51,7 +51,7 @@ mod tests {
     use crate::editor::forms::FormsCommand;
     use PatchVectorField;
 
-    async fn vector_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
+    fn vector_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::editor::forms::commands::add_question::AddQuestion { kind: "vector".into(), step_id: None }));
         crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "vector").expect("vector question").id
     }

@@ -12,7 +12,7 @@ const FORMS_QUESTION_DRAG_MIME: &str = "application/x-semio-forms-question-kind"
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -24,7 +24,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(config: &FormsConfig, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(config: &FormsConfig, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let contributions = parse_contributions(config);
     let mut kind_items = semio_framework_plugin::UiFixedList::default();
     for (kind, label, icon) in catalogue_kinds(&contributions, labels) {

@@ -10,7 +10,7 @@ use std::sync::{Arc, LazyLock, Mutex};
 use dag::{dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, EdgeRouteStyle};
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
-use neural::{channel_output, compute_dirty_set, Atom, BudgetedEval, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
+use neural::{channel_output, compute_dirty_set, Atom, BudgetedEval, ColdRetire, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
@@ -325,6 +325,8 @@ impl FlowHost {
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
         let converged = self.probe_eval_outputs_converged(&tree, &seeds, &dirty, &channels);
+        tree.retire_cold();
+        seeds.retire_cold();
         self.last_eval_json = json.to_string();
         if converged {
             self.outputs = channels.outputs.clone();
@@ -334,6 +336,7 @@ impl FlowHost {
             self.previous_channels = Some(channels);
             self.dag.clear_computing();
         } else {
+            channels.retire_cold();
             self.refresh_computing_chrome_from_pending();
         }
     }
@@ -343,7 +346,10 @@ impl FlowHost {
         let evaluator = Evaluator::new(registry.as_ref());
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("apply_eval_outputs_json probed a dispatch for {kind}"))) };
         match evaluator.evaluate_channels_budgeted(tree, seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, dirty, Some(channels), 0) {
-            Ok(BudgetedEval { remaining, .. }) => remaining.is_empty(),
+            Ok(BudgetedEval { remaining, channels, .. }) => {
+                channels.retire_cold();
+                remaining.is_empty()
+            }
             Err(_) => false,
         }
     }
@@ -1004,6 +1010,8 @@ impl FlowHost {
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
         if dirty.is_empty() && self.previous_channels.is_some() && !self.outputs.is_empty() {
+            tree.retire_cold();
+            seeds.retire_cold();
             return Vec::new();
         }
         let registry = flow_registry();
@@ -1017,6 +1025,8 @@ impl FlowHost {
             let mut dispatch = |kind: &str, input: &Dictionary| registry.as_ref().dispatch(kind, input);
             evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
         };
+        tree.retire_cold();
+        seeds.retire_cold();
         match budgeted {
             Ok(BudgetedEval { channels, remaining, pending_extension }) => {
                 self.pending_extension_eval = pending_extension;
@@ -1025,6 +1035,7 @@ impl FlowHost {
                 self.apply_export_outputs(&channels.outputs);
                 self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
                 if !remaining.is_empty() {
+                    channels.retire_cold();
                     return remaining;
                 }
                 self.neural_cache.sweep();
@@ -1090,6 +1101,8 @@ impl FlowHost {
                 missing.push(channel.name.clone());
             }
         }
+        tree.retire_cold();
+        outputs.retire_cold();
         missing
     }
 
@@ -1107,16 +1120,24 @@ impl FlowHost {
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
         if dirty.is_empty() && self.previous_channels.is_some() && !self.outputs.is_empty() {
+            tree.retire_cold();
+            seeds.retire_cold();
             return Vec::new();
         }
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry.as_ref());
         let previous = self.previous_channels.as_ref();
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("pending_eval_widget_ids probed a dispatch for {kind}"))) };
-        match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, 0) {
-            Ok(BudgetedEval { remaining, .. }) => remaining,
+        let pending = match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, 0) {
+            Ok(BudgetedEval { remaining, channels, .. }) => {
+                channels.retire_cold();
+                remaining
+            }
             Err(_) => Vec::new(),
-        }
+        };
+        tree.retire_cold();
+        seeds.retire_cold();
+        pending
     }
 
     // #region 🌳️TreeBuilding
@@ -2603,6 +2624,8 @@ fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
         }
         widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Ok));
     }
+    tree.retire_cold();
+    seeds.retire_cold();
     crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(widgets))
 }
 // #endregion 🔖️EvalSession

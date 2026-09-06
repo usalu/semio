@@ -6,7 +6,7 @@ use crate::artifacts::equation::{equation_children_from_state, equation_geometry
 /// 🔺️ Clones the current graph and flips only the `directed` field, then re-derives all three
 /// composed children from the patched `(graph, geometry)` pair — every graph-scoped mutation shares
 /// this "clone + patch one field + re-derive" shape.
-pub async fn diff(payload: &super::ChangeGraphDirected, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::ChangeGraphDirected, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     let mut graph = equation_graph(base);
     if graph.directed == payload.new_directed {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Graph is already {}.", if payload.new_directed { "directed" } else { "undirected" }));

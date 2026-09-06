@@ -500,6 +500,15 @@ function materializeGoHost(repoRoot: string, discovered: DiscoveredCase, role: T
  * environment is keyed by the declared package set, so it is built once and reused by every run and
  * every case that declares the same set, and rebuilt the moment the declaration changes.
  */
+/** 🐍️ The interpreter oracle hosts are provisioned from: `SEMIO_PYTHON`, else the repository's own
+ * `.venv` (the only interpreter guaranteed to satisfy `pyproject.toml`'s `requires-python`), else the
+ * `python3` on `PATH`. */
+function oracleHostPython(repoRoot: string): string {
+  if (process.env.SEMIO_PYTHON) return process.env.SEMIO_PYTHON;
+  const venv = join(repoRoot, ".venv", process.platform === "win32" ? "Scripts" : "bin", process.platform === "win32" ? "python.exe" : "python3");
+  return existsSync(venv) ? venv : "python3";
+}
+
 function provisionPythonInterpreter(repoRoot: string, base: string, declared: readonly OracleHostPackage[]): { interpreter: string; problems: string[] } {
   const external = declared.filter((entry) => entry.path === undefined);
   if (external.length === 0) return { interpreter: base, problems: [] };
@@ -547,7 +556,7 @@ function provisionPythonInterpreter(repoRoot: string, base: string, declared: re
 function materializePythonHost(repoRoot: string, discovered: DiscoveredCase, role: TestRole, planPath: string, outPath: string): MaterializedHost {
   const dir = hostDirFor(repoRoot, discovered, role, "python");
   const declared = contributedOraclePackages(repoRoot, discovered, "python");
-  const { interpreter, problems } = provisionPythonInterpreter(repoRoot, process.env.SEMIO_PYTHON ?? "python3", declared);
+  const { interpreter, problems } = provisionPythonInterpreter(repoRoot, oracleHostPython(repoRoot), declared);
   // 🧩️A contributed package that DOES carry a path is in-repo source, reached the way Python reaches
   // any source tree: on the import path, never installed.
   const localPaths = declared.filter((entry) => entry.path !== undefined).map((entry) => join(repoRoot, entry.path!));
@@ -992,7 +1001,7 @@ class DoctorScript extends Script {
       ["typescript", "bun", ["--version"]],
       ["rust", "cargo", ["--version"]],
       ["go", "go", ["version"]],
-      ["python", process.env.SEMIO_PYTHON ?? "python3", ["--version"]],
+      ["python", oracleHostPython(repoRoot), ["--version"]],
       ["dotnet", "dotnet", ["--version"]],
     ];
     const claimed = new Set(discoverTestCases(this.repoRoot).flatMap((entry) => Object.keys(entry.adapters)));

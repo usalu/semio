@@ -1354,7 +1354,7 @@ impl PagedAppCommandDecodeCursor {
                 let bytes = self.reader.read_bounded_bytes(142)?;
                 let command = protocol::decode_local_interaction_query_command(&bytes).map_err(|reason| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("local-interaction.command-wire"), reason))?;
                 Some(AppCommand::LocalInteractionQuery { seq, command })
-            },
+            }
             PagedAppCommandDecodeState::RejectedFields { first, second } => {
                 self.state = PagedAppCommandDecodeState::RejectedFields { first, second };
                 return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
@@ -1627,7 +1627,10 @@ pub enum AppCommand {
         peers: PresenceRosterWire,
     },
     /// 🏠️ Fixed request/token commands; page data travels only on the reply lane.
-    LocalInteractionQuery { seq: u64, command: protocol::LocalInteractionQueryCommand },
+    LocalInteractionQuery {
+        seq: u64,
+        command: protocol::LocalInteractionQueryCommand,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -1797,7 +1800,9 @@ pub enum AppFrame {
         revision: u64,
     },
     /// 📃️ ACK-owned local-only pages are independent of ordinary command outcomes.
-    LocalInteractionQuery { reply: protocol::LocalInteractionQueryReply },
+    LocalInteractionQuery {
+        reply: protocol::LocalInteractionQueryReply,
+    },
 }
 //#endregion 🔖️AppFrame
 
@@ -2172,7 +2177,7 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.byte(29)?;
             out.varint(*seq)?;
             out.bytes(&protocol::encode_local_interaction_query_command(command))?;
-        },
+        }
         AppCommand::Presence { .. } => unreachable!(),
     }
     out.finish()
@@ -2288,10 +2293,12 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
         29 => {
             let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
             let length = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            if length > 142 || length as usize != bytes.len().saturating_sub(pos) { return Err(malformed("local interaction command", pos as u64, "invalid exact bounded envelope")); }
+            if length > 142 || length as usize != bytes.len().saturating_sub(pos) {
+                return Err(malformed("local interaction command", pos as u64, "invalid exact bounded envelope"));
+            }
             let command = protocol::decode_local_interaction_query_command(&bytes[pos..]).map_err(|reason| malformed("local interaction command", pos as u64, reason))?;
             AppCommand::LocalInteractionQuery { seq, command }
-        },
+        }
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -2317,7 +2324,7 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
         AppFrame::LocalInteractionQuery { reply } => {
             out.reserve_exact(4260);
             encode_local_interaction_query_frame_into(reply, &mut out).expect("typed local query frame fits admitted wire extent");
-        },
+        }
         AppFrame::Done { in_reply_to } => {
             out.push(0);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
@@ -2529,9 +2536,11 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
         22 => AppFrame::UiSnapshotEnd { revision: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         23 => {
             let length = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            if length > 4256 || length as usize != bytes.len().saturating_sub(pos) { return Err(malformed("local interaction reply", pos as u64, "invalid exact bounded envelope")); }
+            if length > 4256 || length as usize != bytes.len().saturating_sub(pos) {
+                return Err(malformed("local interaction reply", pos as u64, "invalid exact bounded envelope"));
+            }
             AppFrame::LocalInteractionQuery { reply: protocol::decode_local_interaction_query_reply(&bytes[pos..]).map_err(|reason| malformed("local interaction reply", pos as u64, reason))? }
-        },
+        }
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -2542,7 +2551,9 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
 pub fn encode_local_interaction_query_frame_into(reply: &protocol::LocalInteractionQueryReply, out: &mut Vec<u8>) -> Result<(), &'static str> {
     let length = protocol::local_interaction_query_reply_encoded_len(reply)?;
     let prefix = 1 + ((usize::BITS - length.leading_zeros()).max(1) as usize + 6) / 7;
-    if out.capacity() - out.len() < prefix + length { return Err("local-interaction.frame-not-admitted"); }
+    if out.capacity() - out.len() < prefix + length {
+        return Err("local-interaction.frame-not-admitted");
+    }
     out.push(23);
     crate::os_spr::write_varint_u64(out, length as u64);
     protocol::encode_local_interaction_query_reply_into(reply, out)

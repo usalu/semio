@@ -24,7 +24,7 @@ pub mod export_shots {
         pub all: bool,
     }
 
-    pub async fn handle(payload: &ExportShots, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ExportShots, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         if let Some(asset) = crate::artifacts::shooting::schema::active_asset(doc.snapshot) {

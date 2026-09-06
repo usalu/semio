@@ -23,7 +23,7 @@ semio_framework_plugin::app_labels! {
 //#region 🔖️Resolvers
 /// 🗣️ Resolves a relationship kind's display name — takes `&WiresLabels` (an app-only type), so it
 /// stays app-level regardless of consumer count (artifacts must never depend on apps).
-pub async fn relationship_kind_display_name(kind: &str, labels: &WiresLabels) -> String {
+pub fn relationship_kind_display_name(kind: &str, labels: &WiresLabels) -> String {
     match kind {
         "owns" => labels.relationship_kind_owns.as_str().to_string(),
         "is" => labels.relationship_kind_is.as_str().to_string(),

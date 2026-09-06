@@ -162,15 +162,15 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
     use protocol::{Mutation, MutationDiff};
 
-    async fn sample_asset(id: &str) -> ShootingAsset {
+    fn sample_asset(id: &str) -> ShootingAsset {
         ShootingAsset { id: id.into(), name: format!("Asset {id}"), url: format!("/mesh/{id}.glb"), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None }
     }
 
-    async fn sample_shot(id: &str) -> ShootingShot {
+    fn sample_shot(id: &str) -> ShootingShot {
         ShootingShot { id: id.into(), label: format!("Shot {id}"), width: 256, height: 256, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None }
     }
 
-    async fn round_trip(snapshot: &ShootingSnapshot, operation: &ShootingMutation) -> ShootingSnapshot {
+    fn round_trip(snapshot: &ShootingSnapshot, operation: &ShootingMutation) -> ShootingSnapshot {
         let forward = vcs::apply_mutation(snapshot, operation).expect("valid mutation").0;
         let backwards = operation.inverse(snapshot);
         let mut restored = forward.clone();
@@ -185,7 +185,7 @@ mod tests {
     /// crates' worth of tests (each is its own compilation unit, so a shared cross-crate test-only
     /// helper isn't worth a dependency).
     #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this snapshot, not the FRAC_1_SQRT_2 constant")]
-    async fn representative_snapshot() -> ShootingSnapshot {
+    fn representative_snapshot() -> ShootingSnapshot {
         ShootingSnapshot {
             schema: SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: vec![

@@ -19,7 +19,7 @@ impl EntityId {
     ///
     /// `material` is retained for call-site clarity but uniqueness comes from a process-wide
     /// counter — many creators pass a constant label and still need distinct ids.
-    pub async fn new_serial(prefix: &str, _material: impl AsRef<[u8]>) -> Self {
+    pub fn new_serial(prefix: &str, _material: impl AsRef<[u8]>) -> Self {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(1);
         let n = COUNTER.fetch_add(1, Ordering::Relaxed);
@@ -50,13 +50,13 @@ impl PartialOrd for EntityId {
 /// `dsl::DslField` binding is written directly, bridging straight to `Shape::Text` like `String`'s
 /// own blanket impl does.
 impl dsl::DslField for EntityId {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(EntityId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
@@ -136,7 +136,7 @@ pub struct TextField {
 }
 
 impl TextField {
-    pub async fn plain(text: impl Into<String>) -> Self {
+    pub fn plain(text: impl Into<String>) -> Self {
         Self { text: text.into(), format: None }
     }
 }
@@ -200,7 +200,7 @@ pub struct EntityHeader {
 }
 
 impl EntityHeader {
-    pub async fn new(id: EntityId, name: impl Into<String>) -> Self {
+    pub fn new(id: EntityId, name: impl Into<String>) -> Self {
         Self { id, name: name.into(), description: None, status: LifecycleStatus::Draft, priority: Priority::Preferred, ownership: Ownership::default(), tags: Vec::new(), notes: Vec::new(), timestamps: TimestampMeta::default() }
     }
 }
@@ -238,7 +238,7 @@ pub struct QuantitySpec {
 }
 
 impl QuantitySpec {
-    pub async fn target_unit(target: f64, unit: impl Into<String>) -> Self {
+    pub fn target_unit(target: f64, unit: impl Into<String>) -> Self {
         Self { target: Some(target), unit: unit.into(), ..Default::default() }
     }
 }
@@ -289,13 +289,13 @@ pub struct TraceLink {
 }
 
 impl TraceLink {
-    pub async fn new(from_id: EntityId, to_id: EntityId, kind: TraceKind) -> Self {
+    pub fn new(from_id: EntityId, to_id: EntityId, kind: TraceKind) -> Self {
         Self { id: EntityId::new_serial("trace", "trace"), from_id, to_id, kind, label: None }
     }
 }
 
 impl protocol::Identified<EntityId> for TraceLink {
-    async fn id(&self) -> &EntityId {
+    fn id(&self) -> &EntityId {
         &self.id
     }
 }
@@ -395,7 +395,7 @@ pub struct TraceLinkPatch {
 }
 
 impl Patchable<TraceLinkPatch> for TraceLink {
-    async fn apply_patch(&mut self, patch: &TraceLinkPatch) {
+    fn apply_patch(&mut self, patch: &TraceLinkPatch) {
         if let Some(value) = &patch.from_id {
             self.from_id = value.clone();
         }
@@ -410,7 +410,7 @@ impl Patchable<TraceLinkPatch> for TraceLink {
         }
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<TraceLinkPatch> {
+    fn diff_patch(&self, other: &Self) -> Option<TraceLinkPatch> {
         Some(TraceLinkPatch { from_id: Some(other.from_id.clone()), to_id: Some(other.to_id.clone()), kind: Some(other.kind.clone()), label: Some(other.label.clone()) })
     }
 }

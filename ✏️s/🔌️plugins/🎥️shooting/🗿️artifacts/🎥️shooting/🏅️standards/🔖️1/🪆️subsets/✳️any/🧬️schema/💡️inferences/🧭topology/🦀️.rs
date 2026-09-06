@@ -25,7 +25,7 @@ pub struct ShootingTopology {
 }
 
 /// 🧮️ Computes [`ShootingTopology`] from a shooting snapshot's saved cameras + shots.
-pub async fn compute_shooting_topology(snapshot: &ShootingSnapshot) -> ShootingTopology {
+pub fn compute_shooting_topology(snapshot: &ShootingSnapshot) -> ShootingTopology {
     let camera_ids: BTreeSet<&String> = snapshot.saved_cameras.iter().map(|camera| &camera.id).collect();
 
     let mut topo_order = Vec::with_capacity(snapshot.saved_cameras.len() + snapshot.shots.len());
@@ -54,11 +54,11 @@ mod tests {
     use super::*;
     use crate::artifacts::shooting::{ShootingCamera, ShootingSavedCamera, ShootingShot};
 
-    async fn saved_camera(id: &str) -> ShootingSavedCamera {
+    fn saved_camera(id: &str) -> ShootingSavedCamera {
         ShootingSavedCamera { id: id.into(), label: id.into(), camera: ShootingCamera::default() }
     }
 
-    async fn shot(id: &str, camera_id: Option<&str>) -> ShootingShot {
+    fn shot(id: &str, camera_id: Option<&str>) -> ShootingShot {
         ShootingShot { id: id.into(), label: id.into(), width: 1024, height: 768, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: camera_id.map(Into::into) }
     }
 

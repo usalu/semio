@@ -15,7 +15,7 @@ const NUDGE_STEP_FAST: f64 = 10.0;
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — one `drag-blocks` mutation for the
 /// whole gesture (real multi-select drag), never a whole-`blocks` vec swap.
-async fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
+fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> Emit<NoteMutation, NoteConfigMutation> {
     if selected_ids.is_empty() {
         return Emit::default();
     }
@@ -47,6 +47,6 @@ async fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f6
 #[dsl(keyword = "nudge-selection-right-fast")]
 pub struct NudgeSelectionRightFast {}
 
-pub async fn handle(_payload: &NudgeSelectionRightFast, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(_payload: &NudgeSelectionRightFast, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(nudge(doc.snapshot, &ctx.selected_block_ids, NUDGE_STEP_FAST, 0.0))
 }

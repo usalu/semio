@@ -15,7 +15,7 @@ use crate::artifacts::sequence::schema::diff::*;
 //#region 🔖️Apply
 impl SequenceDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> protocol::MutationApplyResult<SequenceArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> protocol::MutationApplyResult<SequenceArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -45,7 +45,7 @@ impl SequenceDiff {
 }
 
 impl MutationDiff<SequenceSnapshot> for SequenceDiff {
-    async fn apply(&self, snapshot: &SequenceSnapshot) -> protocol::MutationApplyResult<SequenceSnapshot> {
+    fn apply(&self, snapshot: &SequenceSnapshot) -> protocol::MutationApplyResult<SequenceSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -60,7 +60,7 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;

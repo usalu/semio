@@ -23,10 +23,10 @@ pub enum WiresViewCommand {
 }
 
 impl protocol::OpBinary for WiresViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(WiresViewCommand::Noop)
     }
 }
@@ -50,7 +50,7 @@ impl ArtifactViewer for WiresViewer {
     const DIALECT: Dialect = WIRES_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MINDMAP_WIRES_SCHEMA;
 
-    async fn initial_snapshot() -> WiresSnapshot {
+    fn initial_snapshot() -> WiresSnapshot {
         crate::artifacts::wires::empty_wires_snapshot()
     }
 
@@ -58,11 +58,11 @@ impl ArtifactViewer for WiresViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (pan/zoom
     /// persisted per-viewer) is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             canvas::WIRES_VIEW_BODY_CANVAS => canvas::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -72,7 +72,7 @@ impl ArtifactViewer for WiresViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_wires_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_wires_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(WIRES_DIALECT)
         .document(["semio", "reasoning", "mindmap", "wires"])
         .icon_id("reasoning-wires")

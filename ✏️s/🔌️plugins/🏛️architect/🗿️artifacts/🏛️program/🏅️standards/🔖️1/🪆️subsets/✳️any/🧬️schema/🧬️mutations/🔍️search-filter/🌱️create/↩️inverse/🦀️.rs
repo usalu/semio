@@ -6,6 +6,6 @@ use crate::artifacts::program::ProgramMutation;
 use crate::artifacts::program::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub async fn inverse(payload: &super::CreateSearchFilter, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::CreateSearchFilter, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::DeleteSearchFilter(super::super::delete_search_filter::DeleteSearchFilter { id: payload.search_filter.header.id.clone() })]
 }

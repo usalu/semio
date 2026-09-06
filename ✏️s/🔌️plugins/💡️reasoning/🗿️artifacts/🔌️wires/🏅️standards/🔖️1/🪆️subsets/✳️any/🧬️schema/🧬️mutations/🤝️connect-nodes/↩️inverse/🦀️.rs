@@ -6,7 +6,7 @@ use crate::artifacts::wires::schema::entity_id;
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::ConnectNodes, _base: &WiresSnapshot) -> Vec<WiresMutation> {
+pub fn inverse(payload: &super::ConnectNodes, _base: &WiresSnapshot) -> Vec<WiresMutation> {
     match entity_id(&payload.edge, "id") {
         Some(id) => vec![crate::artifacts::wires::mutations::disconnect_nodes::disconnect_nodes(id.to_string())],
         None => Vec::new(),

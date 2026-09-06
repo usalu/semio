@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `DagLayoutOrientation` — see `SequenceConfig::orientation`'s doc comment for why the config field
 /// itself stays a string. Single consumer (`reorganize`), so it lives here rather than the artifact
 /// engine.
-pub async fn orientation_from_config(value: &str) -> DagLayoutOrientation {
+pub fn orientation_from_config(value: &str) -> DagLayoutOrientation {
     match value {
         "topBottom" => DagLayoutOrientation::TopBottom,
         _ => DagLayoutOrientation::LeftRight,
@@ -29,7 +29,7 @@ pub mod reorganize {
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
-    pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let orientation = orientation_from_config(&cfg.snapshot.orientation);
         Ok(Emit::mutations(ops_from_host_mutation(doc.snapshot, |host| {
             let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
@@ -49,7 +49,7 @@ pub mod set_orientation {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetOrientation, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetOrientation, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetOrientation { value: payload.value.clone() }]))
     }
 }
@@ -71,7 +71,7 @@ mod tests {
         use crate::editor::sequence::SequenceCommand;
         use semio_framework_plugin::{EditorApp, VcsArtifactApp};
 
-        pub async fn move_all_steps_to_origin(app: &mut VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>>) {
+        pub fn move_all_steps_to_origin(app: &mut VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>>) {
             let ids: Vec<String> = app.snapshot().expect("projection").to_fixture().steps.iter().map(|step| step.id.clone()).collect();
             for id in &ids {
                 dispatch(app, SequenceCommand::MoveStep(MoveStep { node_id: id.clone(), x: 0.0, y: 0.0 }));

@@ -218,12 +218,7 @@ pub struct GrammarSpec {
 pub fn shape_json_schema(shape: &Shape) -> crate::os_pack::json::Value {
     use crate::os_pack::json::{object, Value};
     let number_array = |min: u64, max: u64, extra: Option<(&str, &str)>| {
-        let mut fields = vec![
-            ("type".to_string(), Value::from("array")),
-            ("items".to_string(), object([("type".to_string(), Value::from("number"))])),
-            ("minItems".to_string(), Value::from(min)),
-            ("maxItems".to_string(), Value::from(max)),
-        ];
+        let mut fields = vec![("type".to_string(), Value::from("array")), ("items".to_string(), object([("type".to_string(), Value::from("number"))])), ("minItems".to_string(), Value::from(min)), ("maxItems".to_string(), Value::from(max))];
         if let Some((key, value)) = extra {
             fields.push((key.to_string(), Value::from(value)));
         }
@@ -236,10 +231,7 @@ pub fn shape_json_schema(shape: &Shape) -> crate::os_pack::json::Value {
         Shape::Float => object([("type".to_string(), Value::from("number"))]),
         Shape::Text => object([("type".to_string(), Value::from("string"))]),
         Shape::Bytes64 => object([("type".to_string(), Value::from("string")), ("contentEncoding".to_string(), Value::from("base64")), ("x-semio-shape".to_string(), Value::from("bytes64"))]),
-        Shape::Enum(variants) => object([
-            ("type".to_string(), Value::from("string")),
-            ("enum".to_string(), Value::Array(variants.iter().map(|(tag, _)| Value::from(tag.clone())).collect())),
-        ]),
+        Shape::Enum(variants) => object([("type".to_string(), Value::from("string")), ("enum".to_string(), Value::Array(variants.iter().map(|(tag, _)| Value::from(tag.clone())).collect()))]),
         Shape::Tuple(inner, len) => {
             let items = shape_json_schema(inner);
             let mut fields = vec![("type".to_string(), Value::from("array")), ("items".to_string(), items)];

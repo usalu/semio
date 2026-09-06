@@ -149,12 +149,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fold_directory_events_command_never_touches_the_document_store() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<HomeViewer>();
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<HomeViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn editor_and_viewer_share_one_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::home::HomeApp, HomeViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::home::HomeApp, HomeViewer>().await;
     }
 }
 //#endregion 🧪️Tests

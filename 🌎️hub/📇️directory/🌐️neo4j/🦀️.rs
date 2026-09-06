@@ -9,7 +9,8 @@ use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
     active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, decode_auth_digest_hex, encode_capability_bytes, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite,
-    directory_command_result_kind_from_str, directory_command_result_kind_str, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str,
+    directory_command_result_kind_from_str, directory_command_result_kind_str, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text,
+    validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str,
     ArtifactCasSweepCandidatePage,
     HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS,
     ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, DIRECTORY_WIRE_INTEGER_MAX, UNCONTROLLED_PROJECTION_REBUILD,
@@ -188,6 +189,7 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (s:SyncSession) REQUIRE s.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (i:SpaceInvite) REQUIRE i.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (r:DirectoryCommandReceipt) REQUIRE r.key IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (r:CheckpointPublicationReceipt) REQUIRE r.key IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (i:SpaceInvite) REQUIRE i.selector IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthAudit) REQUIRE a.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AdminOperationAudit) REQUIRE a.sequence IS UNIQUE",
@@ -1096,6 +1098,51 @@ impl HubDirectory for Neo4jDirectory {
         Ok(())
     }
 
+    async fn claim_or_read_checkpoint_publication(&self, claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<CheckpointPublicationClaimV1> {
+        validate_checkpoint_publication_claim(claim)?;
+        let key = checkpoint_publication_receipt_key(&claim.actor_user_id, &claim.correlation_id);
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let mut existing = txn.execute(query("MATCH (r:CheckpointPublicationReceipt {key: $key}) RETURN r AS r LIMIT 1").param("key", key.clone())).await.map_err(backend)?;
+        let record = existing.next(txn.handle()).await.map_err(backend)?.map(|row| checkpoint_publication_receipt_from_node(&row)).transpose()?;
+        drop(existing);
+        if let Some(record) = record {
+            txn.rollback().await.map_err(backend)?;
+            return Ok(if record.command_sha256 == claim.command_sha256 { CheckpointPublicationClaimV1::Existing(record) } else { CheckpointPublicationClaimV1::Conflict });
+        }
+        txn.run(
+            query("CREATE (:CheckpointPublicationReceipt {key: $key, actorUserId: $actor_user_id, correlationId: $correlation_id, commandSha256: $command_sha256, disposition: 'pending', checkpointId: '', claimedAt: $claimed_at, completedAt: 0})")
+                .param("key", key)
+                .param("actor_user_id", claim.actor_user_id.clone())
+                .param("correlation_id", claim.correlation_id.clone())
+                .param("command_sha256", claim.command_sha256.clone())
+                .param("claimed_at", claim.claimed_at),
+        )
+        .await
+        .map_err(backend)?;
+        txn.commit().await.map_err(backend)?;
+        Ok(CheckpointPublicationClaimV1::Claimed(CheckpointPublicationReceiptRecordV1 {
+            actor_user_id: claim.actor_user_id.clone(),
+            correlation_id: claim.correlation_id.clone(),
+            command_sha256: claim.command_sha256.clone(),
+            disposition: CheckpointPublicationDispositionV1::Pending,
+            checkpoint_id: None,
+            claimed_at: claim.claimed_at,
+            completed_at: None,
+        }))
+    }
+
+    async fn release_checkpoint_publication(&self, actor_user_id: &str, correlation_id: &str, command_sha256: &str) -> DirectoryResult<()> {
+        self.graph
+            .run(
+                query("MATCH (r:CheckpointPublicationReceipt {key: $key, commandSha256: $command_sha256, disposition: 'pending'}) DELETE r")
+                    .param("key", checkpoint_publication_receipt_key(actor_user_id, correlation_id))
+                    .param("command_sha256", command_sha256.to_string()),
+            )
+            .await
+            .map_err(backend)?;
+        Ok(())
+    }
+
     async fn append_admin_operation_audit(&self, fact: &NewAdminOperationAuditRecord) -> DirectoryResult<AdminOperationAuditRecord> {
         validate_admin_operation_audit(fact)?;
         let terminal = fact.phase != "accepted";
@@ -1607,7 +1654,14 @@ impl HubDirectory for Neo4jDirectory {
         Ok(reservation)
     }
 
-    async fn append_reserved_artifact_checkpoint(&self, event: Option<&NewDirectoryEvent>, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, current_now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
+    async fn append_reserved_artifact_checkpoint(
+        &self,
+        event: Option<&NewDirectoryEvent>,
+        checkpoint: &ArtifactCheckpoint,
+        reservation: &ArtifactCasReservation,
+        completion: Option<&CheckpointPublicationCompletionV1>,
+        current_now_ms: u64,
+    ) -> DirectoryResult<Vec<DirectoryEvent>> {
         validate_artifact_cas_publication_v1(&reservation.plan, checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
         if let Some(event) = event {
             validate_verified_checkpoint_append(event, checkpoint)?;
@@ -1673,6 +1727,24 @@ impl HubDirectory for Neo4jDirectory {
         txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'publish', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, eventSeq: $event_seq, plan: $plan})")
             .param("generation", generation).param("key", scope_key).param("space_id", reservation.plan.scope.space_id.clone()).param("document_id", reservation.plan.scope.document_id.clone()).param("checkpoint_id", hex_lower(&reservation.plan.checkpoint_id.0)).param("write_epoch", i64::try_from(reservation.write_epoch).map_err(backend)?).param("expires_at", i64::try_from(reservation.expires_at_ms).map_err(backend)?).param("event_seq", seq).param("plan", encoded)).await.map_err(backend)?;
         cas_project_publish(&mut txn, reservation, generation).await?;
+        if let Some(completion) = completion {
+            validate_checkpoint_publication_completion(completion)?;
+            let mut updated = txn
+                .execute(
+                    query("MATCH (r:CheckpointPublicationReceipt {key: $key, commandSha256: $command_sha256, disposition: 'pending'}) SET r.disposition = 'completed', r.checkpointId = $checkpoint_id, r.completedAt = $completed_at RETURN count(r) AS changed")
+                        .param("key", checkpoint_publication_receipt_key(&completion.actor_user_id, &completion.correlation_id))
+                        .param("command_sha256", completion.command_sha256.clone())
+                        .param("checkpoint_id", hex_lower(&completion.checkpoint_id.0))
+                        .param("completed_at", completion.completed_at),
+                )
+                .await
+                .map_err(backend)?;
+            let changed = updated.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("checkpoint publication completion returned no row".into()))?.get::<i64>("changed").map_err(backend)?;
+            drop(updated);
+            if changed != 1 {
+                return Err(DirectoryError::Conflict("checkpoint publication claim is missing, substituted, or already completed".into()));
+            }
+        }
         txn.commit().await.map_err(backend)?;
         Ok(vec![full])
     }
@@ -2156,6 +2228,34 @@ fn auth_audit_from_node(row: &neo4rs::Row) -> DirectoryResult<AuthAuditRecord> {
 /// 🔑️ The one durable `(actor, request id)` idempotency key this backend indexes receipts by.
 fn directory_command_receipt_key(actor_user_id: &str, request_id: &str) -> String {
     format!("{}:{}", hex_lower(actor_user_id.as_bytes()), request_id)
+}
+
+fn checkpoint_publication_receipt_key(actor_user_id: &str, correlation_id: &str) -> String {
+    format!("{}:{}", hex_lower(actor_user_id.as_bytes()), correlation_id)
+}
+
+fn checkpoint_publication_receipt_from_node(row: &neo4rs::Row) -> DirectoryResult<CheckpointPublicationReceiptRecordV1> {
+    let node: neo4rs::Node = row.get("r").map_err(backend)?;
+    let disposition = match node.get::<String>("disposition").map_err(backend)?.as_str() {
+        "pending" => CheckpointPublicationDispositionV1::Pending,
+        "completed" => CheckpointPublicationDispositionV1::Completed,
+        other => return Err(DirectoryError::Backend(format!("unknown checkpoint publication disposition '{other}'"))),
+    };
+    let checkpoint_id = node
+        .get::<String>("checkpointId")
+        .ok()
+        .filter(|value| !value.is_empty())
+        .map(|value| crate::directory::decode_auth_digest_hex(&value).map(ArtifactHash))
+        .transpose()?;
+    Ok(CheckpointPublicationReceiptRecordV1 {
+        actor_user_id: node.get("actorUserId").map_err(backend)?,
+        correlation_id: node.get("correlationId").map_err(backend)?,
+        command_sha256: node.get("commandSha256").map_err(backend)?,
+        disposition,
+        checkpoint_id,
+        claimed_at: node.get("claimedAt").map_err(backend)?,
+        completed_at: node.get::<i64>("completedAt").ok().filter(|value| *value > 0),
+    })
 }
 
 fn directory_command_receipt_from_node(row: &neo4rs::Row) -> DirectoryResult<DirectoryCommandReceiptRecord> {

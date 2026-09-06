@@ -18,16 +18,16 @@ pub struct DeleteResource {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteResource {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "resource", kind: "delete-resource", record: "DeletedResource" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete resource \"{}\"", self.id.0)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
     }
 }

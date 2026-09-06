@@ -1342,11 +1342,28 @@ pub enum InteractiveJobCloseStep {
     Complete,
 }
 
+/// 🧵️ Whether a job may be handed to another thread. Every threaded target elaborates this to
+/// `Send`, so `J: InteractiveJob` still proves `J: Send` for [`WorkerJobSessionInner`]'s
+/// `unsafe impl` and every pool submission. The browser build (`wasm32`, not `wasip2`) has no
+/// second thread to hand a job to at all — its jobs own `Rc<JsValue>` browser handles by design
+/// (`🎯️targets/🧊️wgpu/🧵️frame-job`'s frame worker is the single JS worker thread) — so requiring
+/// `Send` there would only forbid the one ownership model that target can have.
+#[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
+pub trait JobThreadTransfer: Send {}
+#[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
+impl<T: Send + ?Sized> JobThreadTransfer for T {}
+
+/// 🧵️ Browser twin of the marker above — see its docstring.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub trait JobThreadTransfer {}
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+impl<T: ?Sized> JobThreadTransfer for T {}
+
 /// 🧩️ The protocol every interactive operation implements instead of a run-to-completion function
 /// call — see the module doc's governing rule. `step` is bounded (checks [`StepContext::should_yield`]
 /// and returns before the hard ceiling), cancellable ([`StepContext::is_cancelled`]) and explicitly
 /// resumable (a fresh [`StepContext`] each call, job-owned state carries everything between calls).
-pub trait InteractiveJob: Send {
+pub trait InteractiveJob: JobThreadTransfer {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome;
     fn begin_close(&mut self);
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep;
@@ -2180,7 +2197,12 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         if self.checked_out.is_some() { WorkerJobPoll::CheckedOut } else { self.session.poll() }
     }
 
-    pub fn pump_one(&mut self, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault> {
+    /// 🧵️ `J: Send` for the same reason as [`WorkerJobSession::try_submit_step`] — this is the
+    /// pool-submitting half of the mounted session, not the single-threaded drive path.
+    pub fn pump_one(&mut self, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault>
+    where
+        J: Send,
+    {
         if self.checked_out.is_some() {
             return Err(MountedWorkerJobPumpFault::CheckedOut);
         }
@@ -2920,7 +2942,13 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         self.inner.wake_pending.swap(false, Ordering::AcqRel)
     }
 
-    pub fn try_submit_step(&self, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobTicket, WorkerJobSubmitFault> {
+    /// 🧵️ `J: Send` is stated here rather than on [`InteractiveJob`]: this is the one call that
+    /// actually hands the job to another thread, so the requirement belongs to it. Targets with no
+    /// second thread (the browser wasm build) never reach this and keep their `Rc`-owning jobs.
+    pub fn try_submit_step(&self, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobTicket, WorkerJobSubmitFault>
+    where
+        J: Send,
+    {
         if self.inner.phase.compare_exchange(SESSION_IDLE, SESSION_TRANSITION, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return Err(WorkerJobSubmitFault::Contention(self.contention()));
         }

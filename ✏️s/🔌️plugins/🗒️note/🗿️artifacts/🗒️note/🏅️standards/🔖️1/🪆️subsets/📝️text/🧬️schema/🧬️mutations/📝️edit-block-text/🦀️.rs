@@ -20,23 +20,23 @@ pub struct EditBlockText {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn edit_block_text(id: String, new_paragraphs: Vec<crate::artifacts::note::NoteTextParagraph>) -> NoteMutation {
+pub fn edit_block_text(id: String, new_paragraphs: Vec<crate::artifacts::note::NoteTextParagraph>) -> NoteMutation {
     NoteMutation::EditBlockText(EditBlockText { id, new_paragraphs })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockText {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-text", kind: "edit-block-text", record: "EditedBlockText" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Edit block \"{}\" text", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

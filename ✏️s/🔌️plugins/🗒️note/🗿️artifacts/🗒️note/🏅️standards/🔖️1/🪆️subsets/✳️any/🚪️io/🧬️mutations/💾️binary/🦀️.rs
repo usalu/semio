@@ -14,12 +14,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `NoteMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &NoteMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &NoteMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `NoteMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<NoteMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<NoteMutation, protocol::ProtocolError> {
     NoteMutation::decode_op(bytes)
 }
 

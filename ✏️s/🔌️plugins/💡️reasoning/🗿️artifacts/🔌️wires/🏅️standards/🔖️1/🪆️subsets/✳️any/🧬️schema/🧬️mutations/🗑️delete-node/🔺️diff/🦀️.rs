@@ -6,7 +6,7 @@ use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::fi
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::DeleteNode, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+pub fn diff(payload: &super::DeleteNode, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
     if find_board_node(base, &payload.node_id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id), [payload.node_id.clone()]);
     }

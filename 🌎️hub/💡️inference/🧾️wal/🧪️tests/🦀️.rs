@@ -53,7 +53,7 @@ pub(super) struct DurableFixtureRecord {
 }
 
 pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixtureRecord {
-    use protocol::Inference as _;
+    use directory::Inference as _;
     use semio_s_plugin_gis::artifacts::gismap::{
         mutations::apply_gis_map_mutation,
         schema::{gis_map_descriptor_json, gis_map_document_from_descriptor_json, gis_map_snapshot_to_drawing},
@@ -215,6 +215,7 @@ async fn storage_with_event(fixture: &serde_json::Value, trace: &serde_json::Val
 #[tokio::test]
 async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_cancellation_traces() {
     let fixture = fixture();
+    let durable = durable_fixture_record(&fixture);
     let mut bytes = Vec::new();
     protocol::encode_envelope(&envelope(&fixture), &mut bytes);
     assert_eq!(bytes, decode_hex(fixture["encodedHex"].as_str().unwrap()));
@@ -222,7 +223,7 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
     let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
     for row in identifiers["cases"].as_array().unwrap() {
         for field in ["userId", "sessionId", "spaceId", "documentId"] {
-            let mut candidate = target(&fixture, &fixture["traces"][0]);
+            let mut candidate = target(&fixture, &fixture["traces"][0], &durable);
             let value = row["value"].as_str().unwrap();
             match field {
                 "userId" => candidate.actor = format!("user:{value}#session:valid"),
@@ -236,7 +237,7 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
         }
     }
     for trace in fixture["traces"].as_array().unwrap() {
-        let storage = tokio::time::timeout(Duration::from_secs(2), storage(&fixture, trace)).await.unwrap_or_else(|_| panic!("WAL trace {} timed out during storage admission", trace["name"]));
+        let storage = tokio::time::timeout(Duration::from_secs(2), storage(&fixture, trace, &durable)).await.unwrap_or_else(|_| panic!("WAL trace {} timed out during storage admission", trace["name"]));
         let verifier = InferenceWalVerifierV1::new(storage);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), fixture["generation"].as_u64().unwrap()).unwrap());
         let control = Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap());
@@ -266,7 +267,7 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
         } else {
             None
         };
-        let result = tokio::time::timeout(Duration::from_secs(4), verifier.verify(target(&fixture, trace), fence.clone(), control)).await.unwrap_or_else(|_| panic!("WAL trace {} timed out during retained verification", trace["name"]));
+        let result = tokio::time::timeout(Duration::from_secs(4), verifier.verify(target(&fixture, trace, &durable), fence.clone(), control)).await.unwrap_or_else(|_| panic!("WAL trace {} timed out during retained verification", trace["name"]));
         if let Some(watcher) = watcher {
             watcher.await.unwrap();
         }
@@ -330,10 +331,11 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
 
 pub(in crate::inference) async fn committed_fixture_witness() -> (CommittedInferenceWalWitnessV1, Arc<InferenceDocumentFenceV1>) {
     let fixture = fixture();
+    let durable = durable_fixture_record(&fixture);
     let trace = &fixture["traces"][0];
-    let verifier = InferenceWalVerifierV1::new(storage(&fixture, trace).await);
+    let verifier = InferenceWalVerifierV1::new(storage(&fixture, trace, &durable).await);
     let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), fixture["generation"].as_u64().unwrap()).unwrap());
-    let witness = verifier.verify(target(&fixture, trace), fence.clone(), Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await.unwrap().unwrap();
+    let witness = verifier.verify(target(&fixture, trace, &durable), fence.clone(), Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await.unwrap().unwrap();
     assert_eq!(verifier.active(), 0);
     (witness, fence)
 }
@@ -341,6 +343,7 @@ pub(in crate::inference) async fn committed_fixture_witness() -> (CommittedInfer
 #[tokio::test]
 async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_commands() {
     let fixture = fixture();
+    let durable = durable_fixture_record(&fixture);
     let commands: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/✉️inference-command-v1/🔣️.json")).unwrap();
     let trace = &fixture["traces"][0];
     let mut selected = 0;
@@ -362,9 +365,9 @@ async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_co
             bytes[0] |= 128;
             bytes.insert(1, 0);
         }
-        let mut target = target(&fixture, trace);
+        let mut target = target(&fixture, trace, &durable);
         target.command_hash = crate::inference::sha256(&bytes);
-        let backend = tokio::time::timeout(Duration::from_secs(2), storage_with_command(&fixture, trace, Some(&bytes))).await.expect("bounded committed hostile storage");
+        let backend = tokio::time::timeout(Duration::from_secs(2), storage_with_event(&fixture, trace, &durable, Some(&bytes))).await.expect("bounded committed hostile storage");
         let verifier = InferenceWalVerifierV1::new(backend);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
         let result = tokio::time::timeout(Duration::from_secs(4), verifier.verify(target, fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap()))).await.expect("bounded committed hostile verification");
@@ -378,14 +381,15 @@ async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_co
 #[tokio::test]
 async fn inference_wal_proof_dropped_caller_cancels_and_finishes_retained_replay_before_release() {
     let fixture = fixture();
+    let durable = durable_fixture_record(&fixture);
     let trace = &fixture["traces"][0];
     for owner in fixture["ownership"].as_array().unwrap() {
-        let mut verifier = InferenceWalVerifierV1::new(storage(&fixture, trace).await);
+        let mut verifier = InferenceWalVerifierV1::new(storage(&fixture, trace, &durable).await);
         let gate = Arc::new(tokio::sync::Semaphore::new(0));
         Arc::get_mut(&mut verifier.state).unwrap().replay_gate = Some(gate.clone());
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
         let control = Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap());
-        let mut future = Box::pin(verifier.verify(target(&fixture, trace), fence, control.clone()));
+        let mut future = Box::pin(verifier.verify(target(&fixture, trace, &durable), fence, control.clone()));
         assert!(futures::poll!(future.as_mut()).is_pending());
         tokio::time::timeout(Duration::from_secs(2), async {
             while control.progress().0 == 0 {

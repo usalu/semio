@@ -89,7 +89,15 @@ export default defineConfig({
     // imports — plugins are also fetched at runtime via absolute-URL `import()`, which a production build
     // never bundles, so each union plugin dir needs its own static-dir copy into `dist/`.
     ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
-    ...extensionModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_EXTENSION_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(installedExtensionsDir, name)) })),
+    // 🗄️ Catch-all behind the per-union entries above: modules outside this demonstrator's closure are
+    // still fetched at runtime (stdio has no app descriptor but IS loaded), and without this they fall
+    // through to the SPA fallback and fail the same way.
+    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_PLUGIN_ROUTE, root: path.relative(repoRoot, pluginModulesDir) }),
+    // 🧩️ The whole install root, not the computed closure: the generated runtime session lists EVERY
+    // installed extension's `moduleUrl`, so serving only the transitive subset leaves the rest to the
+    // SPA fallback, which answers descriptor fetches with HTML (`plugin.descriptor-invalid … returned
+    // HTML`) and fails the shell boot. `os/dev`'s own config serves this route whole for the same reason.
+    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) }),
     staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${DEMONSTRATOR_ASSETS_DIR}`, root: DEMONSTRATOR_ASSETS_DIR }),
     ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
     react(),

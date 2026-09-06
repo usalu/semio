@@ -9,7 +9,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 pub use set_try_value::SetTryValueStep;
 
 /// ⏱️ Delegates one generation-checked vector-growth chunk.
-pub async fn handle(payload: &SetTryValueStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-    set_try_value::handle_step(payload, doc, cfg).await
+pub fn handle(payload: &SetTryValueStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    set_try_value::handle_step(payload, doc, cfg)
 }
 //#endregion 🔖️SetTryValueStep

@@ -507,3 +507,73 @@ can only follow registry terminal removal. The remaining acceptance condition
 is a native all-tier/blocked-lane law that calls `retry_close` through both a
 faulted close and a queue refusal, then proves the prior ledger witness and
 `WorkerPool::shutdown == Ok(())` only after the exact terminal acknowledgement.
+
+## Current ClosingReady Callback Ordering Review
+
+Status: read-only review of the current source after the callback-only
+`WorkerMaintenanceStep::Retire` repair. No native command was run. The older
+ticket text above describes earlier revisions; this section is the current
+ordering verdict.
+
+### The reported early-removal path is not present on a normal close
+
+The live retirement callback takes its fixed-row cursor under the row mutex,
+drops that mutex, invokes the close continuation, and only clears the
+generation and returns `Retire` after the continuation reports terminal
+([`db/🗿️artifact/🦀️.rs:4295-4328`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L4295)).
+The maintenance registry owns the matching entry until it handles `Retire`
+after the callback returns; a request observed while the callback is running
+cannot reanimate a retired generation.
+
+For a multistep successful `ArtifactEngine::close_step`, the order is:
+
+1. the callback calls `close_one`, which enters `ClosingReady ->
+   ClosingPolling` only for its direct close turn
+   ([`:4464-4489`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L4464));
+2. `close_step() == Ok(true)` makes `finish` call `schedule`, changing that
+   state to `ClosingPollingWake` ([`:4650-4673`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L4650));
+3. dropping the direct-close guard makes it `ClosingReady` and requests the
+   same maintenance ticket ([`:4373-4383`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L4373));
+4. the callback restores its cursor **before** its own fallback request and
+   returns `Idle`, so either request observes a live exact cursor; and
+5. only `Ok(false)` removes the engine, releases the retained pool-use, stores
+   `Terminal`, and permits the callback to clear its generation
+   ([`:4658-4682`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L4658)).
+
+Thus `mLHeQe/RGUBW7`'s ClosingReady/close-poll ordering should not be repaired
+by removing the re-request or by retiring before `close_step == Ok(false)`.
+The focused close-poll law at [`:5435-5458`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L5435)
+correctly establishes that a parked close cannot be re-polled absent a retained
+wake; the rapid 65-authority law at [`:5318-5378`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L5318)
+is the right capacity/terminal companion once it reaches this revision.
+
+### P0: An engine close error strands the exact cursor without a retry edge
+
+The same callback has a concrete non-terminal hole. `ArtifactRunner::finish`
+returns directly on `ArtifactEngine::close_step() -> Err(_)`
+([`:4658-4671`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L4658)).
+The direct close guard then converts `ClosingPolling` to `ClosingParked`
+without requesting maintenance. The callback sees `terminal == false`, restores
+the cursor, but requests again only when the state is exactly `ClosingReady`
+([`:4311-4319`](../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs#L4311)).
+
+When this happens after `ArtifactAuthority::drop`, no foreground owner remains
+to call `schedule`. The row, generation, writer/engine, and `WorkerPoolUse`
+stay retained in `ClosingParked`; the registry reports `Idle`; and the 65th
+authority can eventually exhaust either the retirement or lower DB-I/O budget.
+This is a retained-owner/liveness failure, not an early terminal deletion.
+
+Use a retained close-fault state: preserve the exact engine/cursor and either
+return `WorkerMaintenanceStep::Fault` with an explicit retry admission, or
+record a retryable fault then arrange exactly one future ticket request outside
+the callback. It must never auto-drop the engine or treat the error as terminal.
+
+Add one native law using a real `ArtifactEngine`/WAL close fault, not a handoff
+only fixture:
+
+1. drop an authority after injecting the first `close_step` error;
+2. observe the same fixed row/generation plus writer and pool-use remain, and
+   prove no implicit second close poll occurred;
+3. drive the documented exact retry; require one terminal acknowledgement,
+   writer reacquisition, slot reuse through the 65th authority, and successful
+   pool shutdown only then.

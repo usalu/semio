@@ -17,12 +17,12 @@ use crate::artifacts::shooting::ShootingSnapshot;
 pub const SHOOTING_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
 
 /// 📖️ Parses `.shooting` DSL text into a `ShootingSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<ShootingSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<ShootingSnapshot, store::TextError> {
     <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `ShootingSnapshot` back to `.shooting` DSL text.
-pub async fn print_dsl(snapshot: &ShootingSnapshot) -> String {
+pub fn print_dsl(snapshot: &ShootingSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 
@@ -34,7 +34,7 @@ mod tests {
 
     /// 🎞️ A fixture exercising every field/variant, shared verbatim by the DSL and OpText law tests.
     #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this snapshot, not the FRAC_1_SQRT_2 constant")]
-    async fn representative_snapshot() -> ShootingSnapshot {
+    fn representative_snapshot() -> ShootingSnapshot {
         ShootingSnapshot {
             schema: SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: vec![

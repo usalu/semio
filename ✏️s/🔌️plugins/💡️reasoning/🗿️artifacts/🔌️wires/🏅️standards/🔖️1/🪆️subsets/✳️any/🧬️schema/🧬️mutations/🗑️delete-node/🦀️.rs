@@ -17,23 +17,23 @@ pub struct DeleteNode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_node(node_id: String) -> WiresMutation {
+pub fn delete_node(node_id: String) -> WiresMutation {
     WiresMutation::DeleteNode(DeleteNode { node_id })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for DeleteNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
-        super::diff::diff(self, base).await
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+        super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
-        super::inverse::inverse(self, base).await
+    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+        super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete node \"{}\"", self.node_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]
     }
 }

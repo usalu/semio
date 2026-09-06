@@ -20,16 +20,16 @@ pub struct MoveFrame {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for MoveFrame {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "frame", kind: "move-frame", record: "MovedFrame" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_move_frame(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_move_frame(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Move frame \"{}\"", self.frame_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]
     }
 }
@@ -37,7 +37,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for MoveFrame {
 
 
 //#region 🕹️MoveFrame
-pub async fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.page_id), [payload.page_id.clone()]);
     };
@@ -62,7 +62,7 @@ pub async fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> prot
 
 
 //#region 🕹️MoveFrame
-pub async fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };

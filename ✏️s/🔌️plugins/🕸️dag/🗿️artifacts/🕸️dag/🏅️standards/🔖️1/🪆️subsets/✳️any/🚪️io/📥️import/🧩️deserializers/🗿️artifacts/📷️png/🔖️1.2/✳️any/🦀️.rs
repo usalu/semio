@@ -13,7 +13,7 @@ use semio_s_plugin_stdio::artifacts::png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEM
 
 pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
-pub async fn deserialize(from: &PngSnapshot) -> Result<DagSnapshot, store::TextError> {
+pub fn deserialize(from: &PngSnapshot) -> Result<DagSnapshot, store::TextError> {
     let _ = STDIO_PNG_DOCUMENT_SCHEMA;
     DagSnapshot::from_value(from.to_value()).map_err(|e| store::TextError::new(format!("dag<-png: {e}"), dsl::TextSpan::at(1, 1)))
 }
@@ -23,7 +23,7 @@ pub struct PngIntoDag;
 impl Deserializer<DagSnapshot> for PngIntoDag {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PngIntoDag: expected a binary png payload".to_string(), diagnostics: Vec::new() });
         };

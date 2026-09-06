@@ -27,7 +27,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// primitive every single-field node mutation (`move-node`/`resize-node`/`change-node-kind`/
 /// `change-node-shape`/`edit-node-text`/`set-node-root`) builds its `🔺️diff` from. No-op when
 /// `node_id` isn't found (the diff simply carries no change for a missing target).
-pub async fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: DslValue) {
+pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: DslValue) {
     if let Some(DslValue::Object(entries)) = array_mut(board, "nodes").iter_mut().find(|node| entity_id(node, "id") == Some(node_id)) {
         match entries.iter_mut().find(|(entry_key, _)| entry_key.as_str() == key) {
             Some((_, slot)) => *slot = value,
@@ -141,11 +141,11 @@ mod tests {
     }
     use store::os_store::test_support::assert_op_line_round_trip;
 
-    async fn node(id: &str, text: &str) -> DslValue {
+    fn node(id: &str, text: &str) -> DslValue {
         dsl::to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
     }
 
-    async fn round_trip(snapshot: &WiresSnapshot, operation: &WiresMutation) -> WiresSnapshot {
+    fn round_trip(snapshot: &WiresSnapshot, operation: &WiresMutation) -> WiresSnapshot {
         let (forward, _messages) = apply_mutation(snapshot, operation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in operation.inverse(snapshot) {

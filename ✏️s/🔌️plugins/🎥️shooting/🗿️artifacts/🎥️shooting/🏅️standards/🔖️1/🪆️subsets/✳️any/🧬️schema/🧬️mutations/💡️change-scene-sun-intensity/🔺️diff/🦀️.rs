@@ -4,7 +4,7 @@ use super::ChangeSceneSunIntensity;
 use crate::artifacts::shooting::diff::ShootingDiff;
 use crate::artifacts::shooting::ShootingSnapshot;
 
-pub async fn diff(payload: &ChangeSceneSunIntensity, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub fn diff(payload: &ChangeSceneSunIntensity, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !payload.new_intensity.is_finite() || payload.new_intensity < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Sun intensity must be a non-negative finite number, got {}.", payload.new_intensity), Vec::<String>::new());
     }

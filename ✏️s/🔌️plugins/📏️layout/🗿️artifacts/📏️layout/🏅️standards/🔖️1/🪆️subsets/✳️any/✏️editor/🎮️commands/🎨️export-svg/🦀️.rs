@@ -12,6 +12,6 @@ pub struct ExportSvg {
     pub page_id: Option<String>,
 }
 
-pub async fn handle(_payload: &ExportSvg, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(_payload: &ExportSvg, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     Err(Fault::from("layout-export-job-only"))
 }

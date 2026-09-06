@@ -169,19 +169,19 @@ impl Default for EquationExprSnapshot {
 impl EquationExprSnapshot {
     /// 🔎️ Depth-first search by label — the ONLY address a mutation/inverse ever resolves
     /// against, per `EquationNodeLabel`'s stability contract.
-    pub async fn find(&self, label: EquationNodeLabel) -> Option<&EquationNode> {
+    pub fn find(&self, label: EquationNodeLabel) -> Option<&EquationNode> {
         find_labeled(&self.expr, label)
     }
 
     /// ✏️ Structural replace-in-place by label; a no-op (returns `false`) if `label` isn't
     /// present — callers (mutation `diff`s) must treat that as "nothing to do", never a panic,
     /// since `base` may already have moved past the label a stale payload still names.
-    pub async fn replace(&mut self, label: EquationNodeLabel, new_kind: EquationNodeKind) -> bool {
+    pub fn replace(&mut self, label: EquationNodeLabel, new_kind: EquationNodeKind) -> bool {
         replace_labeled(&mut self.expr, label, &new_kind)
     }
 }
 
-async fn find_labeled(node: &EquationNode, label: EquationNodeLabel) -> Option<&EquationNode> {
+fn find_labeled(node: &EquationNode, label: EquationNodeLabel) -> Option<&EquationNode> {
     if node.label == label {
         return Some(node);
     }
@@ -193,7 +193,7 @@ async fn find_labeled(node: &EquationNode, label: EquationNodeLabel) -> Option<&
     }
 }
 
-async fn replace_labeled(node: &mut EquationNode, label: EquationNodeLabel, new_kind: &EquationNodeKind) -> bool {
+fn replace_labeled(node: &mut EquationNode, label: EquationNodeLabel, new_kind: &EquationNodeKind) -> bool {
     if node.label == label {
         node.kind = new_kind.clone();
         return true;
@@ -211,7 +211,7 @@ async fn replace_labeled(node: &mut EquationNode, label: EquationNodeLabel, new_
 /// (`Expr::integer`/`Expr::from(Rational)`/`Expr::symbol`/`Expr::add`/`Expr::mul`/`Expr::pow`) —
 /// never touches `cas`'s private `Node`/hash-cache fields. Labels are dropped here: `Expr` has no
 /// concept of node identity, it is the pure computation form.
-pub async fn equation_node_to_expr(node: &EquationNode) -> crate::cas::expr::Expr {
+pub fn equation_node_to_expr(node: &EquationNode) -> crate::cas::expr::Expr {
     use crate::cas::expr::Expr;
     match &node.kind {
         EquationNodeKind::Integer { lexeme } => {
@@ -240,7 +240,7 @@ pub async fn equation_node_to_expr(node: &EquationNode) -> crate::cas::expr::Exp
 /// documented gap, not silent corruption (the fallback is structurally distinguishable, never
 /// mistaken for a real computed value, since callers control which `Expr`s they ever pass in
 /// during this wave's proven scope).
-pub async fn expr_to_equation_node(expr: &crate::cas::expr::Expr, next_label: &mut u64) -> EquationNode {
+pub fn expr_to_equation_node(expr: &crate::cas::expr::Expr, next_label: &mut u64) -> EquationNode {
     use crate::cas::expr::Kind;
     let label = EquationNodeLabel(*next_label);
     *next_label += 1;

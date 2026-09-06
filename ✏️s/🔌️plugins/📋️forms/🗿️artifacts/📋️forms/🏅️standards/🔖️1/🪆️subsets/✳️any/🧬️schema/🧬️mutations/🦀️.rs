@@ -43,12 +43,12 @@ pub enum FormMutation {
 //#region 🔖️CompatDelegates
 /// ⚖️ Whole-document apply — a thin delegation to the derive-generated `Mutation::diff`+`apply`
 /// (see file-level doc for why the free function itself stays, not its old hand-rolled match body).
-pub async fn apply_form_edit_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> protocol::MutationApplyResult<FormsSnapshot> {
+pub fn apply_form_edit_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> protocol::MutationApplyResult<FormsSnapshot> {
     <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(mutation.diff(spec).diff(), spec)
 }
 
 /// ⚖️ Whole-document inverse — a thin delegation to the derive-generated `Mutation::inverse`.
-pub async fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> Vec<FormMutation> {
+pub fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> Vec<FormMutation> {
     mutation.inverse(spec)
 }
 //#endregion 🔖️CompatDelegates
@@ -57,7 +57,7 @@ pub async fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation
 /// 🌉️ Playbook kernel helpers still typed on `PlaybookSpec` — reads `steps` through the
 /// working-scene accessor (`crate::artifacts::forms::forms_steps`) now that `FormsSnapshot` no
 /// longer carries a bare `steps` field (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM).
-pub async fn as_playbook_spec(snapshot: &FormsSnapshot) -> flow::playbook::PlaybookSpec {
+pub fn as_playbook_spec(snapshot: &FormsSnapshot) -> flow::playbook::PlaybookSpec {
     flow::playbook::PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps: crate::artifacts::forms::forms_steps(snapshot) }
 }
 //#endregion 🔖️PlaybookBridge
@@ -171,11 +171,11 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
     use protocol::{MutationDiff, SemanticMutation};
 
-    async fn sample_step(id: &str) -> FormStep {
+    fn sample_step(id: &str) -> FormStep {
         FormStep { id: id.into(), title: format!("Step {id}"), description: None, blocks: Vec::new() }
     }
 
-    async fn sample_block(id: &str) -> FormQuestion {
+    fn sample_block(id: &str) -> FormQuestion {
         FormQuestion {
             id: id.into(),
             label: format!("Block {id}"),
@@ -200,15 +200,15 @@ mod tests {
         }
     }
 
-    async fn base_snapshot() -> FormsSnapshot {
+    fn base_snapshot() -> FormsSnapshot {
         base_snapshot_with_steps(vec![sample_step("s1"), sample_step("s2")])
     }
 
-    async fn base_snapshot_with_steps(steps: Vec<FormStep>) -> FormsSnapshot {
+    fn base_snapshot_with_steps(steps: Vec<FormStep>) -> FormsSnapshot {
         crate::artifacts::forms::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, steps)
     }
 
-    async fn steps_of(snapshot: &FormsSnapshot) -> Vec<FormStep> {
+    fn steps_of(snapshot: &FormsSnapshot) -> Vec<FormStep> {
         crate::artifacts::forms::forms_steps(snapshot)
     }
 

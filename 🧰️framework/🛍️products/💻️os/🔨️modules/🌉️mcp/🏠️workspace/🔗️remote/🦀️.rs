@@ -4,9 +4,10 @@ use crate::{GatewayError, GatewayErrorCode};
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
 use semio_framework_os_kernel::os_directory::{
     client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
-    descriptor_digest_v1, hex_lower, DirectoryEventBody, DirectorySpaceAdministrationPageV1, DirectoryStreamMessage, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
+    descriptor_digest_v1, hex_lower, DirectoryEventBody, DirectorySpaceAdministrationPageV1, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
 };
-use std::collections::HashMap;
+use semio_framework_os_kernel::{FromValue, ToValue};
+use std::collections::{BTreeMap, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, PoisonError, RwLock};
 
@@ -17,9 +18,14 @@ pub use pair::{CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairHttpRe
 pub use pair::{NativeCanonicalPairBody, NativeCanonicalPairTransport};
 
 pub const HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS: usize = 4_096;
+pub const HUB_VERIFIED_CATALOG_MAX_PACKAGES: usize = 256;
+pub const HUB_VERIFIED_CATALOG_MAX_DESCRIPTOR_BYTES: usize = 32 * 1024 * 1024;
 pub const HUB_BINDING_DIAGNOSTIC_MAX_BYTES: usize = 4_096;
 pub const HUB_BINDING_ID_MAX_BYTES: usize = 512;
 pub const HUB_BINDING_OPERATION_TIMEOUT_MS: u64 = 10_000;
+pub const CANONICAL_CHECKPOINT_RESOURCE_SCHEMA: &str = "semio.mcp.canonical-checkpoint-resource/v1";
+pub const CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES: usize = 6 * 1024 * 1024;
+const CANONICAL_CHECKPOINT_RESOURCE_METADATA_MAX_BYTES: usize = 16 * 1024;
 static NEXT_HUB_AUTHORITY_GENERATION: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone, Debug, PartialEq)]
@@ -37,6 +43,23 @@ pub struct AuthorizedDescriptorSnapshot {
     pub membership: MemberView,
     pub observed_event_seq: u64,
     pub documents: HashMap<DocumentScope, AuthorizedDocumentView>,
+}
+
+/// 🧾 One package descriptor selected by the authenticated Hub for at least one document.
+#[derive(Clone, Debug, PartialEq)]
+pub struct AuthorizedPackageSelection {
+    pub scope: DocumentScope,
+    pub descriptor_digest_v1: String,
+    pub lease: DocumentExecutionTargetLeaseFieldsV1,
+    pub descriptor: semio_framework::PackageDescriptor,
+}
+
+/// 🔐 A bounded package roster that is publishable only while the exact descriptor authority
+/// generation that selected it remains live.
+#[derive(Clone, Debug, PartialEq)]
+pub struct AuthorizedCatalogSnapshot {
+    pub authority_generation: u64,
+    pub selections: Vec<AuthorizedPackageSelection>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -112,6 +135,7 @@ pub struct HubRemoteBinding {
     authority_generation: AtomicU64,
     observed_event_seq: AtomicU64,
     authenticated_user_id: RwLock<Option<String>>,
+    catalog: RwLock<Option<Arc<AuthorizedCatalogSnapshot>>>,
     pair_actor: Mutex<pair::CanonicalPairActor>,
     #[cfg(test)]
     pair_mount_return_pause: Mutex<Option<(Arc<std::sync::Barrier>, Arc<std::sync::Barrier>)>>,
@@ -135,6 +159,7 @@ impl HubRemoteBinding {
             authority_generation: AtomicU64::new(0),
             observed_event_seq: AtomicU64::new(0),
             authenticated_user_id: RwLock::new(None),
+            catalog: RwLock::new(None),
         })
     }
 
@@ -160,6 +185,119 @@ impl HubRemoteBinding {
             state => return Err(unavailable_gateway_error(state)),
         };
         Ok(ready)
+    }
+
+    /// 📚 Returns the exact Hub-selected package descriptors only while their authenticated
+    /// descriptor authority is still current. Refreshing, expiry and revocation fail closed.
+    pub fn ready_catalog_snapshot(&self, wall_now_ms: i64) -> Result<Arc<AuthorizedCatalogSnapshot>, GatewayError> {
+        self.ready_snapshot(wall_now_ms)?;
+        let authority_generation = self.authority_generation.load(Ordering::SeqCst);
+        let catalog = self.catalog.read().unwrap_or_else(PoisonError::into_inner).clone();
+        match catalog {
+            Some(catalog) if authority_generation != 0 && catalog.authority_generation == authority_generation && self.authority_generation.load(Ordering::SeqCst) == authority_generation => Ok(catalog),
+            _ => Err(unavailable_gateway_error(HubRemoteBindingState::Refreshing)),
+        }
+    }
+
+    /// 🔎 Fetches and verifies the protected descriptor body behind every selected document. No
+    /// repository path participates: manifest identity, bytes and descriptor contents all come from
+    /// authenticated execution-target routes and are fenced by the current authority generation.
+    pub async fn refresh_catalog<T: DirectoryTransport>(
+        &self,
+        client: &DirectoryClient<T>,
+        snapshot: &Arc<AuthorizedDescriptorSnapshot>,
+        ctx: &OperationContext,
+    ) -> Result<Arc<AuthorizedCatalogSnapshot>, HubBindingError> {
+        *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = None;
+        let authority_generation = self.authority_generation.load(Ordering::SeqCst);
+        if authority_generation == 0 {
+            return Err(HubBindingError::StaleRefresh);
+        }
+        let mut documents: Vec<_> = snapshot.documents.values().cloned().collect();
+        documents.sort_by(|left, right| left.scope.space_id.cmp(&right.scope.space_id).then_with(|| left.scope.document_id.cmp(&right.scope.document_id)));
+        let mut selected = BTreeMap::<(String, String, String, String, String), AuthorizedPackageSelection>::new();
+        let mut descriptor_bytes_total = 0usize;
+        let mut catalog_generation_id: Option<String> = None;
+        for (index, document) in documents.into_iter().enumerate() {
+            if ctx.cancel.is_cancelled_now() {
+                return Err(HubBindingError::Cancelled);
+            }
+            let intent = DocumentOpenIntentV1 {
+                schema: "semio.hub.document-open-intent/v1".into(),
+                version: 1,
+                scope: document.scope.clone(),
+                requested_surface_id: None,
+                client_instance_id: format!("mcp-catalog-{index}"),
+            };
+            let lease = client.document_execution_target_manifest(ctx, &intent).await.map_err(map_catalog_client_error)?;
+            let descriptor_bytes = client.document_execution_target_descriptor(ctx, &intent).await.map_err(map_catalog_client_error)?;
+            descriptor_bytes_total = descriptor_bytes_total.checked_add(descriptor_bytes.len()).ok_or(HubBindingError::CapacityExceeded)?;
+            if descriptor_bytes_total > HUB_VERIFIED_CATALOG_MAX_DESCRIPTOR_BYTES {
+                return Err(HubBindingError::CapacityExceeded);
+            }
+            if lease.scope != document.scope
+                || lease.descriptor_digest_v1 != document.descriptor_digest_v1
+                || lease.package.plugin_id != document.view.descriptor.owner.plugin_id
+                || lease.package.package_id != document.view.descriptor.owner.package_id
+                || lease.package.version != document.view.descriptor.owner.version
+                || lease.package.component_sha256 != document.view.descriptor.owner.package_hash
+                || lease.artifact.kind != document.view.descriptor.artifact_kind
+                || lease.artifact.schema != document.view.descriptor.artifact_schema
+                || lease.artifact.pack_schema_hash != document.view.descriptor.pack_schema_hash
+                || lease.descriptor.byte_length != descriptor_bytes.len() as u64
+                || lease.descriptor.sha256 != framework_hash::sha256_hex(&descriptor_bytes)
+            {
+                return Err(HubBindingError::InvalidResponse("execution-target selection does not match authenticated document descriptor"));
+            }
+            match &catalog_generation_id {
+                Some(expected) if expected != &lease.catalog.generation_id => return Err(HubBindingError::InvalidResponse("documents resolved against different catalog generations")),
+                None => catalog_generation_id = Some(lease.catalog.generation_id.clone()),
+                Some(_) => {}
+            }
+            let descriptor_value = semio_framework_os_kernel::os_store::pack_rt::decode_wire_value(&descriptor_bytes)
+                .map_err(|_| HubBindingError::InvalidResponse("execution-target descriptor is not a canonical pack"))?;
+            let descriptor = semio_framework::PackageDescriptor::from_value(descriptor_value.clone())
+                .map_err(|_| HubBindingError::InvalidResponse("execution-target descriptor is not a package descriptor"))?;
+            if semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor_value) != descriptor_bytes
+                || semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value()) != descriptor_bytes
+            {
+                return Err(HubBindingError::InvalidResponse("execution-target descriptor is not its exact canonical package projection"));
+            }
+            if descriptor.descriptor_version != 1
+                || descriptor.package_id != lease.package.package_id
+                || descriptor.manifest.plugin_id != lease.package.plugin_id
+                || descriptor.manifest.version != lease.package.version
+                || descriptor.hashes.wasm_sha256 != lease.package.component_sha256
+            {
+                return Err(HubBindingError::InvalidResponse("execution-target package descriptor identity mismatch"));
+            }
+            let key = (
+                lease.package.plugin_id.clone(),
+                lease.package.package_id.clone(),
+                lease.package.version.clone(),
+                lease.package.component_sha256.clone(),
+                lease.package.descriptor_byte_sha256.clone(),
+            );
+            let candidate = AuthorizedPackageSelection { scope: document.scope, descriptor_digest_v1: document.descriptor_digest_v1, lease, descriptor };
+            if let Some(previous) = selected.get(&key) {
+                if previous.descriptor != candidate.descriptor || previous.lease.catalog != candidate.lease.catalog {
+                    return Err(HubBindingError::InvalidResponse("one selected package identity resolved to different descriptors"));
+                }
+            } else {
+                if selected.len() >= HUB_VERIFIED_CATALOG_MAX_PACKAGES {
+                    return Err(HubBindingError::CapacityExceeded);
+                }
+                selected.insert(key, candidate);
+            }
+        }
+        if self.authority_generation.load(Ordering::SeqCst) != authority_generation
+            || !matches!(self.state(), HubRemoteBindingState::Ready(current) if current.as_ref() == snapshot.as_ref())
+        {
+            return Err(HubBindingError::StaleRefresh);
+        }
+        let catalog = Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections: selected.into_values().collect() });
+        *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = Some(catalog.clone());
+        Ok(catalog)
     }
 
     pub async fn refresh<T: DirectoryTransport>(&self, client: &DirectoryClient<T>, ctx: &OperationContext, wall_now_ms: i64, operation_now_ms: u64) -> Result<Arc<AuthorizedDescriptorSnapshot>, HubBindingError> {
@@ -255,6 +393,7 @@ impl HubRemoteBinding {
         let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         let generation = self.generation.fetch_add(1, Ordering::SeqCst).saturating_add(1);
         self.authority_generation.store(0, Ordering::SeqCst);
+        *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = None;
         actor.invalidate(pair::CanonicalPairActorState::Refreshing);
         drop(actor);
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Refreshing;
@@ -271,6 +410,7 @@ impl HubRemoteBinding {
         let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         self.generation.fetch_add(1, Ordering::SeqCst);
         self.authority_generation.store(0, Ordering::SeqCst);
+        *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = None;
         actor.invalidate(pair::CanonicalPairActorState::Refreshing);
         drop(actor);
         let mut state = self.state.write().unwrap_or_else(PoisonError::into_inner);
@@ -283,6 +423,7 @@ impl HubRemoteBinding {
         let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         self.generation.fetch_add(1, Ordering::SeqCst);
         self.authority_generation.store(0, Ordering::SeqCst);
+        *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = None;
         actor.invalidate(pair::CanonicalPairActorState::Revoked);
         drop(actor);
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Revoked;
@@ -360,10 +501,17 @@ impl HubRemoteBinding {
         *self.state.write().unwrap_or_else(PoisonError::into_inner) = HubRemoteBindingState::Ready(Arc::new(snapshot));
         self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).descriptor_ready(authority_generation);
     }
+
+    #[cfg(test)]
+    pub(crate) fn install_catalog_for_test(&self, selections: Vec<AuthorizedPackageSelection>) {
+        let authority_generation = self.authority_generation.load(Ordering::SeqCst);
+        assert_ne!(authority_generation, 0);
+        *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections }));
+    }
 }
 
 fn next_authority_generation() -> Result<u64, HubBindingError> {
-    NEXT_HUB_AUTHORITY_GENERATION.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |current| current.checked_add(1)).map_err(|_| HubBindingError::CapacityExceeded)
+    NEXT_HUB_AUTHORITY_GENERATION.try_update(Ordering::SeqCst, Ordering::SeqCst, |current| current.checked_add(1)).map_err(|_| HubBindingError::CapacityExceeded)
 }
 
 pub fn validate_hub_origin(base_url: &str, space_id: &str) -> Result<(), GatewayError> {
@@ -385,6 +533,92 @@ pub fn parse_descriptor_resource_uri(uri: &str) -> Option<DocumentScope> {
         return None;
     }
     Some(DocumentScope::new(space_id, document_id))
+}
+
+pub fn checkpoint_resource_uri(scope: &DocumentScope) -> String {
+    format!("semio://workspace/scopes/{}/{}/checkpoint", percent_encode(&scope.space_id), percent_encode(&scope.document_id))
+}
+
+pub fn parse_checkpoint_resource_uri(uri: &str) -> Option<DocumentScope> {
+    let rest = uri.strip_prefix("semio://workspace/scopes/")?;
+    let mut parts = rest.split('/');
+    let space_id = percent_decode(parts.next()?)?;
+    let document_id = percent_decode(parts.next()?)?;
+    if parts.next()? != "checkpoint" || parts.next().is_some() || space_id.is_empty() || document_id.is_empty() {
+        return None;
+    }
+    Some(DocumentScope::new(space_id, document_id))
+}
+
+fn checked_base64_length(length: usize) -> Result<usize, CanonicalPairMountError> {
+    length.checked_add(2).and_then(|value| value.checked_div(3)).and_then(|value| value.checked_mul(4)).ok_or(CanonicalPairMountError::ResourceLimit)
+}
+
+fn base64_encode_exact(bytes: &[u8], output_length: usize) -> Result<String, CanonicalPairMountError> {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    if checked_base64_length(bytes.len())? != output_length {
+        return Err(CanonicalPairMountError::ResourceLimit);
+    }
+    let mut output = String::with_capacity(output_length);
+    for chunk in bytes.chunks(3) {
+        let first = chunk[0];
+        let second = *chunk.get(1).unwrap_or(&0);
+        let third = *chunk.get(2).unwrap_or(&0);
+        output.push(ALPHABET[(first >> 2) as usize] as char);
+        output.push(ALPHABET[(((first & 3) << 4) | (second >> 4)) as usize] as char);
+        output.push(if chunk.len() > 1 { ALPHABET[(((second & 15) << 2) | (third >> 6)) as usize] as char } else { '=' });
+        output.push(if chunk.len() > 2 { ALPHABET[(third & 63) as usize] as char } else { '=' });
+    }
+    Ok(output)
+}
+
+fn canonical_checkpoint_resource_text(
+    identity: &CanonicalPairMountIdentity,
+    frontier: &semio_framework_os_kernel::os_directory::ArtifactFrontier,
+    pack: &[u8],
+    spr: &[u8],
+) -> Result<String, CanonicalPairMountError> {
+    let raw_length = pack.len().checked_add(spr.len()).ok_or(CanonicalPairMountError::ResourceLimit)?;
+    if raw_length > pair::HUB_PAIR_MAX_VERIFIED_BYTES {
+        return Err(CanonicalPairMountError::ResourceLimit);
+    }
+    if frontier.document_id != identity.scope.document_id {
+        return Err(CanonicalPairMountError::InvalidResponse("canonical checkpoint projection identity mismatch"));
+    }
+    let pack_base64_length = checked_base64_length(pack.len())?;
+    let spr_base64_length = checked_base64_length(spr.len())?;
+    let projected_upper_bound = pack_base64_length
+        .checked_add(spr_base64_length)
+        .and_then(|value| value.checked_add(CANONICAL_CHECKPOINT_RESOURCE_METADATA_MAX_BYTES))
+        .ok_or(CanonicalPairMountError::ResourceLimit)?;
+    if projected_upper_bound > CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES {
+        return Err(CanonicalPairMountError::ResourceLimit);
+    }
+    let pack_base64 = base64_encode_exact(pack, pack_base64_length)?;
+    let spr_base64 = base64_encode_exact(spr, spr_base64_length)?;
+    let value = serde_json::json!({
+        "schema": CANONICAL_CHECKPOINT_RESOURCE_SCHEMA,
+        "scope": { "spaceId": identity.scope.space_id, "documentId": identity.scope.document_id },
+        "descriptorDigestV1": identity.descriptor_digest_v1,
+        "activeCheckpointId": identity.active_checkpoint_id,
+        "etag": identity.etag,
+        "authorityGeneration": identity.authority_generation,
+        "catalogGeneration": identity.catalog_generation,
+        "frontier": {
+            "documentId": frontier.document_id,
+            "headEditOrdinal": frontier.head_edit_ordinal,
+            "headEditId": frontier.head_edit_id,
+            "lastCommitSeq": frontier.last_commit_seq,
+            "chainHash": hex_lower(&frontier.chain_hash.0)
+        },
+        "pack": { "byteLength": pack.len(), "sha256": framework_hash::sha256_hex(pack), "base64": pack_base64 },
+        "spr": { "byteLength": spr.len(), "sha256": framework_hash::sha256_hex(spr), "base64": spr_base64 }
+    });
+    let text = serde_json::to_string(&value).map_err(|_| CanonicalPairMountError::InvalidResponse("canonical checkpoint resource serialization failed"))?;
+    if text.len() > CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES {
+        return Err(CanonicalPairMountError::ResourceLimit);
+    }
+    Ok(text)
 }
 
 fn validate_identity(field: &'static str, value: &str) -> Result<(), HubBindingError> {
@@ -410,6 +644,17 @@ fn map_client_error(error: DirectoryClientError) -> HubBindingError {
         DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
         DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
         DirectoryClientError::Decode(_) | DirectoryClientError::Http { .. } | DirectoryClientError::Transport(_) => HubBindingError::Unavailable,
+    }
+}
+
+fn map_catalog_client_error(error: DirectoryClientError) -> HubBindingError {
+    match error {
+        DirectoryClientError::Unauthorized | DirectoryClientError::Http { status: 403, .. } => HubBindingError::Unauthorized,
+        DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
+        DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded) => HubBindingError::DeadlineExceeded,
+        DirectoryClientError::Decode(_) => HubBindingError::InvalidResponse("execution-target response failed validation"),
+        DirectoryClientError::Http { status: 404 | 409, .. } => HubBindingError::StaleRefresh,
+        DirectoryClientError::Http { .. } | DirectoryClientError::Transport(_) => HubBindingError::Unavailable,
     }
 }
 
@@ -525,8 +770,11 @@ impl NativeHubBindingDriver {
             cancel: cancel.child_now(),
             capability: None,
         };
-        runtime
+        let descriptor_snapshot = runtime
             .block_on(binding.refresh(client.as_ref(), &ctx, wall_now_ms(), operation_now))
+            .map_err(binding_error_to_gateway)?;
+        runtime
+            .block_on(binding.refresh_catalog(client.as_ref(), &descriptor_snapshot, &ctx))
             .map_err(binding_error_to_gateway)?;
 
         let mut stream = client.stream(0);
@@ -586,7 +834,12 @@ impl NativeHubBindingDriver {
                                         }
                                         continue;
                                     }
-                                    Ok(_) => {}
+                                    Ok(snapshot) => {
+                                        if thread_runtime.block_on(thread_binding.refresh_catalog(thread_client.as_ref(), &snapshot, &ctx)).is_err() {
+                                            thread_binding.invalidate("authenticated Hub catalog refresh failed before directory dial");
+                                            continue;
+                                        }
+                                    }
                                 }
                             }
                             let authority_generation = thread_binding.authority_generation.load(Ordering::SeqCst);
@@ -621,7 +874,14 @@ impl NativeHubBindingDriver {
                         }
                         DirectoryStreamTurn::Idle if needs_refresh => {
                             match thread_runtime.block_on(thread_binding.refresh(thread_client.as_ref(), &ctx, wall_now_ms(), operation_now)) {
-                                Ok(_) => needs_refresh = false,
+                                Ok(snapshot) => match thread_runtime.block_on(thread_binding.refresh_catalog(thread_client.as_ref(), &snapshot, &ctx)) {
+                                    Ok(_) => needs_refresh = false,
+                                    Err(HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired) => break,
+                                    Err(_) => {
+                                        thread_binding.invalidate("authenticated Hub catalog refresh failed");
+                                        std::thread::sleep(std::time::Duration::from_millis(100));
+                                    }
+                                },
                                 Err(HubBindingError::Unauthorized | HubBindingError::SessionExpired | HubBindingError::MembershipRequired) => break,
                                 Err(_) => std::thread::sleep(std::time::Duration::from_millis(100)),
                             }
@@ -740,7 +1000,7 @@ impl HubRemoteBinding {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl NativeHubBindingDriver {
-    fn inference_context(&self, cancel: &semio_framework_async::CancelToken, timeout_ms: u64) -> (OperationContext, u64) {
+    fn operation_context(&self, cancel: &semio_framework_async::CancelToken, timeout_ms: u64) -> (OperationContext, u64) {
         use semio_framework_async::TraceId;
         let operation_now = self.runtime.block_on(self.runtime.now_ms());
         let context = OperationContext {
@@ -760,7 +1020,7 @@ impl NativeHubBindingDriver {
     pub fn submit_gis_map_inference_job(
         &self, scope: &DocumentScope, hub_origin: &str, request: &crate::inference::GisMapInferenceSubmitRequestV1, cancel: &semio_framework_async::CancelToken,
     ) -> Result<crate::inference::GisMapInferenceJobReceiptV1, crate::inference::InferenceRouteErrorV1> {
-        let (context, _) = self.inference_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
+        let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
         self.runtime.block_on(crate::inference::submit_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
     }
 
@@ -768,7 +1028,7 @@ impl NativeHubBindingDriver {
     pub fn read_gis_map_inference_job_events(
         &self, scope: &DocumentScope, hub_origin: &str, job_id: &str, after: u64, cancel: &semio_framework_async::CancelToken,
     ) -> Result<crate::inference::GisMapInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
-        let (context, _) = self.inference_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        let (context, _) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
         self.runtime.block_on(crate::inference::read_gis_map_job_events(self.inference_transport.as_ref(), &context, hub_origin, scope, job_id, after))
     }
 
@@ -776,7 +1036,7 @@ impl NativeHubBindingDriver {
     pub fn cancel_gis_map_inference_job(
         &self, scope: &DocumentScope, hub_origin: &str, job_id: &str, cancel: &semio_framework_async::CancelToken,
     ) -> Result<crate::inference::GisMapInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
-        let (context, _) = self.inference_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        let (context, _) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
         self.runtime.block_on(crate::inference::cancel_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, job_id))
     }
 
@@ -784,7 +1044,7 @@ impl NativeHubBindingDriver {
     pub fn approve_gis_map_inference_job(
         &self, scope: &DocumentScope, hub_origin: &str, request: &crate::inference::GisMapInferenceApprovalRequestV1, cancel: &semio_framework_async::CancelToken,
     ) -> Result<crate::inference::GisMapInferenceApprovalReceiptV1, crate::inference::InferenceRouteErrorV1> {
-        let (context, _) = self.inference_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
+        let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
         self.runtime.block_on(crate::inference::approve_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
     }
 
@@ -792,7 +1052,7 @@ impl NativeHubBindingDriver {
     /// base identity an inference job is compared against: descriptor digest, active checkpoint,
     /// catalog generation, etag and the verified baseline frontier.
     pub fn gis_map_inference_base(&self, binding: &HubRemoteBinding, scope: &DocumentScope, cancel: &semio_framework_async::CancelToken) -> Result<crate::inference::GisMapInferenceBaseBindingV1, CanonicalPairMountError> {
-        let (context, operation_now) = self.inference_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        let (context, operation_now) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
         let mount = self.mount_canonical_pair(binding, scope, None, None, &context, wall_now_ms(), operation_now)?;
         let identity = mount.identity();
         let baseline = mount.baseline();
@@ -810,6 +1070,22 @@ impl NativeHubBindingDriver {
             last_commit_seq: baseline.last_commit_seq,
             chain_hash: hex_lower(&baseline.chain_hash.0),
         })
+    }
+
+    /// 🧪 Reads one authenticated frozen checkpoint through the protected pair transport and
+    /// projects it to the bounded MCP resource codec without exposing the retained cache bytes.
+    pub fn read_canonical_checkpoint(
+        &self,
+        binding: &HubRemoteBinding,
+        scope: &DocumentScope,
+        cancel: &semio_framework_async::CancelToken,
+    ) -> Result<String, CanonicalPairMountError> {
+        let (context, operation_now) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        let mount = self.mount_canonical_pair(binding, scope, None, None, &context, wall_now_ms(), operation_now)?;
+        if mount.identity().scope != *scope {
+            return Err(CanonicalPairMountError::InvalidResponse("canonical checkpoint scope does not match its mount"));
+        }
+        binding.project_mounted_canonical_pair(&mount, wall_now_ms(), canonical_checkpoint_resource_text)
     }
 }
 
@@ -942,6 +1218,84 @@ mod tests {
         ]);
         let rendered = format!("{:?} {:?} {:?}", binding.state(), binding.progress(), binding.diagnostic());
         assert!(!rendered.contains("session.v1."));
+    }
+
+    #[tokio::test]
+    async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revocation_removes_it() {
+        let contract = fixture();
+        let (directory_client, _) = client_for(&contract["cases"]["memberReady"]);
+        let seed_binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
+        let seed = seed_binding.refresh(&directory_client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
+
+        let repo_root = crate::workspace::find_repo_root().expect("repo root");
+        let corpus: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(repo_root.join("🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus"),
+        )
+        .expect("execution-target corpus json");
+        let mut manifest: DocumentExecutionTargetLeaseFieldsV1 =
+            semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
+        let descriptor = crate::workspace::load_package_descriptor(&repo_root.join("✏️s/🔌️plugins/🌍️gis")).expect("installed GIS descriptor test input");
+        let descriptor_bytes = semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value());
+        let descriptor_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
+        manifest.package.plugin_id = descriptor.manifest.plugin_id.clone();
+        manifest.package.package_id = descriptor.package_id.clone();
+        manifest.package.version = descriptor.manifest.version.clone();
+        manifest.package.component_sha256 = descriptor.hashes.wasm_sha256.clone();
+        manifest.package.descriptor_byte_sha256 = descriptor_sha256.clone();
+        manifest.component.sha256 = descriptor.hashes.wasm_sha256.clone();
+        manifest.descriptor.sha256 = descriptor_sha256;
+        manifest.descriptor.byte_length = u64::try_from(descriptor_bytes.len()).expect("descriptor length");
+        if let semio_framework_os_kernel::os_directory::schema::DocumentExecutionTargetBrowserActorV1::ClosedBrowserActor {
+            source_component_sha256,
+            source_descriptor_byte_sha256,
+            ..
+        } = &mut manifest.browser_actor
+        {
+            source_component_sha256.clone_from(&manifest.package.component_sha256);
+            source_descriptor_byte_sha256.clone_from(&manifest.package.descriptor_byte_sha256);
+        }
+
+        let mut snapshot = seed.as_ref().clone();
+        snapshot.space.id = manifest.scope.space_id.clone();
+        let mut document = snapshot.documents.values().next().expect("seed document").clone();
+        document.scope = manifest.scope.clone();
+        document.descriptor_digest_v1 = manifest.descriptor_digest_v1.clone();
+        document.view.descriptor.space_id = manifest.scope.space_id.clone();
+        document.view.descriptor.document_id = manifest.scope.document_id.clone();
+        document.view.descriptor.artifact_kind = manifest.artifact.kind.clone();
+        document.view.descriptor.artifact_schema = manifest.artifact.schema.clone();
+        document.view.descriptor.pack_schema_hash = manifest.artifact.pack_schema_hash.clone();
+        document.view.descriptor.owner.plugin_id = manifest.package.plugin_id.clone();
+        document.view.descriptor.owner.package_id = manifest.package.package_id.clone();
+        document.view.descriptor.owner.version = manifest.package.version.clone();
+        document.view.descriptor.owner.package_hash = manifest.package.component_sha256.clone();
+        snapshot.documents = HashMap::from([(manifest.scope.clone(), document)]);
+
+        let binding = HubRemoteBinding::new("http://hub.invalid", manifest.scope.space_id.clone()).unwrap();
+        binding.install_snapshot_for_test(snapshot.clone());
+        let requests = Arc::new(Mutex::new(Vec::new()));
+        let transport = RecordingTransport {
+            responses: Arc::new(Mutex::new(VecDeque::from([
+                HttpResponse { status: 200, body: semio_framework_os_kernel::os_pack::json::to_json_string(&manifest).into_bytes() },
+                HttpResponse { status: 200, body: descriptor_bytes },
+            ]))),
+            requests: requests.clone(),
+        };
+        let client = DirectoryClient::new(transport, "http://hub.invalid");
+        let selected = binding.refresh_catalog(&client, &Arc::new(snapshot), &context(Some(20_000))).await.unwrap();
+        assert_eq!(selected.selections.len(), 1);
+        assert_eq!(selected.selections[0].lease.package, manifest.package);
+        assert_eq!(selected.selections[0].descriptor.manifest.plugin_id, "gis");
+        let paths: Vec<_> = requests.lock().unwrap().iter().map(|(_, url, _)| url.clone()).collect();
+        assert_eq!(
+            paths,
+            [
+                "http://hub.invalid/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/execution-target/manifest",
+                "http://hub.invalid/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/execution-target/descriptor",
+            ],
+        );
+        binding.invalidate_stream();
+        assert_eq!(binding.ready_catalog_snapshot(i64::MIN).unwrap_err().code, GatewayErrorCode::PluginUnavailable);
     }
 
     #[tokio::test]

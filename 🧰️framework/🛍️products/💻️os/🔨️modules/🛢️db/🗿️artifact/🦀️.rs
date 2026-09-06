@@ -339,6 +339,14 @@ pub struct CommitNotification {
     pub touched: db_state::TouchedSet,
 }
 
+/// 📍️ One actor-serialized checkpoint-publication observation, including the exact
+/// committed tip identity omitted from the generic database frontier.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckpointPublicationSnapshot {
+    pub frontier: Frontier,
+    pub head_edit_id: Option<protocol::MutationId>,
+}
+
 /// 🧾️ Actor-owned outcome for one Store-admitted durable fixed-three decision event.
 pub enum ArtifactDurableGroupJournalAppendV1 {
     Absent,
@@ -367,43 +375,232 @@ impl ArtifactCommittedDurableGroupDecisionV1 {
         self.segment_index
     }
 
-    pub(crate) fn record(&self) -> &store::durable_group::DurableOwnedGroupJournalRecordV1 {
-        &self.record
+    fn receipt(&self) -> store::durable_group::DurableOwnedGroupJournalReceiptV1 {
+        store::durable_group::DurableOwnedGroupJournalReceiptV1 {
+            anchor_sha256: self.record.anchor_sha256().to_string(),
+            decision_sha256: self.record.decision_sha256().to_string(),
+            transaction_id: self.transaction_id,
+            segment_index: self.segment_index,
+        }
     }
 
-    pub(crate) fn into_record(self) -> store::durable_group::DurableOwnedGroupJournalRecordV1 {
-        self.record
-    }
-
-    /// ♻️ Transfers the exact committed decision into Store-owned fixed-three recovery without exposing Event bytes or receipt fields.
-    pub fn begin_store_owned_recovery<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
-        &self,
-        parent: store::ArtifactStore<ParentP, ParentMutation>,
-        drawing: store::ArtifactStore<DrawingP, DrawingMutation>,
-        value: store::ArtifactStore<ValueP, ValueMutation>,
-    ) -> Result<
-        store::durable_group::DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
-        store::durable_group::DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
-    >
+    pub(crate) fn into_store_owned_recovery<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+        self,
+        admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    ) -> ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
     where
         ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ParentMutation: store::StoreMutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
         DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        DrawingMutation: store::StoreMutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
         ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ValueMutation: store::StoreMutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
     {
-        self.record.begin_store_owned_recovery(
-            store::durable_group::DurableOwnedGroupJournalReceiptV1 {
-                anchor_sha256: self.record.anchor_sha256().to_string(),
-                decision_sha256: self.record.decision_sha256().to_string(),
-                transaction_id: self.transaction_id,
-                segment_index: self.segment_index,
+        ArtifactCommittedDurableGroupRecoveryV1 { state: std::mem::ManuallyDrop::new(Some(ArtifactCommittedDurableGroupRecoveryStateV1::Admitting { witness: self, admission, last_error: None })) }
+    }
+}
+
+enum ArtifactCommittedDurableGroupRecoveryStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    Admitting {
+        witness: ArtifactCommittedDurableGroupDecisionV1,
+        admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+        last_error: Option<store::durable_group::DurableOwnedGroupDecisionError>,
+    },
+    Recovering {
+        document: ArtifactId,
+        receipt: store::durable_group::DurableOwnedGroupJournalReceiptV1,
+        host: store::durable_group::DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    },
+    Complete {
+        document: ArtifactId,
+        receipt: store::durable_group::DurableOwnedGroupJournalReceiptV1,
+        already_applied: bool,
+        owners: store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    },
+}
+
+/// 🔁️ One non-cancellable exact-three-Store restoration driven only by a consumed committed WAL witness.
+#[must_use = "committed recovery must reach one terminal three-Store owner handoff"]
+pub(crate) struct ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    state: std::mem::ManuallyDrop<Option<ArtifactCommittedDurableGroupRecoveryStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum ArtifactCommittedDurableGroupRecoveryAdvanceV1 {
+    Progress(store::durable_group::DurableOwnedThreeStoreCommitPhaseV1),
+    Blocked,
+    Fault(store::durable_group::DurableOwnedGroupDecisionError),
+    Complete,
+}
+
+pub(crate) struct ArtifactCommittedDurableGroupRecoveryTerminalV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    pub(crate) document: ArtifactId,
+    pub(crate) receipt: store::durable_group::DurableOwnedGroupJournalReceiptV1,
+    pub(crate) already_applied: bool,
+    pub(crate) owners: store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+}
+
+pub(crate) struct ArtifactCommittedDurableGroupRecoveryRejectedTerminalV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    pub(crate) document: ArtifactId,
+    pub(crate) receipt: store::durable_group::DurableOwnedGroupJournalReceiptV1,
+    pub(crate) error: store::durable_group::DurableOwnedGroupDecisionError,
+    pub(crate) owners: store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+{
+    pub(crate) fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> ArtifactCommittedDurableGroupRecoveryAdvanceV1 {
+        let Some(state) = self.state.take() else {
+            return ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(store::durable_group::DurableOwnedGroupDecisionError::InvalidOutcome);
+        };
+        match state {
+            ArtifactCommittedDurableGroupRecoveryStateV1::Admitting { witness, admission, .. } => {
+                let document = witness.document.clone();
+                let receipt = witness.receipt();
+                match admission.restore_untrusted_committed_record(&witness.record, receipt.clone()) {
+                    Ok(store::durable_group::DurableOwnedMapRecoveryStartV1::Apply(host)) => {
+                        let Some(phase) = host.phase() else {
+                            *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                            return ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(store::durable_group::DurableOwnedGroupDecisionError::InvalidOutcome);
+                        };
+                        *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                        ArtifactCommittedDurableGroupRecoveryAdvanceV1::Progress(phase)
+                    }
+                    Ok(store::durable_group::DurableOwnedMapRecoveryStartV1::AlreadyApplied(owners)) => {
+                        *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Complete { document, receipt, already_applied: true, owners });
+                        ArtifactCommittedDurableGroupRecoveryAdvanceV1::Complete
+                    }
+                    Err(rejected) => {
+                        let error = rejected.error.clone();
+                        let admission = store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(rejected.parent, rejected.drawing, rejected.value);
+                        *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Admitting { witness, admission, last_error: Some(error.clone()) });
+                        ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(error)
+                    }
+                }
+            }
+            ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, mut host } => match host.advance(grant) {
+                store::durable_group::DurableOwnedMapRecoveryAdvanceV1::Progress(phase) => {
+                    *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                    ArtifactCommittedDurableGroupRecoveryAdvanceV1::Progress(phase)
+                }
+                store::durable_group::DurableOwnedMapRecoveryAdvanceV1::Blocked => {
+                    *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                    ArtifactCommittedDurableGroupRecoveryAdvanceV1::Blocked
+                }
+                store::durable_group::DurableOwnedMapRecoveryAdvanceV1::Fault(error) => {
+                    *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                    ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(error)
+                }
+                store::durable_group::DurableOwnedMapRecoveryAdvanceV1::AwaitingAcknowledgement => {
+                    if !host.acknowledge_restoration(&receipt) {
+                        *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                        return ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(store::durable_group::DurableOwnedGroupDecisionError::InvalidHash);
+                    }
+                    let Some(phase) = host.phase() else {
+                        *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                        return ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(store::durable_group::DurableOwnedGroupDecisionError::InvalidOutcome);
+                    };
+                    *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                    ArtifactCommittedDurableGroupRecoveryAdvanceV1::Progress(phase)
+                }
+                store::durable_group::DurableOwnedMapRecoveryAdvanceV1::Complete => {
+                    let Some(owners) = host.take_terminal_owners() else {
+                        *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                        return ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(store::durable_group::DurableOwnedGroupDecisionError::InvalidOutcome);
+                    };
+                    *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Complete { document, receipt, already_applied: false, owners });
+                    ArtifactCommittedDurableGroupRecoveryAdvanceV1::Complete
+                }
             },
-            parent,
-            drawing,
-            value,
-        )
+            complete @ ArtifactCommittedDurableGroupRecoveryStateV1::Complete { .. } => {
+                *self.state = Some(complete);
+                ArtifactCommittedDurableGroupRecoveryAdvanceV1::Complete
+            }
+        }
+    }
+
+    pub(crate) fn take_terminal(&mut self) -> Option<ArtifactCommittedDurableGroupRecoveryTerminalV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+        let state = self.state.take()?;
+        match state {
+            ArtifactCommittedDurableGroupRecoveryStateV1::Complete { document, receipt, already_applied, owners } => Some(ArtifactCommittedDurableGroupRecoveryTerminalV1 { document, receipt, already_applied, owners }),
+            state => {
+                *self.state = Some(state);
+                None
+            }
+        }
+    }
+
+    pub(crate) fn take_rejected_terminal(&mut self) -> Option<ArtifactCommittedDurableGroupRecoveryRejectedTerminalV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+        let state = self.state.take()?;
+        match state {
+            ArtifactCommittedDurableGroupRecoveryStateV1::Admitting { witness, admission, last_error: Some(error) } => {
+                let document = witness.document.clone();
+                let receipt = witness.receipt();
+                drop(witness);
+                Some(ArtifactCommittedDurableGroupRecoveryRejectedTerminalV1 { document, receipt, error, owners: admission.into_owners() })
+            }
+            state => {
+                *self.state = Some(state);
+                None
+            }
+        }
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.state.is_none()
+    }
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    fn drop(&mut self) {
+        assert!(self.state.is_none(), "committed WAL recovery reached Drop before exact three-Store terminal handoff");
     }
 }
 
@@ -1284,6 +1481,7 @@ pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + '
     applied_receipts: HashMap<String, CommandReceipt>,
     actor_seq: HashMap<String, u64>,
     frontier: Frontier,
+    head_edit_id: Option<protocol::MutationId>,
     outbox: Vec<OutboxEntry>,
     commit_log: Vec<CommitNotification>,
     previews: db_preview::PreviewStore,
@@ -1373,6 +1571,16 @@ impl std::fmt::Debug for ArtifactEngineOpenRejected {
 const MAX_RECENT_TOUCHES: usize = 256;
 
 impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        if self.wal.close_step()? {
+            return Ok(true);
+        }
+        if self.state.values.close_step()? {
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
     /// @emoji 🌱️ Retained constructor used by the document authority. Every storage wait remains
     /// represented by this future so a pool worker only polls it once before yielding.
     pub async fn create_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected> {
@@ -1479,6 +1687,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                                 if envelope.document_id.0 != core_id.0 {
                                     return Err(DbError::Corrupt("artifact envelope document differs".to_string()));
                                 }
+                                engine.head_edit_id = Some(envelope.mutation_id.clone());
                                 seen += 1;
                                 batch_ids.insert(envelope.mutation_id.0.clone());
                                 if seen <= applied_head_seq {
@@ -1562,6 +1771,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             applied_receipts: HashMap::new(),
             actor_seq: HashMap::new(),
             frontier: Frontier::genesis(core_id.clone()),
+            head_edit_id: None,
             outbox: Vec::new(),
             commit_log: Vec::new(),
             previews: db_preview::PreviewStore::new(core_id, preview_budgets),
@@ -1763,6 +1973,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         // preview-reconcile
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all.clone() }, &db_preview::DbConflictOracle::default());
         self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _, _)| envelope.mutation_id.clone()).collect(), touched: touched_all });
+        self.head_edit_id = Some(command_id.clone());
 
         // vcs (best-effort: this crate never blocks a commit on the vcs seam's outcome; a disabled
         // vcs feature supplies `NullVersionGraph`, whose `Unimplemented` is tolerated here)
@@ -1823,6 +2034,11 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
     pub async fn frontier(&self) -> Frontier {
         self.frontier.clone()
+    }
+
+    /// 📍️ Captures the frontier and its exact committed tip in one serialized actor turn.
+    pub async fn checkpoint_publication_snapshot(&self) -> CheckpointPublicationSnapshot {
+        CheckpointPublicationSnapshot { frontier: self.frontier.clone(), head_edit_id: self.head_edit_id.clone() }
     }
 
     pub async fn commit_log(&self) -> &[CommitNotification] {
@@ -3851,6 +4067,9 @@ pub enum ArtifactMessage {
     Frontier {
         reply: db_actor::ReplySender<Frontier>,
     },
+    CheckpointPublicationSnapshot {
+        reply: db_actor::ReplySender<CheckpointPublicationSnapshot>,
+    },
     /// @emoji 🔎️ Additive this revision — `db_engine`'s current `ArtifactHandle::query` goes
     /// through `Query { path, .. }` above and never constructs this variant, so adding it is safe.
     RunQuery {
@@ -4049,6 +4268,11 @@ struct ArtifactRunnerHandoff {
     terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
     close_runner: std::sync::Mutex<Option<Arc<dyn Fn() -> bool + Send + Sync>>>,
     retirement_maintenance: std::sync::Mutex<Option<(Arc<semio_framework_async::WorkerPool>, semio_framework_async::WorkerMaintenanceTicket)>>,
+    close_error: std::sync::Mutex<Option<DbError>>,
+    #[cfg(test)]
+    close_fault_once: std::sync::atomic::AtomicBool,
+    #[cfg(test)]
+    close_polls: std::sync::atomic::AtomicUsize,
     active_history: std::sync::atomic::AtomicBool,
     driver: std::sync::atomic::AtomicU8,
     terminal: std::sync::atomic::AtomicBool,
@@ -4112,8 +4336,12 @@ fn artifact_runner_retirement_step([index, generation]: [u64; 2]) -> semio_frame
     };
     if !terminal {
         let ready = owner.handoff.driver.load(std::sync::atomic::Ordering::Acquire) == ArtifactRunnerDriver::ClosingReady as u8;
+        let faulted = owner.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
         let maintenance = (owner.pool.clone(), owner.ticket);
         *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = cursor;
+        if faulted {
+            return semio_framework_async::WorkerMaintenanceStep::Fault;
+        }
         if ready {
             let _ = maintenance.0.request_maintenance(maintenance.1);
         }
@@ -4274,7 +4502,6 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                 || driver == ArtifactRunnerDriver::ClosingReady as u8
                 || driver == ArtifactRunnerDriver::ClosingPolling as u8
                 || driver == ArtifactRunnerDriver::ClosingPollingWake as u8
-                || driver == ArtifactRunnerDriver::ClosingParked as u8
             {
                 break;
             }
@@ -4441,17 +4668,44 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         self.schedule();
     }
 
-    fn finish(&self) {
+    fn finish(self: &Arc<Self>) {
         if self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|turn| matches!(turn, ArtifactTurn::History { replay, .. } if !replay.terminal_is_empty())) {
             return;
+        }
+        {
+            let mut engine = self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(owner) = engine.as_mut() {
+                #[cfg(test)]
+                {
+                    self.handoff.close_polls.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                    if self.handoff.close_fault_once.swap(false, std::sync::atomic::Ordering::AcqRel) {
+                        *self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DbError::Io("injected artifact engine close fault".to_string()));
+                        return;
+                    }
+                }
+                match owner.close_step() {
+                    Ok(true) => {
+                        self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                        drop(engine);
+                        self.schedule();
+                        return;
+                    }
+                    Ok(false) => {
+                        self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                        engine.take();
+                    }
+                    Err(error) => {
+                        *self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(error);
+                        return;
+                    }
+                }
+            }
         }
         if !self.terminal.swap(true, std::sync::atomic::Ordering::AcqRel) {
             let builder = self.builder.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             if builder.is_none() {
                 let turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-                if turn.is_none() {
-                    self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-                }
+                drop(turn);
             }
             self.handoff.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.handoff.driver.store(ArtifactRunnerDriver::Terminal as u8, std::sync::atomic::Ordering::Release);
@@ -4475,6 +4729,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                     ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms).await),
                     ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path).await),
                     ArtifactMessage::Frontier { reply } => reply.send(engine.frontier().await),
+                    ArtifactMessage::CheckpointPublicationSnapshot { reply } => reply.send(engine.checkpoint_publication_snapshot().await),
                     ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(engine.query(query, consistency).await),
                     ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(engine.snapshot_now(now_ms).await),
                     ArtifactMessage::DrainOutbox { reply } => reply.send(engine.drain_outbox().await),
@@ -4672,6 +4927,11 @@ impl ArtifactAuthority {
             terminal_job: std::sync::Mutex::new(None),
             close_runner: std::sync::Mutex::new(None),
             retirement_maintenance: std::sync::Mutex::new(None),
+            close_error: std::sync::Mutex::new(None),
+            #[cfg(test)]
+            close_fault_once: std::sync::atomic::AtomicBool::new(false),
+            #[cfg(test)]
+            close_polls: std::sync::atomic::AtomicUsize::new(0),
             active_history: std::sync::atomic::AtomicBool::new(false),
             driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::RunnableIdle as u8),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -4813,6 +5073,11 @@ impl ArtifactAuthority {
         self.address.ask(Priority::Query, |reply| ArtifactMessage::Frontier { reply }).await
     }
 
+    /// 📍️ Captures one checkpoint-publication snapshot through the document actor.
+    pub async fn checkpoint_publication_snapshot(&self) -> Result<CheckpointPublicationSnapshot, DbError> {
+        self.address.ask(Priority::Query, |reply| ArtifactMessage::CheckpointPublicationSnapshot { reply }).await
+    }
+
     pub async fn run_query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
         self.address.ask(Priority::Query, |reply| ArtifactMessage::RunQuery { query, consistency, reply }).await?
     }
@@ -4836,6 +5101,19 @@ impl ArtifactAuthority {
         (self.cancel)();
         self.close_step();
         self.handoff.terminal.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn shutdown_debug_witness(&self) -> String {
+        format!(
+            "driver={} terminal={} active_history={} terminal_job={} retirement_maintenance={} runner_pool_use={}",
+            self.handoff.driver.load(std::sync::atomic::Ordering::Acquire),
+            self.handoff.terminal.load(std::sync::atomic::Ordering::Acquire),
+            self.handoff.active_history.load(std::sync::atomic::Ordering::Acquire),
+            self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
+            self.handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
+            self.handoff.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
+        )
     }
 }
 
@@ -4942,6 +5220,9 @@ mod tests {
             terminal_job: std::sync::Mutex::new(None),
             close_runner: std::sync::Mutex::new(None),
             retirement_maintenance: std::sync::Mutex::new(None),
+            close_error: std::sync::Mutex::new(None),
+            close_fault_once: std::sync::atomic::AtomicBool::new(false),
+            close_polls: std::sync::atomic::AtomicUsize::new(0),
             active_history: std::sync::atomic::AtomicBool::new(false),
             driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -4963,7 +5244,17 @@ mod tests {
         drop(external);
         assert!(handoff.terminal_job.lock().unwrap().is_some());
         let resumed = handoff.terminal_job.lock().unwrap().take().map(|owner| ArtifactRunnerTerminalJob { handoff: handoff.clone(), owner: Some(owner) }).unwrap();
-        assert!(resumed.resume().is_ok());
+        let mut retained = Some(resumed);
+        for _ in 0..1_024 {
+            match retained.take().expect("terminal resume fixture lost its exact cursor").resume() {
+                Ok(()) => break,
+                Err(cursor) => {
+                    retained = Some(cursor);
+                    std::thread::yield_now();
+                }
+            }
+        }
+        assert!(retained.is_none(), "terminal resume fixture did not admit its exact cursor");
         let (done_tx, done_rx) = std::sync::mpsc::sync_channel(1);
         pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Maintenance, Box::new(move || done_tx.send(()).unwrap()));
         done_rx.recv().unwrap();
@@ -4986,6 +5277,9 @@ mod tests {
             terminal_job: std::sync::Mutex::new(None),
             close_runner: std::sync::Mutex::new(None),
             retirement_maintenance: std::sync::Mutex::new(None),
+            close_error: std::sync::Mutex::new(None),
+            close_fault_once: std::sync::atomic::AtomicBool::new(false),
+            close_polls: std::sync::atomic::AtomicUsize::new(0),
             active_history: std::sync::atomic::AtomicBool::new(false),
             driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -5018,22 +5312,25 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner() {
         let (authority, storage, pool) = journal_authority().await;
+        for _ in 0..10_000 {
+            if authority.handoff.driver.load(std::sync::atomic::Ordering::Acquire) == ArtifactRunnerDriver::RunnableIdle as u8 {
+                break;
+            }
+            semio_framework_async::yield_once().await;
+        }
+        assert_eq!(authority.handoff.driver.load(std::sync::atomic::Ordering::Acquire), ArtifactRunnerDriver::RunnableIdle as u8, "artifact authority readiness did not complete its internal driver handoff");
         authority.handoff.driver.store(ArtifactRunnerDriver::Parked as u8, std::sync::atomic::Ordering::Release);
         *authority.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) =
             Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, Box::new(|| panic!("parked terminal job must be retired, not executed after authority Drop"))));
+        let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact retirement fixture owns its exact terminal acknowledgement");
         drop(authority);
-        let mut terminal = false;
-        for _ in 0..10_000 {
-            match pool.shutdown() {
-                Ok(()) => {
-                    terminal = true;
-                    break;
-                }
-                Err(semio_framework_async::WorkerPoolShutdownError::Busy { .. }) => semio_framework_async::yield_once().await,
-                Err(error) => panic!("registered authority retirement lost its pool lifecycle: {error:?}"),
-            }
+        done.await.expect("registered authority retirement did not produce its terminal acknowledgement");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().any(|generation| generation.load(std::sync::atomic::Ordering::Acquire) != 0) {
+            assert!(std::time::Instant::now() < deadline, "registered authority retirement did not release its exact callback slot");
+            semio_framework_async::yield_once().await;
         }
-        assert!(terminal, "registered authority retirement did not release its exact pool use");
+        assert_eq!(pool.shutdown(), Ok(()));
         drop(storage);
         assert!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().all(|generation| generation.load(std::sync::atomic::Ordering::Acquire) == 0));
     }
@@ -5048,6 +5345,9 @@ mod tests {
             terminal_job: std::sync::Mutex::new(None),
             close_runner: std::sync::Mutex::new(None),
             retirement_maintenance: std::sync::Mutex::new(None),
+            close_error: std::sync::Mutex::new(None),
+            close_fault_once: std::sync::atomic::AtomicBool::new(false),
+            close_polls: std::sync::atomic::AtomicUsize::new(0),
             active_history: std::sync::atomic::AtomicBool::new(false),
             driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::ClosingReady as u8),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -5070,15 +5370,8 @@ mod tests {
         drop(pool_use);
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         loop {
-            let restored = ARTIFACT_RUNNER_RETIREMENTS[index]
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .as_ref()
-                .is_some_and(|owner| {
-                    owner.generation == generation
-                        && Arc::ptr_eq(&owner.handoff, &handoff)
-                        && Arc::ptr_eq(&owner.pool, &pool)
-                });
+            let restored =
+                ARTIFACT_RUNNER_RETIREMENTS[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|owner| owner.generation == generation && Arc::ptr_eq(&owner.handoff, &handoff) && Arc::ptr_eq(&owner.pool, &pool));
             if attempts.load(std::sync::atomic::Ordering::Acquire) != 0 && restored {
                 break;
             }
@@ -5098,22 +5391,86 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry() {
+        let (authority, storage, pool) = journal_authority().await;
+        let handoff = authority.handoff.clone();
+        let retirement = authority.retirement.as_ref().expect("artifact engine close-fault fixture owns one retirement reservation");
+        let index = retirement.index;
+        let generation = retirement.generation;
+        let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
+        handoff.close_fault_once.store(true, std::sync::atomic::Ordering::Release);
+        drop(authority);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            let retained = ARTIFACT_RUNNER_RETIREMENTS[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|owner| owner.generation == generation && Arc::ptr_eq(&owner.handoff, &handoff));
+            if retained && matches!(&*handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(DbError::Io(detail)) if detail == "injected artifact engine close fault") {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline, "artifact engine close fault did not retain its exact runner cursor");
+            semio_framework_async::yield_once().await;
+        }
+        let retained_polls = handoff.close_polls.load(std::sync::atomic::Ordering::Acquire);
+        let (barrier_tx, barrier_rx) = std::sync::mpsc::sync_channel(1);
+        pool.submit_at(pool.now_ms(), semio_framework_async::Lane::UserVisible, Box::new(move || barrier_tx.send(()).unwrap()));
+        barrier_rx.recv().unwrap();
+        assert_eq!(handoff.close_polls.load(std::sync::atomic::Ordering::Acquire), retained_polls, "faulted artifact engine close was repolled without explicit maintenance admission");
+        assert_eq!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire), generation);
+        assert_eq!(pool.shutdown(), Err(semio_framework_async::WorkerPoolShutdownError::Busy { retained_uses: 1 }));
+        handoff.request_retirement_maintenance();
+        done.await.expect("explicit artifact engine close retry did not produce one terminal acknowledgement");
+        while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire) == generation {
+            assert!(std::time::Instant::now() < deadline, "explicit artifact engine close retry did not release its retirement slot");
+            semio_framework_async::yield_once().await;
+        }
+        assert!(handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(handoff.close_polls.load(std::sync::atomic::Ordering::Acquire) > retained_polls);
+        assert_eq!(pool.shutdown(), Ok(()));
+        drop(storage);
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity() {
         fn idle(_: [u64; 2]) -> semio_framework_async::WorkerMaintenanceStep {
             semio_framework_async::WorkerMaintenanceStep::Idle
         }
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
         let storage = storage().await;
+        let document = protocol::ArtifactId(String::from("retirement-reuse"));
+        let core = to_core_document_id(&document).await;
         for ordinal in 0..=ARTIFACT_RUNNER_RETIREMENT_SLOTS {
             let engine_storage = storage.clone();
-            let document = protocol::ArtifactId(format!("retirement-reuse-{ordinal}"));
-            let authority = ArtifactAuthority::spawn(pool.clone(), move || ArtifactEngine::create_retained(document, engine_storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(4)).await.unwrap();
+            let engine_document = document.clone();
+            let authority = ArtifactAuthority::spawn(
+                pool.clone(),
+                move || async move {
+                    if ordinal == 0 {
+                        ArtifactEngine::create_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await
+                    } else {
+                        ArtifactEngine::open_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await.map(|(engine, _)| engine)
+                    }
+                },
+                MailboxCapacities::uniform(4),
+            )
+            .await
+            .unwrap();
             drop(authority);
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
             while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().any(|generation| generation.load(std::sync::atomic::Ordering::Acquire) != 0) {
                 assert!(std::time::Instant::now() < deadline, "artifact authority retirement did not release its callback slot");
                 semio_framework_async::yield_once().await;
             }
+            let wal = storage.wal().await;
+            let writer = loop {
+                match wal.acquire_writer(&core).await {
+                    Ok(writer) => break writer,
+                    Err(DbError::Conflict(_)) => {
+                        assert!(std::time::Instant::now() < deadline, "artifact authority retirement did not release its WAL writer");
+                        semio_framework_async::yield_once().await;
+                    }
+                    Err(error) => panic!("artifact authority retirement writer probe failed: {error}"),
+                }
+            };
+            writer.release().await.unwrap();
         }
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         loop {
@@ -5153,6 +5510,9 @@ mod tests {
             terminal_job: std::sync::Mutex::new(None),
             close_runner: std::sync::Mutex::new(None),
             retirement_maintenance: std::sync::Mutex::new(None),
+            close_error: std::sync::Mutex::new(None),
+            close_fault_once: std::sync::atomic::AtomicBool::new(false),
+            close_polls: std::sync::atomic::AtomicUsize::new(0),
             active_history: std::sync::atomic::AtomicBool::new(true),
             driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -5199,6 +5559,9 @@ mod tests {
             terminal_job: std::sync::Mutex::new(None),
             close_runner: std::sync::Mutex::new(None),
             retirement_maintenance: std::sync::Mutex::new(None),
+            close_error: std::sync::Mutex::new(None),
+            close_fault_once: std::sync::atomic::AtomicBool::new(false),
+            close_polls: std::sync::atomic::AtomicUsize::new(0),
             active_history: std::sync::atomic::AtomicBool::new(true),
             driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::ClosingPolling as u8),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -5772,6 +6135,7 @@ mod tests {
         let value: serde_json::Value = stored_json(stored).await;
         assert_eq!(value, serde_json::json!("hello"));
         assert_eq!(engine.frontier().await.head_seq, 1);
+        assert_eq!(engine.checkpoint_publication_snapshot().await.head_edit_id, Some(protocol::MutationId("op-1".to_string())));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5800,6 +6164,7 @@ mod tests {
         assert_eq!(reopened.frontier().await.head_seq, 2);
         assert_eq!(reopened.frontier().await.commit_seq, 2);
         assert_eq!(reopened.frontier().await, before_frontier);
+        assert_eq!(reopened.checkpoint_publication_snapshot().await.head_edit_id, Some(protocol::MutationId("op-2".to_string())));
 
         let name: serde_json::Value = stored_json(reopened.get("name").await.unwrap().unwrap()).await;
         assert_eq!(name, serde_json::json!("hello"));
@@ -6054,6 +6419,28 @@ mod tests {
         store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES }
     }
 
+    #[cfg(feature = "vcs")]
+    async fn committed_recovery_hash_store(id: &str, dialect: store::os_io::ArtifactDialect, owner: Option<store::OwnerRef>) -> store::ArtifactStore<crate::db_engine::vcs_integration::HashProjection, crate::db_engine::vcs_integration::HashMutation> {
+        use store::MemberStoreOwner as _;
+        let mut envelope = store::create_document_envelope::<crate::db_engine::vcs_integration::HashProjection, crate::db_engine::vcs_integration::HashMutation>("db.hash/v1", id, crate::db_engine::vcs_integration::HashProjection::default(), None);
+        envelope.dialect = Some(dialect);
+        envelope.owner = owner;
+        let mut store = store::ArtifactStore::new(envelope).await.expect("committed recovery fixture creates one exact Store");
+        store.install_member_store_owners_exact(crate::db_engine::vcs_integration::HashProjection::member_store_owners());
+        store
+    }
+
+    #[cfg(feature = "vcs")]
+    fn close_committed_recovery_hash_store(store: &mut store::ArtifactStore<crate::db_engine::vcs_integration::HashProjection, crate::db_engine::vcs_integration::HashMutation>) {
+        for _ in 0..4_096 {
+            if store::SpaceMember::close_owned_step(store, 1, 4_096).expect("committed recovery fixture Store closes") == store::SnapshotRetirementStep::Complete {
+                assert!(store::SpaceMember::close_owned_terminal_is_empty(store));
+                return;
+            }
+        }
+        panic!("committed recovery fixture Store did not reach terminal handoff");
+    }
+
     fn close_journal_commit(commit: &mut dyn store::durable_group::DurableOwnedGroupJournalCommitV1) {
         commit.begin_close();
         for _ in 0..8 {
@@ -6082,7 +6469,7 @@ mod tests {
             }
             semio_framework_async::yield_once().await;
         }
-        panic!("journal authority did not terminate");
+        panic!("journal authority did not terminate: {}", authority.shutdown_debug_witness());
     }
 
     async fn durable_group_witness_batch(kinds: &[serde_json::Value], canonical_pack: &[u8]) -> db_wal::WalRecordBatch {
@@ -6155,9 +6542,15 @@ mod tests {
         assert_eq!(witness.document(), &replay_document);
         assert_eq!(witness.transaction_id(), receipt.transaction_id);
         assert_eq!(witness.segment_index(), receipt.segment_index);
-        assert_eq!(witness.record().canonical_pack(), canonical_pack);
-        assert_eq!(witness.into_record().decision_sha256(), decision_sha256);
+        assert_eq!(witness.receipt(), receipt);
+        assert_eq!(witness.record.canonical_pack(), canonical_pack);
+        assert_eq!(witness.record.decision_sha256(), decision_sha256);
         assert_eq!(receipt.transaction_id, 1);
+        let source = include_str!("🦀️.rs");
+        let witness_api = &source[source.find("pub struct ArtifactCommittedDurableGroupDecisionV1").unwrap()..source.find("pub(crate) fn committed_durable_group_decision_from_transaction").unwrap()];
+        assert!(witness_api.contains("into_store_owned_recovery") && witness_api.contains("take_rejected_terminal"));
+        assert!(!witness_api.contains("fn record(&self)") && !witness_api.contains("fn into_record("));
+        assert!(!witness_api.contains("fn cancel("));
         eprintln!("[DEBUG] typed authority journal committed one exact canonical Store decision through its retained WAL writer and forced Fsync");
     }
 
@@ -6196,14 +6589,20 @@ mod tests {
                 "witness" => {
                     let witness = outcome.unwrap().expect("one exact Event must produce a committed decision witness");
                     assert_eq!(witness.document(), &replay_document);
-                    assert_eq!(witness.record().canonical_pack(), canonical_pack);
+                    assert_eq!(witness.record.canonical_pack(), canonical_pack);
                 }
                 "ignored" => assert!(outcome.unwrap().is_none()),
                 "rejected" => assert!(matches!(outcome, Err(DbError::Corrupt(_)))),
                 other => panic!("unknown durable witness expectation {other}"),
             }
         }
-        assert!(matches!(replay.next_transaction_step().await.unwrap(), db_wal::WalCommittedStep::Done));
+        loop {
+            match replay.next_transaction_step().await.unwrap() {
+                db_wal::WalCommittedStep::Yield => continue,
+                db_wal::WalCommittedStep::Done => break,
+                db_wal::WalCommittedStep::Transaction(_) => panic!("durable witness fixture replayed an unexpected committed transaction"),
+            }
+        }
         while replay.close_owner_step().unwrap() {}
         assert!(replay.terminal_is_empty());
 
@@ -6212,10 +6611,83 @@ mod tests {
             db_wal::replay_committed_document(&aborted, &document, db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap())
                 .await
                 .unwrap();
-        assert!(matches!(replay.next_transaction_step().await.unwrap(), db_wal::WalCommittedStep::Done));
+        loop {
+            match replay.next_transaction_step().await.unwrap() {
+                db_wal::WalCommittedStep::Yield => continue,
+                db_wal::WalCommittedStep::Done => break,
+                db_wal::WalCommittedStep::Transaction(_) => panic!("aborted durable witness fixture exposed a committed transaction"),
+            }
+        }
         while replay.close_owner_step().unwrap() {}
         assert!(replay.terminal_is_empty());
         eprintln!("[DEBUG] committed decision witness admitted one sole canonical Event, ignored Command or aborted Event, and rejected mixed, duplicate, or foreign Event transactions");
+    }
+
+    #[cfg(feature = "vcs")]
+    #[semio_framework_async_macros::async_test]
+    async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact_three_stores_on_pre_mutation_rejection() {
+        let document = ArtifactId::from("map-a");
+        let record = store::durable_group::durable_owned_group_journal_test_record();
+        let anchor_sha256 = record.anchor_sha256().to_string();
+        let decision_sha256 = record.decision_sha256().to_string();
+        let canonical_pack = record.into_canonical_pack();
+        let backing = storage().await;
+        let wal_storage = backing.wal().await;
+        let mut wal = db_wal::ArtifactWal::create(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await.unwrap();
+        let mut records = durable_group_witness_batch(&[serde_json::Value::String("event".to_string())], &canonical_pack).await;
+        wal.submit(&wal_storage, &records, DurabilityClass::Fsync, 1).await.unwrap();
+        close_wal_record_batch(&mut records).await.unwrap();
+        wal.close().await.unwrap();
+        let mut replay =
+            db_wal::replay_committed_document(&wal_storage, &document, db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap())
+                .await
+                .unwrap();
+        let transaction = loop {
+            match replay.next_transaction_step().await.unwrap() {
+                db_wal::WalCommittedStep::Transaction(transaction) => break transaction,
+                db_wal::WalCommittedStep::Yield => continue,
+                db_wal::WalCommittedStep::Done => panic!("committed recovery fixture lost its decision transaction"),
+            }
+        };
+        let witness = committed_durable_group_decision_from_transaction(&document, transaction).unwrap().expect("one committed Event produces one opaque DB witness");
+        while replay.close_owner_step().unwrap() {}
+
+        let parent_dialect = store::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() };
+        let child_dialect = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
+        let parent_reference = store::os_io::ArtifactRef { artifact_id: "map-a".into(), dialect: parent_dialect.clone() };
+        let parent = committed_recovery_hash_store("map-a", parent_dialect, None).await;
+        let drawing = committed_recovery_hash_store("gismap-drawing", child_dialect("drawing"), Some(store::OwnerRef { parent: parent_reference.clone(), slot: "drawing".into(), child_id: "gismap-drawing".into() })).await;
+        let value = committed_recovery_hash_store("gismap-value", child_dialect("value"), Some(store::OwnerRef { parent: parent_reference, slot: "value".into(), child_id: "gismap-value".into() })).await;
+        let parent_before = (parent.snapshot_pack().await.unwrap(), store::SpaceMember::artifact_ref(&parent), store::SpaceMember::owner_ref(&parent));
+        let drawing_before = (drawing.snapshot_pack().await.unwrap(), store::SpaceMember::artifact_ref(&drawing), store::SpaceMember::owner_ref(&drawing));
+        let value_before = (value.snapshot_pack().await.unwrap(), store::SpaceMember::artifact_ref(&value), store::SpaceMember::owner_ref(&value));
+        let admission = store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(parent, drawing, value);
+        let mut recovery = witness.into_store_owned_recovery(admission);
+        assert_eq!(recovery.advance(journal_grant()), ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(store::durable_group::DurableOwnedGroupDecisionError::InvalidFrontier));
+        let mut terminal = recovery.take_rejected_terminal().expect("pre-mutation rejection consumes the witness and returns all three exact Store owners");
+        assert!(recovery.terminal_is_empty());
+        assert_eq!(terminal.document, document);
+        assert_eq!(terminal.receipt.transaction_id, 1);
+        assert_eq!(terminal.receipt.anchor_sha256, anchor_sha256);
+        assert_eq!(terminal.receipt.decision_sha256, decision_sha256);
+        assert_eq!(terminal.error, store::durable_group::DurableOwnedGroupDecisionError::InvalidFrontier);
+        assert_eq!([terminal.owners.parent.generation(), terminal.owners.drawing.generation(), terminal.owners.value.generation()], [0, 0, 0]);
+        let parent_after = terminal.owners.parent.snapshot_pack().await.unwrap();
+        let drawing_after = terminal.owners.drawing.snapshot_pack().await.unwrap();
+        let value_after = terminal.owners.value.snapshot_pack().await.unwrap();
+        assert_eq!(
+            (parent_after.pack, parent_after.spr, store::SpaceMember::artifact_ref(&terminal.owners.parent), store::SpaceMember::owner_ref(&terminal.owners.parent)),
+            (parent_before.0.pack, parent_before.0.spr, parent_before.1, parent_before.2)
+        );
+        assert_eq!(
+            (drawing_after.pack, drawing_after.spr, store::SpaceMember::artifact_ref(&terminal.owners.drawing), store::SpaceMember::owner_ref(&terminal.owners.drawing)),
+            (drawing_before.0.pack, drawing_before.0.spr, drawing_before.1, drawing_before.2)
+        );
+        assert_eq!((value_after.pack, value_after.spr, store::SpaceMember::artifact_ref(&terminal.owners.value), store::SpaceMember::owner_ref(&terminal.owners.value)), (value_before.0.pack, value_before.0.spr, value_before.1, value_before.2));
+        close_committed_recovery_hash_store(&mut terminal.owners.value);
+        close_committed_recovery_hash_store(&mut terminal.owners.drawing);
+        close_committed_recovery_hash_store(&mut terminal.owners.parent);
+        eprintln!("[DEBUG] a sole committed WAL Event witness denied a foreign Store frontier before mutation and returned all exact owners without exposing the witness");
     }
 
     #[semio_framework_async_macros::async_test]

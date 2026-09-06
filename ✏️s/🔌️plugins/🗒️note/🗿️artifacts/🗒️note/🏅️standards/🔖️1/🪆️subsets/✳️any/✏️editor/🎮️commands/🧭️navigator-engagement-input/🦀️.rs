@@ -10,6 +10,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "navigator-engagement-input")]
 pub struct NavigatorEngagementInput {}
 
-pub async fn handle(_payload: &NavigatorEngagementInput, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(_payload: &NavigatorEngagementInput, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::default())
 }

@@ -67,7 +67,9 @@ impl FrameBuildJob {
 }
 
 impl FrameDirectives {
-    fn close_step(&mut self) -> bool {
+    /// ♻️ Incremental retirement of the directive owner — driven by `🧊️renderer/🦀️.rs`'s own frame
+    /// close ladder, so it is crate-visible rather than module-private.
+    pub(crate) fn close_step(&mut self) -> bool {
         true
     }
 }
@@ -549,21 +551,20 @@ impl FrameBuildHandle {
                 return None;
             }
             match session.poll() {
-                semio_framework_job::WorkerJobPoll::Idle => match session.try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive) {
-                    Ok(ticket) => self.ticket = Some(ticket),
-                    Err(semio_framework_job::WorkerJobSubmitFault::Pool(kind)) => {
-                        if let Ok(rejected) = session.take_rejected() {
-                            if matches!(kind, semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended) {
-                                rejected.resume();
-                            } else {
-                                rejected.begin_close();
-                            }
-                        }
+                // 🌐️ The browser drives the step ON THE CALLER, never through a pool: this function
+                // only runs inside the dedicated `semio-frame-worker` isolate (the `web_sys::window()`
+                // guard above fails closed everywhere else), that isolate IS the frame thread, and a
+                // `wasm32-unknown-unknown` build has no second thread to submit to at all. The job
+                // legitimately owns `Rc<JsValue>` plugin handles and an `Rc` waker, which
+                // `try_submit_step`'s `J: Send` — the one call that really hands a job to another
+                // thread — rules out by construction. Contention is transient: the next
+                // `poll_runtime_and_resubmit` retries the same generation, exactly as a saturated
+                // pool submission used to.
+                semio_framework_job::WorkerJobPoll::Idle => {
+                    if let Ok((ticket, _)) = session.try_step_on_caller() {
+                        self.ticket = Some(ticket);
                     }
-                    Err(_) => {
-                        let _ = session.begin_close();
-                    }
-                },
+                }
                 semio_framework_job::WorkerJobPoll::Outcome => {
                     if let Some(ticket) = self.ticket.take() {
                         if let Ok(mut owner) = session.take_outcome(ticket) {

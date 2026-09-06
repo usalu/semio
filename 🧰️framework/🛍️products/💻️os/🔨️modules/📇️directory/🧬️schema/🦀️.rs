@@ -92,6 +92,23 @@ impl ArtifactHash {
     pub const fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
+
+    /// 🔤️ Parses one canonical lowercase hexadecimal artifact hash.
+    pub fn parse_hex(value: &str) -> Option<Self> {
+        if !valid_document_open_hash(value) {
+            return None;
+        }
+        let mut bytes = [0u8; 32];
+        for (index, slot) in bytes.iter_mut().enumerate() {
+            *slot = u8::from_str_radix(&value[index * 2..index * 2 + 2], 16).ok()?;
+        }
+        Some(Self(bytes))
+    }
+
+    /// 🔡️ Renders canonical lowercase hexadecimal without exposing a storage locator.
+    pub fn hex(&self) -> String {
+        hex_lower(&self.0)
+    }
 }
 
 impl crate::ToValue for ArtifactHash {
@@ -342,6 +359,123 @@ pub enum DirectoryCommand {
     AnnounceDocument { descriptor: DocumentDescriptor },
 }
 //#endregion 🔖️Command
+
+//#region 📣️CheckpointPublicationCommand
+/// 📦️ Exact command and receipt body ceiling; canonical pairs travel through content hashes.
+pub const CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES: usize = 8 * 1024;
+/// ⏱️ Fixed end-to-end authority deadline for one public checkpoint publication.
+pub const CHECKPOINT_PUBLICATION_DEADLINE_MS: u64 = 30_000;
+/// 🧯️ Public publication ceiling aligned with the existing bounded Hub blob ingress.
+pub const CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES: u64 = 1024 * 1024;
+
+/// 🌊️ Client-declared artifact frontier with a canonical hexadecimal chain hash.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CheckpointPublicationFrontierV1 {
+    pub document_id: String,
+    pub head_edit_ordinal: u64,
+    pub head_edit_id: String,
+    pub last_commit_seq: u64,
+    pub chain_sha256: String,
+}
+
+impl CheckpointPublicationFrontierV1 {
+    /// 🛡️ Checks the cross-runtime integer, text, and hash boundary.
+    pub fn validate(&self) -> bool {
+        valid_document_open_text(&self.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && self.head_edit_ordinal > 0
+            && self.head_edit_ordinal <= DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            && valid_document_open_text(&self.head_edit_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && self.last_commit_seq > 0
+            && self.last_commit_seq <= DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            && valid_document_open_hash(&self.chain_sha256)
+    }
+
+    /// 🧬️ Converts the validated public grammar into the directory authority frontier.
+    pub fn artifact_frontier(&self) -> Option<ArtifactFrontier> {
+        if !self.validate() {
+            return None;
+        }
+        Some(ArtifactFrontier {
+            document_id: self.document_id.clone(),
+            head_edit_ordinal: self.head_edit_ordinal,
+            head_edit_id: self.head_edit_id.clone(),
+            last_commit_seq: self.last_commit_seq,
+            chain_hash: ArtifactHash::parse_hex(&self.chain_sha256)?,
+        })
+    }
+}
+
+/// 🎯️ Exact active checkpoint expectation; `none` is explicit and never means skip.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(tag = "state", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
+pub enum CheckpointPublicationCurrentV1 {
+    None,
+    Active { checkpoint_id: String, baseline_frontier: CheckpointPublicationFrontierV1 },
+}
+
+/// 🪞️ Public content identity for one already-landed Hub blob.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CheckpointPublicationBlobV1 {
+    pub sha256: String,
+    pub byte_length: u64,
+}
+
+/// 📤️ One scope-from-route command to validate and publish an existing canonical pair.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CheckpointPublicationCommandV1 {
+    pub schema: String,
+    pub correlation_id: String,
+    pub descriptor_digest_v1: String,
+    pub expected_document_frontier: DocumentFrontier,
+    pub expected_current: CheckpointPublicationCurrentV1,
+    pub baseline_frontier: CheckpointPublicationFrontierV1,
+    pub pack: CheckpointPublicationBlobV1,
+    pub spr: CheckpointPublicationBlobV1,
+}
+
+impl CheckpointPublicationCommandV1 {
+    /// 🛡️ Validates the schema-owned command independently of route-owned scope.
+    pub fn validate(&self) -> bool {
+        let frontier_valid = |frontier: &DocumentFrontier| frontier.head_seq <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && frontier.commit_seq <= frontier.head_seq && frontier.epoch <= DOCUMENT_OPEN_MAX_SAFE_INTEGER;
+        let blob_valid = |blob: &CheckpointPublicationBlobV1| blob.byte_length > 0 && blob.byte_length <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && valid_document_open_hash(&blob.sha256);
+        self.schema == "semio.hub.checkpoint-publication-command/v1"
+            && self.correlation_id.len() == DIRECTORY_COMMAND_REQUEST_ID_LEN
+            && !self.correlation_id.bytes().all(|byte| byte == b'0')
+            && self.correlation_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+            && valid_document_open_hash(&self.descriptor_digest_v1)
+            && frontier_valid(&self.expected_document_frontier)
+            && self.baseline_frontier.validate()
+            && match &self.expected_current {
+                CheckpointPublicationCurrentV1::None => true,
+                CheckpointPublicationCurrentV1::Active { checkpoint_id, baseline_frontier } => valid_document_open_hash(checkpoint_id) && baseline_frontier.validate(),
+            }
+            && blob_valid(&self.pack)
+            && blob_valid(&self.spr)
+            && self.pack.byte_length.checked_add(self.spr.byte_length).is_some_and(|bytes| bytes <= CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES)
+    }
+
+    /// 📥️ Parses one exact canonical body, rejecting padding and unknown fields.
+    pub fn parse_canonical_json(json: &str) -> Option<Self> {
+        if json.len() > CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES {
+            return None;
+        }
+        let value: Self = crate::os_pack::json::from_json_str(json).ok()?;
+        (value.validate() && crate::os_pack::json::to_json_string(&value) == json).then_some(value)
+    }
+}
+
+/// 🧾️ Success-only public completion; checkpoint bytes and locators remain private.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CheckpointPublicationReceiptV1 {
+    pub schema: String,
+    pub correlation_id: String,
+    pub checkpoint: PublishedArtifactCheckpoint,
+}
+//#endregion 📣️CheckpointPublicationCommand
 
 //#region 🔖️CommandReceipt
 /// 📦️ Exact posted-command request ceiling; matches the hub's public administrator request ceiling.
@@ -1330,6 +1464,17 @@ pub enum DocumentOpenRendererTargetV1 {
     Wasm,
 }
 
+impl DocumentOpenRendererTargetV1 {
+    /// 🪞️ Canonical renderer identity for actor validation and transport projections.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::React => "react",
+            Self::Wgpu => "wgpu",
+            Self::Wasm => "wasm",
+        }
+    }
+}
+
 /// 👁️ Server-selected document surface authority.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "lowercase")]
@@ -1432,6 +1577,7 @@ pub struct DocumentOpenPlanV1 {
     pub artifact: DocumentOpenArtifactV1,
     pub parent_dialect: DocumentOpenParentDialectV1,
     pub surface: DocumentOpenSurfaceV1,
+    pub browser_actor: DocumentOpenBrowserActorV1,
     pub grant: DocumentOpenGrantV1,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub checkpoint: Option<DocumentOpenCheckpointV1>,
@@ -1511,6 +1657,9 @@ impl DocumentOpenIntentV1 {
 impl DocumentOpenPlanV1 {
     /// ✅ Validates a complete receipt-free authority projection at a caller-supplied wall time.
     pub fn validate(&self, now_ms: u64) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+        self.browser_actor
+            .validate(DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
+            .map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
         let ids = [
             self.scope.space_id.as_str(),
             self.scope.document_id.as_str(),
@@ -1620,6 +1769,7 @@ pub struct DocumentExecutionTargetLeaseFieldsV1 {
     pub package: DocumentOpenPackageV1,
     pub component: DocumentExecutionTargetComponentV1,
     pub descriptor: DocumentExecutionTargetDescriptorV1,
+    pub browser_actor: DocumentExecutionTargetBrowserActorV1,
     pub artifact: DocumentOpenArtifactV1,
     pub parent_dialect: DocumentOpenParentDialectV1,
     pub surface: DocumentOpenSurfaceV1,
@@ -1632,6 +1782,9 @@ pub struct DocumentExecutionTargetLeaseFieldsV1 {
 impl DocumentExecutionTargetLeaseFieldsV1 {
     /// ✅ Validates every identity, byte and grant invariant of one receipt-free lease projection.
     pub fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+        self.browser_actor
+            .validate(DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
+            .map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
         let ids = [
             self.scope.space_id.as_str(),
             self.scope.document_id.as_str(),
@@ -1698,8 +1851,8 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
 /// 🧾 Projects one plan into receipt-free lease fields. The plan constrains every identity but no
 /// byte length, so both lengths come from the installation under comparison and are independently
 /// enforced against the exact verified bytes before a lease exists.
-pub fn lease_fields_from_plan_v1(plan: &DocumentOpenPlanV1, component_byte_length: u64, descriptor_byte_length: u64) -> DocumentExecutionTargetLeaseFieldsV1 {
-    DocumentExecutionTargetLeaseFieldsV1 {
+pub fn lease_fields_from_plan_v1(plan: &DocumentOpenPlanV1, component_byte_length: u64, descriptor_byte_length: u64, browser_actor_byte_length: Option<u64>) -> Result<DocumentExecutionTargetLeaseFieldsV1, DocumentOpenPlanErrorCodeV1> {
+    let fields = DocumentExecutionTargetLeaseFieldsV1 {
         schema: "semio.os.document-execution-target-lease/v1".to_string(),
         version: 1,
         scope: plan.scope.clone(),
@@ -1708,13 +1861,19 @@ pub fn lease_fields_from_plan_v1(plan: &DocumentOpenPlanV1, component_byte_lengt
         package: plan.package.clone(),
         component: DocumentExecutionTargetComponentV1 { sha256: plan.package.component_sha256.clone(), blake3: plan.package.component_blake3.clone(), byte_length: component_byte_length },
         descriptor: DocumentExecutionTargetDescriptorV1 { sha256: plan.package.descriptor_byte_sha256.clone(), byte_length: descriptor_byte_length },
+        browser_actor: plan
+            .browser_actor
+            .to_lease(DocumentBrowserActorSourceV1 { component_sha256: &plan.package.component_sha256, descriptor_byte_sha256: &plan.package.descriptor_byte_sha256 }, plan.surface.renderer_target.as_str(), browser_actor_byte_length)
+            .map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?,
         artifact: plan.artifact.clone(),
         parent_dialect: plan.parent_dialect.clone(),
         surface: plan.surface.clone(),
         grant: plan.grant,
         checkpoint: plan.checkpoint.clone(),
         revalidation: plan.revalidation,
-    }
+    };
+    fields.validate()?;
+    Ok(fields)
 }
 
 /// ⚖️ The one shared full-field lease relation. No transport is permitted a subset comparison.

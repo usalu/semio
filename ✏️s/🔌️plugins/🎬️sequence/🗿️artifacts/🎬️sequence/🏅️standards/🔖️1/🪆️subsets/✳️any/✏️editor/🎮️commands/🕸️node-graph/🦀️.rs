@@ -18,7 +18,7 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    async fn edit_with_selection(payload: &NodeGraphEdit, fixture: &SequenceSnapshot, selected: &[String]) -> Emit<SequenceMutation, SequenceConfigMutation> {
+    fn edit_with_selection(payload: &NodeGraphEdit, fixture: &SequenceSnapshot, selected: &[String]) -> Emit<SequenceMutation, SequenceConfigMutation> {
         let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
         let ops = ops_from_host_mutation(fixture, |host| {
             for operation in &sub_operations {
@@ -52,11 +52,11 @@ pub mod node_graph_edit {
     /// reachable only through that macro-generated path (`SequencePlayApp::handle` always routes this
     /// command through `apply` below instead), so its `"deleteSelection"` sub-operation degrades to
     /// treating the selection as empty; every other sub-operation (`setFixture`/`connect`) is unaffected.
-    pub async fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(edit_with_selection(payload, doc.snapshot, &[]))
     }
 
-    pub async fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(edit_with_selection(payload, doc.snapshot, &interaction.selection(crate::editor::sequence::SEQUENCE_INTERACTION_STEPS).ids))
     }
 }
@@ -73,7 +73,7 @@ pub mod set_viewport {
         pub camera: SequenceCamera,
     }
 
-    pub async fn handle(payload: &SetViewport, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(payload: &SetViewport, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetCamera { camera: payload.camera.clone() }]))
     }
 }

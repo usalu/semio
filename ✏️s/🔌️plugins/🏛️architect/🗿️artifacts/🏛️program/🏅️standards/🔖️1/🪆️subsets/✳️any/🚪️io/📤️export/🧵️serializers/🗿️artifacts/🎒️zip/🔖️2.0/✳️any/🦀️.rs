@@ -3,10 +3,10 @@ use crate::artifacts::program::ProgramSnapshot;
 use semio_s_plugin_stdio::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA;
 pub use semio_s_plugin_stdio::artifacts::zip::{ZipEntry, ZipSnapshot};
 
-pub async fn register() {}
+pub fn register() {}
 
-pub async fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, store::TextError> {
-    let tables = crate::artifacts::program::io::program_export_tables(snapshot).await.map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
+pub fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, store::TextError> {
+    let tables = crate::artifacts::program::io::program_export_tables(snapshot).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
     let entries = tables
         .into_iter()
         .map(|table| {
@@ -17,12 +17,12 @@ pub async fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, store:
     Ok(ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: "s.architect.program@1/*".into() })
 }
 
-pub async fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<ZipSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot).await?))
+pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+    Ok(<ZipSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }
 
-pub async fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
-    let archive = serialize(snapshot).await?;
+pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+    let archive = serialize(snapshot)?;
     semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&archive).map_err(|error| store::TextError::new(format!("program->zip: {error}"), dsl::TextSpan::at(1, 1)))
 }
 

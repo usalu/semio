@@ -52,7 +52,9 @@ impl<T: ChildFieldRefs> ChildFieldRefs for Vec<T> {
     const MANY: bool = true;
     fn visit_child_field<'a, V: ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
         visitor.step()?;
-        for value in self { value.visit_child_field(slot, visitor)?; }
+        for value in self {
+            value.visit_child_field(slot, visitor)?;
+        }
         Ok(())
     }
 }

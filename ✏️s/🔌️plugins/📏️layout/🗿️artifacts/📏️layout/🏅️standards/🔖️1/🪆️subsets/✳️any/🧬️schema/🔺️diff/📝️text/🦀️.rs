@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Apply
-async fn apply_identified_delta<T, P, E, F>(items: &[T], removed: &[String], added: &[T], patched: &[E], reordered: Option<&Vec<String>>, entry_parts: F) -> protocol::MutationApplyResult<Vec<T>>
+fn apply_identified_delta<T, P, E, F>(items: &[T], removed: &[String], added: &[T], patched: &[E], reordered: Option<&Vec<String>>, entry_parts: F) -> protocol::MutationApplyResult<Vec<T>>
 where
     T: Clone + protocol::Identified<String> + Patchable<P>,
     P: Clone,
@@ -67,21 +67,21 @@ where
     Ok(next)
 }
 
-pub async fn apply_pages_delta(items: &[Page], delta: &LayoutPagesDelta) -> protocol::MutationApplyResult<Vec<Page>> {
+pub fn apply_pages_delta(items: &[Page], delta: &LayoutPagesDelta) -> protocol::MutationApplyResult<Vec<Page>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutPagePatchEntry| (&entry.id, &entry.patch))
 }
 
-pub async fn apply_stories_delta(items: &[TextStory], delta: &LayoutStoriesDelta) -> protocol::MutationApplyResult<Vec<TextStory>> {
+pub fn apply_stories_delta(items: &[TextStory], delta: &LayoutStoriesDelta) -> protocol::MutationApplyResult<Vec<TextStory>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutStoryPatchEntry| (&entry.id, &entry.patch))
 }
 
-pub async fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> protocol::MutationApplyResult<Vec<ImageLink>> {
+pub fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> protocol::MutationApplyResult<Vec<ImageLink>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutLinkPatchEntry| (&entry.id, &entry.patch))
 }
 
 impl LayoutDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &LayoutArtifact) -> protocol::MutationApplyResult<LayoutArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &LayoutArtifact) -> protocol::MutationApplyResult<LayoutArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -159,7 +159,7 @@ impl LayoutDiff {
 }
 
 impl MutationDiff<LayoutSnapshot> for LayoutDiff {
-    async fn apply(&self, snapshot: &LayoutSnapshot) -> protocol::MutationApplyResult<LayoutSnapshot> {
+    fn apply(&self, snapshot: &LayoutSnapshot) -> protocol::MutationApplyResult<LayoutSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -198,12 +198,12 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
         }
-        async fn absorb_pages(target: &mut Option<LayoutPagesDelta>, incoming: Option<LayoutPagesDelta>) {
+        fn absorb_pages(target: &mut Option<LayoutPagesDelta>, incoming: Option<LayoutPagesDelta>) {
             if let Some(src) = incoming {
                 match target {
                     Some(dst) => {
@@ -277,7 +277,7 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
 
 //#region 🔖️Helpers
 /// 🖼️ Whole-snapshot replacement diff.
-pub async fn diff_set_snapshot(snapshot: &LayoutSnapshot) -> LayoutDiff {
+pub fn diff_set_snapshot(snapshot: &LayoutSnapshot) -> LayoutDiff {
     LayoutDiff { artifact: Some(Box::new(LayoutArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers

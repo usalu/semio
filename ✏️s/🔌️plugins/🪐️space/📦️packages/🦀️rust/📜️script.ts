@@ -199,10 +199,17 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const spaceShared = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🦀️.rs"), "utf8");
   const spaceConfig = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/🦀️.rs"), "utf8");
   const exportMedia = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/📤️export-media/🦀️.rs"), "utf8");
+  const setAppRegistrations = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/📇️set-app-registrations/🦀️.rs"), "utf8");
+  const createStudio = readFileSync(join(base, "✏️editor/🎮️commands/🏗️create-studio/🦀️.rs"), "utf8");
   const cataloguePanel = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🛍️catalogue/🦀️.rs"), "utf8");
+  const inspectionPanel = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔍️inspection/🦀️.rs"), "utf8");
+  const parametersPanel = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔢️parameters/🦀️.rs"), "utf8");
   const nodeGraphEdit = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/✏️node-graph-edit/🦀️.rs"), "utf8");
   const setActiveExample = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🎬️set-active-example/🦀️.rs"), "utf8");
   const setActivePanelTab = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/⚙️set-active-panel-tab/🦀️.rs"), "utf8");
+  const workflowWindow = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🦀️.rs"), "utf8");
+  const compiledDagWindow = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🦀️.rs"), "utf8");
+  const spawnApp = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🚀️spawn-app/🦀️.rs"), "utf8");
   const ownerScript = readFileSync(import.meta.filename, "utf8");
   const osHost = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
   const exact = (editorSource: string, viewerSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
@@ -259,6 +266,18 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   assert(cataloguePanel.includes(').await.expect("catalogue tree")') && setActivePanelTab.includes(').await.expect("catalogue tree")') && setActiveExample.includes("register_studio_port_for_test(&entry.id, port).await") && cataloguePanel.includes("project_and_retire_fixture_tree") && setActivePanelTab.includes("project_and_retire_fixture_tree"), "Space catalogue or studio-port fixtures bypass current async ownership and component retirement");
   assert(nodeGraphEdit.includes("serde_json::Value::as_object_mut") && nodeGraphEdit.includes("serde_json::Value::Object(position)") && !nodeGraphEdit.includes("fixture.get_mut(\"layout\").and_then(pack::JsonValue::as_object_mut)"), "Space node-graph fixture crosses serde JSON through the first-party Pack value family");
   assert(setActiveExample.includes("OsBackbonePorts::Store(store::BackbonePorts::Memory") && setActiveExample.match(/empty_workflow_snapshot\(\)\.await/g)?.length === 5 && setActivePanelTab.includes("let projection = empty_workflow_snapshot().await;"), "Space fixtures retain a stale backbone enum or unresolved workflow snapshot future");
+  assert(setActiveExample.match(/load_document_snapshot\(&emit\)\.await/g)?.length === 2 && workflowWindow.match(/\.render\(S_PLAY_BODY_WORKFLOW,[^;]+\.await\.expect\("render"\)/g)?.length === 2 && compiledDagWindow.includes('.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::default()).await.expect("render")') && workflowWindow.match(/project_and_retire_fixture_tree\(node\)/g)?.length === 2 && compiledDagWindow.includes("project_and_retire_fixture_tree(node)"), "Space window fixtures retain unresolved async renders or unretired component owners");
+  const spaceAppFixtures = `${workflowWindow}\n${compiledDagWindow}\n${spawnApp}`;
+  assert(!spaceAppFixtures.includes("VcsArtifactApp::new(crate::engine::space::SpaceApp::default())") && spaceAppFixtures.match(/VcsArtifactApp::<crate::engine::space::SpaceApp>::new/g)?.length === 4, "Space fixtures leave the current NoMembers app owner ambiguous");
+  const fixedPanelFixtures = `${inspectionPanel}\n${parametersPanel}`;
+  assert(!fixedPanelFixtures.includes("pack::to_json_string(&node)") && fixedPanelFixtures.match(/project_and_retire_fixture_tree\(semio_framework_plugin::ComponentTree \{ root: node \}\)/g)?.length === 3, "Space panel fixtures serialize retained BuiltNode owners instead of projecting and retiring them");
+  assert(spaceShared.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 4 && homeViewerApp.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 2, "Home or Space surface tests leave the async testkit future unpolled");
+  assert(createStudio.includes("resolve_ready(crate::register_studio_port(&entry.id, port))") && exportMedia.includes("resolve_ready(crate::ensure_space_fixtures_registered())") && setAppRegistrations.includes("resolve_ready(crate::engine::space::engine::apply_app_registrations(&payload.json))"), "Synchronous Space command handlers leave an async registry side effect unpolled");
+  for (const law of [
+    "editor::home::modes::explore::windows::main::component::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
+    "editor::home::modes::explore::windows::main::component::tests::spectator_and_unbound_hub_rows_only_carry_open",
+    "viewer::home::modes::view::windows::main::component::tests::a_row_stamps_the_space_row_id",
+  ]) assert(ownerScript.includes(law), `Home native gate omitted the current exact selector ${law}`);
   assert(ownerScript.includes('RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432"'), "Home exact builds do not bound compiler worker stacks");
   assert(ownerScript.includes('nativeEnv: { RUST_MIN_STACK: "268435456" }'), "Home exact laws lost their native runtime stack");
   for (const hostile of [
@@ -272,7 +291,7 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     assert(osHost.includes(`fn ${name}()`), `OS host omitted ${law}`);
   }
   assert(ownerScript.includes('cargoArgs: ["--features", "os-host-full"]'), "Home native gate cannot select its feature-owned workflow law");
-  return 48;
+  return 54;
 }
 
 class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
@@ -300,9 +319,9 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
             package: "semio-s-plugin-space",
             target: { kind: "lib" },
             laws: [
-              "editor::home::modes::explore::windows::main::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
-              "editor::home::modes::explore::windows::main::tests::spectator_and_unbound_hub_rows_only_carry_open",
-              "viewer::home::modes::view::windows::main::tests::a_row_stamps_the_space_row_id",
+              "editor::home::modes::explore::windows::main::component::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
+              "editor::home::modes::explore::windows::main::component::tests::spectator_and_unbound_hub_rows_only_carry_open",
+              "viewer::home::modes::view::windows::main::component::tests::a_row_stamps_the_space_row_id",
             ],
           },
         ],

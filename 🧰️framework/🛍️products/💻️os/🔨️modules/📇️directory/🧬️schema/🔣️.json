@@ -1098,7 +1098,7 @@
     "DocumentExecutionTargetLeaseFieldsV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "artifact", "parentDialect", "surface", "grant", "revalidation"],
+      "required": ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "browserActor", "artifact", "parentDialect", "surface", "grant", "revalidation"],
       "properties": {
         "schema": { "const": "semio.os.document-execution-target-lease/v1" },
         "version": { "const": 1 },
@@ -1142,6 +1142,7 @@
             "byteLength": { "type": "integer", "minimum": 1, "maximum": 4194304 }
           }
         },
+        "browserActor": { "$ref": "https://semio.tech/schemas/os/document-browser-actor-v1.json#/$defs/lease" },
         "artifact": {
           "type": "object",
           "additionalProperties": false,
@@ -1194,6 +1195,76 @@
             "sessionGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
             "shareGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
           }
+        }
+      }
+    },
+    "DocumentOpenPlanV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "receipt",
+        "expiresAtUnixMs",
+        "scope",
+        "descriptorDigestV1",
+        "catalog",
+        "package",
+        "artifact",
+        "parentDialect",
+        "surface",
+        "browserActor",
+        "grant",
+        "revalidation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.document-open-plan/v1"
+        },
+        "version": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/version"
+        },
+        "receipt": {
+          "type": "string",
+          "pattern": "^open\\.v1\\.[A-Za-z0-9_-]{43}$"
+        },
+        "expiresAtUnixMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/scope"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/descriptorDigestV1"
+        },
+        "catalog": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/catalog"
+        },
+        "package": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/package"
+        },
+        "artifact": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/artifact"
+        },
+        "parentDialect": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/parentDialect"
+        },
+        "surface": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/surface"
+        },
+        "browserActor": {
+          "$ref": "https://semio.tech/schemas/os/document-browser-actor-v1.json#/$defs/plan"
+        },
+        "grant": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/grant"
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/checkpoint"
+        },
+        "revalidation": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/revalidation"
         }
       }
     },

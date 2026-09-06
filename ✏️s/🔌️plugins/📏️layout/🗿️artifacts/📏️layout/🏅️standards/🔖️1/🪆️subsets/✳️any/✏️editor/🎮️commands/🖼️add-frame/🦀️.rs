@@ -29,7 +29,7 @@ pub struct AddFrame {
     pub y: Option<f64>,
 }
 
-pub async fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let page_id = config.active_page_id.clone();

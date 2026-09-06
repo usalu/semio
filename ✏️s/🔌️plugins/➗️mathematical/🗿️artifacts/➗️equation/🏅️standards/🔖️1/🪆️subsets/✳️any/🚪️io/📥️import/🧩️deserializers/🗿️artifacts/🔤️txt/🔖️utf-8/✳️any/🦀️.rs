@@ -17,7 +17,7 @@ pub struct TxtIntoEquation;
 impl Deserializer<EquationSnapshot> for TxtIntoEquation {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<EquationSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<EquationSnapshot> {
         Err(IoError { message: "txt import not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

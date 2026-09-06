@@ -49,7 +49,7 @@ impl Default for DagSnapshot {
 }
 
 /// 🌱 Canonical default document used by the play app and examples.
-pub async fn default_snapshot() -> DagSnapshot {
+pub fn default_snapshot() -> DagSnapshot {
     crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT).expect("bundled dag example DSL must parse")
 }
 //#endregion 🔖️Snapshot
@@ -83,10 +83,10 @@ impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
 /// reading through the exact child owner. Kept as methods on `DagSnapshot` itself so call sites do
 /// not need to import `dag_working_scene`.
 impl DagSnapshot {
-    pub async fn nodes(&self) -> Vec<DagNodeSpec> {
+    pub fn nodes(&self) -> Vec<DagNodeSpec> {
         crate::artifacts::dag::dag_working_scene(self).nodes
     }
-    pub async fn edges(&self) -> Vec<DagFixtureEdge> {
+    pub fn edges(&self) -> Vec<DagFixtureEdge> {
         crate::artifacts::dag::dag_working_scene(self).edges
     }
 }

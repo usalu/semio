@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "reset-try")]
 pub struct ResetTry {}
 
-pub async fn handle(_payload: &ResetTry, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(_payload: &ResetTry, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let mut mutations = cancel_pending_generations(doc.operation()?);
     mutations.extend(reset_try_config_mutations());
     Ok(Emit::config(mutations))

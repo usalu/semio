@@ -3663,6 +3663,14 @@ pub struct Frontier {
     pub epoch: u64,
 }
 
+/// 📍️ One document-actor generation's exact checkpoint-publication observation.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckpointPublicationSnapshot {
+    pub authority_generation: u64,
+    pub frontier: Frontier,
+    pub head_edit_id: Option<protocol::MutationId>,
+}
+
 impl Frontier {
     /// @emoji 🏔️ True iff `self` has observed everything `other` has — mirrors
     /// `Frontier::dominates`, re-derived here since this type's `document` field has a
@@ -6187,7 +6195,7 @@ impl DatabaseCreateCatalogState {
                 *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(job);
                 self.retry_closing.store(true, Ordering::Release);
                 self.stage_error(error, progress);
-                self.drive_callback_close_claimed();
+                self.drive_callback_close_claimed(true);
             } else {
                 *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
             }
@@ -6221,10 +6229,10 @@ impl DatabaseCreateCatalogState {
             self.arm_callback_close();
             return;
         }
-        self.drive_callback_close_claimed();
+        self.drive_callback_close_claimed(true);
     }
 
-    fn drive_callback_close_claimed(self: Arc<Self>) {
+    fn drive_callback_close_claimed(self: Arc<Self>, autonomous: bool) {
         use std::sync::atomic::Ordering;
         self.opportunities.fetch_add(1, Ordering::AcqRel);
         let driven = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.drive_claimed(self.generation)));
@@ -6234,11 +6242,24 @@ impl DatabaseCreateCatalogState {
         self.wake_requested.store(false, Ordering::Release);
         self.driver_authority.store(DatabaseCreateCatalogDriverAuthority::Idle as u8, Ordering::Release);
         let keep_closing = !self.finished.load(Ordering::Acquire) && (self.phase() != DatabaseCreateCatalogPhase::Terminal || self.closing.load(Ordering::Acquire));
-        if keep_closing {
+        if keep_closing && autonomous {
             self.arm_callback_close();
         } else {
             self.retry_closing.store(false, Ordering::Release);
+            if !keep_closing {
+                self.callback_close_armed.store(false, Ordering::Release);
+            }
         }
+    }
+
+    fn drive_explicit_close_one(self: &Arc<Self>) -> bool {
+        use std::sync::atomic::Ordering;
+        self.retry_closing.store(true, Ordering::Release);
+        if self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Idle as u8, DatabaseCreateCatalogDriverAuthority::Driving as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return false;
+        }
+        self.clone().drive_callback_close_claimed(false);
+        true
     }
 
     fn begin_callback_close(self: &Arc<Self>) {
@@ -7046,17 +7067,10 @@ impl DatabaseCreateCatalogState {
         }
     }
 
-    fn release_success(&self) {
-        if !self.roots_are_empty() {
-            return;
-        }
-        self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        self.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        self.finished.store(true, std::sync::atomic::Ordering::Release);
-        let mut registry = database_create_catalog_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
-            registry[self.slot] = None;
-        }
+    fn release_success(self: &Arc<Self>) {
+        self.closing.store(true, std::sync::atomic::Ordering::Release);
+        self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
+        self.schedule();
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -7087,14 +7101,7 @@ impl DatabaseCreateCatalogFuture {
         Self::try_prepare_with_use(pool, pool_use, catalog, storage, document, schedule)
     }
 
-    fn try_prepare_with_use(
-        pool: Arc<WorkerPool>,
-        pool_use: Arc<WorkerPoolUse>,
-        catalog: Arc<Mutex<CatalogState>>,
-        storage: Arc<db_storage::DbBackend>,
-        document: protocol::ArtifactId,
-        schedule: bool,
-    ) -> Result<Self, DatabaseCreateCatalogRejected> {
+    fn try_prepare_with_use(pool: Arc<WorkerPool>, pool_use: Arc<WorkerPoolUse>, catalog: Arc<Mutex<CatalogState>>, storage: Arc<db_storage::DbBackend>, document: protocol::ArtifactId, schedule: bool) -> Result<Self, DatabaseCreateCatalogRejected> {
         let admission = match DatabaseCreateCatalogAdmission::try_claim(&document) {
             Ok(admission) => admission,
             Err(error) => return Err(DatabaseCreateCatalogRejected::new(pool, error, storage, document)),
@@ -7294,9 +7301,15 @@ impl DatabaseCreateCatalogTerminalHandle {
         let authority = self.state.driver_authority.load(std::sync::atomic::Ordering::Acquire);
         if authority == DatabaseCreateCatalogDriverAuthority::Driving as u8 || authority == DatabaseCreateCatalogDriverAuthority::Retry as u8 {
             DatabaseCreateCatalogCloseStep::Blocked
+        } else if self.state.drive_explicit_close_one() {
+            if self.state.terminal_is_empty() {
+                DatabaseCreateCatalogCloseStep::Complete
+            } else {
+                DatabaseCreateCatalogCloseStep::Progress
+            }
         } else {
             self.state.begin_callback_close();
-            DatabaseCreateCatalogCloseStep::Progress
+            DatabaseCreateCatalogCloseStep::Blocked
         }
     }
 
@@ -8093,15 +8106,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             }
             None => {
                 let pages = encode_catalog_pages(&[]).await?;
-                let bootstrap = match DatabaseCatalogBootstrapFuture::try_prepare_with_use(
-                    pool.clone(),
-                    pool_use.clone(),
-                    storage,
-                    pages,
-                    DatabaseCatalogBootstrapKey::root(),
-                    EpochFence::INITIAL,
-                    true,
-                ) {
+                let bootstrap = match DatabaseCatalogBootstrapFuture::try_prepare_with_use(pool.clone(), pool_use.clone(), storage, pages, DatabaseCatalogBootstrapKey::root(), EpochFence::INITIAL, true) {
                     Ok(bootstrap) => bootstrap,
                     Err(rejected) => return Err(rejected.close_and_take_error()),
                 };
@@ -8206,13 +8211,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         Ok(known)
     }
 
-    async fn publish_mount_catalog(
-        pool: Arc<WorkerPool>,
-        pool_use: Arc<WorkerPoolUse>,
-        storage: Arc<db_storage::DbBackend>,
-        catalog: Arc<Mutex<CatalogState>>,
-        document: protocol::ArtifactId,
-    ) -> Result<(), DbError> {
+    async fn publish_mount_catalog(pool: Arc<WorkerPool>, pool_use: Arc<WorkerPoolUse>, storage: Arc<db_storage::DbBackend>, catalog: Arc<Mutex<CatalogState>>, document: protocol::ArtifactId) -> Result<(), DbError> {
         let transaction = match DatabaseCreateCatalogFuture::try_prepare_with_use(pool, pool_use, catalog, storage, document, true) {
             Ok(transaction) => transaction,
             Err(rejected) => return Err(rejected.close_and_take_error()),
@@ -8376,8 +8375,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// 🪴️ Admits the exact create-document catalog transaction before any catalog owner is copied.
     pub fn create_document_catalog_retained(&self, document: protocol::ArtifactId) -> Result<DatabaseCreateCatalogFuture, DatabaseRetainedActivityRejected<DatabaseCreateCatalogRejected>> {
         let pool_use = self.require_open_use().map_err(DatabaseRetainedActivityRejected::Closed)?;
-        DatabaseCreateCatalogFuture::try_prepare_with_use(self.pool.clone(), pool_use, self.catalog.clone(), self.storage.clone(), document, true)
-            .map_err(DatabaseRetainedActivityRejected::Retained)
+        DatabaseCreateCatalogFuture::try_prepare_with_use(self.pool.clone(), pool_use, self.catalog.clone(), self.storage.clone(), document, true).map_err(DatabaseRetainedActivityRejected::Retained)
     }
 
     /// @emoji 🌱️ The frozen `create_document`: mints a brand-new document, durably records it in the
@@ -8506,7 +8504,20 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Executor(kind)) => {
                     return Err(DbError::Unavailable(format!("database shutdown retains a non-runnable document-mount job: {kind:?}")));
                 }
-                DatabaseShutdownProgress::Interrupted => return Err(control.interruption_error()),
+                DatabaseShutdownProgress::Interrupted => {
+                    #[cfg(test)]
+                    {
+                        let closing = self.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("none"));
+                        eprintln!(
+                            "[DEBUG] database shutdown interrupted: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}",
+                            self.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
+                            self.shutdown_graph_complete,
+                            self.shutdown_emit_started,
+                            self.pool_use.as_ref().map_or(0, Arc::strong_count),
+                        );
+                    }
+                    return Err(control.interruption_error());
+                }
                 DatabaseShutdownProgress::Complete => return Ok(()),
             }
         }
@@ -8558,8 +8569,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         snapshot_chunk_bytes: usize,
     ) -> Result<db_sync::DatabaseSyncHelloFuture, DatabaseRetainedActivityRejected<db_sync::DatabaseSyncHelloRejected>> {
         let pool_use = self.require_open_use().map_err(DatabaseRetainedActivityRejected::Closed)?;
-        db_sync::DatabaseSyncHelloFuture::try_submit_with_use(self.pool.clone(), pool_use, self.storage.clone(), document, hello_frontier, session_id, origin, snapshot_chunk_bytes)
-            .map_err(DatabaseRetainedActivityRejected::Retained)
+        db_sync::DatabaseSyncHelloFuture::try_submit_with_use(self.pool.clone(), pool_use, self.storage.clone(), document, hello_frontier, session_id, origin, snapshot_chunk_bytes).map_err(DatabaseRetainedActivityRejected::Retained)
     }
 
     /// 📡️ Mounts one retained hello authority and returns its backpressured frame session.
@@ -10263,6 +10273,16 @@ impl ArtifactHandle {
     pub async fn frontier(&self) -> Result<Frontier, DbError> {
         let core_frontier = self.authority.frontier().await?;
         Ok(to_engine_frontier(&core_frontier, self.document.clone()))
+    }
+
+    /// 📍️ Captures the exact committed frontier and tip identity in one serialized turn.
+    pub async fn checkpoint_publication_snapshot(&self) -> Result<CheckpointPublicationSnapshot, DbError> {
+        let snapshot = self.authority.checkpoint_publication_snapshot().await?;
+        Ok(CheckpointPublicationSnapshot {
+            authority_generation: self.authority.generation().0,
+            frontier: to_engine_frontier(&snapshot.frontier, self.document.clone()),
+            head_edit_id: snapshot.head_edit_id,
+        })
     }
 
     /// @emoji 🌫️ The frozen `preview` — see `subscribe`'s doc; same deferral reason.
@@ -12511,10 +12531,7 @@ mod tests {
     async fn database_create_catalog_resolved_drop_retains_use_until_terminal_drain() {
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
         let (storage, catalog, _) = create_catalog_fixture(Vec::new()).await;
-        let result = DatabaseCreateCatalogFuture::try_submit(pool.clone(), catalog, storage, protocol::ArtifactId(String::from("resolved-owner-drop")))
-            .unwrap()
-            .await
-            .unwrap();
+        let result = DatabaseCreateCatalogFuture::try_submit(pool.clone(), catalog, storage, protocol::ArtifactId(String::from("resolved-owner-drop"))).unwrap().await.unwrap();
         let generation = result.state.as_ref().expect("resolved result retains its exact catalog state").generation;
         assert_eq!(pool.shutdown(), Err(semio_framework_async::WorkerPoolShutdownError::Busy { retained_uses: 1 }));
         drop(result);
@@ -12574,7 +12591,17 @@ mod tests {
         drop(wal);
         drop(first);
         drop(second);
-        database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
+        if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
+            let closing = database.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("no-closing-authority"));
+            eprintln!(
+                "[DEBUG] concurrent mount shutdown retained state: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}; error={error}",
+                database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
+                database.shutdown_graph_complete,
+                database.shutdown_emit_started,
+                database.pool_use.as_ref().map_or(0, Arc::strong_count),
+            );
+            panic!("database shutdown after concurrent mount failed: {error}");
+        }
         pool.shutdown().unwrap();
     }
 
@@ -12704,6 +12731,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_cancelled_ensure_waiter_does_not_cancel_mount_owner() {
+        eprintln!("[DEBUG] cancelled-waiter stage=setup");
         let pool = test_worker_pool();
         let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
@@ -12714,18 +12742,41 @@ mod tests {
             std::task::Poll::Ready(())
         })
         .await;
+        eprintln!("[DEBUG] cancelled-waiter stage=first-pending");
         drop(cancelled);
         {
             let registry = database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let DatabaseDocumentMountSlot::Opening { owner, waiters, .. } = registry.slots.get(&document.0).unwrap() else { panic!("cancelled waiter removed retained owner") };
             assert_eq!(waiters.iter().flatten().count(), 0);
             assert!(!owner.terminal.load(std::sync::atomic::Ordering::Acquire));
+            eprintln!(
+                "[DEBUG] cancelled-waiter stage=owner-retained driver={} wake={} resume={}",
+                owner.driver.load(std::sync::atomic::Ordering::Acquire),
+                owner.wake_requested.load(std::sync::atomic::Ordering::Acquire),
+                owner.resume_requested.load(std::sync::atomic::Ordering::Acquire)
+            );
         }
+        eprintln!("[DEBUG] cancelled-waiter stage=join");
         let handle = database.ensure_document(&document).await.unwrap();
+        eprintln!("[DEBUG] cancelled-waiter stage=joined");
         assert_eq!(database.catalog().await.artifacts.iter().filter(|entry| entry.document == document).count(), 1);
         drop(handle);
-        database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
+        eprintln!("[DEBUG] cancelled-waiter stage=shutdown");
+        if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
+            let closing = database.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("none"));
+            let registry = database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            eprintln!(
+                "[DEBUG] cancelled-waiter shutdown retained state: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}; error={error}",
+                registry.len(),
+                database.shutdown_graph_complete,
+                database.shutdown_emit_started,
+                database.pool_use.as_ref().map_or(0, Arc::strong_count),
+            );
+            panic!("database shutdown after cancelled waiter failed: {error}");
+        }
+        eprintln!("[DEBUG] cancelled-waiter stage=pool-shutdown");
         pool.shutdown();
+        eprintln!("[DEBUG] cancelled-waiter stage=complete");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -12759,7 +12810,18 @@ mod tests {
         assert_eq!(emit.document_event_count(), 1);
         drop(survivor);
         drop(later);
-        database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
+        if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
+            let closing = database.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("none"));
+            let registry = database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            eprintln!(
+                "[DEBUG] emission mount shutdown retained state: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}; error={error}",
+                registry.len(),
+                database.shutdown_graph_complete,
+                database.shutdown_emit_started,
+                database.pool_use.as_ref().map_or(0, Arc::strong_count),
+            );
+            panic!("database shutdown after controlled mount emission failed: {error}");
+        }
         pool.shutdown();
     }
 
@@ -13084,7 +13146,17 @@ mod tests {
         fault.set_script(crate::db_testkit::FaultScript::default()).await;
         let handle = database.ensure_document(&document).await.unwrap();
         drop(handle);
-        database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
+        if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
+            let closing = database.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("none"));
+            eprintln!(
+                "[DEBUG] unlock-retry shutdown retained state: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}; error={error}",
+                database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
+                database.shutdown_graph_complete,
+                database.shutdown_emit_started,
+                database.pool_use.as_ref().map_or(0, Arc::strong_count),
+            );
+            panic!("database shutdown after controlled unlock retry failed: {error}");
+        }
         pool.shutdown();
     }
 
@@ -13243,6 +13315,10 @@ mod tests {
 
         let frontier = handle.frontier().await.unwrap();
         assert_eq!(frontier.head_seq, 1);
+        let checkpoint_snapshot = handle.checkpoint_publication_snapshot().await.unwrap();
+        assert_ne!(checkpoint_snapshot.authority_generation, 0);
+        assert_eq!(checkpoint_snapshot.frontier, frontier);
+        assert_eq!(checkpoint_snapshot.head_edit_id, Some(protocol::MutationId("op-1".to_string())));
 
         let mut at_least = handle.query(Query::Get { path: "name".to_string() }, Consistency::AtLeast(frontier)).await.unwrap();
         assert_eq!(at_least.len(), 1);
@@ -13300,6 +13376,7 @@ mod tests {
         let value = decode_query_json(queried).await;
         assert_eq!(value, serde_json::json!(1), "the document's committed state must have survived the reopen via WAL replay");
         assert_eq!(handle.frontier().await.unwrap().head_seq, 1);
+        assert_eq!(handle.checkpoint_publication_snapshot().await.unwrap().head_edit_id, Some(protocol::MutationId("op-1".to_string())));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -13417,7 +13494,8 @@ mod tests {
         while before.close_step() {}
         assert!(before.terminal_is_empty());
         assert!(matches!(storage.wal().await.acquire_writer(&core_document).await, Err(DbError::Conflict(_))), "the live actor must retain its original writer before compaction");
-        let report = database.compact_document(&document, "actor-holder", false).await.unwrap();
+        let compacted = database.compact_document(&document, "actor-holder", false).await;
+        let report = compacted.unwrap();
         assert!(report.wal_segments_deleted >= 1);
         assert_eq!(report.payloads_deleted, 0, "document-scoped maintenance must not reclaim global CAS bytes");
         let mut after = storage.wal().await.list_segments(&core_document).await.unwrap();

@@ -254,13 +254,13 @@ mod tests {
                 accepted += 1;
                 assert_eq!(bindings.len(), fixture["codecCount"].as_u64().unwrap() as usize);
                 for (binding, row) in bindings.iter().zip(expected["receipts"].as_array().unwrap()) {
-                    assert_eq!(binding.plugin_id, expected["pluginId"]);
-                    assert_eq!(binding.package_id, expected["packageId"]);
-                    assert_eq!(binding.artifact_kind, row["kind"]);
-                    assert_eq!(binding.codec.schema, row["schema"]);
-                    assert_eq!(binding.codec.extension, row["extension"]);
-                    assert_eq!(hexadecimal(&binding.codec.pack_schema_hash), row["protocolSha256"]);
-                    assert_ne!(binding.codec.pack_schema_hash, [0; 32]);
+                    assert_eq!(binding.plugin_id(), expected["pluginId"]);
+                    assert_eq!(binding.package_id(), expected["packageId"]);
+                    assert_eq!(binding.artifact_kind(), row["kind"]);
+                    assert_eq!(binding.codec().schema, row["schema"]);
+                    assert_eq!(binding.codec().extension, row["extension"]);
+                    assert_eq!(hexadecimal(&binding.codec().pack_schema_hash), row["protocolSha256"]);
+                    assert_ne!(binding.codec().pack_schema_hash, [0; 32]);
                 }
             }
         }
@@ -286,7 +286,7 @@ mod tests {
                 }
                 let bindings = providers.preview(plugin_id, package_id, env!("CARGO_PKG_VERSION"), &context).expect("selected compiled provider");
                 assert_eq!(bindings.len(), count, "{}", profile["name"]);
-                assert!(bindings.iter().all(|binding| binding.package_id == package_id));
+                assert!(bindings.iter().all(|binding| binding.package_id() == package_id));
                 requested.push(package_id);
                 receipts += count;
             }

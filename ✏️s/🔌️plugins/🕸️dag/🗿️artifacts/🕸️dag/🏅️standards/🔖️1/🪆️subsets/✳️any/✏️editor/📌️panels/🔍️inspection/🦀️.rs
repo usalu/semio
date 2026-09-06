@@ -14,7 +14,7 @@ pub const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -26,7 +26,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Fields
-async fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
+fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
@@ -59,7 +59,7 @@ async fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl
     })
 }
 
-async fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
+fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
@@ -94,7 +94,7 @@ async fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl I
 //#endregion 🔖️Fields
 
 //#region 🔖️Render
-pub async fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
+pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "dag-play-inspector.empty".into(),

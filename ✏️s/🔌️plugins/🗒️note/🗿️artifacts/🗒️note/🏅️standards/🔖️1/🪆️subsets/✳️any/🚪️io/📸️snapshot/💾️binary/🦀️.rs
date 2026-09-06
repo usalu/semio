@@ -10,12 +10,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `NoteSnapshot` to its binary pack form.
-pub async fn encode(document: &NoteSnapshot) -> Vec<u8> {
+pub fn encode(document: &NoteSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `NoteSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<NoteSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<NoteSnapshot, PackError> {
     <NoteSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 

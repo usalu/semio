@@ -82,7 +82,7 @@ pub mod fnkind {
     impl FnKind {
         /// 🔢️ Fixed arity, or `None` for the two families whose argument count varies (Bessel/orthogonal
         /// functions carry an order/degree argument in addition to their evaluation point).
-        pub async fn arity(&self) -> Option<usize> {
+        pub fn arity(&self) -> Option<usize> {
             use FnKind::*;
             match self {
                 Sin | Cos | Tan | Cot | Sec | Csc | Asin | Acos | Atan | Acot | Asec | Acsc | Sinh | Cosh | Tanh | Asinh | Acosh | Atanh | Exp | Ln | Abs | Sign | Floor | Ceil | Gamma | LogGamma | Digamma | Erf | Erfc | Zeta => Some(1),
@@ -92,7 +92,7 @@ pub mod fnkind {
             }
         }
 
-        pub async fn name(&self) -> std::borrow::Cow<'static, str> {
+        pub fn name(&self) -> std::borrow::Cow<'static, str> {
             use FnKind::*;
             match self {
                 Sin => "sin".into(),
@@ -140,12 +140,12 @@ pub mod fnkind {
         }
 
         /// 🔄️ `true` for functions with `f(-x) == f(x)`.
-        pub async fn is_even(&self) -> bool {
+        pub fn is_even(&self) -> bool {
             matches!(self, FnKind::Cos | FnKind::Cosh | FnKind::Abs)
         }
 
         /// 🔄️ `true` for functions with `f(-x) == -f(x)`.
-        pub async fn is_odd(&self) -> bool {
+        pub fn is_odd(&self) -> bool {
             matches!(self, FnKind::Sin | FnKind::Tan | FnKind::Cot | FnKind::Csc | FnKind::Sinh | FnKind::Tanh | FnKind::Asin | FnKind::Atan | FnKind::Asinh | FnKind::Atanh | FnKind::Sign | FnKind::Erf)
         }
     }
@@ -203,15 +203,15 @@ pub mod expr {
     }
 
     impl Symbol {
-        pub(crate) async fn new(name: &str, assumptions: AssumeSet) -> Self {
+        pub(crate) fn new(name: &str, assumptions: AssumeSet) -> Self {
             Self { name: Rc::from(name), assumptions }
         }
 
-        pub async fn name(&self) -> &str {
+        pub fn name(&self) -> &str {
             &self.name
         }
 
-        pub async fn assumptions(&self) -> AssumeSet {
+        pub fn assumptions(&self) -> AssumeSet {
             self.assumptions
         }
     }
@@ -254,7 +254,7 @@ pub mod expr {
     }
 
     impl Constant {
-        pub async fn name(&self) -> &'static str {
+        pub fn name(&self) -> &'static str {
             match self {
                 Constant::Pi => "pi",
                 Constant::E => "e",
@@ -332,7 +332,7 @@ pub mod expr {
     /// 🔢️ FNV-1a, computed bottom-up once at construction and cached — equality checks hash first (cheap
     /// reject), then `Rc::ptr_eq` (cheap accept, common since subtrees are shared), then a full structural
     /// compare only in the rare remaining case.
-    async fn fnv1a_mix(mut hash: u64, bytes: &[u8]) -> u64 {
+    fn fnv1a_mix(mut hash: u64, bytes: &[u8]) -> u64 {
         for &b in bytes {
             hash ^= b as u64;
             hash = hash.wrapping_mul(0x0000_0100_0000_01B3);
@@ -342,7 +342,7 @@ pub mod expr {
 
     const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 
-    async fn hash_kind(kind: &Kind) -> u64 {
+    fn hash_kind(kind: &Kind) -> u64 {
         let mut h = FNV_OFFSET;
         match kind {
             Kind::Integer(n) => {
@@ -430,75 +430,75 @@ pub mod expr {
     impl Expr {
         /// ⚠️ Only `canon.rs` should call this — every other constructor goes through the smart
         /// constructors there to maintain the auto-simplification invariants.
-        pub(crate) async fn from_kind_unchecked(kind: Kind) -> Self {
+        pub(crate) fn from_kind_unchecked(kind: Kind) -> Self {
             let hash = hash_kind(&kind);
             Self(Rc::new(Node { hash, kind }))
         }
 
-        pub async fn kind(&self) -> &Kind {
+        pub fn kind(&self) -> &Kind {
             &self.0.kind
         }
 
-        pub async fn hash(&self) -> u64 {
+        pub fn hash(&self) -> u64 {
             self.0.hash
         }
 
-        pub async fn symbol(name: &str) -> Self {
+        pub fn symbol(name: &str) -> Self {
             crate::cas::canon::make_symbol(name, AssumeSet::NONE)
         }
 
-        pub async fn symbol_with(name: &str, assumptions: AssumeSet) -> Self {
+        pub fn symbol_with(name: &str, assumptions: AssumeSet) -> Self {
             crate::cas::canon::make_symbol(name, assumptions)
         }
 
-        pub async fn integer(value: i64) -> Self {
+        pub fn integer(value: i64) -> Self {
             crate::cas::canon::make_integer(Integer::from_i64(value))
         }
 
-        pub async fn constant(c: Constant) -> Self {
+        pub fn constant(c: Constant) -> Self {
             Self::from_kind_unchecked(Kind::Constant(c))
         }
 
-        pub async fn boolean(b: bool) -> Self {
+        pub fn boolean(b: bool) -> Self {
             Self::from_kind_unchecked(Kind::Bool(b))
         }
 
-        pub async fn as_integer(&self) -> Option<&Integer> {
+        pub fn as_integer(&self) -> Option<&Integer> {
             match self.kind() {
                 Kind::Integer(n) => Some(n),
                 _ => None,
             }
         }
 
-        pub async fn as_symbol(&self) -> Option<&Symbol> {
+        pub fn as_symbol(&self) -> Option<&Symbol> {
             match self.kind() {
                 Kind::Symbol(s) => Some(s),
                 _ => None,
             }
         }
 
-        pub async fn is_zero_literal(&self) -> bool {
+        pub fn is_zero_literal(&self) -> bool {
             matches!(self.kind(), Kind::Integer(n) if n.is_zero())
         }
 
-        pub async fn is_one_literal(&self) -> bool {
+        pub fn is_one_literal(&self) -> bool {
             matches!(self.kind(), Kind::Integer(n) if *n == Integer::one())
         }
 
         // #region 🔖️PublicConstructors
-        pub async fn add(terms: Vec<Expr>) -> Self {
+        pub fn add(terms: Vec<Expr>) -> Self {
             crate::cas::canon::make_add(terms)
         }
 
-        pub async fn mul(factors: Vec<Expr>) -> Self {
+        pub fn mul(factors: Vec<Expr>) -> Self {
             crate::cas::canon::make_mul(factors)
         }
 
-        pub async fn pow(base: Expr, exp: Expr) -> Self {
+        pub fn pow(base: Expr, exp: Expr) -> Self {
             crate::cas::canon::make_pow(base, exp)
         }
 
-        pub async fn func(kind: FnKind, args: Vec<Expr>) -> Self {
+        pub fn func(kind: FnKind, args: Vec<Expr>) -> Self {
             crate::cas::canon::make_func(kind, args)
         }
         // #endregion 🔖️PublicConstructors
@@ -531,7 +531,7 @@ pub mod expr {
 
     /// 🔢️ Kind-class rank used as the primary key of the canonical total order (before falling back to
     /// structural comparison within the same class).
-    async fn kind_rank(k: &Kind) -> u8 {
+    fn kind_rank(k: &Kind) -> u8 {
         match k {
             Kind::Integer(_) => 0,
             Kind::Rational(_) => 0,
@@ -720,17 +720,17 @@ mod canon {
     use std::collections::BTreeMap;
 
     // #region 🔖️Leaves
-    pub(crate) async fn make_symbol(name: &str, assumptions: AssumeSet) -> Expr {
+    pub(crate) fn make_symbol(name: &str, assumptions: AssumeSet) -> Expr {
         Expr::from_kind_unchecked(Kind::Symbol(Symbol::new(name, assumptions.close())))
     }
 
-    pub(crate) async fn make_integer(n: Integer) -> Expr {
+    pub(crate) fn make_integer(n: Integer) -> Expr {
         Expr::from_kind_unchecked(Kind::Integer(n))
     }
 
     /// ➗️ Folds to `Integer` whenever the value is integral — `Kind::Rational` is only ever constructed
     /// for genuinely non-integral values.
-    pub(crate) async fn make_rational(r: Rational) -> Expr {
+    pub(crate) fn make_rational(r: Rational) -> Expr {
         if r.is_integer() {
             make_integer(r.trunc())
         } else {
@@ -738,7 +738,7 @@ mod canon {
         }
     }
 
-    pub(crate) async fn make_neg(e: Expr) -> Expr {
+    pub(crate) fn make_neg(e: Expr) -> Expr {
         make_mul(vec![make_integer(Integer::from_i64(-1)), e])
     }
     // #endregion 🔖️Leaves
@@ -752,56 +752,56 @@ mod canon {
     }
 
     impl Num {
-        async fn zero() -> Self {
+        fn zero() -> Self {
             Num::Int(Integer::zero())
         }
-        async fn one() -> Self {
+        fn one() -> Self {
             Num::Int(Integer::one())
         }
-        async fn from_expr(e: &Expr) -> Option<Self> {
+        fn from_expr(e: &Expr) -> Option<Self> {
             match e.kind() {
                 Kind::Integer(n) => Some(Num::Int(n.clone())),
                 Kind::Rational(r) => Some(Num::Rat(r.clone())),
                 _ => None,
             }
         }
-        async fn to_rational(&self) -> Rational {
+        fn to_rational(&self) -> Rational {
             match self {
                 Num::Int(n) => Rational::from_integer(n.clone()),
                 Num::Rat(r) => r.clone(),
             }
         }
-        async fn add(&self, other: &Self) -> Self {
+        fn add(&self, other: &Self) -> Self {
             match (self, other) {
                 (Num::Int(a), Num::Int(b)) => Num::Int(a.add(b)),
                 _ => Num::Rat(self.to_rational().add(&other.to_rational())),
             }
         }
-        async fn mul(&self, other: &Self) -> Self {
+        fn mul(&self, other: &Self) -> Self {
             match (self, other) {
                 (Num::Int(a), Num::Int(b)) => Num::Int(a.mul(b)),
                 _ => Num::Rat(self.to_rational().mul(&other.to_rational())),
             }
         }
-        async fn is_zero(&self) -> bool {
+        fn is_zero(&self) -> bool {
             match self {
                 Num::Int(n) => n.is_zero(),
                 Num::Rat(r) => r.is_zero(),
             }
         }
-        async fn is_one(&self) -> bool {
+        fn is_one(&self) -> bool {
             match self {
                 Num::Int(n) => *n == Integer::one(),
                 Num::Rat(r) => *r == Rational::one(),
             }
         }
-        async fn is_negative(&self) -> bool {
+        fn is_negative(&self) -> bool {
             match self {
                 Num::Int(n) => n.is_negative(),
                 Num::Rat(r) => r.numer().is_negative(),
             }
         }
-        async fn into_expr(self) -> Expr {
+        fn into_expr(self) -> Expr {
             match self {
                 Num::Int(n) => make_integer(n),
                 Num::Rat(r) => make_rational(r),
@@ -811,7 +811,7 @@ mod canon {
     // #endregion 🔖️NumberFolding
 
     // #region 🔖️Add
-    pub(crate) async fn make_add(terms: Vec<Expr>) -> Expr {
+    pub(crate) fn make_add(terms: Vec<Expr>) -> Expr {
         let mut flat = Vec::with_capacity(terms.len());
         flatten_add(terms, &mut flat);
 
@@ -859,7 +859,7 @@ mod canon {
         finalize_variadic(result_terms, Integer::zero(), Kind::Add)
     }
 
-    async fn flatten_add(terms: Vec<Expr>, out: &mut Vec<Expr>) {
+    fn flatten_add(terms: Vec<Expr>, out: &mut Vec<Expr>) {
         for t in terms {
             match t.kind() {
                 Kind::Add(inner) => flatten_add(inner.clone(), out),
@@ -871,7 +871,7 @@ mod canon {
     /// ➗️ Splits a term into `(numeric_coefficient, rest)` for like-term collection: a `Mul` with a
     /// leading numeric factor contributes that factor as the coefficient and the remaining factors
     /// (re-multiplied) as `rest`; anything else has an implicit coefficient of `1`.
-    async fn split_coefficient(term: &Expr) -> (Num, Expr) {
+    fn split_coefficient(term: &Expr) -> (Num, Expr) {
         if let Kind::Mul(factors) = term.kind() {
             if let Some(first_num) = factors.first().and_then(Num::from_expr) {
                 let rest_factors: Vec<Expr> = factors[1..].to_vec();
@@ -884,7 +884,7 @@ mod canon {
     // #endregion 🔖️Add
 
     // #region 🔖️Mul
-    pub(crate) async fn make_mul(factors: Vec<Expr>) -> Expr {
+    pub(crate) fn make_mul(factors: Vec<Expr>) -> Expr {
         let mut flat = Vec::with_capacity(factors.len());
         flatten_mul(factors, &mut flat);
 
@@ -959,7 +959,7 @@ mod canon {
         finalize_variadic(result_terms, Integer::one(), Kind::Mul)
     }
 
-    async fn flatten_mul(factors: Vec<Expr>, out: &mut Vec<Expr>) {
+    fn flatten_mul(factors: Vec<Expr>, out: &mut Vec<Expr>) {
         for f in factors {
             match f.kind() {
                 Kind::Mul(inner) => flatten_mul(inner.clone(), out),
@@ -971,7 +971,7 @@ mod canon {
     /// 🧹️ Common tail for `Add`/`Mul`: drop the identity element (dead code by construction upstream is
     /// avoided since numeric folding already strips it), sort canonically, and collapse
     /// empty/singleton results.
-    async fn finalize_variadic(mut terms: Vec<Expr>, identity: Integer, wrap: fn(Vec<Expr>) -> Kind) -> Expr {
+    fn finalize_variadic(mut terms: Vec<Expr>, identity: Integer, wrap: fn(Vec<Expr>) -> Kind) -> Expr {
         terms.retain(|t| !matches!(t.kind(), Kind::Integer(n) if *n == identity));
         if terms.is_empty() {
             return make_integer(identity);
@@ -985,7 +985,7 @@ mod canon {
     // #endregion 🔖️Mul
 
     // #region 🔖️Pow
-    pub(crate) async fn make_pow(base: Expr, exp: Expr) -> Expr {
+    pub(crate) fn make_pow(base: Expr, exp: Expr) -> Expr {
         if matches!(base.kind(), Kind::Constant(Constant::Undefined)) || matches!(exp.kind(), Kind::Constant(Constant::Undefined)) {
             return Expr::constant(Constant::Undefined);
         }
@@ -1047,7 +1047,7 @@ mod canon {
         }
     }
 
-    async fn fold_integer_pow(base: Integer, exp: Integer) -> Expr {
+    fn fold_integer_pow(base: Integer, exp: Integer) -> Expr {
         let Some(ev) = exp.to_i64() else {
             return Expr::from_kind_unchecked(Kind::Pow(make_integer(base), make_integer(exp)));
         };
@@ -1066,7 +1066,7 @@ mod canon {
     /// `outside^q * inside` (via prime factorization) with `inside` free of `q`-th-power factors, giving
     /// `base^(1/q) = (+-outside) * inside^(1/q)`. Only the numerator-`1` case gets this partial extraction;
     /// other numerators only fold when `base` is an *exact* `q`-th power (documented simplification).
-    async fn fold_radical(base: &Integer, exp: Rational) -> Option<Expr> {
+    fn fold_radical(base: &Integer, exp: Rational) -> Option<Expr> {
         let q = exp.denom().to_u64()? as u32;
         let p = exp.numer().clone();
         if q < 2 {
@@ -1109,7 +1109,7 @@ mod canon {
     // #endregion 🔖️Pow
 
     // #region 🔖️Func
-    pub(crate) async fn make_func(kind: FnKind, args: Vec<Expr>) -> Expr {
+    pub(crate) fn make_func(kind: FnKind, args: Vec<Expr>) -> Expr {
         if let Some(arity) = kind.arity() {
             debug_assert_eq!(args.len(), arity, "make_func: wrong arity for {kind:?}");
         }
@@ -1124,7 +1124,7 @@ mod canon {
         Expr::from_kind_unchecked(Kind::Fn(kind, args))
     }
 
-    async fn fold_unary_special_value(kind: &FnKind, arg: &Expr) -> Option<Expr> {
+    fn fold_unary_special_value(kind: &FnKind, arg: &Expr) -> Option<Expr> {
         match kind {
             FnKind::Sin | FnKind::Tan | FnKind::Asin | FnKind::Atan | FnKind::Sinh | FnKind::Tanh | FnKind::Asinh | FnKind::Atanh if arg.is_zero_literal() => Some(Expr::integer(0)),
             FnKind::Cos | FnKind::Cosh if arg.is_zero_literal() => Some(Expr::integer(1)),
@@ -1323,26 +1323,26 @@ pub mod assume {
         pub const ODD: Self = Self(1 << 10);
         pub const FINITE: Self = Self(1 << 11);
 
-        pub async fn bits(self) -> u32 {
+        pub fn bits(self) -> u32 {
             self.0
         }
 
-        pub async fn from_bits(bits: u32) -> Self {
+        pub fn from_bits(bits: u32) -> Self {
             Self(bits)
         }
 
-        pub async fn contains(self, flag: Self) -> bool {
+        pub fn contains(self, flag: Self) -> bool {
             self.0 & flag.0 == flag.0
         }
 
-        pub async fn union(self, other: Self) -> Self {
+        pub fn union(self, other: Self) -> Self {
             Self(self.0 | other.0)
         }
 
         /// 🔒️ Applies every implication to a fixpoint (`POSITIVE => REAL, NONNEGATIVE, NONZERO`, etc.),
         /// then panics if the closed set contains a direct contradiction (e.g. `POSITIVE` and `NEGATIVE`).
         /// Called once, at symbol-construction time — every `AssumeSet` observed afterward is already closed.
-        pub async fn close(self) -> Self {
+        pub fn close(self) -> Self {
             let mut set = self;
             loop {
                 let mut next = set;
@@ -1404,15 +1404,15 @@ pub mod assume {
     }
 
     impl Assumptions {
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             Self::default()
         }
 
-        pub async fn assume_bound(&mut self, symbol: &str, operator: RelationalOperator, bound: number::Rational) {
+        pub fn assume_bound(&mut self, symbol: &str, operator: RelationalOperator, bound: number::Rational) {
             self.facts.push((symbol.to_string(), operator, bound));
         }
 
-        async fn bound_for(&self, symbol: &str) -> Option<bool> {
+        fn bound_for(&self, symbol: &str) -> Option<bool> {
             for (name, operation, bound) in &self.facts {
                 if name != symbol {
                     continue;
@@ -1441,15 +1441,15 @@ pub mod assume {
     /// 〽 Three-valued positivity query: exact for numeric literals, from-flags for bare symbols, and
     /// recursively deduced through `Add`/`Mul`/`Pow`/a few `Fn` cases; `None` means "can't tell", never
     /// a wrong answer.
-    pub async fn is_positive(e: &Expr) -> Option<bool> {
+    pub fn is_positive(e: &Expr) -> Option<bool> {
         is_positive_depth(e, &Assumptions::new(), 0)
     }
 
-    pub async fn is_positive_with(e: &Expr, assumptions: &Assumptions) -> Option<bool> {
+    pub fn is_positive_with(e: &Expr, assumptions: &Assumptions) -> Option<bool> {
         is_positive_depth(e, assumptions, 0)
     }
 
-    async fn is_positive_depth(e: &Expr, assumptions: &Assumptions, depth: u32) -> Option<bool> {
+    fn is_positive_depth(e: &Expr, assumptions: &Assumptions, depth: u32) -> Option<bool> {
         if depth > MAX_DEDUCTION_DEPTH {
             return None;
         }
@@ -1520,11 +1520,11 @@ pub mod assume {
         }
     }
 
-    pub async fn is_nonzero(e: &Expr) -> Option<bool> {
+    pub fn is_nonzero(e: &Expr) -> Option<bool> {
         is_nonzero_depth(e, &Assumptions::new(), 0)
     }
 
-    async fn is_nonzero_depth(e: &Expr, assumptions: &Assumptions, depth: u32) -> Option<bool> {
+    fn is_nonzero_depth(e: &Expr, assumptions: &Assumptions, depth: u32) -> Option<bool> {
         if depth > MAX_DEDUCTION_DEPTH {
             return None;
         }
@@ -1559,7 +1559,7 @@ pub mod assume {
         }
     }
 
-    pub async fn is_real(e: &Expr) -> Option<bool> {
+    pub fn is_real(e: &Expr) -> Option<bool> {
         match e.kind() {
             Kind::Integer(_) | Kind::Rational(_) => Some(true),
             Kind::Symbol(sym) => {
@@ -1581,7 +1581,7 @@ pub mod assume {
         }
     }
 
-    pub async fn is_integer(e: &Expr) -> Option<bool> {
+    pub fn is_integer(e: &Expr) -> Option<bool> {
         match e.kind() {
             Kind::Integer(_) => Some(true),
             Kind::Rational(_) => Some(false),
@@ -1603,7 +1603,7 @@ pub mod assume {
         }
     }
 
-    pub async fn is_even(e: &Expr) -> Option<bool> {
+    pub fn is_even(e: &Expr) -> Option<bool> {
         match e.kind() {
             Kind::Integer(n) => n.to_i64().map(|v| v % 2 == 0),
             Kind::Symbol(sym) => {
@@ -1676,7 +1676,7 @@ pub mod visit {
 
     // #region 🔖️Subs
     /// 🔁️ Replaces every occurrence of `target` with `replacement` (structural equality, post-order).
-    pub async fn subs(e: &Expr, target: &Expr, replacement: &Expr) -> Expr {
+    pub fn subs(e: &Expr, target: &Expr, replacement: &Expr) -> Expr {
         if e == target {
             return replacement.clone();
         }
@@ -1684,7 +1684,7 @@ pub mod visit {
     }
 
     /// 🔁️ Applies a full substitution map in one pass (each key checked before recursing into children).
-    pub async fn subs_many(e: &Expr, map: &[(Expr, Expr)]) -> Expr {
+    pub fn subs_many(e: &Expr, map: &[(Expr, Expr)]) -> Expr {
         for (target, replacement) in map {
             if e == target {
                 return replacement.clone();
@@ -1695,7 +1695,7 @@ pub mod visit {
 
     /// 🌳️ Applies `f` to every child of `e` and rebuilds `e` with the results, going through the smart
     /// constructors so the rebuilt node is always fully canonical.
-    pub async fn map_children(e: &Expr, f: &mut impl FnMut(&Expr) -> Expr) -> Expr {
+    pub fn map_children(e: &Expr, f: &mut impl FnMut(&Expr) -> Expr) -> Expr {
         match e.kind() {
             Kind::Add(terms) => Expr::add(terms.iter().map(f).collect()),
             Kind::Mul(factors) => Expr::mul(factors.iter().map(f).collect()),
@@ -1711,7 +1711,7 @@ pub mod visit {
     // #region 🔖️Replace
     /// 🔁️ Bottom-up rewrite: applies `f` to every subtree (children first), keeping `f`'s result whenever
     /// it returns `Some`.
-    pub async fn replace_bottom_up(e: &Expr, f: &mut impl FnMut(&Expr) -> Option<Expr>) -> Expr {
+    pub fn replace_bottom_up(e: &Expr, f: &mut impl FnMut(&Expr) -> Option<Expr>) -> Expr {
         let rebuilt = map_children(e, &mut |child| replace_bottom_up(child, f));
         f(&rebuilt).unwrap_or(rebuilt)
     }
@@ -1719,13 +1719,13 @@ pub mod visit {
 
     // #region 🔖️FreeSymbols
     /// 🔤️ Every distinct symbol appearing anywhere in `e`, in canonical (sorted, deduplicated) order.
-    pub async fn free_symbols(e: &Expr) -> Vec<Expr> {
+    pub fn free_symbols(e: &Expr) -> Vec<Expr> {
         let mut found = std::collections::BTreeSet::new();
         collect_symbols(e, &mut found);
         found.into_iter().collect()
     }
 
-    async fn collect_symbols(e: &Expr, out: &mut std::collections::BTreeSet<Expr>) {
+    fn collect_symbols(e: &Expr, out: &mut std::collections::BTreeSet<Expr>) {
         if matches!(e.kind(), Kind::Symbol(_)) {
             out.insert(e.clone());
             return;
@@ -1735,14 +1735,14 @@ pub mod visit {
         }
     }
 
-    pub async fn contains_symbol(e: &Expr, symbol: &Expr) -> bool {
+    pub fn contains_symbol(e: &Expr, symbol: &Expr) -> bool {
         if e == symbol {
             return true;
         }
         children(e).iter().any(|c| contains_symbol(c, symbol))
     }
 
-    async fn children(e: &Expr) -> Vec<Expr> {
+    fn children(e: &Expr) -> Vec<Expr> {
         match e.kind() {
             Kind::Add(terms) => terms.clone(),
             Kind::Mul(factors) => factors.clone(),
@@ -1757,7 +1757,7 @@ pub mod visit {
 
     // #region 🔖️NodeCount
     /// 🔢️ Total node count (leaves + internal nodes), used by `simplify`'s "smallest wins" heuristic.
-    pub async fn node_count(e: &Expr) -> usize {
+    pub fn node_count(e: &Expr) -> usize {
         1 + children(e).iter().map(node_count).sum::<usize>()
     }
     // #endregion 🔖️NodeCount
@@ -1824,7 +1824,7 @@ pub mod fmt {
         Atom = 5,
     }
 
-    async fn precedence(e: &Expr) -> Prec {
+    fn precedence(e: &Expr) -> Prec {
         match e.kind() {
             Kind::Add(_) => Prec::Add,
             Kind::Mul(_) => Prec::Mul,
@@ -1837,7 +1837,7 @@ pub mod fmt {
     // #endregion 🔖️Precedence
 
     // #region 🔖️Display
-    pub async fn display_string(e: &Expr) -> String {
+    pub fn display_string(e: &Expr) -> String {
         let mut s = String::new();
         write_expr(e, &mut s);
         s
@@ -1845,7 +1845,7 @@ pub mod fmt {
 
     /// ✖️➗️ Recovers the canonical `-a` / `a/b` encodings (`Mul([-1, a])`, `Mul([a, Pow(b,-1)])`) into
     /// readable infix output.
-    async fn write_expr(e: &Expr, out: &mut String) {
+    fn write_expr(e: &Expr, out: &mut String) {
         match e.kind() {
             Kind::Integer(n) => out.push_str(&n.to_decimal()),
             Kind::Rational(r) => out.push_str(&r.to_string()),
@@ -1880,7 +1880,7 @@ pub mod fmt {
         }
     }
 
-    async fn rel_symbol(operator: RelationalOperator) -> &'static str {
+    fn rel_symbol(operator: RelationalOperator) -> &'static str {
         match operator {
             RelationalOperator::Eq => " == ",
             RelationalOperator::Ne => " != ",
@@ -1891,7 +1891,7 @@ pub mod fmt {
         }
     }
 
-    async fn write_paren_if_needed(e: &Expr, min_prec: Prec, out: &mut String) {
+    fn write_paren_if_needed(e: &Expr, min_prec: Prec, out: &mut String) {
         if (precedence(e) as i32) < (min_prec as i32) {
             out.push('(');
             write_expr(e, out);
@@ -1904,7 +1904,7 @@ pub mod fmt {
     /// ➕️ Prints in the conventional "highest-degree/most-complex term first, plain constant last" order —
     /// the reverse of `Add`'s canonical storage order (which puts the numeric coefficient first, an
     /// internal invariant unrelated to how a human expects to read the sum).
-    async fn write_add(terms: &[Expr], out: &mut String) {
+    fn write_add(terms: &[Expr], out: &mut String) {
         let reordered: Vec<Expr> = terms.iter().rev().cloned().collect();
         for (i, term) in reordered.iter().enumerate() {
             let (is_neg, display_term) = extract_negation(term);
@@ -1921,7 +1921,7 @@ pub mod fmt {
 
     /// ➖️ Detects the `-1 * rest` / negative-literal encoding of a negated term and returns
     /// `(true, positive_rest)`, or `(false, term)` if the term isn't negative.
-    async fn extract_negation(term: &Expr) -> (bool, Expr) {
+    fn extract_negation(term: &Expr) -> (bool, Expr) {
         match term.kind() {
             Kind::Integer(n) if n.is_negative() => return (true, Expr::from(n.abs_integer())),
             Kind::Rational(r) if r.numer().is_negative() => return (true, Expr::from(r.abs())),
@@ -1941,7 +1941,7 @@ pub mod fmt {
         (false, term.clone())
     }
 
-    async fn write_mul(factors: &[Expr], out: &mut String) {
+    fn write_mul(factors: &[Expr], out: &mut String) {
         // Recover a/b: a Pow(base, negative-exponent) factor becomes the denominator, and a Rational
         // numeric coefficient splits into a numerator/denominator pair rather than printing "1/2*x".
         let mut numer: Vec<Expr> = Vec::new();
@@ -1991,7 +1991,7 @@ pub mod fmt {
         }
     }
 
-    async fn is_negative_literal(e: &Expr) -> bool {
+    fn is_negative_literal(e: &Expr) -> bool {
         match e.kind() {
             Kind::Integer(n) => n.is_negative(),
             Kind::Rational(r) => r.numer().is_negative(),
@@ -1999,13 +1999,13 @@ pub mod fmt {
         }
     }
 
-    async fn write_pow(base: &Expr, exp: &Expr, out: &mut String) {
+    fn write_pow(base: &Expr, exp: &Expr, out: &mut String) {
         write_paren_if_needed(base, Prec::Unary, out);
         out.push('^');
         write_paren_if_needed(exp, Prec::Unary, out);
     }
 
-    async fn write_func(kind: &FnKind, args: &[Expr], out: &mut String) {
+    fn write_func(kind: &FnKind, args: &[Expr], out: &mut String) {
         out.push_str(&kind.name());
         out.push('(');
         for (i, a) in args.iter().enumerate() {
@@ -2025,13 +2025,13 @@ pub mod fmt {
     // #endregion 🔖️Display
 
     // #region 🔖️Latex
-    pub async fn to_latex(e: &Expr) -> String {
+    pub fn to_latex(e: &Expr) -> String {
         let mut s = String::new();
         write_latex(e, &mut s);
         s
     }
 
-    async fn write_latex(e: &Expr, out: &mut String) {
+    fn write_latex(e: &Expr, out: &mut String) {
         match e.kind() {
             Kind::Integer(n) => out.push_str(&n.to_decimal()),
             Kind::Rational(r) => {
@@ -2123,7 +2123,7 @@ pub mod fmt {
         }
     }
 
-    async fn latex_constant(c: &Constant) -> &'static str {
+    fn latex_constant(c: &Constant) -> &'static str {
         match c {
             Constant::Pi => "\\pi",
             Constant::E => "e",
@@ -2136,7 +2136,7 @@ pub mod fmt {
         }
     }
 
-    async fn latex_rel(operator: RelationalOperator) -> &'static str {
+    fn latex_rel(operator: RelationalOperator) -> &'static str {
         match operator {
             RelationalOperator::Eq => " = ",
             RelationalOperator::Ne => " \\neq ",
@@ -2202,19 +2202,19 @@ pub mod pattern {
     use std::rc::Rc;
 
     // #region 🔖️Wildcards
-    pub async fn wild(id: u16) -> Expr {
+    pub fn wild(id: u16) -> Expr {
         Expr::from_kind_unchecked(Kind::Wild(id, WildKind::Any))
     }
-    pub async fn wild_num(id: u16) -> Expr {
+    pub fn wild_num(id: u16) -> Expr {
         Expr::from_kind_unchecked(Kind::Wild(id, WildKind::Number))
     }
-    pub async fn wild_nonzero(id: u16) -> Expr {
+    pub fn wild_nonzero(id: u16) -> Expr {
         Expr::from_kind_unchecked(Kind::Wild(id, WildKind::NotZero))
     }
-    pub async fn wild_free(id: u16, symbol: &str) -> Expr {
+    pub fn wild_free(id: u16, symbol: &str) -> Expr {
         Expr::from_kind_unchecked(Kind::Wild(id, WildKind::FreeOf(Rc::from(symbol))))
     }
-    pub async fn wild_seq(id: u16) -> Expr {
+    pub fn wild_seq(id: u16) -> Expr {
         Expr::from_kind_unchecked(Kind::Wild(id, WildKind::Seq))
     }
     // #endregion 🔖️Wildcards
@@ -2228,7 +2228,7 @@ pub mod pattern {
 
     pub type Bindings = BTreeMap<u16, Binding>;
 
-    async fn bind_one(id: u16, value: Expr, mut bindings: Bindings) -> Option<Bindings> {
+    fn bind_one(id: u16, value: Expr, mut bindings: Bindings) -> Option<Bindings> {
         match bindings.get(&id) {
             Some(Binding::One(existing)) => {
                 if *existing == value {
@@ -2245,7 +2245,7 @@ pub mod pattern {
         }
     }
 
-    async fn bind_many(id: u16, items: Vec<Expr>, mut bindings: Bindings) -> Option<Bindings> {
+    fn bind_many(id: u16, items: Vec<Expr>, mut bindings: Bindings) -> Option<Bindings> {
         match bindings.get(&id) {
             Some(Binding::Many(existing)) => {
                 if *existing == items {
@@ -2267,12 +2267,12 @@ pub mod pattern {
     const DEFAULT_BUDGET: i64 = 10_000;
     const MAX_SUBJECT_WIDTH: usize = 24;
 
-    pub async fn match_expr(pattern: &Expr, subject: &Expr) -> Option<Bindings> {
+    pub fn match_expr(pattern: &Expr, subject: &Expr) -> Option<Bindings> {
         let mut budget = DEFAULT_BUDGET;
         match_impl(pattern, subject, Bindings::new(), &mut budget)
     }
 
-    async fn satisfies_constraint(wk: &WildKind, subject: &Expr) -> bool {
+    fn satisfies_constraint(wk: &WildKind, subject: &Expr) -> bool {
         match wk {
             WildKind::Any | WildKind::Seq => true,
             WildKind::Number => matches!(subject.kind(), Kind::Integer(_) | Kind::Rational(_)),
@@ -2281,7 +2281,7 @@ pub mod pattern {
         }
     }
 
-    async fn contains_symbol_name(e: &Expr, name: &str) -> bool {
+    fn contains_symbol_name(e: &Expr, name: &str) -> bool {
         match e.kind() {
             Kind::Symbol(s) => s.name() == name,
             Kind::Add(terms) | Kind::Mul(terms) => terms.iter().any(|t| contains_symbol_name(t, name)),
@@ -2293,7 +2293,7 @@ pub mod pattern {
         }
     }
 
-    async fn match_impl(pattern: &Expr, subject: &Expr, bindings: Bindings, budget: &mut i64) -> Option<Bindings> {
+    fn match_impl(pattern: &Expr, subject: &Expr, bindings: Bindings, budget: &mut i64) -> Option<Bindings> {
         *budget -= 1;
         if *budget <= 0 {
             return None;
@@ -2349,7 +2349,7 @@ pub mod pattern {
     /// 🧩️ Matches an unordered term list against another: assigns each non-`Seq` pattern term to a distinct
     /// subject term via backtracking (any assignment order is tried), then binds a single trailing `Seq`
     /// wildcard (at most one is supported) to whatever subject terms remain unassigned.
-    async fn match_multiset(p_terms: &[Expr], s_terms: &[Expr], bindings: Bindings, budget: &mut i64) -> Option<Bindings> {
+    fn match_multiset(p_terms: &[Expr], s_terms: &[Expr], bindings: Bindings, budget: &mut i64) -> Option<Bindings> {
         if s_terms.len() > MAX_SUBJECT_WIDTH {
             return None;
         }
@@ -2381,7 +2381,7 @@ pub mod pattern {
         }
     }
 
-    async fn assign(pats: &[&Expr], idx: usize, s_terms: &[Expr], used: &mut Vec<bool>, bindings: Bindings, budget: &mut i64) -> Option<Bindings> {
+    fn assign(pats: &[&Expr], idx: usize, s_terms: &[Expr], used: &mut Vec<bool>, bindings: Bindings, budget: &mut i64) -> Option<Bindings> {
         if idx == pats.len() {
             return Some(bindings);
         }
@@ -2408,7 +2408,7 @@ pub mod pattern {
     // #region 🔖️Instantiate
     /// 🏗️ Rebuilds `template` with every `Wild` node replaced by its binding — `Seq` bindings splice their
     /// items directly into the enclosing `Add`/`Mul` term list rather than substituting a single value.
-    pub async fn instantiate(template: &Expr, bindings: &Bindings) -> Expr {
+    pub fn instantiate(template: &Expr, bindings: &Bindings) -> Expr {
         match template.kind() {
             Kind::Wild(id, _) => match bindings.get(id) {
                 Some(Binding::One(v)) => v.clone(),
@@ -2425,7 +2425,7 @@ pub mod pattern {
         }
     }
 
-    async fn instantiate_seq(terms: &[Expr], bindings: &Bindings) -> Vec<Expr> {
+    fn instantiate_seq(terms: &[Expr], bindings: &Bindings) -> Vec<Expr> {
         let mut out = Vec::with_capacity(terms.len());
         for t in terms {
             if let Kind::Wild(id, WildKind::Seq) = t.kind() {
@@ -2456,19 +2456,19 @@ pub mod pattern {
     }
 
     impl Rule {
-        pub async fn new(lhs: Expr, rhs: Expr) -> Self {
+        pub fn new(lhs: Expr, rhs: Expr) -> Self {
             Self { lhs, rhs: RuleRhs::Template(rhs), cond: None }
         }
 
-        pub async fn with_condition(lhs: Expr, rhs: Expr, cond: RuleCondition) -> Self {
+        pub fn with_condition(lhs: Expr, rhs: Expr, cond: RuleCondition) -> Self {
             Self { lhs, rhs: RuleRhs::Template(rhs), cond: Some(cond) }
         }
 
-        pub async fn from_builder(lhs: Expr, builder: Rc<dyn Fn(&Bindings) -> Expr>) -> Self {
+        pub fn from_builder(lhs: Expr, builder: Rc<dyn Fn(&Bindings) -> Expr>) -> Self {
             Self { lhs, rhs: RuleRhs::Builder(builder), cond: None }
         }
 
-        pub async fn try_apply(&self, e: &Expr) -> Option<Expr> {
+        pub fn try_apply(&self, e: &Expr) -> Option<Expr> {
             let bindings = match_expr(&self.lhs, e)?;
             if let Some(cond) = &self.cond {
                 if !cond(&bindings) {
@@ -2494,15 +2494,15 @@ pub mod pattern {
     }
 
     impl RuleSet {
-        pub async fn new(rules: Vec<Rule>) -> Self {
+        pub fn new(rules: Vec<Rule>) -> Self {
             Self { rules }
         }
 
-        pub async fn try_apply_one(&self, e: &Expr) -> Option<Expr> {
+        pub fn try_apply_one(&self, e: &Expr) -> Option<Expr> {
             self.rules.iter().find_map(|r| r.try_apply(e))
         }
 
-        pub async fn apply(&self, e: &Expr, strategy: Strategy) -> Expr {
+        pub fn apply(&self, e: &Expr, strategy: Strategy) -> Expr {
             match strategy {
                 Strategy::BottomUpOnce => crate::cas::visit::replace_bottom_up(e, &mut |sub| self.try_apply_one(sub)),
                 Strategy::TopDownOnce => self.apply_top_down_once(e),
@@ -2520,7 +2520,7 @@ pub mod pattern {
             }
         }
 
-        async fn apply_top_down_once(&self, e: &Expr) -> Expr {
+        fn apply_top_down_once(&self, e: &Expr) -> Expr {
             let rewritten = self.try_apply_one(e).unwrap_or_else(|| e.clone());
             crate::cas::visit::map_children(&rewritten, &mut |c| self.apply_top_down_once(c))
         }
@@ -2652,11 +2652,11 @@ pub mod polybridge {
         pub gens: Vec<Expr>,
     }
 
-    async fn gen_index(e: &Expr, map: &PolyMap) -> Option<usize> {
+    fn gen_index(e: &Expr, map: &PolyMap) -> Option<usize> {
         map.gens.iter().position(|g| g == e)
     }
 
-    async fn push_unique(gens: &mut Vec<Expr>, e: Expr) {
+    fn push_unique(gens: &mut Vec<Expr>, e: Expr) {
         if !gens.contains(&e) {
             gens.push(e);
         }
@@ -2668,13 +2668,13 @@ pub mod polybridge {
     /// applications, non-numeric constants, and any `Pow` node whose exponent isn't a plain non-negative
     /// integer (fractional/negative/symbolic exponents can't be expressed as a polynomial power in the
     /// base, so the whole `Pow` becomes its own opaque generator).
-    pub async fn detect_gens(e: &Expr) -> Vec<Expr> {
+    pub fn detect_gens(e: &Expr) -> Vec<Expr> {
         let mut gens = Vec::new();
         collect_gens(e, &mut gens);
         gens
     }
 
-    async fn collect_gens(e: &Expr, gens: &mut Vec<Expr>) {
+    fn collect_gens(e: &Expr, gens: &mut Vec<Expr>) {
         match e.kind() {
             Kind::Integer(_) | Kind::Rational(_) => {}
             Kind::Add(terms) | Kind::Mul(terms) => {
@@ -2700,18 +2700,18 @@ pub mod polybridge {
     /// 🔁️ Converts `e` to a `PolyM<Rational>` over the given (fixed, ordered) generator list; `None` if
     /// `e` contains a subtree that isn't a polynomial combination of numbers and those generators (e.g. a
     /// generator not in the list, or a negative/fractional power of one).
-    pub async fn as_poly(e: &Expr, gens: &[Expr]) -> Option<(PolyM<Rational>, PolyMap)> {
+    pub fn as_poly(e: &Expr, gens: &[Expr]) -> Option<(PolyM<Rational>, PolyMap)> {
         let map = PolyMap { gens: gens.to_vec() };
         let poly = expr_to_polym(e, &map)?;
         Some((poly, map))
     }
 
-    pub async fn as_poly_auto(e: &Expr) -> Option<(PolyM<Rational>, PolyMap)> {
+    pub fn as_poly_auto(e: &Expr) -> Option<(PolyM<Rational>, PolyMap)> {
         let gens = detect_gens(e);
         as_poly(e, &gens)
     }
 
-    async fn expr_to_polym(e: &Expr, map: &PolyMap) -> Option<PolyM<Rational>> {
+    fn expr_to_polym(e: &Expr, map: &PolyMap) -> Option<PolyM<Rational>> {
         let nvars = map.gens.len().max(1);
         match e.kind() {
             Kind::Integer(n) => Some(PolyM::constant(Rational::from_integer(n.clone()), nvars, MonomialOrder::Lex)),
@@ -2745,7 +2745,7 @@ pub mod polybridge {
     }
 
     /// ↩️ Rebuilds a canonical `Expr` from a `PolyM<Rational>` and the generator map it was built against.
-    pub async fn from_poly(p: &PolyM<Rational>, map: &PolyMap) -> Expr {
+    pub fn from_poly(p: &PolyM<Rational>, map: &PolyMap) -> Expr {
         let mut terms = Vec::with_capacity(p.terms().len());
         for (m, c) in p.terms() {
             let mut factors = vec![Expr::from(c.clone())];
@@ -2765,7 +2765,7 @@ pub mod polybridge {
 
     /// 🔁️ Converts `e` to a dense univariate `PolyU<Rational>` in `x` alone; `None` if `e` involves any
     /// other generator or a non-polynomial power of `x`.
-    pub async fn as_poly_uni(e: &Expr, x: &Expr) -> Option<PolyU<Rational>> {
+    pub fn as_poly_uni(e: &Expr, x: &Expr) -> Option<PolyU<Rational>> {
         let (poly, _map) = as_poly(e, std::slice::from_ref(x))?;
         let max_deg = poly.terms().iter().map(|(m, _)| m.exps()[0] as usize).max().unwrap_or(0);
         let mut coeffs = vec![Rational::zero(); max_deg + 1];
@@ -2775,7 +2775,7 @@ pub mod polybridge {
         Some(PolyU::from_coeffs(coeffs))
     }
 
-    pub async fn polyu_to_expr(p: &PolyU<Rational>, x: &Expr) -> Expr {
+    pub fn polyu_to_expr(p: &PolyU<Rational>, x: &Expr) -> Expr {
         let map = PolyMap { gens: vec![x.clone()] };
         let terms: Vec<(crate::polynomial::Monomial, Rational)> = p.coeffs().iter().enumerate().map(|(i, c)| (crate::polynomial::Monomial::new(vec![i as u32]), c.clone())).collect();
         from_poly(&PolyM::from_terms(terms, 1, MonomialOrder::Lex), &map)
@@ -2785,13 +2785,13 @@ pub mod polybridge {
     // #region 🔖️RationalFunctionBridge
     /// 🔍️ Like [`detect_gens`], but recurses through integer powers of *either* sign (rational-function
     /// generators are the base, not the whole `Pow`, since `x` and `1/x` should share one generator).
-    async fn detect_gens_ratfunc(e: &Expr) -> Vec<Expr> {
+    fn detect_gens_ratfunc(e: &Expr) -> Vec<Expr> {
         let mut gens = Vec::new();
         collect_gens_ratfunc(e, &mut gens);
         gens
     }
 
-    async fn collect_gens_ratfunc(e: &Expr, gens: &mut Vec<Expr>) {
+    fn collect_gens_ratfunc(e: &Expr, gens: &mut Vec<Expr>) {
         match e.kind() {
             Kind::Integer(_) | Kind::Rational(_) => {}
             Kind::Add(terms) | Kind::Mul(terms) => {
@@ -2812,18 +2812,18 @@ pub mod polybridge {
 
     /// 🔁️ Converts `e` into a single `num/den` rational-function form over its auto-detected generators —
     /// the "together" operation at the polynomial level (no GCD cancellation; see `simplify::cancel` for that).
-    pub async fn as_ratfunc_auto(e: &Expr) -> Option<(PolyM<Rational>, PolyM<Rational>, PolyMap)> {
+    pub fn as_ratfunc_auto(e: &Expr) -> Option<(PolyM<Rational>, PolyM<Rational>, PolyMap)> {
         let gens = detect_gens_ratfunc(e);
         let map = PolyMap { gens };
         let (num, den) = expr_to_ratfunc(e, &map)?;
         Some((num, den, map))
     }
 
-    async fn ratfunc_one(nvars: usize) -> PolyM<Rational> {
+    fn ratfunc_one(nvars: usize) -> PolyM<Rational> {
         PolyM::constant(Rational::one(), nvars, MonomialOrder::Lex)
     }
 
-    async fn expr_to_ratfunc(e: &Expr, map: &PolyMap) -> Option<(PolyM<Rational>, PolyM<Rational>)> {
+    fn expr_to_ratfunc(e: &Expr, map: &PolyMap) -> Option<(PolyM<Rational>, PolyM<Rational>)> {
         let nvars = map.gens.len().max(1);
         match e.kind() {
             Kind::Integer(n) => Some((PolyM::constant(Rational::from_integer(n.clone()), nvars, MonomialOrder::Lex), ratfunc_one(nvars))),
@@ -2861,13 +2861,13 @@ pub mod polybridge {
         }
     }
 
-    pub async fn poly_uses_var(p: &PolyM<Rational>, var: usize) -> bool {
+    pub fn poly_uses_var(p: &PolyM<Rational>, var: usize) -> bool {
         p.terms().iter().any(|(m, _)| m.exps()[var] > 0)
     }
 
     /// 🔁️ Extracts `p` as a univariate polynomial in the single variable `var`, if none of `p`'s other
     /// variables actually appear (`None` otherwise).
-    pub async fn polym_to_polyu(p: &PolyM<Rational>, var: usize) -> Option<PolyU<Rational>> {
+    pub fn polym_to_polyu(p: &PolyM<Rational>, var: usize) -> Option<PolyU<Rational>> {
         let mut max_deg = 0usize;
         for (m, _) in p.terms() {
             for (i, &e) in m.exps().iter().enumerate() {
@@ -2884,7 +2884,7 @@ pub mod polybridge {
         Some(PolyU::from_coeffs(coeffs))
     }
 
-    pub async fn polyu_to_polym(p: &PolyU<Rational>, var: usize, nvars: usize) -> PolyM<Rational> {
+    pub fn polyu_to_polym(p: &PolyU<Rational>, var: usize, nvars: usize) -> PolyM<Rational> {
         let terms: Vec<(crate::polynomial::Monomial, Rational)> = p
             .coeffs()
             .iter()
@@ -2900,7 +2900,7 @@ pub mod polybridge {
 
     /// 🔀️ Rebuilds `num/den` as a canonical `Expr`, folding a constant denominator directly into `num`'s
     /// coefficients rather than emitting a trivial `* 1` division.
-    pub async fn build_ratio(num: &PolyM<Rational>, den: &PolyM<Rational>, map: &PolyMap) -> Expr {
+    pub fn build_ratio(num: &PolyM<Rational>, den: &PolyM<Rational>, map: &PolyMap) -> Expr {
         if den.is_zero() {
             return Expr::constant(crate::cas::expr::Constant::ComplexInf);
         }
@@ -2919,7 +2919,7 @@ pub mod polybridge {
     /// converting each irreducible factor back to a monic `Rational` polynomial — folding its former
     /// leading coefficient (and the clearing scale) into the returned overall constant, so
     /// `overall * prod(factor_i ^ mult_i) == self` exactly.
-    pub async fn factor_poly_u(p: &PolyU<Rational>) -> (Rational, Vec<(PolyU<Rational>, u32)>) {
+    pub fn factor_poly_u(p: &PolyU<Rational>) -> (Rational, Vec<(PolyU<Rational>, u32)>) {
         if p.is_zero() {
             return (Rational::zero(), Vec::new());
         }
@@ -3033,14 +3033,14 @@ pub mod simplify {
     use number::Rational;
 
     // #region 🔖️Expand
-    pub async fn expand(e: &Expr) -> Expr {
+    pub fn expand(e: &Expr) -> Expr {
         if let Some((poly, map)) = polybridge::as_poly_auto(e) {
             return polybridge::from_poly(&poly, &map);
         }
         expand_tree(e)
     }
 
-    async fn expand_tree(e: &Expr) -> Expr {
+    fn expand_tree(e: &Expr) -> Expr {
         match e.kind() {
             Kind::Add(terms) => Expr::add(terms.iter().map(expand_tree).collect()),
             Kind::Mul(factors) => {
@@ -3067,7 +3067,7 @@ pub mod simplify {
         }
     }
 
-    async fn distribute_mul(factors: &[Expr]) -> Expr {
+    fn distribute_mul(factors: &[Expr]) -> Expr {
         let mut acc = Expr::integer(1);
         for f in factors {
             acc = distribute_pair(&acc, f);
@@ -3075,7 +3075,7 @@ pub mod simplify {
         acc
     }
 
-    async fn distribute_pair(a: &Expr, b: &Expr) -> Expr {
+    fn distribute_pair(a: &Expr, b: &Expr) -> Expr {
         let a_terms: Vec<Expr> = match a.kind() {
             Kind::Add(ts) => ts.clone(),
             _ => vec![a.clone()],
@@ -3097,7 +3097,7 @@ pub mod simplify {
     // #region 🔖️Collect
     /// 🗂️ Groups the (expanded) terms of `e` by their integer power of `x`; terms that aren't a clean
     /// integer power of `x` (e.g. involving another generator entirely) are left untouched and appended.
-    pub async fn collect(e: &Expr, x: &Expr) -> Expr {
+    pub fn collect(e: &Expr, x: &Expr) -> Expr {
         let expanded = expand(e);
         let terms: Vec<Expr> = match expanded.kind() {
             Kind::Add(ts) => ts.clone(),
@@ -3121,7 +3121,7 @@ pub mod simplify {
         Expr::add(result_terms)
     }
 
-    async fn term_power_of(term: &Expr, x: &Expr) -> Option<(i64, Expr)> {
+    fn term_power_of(term: &Expr, x: &Expr) -> Option<(i64, Expr)> {
         if term == x {
             return Some((1, Expr::integer(1)));
         }
@@ -3162,7 +3162,7 @@ pub mod simplify {
     // #endregion 🔖️Collect
 
     // #region 🔖️TogetherCancel
-    pub async fn together(e: &Expr) -> Expr {
+    pub fn together(e: &Expr) -> Expr {
         let Some((num, den, map)) = polybridge::as_ratfunc_auto(e) else { return e.clone() };
         polybridge::build_ratio(&num, &den, &map)
     }
@@ -3170,7 +3170,7 @@ pub mod simplify {
     /// ➗️ `together`, plus a GCD cancellation pass when the numerator/denominator involve at most one
     /// generator (the univariate case, where `PolyU::gcd_monic` applies); a genuinely multivariate
     /// cancellation is left uncancelled (documented limitation — still correct, just not maximally reduced).
-    pub async fn cancel(e: &Expr) -> Expr {
+    pub fn cancel(e: &Expr) -> Expr {
         let Some((num, den, map)) = polybridge::as_ratfunc_auto(e) else { return e.clone() };
         if den.is_zero() {
             return e.clone();
@@ -3193,7 +3193,7 @@ pub mod simplify {
         polybridge::build_ratio(&num, &den, &map)
     }
 
-    async fn exact_div_u(a: &PolyU<Rational>, b: &PolyU<Rational>) -> Option<PolyU<Rational>> {
+    fn exact_div_u(a: &PolyU<Rational>, b: &PolyU<Rational>) -> Option<PolyU<Rational>> {
         let (q, r) = a.div_rem(b);
         if r.is_zero() {
             Some(q)
@@ -3207,7 +3207,7 @@ pub mod simplify {
     /// 🔍️ Factors `e` over `Q` when it's univariate (a single generator); genuinely multivariate
     /// expressions are returned unchanged — multivariate factoring is a documented follow-up, not attempted
     /// via a wrong or partial answer.
-    pub async fn factor(e: &Expr) -> Expr {
+    pub fn factor(e: &Expr) -> Expr {
         let gens = polybridge::detect_gens(e);
         if gens.len() != 1 {
             return e.clone();
@@ -3230,7 +3230,7 @@ pub mod simplify {
     /// 🧩️ Univariate partial-fraction decomposition over `Q`: factors the denominator, then solves the
     /// linear system (via `number`'s exact `MatG::solve`) for each factor's numerator
     /// coefficients — handles repeated factors, not just squarefree denominators.
-    pub async fn apart(e: &Expr, x: &Expr) -> Expr {
+    pub fn apart(e: &Expr, x: &Expr) -> Expr {
         let Some((num_m, den_m, map)) = polybridge::as_ratfunc_auto(e) else { return e.clone() };
         if map.gens.len() != 1 || map.gens[0] != *x {
             return e.clone();
@@ -3243,7 +3243,7 @@ pub mod simplify {
         apart_univariate(&num, &den, x)
     }
 
-    async fn together_fallback(poly_part: &PolyU<Rational>, remainder: &PolyU<Rational>, den: &PolyU<Rational>, x: &Expr) -> Expr {
+    fn together_fallback(poly_part: &PolyU<Rational>, remainder: &PolyU<Rational>, den: &PolyU<Rational>, x: &Expr) -> Expr {
         let poly_expr = polybridge::polyu_to_expr(poly_part, x);
         if remainder.is_zero() {
             return poly_expr;
@@ -3251,7 +3251,7 @@ pub mod simplify {
         Expr::add(vec![poly_expr, Expr::mul(vec![polybridge::polyu_to_expr(remainder, x), Expr::pow(polybridge::polyu_to_expr(den, x), Expr::integer(-1))])])
     }
 
-    async fn apart_univariate(num: &PolyU<Rational>, den: &PolyU<Rational>, x: &Expr) -> Expr {
+    fn apart_univariate(num: &PolyU<Rational>, den: &PolyU<Rational>, x: &Expr) -> Expr {
         let (poly_part, remainder) = num.div_rem(den);
         if remainder.is_zero() {
             return polybridge::polyu_to_expr(&poly_part, x);
@@ -3330,11 +3330,11 @@ pub mod simplify {
     /// 🌱️ Denests the classical `sqrt(p + q*sqrt(c))` pattern into `sqrt(t1) + sign(q)*sqrt(t2)` when
     /// `t = p^2 - q^2*c` is a perfect-square integer and `(p+-sqrt(t))` are both even (so `t1, t2` land on
     /// exact integers) — the single denesting identity in scope for the first pass.
-    pub async fn denest_sqrt(e: &Expr) -> Expr {
+    pub fn denest_sqrt(e: &Expr) -> Expr {
         crate::cas::visit::replace_bottom_up(e, &mut |sub| try_denest_sqrt(sub))
     }
 
-    async fn try_denest_sqrt(e: &Expr) -> Option<Expr> {
+    fn try_denest_sqrt(e: &Expr) -> Option<Expr> {
         let Kind::Pow(inner, exp) = e.kind() else { return None };
         if !is_half(exp) {
             return None;
@@ -3367,18 +3367,18 @@ pub mod simplify {
         Some(Expr::add(vec![sqrt1, Expr::mul(vec![Expr::integer(sign), sqrt2])]))
     }
 
-    async fn is_half(e: &Expr) -> bool {
+    fn is_half(e: &Expr) -> bool {
         matches!(e.kind(), Kind::Rational(r) if *r == Rational::from_i64(1, 2).unwrap())
     }
 
-    async fn isqrt_i64(v: i64) -> Option<i64> {
+    fn isqrt_i64(v: i64) -> Option<i64> {
         if v < 0 {
             return None;
         }
         Some((v as f64).sqrt().round() as i64)
     }
 
-    async fn extract_b_sqrt_c(term: &Expr) -> Option<(i64, i64)> {
+    fn extract_b_sqrt_c(term: &Expr) -> Option<(i64, i64)> {
         match term.kind() {
             Kind::Mul(factors) if factors.len() == 2 => {
                 let coeff = match factors[0].kind() {
@@ -3406,7 +3406,7 @@ pub mod simplify {
     // #region 🔖️Simplify
     /// 🧭️ The measured simplification pipeline: try a handful of candidate rewrites and keep whichever has
     /// the fewest nodes (canonical order breaks ties) — deterministic, no heuristic search.
-    pub async fn simplify(e: &Expr) -> Expr {
+    pub fn simplify(e: &Expr) -> Expr {
         let candidates = [e.clone(), cancel(e), crate::cas::trig::trig_canon(e), factor(e), denest_sqrt(e)];
         candidates.into_iter().min_by(|a, b| crate::cas::visit::node_count(a).cmp(&crate::cas::visit::node_count(b)).then_with(|| a.cmp(b))).expect("candidate list is non-empty by construction")
     }
@@ -3522,7 +3522,7 @@ pub mod trig {
     use crate::cas::pattern::{wild, wild_seq, Rule, RuleSet, Strategy};
 
     // #region 🔖️TrigCanon
-    async fn ratio_rules() -> RuleSet {
+    fn ratio_rules() -> RuleSet {
         RuleSet::new(vec![
             Rule::new(Expr::func(FnKind::Tan, vec![wild(0)]), Expr::mul(vec![Expr::func(FnKind::Sin, vec![wild(0)]), Expr::pow(Expr::func(FnKind::Cos, vec![wild(0)]), Expr::integer(-1))])),
             Rule::new(Expr::func(FnKind::Cot, vec![wild(0)]), Expr::mul(vec![Expr::func(FnKind::Cos, vec![wild(0)]), Expr::pow(Expr::func(FnKind::Sin, vec![wild(0)]), Expr::integer(-1))])),
@@ -3531,7 +3531,7 @@ pub mod trig {
         ])
     }
 
-    async fn pythagorean_rules() -> RuleSet {
+    fn pythagorean_rules() -> RuleSet {
         let sin2_cos2 = Expr::add(vec![Expr::pow(Expr::func(FnKind::Sin, vec![wild(0)]), Expr::integer(2)), Expr::pow(Expr::func(FnKind::Cos, vec![wild(0)]), Expr::integer(2)), wild_seq(1)]);
         let rewritten = Expr::add(vec![Expr::integer(1), wild_seq(1)]);
         RuleSet::new(vec![Rule::new(sin2_cos2, rewritten)])
@@ -3539,7 +3539,7 @@ pub mod trig {
 
     /// 📐️ Rewrites `tan/cot/sec/csc` to `sin`/`cos`, then applies the Pythagorean identity (including the
     /// `sin^2(w) + cos^2(w) + ...rest` generalization via a `Seq` wildcard) to a capped fixpoint.
-    pub async fn trig_canon(e: &Expr) -> Expr {
+    pub fn trig_canon(e: &Expr) -> Expr {
         let ratios = ratio_rules();
         let after_ratios = ratios.apply(e, Strategy::Fixpoint { max_iters: 8 });
         let pythag = pythagorean_rules();
@@ -3548,7 +3548,7 @@ pub mod trig {
     // #endregion 🔖️TrigCanon
 
     // #region 🔖️ExpandTrig
-    pub async fn expand_trig(e: &Expr) -> Expr {
+    pub fn expand_trig(e: &Expr) -> Expr {
         let rebuilt = crate::cas::visit::map_children(e, &mut expand_trig);
         match rebuilt.kind() {
             Kind::Fn(FnKind::Sin, args) if args.len() == 1 => expand_trig_sin(&args[0]),
@@ -3558,7 +3558,7 @@ pub mod trig {
         }
     }
 
-    async fn split_add(arg: &Expr) -> Option<(Expr, Expr)> {
+    fn split_add(arg: &Expr) -> Option<(Expr, Expr)> {
         let Kind::Add(terms) = arg.kind() else { return None };
         if terms.len() < 2 {
             return None;
@@ -3567,7 +3567,7 @@ pub mod trig {
         Some((first.clone(), Expr::add(rest.to_vec())))
     }
 
-    async fn expand_trig_sin(arg: &Expr) -> Expr {
+    fn expand_trig_sin(arg: &Expr) -> Expr {
         match split_add(arg) {
             Some((first, rest)) => {
                 let sin_first = Expr::func(FnKind::Sin, vec![first.clone()]);
@@ -3578,7 +3578,7 @@ pub mod trig {
         }
     }
 
-    async fn expand_trig_cos(arg: &Expr) -> Expr {
+    fn expand_trig_cos(arg: &Expr) -> Expr {
         match split_add(arg) {
             Some((first, rest)) => {
                 let cos_first = Expr::func(FnKind::Cos, vec![first.clone()]);
@@ -3591,7 +3591,7 @@ pub mod trig {
     // #endregion 🔖️ExpandTrig
 
     // #region 🔖️ExpandLog
-    pub async fn expand_log(e: &Expr) -> Expr {
+    pub fn expand_log(e: &Expr) -> Expr {
         let rebuilt = crate::cas::visit::map_children(e, &mut expand_log);
         if let Kind::Fn(FnKind::Ln, args) = rebuilt.kind() {
             if args.len() == 1 {
@@ -3601,7 +3601,7 @@ pub mod trig {
         rebuilt
     }
 
-    async fn expand_log_arg(arg: &Expr) -> Expr {
+    fn expand_log_arg(arg: &Expr) -> Expr {
         match arg.kind() {
             Kind::Mul(factors) => Expr::add(factors.iter().map(expand_log_arg).collect()),
             Kind::Pow(base, exp) => Expr::mul(vec![exp.clone(), expand_log_arg(base)]),
@@ -3612,7 +3612,7 @@ pub mod trig {
     /// 📐️ Reverse of `expand_log`: combines a sum of `ln(a) + ln(b) + ...` into `ln(a*b*...)`, gated on
     /// `is_positive` for every combined argument (never combines when that can't be verified, to avoid
     /// silently crossing a branch cut).
-    pub async fn logcombine(e: &Expr) -> Expr {
+    pub fn logcombine(e: &Expr) -> Expr {
         let rebuilt = crate::cas::visit::map_children(e, &mut logcombine);
         let Kind::Add(terms) = rebuilt.kind() else { return rebuilt };
         let mut log_args: Vec<Expr> = Vec::new();
@@ -3636,7 +3636,7 @@ pub mod trig {
 
     // #region 🔖️Powsimp
     /// 📐️ Combines same-exponent power factors within a product: `x^a * y^a -> (x*y)^a`.
-    pub async fn powsimp(e: &Expr) -> Expr {
+    pub fn powsimp(e: &Expr) -> Expr {
         let rebuilt = crate::cas::visit::map_children(e, &mut powsimp);
         let Kind::Mul(factors) = rebuilt.kind() else { return rebuilt };
         let mut by_exp: std::collections::BTreeMap<Expr, Vec<Expr>> = std::collections::BTreeMap::new();
@@ -3755,7 +3755,7 @@ pub mod diff {
 
     // #region 🔖️Diff
     /// 📉️ `d(e)/d(x)`, treating every other symbol as a constant (partial derivative).
-    pub async fn diff(e: &Expr, x: &Expr) -> Option<Expr> {
+    pub fn diff(e: &Expr, x: &Expr) -> Option<Expr> {
         match e.kind() {
             Kind::Integer(_) | Kind::Rational(_) | Kind::Constant(_) | Kind::Bool(_) | Kind::RootOf { .. } => Some(Expr::integer(0)),
             Kind::Symbol(_) => Some(if e == x { Expr::integer(1) } else { Expr::integer(0) }),
@@ -3796,7 +3796,7 @@ pub mod diff {
 
     /// 📉️ Multivariate: the vector of partial derivatives w.r.t. each of `vars`, in order; `None` as soon
     /// as any single partial derivative is unknown.
-    pub async fn gradient(e: &Expr, vars: &[Expr]) -> Option<Vec<Expr>> {
+    pub fn gradient(e: &Expr, vars: &[Expr]) -> Option<Vec<Expr>> {
         vars.iter().map(|v| diff(e, v)).collect()
     }
 
@@ -3804,7 +3804,7 @@ pub mod diff {
     /// `-diff(lhs-rhs, x) / diff(lhs-rhs, y)` (total derivative via the implicit function theorem), treating
     /// `y` as an independent symbol in the equation and substituting nothing — the caller is expected to
     /// already have `y` appearing explicitly wherever it's implicitly a function of `x`.
-    pub async fn idiff(lhs: &Expr, rhs: &Expr, y: &Expr, x: &Expr) -> Option<Expr> {
+    pub fn idiff(lhs: &Expr, rhs: &Expr, y: &Expr, x: &Expr) -> Option<Expr> {
         let f = lhs.clone() - rhs.clone();
         let dfdx = diff(&f, x)?;
         let dfdy = diff(&f, y)?;
@@ -3816,7 +3816,7 @@ pub mod diff {
     // #endregion 🔖️Diff
 
     // #region 🔖️PowRule
-    async fn diff_pow(base: &Expr, exp: &Expr, x: &Expr) -> Option<Expr> {
+    fn diff_pow(base: &Expr, exp: &Expr, x: &Expr) -> Option<Expr> {
         let exp_depends = crate::cas::visit::contains_symbol(exp, x);
         let base_depends = crate::cas::visit::contains_symbol(base, x);
         if !exp_depends {
@@ -3843,7 +3843,7 @@ pub mod diff {
     // #endregion 🔖️PowRule
 
     // #region 🔖️FnChainRule
-    async fn diff_fn(kind: &FnKind, args: &[Expr], x: &Expr) -> Option<Expr> {
+    fn diff_fn(kind: &FnKind, args: &[Expr], x: &Expr) -> Option<Expr> {
         match kind {
             FnKind::UserFn(_) | FnKind::Zeta => None,
             FnKind::BesselJ | FnKind::BesselY | FnKind::BesselI | FnKind::BesselK => diff_bessel(kind, args, x),
@@ -3864,7 +3864,7 @@ pub mod diff {
         }
     }
 
-    async fn unary_derivative(kind: &FnKind, arg: &Expr) -> Option<Expr> {
+    fn unary_derivative(kind: &FnKind, arg: &Expr) -> Option<Expr> {
         use FnKind::*;
         let half = Expr::from(Rational::from_i64(1, 2).unwrap());
         let neg_half = Expr::from(Rational::from_i64(-1, 2).unwrap());
@@ -3905,7 +3905,7 @@ pub mod diff {
     // #endregion 🔖️FnChainRule
 
     // #region 🔖️SpecialFunctionRecurrences
-    async fn diff_bessel(kind: &FnKind, args: &[Expr], x: &Expr) -> Option<Expr> {
+    fn diff_bessel(kind: &FnKind, args: &[Expr], x: &Expr) -> Option<Expr> {
         let [n, arg] = args else { return None };
         if crate::cas::visit::contains_symbol(n, x) {
             return None;
@@ -3927,7 +3927,7 @@ pub mod diff {
         Some(Expr::mul(vec![outer, inner_d]))
     }
 
-    async fn diff_legendre(args: &[Expr], x: &Expr) -> Option<Expr> {
+    fn diff_legendre(args: &[Expr], x: &Expr) -> Option<Expr> {
         let [n, arg] = args else { return None };
         if crate::cas::visit::contains_symbol(n, x) {
             return None;
@@ -3943,7 +3943,7 @@ pub mod diff {
         Some(Expr::mul(vec![outer, inner_d]))
     }
 
-    async fn diff_chebyshev_t(args: &[Expr], x: &Expr) -> Option<Expr> {
+    fn diff_chebyshev_t(args: &[Expr], x: &Expr) -> Option<Expr> {
         let [n, arg] = args else { return None };
         if crate::cas::visit::contains_symbol(n, x) {
             return None;
@@ -3957,7 +3957,7 @@ pub mod diff {
         Some(Expr::mul(vec![outer, inner_d]))
     }
 
-    async fn diff_chebyshev_u(args: &[Expr], x: &Expr) -> Option<Expr> {
+    fn diff_chebyshev_u(args: &[Expr], x: &Expr) -> Option<Expr> {
         let [n, arg] = args else { return None };
         if crate::cas::visit::contains_symbol(n, x) {
             return None;
@@ -3973,7 +3973,7 @@ pub mod diff {
         Some(Expr::mul(vec![outer, inner_d]))
     }
 
-    async fn diff_hermite(args: &[Expr], x: &Expr) -> Option<Expr> {
+    fn diff_hermite(args: &[Expr], x: &Expr) -> Option<Expr> {
         let [n, arg] = args else { return None };
         if crate::cas::visit::contains_symbol(n, x) {
             return None;
@@ -3987,7 +3987,7 @@ pub mod diff {
         Some(Expr::mul(vec![outer, inner_d]))
     }
 
-    async fn diff_laguerre(args: &[Expr], x: &Expr) -> Option<Expr> {
+    fn diff_laguerre(args: &[Expr], x: &Expr) -> Option<Expr> {
         let [n, arg] = args else { return None };
         if crate::cas::visit::contains_symbol(n, x) {
             return None;
@@ -4124,14 +4124,14 @@ pub mod series {
         pub coeffs: Vec<Expr>,
     }
 
-    async fn is_determinate(e: &Expr) -> bool {
+    fn is_determinate(e: &Expr) -> bool {
         !matches!(e.kind(), Kind::Constant(Constant::Undefined) | Kind::Constant(Constant::ComplexInf))
     }
 
     /// 📶️ Builds the order-`order` Taylor series of `e` in `x` around `at`; `None` if `e` (or any of its
     /// first `order` derivatives) is undefined at `at` — e.g. `e` has a pole there, which this pass doesn't
     /// handle as a genuine Laurent series (a documented first-pass limitation).
-    pub async fn taylor_series(e: &Expr, x: &Expr, at: &Expr, order: usize) -> Option<Series> {
+    pub fn taylor_series(e: &Expr, x: &Expr, at: &Expr, order: usize) -> Option<Series> {
         let mut coeffs = Vec::with_capacity(order + 1);
         let mut current = e.clone();
         let mut factorial = Integer::one();
@@ -4151,27 +4151,27 @@ pub mod series {
     }
 
     /// ↩️ Reconstructs `sum coeffs[k] * (x-at)^k` as a plain `Expr`.
-    pub async fn series_to_expr(s: &Series) -> Expr {
+    pub fn series_to_expr(s: &Series) -> Expr {
         let terms: Vec<Expr> = s.coeffs.iter().enumerate().map(|(k, c)| if k == 0 { c.clone() } else { Expr::mul(vec![c.clone(), Expr::pow(s.x.clone() - s.at.clone(), Expr::integer(k as i64))]) }).collect();
         Expr::add(terms)
     }
 
     /// 🔎️ The lowest-order term with a (structurally) nonzero coefficient, or `None` if every retained
     /// coefficient is exactly zero — used by `limits` to read off the leading behavior near `at`.
-    pub async fn leading_term(s: &Series) -> Option<(usize, Expr)> {
+    pub fn leading_term(s: &Series) -> Option<(usize, Expr)> {
         s.coeffs.iter().enumerate().find(|(_, c)| !c.is_zero_literal()).map(|(k, c)| (k, c.clone()))
     }
 
     impl Series {
         /// ➕️ Term-wise sum, truncated to the shorter of the two operands' orders.
-        pub async fn add(&self, other: &Self) -> Self {
+        pub fn add(&self, other: &Self) -> Self {
             let n = self.coeffs.len().min(other.coeffs.len());
             let coeffs = (0..n).map(|k| self.coeffs[k].clone() + other.coeffs[k].clone()).collect();
             Self { x: self.x.clone(), at: self.at.clone(), coeffs }
         }
 
         /// ✖️ Cauchy product, truncated to the shorter of the two operands' orders.
-        pub async fn mul(&self, other: &Self) -> Self {
+        pub fn mul(&self, other: &Self) -> Self {
             let n = self.coeffs.len().min(other.coeffs.len());
             let coeffs = (0..n)
                 .map(|k| {
@@ -4182,7 +4182,7 @@ pub mod series {
             Self { x: self.x.clone(), at: self.at.clone(), coeffs }
         }
 
-        pub async fn scale(&self, c: &Expr) -> Self {
+        pub fn scale(&self, c: &Expr) -> Self {
             Self { x: self.x.clone(), at: self.at.clone(), coeffs: self.coeffs.iter().map(|k| k.clone() * c.clone()).collect() }
         }
     }
@@ -4266,18 +4266,18 @@ pub mod limits {
     // #region 🔖️Limit
     const MAX_LHOPITAL_DEPTH: u32 = 8;
 
-    async fn is_determinate(e: &Expr) -> bool {
+    fn is_determinate(e: &Expr) -> bool {
         !matches!(e.kind(), Kind::Constant(Constant::Undefined))
     }
 
-    async fn is_infinite(e: &Expr) -> bool {
+    fn is_infinite(e: &Expr) -> bool {
         matches!(e.kind(), Kind::Constant(Constant::Inf) | Kind::Constant(Constant::NegInf) | Kind::Constant(Constant::ComplexInf))
     }
 
     /// 🎯️ `lim_{x -> at} e`, approaching from `dir` (only meaningful for a finite `at`; infinite limits
     /// are always two-sided in the reduced `t -> 0` problem). Returns `None` when the limit can't be
     /// resolved by direct substitution or a bounded L'Hopital chain — never a guessed or wrong value.
-    pub async fn limit(e: &Expr, x: &Expr, at: &Expr, dir: Direction) -> Option<Expr> {
+    pub fn limit(e: &Expr, x: &Expr, at: &Expr, dir: Direction) -> Option<Expr> {
         if matches!(at.kind(), Kind::Constant(Constant::Inf)) {
             let t = Expr::symbol("§limit_t");
             let e_t = crate::cas::visit::subs(e, x, &Expr::pow(t.clone(), Expr::integer(-1)));
@@ -4304,7 +4304,7 @@ pub mod limits {
 
     /// 📶️ Series-based fast path: expand numerator and denominator around `at` and read off the ratio of
     /// leading terms — handles `0/0` forms cleanly without repeated differentiation.
-    async fn limit_via_series(e: &Expr, x: &Expr, at: &Expr) -> Option<Expr> {
+    fn limit_via_series(e: &Expr, x: &Expr, at: &Expr) -> Option<Expr> {
         let (num, den) = extract_ratio(e, x);
         let num_series = crate::cas::series::taylor_series(&num, x, at, 6)?;
         let den_series = crate::cas::series::taylor_series(&den, x, at, 6)?;
@@ -4317,7 +4317,7 @@ pub mod limits {
         }
     }
 
-    async fn lhopital(e: &Expr, x: &Expr, at: &Expr, depth: u32) -> Option<Expr> {
+    fn lhopital(e: &Expr, x: &Expr, at: &Expr, depth: u32) -> Option<Expr> {
         if depth > MAX_LHOPITAL_DEPTH {
             return None;
         }
@@ -4344,7 +4344,7 @@ pub mod limits {
     /// 🌉️ Splits `e` into a `num/den` pair via the poly bridge's rational-function detector (which treats
     /// any non-polynomial subtree, including transcendental functions, as its own generator) — falls back
     /// to `(e, 1)` when the bridge can't build a ratio at all.
-    async fn extract_ratio(e: &Expr, x: &Expr) -> (Expr, Expr) {
+    fn extract_ratio(e: &Expr, x: &Expr) -> (Expr, Expr) {
         if let Some((num_m, den_m, map)) = crate::cas::polybridge::as_ratfunc_auto(e) {
             if map.gens.iter().any(|g| g == x) {
                 return (crate::cas::polybridge::from_poly(&num_m, &map), crate::cas::polybridge::from_poly(&den_m, &map));
@@ -4419,7 +4419,7 @@ pub mod rootof {
     use number::{Integer, Natural, Rational};
 
     // #region 🔖️Conversion
-    async fn clear_denominators(coeffs: &[Rational]) -> PolyU<Integer> {
+    fn clear_denominators(coeffs: &[Rational]) -> PolyU<Integer> {
         let denom_lcm = coeffs.iter().fold(Natural::one(), |acc, c| {
             let g = acc.gcd(c.denom());
             acc.mul(c.denom()).div_rem(&g).0
@@ -4428,19 +4428,19 @@ pub mod rootof {
         PolyU::from_coeffs(coeffs.iter().map(|c| c.mul(&scale).trunc()).collect())
     }
 
-    async fn to_algebraic(coeffs: &[Rational], index: u32) -> Option<AlgebraicReal> {
+    fn to_algebraic(coeffs: &[Rational], index: u32) -> Option<AlgebraicReal> {
         let int_poly = clear_denominators(coeffs);
         AlgebraicReal::root_of(&int_poly, index as usize)
     }
     // #endregion 🔖️Conversion
 
     // #region 🔖️Construction
-    pub async fn root_of_expr(coeffs: Vec<Rational>, index: u32) -> Expr {
+    pub fn root_of_expr(coeffs: Vec<Rational>, index: u32) -> Expr {
         Expr::from_kind_unchecked(Kind::RootOf { coeffs, index })
     }
 
     /// 🌱️ Builds one `RootOf` expression per real root of `poly` (ascending order).
-    pub async fn real_roots_of(poly: &PolyU<Integer>) -> Vec<Expr> {
+    pub fn real_roots_of(poly: &PolyU<Integer>) -> Vec<Expr> {
         let n_roots = crate::polynomial::isolate_real_roots(poly).len();
         let coeffs: Vec<Rational> = poly.coeffs().iter().map(|c| Rational::from_integer(c.clone())).collect();
         (0..n_roots as u32).map(|i| root_of_expr(coeffs.clone(), i)).collect()
@@ -4448,7 +4448,7 @@ pub mod rootof {
     // #endregion 🔖️Construction
 
     // #region 🔖️Queries
-    pub async fn root_of_to_f64(e: &Expr) -> Option<f64> {
+    pub fn root_of_to_f64(e: &Expr) -> Option<f64> {
         let Kind::RootOf { coeffs, index } = e.kind() else { return None };
         let mut a = to_algebraic(coeffs, *index)?;
         // 🎯️ The raw isolating interval can be as wide as the Cauchy root bound — refine to f64 precision
@@ -4457,12 +4457,12 @@ pub mod rootof {
         Some(a.to_f64())
     }
 
-    pub async fn root_of_sign(e: &Expr) -> Option<std::cmp::Ordering> {
+    pub fn root_of_sign(e: &Expr) -> Option<std::cmp::Ordering> {
         let Kind::RootOf { coeffs, index } = e.kind() else { return None };
         to_algebraic(coeffs, *index)?.sign()
     }
 
-    pub async fn root_of_refine(e: &Expr, width: &Rational) -> Option<(Rational, Rational)> {
+    pub fn root_of_refine(e: &Expr, width: &Rational) -> Option<(Rational, Rational)> {
         let Kind::RootOf { coeffs, index } = e.kind() else { return None };
         let mut a = to_algebraic(coeffs, *index)?;
         a.refine(width);
@@ -4532,14 +4532,14 @@ pub mod solve {
 
     // #region 🔖️Univariate
     /// 🧩️ Solves `e == 0` for `x`.
-    pub async fn solve_univariate(e: &Expr, x: &Expr) -> SolutionSet {
+    pub fn solve_univariate(e: &Expr, x: &Expr) -> SolutionSet {
         if let Some(p) = crate::cas::polybridge::as_poly_uni(e, x) {
             return solve_poly_rational(&p, x);
         }
         solve_transcendental(e, x)
     }
 
-    async fn clear_denominators(p: &PolyU<Rational>) -> PolyU<Integer> {
+    fn clear_denominators(p: &PolyU<Rational>) -> PolyU<Integer> {
         let denom_lcm = p.coeffs().iter().fold(Natural::one(), |acc, c| {
             let g = acc.gcd(c.denom());
             acc.mul(c.denom()).div_rem(&g).0
@@ -4548,7 +4548,7 @@ pub mod solve {
         PolyU::from_coeffs(p.coeffs().iter().map(|c| c.mul(&scale).trunc()).collect())
     }
 
-    async fn solve_poly_rational(p: &PolyU<Rational>, x: &Expr) -> SolutionSet {
+    fn solve_poly_rational(p: &PolyU<Rational>, x: &Expr) -> SolutionSet {
         if p.is_zero() {
             return SolutionSet::All;
         }
@@ -4569,7 +4569,7 @@ pub mod solve {
         }
     }
 
-    async fn solve_irreducible(factor: &PolyU<Rational>, x: &Expr) -> Vec<Expr> {
+    fn solve_irreducible(factor: &PolyU<Rational>, x: &Expr) -> Vec<Expr> {
         match factor.degree().unwrap_or(0) {
             0 => Vec::new(),
             1 => vec![solve_linear(factor)],
@@ -4578,7 +4578,7 @@ pub mod solve {
         }
     }
 
-    async fn solve_linear(factor: &PolyU<Rational>) -> Expr {
+    fn solve_linear(factor: &PolyU<Rational>) -> Expr {
         let a = factor.coeff(1);
         let b = factor.coeff(0);
         Expr::from(b.neg().div(&a).expect("nonzero leading coefficient of a degree-1 factor"))
@@ -4587,7 +4587,7 @@ pub mod solve {
     /// √ `sqrt(r)` as a canonical `Expr`, rationalizing `sqrt(p/q) = sqrt(p*q)/q` so the radical-extraction
     /// in `canon.rs` (which only folds `Integer` bases) gets a chance to simplify it; negative `r` factors
     /// out `i`.
-    pub(crate) async fn sqrt_of_rational(r: &Rational) -> Expr {
+    pub(crate) fn sqrt_of_rational(r: &Rational) -> Expr {
         if r.is_zero() {
             return Expr::integer(0);
         }
@@ -4601,7 +4601,7 @@ pub mod solve {
         Expr::mul(vec![sqrt_expr, Expr::from(Rational::new(Integer::one(), Integer::from_natural(denom)).unwrap())])
     }
 
-    async fn solve_quadratic(factor: &PolyU<Rational>) -> Vec<Expr> {
+    fn solve_quadratic(factor: &PolyU<Rational>) -> Vec<Expr> {
         let a = factor.coeff(2);
         let b = factor.coeff(1);
         let c = factor.coeff(0);
@@ -4615,7 +4615,7 @@ pub mod solve {
     /// 🌱️ Degree >= 3: real roots only, as `RootOf` objects (complex-root enumeration and the classical
     /// Cardano/Ferrari radical forms are a documented follow-up — `RootOf` is always correct, just not
     /// always a closed radical).
-    async fn solve_via_rootof(factor: &PolyU<Rational>, _x: &Expr) -> Vec<Expr> {
+    fn solve_via_rootof(factor: &PolyU<Rational>, _x: &Expr) -> Vec<Expr> {
         let int_poly = clear_denominators(factor);
         crate::cas::rootof::real_roots_of(&int_poly)
     }
@@ -4625,7 +4625,7 @@ pub mod solve {
     /// 🧩️ Narrow pattern table: recognizes `e` as affine (`A*g + B` with `A, B` numeric) in a single
     /// function-application generator `g = f(x)` with `f`'s argument being exactly `x` (not a nested
     /// expression), and inverts `f` for `Exp`/`Ln`/`Sin`. Everything else is `Unknown`, never guessed.
-    async fn solve_transcendental(e: &Expr, x: &Expr) -> SolutionSet {
+    fn solve_transcendental(e: &Expr, x: &Expr) -> SolutionSet {
         let gens = crate::cas::polybridge::detect_gens(e);
         for g in &gens {
             let Kind::Fn(kind, args) = g.kind() else { continue };
@@ -4645,7 +4645,7 @@ pub mod solve {
         SolutionSet::Unknown
     }
 
-    async fn invert_generator(kind: &FnKind, x: &Expr, value: &Expr) -> SolutionSet {
+    fn invert_generator(kind: &FnKind, x: &Expr, value: &Expr) -> SolutionSet {
         match kind {
             FnKind::Exp => match crate::cas::assume::is_positive(value) {
                 Some(true) => SolutionSet::Finite(vec![Expr::func(FnKind::Ln, vec![value.clone()])]),
@@ -4671,7 +4671,7 @@ pub mod solve {
     /// 🧩️ Solves a square system of equations (each `== 0`), linear in `vars`, via Cramer's rule over plain
     /// `Expr` arithmetic — no `Ring`/`Field` abstraction needed since the entries are already `Expr`.
     /// Only square, non-singular systems are resolved in this pass; anything else is `Unknown`.
-    pub async fn solve_linear_system(eqs: &[Expr], vars: &[Expr]) -> SolutionSet {
+    pub fn solve_linear_system(eqs: &[Expr], vars: &[Expr]) -> SolutionSet {
         let n = vars.len();
         if eqs.len() != n || n == 0 {
             return SolutionSet::Unknown;
@@ -4690,7 +4690,7 @@ pub mod solve {
         SolutionSet::Finite(cramer_solutions(&a, &b, &det_a))
     }
 
-    async fn cramer_solutions(a: &[Vec<Expr>], b: &[Expr], det_a: &Expr) -> Vec<Expr> {
+    fn cramer_solutions(a: &[Vec<Expr>], b: &[Expr], det_a: &Expr) -> Vec<Expr> {
         let n = a.len();
         let mut sols = Vec::with_capacity(n);
         for i in 0..n {
@@ -4705,7 +4705,7 @@ pub mod solve {
 
     /// 🧮️ Cofactor-expansion determinant over plain `Expr` entries — reused by `matrix.rs` for symbolic
     /// matrices, since `Expr` already behaves like a field under its own `+`/`-`/`*`/`Pow(-1)` encoding.
-    pub(crate) async fn det_expr(m: &[Vec<Expr>]) -> Expr {
+    pub(crate) fn det_expr(m: &[Vec<Expr>]) -> Expr {
         let n = m.len();
         if n == 0 {
             return Expr::integer(1);
@@ -4724,7 +4724,7 @@ pub mod solve {
 
     /// 🧩️ Extracts `(coeffs, constant)` such that `eq == sum(coeffs[i] * vars[i]) + constant`, or `None` if
     /// `eq` (after `expand`) has a term mixing two variables or a variable at a power other than 1.
-    async fn linear_coeffs_expr(eq: &Expr, vars: &[Expr]) -> Option<(Vec<Expr>, Expr)> {
+    fn linear_coeffs_expr(eq: &Expr, vars: &[Expr]) -> Option<(Vec<Expr>, Expr)> {
         let expanded = crate::cas::simplify::expand(eq);
         let terms: Vec<Expr> = match expanded.kind() {
             Kind::Add(ts) => ts.clone(),
@@ -4770,7 +4770,7 @@ pub mod solve {
     /// exact Sturm-based sign evaluation at rational sample points would be fully certified, but midpoint
     /// sampling is correct as long as no two distinct critical points round to the same `f64`, which is
     /// true for any inputs realistic at this scale).
-    pub async fn solve_inequality(e: &Expr, operator: RelationalOperator, x: &Expr) -> SolutionSet {
+    pub fn solve_inequality(e: &Expr, operator: RelationalOperator, x: &Expr) -> SolutionSet {
         let Some((num_m, den_m, map)) = crate::cas::polybridge::as_ratfunc_auto(e) else { return SolutionSet::Unknown };
         if map.gens.len() != 1 || map.gens[0] != *x {
             return SolutionSet::Unknown;
@@ -4961,11 +4961,11 @@ pub mod matrix {
     }
 
     impl SymMatrix {
-        pub async fn zeros(rows: usize, cols: usize) -> Self {
+        pub fn zeros(rows: usize, cols: usize) -> Self {
             Self { rows, cols, data: vec![Expr::integer(0); rows * cols] }
         }
 
-        pub async fn identity(n: usize) -> Self {
+        pub fn identity(n: usize) -> Self {
             let mut m = Self::zeros(n, n);
             for i in 0..n {
                 m.set(i, i, Expr::integer(1));
@@ -4973,25 +4973,25 @@ pub mod matrix {
             m
         }
 
-        pub async fn from_rows(rows: Vec<Vec<Expr>>) -> Self {
+        pub fn from_rows(rows: Vec<Vec<Expr>>) -> Self {
             let nrows = rows.len();
             let ncols = rows.first().map_or(0, Vec::len);
             Self { rows: nrows, cols: ncols, data: rows.into_iter().flatten().collect() }
         }
 
-        pub async fn get(&self, row: usize, col: usize) -> &Expr {
+        pub fn get(&self, row: usize, col: usize) -> &Expr {
             &self.data[row * self.cols + col]
         }
 
-        pub async fn set(&mut self, row: usize, col: usize, value: Expr) {
+        pub fn set(&mut self, row: usize, col: usize, value: Expr) {
             self.data[row * self.cols + col] = value;
         }
 
-        async fn rows_vec(&self) -> Vec<Vec<Expr>> {
+        fn rows_vec(&self) -> Vec<Vec<Expr>> {
             (0..self.rows).map(|r| (0..self.cols).map(|c| self.get(r, c).clone()).collect()).collect()
         }
 
-        pub async fn transpose(&self) -> Self {
+        pub fn transpose(&self) -> Self {
             let mut out = Self::zeros(self.cols, self.rows);
             for r in 0..self.rows {
                 for c in 0..self.cols {
@@ -5001,19 +5001,19 @@ pub mod matrix {
             out
         }
 
-        pub async fn add(&self, other: &Self) -> Self {
+        pub fn add(&self, other: &Self) -> Self {
             Self { rows: self.rows, cols: self.cols, data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.clone() + b.clone()).collect() }
         }
 
-        pub async fn sub(&self, other: &Self) -> Self {
+        pub fn sub(&self, other: &Self) -> Self {
             Self { rows: self.rows, cols: self.cols, data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.clone() - b.clone()).collect() }
         }
 
-        pub async fn scale(&self, s: &Expr) -> Self {
+        pub fn scale(&self, s: &Expr) -> Self {
             Self { rows: self.rows, cols: self.cols, data: self.data.iter().map(|v| v.clone() * s.clone()).collect() }
         }
 
-        pub async fn matmul(&self, other: &Self) -> Self {
+        pub fn matmul(&self, other: &Self) -> Self {
             assert_eq!(self.cols, other.rows, "SymMatrix::matmul: dimension mismatch");
             let mut out = Self::zeros(self.rows, other.cols);
             for r in 0..self.rows {
@@ -5025,19 +5025,19 @@ pub mod matrix {
             out
         }
 
-        pub async fn trace(&self) -> Expr {
+        pub fn trace(&self) -> Expr {
             let n = self.rows.min(self.cols);
             Expr::add((0..n).map(|i| self.get(i, i).clone()).collect())
         }
 
         /// 🧮️ Cofactor-expansion determinant, simplified via `simplify::cancel` (raw cofactor expansion on
         /// symbolic entries grows quickly; canceling common factors keeps the result readable).
-        pub async fn det(&self) -> Expr {
+        pub fn det(&self) -> Expr {
             assert_eq!(self.rows, self.cols, "SymMatrix::det requires a square matrix");
             crate::cas::simplify::cancel(&det_expr(&self.rows_vec()))
         }
 
-        async fn cofactor(&self, skip_row: usize, skip_col: usize) -> Expr {
+        fn cofactor(&self, skip_row: usize, skip_col: usize) -> Expr {
             let minor: Vec<Vec<Expr>> = self.rows_vec().into_iter().enumerate().filter(|&(r, _)| r != skip_row).map(|(_, row)| row.into_iter().enumerate().filter(|&(c, _)| c != skip_col).map(|(_, v)| v).collect()).collect();
             let sign = if (skip_row + skip_col).is_multiple_of(2) { Expr::integer(1) } else { Expr::integer(-1) };
             sign * det_expr(&minor)
@@ -5045,7 +5045,7 @@ pub mod matrix {
 
         /// 🧮️ The adjugate (classical adjoint) matrix: `adj(A)[i][j] = cofactor(A, j, i)` (transposed
         /// cofactor matrix), satisfying `A * adj(A) == det(A) * I`.
-        pub async fn adjugate(&self) -> Self {
+        pub fn adjugate(&self) -> Self {
             assert_eq!(self.rows, self.cols, "SymMatrix::adjugate requires a square matrix");
             let n = self.rows;
             let mut out = Self::zeros(n, n);
@@ -5060,7 +5060,7 @@ pub mod matrix {
         /// ➗️ `Some(adj(A) / det(A))` when `det(A)` is (structurally, after `simplify`) provably nonzero;
         /// `None` when it's zero, and no answer when it can't be decided either way (the zero-test problem
         /// for symbolic `Expr` coefficients is undecidable in general — this pass is best-effort, never wrong).
-        pub async fn inverse(&self) -> Option<Self> {
+        pub fn inverse(&self) -> Option<Self> {
             let d = self.det();
             if d.is_zero_literal() {
                 return None;
@@ -5072,7 +5072,7 @@ pub mod matrix {
 
         /// 🧮️ Coefficients of the characteristic polynomial `det(A - lambda*I)` in the fresh symbol
         /// `lambda`, low-degree-first, via `as_poly_uni` on the cofactor-expansion determinant.
-        pub async fn charpoly(&self, lambda: &Expr) -> Option<crate::polynomial::PolyU<Rational>> {
+        pub fn charpoly(&self, lambda: &Expr) -> Option<crate::polynomial::PolyU<Rational>> {
             assert_eq!(self.rows, self.cols, "SymMatrix::charpoly requires a square matrix");
             let n = self.rows;
             let mut shifted = self.clone();
@@ -5084,7 +5084,7 @@ pub mod matrix {
         }
 
         /// 🎯️ Eigenvalues via `solve_univariate` on the characteristic polynomial.
-        pub async fn eigenvalues(&self) -> SolutionSet {
+        pub fn eigenvalues(&self) -> SolutionSet {
             let lambda = Expr::symbol("§lambda");
             let Some(poly) = self.charpoly(&lambda) else { return SolutionSet::Unknown };
             crate::cas::solve::solve_univariate(&crate::cas::polybridge::polyu_to_expr(&poly, &lambda), &lambda)
@@ -5092,11 +5092,11 @@ pub mod matrix {
 
         /// 🔢️ `true` if every entry is a plain numeric literal (`Integer`/`Rational`), enabling the
         /// `number`-backed numeric paths below.
-        async fn is_numeric(&self) -> bool {
+        fn is_numeric(&self) -> bool {
             self.data.iter().all(|e| matches!(e.kind(), Kind::Integer(_) | Kind::Rational(_)))
         }
 
-        async fn to_numeric(&self) -> Option<number::MatG<Rational>> {
+        fn to_numeric(&self) -> Option<number::MatG<Rational>> {
             if !self.is_numeric() {
                 return None;
             }
@@ -5116,7 +5116,7 @@ pub mod matrix {
             Some(number::MatG::from_rows(rows))
         }
 
-        async fn from_numeric(m: &number::MatG<Rational>) -> Self {
+        fn from_numeric(m: &number::MatG<Rational>) -> Self {
             let rows: Vec<Vec<Expr>> = (0..m.rows).map(|r| (0..m.cols).map(|c| Expr::from(m.get(r, c).clone())).collect()).collect();
             Self::from_rows(rows)
         }
@@ -5124,17 +5124,17 @@ pub mod matrix {
         /// 🔢️ Rank via exact RREF, only when every entry is numeric (`None` for genuinely symbolic matrices
         /// in this pass — a generic symbolic-pivot RREF would need the same zero-test machinery `inverse`
         /// already documents as undecidable in general).
-        pub async fn rank(&self) -> Option<usize> {
+        pub fn rank(&self) -> Option<usize> {
             self.to_numeric().map(|m| m.rank())
         }
 
-        pub async fn nullspace(&self) -> Option<Vec<Vec<Expr>>> {
+        pub fn nullspace(&self) -> Option<Vec<Vec<Expr>>> {
             let m = self.to_numeric()?;
             Some(m.nullspace().into_iter().map(|v| (0..v.len()).map(|i| Expr::from(v.get(i).clone())).collect()).collect())
         }
 
         /// 🔢️ Reduced row-echelon form (`(rref, pivot_columns, rank)`), only when every entry is numeric.
-        pub async fn rref(&self) -> Option<(Self, Vec<usize>, usize)> {
+        pub fn rref(&self) -> Option<(Self, Vec<usize>, usize)> {
             let m = self.to_numeric()?;
             let (r, pivots, rank) = m.rref();
             Some((Self::from_numeric(&r), pivots, rank))
@@ -5142,7 +5142,7 @@ pub mod matrix {
 
         /// 🔁️ Solves `A x = b` when `A` is numeric; falls back to `None` for symbolic matrices (use
         /// `crate::cas::solve::solve_linear_system` directly for those).
-        pub async fn solve_numeric(&self, b: &[Expr]) -> Option<Vec<Expr>> {
+        pub fn solve_numeric(&self, b: &[Expr]) -> Option<Vec<Expr>> {
             let m = self.to_numeric()?;
             if !b.iter().all(|e| matches!(e.kind(), Kind::Integer(_) | Kind::Rational(_))) {
                 return None;
@@ -5167,7 +5167,7 @@ pub mod matrix {
     mod tests {
         use super::*;
 
-        async fn e(v: i64) -> Expr {
+        fn e(v: i64) -> Expr {
             Expr::integer(v)
         }
 
@@ -5274,11 +5274,11 @@ pub mod integrate {
     // #region 🔖️Integrate
     const MAX_BY_PARTS_DEPTH: u32 = 3;
 
-    pub async fn integrate(e: &Expr, x: &Expr) -> Option<Expr> {
+    pub fn integrate(e: &Expr, x: &Expr) -> Option<Expr> {
         integrate_depth(e, x, 0)
     }
 
-    async fn integrate_depth(e: &Expr, x: &Expr, depth: u32) -> Option<Expr> {
+    fn integrate_depth(e: &Expr, x: &Expr, depth: u32) -> Option<Expr> {
         if !crate::cas::visit::contains_symbol(e, x) {
             return Some(e.clone() * x.clone());
         }
@@ -5333,7 +5333,7 @@ pub mod integrate {
         None
     }
 
-    async fn bare_antiderivative(kind: &FnKind, x: &Expr) -> Option<Expr> {
+    fn bare_antiderivative(kind: &FnKind, x: &Expr) -> Option<Expr> {
         use FnKind::*;
         Some(match kind {
             Sin => Expr::integer(-1) * Expr::func(Cos, vec![x.clone()]),
@@ -5349,14 +5349,14 @@ pub mod integrate {
 
     /// 🎯️ `lim_{x -> x0} (x - x0) * e` — the residue at a *simple* pole; higher-order poles are a
     /// documented gap (the underlying `limit` honestly returns `None` rather than a wrong value for those).
-    pub async fn residue(e: &Expr, x: &Expr, x0: &Expr) -> Option<Expr> {
+    pub fn residue(e: &Expr, x: &Expr, x0: &Expr) -> Option<Expr> {
         let shifted = (x.clone() - x0.clone()) * e.clone();
         crate::cas::limits::limit(&shifted, x, x0, crate::cas::limits::Direction::Both)
     }
 
     /// ∫ Definite integral via the fundamental theorem: `antideriv(hi) - antideriv(lo)`, with infinite
     /// bounds routed through `limit`.
-    pub async fn integrate_definite(e: &Expr, x: &Expr, lo: &Expr, hi: &Expr) -> Option<Expr> {
+    pub fn integrate_definite(e: &Expr, x: &Expr, lo: &Expr, hi: &Expr) -> Option<Expr> {
         let antideriv = integrate(e, x)?;
         let value_at = |bound: &Expr| -> Option<Expr> {
             if matches!(bound.kind(), Kind::Constant(Constant::Inf) | Kind::Constant(Constant::NegInf)) {
@@ -5377,7 +5377,7 @@ pub mod integrate {
     // #endregion 🔖️Integrate
 
     // #region 🔖️RationalFunction
-    async fn integrate_rational(e: &Expr, x: &Expr) -> Option<Expr> {
+    fn integrate_rational(e: &Expr, x: &Expr) -> Option<Expr> {
         let (num_m, den_m, map) = crate::cas::polybridge::as_ratfunc_auto(e)?;
         if map.gens.len() != 1 || map.gens[0] != *x {
             return None;
@@ -5390,7 +5390,7 @@ pub mod integrate {
         integrate_ratfunc(&num, &den, x)
     }
 
-    async fn integrate_ratfunc(num: &PolyU<Rational>, den: &PolyU<Rational>, x: &Expr) -> Option<Expr> {
+    fn integrate_ratfunc(num: &PolyU<Rational>, den: &PolyU<Rational>, x: &Expr) -> Option<Expr> {
         let (poly_part, remainder) = num.div_rem(den);
         let mut result_terms = Vec::new();
         for (i, c) in poly_part.coeffs().iter().enumerate() {
@@ -5417,7 +5417,7 @@ pub mod integrate {
         Some(Expr::add(result_terms))
     }
 
-    async fn integrate_partial_fraction_term(term: &Expr, x: &Expr) -> Option<Expr> {
+    fn integrate_partial_fraction_term(term: &Expr, x: &Expr) -> Option<Expr> {
         if !crate::cas::visit::contains_symbol(term, x) {
             return Some(term.clone() * x.clone());
         }
@@ -5439,7 +5439,7 @@ pub mod integrate {
         integrate_over_factor_power(&numerator, factor_base, j, x)
     }
 
-    async fn integrate_over_factor_power(numerator: &Expr, factor: &Expr, j: i64, x: &Expr) -> Option<Expr> {
+    fn integrate_over_factor_power(numerator: &Expr, factor: &Expr, j: i64, x: &Expr) -> Option<Expr> {
         let fp = crate::cas::polybridge::as_poly_uni(factor, x)?;
         match fp.degree().unwrap_or(0) {
             1 => {
@@ -5461,7 +5461,7 @@ pub mod integrate {
     /// ∫ `(p*x + q) / (a*x^2 + b*x + c) dx` for an irreducible quadratic (`c/a - (b/a)^2/4 > 0`), via the
     /// classical split into a logarithmic part (from the derivative-matching half) and an `atan` part
     /// (from completing the square).
-    async fn integrate_linear_over_irreducible_quadratic(numerator: &Expr, fp: &PolyU<Rational>, x: &Expr) -> Option<Expr> {
+    fn integrate_linear_over_irreducible_quadratic(numerator: &Expr, fp: &PolyU<Rational>, x: &Expr) -> Option<Expr> {
         let np = crate::cas::polybridge::as_poly_uni(numerator, x)?;
         if np.degree().unwrap_or(0) > 1 {
             return None;
@@ -5499,7 +5499,7 @@ pub mod integrate {
     // #region 🔖️Substitution
     /// 🔄️ `u`-substitution: for `e = f(inner) * rest`, if `rest / inner'` is free of `x` (a constant
     /// multiplier), the integral is that constant times `F(inner)` (`F` from a small antiderivative table).
-    async fn integrate_by_substitution(e: &Expr, x: &Expr) -> Option<Expr> {
+    fn integrate_by_substitution(e: &Expr, x: &Expr) -> Option<Expr> {
         let Kind::Mul(factors) = e.kind() else { return None };
         for (i, f) in factors.iter().enumerate() {
             let Kind::Fn(kind, args) = f.kind() else { continue };
@@ -5526,7 +5526,7 @@ pub mod integrate {
         None
     }
 
-    async fn antiderivative_table(kind: &FnKind, inner: &Expr) -> Option<Expr> {
+    fn antiderivative_table(kind: &FnKind, inner: &Expr) -> Option<Expr> {
         use FnKind::*;
         Some(match kind {
             Sin => Expr::integer(-1) * Expr::func(Cos, vec![inner.clone()]),
@@ -5544,7 +5544,7 @@ pub mod integrate {
     /// 🧩️ Integration by parts for a two-factor product, choosing `u` via a coarse LIATE ranking
     /// (Logarithm < Inverse-trig < Algebraic < Trig/hyperbolic < Exponential), depth-capped so the
     /// `v * du` recursion can't loop forever on a pair that doesn't actually simplify.
-    async fn integrate_by_parts(e: &Expr, x: &Expr, depth: u32) -> Option<Expr> {
+    fn integrate_by_parts(e: &Expr, x: &Expr, depth: u32) -> Option<Expr> {
         let factors: Vec<Expr> = match e.kind() {
             Kind::Mul(fs) => fs.clone(),
             _ => vec![e.clone()],
@@ -5570,7 +5570,7 @@ pub mod integrate {
         Some(u * v - second_term)
     }
 
-    async fn liate_rank(f: &Expr, x: &Expr) -> i32 {
+    fn liate_rank(f: &Expr, x: &Expr) -> i32 {
         match f.kind() {
             Kind::Fn(FnKind::Ln, _) => 0,
             Kind::Fn(FnKind::Asin | FnKind::Acos | FnKind::Atan, _) => 1,
@@ -5587,7 +5587,7 @@ pub mod integrate {
     mod tests {
         use super::*;
 
-        async fn diff_matches(e: &Expr, x: &Expr, antideriv: &Expr) -> bool {
+        fn diff_matches(e: &Expr, x: &Expr, antideriv: &Expr) -> bool {
             let d = crate::cas::diff::diff(antideriv, x).unwrap();
             crate::cas::simplify::simplify(&(d - e.clone())).is_zero_literal()
         }
@@ -5704,7 +5704,7 @@ pub mod sums {
 
     // #region 🔖️ClosedForm
     /// Σ `sum_{k=lo}^{hi} e(k)` in closed form, for `e` polynomial or geometric in `n`; `None` otherwise.
-    pub async fn sum_closed(e: &Expr, n: &Expr, lo: &Expr, hi: &Expr) -> Option<Expr> {
+    pub fn sum_closed(e: &Expr, n: &Expr, lo: &Expr, hi: &Expr) -> Option<Expr> {
         if let Some(p) = crate::cas::polybridge::as_poly_uni(e, n) {
             let s = sum_polynomial_closed_form(&p, n)?;
             let at_hi = crate::cas::visit::subs(&s, n, hi);
@@ -5718,7 +5718,7 @@ pub mod sums {
     /// Σ The polynomial `S(N) = sum_{k=0}^{N} p(k)`, recovered by evaluating the true partial sums at
     /// `deg(p) + 2` integer points and interpolating (a degree-`d` polynomial's partial sum is always an
     /// exact degree-`(d+1)` polynomial in `N`, so this is exact, not an approximation).
-    async fn sum_polynomial_closed_form(p: &PolyU<Rational>, n: &Expr) -> Option<Expr> {
+    fn sum_polynomial_closed_form(p: &PolyU<Rational>, n: &Expr) -> Option<Expr> {
         let d = p.degree().unwrap_or(0);
         let num_points = d + 2;
         let mut cumulative = Rational::zero();
@@ -5734,7 +5734,7 @@ pub mod sums {
 
     /// Σ `sum_{k=lo}^{hi} c * r^k` for `c`, `r` free of `n`, via the closed geometric-series formula
     /// (special-cased at `r == 1`, where the sum is just `count * c`).
-    async fn sum_geometric(e: &Expr, n: &Expr, lo: &Expr, hi: &Expr) -> Option<Expr> {
+    fn sum_geometric(e: &Expr, n: &Expr, lo: &Expr, hi: &Expr) -> Option<Expr> {
         let (const_factors, var_factors): (Vec<Expr>, Vec<Expr>) = match e.kind() {
             Kind::Mul(factors) => factors.iter().cloned().partition(|f| !crate::cas::visit::contains_symbol(f, n)),
             _ => (Vec::new(), vec![e.clone()]),
@@ -5761,7 +5761,7 @@ pub mod sums {
     /// 🌊️ Fourier coefficients `(a_n, b_n)` of `f` on `[-L, L]` (`a_0` at index 0, `b_0` fixed at `0` since
     /// the sine term vanishes there), via `integrate_definite` — correct whenever the underlying integrals
     /// resolve, `None` for the whole pair otherwise (never a partial/wrong coefficient list).
-    pub async fn fourier_coefficients(f: &Expr, x: &Expr, half_period: &Expr, n_terms: usize) -> Option<(Vec<Expr>, Vec<Expr>)> {
+    pub fn fourier_coefficients(f: &Expr, x: &Expr, half_period: &Expr, n_terms: usize) -> Option<(Vec<Expr>, Vec<Expr>)> {
         let l = half_period.clone();
         let neg_l = Expr::integer(-1) * l.clone();
         let mut a = Vec::with_capacity(n_terms + 1);
@@ -5856,11 +5856,11 @@ pub mod ode {
 
     // #region 🔖️FirstOrder
     /// 🌊️ Classifies and solves `y' = f(x, y)`: separable, linear, then Bernoulli, in that order.
-    pub async fn solve_ode_first_order(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
+    pub fn solve_ode_first_order(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
         try_separable(f, x, y).or_else(|| try_linear_first_order(f, x, y)).or_else(|| try_bernoulli(f, x, y))
     }
 
-    async fn try_separable(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
+    fn try_separable(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
         let factors: Vec<Expr> = match f.kind() {
             Kind::Mul(fs) => fs.clone(),
             _ => vec![f.clone()],
@@ -5879,7 +5879,7 @@ pub mod ode {
 
     /// 🧩️ Extracts `(coeff, constant)` such that `f == coeff * y + constant`, both free of `y`; `None` if
     /// `f` isn't affine in `y`.
-    async fn affine_in_y(f: &Expr, y: &Expr) -> Option<(Expr, Expr)> {
+    fn affine_in_y(f: &Expr, y: &Expr) -> Option<(Expr, Expr)> {
         let expanded = crate::cas::simplify::expand(f);
         let terms: Vec<Expr> = match expanded.kind() {
             Kind::Add(ts) => ts.clone(),
@@ -5918,7 +5918,7 @@ pub mod ode {
         Some((coeff, Expr::add(constant)))
     }
 
-    async fn try_linear_first_order(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
+    fn try_linear_first_order(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
         let (coeff, q) = affine_in_y(f, y)?;
         if crate::cas::visit::contains_symbol(&coeff, y) || crate::cas::visit::contains_symbol(&q, y) {
             return None;
@@ -5933,7 +5933,7 @@ pub mod ode {
         Some(OdeSolution { rhs: y_sol, constants: vec![c1] })
     }
 
-    async fn try_bernoulli(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
+    fn try_bernoulli(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
         let expanded = crate::cas::simplify::expand(f);
         let terms: Vec<Expr> = match expanded.kind() {
             Kind::Add(ts) => ts.clone(),
@@ -6005,7 +6005,7 @@ pub mod ode {
     /// real roots (with multiplicity, giving `x^k e^{rx}` terms) and complex-conjugate pairs from
     /// irreducible quadratic factors (giving `x^k e^{alpha x} {cos,sin}(beta x)` terms); an irreducible
     /// factor of degree >= 3 in the characteristic polynomial is a documented gap (`None`).
-    pub async fn solve_linear_constant_coeff_homogeneous(coeffs: &[Rational], x: &Expr) -> Option<OdeSolution> {
+    pub fn solve_linear_constant_coeff_homogeneous(coeffs: &[Rational], x: &Expr) -> Option<OdeSolution> {
         let char_poly = PolyU::from_coeffs(coeffs.to_vec());
         if char_poly.is_zero() || char_poly.degree().unwrap_or(0) == 0 {
             return None;
@@ -6065,7 +6065,7 @@ pub mod ode {
     mod tests {
         use super::*;
 
-        async fn satisfies(sol: &Expr, x: &Expr, y: &Expr, rhs_of_ode: &Expr) -> bool {
+        fn satisfies(sol: &Expr, x: &Expr, y: &Expr, rhs_of_ode: &Expr) -> bool {
             // Substitutes the solution in for y and checks y' == rhs_of_ode(x, sol) structurally after simplify.
             let dy = crate::cas::diff::diff(sol, x).unwrap();
             let substituted_rhs = crate::cas::visit::subs(rhs_of_ode, y, sol);
@@ -6151,7 +6151,7 @@ pub mod transforms {
     use number::Integer;
 
     // #region 🔖️Laplace
-    pub async fn laplace_transform(f: &Expr, t: &Expr, s: &Expr) -> Option<Expr> {
+    pub fn laplace_transform(f: &Expr, t: &Expr, s: &Expr) -> Option<Expr> {
         if !crate::cas::visit::contains_symbol(f, t) {
             return Some(f.clone() * Expr::pow(s.clone(), Expr::integer(-1)));
         }
@@ -6193,7 +6193,7 @@ pub mod transforms {
         None
     }
 
-    async fn factorial(n: i64) -> Integer {
+    fn factorial(n: i64) -> Integer {
         let mut result = Integer::one();
         for k in 1..=n {
             result = result.mul(&Integer::from_i64(k));
@@ -6203,7 +6203,7 @@ pub mod transforms {
 
     /// 🔍️ `arg == a * t` for some `a` free of `t`; `None` for anything with a constant offset or nonlinear
     /// dependence (this pass's table entries only need the pure-scaling case).
-    async fn linear_coeff_in(arg: &Expr, t: &Expr) -> Option<Expr> {
+    fn linear_coeff_in(arg: &Expr, t: &Expr) -> Option<Expr> {
         if arg == t {
             return Some(Expr::integer(1));
         }
@@ -6216,7 +6216,7 @@ pub mod transforms {
         None
     }
 
-    async fn laplace_table(kind: &FnKind, a: &Expr, s: &Expr) -> Option<Expr> {
+    fn laplace_table(kind: &FnKind, a: &Expr, s: &Expr) -> Option<Expr> {
         use FnKind::*;
         let s2 = Expr::pow(s.clone(), Expr::integer(2));
         let a2 = Expr::pow(a.clone(), Expr::integer(2));
@@ -6232,7 +6232,7 @@ pub mod transforms {
     // #endregion 🔖️Laplace
 
     // #region 🔖️InverseLaplace
-    pub async fn inverse_laplace_transform(f: &Expr, s: &Expr, t: &Expr) -> Option<Expr> {
+    pub fn inverse_laplace_transform(f: &Expr, s: &Expr, t: &Expr) -> Option<Expr> {
         if let Kind::Add(terms) = f.kind() {
             let mut parts = Vec::with_capacity(terms.len());
             for term in terms {
@@ -6258,7 +6258,7 @@ pub mod transforms {
     }
 
     /// 🔍️ `e == s - a` (or bare `s`, giving `a = 0`); `None` otherwise.
-    async fn extract_shift(e: &Expr, s: &Expr) -> Option<Expr> {
+    fn extract_shift(e: &Expr, s: &Expr) -> Option<Expr> {
         if e == s {
             return Some(Expr::integer(0));
         }

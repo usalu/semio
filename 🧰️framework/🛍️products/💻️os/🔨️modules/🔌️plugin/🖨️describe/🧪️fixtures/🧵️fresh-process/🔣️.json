@@ -1,0 +1,79 @@
+{
+  "schema": "semio.plugin.fresh-process-laws/v1",
+  "maxOutputBytes": 67108864,
+  "diagnosticChars": 6000,
+  "cases": [
+    {
+      "name": "success",
+      "mode": "exit",
+      "stdout": "fresh success\n",
+      "stderr": "",
+      "exitCode": 0,
+      "reason": "exit",
+      "diagnostic": ""
+    },
+    {
+      "name": "compiler-error",
+      "mode": "exit",
+      "stdout": "{\"reason\":\"compiler-message\",\"message\":{\"level\":\"warning\",\"rendered\":\"warning: not the failure\"}}\n{\"reason\":\"compiler-message\",\"message\":{\"level\":\"error\",\"rendered\":\"error: exact fresh compiler sentinel\"}}\n",
+      "stderr": "cargo stopped\n",
+      "exitCode": 101,
+      "reason": "exit",
+      "diagnostic": "error: exact fresh compiler sentinel"
+    },
+    {
+      "name": "stderr-error",
+      "mode": "exit",
+      "stdout": "non-json tool output\n",
+      "stderr": "emitter failure sentinel\n",
+      "exitCode": 101,
+      "reason": "exit",
+      "diagnostic": "emitter failure sentinel"
+    },
+    {
+      "name": "spawn-error",
+      "mode": "missing",
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0,
+      "reason": "spawn-error",
+      "diagnostic": "spawn-error"
+    },
+    {
+      "name": "cancelled",
+      "mode": "cancel",
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0,
+      "reason": "cancelled",
+      "diagnostic": "cancelled"
+    },
+    {
+      "name": "deadline",
+      "mode": "timeout",
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0,
+      "reason": "timeout",
+      "diagnostic": "timeout"
+    },
+    {
+      "name": "output-limit",
+      "mode": "flood",
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0,
+      "reason": "output-limit",
+      "diagnostic": "output-limit"
+    },
+    {
+      "name": "pre-cancelled",
+      "mode": "pre-cancel",
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0,
+      "reason": "cancelled",
+      "diagnostic": "cancelled"
+    }
+  ]
+}

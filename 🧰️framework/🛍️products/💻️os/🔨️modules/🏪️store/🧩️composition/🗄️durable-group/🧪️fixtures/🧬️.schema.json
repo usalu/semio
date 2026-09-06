@@ -88,8 +88,18 @@
     },
     "committedRecovery": {
       "type": "object", "additionalProperties": false,
-      "required": ["witness", "journalBegins", "cancellation", "cases"],
+      "required": ["authority", "witness", "journalBegins", "cancellation", "cases"],
       "properties": {
+        "authority": {
+          "type": "object", "additionalProperties": false,
+          "required": ["consumer", "recordEscape", "receiptSource", "terminalHandoff"],
+          "properties": {
+            "consumer": { "const": "db-wal-witness" },
+            "recordEscape": { "const": false },
+            "receiptSource": { "const": "derived" },
+            "terminalHandoff": { "const": "stores-and-ack-once" }
+          }
+        },
         "witness": {
           "type": "object", "additionalProperties": false,
           "required": ["recordKind", "transaction", "bodyRecords", "transactionId", "segmentIndex"],

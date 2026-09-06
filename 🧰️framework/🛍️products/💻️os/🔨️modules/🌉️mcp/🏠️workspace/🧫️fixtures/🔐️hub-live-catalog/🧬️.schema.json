@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://mcp/hub-live-catalog/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "selection", "localOnly", "states", "hostile"],
+  "properties": {
+    "schema": { "const": "semio.mcp.hub-live-catalog/v1" },
+    "selection": { "$ref": "#/$defs/selection" },
+    "localOnly": { "$ref": "#/$defs/package" },
+    "states": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["binding", "selectedPlugins", "localFallback"],
+        "properties": {
+          "binding": { "enum": ["ready", "refreshing", "revoked"] },
+          "selectedPlugins": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+          "localFallback": { "const": false }
+        }
+      }
+    },
+    "hostile": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "field", "value"],
+        "properties": {
+          "name": { "$ref": "#/$defs/id" },
+          "field": { "enum": ["scope", "descriptorDigestV1", "pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256"] },
+          "value": {}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId"],
+      "properties": {
+        "spaceId": { "$ref": "#/$defs/id" },
+        "documentId": { "$ref": "#/$defs/id" }
+      }
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/id" },
+        "packageId": { "$ref": "#/$defs/id" },
+        "version": { "$ref": "#/$defs/id" },
+        "componentSha256": { "$ref": "#/$defs/hash" },
+        "descriptorByteSha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "descriptorDigestV1", "catalogGenerationId", "package", "expectedInferenceOwners"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/scope" },
+        "descriptorDigestV1": { "$ref": "#/$defs/hash" },
+        "catalogGenerationId": { "$ref": "#/$defs/hash" },
+        "package": { "$ref": "#/$defs/package" },
+        "expectedInferenceOwners": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

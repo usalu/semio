@@ -117,7 +117,7 @@ fn independent_chain(segments: &[Vec<u8>], document: &str) -> bool {
     true
 }
 
-async fn chain_segments(fixture: &serde_json::Value, case: &serde_json::Value) -> Vec<Vec<u8>> {
+async fn chain_segments(fixture: &serde_json::Value, case: &serde_json::Value, durable: &DurableFixtureRecord) -> Vec<Vec<u8>> {
     let count = case["segments"].as_u64().unwrap();
     let mutation = case["mutation"].as_str().unwrap();
     let mut segments: Vec<Vec<u8>> = Vec::new();
@@ -142,13 +142,12 @@ async fn chain_segments(fixture: &serde_json::Value, case: &serde_json::Value) -
         let transactions = if count == 1 { 1..=2 } else { index + 1..=index + 1 };
         for tx in transactions {
             writer.write_record(db::wal::WAL_TX_BEGIN, true, &tx.to_le_bytes(), protocol::codec::ids::CodecId(0)).await.unwrap();
-            let mut command = Vec::new();
-            protocol::encode_envelope(&envelope(fixture), &mut command);
+            let mut event = durable.record.canonical_pack().to_vec();
             if tx == 1 {
-                let last = command.len() - 1;
-                command[last] ^= 1;
+                let last = event.len() - 1;
+                event[last] ^= 1;
             }
-            writer.write_record(db::wal::WAL_COMMAND, true, &command, protocol::codec::ids::CodecId(0)).await.unwrap();
+            writer.write_record(db::wal::WAL_EVENT, true, &event, protocol::codec::ids::CodecId(0)).await.unwrap();
             let mut commit = tx.to_le_bytes().to_vec();
             commit.extend_from_slice(&1u32.to_le_bytes());
             writer.write_record(db::wal::WAL_TX_COMMIT, true, &commit, protocol::codec::ids::CodecId(0)).await.unwrap();
@@ -159,7 +158,7 @@ async fn chain_segments(fixture: &serde_json::Value, case: &serde_json::Value) -
     let first = &mut segments[0];
     let all = frames(first);
     let selected = if mutation == "record-crc-repaired" {
-        all.iter().find(|frame| frame.kind == db::wal::WAL_COMMAND).copied()
+        all.iter().find(|frame| frame.kind == db::wal::WAL_EVENT).copied()
     } else if mutation.ends_with("crc-repaired") {
         all.iter().filter(|frame| frame.kind == protocol::wire::REC_COMMIT).nth(1).copied()
     } else {
@@ -193,21 +192,23 @@ async fn retained_storage(fixture: &serde_json::Value, segments: &[Vec<u8>], fir
     let pool = Arc::new(db::semio_framework_async::process_worker_pool(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
     let backend = db::storage::MemoryStorage::new(pool).await.unwrap();
     let document = db::ArtifactId(fixture["documentKey"].as_str().unwrap().into());
+    let permit = backend.acquire_writer(&document).await.unwrap();
     for (index, bytes) in segments.iter().enumerate() {
-        backend.create_segment(&document, index as u64).await.unwrap();
+        backend.create_segment(&permit, index as u64).await.unwrap();
         let mut pages = db::storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db::storage::DB_IO_PAGE_BYTES)).unwrap();
         for fragment in bytes.chunks(db::storage::DB_IO_PAGE_BYTES) {
             assert_eq!(pages.write_fragment(fragment).unwrap(), fragment.len());
         }
-        backend.append(&document, index as u64, pages.seal_retained().await.unwrap()).await.unwrap();
-        backend.sync(&document, index as u64, db::DurabilityClass::Fsync).await.unwrap();
+        backend.append(&permit, index as u64, pages.seal_retained().await.unwrap()).await.unwrap();
+        backend.sync(&permit, index as u64, db::DurabilityClass::Fsync).await.unwrap();
         if index + 1 < segments.len() {
-            backend.seal(&document, index as u64).await.unwrap();
+            backend.seal(&permit, index as u64).await.unwrap();
         }
     }
     for index in 0..first {
-        backend.delete_segment(&document, index as u64).await.unwrap();
+        backend.delete_segment(&permit, index as u64).await.unwrap();
     }
+    permit.release().await.unwrap();
     Arc::new(db::storage::DbBackend::Memory(backend))
 }
 
@@ -215,8 +216,9 @@ async fn retained_storage(fixture: &serde_json::Value, segments: &[Vec<u8>], fir
 async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment_tip_mismatch() {
     let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
     let fixture = fixture();
+    let durable = durable_fixture_record(&fixture);
     for case in chain["cases"].as_array().unwrap() {
-        let segments = chain_segments(&fixture, case).await;
+        let segments = chain_segments(&fixture, case, &durable).await;
         for bytes in &segments {
             for frame in frames(bytes) {
                 assert_eq!(protocol::codec::crc32c(&bytes[frame.body..frame.end]), u32::from_le_bytes(bytes[frame.end..frame.end + 4].try_into().unwrap()));
@@ -226,7 +228,7 @@ async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment
         assert_eq!(independent_chain(&segments, fixture["documentKey"].as_str().unwrap()), expected, "independent blake3 {}", case["name"]);
         let verifier = InferenceWalVerifierV1::new(retained_storage(&fixture, &segments, 0).await);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
-        let result = verifier.verify(target(&fixture, &fixture["traces"][0]), fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await;
+        let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await;
         assert_eq!(matches!(result, Ok(Some(_))), expected, "actual retained WAL {}", case["name"]);
         assert_eq!(verifier.active(), 0);
         assert!(verifier.close_steps() > 0);
@@ -237,14 +239,15 @@ async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment
 async fn inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_is_not_a_genesis_proof() {
     let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
     let fixture = fixture();
-    let segments = chain_segments(&fixture, &chain["cases"][0]).await;
+    let durable = durable_fixture_record(&fixture);
+    let segments = chain_segments(&fixture, &chain["cases"][0], &durable).await;
     for owner in chain["hashingOwnership"].as_array().unwrap() {
         let mut verifier = InferenceWalVerifierV1::new(retained_storage(&fixture, &segments, 0).await);
         let gate = Arc::new(tokio::sync::Semaphore::new(0));
         Arc::get_mut(&mut verifier.state).unwrap().hashing_gate = Some(gate.clone());
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
         let control = Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap());
-        let mut future = Box::pin(verifier.verify(target(&fixture, &fixture["traces"][0]), fence, control.clone()));
+        let mut future = Box::pin(verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, control.clone()));
         assert!(futures::poll!(future.as_mut()).is_pending());
         tokio::time::timeout(Duration::from_secs(2), async {
             while verifier.state.hashing_steps.load(Ordering::Acquire) == 0 {
@@ -284,7 +287,7 @@ async fn inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_i
         assert_eq!(verifier.state.hashing_steps.load(Ordering::Acquire), 1);
     }
     for boundary in chain["retainedBoundaries"].as_array().unwrap() {
-        let segments = chain_segments(&fixture, &serde_json::json!({"segments": 2, "mutation": boundary["mutation"]})).await;
+        let segments = chain_segments(&fixture, &serde_json::json!({"segments": 2, "mutation": boundary["mutation"]}), &durable).await;
         let backend = retained_storage(&fixture, &segments, 1).await;
         let storage = backend.wal().await;
         let document = db::ArtifactId(fixture["documentKey"].as_str().unwrap().into());
@@ -308,7 +311,7 @@ async fn inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_i
         drop(storage);
         let verifier = InferenceWalVerifierV1::new(backend);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
-        let result = verifier.verify(target(&fixture, &fixture["traces"][0]), fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await;
+        let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await;
         assert_eq!(matches!(result, Ok(Some(_))), boundary["genesisProofAccepted"].as_bool().unwrap());
         assert!(matches!(result, Err(InferenceErrorV1::Storage)));
         assert_eq!(verifier.active(), 0);

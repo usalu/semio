@@ -19,23 +19,23 @@ pub struct InsertTableRow {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn insert_table_row(id: String) -> NoteMutation {
+pub fn insert_table_row(id: String) -> NoteMutation {
     NoteMutation::InsertTableRow(InsertTableRow { id })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for InsertTableRow {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "table-row", kind: "insert-table-row", record: "InsertedTableRow" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Insert row into table \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

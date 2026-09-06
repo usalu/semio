@@ -11,7 +11,7 @@ pub const MATH_PLAY_BODY_GEOMETRY: &str = "equation.play.geometry";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::equation::create_equation_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: MATH_PLAY_WINDOW_GEOMETRY.into(),
         label: LocalizedLabel::native("Geometry", "Geometrie"),
@@ -32,7 +32,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(geometry: &EquationGeometry) -> UiNode {
+pub fn render(geometry: &EquationGeometry) -> UiNode {
     let mut scene = empty_component_scene(MATH_PLAY_BODY_GEOMETRY, SurfaceKind::Canvas2d);
     scene.canvas_2d = Some(Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry), snapshot: None });
     UiNode::ComponentScene(scene)

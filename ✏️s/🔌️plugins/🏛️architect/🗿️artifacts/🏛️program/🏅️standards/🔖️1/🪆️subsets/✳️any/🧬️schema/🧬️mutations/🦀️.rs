@@ -855,7 +855,7 @@ mod tests {
     use crate::artifacts::program::{empty_plugin, sample_plugin};
     use protocol::{Mutation, MutationDiff, OpText, SemanticMutation};
 
-    async fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
+    fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
         let forward = operation.diff(snapshot).diff().apply(snapshot).expect("valid mutation diff");
         let mut backward = operation.inverse(snapshot);
         backward.reverse();

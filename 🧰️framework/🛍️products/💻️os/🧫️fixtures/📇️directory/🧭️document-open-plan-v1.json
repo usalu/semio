@@ -1,14 +1,39 @@
 {
   "formatVersion": 1,
   "parentDialectNegativeMutations": [
-    { "path": "parentDialect", "value": null },
-    { "path": "parentDialect.standard", "value": "" },
-    { "path": "parentDialect.standard", "value": "\u0085" },
-    { "path": "parentDialect.subset", "value": " * " },
-    { "path": "parentDialect.artifactKind", "value": "s.foreign.document" },
-    { "path": "parentDialect.extra", "value": true },
-    { "path": "parentDialect.standard", "value": 7 },
-    { "path": "parentDialect.standard", "unit": "🌊", "repetitions": 65 }
+    {
+      "path": "parentDialect",
+      "value": null
+    },
+    {
+      "path": "parentDialect.standard",
+      "value": ""
+    },
+    {
+      "path": "parentDialect.standard",
+      "value": ""
+    },
+    {
+      "path": "parentDialect.subset",
+      "value": " * "
+    },
+    {
+      "path": "parentDialect.artifactKind",
+      "value": "s.foreign.document"
+    },
+    {
+      "path": "parentDialect.extra",
+      "value": true
+    },
+    {
+      "path": "parentDialect.standard",
+      "value": 7
+    },
+    {
+      "path": "parentDialect.standard",
+      "unit": "🌊",
+      "repetitions": 65
+    }
   ],
   "nowMs": 2000000000000,
   "receiptDigest": {
@@ -47,38 +72,46 @@
     "expectedGenerationId": "1019f0371199dd5e744ca74406185e4cc2017f71398225031bd079b99f0116ef"
   },
   "descriptor": {
-    "spaceId": "raum:\u00e4",
-    "documentId": "plan:\u6771\u4eac",
+    "spaceId": "raum:ä",
+    "documentId": "plan:東京",
     "artifactKind": "s.gis:gismap",
-    "artifactSchema": "s.gis.gismap@1/*:\u7cbe\u5bc6",
+    "artifactSchema": "s.gis.gismap@1/*:精密",
     "owner": {
-      "pluginId": "s.gis:\u5730\u56f3",
+      "pluginId": "s.gis:地図",
       "packageId": "s.gis.gismap:codec",
-      "version": "1.0.0:\u03b2",
+      "version": "1.0.0:β",
       "packageHash": "2222222222222222222222222222222222222222222222222222222222222222"
     },
     "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
     "bootstrapVersion": 1,
-    "bootstrapFrontier": { "headSeq": 7, "commitSeq": 6, "epoch": 2 },
+    "bootstrapFrontier": {
+      "headSeq": 7,
+      "commitSeq": 6,
+      "epoch": 2
+    },
     "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
   },
   "descriptorDigestV1": "03504036d9aecf653a38d807d2a852f18d13bcf612cb9d7e612c46540c430cac",
   "catalogRows": [
     {
       "package": {
-        "pluginId": "s.gis:\u5730\u56f3",
+        "pluginId": "s.gis:地図",
         "packageId": "s.gis.gismap:codec",
-        "version": "1.0.0:\u03b2",
+        "version": "1.0.0:β",
         "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
         "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
         "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555"
       },
       "artifact": {
         "kind": "s.gis:gismap",
-        "schema": "s.gis.gismap@1/*:\u7cbe\u5bc6",
+        "schema": "s.gis.gismap@1/*:精密",
         "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111"
       },
-      "parentDialect": { "artifactKind": "s.gis:gismap", "standard": "1", "subset": "*" },
+      "parentDialect": {
+        "artifactKind": "s.gis:gismap",
+        "standard": "1",
+        "subset": "*"
+      },
       "surface": {
         "surfaceId": "surface.gis.editor",
         "appId": "app.gis",
@@ -86,23 +119,34 @@
         "role": "editor",
         "rendererTarget": "react"
       },
-      "grant": { "read": true, "write": true, "observe": true }
+      "browserActor": {
+        "kind": "none"
+      },
+      "grant": {
+        "read": true,
+        "write": true,
+        "observe": true
+      }
     },
     {
       "package": {
-        "pluginId": "s.gis:\u5730\u56f3",
+        "pluginId": "s.gis:地図",
         "packageId": "s.gis.gismap:codec",
-        "version": "1.0.0:\u03b2",
+        "version": "1.0.0:β",
         "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
         "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
         "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555"
       },
       "artifact": {
         "kind": "s.gis:gismap",
-        "schema": "s.gis.gismap@1/*:\u7cbe\u5bc6",
+        "schema": "s.gis.gismap@1/*:精密",
         "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111"
       },
-      "parentDialect": { "artifactKind": "s.gis:gismap", "standard": "1", "subset": "*" },
+      "parentDialect": {
+        "artifactKind": "s.gis:gismap",
+        "standard": "1",
+        "subset": "*"
+      },
       "surface": {
         "surfaceId": "surface.gis.viewer",
         "appId": "app.gis",
@@ -110,51 +154,144 @@
         "role": "viewer",
         "rendererTarget": "react"
       },
-      "grant": { "read": true, "write": false, "observe": true }
+      "browserActor": {
+        "kind": "none"
+      },
+      "grant": {
+        "read": true,
+        "write": false,
+        "observe": true
+      }
     }
   ],
   "intent": {
     "schema": "semio.hub.document-open-intent/v1",
     "version": 1,
-    "scope": { "spaceId": "raum:\u00e4", "documentId": "plan:\u6771\u4eac" },
+    "scope": {
+      "spaceId": "raum:ä",
+      "documentId": "plan:東京"
+    },
     "requestedSurfaceId": "surface.gis.editor",
-    "clientInstanceId": "client:\u65e5\u672c"
+    "clientInstanceId": "client:日本"
   },
   "issueCases": [
-    { "name": "session-author-editor", "subjectKind": "session", "role": "author", "expected": "accepted", "expectedSurfaceId": "surface.gis.editor", "expectedWrite": true },
-    { "name": "session-author-default", "subjectKind": "session", "role": "author", "removePath": "requestedSurfaceId", "expected": "accepted", "expectedSurfaceId": "surface.gis.editor", "expectedWrite": true },
-    { "name": "share-viewer", "subjectKind": "share", "replacePath": "requestedSurfaceId", "value": "surface.gis.viewer", "expected": "accepted", "expectedSurfaceId": "surface.gis.viewer", "expectedWrite": false },
-    { "name": "share-editor-denied", "subjectKind": "share", "expected": "component-unavailable" },
-    { "name": "spectator-editor-denied", "subjectKind": "session", "role": "spectator", "expected": "component-unavailable" },
-    { "name": "foreign-surface", "subjectKind": "session", "role": "author", "replacePath": "requestedSurfaceId", "value": "surface.foreign", "expected": "component-unavailable" },
-    { "name": "foreign-scope", "subjectKind": "session", "role": "author", "replacePath": "scope.spaceId", "value": "foreign", "expected": "denied" },
-    { "name": "wrong-schema", "subjectKind": "session", "role": "author", "replacePath": "schema", "value": "semio.hub.document-open-intent/v2", "expected": "denied" },
-    { "name": "unknown-authority", "subjectKind": "session", "role": "author", "replacePath": "actor", "value": "caller-selected", "expected": "denied" },
-    { "name": "control-client", "subjectKind": "session", "role": "author", "replacePath": "clientInstanceId", "value": "client:\u0085hidden", "expected": "denied" },
-    { "name": "overlong-client", "subjectKind": "session", "role": "author", "replacePath": "clientInstanceId", "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "expected": "denied" }
+    {
+      "name": "session-author-editor",
+      "subjectKind": "session",
+      "role": "author",
+      "expected": "accepted",
+      "expectedSurfaceId": "surface.gis.editor",
+      "expectedWrite": true
+    },
+    {
+      "name": "session-author-default",
+      "subjectKind": "session",
+      "role": "author",
+      "removePath": "requestedSurfaceId",
+      "expected": "accepted",
+      "expectedSurfaceId": "surface.gis.editor",
+      "expectedWrite": true
+    },
+    {
+      "name": "share-viewer",
+      "subjectKind": "share",
+      "replacePath": "requestedSurfaceId",
+      "value": "surface.gis.viewer",
+      "expected": "accepted",
+      "expectedSurfaceId": "surface.gis.viewer",
+      "expectedWrite": false
+    },
+    {
+      "name": "share-editor-denied",
+      "subjectKind": "share",
+      "expected": "component-unavailable"
+    },
+    {
+      "name": "spectator-editor-denied",
+      "subjectKind": "session",
+      "role": "spectator",
+      "expected": "component-unavailable"
+    },
+    {
+      "name": "foreign-surface",
+      "subjectKind": "session",
+      "role": "author",
+      "replacePath": "requestedSurfaceId",
+      "value": "surface.foreign",
+      "expected": "component-unavailable"
+    },
+    {
+      "name": "foreign-scope",
+      "subjectKind": "session",
+      "role": "author",
+      "replacePath": "scope.spaceId",
+      "value": "foreign",
+      "expected": "denied"
+    },
+    {
+      "name": "wrong-schema",
+      "subjectKind": "session",
+      "role": "author",
+      "replacePath": "schema",
+      "value": "semio.hub.document-open-intent/v2",
+      "expected": "denied"
+    },
+    {
+      "name": "unknown-authority",
+      "subjectKind": "session",
+      "role": "author",
+      "replacePath": "actor",
+      "value": "caller-selected",
+      "expected": "denied"
+    },
+    {
+      "name": "control-client",
+      "subjectKind": "session",
+      "role": "author",
+      "replacePath": "clientInstanceId",
+      "value": "client:hidden",
+      "expected": "denied"
+    },
+    {
+      "name": "overlong-client",
+      "subjectKind": "session",
+      "role": "author",
+      "replacePath": "clientInstanceId",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected": "denied"
+    }
   ],
   "validPlan": {
     "schema": "semio.hub.document-open-plan/v1",
     "version": 1,
     "receipt": "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA",
     "expiresAtUnixMs": 2000000030000,
-    "scope": { "spaceId": "raum:\u00e4", "documentId": "plan:\u6771\u4eac" },
+    "scope": {
+      "spaceId": "raum:ä",
+      "documentId": "plan:東京"
+    },
     "descriptorDigestV1": "03504036d9aecf653a38d807d2a852f18d13bcf612cb9d7e612c46540c430cac",
-    "catalog": { "generationId": "1019f0371199dd5e744ca74406185e4cc2017f71398225031bd079b99f0116ef" },
+    "catalog": {
+      "generationId": "1019f0371199dd5e744ca74406185e4cc2017f71398225031bd079b99f0116ef"
+    },
     "package": {
-      "pluginId": "s.gis:\u5730\u56f3",
+      "pluginId": "s.gis:地図",
       "packageId": "s.gis.gismap:codec",
-      "version": "1.0.0:\u03b2",
+      "version": "1.0.0:β",
       "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
       "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
       "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555"
     },
     "artifact": {
       "kind": "s.gis:gismap",
-      "schema": "s.gis.gismap@1/*:\u7cbe\u5bc6",
+      "schema": "s.gis.gismap@1/*:精密",
       "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111"
     },
-    "parentDialect": { "artifactKind": "s.gis:gismap", "standard": "1", "subset": "*" },
+    "parentDialect": {
+      "artifactKind": "s.gis:gismap",
+      "standard": "1",
+      "subset": "*"
+    },
     "surface": {
       "surfaceId": "surface.gis.editor",
       "appId": "app.gis",
@@ -162,16 +299,56 @@
       "role": "editor",
       "rendererTarget": "react"
     },
-    "grant": { "read": true, "write": true, "observe": true },
+    "browserActor": {
+      "kind": "none"
+    },
+    "grant": {
+      "read": true,
+      "write": true,
+      "observe": true
+    },
     "checkpoint": {
       "checkpointId": "480a3b0f144e38a0527e4f6341af445098284a18a53017ba5e9a8c1bcdd60d33",
       "descriptorDigestV1": "03504036d9aecf653a38d807d2a852f18d13bcf612cb9d7e612c46540c430cac",
       "baselineFrontier": {
-        "documentId": "plan:\u6771\u4eac",
+        "documentId": "plan:東京",
         "headEditOrdinal": 2,
         "headEditId": "edit:2",
         "lastCommitSeq": 2,
-        "chainHash": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+        "chainHash": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
       },
       "aggregateSha256": "e29f9287b42b0642d71995e2d00cc27312b9a568f1d0a2f87fbb6e369632ad35"
     },
@@ -187,43 +364,205 @@
     "planReceipt": "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA"
   },
   "exchangeNegativeMutations": [
-    { "name": "exchange-wrong-schema", "path": "schema", "value": "semio.hub.document-plan-socket-grant-intent/v2" },
-    { "name": "exchange-wrong-version", "path": "version", "value": 2 },
-    { "name": "exchange-noncanonical-receipt-tail", "path": "planReceipt", "value": "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyB" },
-    { "name": "exchange-invalid-receipt-alphabet", "path": "planReceipt", "value": "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHy!" },
-    { "name": "exchange-unknown-authority", "path": "actor", "value": "caller-selected" }
+    {
+      "name": "exchange-wrong-schema",
+      "path": "schema",
+      "value": "semio.hub.document-plan-socket-grant-intent/v2"
+    },
+    {
+      "name": "exchange-wrong-version",
+      "path": "version",
+      "value": 2
+    },
+    {
+      "name": "exchange-noncanonical-receipt-tail",
+      "path": "planReceipt",
+      "value": "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyB"
+    },
+    {
+      "name": "exchange-invalid-receipt-alphabet",
+      "path": "planReceipt",
+      "value": "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHy!"
+    },
+    {
+      "name": "exchange-unknown-authority",
+      "path": "actor",
+      "value": "caller-selected"
+    }
   ],
   "socketConsumeCases": [
-    { "name": "exact-current-authority", "expected": "accepted" },
-    { "name": "surface-substitution", "dialSurfaceId": "surface.gis.viewer", "expected": "denied" },
-    { "name": "descriptor-substitution", "replacePath": "descriptorDigestV1", "value": "7777777777777777777777777777777777777777777777777777777777777777", "expected": "denied" },
-    { "name": "catalog-generation-substitution", "replacePath": "catalog.generationId", "value": "7777777777777777777777777777777777777777777777777777777777777777", "expected": "denied" },
-    { "name": "directory-revision-substitution", "replacePath": "revalidation.directoryRevision", "value": 20, "expected": "denied" },
-    { "name": "checkpoint-substitution", "replacePath": "checkpoint.checkpointId", "value": "7777777777777777777777777777777777777777777777777777777777777777", "expected": "denied" },
-    { "name": "parent-artifact-kind-substitution", "replacePath": "parentDialect.artifactKind", "value": "s.foreign.document", "expected": "denied" },
-    { "name": "parent-standard-substitution", "replacePath": "parentDialect.standard", "value": "2", "expected": "denied" },
-    { "name": "parent-subset-substitution", "replacePath": "parentDialect.subset", "value": "preview", "expected": "denied" }
+    {
+      "name": "exact-current-authority",
+      "expected": "accepted"
+    },
+    {
+      "name": "surface-substitution",
+      "dialSurfaceId": "surface.gis.viewer",
+      "expected": "denied"
+    },
+    {
+      "name": "descriptor-substitution",
+      "replacePath": "descriptorDigestV1",
+      "value": "7777777777777777777777777777777777777777777777777777777777777777",
+      "expected": "denied"
+    },
+    {
+      "name": "catalog-generation-substitution",
+      "replacePath": "catalog.generationId",
+      "value": "7777777777777777777777777777777777777777777777777777777777777777",
+      "expected": "denied"
+    },
+    {
+      "name": "directory-revision-substitution",
+      "replacePath": "revalidation.directoryRevision",
+      "value": 20,
+      "expected": "denied"
+    },
+    {
+      "name": "checkpoint-substitution",
+      "replacePath": "checkpoint.checkpointId",
+      "value": "7777777777777777777777777777777777777777777777777777777777777777",
+      "expected": "denied"
+    },
+    {
+      "name": "parent-artifact-kind-substitution",
+      "replacePath": "parentDialect.artifactKind",
+      "value": "s.foreign.document",
+      "expected": "denied"
+    },
+    {
+      "name": "parent-standard-substitution",
+      "replacePath": "parentDialect.standard",
+      "value": "2",
+      "expected": "denied"
+    },
+    {
+      "name": "parent-subset-substitution",
+      "replacePath": "parentDialect.subset",
+      "value": "preview",
+      "expected": "denied"
+    }
   ],
   "negativeMutations": [
-    { "name": "foreign-scope", "path": "scope.spaceId", "value": "other", "code": "stale" },
-    { "name": "package-mismatch", "path": "package.componentSha256", "value": "6666666666666666666666666666666666666666666666666666666666666666", "code": "stale" },
-    { "name": "surface-mismatch", "path": "surface.surfaceId", "value": "surface.other", "code": "stale" },
-    { "name": "parent-standard-mismatch", "path": "parentDialect.standard", "value": "2", "code": "stale" },
-    { "name": "parent-kind-mismatch", "path": "parentDialect.artifactKind", "value": "s.foreign.document", "code": "denied" },
-    { "name": "parent-standard-control", "path": "parentDialect.standard", "value": "\u0085", "code": "denied" },
-    { "name": "parent-subset-trim", "path": "parentDialect.subset", "value": " * ", "code": "denied" },
-    { "name": "catalog-generation-mismatch", "path": "catalog.generationId", "value": "7777777777777777777777777777777777777777777777777777777777777777", "code": "stale" },
-    { "name": "expired", "path": "expiresAtUnixMs", "value": 1999999999999, "code": "expired" },
-    { "name": "overlong-ttl", "path": "expiresAtUnixMs", "value": 2000000030001, "code": "denied" },
-    { "name": "noncanonical-receipt-tail", "path": "receipt", "value": "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyB", "code": "denied" },
-    { "name": "unicode-cc-identity", "path": "surface.appId", "value": "app.\u0085hidden", "code": "denied" },
-    { "name": "frontier-head-id-control", "path": "checkpoint.baselineFrontier.headEditId", "value": "edit:\u0085", "code": "denied" },
-    { "name": "frontier-head-id-overlong", "path": "checkpoint.baselineFrontier.headEditId", "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "code": "denied" },
-    { "name": "unsafe-expiry", "path": "expiresAtUnixMs", "value": 9007199254740992, "code": "denied" },
-    { "name": "unsafe-frontier-ordinal", "path": "checkpoint.baselineFrontier.headEditOrdinal", "value": 9007199254740992, "code": "denied" },
-    { "name": "unsafe-revalidation-revision", "path": "revalidation.directoryRevision", "value": 9007199254740992, "code": "denied" },
-    { "name": "nested-scope-extra", "path": "scope.actor", "value": "caller-selected", "code": "denied" },
-    { "name": "nested-frontier-extra", "path": "checkpoint.baselineFrontier.storageKey", "value": "private", "code": "denied" },
-    { "name": "unknown-field", "path": "actor", "value": "caller-selected", "code": "denied" }
+    {
+      "name": "foreign-scope",
+      "path": "scope.spaceId",
+      "value": "other",
+      "code": "stale"
+    },
+    {
+      "name": "package-mismatch",
+      "path": "package.componentSha256",
+      "value": "6666666666666666666666666666666666666666666666666666666666666666",
+      "code": "stale"
+    },
+    {
+      "name": "surface-mismatch",
+      "path": "surface.surfaceId",
+      "value": "surface.other",
+      "code": "stale"
+    },
+    {
+      "name": "parent-standard-mismatch",
+      "path": "parentDialect.standard",
+      "value": "2",
+      "code": "stale"
+    },
+    {
+      "name": "parent-kind-mismatch",
+      "path": "parentDialect.artifactKind",
+      "value": "s.foreign.document",
+      "code": "denied"
+    },
+    {
+      "name": "parent-standard-control",
+      "path": "parentDialect.standard",
+      "value": "",
+      "code": "denied"
+    },
+    {
+      "name": "parent-subset-trim",
+      "path": "parentDialect.subset",
+      "value": " * ",
+      "code": "denied"
+    },
+    {
+      "name": "catalog-generation-mismatch",
+      "path": "catalog.generationId",
+      "value": "7777777777777777777777777777777777777777777777777777777777777777",
+      "code": "stale"
+    },
+    {
+      "name": "expired",
+      "path": "expiresAtUnixMs",
+      "value": 1999999999999,
+      "code": "expired"
+    },
+    {
+      "name": "overlong-ttl",
+      "path": "expiresAtUnixMs",
+      "value": 2000000030001,
+      "code": "denied"
+    },
+    {
+      "name": "noncanonical-receipt-tail",
+      "path": "receipt",
+      "value": "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyB",
+      "code": "denied"
+    },
+    {
+      "name": "unicode-cc-identity",
+      "path": "surface.appId",
+      "value": "app.hidden",
+      "code": "denied"
+    },
+    {
+      "name": "frontier-head-id-control",
+      "path": "checkpoint.baselineFrontier.headEditId",
+      "value": "edit:",
+      "code": "denied"
+    },
+    {
+      "name": "frontier-head-id-overlong",
+      "path": "checkpoint.baselineFrontier.headEditId",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "code": "denied"
+    },
+    {
+      "name": "unsafe-expiry",
+      "path": "expiresAtUnixMs",
+      "value": 9007199254740992,
+      "code": "denied"
+    },
+    {
+      "name": "unsafe-frontier-ordinal",
+      "path": "checkpoint.baselineFrontier.headEditOrdinal",
+      "value": 9007199254740992,
+      "code": "denied"
+    },
+    {
+      "name": "unsafe-revalidation-revision",
+      "path": "revalidation.directoryRevision",
+      "value": 9007199254740992,
+      "code": "denied"
+    },
+    {
+      "name": "nested-scope-extra",
+      "path": "scope.actor",
+      "value": "caller-selected",
+      "code": "denied"
+    },
+    {
+      "name": "nested-frontier-extra",
+      "path": "checkpoint.baselineFrontier.storageKey",
+      "value": "private",
+      "code": "denied"
+    },
+    {
+      "name": "unknown-field",
+      "path": "actor",
+      "value": "caller-selected",
+      "code": "denied"
+    }
   ]
 }

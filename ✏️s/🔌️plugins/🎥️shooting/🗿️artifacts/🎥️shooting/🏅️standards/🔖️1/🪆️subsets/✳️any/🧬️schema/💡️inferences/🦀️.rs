@@ -26,7 +26,7 @@ pub struct ShootingInference {
 }
 
 impl protocol::Inference<ShootingSnapshot> for ShootingInference {
-    async fn infer(snapshot: &ShootingSnapshot) -> Self {
+    fn infer(snapshot: &ShootingSnapshot) -> Self {
         Self { topology: compute_shooting_topology(snapshot) }
     }
 }
@@ -40,13 +40,13 @@ impl Default for ShootingInference {
 }
 
 impl protocol::InferenceSpec<ShootingSnapshot> for ShootingInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.shooting.shooting.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.shooting.shooting.inference.topology", reads: &["shots", "saved_cameras"] }]
     }
 }
@@ -62,7 +62,7 @@ impl ArtifactInferrer for crate::artifacts::shooting::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.shooting.shooting.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `shooting_artifact_schema_descriptor`'s registration.
-pub async fn shooting_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn shooting_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.shooting.shooting.inference",
         inference: schema::FacetLeaves {
@@ -84,7 +84,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn sample_snapshot() -> ShootingSnapshot {
+    fn sample_snapshot() -> ShootingSnapshot {
         ShootingSnapshot {
             saved_cameras: vec![ShootingSavedCamera { id: "cam-1".into(), label: "Front".into(), camera: ShootingCamera::default() }],
             shots: vec![ShootingShot { id: "shot-1".into(), label: "Shot 1".into(), width: 1024, height: 768, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: Some("cam-1".into()) }],

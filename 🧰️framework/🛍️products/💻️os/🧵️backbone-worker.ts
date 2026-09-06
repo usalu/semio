@@ -7,14 +7,114 @@
  */
 // #endregion Header
 
-import type { ArtifactBootstrapControl, ArtifactBootstrapProgress, ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireArtifactBootstrap, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactBootstrapWorkerEvent, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, BrowserBrokerPortResponseV1, CanonicalDirectoryEventPageV1, CommandAckOutcome, DirectoryAcknowledgedStream, DirectoryAdministrationPhaseV1, DirectoryCommand, DirectoryEventPageAckV1, DirectoryStreamMessage, DocumentScope, PersistenceBinding, RemoteState, SocketGrantReceiptV1 } from "./🟦️";
+import type {
+  ArtifactBootstrapControl,
+  ArtifactBootstrapProgress,
+  ArtifactPresencePeer,
+  ClientFrame,
+  MutationEnvelope,
+  ServerFrame,
+  WireAckStage,
+  WireArtifactBootstrap,
+  WireFrontierSummary,
+  WireLane,
+  WireMutationEnvelope,
+} from "@semio-tech/framework-replication";
+import type {
+  ArtifactActorConfig,
+  ArtifactActorMsg,
+  ArtifactBootstrapWorkerEvent,
+  ArtifactEvent,
+  ArtifactSyncStatus,
+  BackboneWorkerRequest,
+  BackboneWorkerResponse,
+  BackboneWorkerWireMessage,
+  BrowserBrokerPortResponseV1,
+  CanonicalDirectoryEventPageV1,
+  CommandAckOutcome,
+  DirectoryAcknowledgedStream,
+  DirectoryAdministrationPhaseV1,
+  DirectoryCommand,
+  DirectoryEventPageAckV1,
+  DirectoryStreamMessage,
+  DocumentScope,
+  PersistenceBinding,
+  RemoteState,
+  SocketGrantReceiptV1,
+} from "./🟦️";
 import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
-import { DirectoryClient, DirectoryCommandError, DirectoryHttpError, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, documentRuntimeKeyV1, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue, isPackInteger, packUIntSafeOrNull, parseBrowserBrokerPortRequestV1, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "./🟦️";
+import {
+  DirectoryClient,
+  DirectoryCommandError,
+  DirectoryHttpError,
+  HUB_RECONNECT_MAX_MS,
+  HUB_RECONNECT_MIN_MS,
+  createSocketGrantIssuerV1,
+  decodeBackboneWorkerRequest,
+  decodeBackboneWorkerResponse,
+  decodeDocumentPackBytes,
+  decodePackValue,
+  documentRuntimeKeyV1,
+  encodeBackboneWorkerRequest,
+  encodeBackboneWorkerResponse,
+  encodeDocumentPackBytes,
+  encodePackValue,
+  isPackInteger,
+  packUIntSafeOrNull,
+  parseBrowserBrokerPortRequestV1,
+  parseSocketGrantReceiptV1,
+  socketGrantProtocolsV1,
+} from "./🟦️";
 import type { PackValue } from "./🟦️";
-import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, DocumentOpenIntentV1, DocumentOpenPlanV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortStatusV1, GisMapInferencePreviewV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, gisMapInferenceCodeFromStatusV1, gisMapInferencePortTerminalV1, idleGisMapInferencePortStatusV1, parseGisMapInferenceApprovalReceiptV1, parseGisMapInferenceEventPageV1, parseGisMapInferenceJobReceiptV1, reduceGisMapInferencePortV1, sealGisMapInferenceApprovalRequestV1, sealGisMapInferenceJobRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, directoryCommandErrorIsTransient, directoryCommandRequestJson, directoryCommandSha256, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1, sameLeaseFieldsV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
+import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
+import { BROWSER_ACTOR_CHILD_LIMITS, measureChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import type {
+  DirectoryCommandErrorCodeV1,
+  DirectoryCommandOutcomeV1,
+  DirectoryCommandReceiptV1,
+  DirectoryCommandRequestV1,
+  DirectoryCommandResultV1,
+  DocumentExecutionTargetLeaseFieldsV1,
+  DocumentExecutionTargetProgressV1,
+  DocumentExecutionTargetStatusCodeV1,
+  DocumentOpenIntentV1,
+  DocumentOpenPlanV1,
+  GisMapInferencePortCodeV1,
+  GisMapInferencePortEventV1,
+  GisMapInferencePortStatusV1,
+  GisMapInferencePreviewV1,
+} from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import {
+  DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
+  GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
+  gisMapInferenceCodeFromStatusV1,
+  gisMapInferencePortTerminalV1,
+  idleGisMapInferencePortStatusV1,
+  parseGisMapInferenceApprovalReceiptV1,
+  parseGisMapInferenceEventPageV1,
+  parseGisMapInferenceJobReceiptV1,
+  reduceGisMapInferencePortV1,
+  sealGisMapInferenceApprovalRequestV1,
+  sealGisMapInferenceJobRequestV1,
+} from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import {
+  DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
+  DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
+  DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1,
+  directoryCommandErrorIsTransient,
+  directoryCommandRequestJson,
+  directoryCommandSha256,
+  documentExecutionTargetStatusRoleV1,
+  leaseFieldsFromPlanV1,
+  parseDocumentExecutionTargetLeaseFieldsV1,
+  parseDocumentOpenIntentV1,
+  parseDocumentOpenPlanV1,
+  parseDocumentPlanSocketGrantIntentV1,
+  sameLeaseFieldsV1,
+  sealDirectoryCommandReceiptV1,
+  sealDirectoryCommandRequestV1,
+} from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 🔏️ First-party BLAKE3 runtime module — Web Crypto supplies SHA-256 but has no BLAKE3, so a
  * verified execution-target component is hashed with the repository's own implementation. */
 import { blake3Hex } from "@semio-tech/framework";
@@ -68,9 +168,7 @@ const documentExecutionOwners = new Map<string, DocumentExecutionOwnerEntry>();
 
 function documentRuntimeKeyForConfig(config: ArtifactActorConfig): string {
   const hub = hubBinding(config);
-  return hub === null
-    ? documentRuntimeKeyV1({ kind: "local", documentId: config.documentId })
-    : documentRuntimeKeyV1({ kind: "hub", spaceId: hub.spaceId, documentId: config.documentId });
+  return hub === null ? documentRuntimeKeyV1({ kind: "local", documentId: config.documentId }) : documentRuntimeKeyV1({ kind: "hub", spaceId: hub.spaceId, documentId: config.documentId });
 }
 
 function ownedDocumentRuntimeKey(documentId: string, spaceId?: string): string | null {
@@ -235,7 +333,9 @@ type ArtifactState = {
   docAbort: AbortController;
   /** 🪪️ The private verified execution-target owner for a non-`react` hub target, live only while
    * this document's plan/socket authority is. Never posted, cloned or encoded. */
+  executionTargetOpen: symbol | null;
   executionTargetLease: DocumentExecutionTargetLease | null;
+  browserActorReservation: DocumentBrowserActorReservation | null;
   /** 🛟️ Handle for the recursive, jittered sanity-poll reschedule (finding 1) — a plain
    * `ReturnType<typeof setTimeout>`, not `setInterval`, because each tick schedules its OWN next
    * delay with fresh jitter rather than ticking on a fixed period. */
@@ -265,6 +365,7 @@ type ArtifactState = {
   pendingResumeToken: string | null;
   requiredTailFrontier: WireFrontierSummary | null;
   artifactBootstrap: ArtifactBootstrapAssembler | null;
+  artifactBootstrapOwner: DocumentArtifactBootstrapOwner | null;
   artifactBootstrapDeadlineMs: number | null;
   artifactBootstrapProgress: ArtifactBootstrapProgress[];
   currentPack: Uint8Array | null;
@@ -317,11 +418,7 @@ function emitEvent(state: ArtifactState, event: ArtifactEvent): void {
   const scope = artifactScope(state);
   if (event.kind === "presence") {
     const authority = state.presenceAuthority;
-    const verified = authority !== null
-      && authority.socket === state.socket
-      && scope !== undefined
-      && authority.scope.spaceId === scope.spaceId
-      && authority.scope.documentId === scope.documentId;
+    const verified = authority !== null && authority.socket === state.socket && scope !== undefined && authority.scope.spaceId === scope.spaceId && authority.scope.documentId === scope.documentId;
     post({
       kind: "event",
       documentId: state.config.documentId,
@@ -388,7 +485,9 @@ async function browserBrokerFetch(input: string, init: RequestInit = {}, options
   localBrowserBrokerQueued += 1;
   let resolveTurn: () => void = () => undefined;
   const prior = localBrowserBrokerQueue;
-  localBrowserBrokerQueue = new Promise<void>((resolve) => { resolveTurn = resolve; });
+  localBrowserBrokerQueue = new Promise<void>((resolve) => {
+    resolveTurn = resolve;
+  });
   await prior;
   try {
     const current = localBrowserBrokerProof;
@@ -401,10 +500,14 @@ async function browserBrokerFetch(input: string, init: RequestInit = {}, options
     const currentHex = bytesHex(current);
     clearLocalBrowserBrokerProof();
     try {
-      const response = await fetchWithTimeout(input, {
-        ...init,
-        headers: { ...(init.headers as Record<string, string> | undefined), "x-semio-browser-broker": currentHex, "x-semio-browser-broker-next": bytesHex(nextDigest) },
-      }, options);
+      const response = await fetchWithTimeout(
+        input,
+        {
+          ...init,
+          headers: { ...(init.headers as Record<string, string> | undefined), "x-semio-browser-broker": currentHex, "x-semio-browser-broker-next": bytesHex(nextDigest) },
+        },
+        options,
+      );
       if (response.headers.get("x-semio-browser-broker-advanced") === "1" && response.status !== 401) {
         localBrowserBrokerProof = next;
         localBrowserBrokerProofExpiresAtMs = Date.now() + BROWSER_BROKER_PROOF_TTL_MS;
@@ -450,14 +553,17 @@ function attachLocalBrokerPort(port: MessagePort): void {
     const requestId = message.requestId;
     const controller = new AbortController();
     localBrowserBrokerRpcControllers.set(requestId, controller);
-    void browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal }).then(async (response) => {
-      const body = await response.text();
-      const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: response.status, body };
-      port.postMessage(result);
-    }).catch((error: unknown) => {
-      const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: error instanceof Error && error.message === "browser broker rebootstrap required" ? 428 : 503, body: "" };
-      port.postMessage(result);
-    }).finally(() => localBrowserBrokerRpcControllers.delete(requestId));
+    void browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal })
+      .then(async (response) => {
+        const body = await response.text();
+        const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: response.status, body };
+        port.postMessage(result);
+      })
+      .catch((error: unknown) => {
+        const result: BrowserBrokerPortResponseV1 = { kind: "response", requestId, status: error instanceof Error && error.message === "browser broker rebootstrap required" ? 428 : 503, body: "" };
+        port.postMessage(result);
+      })
+      .finally(() => localBrowserBrokerRpcControllers.delete(requestId));
   };
   port.start();
 }
@@ -484,39 +590,8 @@ type BrowserDocumentSocketAuthorityV1 = Readonly<{
   surfaceId?: string;
 }>;
 
-async function readDocumentOpenJson(response: Response): Promise<unknown> {
-  const contentLength = Number(response.headers.get("content-length") ?? "0");
-  if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > DOCUMENT_OPEN_RESPONSE_MAX_BYTES) throw new Error("document open: invalid response");
-  if (!response.body) throw new Error("document open: invalid response");
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let retained = 0;
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      retained += value.byteLength;
-      if (retained > DOCUMENT_OPEN_RESPONSE_MAX_BYTES) {
-        await reader.cancel();
-        throw new Error("document open: invalid response");
-      }
-      chunks.push(value);
-    }
-    const bytes = new Uint8Array(retained);
-    let offset = 0;
-    for (const chunk of chunks) {
-      bytes.set(chunk, offset);
-      offset += chunk.byteLength;
-      chunk.fill(0);
-    }
-    try {
-      return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-    } finally {
-      bytes.fill(0);
-    }
-  } finally {
-    for (const chunk of chunks) chunk.fill(0);
-  }
+async function readDocumentOpenJson(response: FetchTimeoutResponse, control: ExecutionTargetReadControl): Promise<unknown> {
+  return readExecutionTargetJson(response, DOCUMENT_OPEN_RESPONSE_MAX_BYTES, control);
 }
 
 //#region 🪪️ExecutionTargetLease
@@ -525,7 +600,7 @@ const EXECUTION_TARGET_PROGRESS_UNIT_BYTES = 64 * 1024;
 /** 🧯️ Bound on the strict lease manifest JSON body. */
 const EXECUTION_TARGET_MANIFEST_MAX_BYTES = 8 * 1024;
 
-type DocumentExecutionTargetAssetV1 = "manifest" | "component" | "descriptor";
+type DocumentExecutionTargetAssetV1 = "manifest" | "component" | "descriptor" | "browser-actor";
 
 const documentExecutionTargetLeaseMintToken = Symbol("semio.os.document-execution-target-lease.mint/v1");
 const documentExecutionTargetLeaseBrand = Symbol("semio.os.document-execution-target-lease/v1");
@@ -542,6 +617,9 @@ class DocumentExecutionTargetLease {
   #descriptor: Uint8Array | null;
   #moduleUrl: string | null = null;
   #live = true;
+  #retirement = new AbortController();
+  #browserActorGrant: DocumentBrowserActorGrant | null = null;
+  #browserActorOpen: DocumentBrowserActorOpen | null = null;
 
   constructor(token: symbol, fields: DocumentExecutionTargetLeaseFieldsV1, hubOrigin: string, component: Uint8Array, descriptor: Uint8Array) {
     if (token !== documentExecutionTargetLeaseMintToken) throw new Error("document execution target lease: private constructor");
@@ -565,8 +643,72 @@ class DocumentExecutionTargetLease {
     return Object.freeze(structuredClone(this.#fields));
   }
 
+  get retirement(): AbortSignal {
+    return this.#retirement.signal;
+  }
+
+  admitBrowserActor(token: symbol, receipt: SocketGrantReceiptV1, retireAtMs: number, open: DocumentBrowserActorOpen): void {
+    if (token !== documentExecutionTargetLeaseMintToken || !this.#live || this.#browserActorGrant !== null || !Number.isSafeInteger(retireAtMs)) throw new Error("document browser actor: private grant");
+    const parsed = parseSocketGrantReceiptV1(receipt);
+    if (parsed.expiresAtMs > retireAtMs) throw new Error("document browser actor: invalid grant");
+    open.assertCurrent();
+    this.#browserActorOpen = Object.freeze({ binding: structuredClone(open.binding), intent: structuredClone(open.intent), assertCurrent: open.assertCurrent });
+    this.#browserActorGrant = Object.freeze({ actorId: parsed.actorId, reserveBeforeMs: parsed.expiresAtMs, retireAtMs });
+  }
+
+  assertBrowserActorCurrent(): void {
+    if (!this.#live || !this.#browserActorOpen) throw new Error("document browser actor: retired open owner");
+    this.#browserActorOpen.assertCurrent();
+  }
+
+  assertBrowserActorDescribeCapacity(): void {
+    if (!this.#live || !this.#descriptor) throw new Error("document browser actor: dropped descriptor");
+    assertBrowserActorDescribeCapacityV1(this.#descriptor.byteLength);
+  }
+
+  async activateBrowserActor(child: DocumentBrowserActorChild, signal: AbortSignal, assertSession: () => void, report: (progress: DocumentExecutionTargetProgressV1) => void): Promise<void> {
+    const open = this.#browserActorOpen,
+      grant = this.#browserActorGrant,
+      actor = this.#fields.browserActor;
+    if (!open || !grant || actor.kind !== "closed-browser-actor") throw new Error("document browser actor: missing private authority");
+    const assertCurrent = () => {
+      assertSession();
+      open.assertCurrent();
+      if (!this.#live || this.#browserActorOpen !== open || this.#browserActorGrant !== grant) throw new Error("document browser actor: retired authority");
+    };
+    const control: ExecutionTargetReadControl = { signal, deadlineAtMs: Math.min(grant.reserveBeforeMs, grant.retireAtMs, Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS), assertCurrent };
+    let source: Uint8Array | undefined, result: BrowserActorChildValue | undefined;
+    try {
+      assertExecutionTargetRead(control);
+      this.assertBrowserActorDescribeCapacity();
+      const response = await browserExecutionTargetAssetRequest(open.binding, open.intent.scope.documentId, "browser-actor", open.intent, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal });
+      source = await readExecutionTargetBody(response, actor.byteLength, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, "browser-actor", control, report);
+      assertExecutionTargetRead(control);
+      if ((await executionTargetSha256Hex(source)) !== actor.sha256) throw new Error("document browser actor: body integrity");
+      assertExecutionTargetRead(control);
+      await child.load(source.buffer as ArrayBuffer);
+      assertExecutionTargetRead(control);
+      result = await child.invoke(["describe", "describe"], []);
+      assertExecutionTargetRead(control);
+      if (!(result instanceof Uint8Array) || !(result.buffer instanceof ArrayBuffer) || result.byteOffset !== 0 || result.byteLength !== result.buffer.byteLength || !this.#descriptor) throw new Error("document browser actor: describe shape");
+      verifyBrowserActorDescribeV1(result, this.#descriptor, { decode: decodePackValue, encode: encodePackValue });
+      assertExecutionTargetRead(control);
+    } finally {
+      if (source?.byteLength) source.fill(0);
+      if (result !== undefined) for (const buffer of measureChildValue(result, BROWSER_ACTOR_CHILD_LIMITS.outputBytes).transfers) new Uint8Array(buffer).fill(0);
+    }
+  }
+
+  browserActorGrant(): DocumentBrowserActorGrant | null {
+    return this.#live ? this.#browserActorGrant : null;
+  }
+
   drop(): void {
+    if (!this.#live) return;
     this.#live = false;
+    this.#retirement.abort();
+    this.#browserActorGrant = null;
+    this.#browserActorOpen = null;
     this.#component?.fill(0);
     this.#descriptor?.fill(0);
     this.#component = null;
@@ -579,7 +721,7 @@ class DocumentExecutionTargetLease {
 }
 
 /** 🧾️ Receipt-free lease projection of one parsed plan, at the byte lengths under comparison. */
-function receiptFreeFields(plan: DocumentOpenPlanV1, byteLengths: { readonly component: number; readonly descriptor: number }): DocumentExecutionTargetLeaseFieldsV1 {
+function receiptFreeFields(plan: DocumentOpenPlanV1, byteLengths: { readonly component: number; readonly descriptor: number; readonly browserActor?: number }): DocumentExecutionTargetLeaseFieldsV1 {
   return leaseFieldsFromPlanV1(plan, byteLengths);
 }
 
@@ -595,12 +737,18 @@ function executionTargetAssetPath(spaceId: string, documentId: string, asset: Do
   return `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/execution-target/${asset}`;
 }
 
-/** 🚪️ The only broker operation this lane owns: exactly the three protected document-scoped asset
+/** 🚪️ The only broker operation this lane owns: exactly the four protected document-scoped asset
  * calls, always POST, always the bounded `DocumentOpenIntentV1` body, never a package, digest,
  * generation, path or receipt selector. Anything else is denied before a request exists. */
-function browserExecutionTargetAssetRequest(binding: Extract<PersistenceBinding, { kind: "hub" }>, documentId: string, asset: DocumentExecutionTargetAssetV1, intent: DocumentOpenIntentV1, options: { readonly timeoutMs: number; readonly signal: AbortSignal }): Promise<FetchTimeoutResponse> {
+function browserExecutionTargetAssetRequest(
+  binding: Extract<PersistenceBinding, { kind: "hub" }>,
+  documentId: string,
+  asset: DocumentExecutionTargetAssetV1,
+  intent: DocumentOpenIntentV1,
+  options: { readonly timeoutMs: number; readonly signal: AbortSignal },
+): Promise<FetchTimeoutResponse> {
   const path = executionTargetAssetPath(binding.spaceId, documentId, asset);
-  if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/execution-target\/(?:manifest|component|descriptor)$/u.test(path)) return Promise.reject(new Error("document execution target: operation denied"));
+  if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/execution-target\/(?:manifest|component|descriptor|browser-actor)$/u.test(path)) return Promise.reject(new Error("document execution target: operation denied"));
   if (intent.scope.spaceId !== binding.spaceId || intent.scope.documentId !== documentId) return Promise.reject(new Error("document execution target: operation denied"));
   return browserBrokerFetch(`/_semio/hub${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) }, options);
 }
@@ -616,72 +764,122 @@ function emitExecutionTargetStatus(state: ArtifactState, binding: Extract<Persis
   post(status);
 }
 
-/** 📥️ Streams the strict lease manifest under its own explicit maximum, independently of the larger
- * plan/grant response bound. The body is wiped after decoding. */
-async function readExecutionTargetManifestJson(response: FetchTimeoutResponse): Promise<unknown> {
-  const declared = response.headers.get("content-length");
-  if (declared !== null && !(Number.isSafeInteger(Number(declared)) && Number(declared) >= 1 && Number(declared) <= EXECUTION_TARGET_MANIFEST_MAX_BYTES)) throw new Error("document execution target: invalid manifest");
-  if (!response.body) throw new Error("document execution target: invalid manifest");
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let retained = 0;
+type ExecutionTargetReadControl = Readonly<{ signal: AbortSignal; deadlineAtMs: number; assertCurrent(): void }>;
+type ExecutionTargetBodyResponse = FetchTimeoutResponse & { readonly body?: ReadableStream<Uint8Array> | null };
+
+function assertExecutionTargetRead(control: ExecutionTargetReadControl): void {
+  if (control.signal.aborted || !Number.isSafeInteger(control.deadlineAtMs) || Date.now() >= control.deadlineAtMs) throw new Error("document execution target: cancelled or expired");
+  control.assertCurrent();
+}
+
+/** 🧹️ Owns one bounded body through EOF, cancellation and stale-read retirement. */
+async function readBoundedExecutionTargetBody(response: FetchTimeoutResponse, expected: number | null, maximum: number, control: ExecutionTargetReadControl, report: (received: number, total: number) => void): Promise<Uint8Array> {
+  const body = (response as ExecutionTargetBodyResponse).body;
+  if (!(body instanceof ReadableStream)) throw new Error("document execution target: invalid body");
+  const reader = body.getReader();
+  let bytes: Uint8Array | null = null,
+    cancelled = false,
+    timer: ReturnType<typeof setTimeout> | undefined;
+  let rejectStop: (error: Error) => void = () => {};
+  const stop = new Promise<never>((_resolve, reject) => {
+    rejectStop = reject;
+  });
+  void stop.catch(() => {});
+  const abort = (): void => rejectStop(new Error("document execution target: cancelled or expired"));
+  const cancel = (): void => {
+    if (cancelled) return;
+    cancelled = true;
+    void reader.cancel().catch(() => {});
+  };
   try {
+    const header = response.headers.get("content-length");
+    const declared = header === null ? null : Number(header);
+    if (
+      !response.ok ||
+      !Number.isSafeInteger(maximum) ||
+      maximum < 1 ||
+      (declared !== null && (!Number.isSafeInteger(declared) || declared < 1 || declared > maximum)) ||
+      (expected !== null && (declared !== expected || !Number.isSafeInteger(expected) || expected < 1 || expected > maximum))
+    )
+      throw new Error("document execution target: invalid body");
+    assertExecutionTargetRead(control);
+    control.signal.addEventListener("abort", abort, { once: true });
+    timer = setTimeout(abort, Math.min(0x7fffffff, Math.max(0, control.deadlineAtMs - Date.now())));
+    assertExecutionTargetRead(control);
+    bytes = new Uint8Array(declared ?? maximum);
+    let received = 0,
+      announced = 0;
     for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      retained += value.byteLength;
-      if (retained > EXECUTION_TARGET_MANIFEST_MAX_BYTES) throw new Error("document execution target: invalid manifest");
-      chunks.push(value);
+      assertExecutionTargetRead(control);
+      const slot: { state: "pending" | "claimed" | "abandoned"; result?: ReadableStreamReadResult<Uint8Array> } = { state: "pending" };
+      const pending = reader.read().then((result) => {
+        slot.result = result;
+        if (slot.state === "abandoned" && result.value instanceof Uint8Array) result.value.fill(0);
+        return result;
+      });
+      let result: ReadableStreamReadResult<Uint8Array>;
+      try {
+        result = await Promise.race([pending, stop]);
+        slot.state = "claimed";
+      } catch (error) {
+        slot.state = "abandoned";
+        if (slot.result?.value instanceof Uint8Array) slot.result.value.fill(0);
+        throw error;
+      }
+      try {
+        assertExecutionTargetRead(control);
+        if (result.done) break;
+        if (!(result.value instanceof Uint8Array) || result.value.byteLength > bytes.length - received) throw new Error("document execution target: invalid body");
+        bytes.set(result.value, received);
+        received += result.value.byteLength;
+        if (received - announced >= EXECUTION_TARGET_PROGRESS_UNIT_BYTES) {
+          announced = received;
+          report(received, declared ?? maximum);
+        }
+      } finally {
+        if (result.value instanceof Uint8Array) result.value.fill(0);
+      }
     }
-    if (retained === 0) throw new Error("document execution target: invalid manifest");
-    const bytes = new Uint8Array(retained);
-    let offset = 0;
-    for (const chunk of chunks) {
-      bytes.set(chunk, offset);
-      offset += chunk.byteLength;
-    }
-    try {
-      return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-    } finally {
-      bytes.fill(0);
-    }
+    assertExecutionTargetRead(control);
+    if (received === 0 || (declared !== null && received !== declared)) throw new Error("document execution target: invalid body");
+    report(received, declared ?? received);
+    assertExecutionTargetRead(control);
+    if (declared === null) return bytes.slice(0, received);
+    const owned = bytes;
+    bytes = null;
+    return owned;
+  } catch (error) {
+    cancel();
+    throw error;
   } finally {
-    await reader.cancel().catch(() => undefined);
-    for (const chunk of chunks) chunk.fill(0);
+    clearTimeout(timer);
+    control.signal.removeEventListener("abort", abort);
+    bytes?.fill(0);
+    reader.releaseLock();
   }
 }
 
-/** 📥️ Streams one bounded asset body, enforcing the declared byte length, the shared maximum and the
- * operation's cancellation/deadline before every chunk, and reporting bounded progress only. */
-async function readExecutionTargetBody(response: FetchTimeoutResponse, expectedByteLength: number, maxBytes: number, stage: "component" | "descriptor", signal: AbortSignal, report: (progress: DocumentExecutionTargetProgressV1) => void): Promise<Uint8Array> {
-  const declared = Number(response.headers.get("content-length") ?? "");
-  if (!response.ok || !Number.isSafeInteger(declared) || declared !== expectedByteLength || declared < 1 || declared > maxBytes || !response.body) throw new Error("document execution target: invalid body");
-  const bytes = new Uint8Array(declared);
-  const reader = response.body.getReader();
-  let received = 0;
-  let announced = 0;
+/** 📥️ Decodes the bounded manifest and wipes its temporary body owner. */
+async function readExecutionTargetJson(response: FetchTimeoutResponse, maximum: number, control: ExecutionTargetReadControl): Promise<unknown> {
+  const bytes = await readBoundedExecutionTargetBody(response, null, maximum, control, () => {});
   try {
-    for (;;) {
-      if (signal.aborted) throw new Error("document execution target: cancelled");
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (received + value.byteLength > declared) throw new Error("document execution target: invalid body");
-      bytes.set(value, received);
-      received += value.byteLength;
-      value.fill(0);
-      if (received - announced >= EXECUTION_TARGET_PROGRESS_UNIT_BYTES) {
-        announced = received;
-        report({ stage, completedBytes: received, totalBytes: declared });
-      }
-    }
-    if (received !== declared) throw new Error("document execution target: invalid body");
-    report({ stage, completedBytes: received, totalBytes: declared });
-    return bytes;
-  } catch (error) {
+    assertExecutionTargetRead(control);
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } finally {
     bytes.fill(0);
-    await reader.cancel().catch(() => undefined);
-    throw error;
   }
+}
+
+/** 📥️ Acquires exactly one declared asset body with bounded progress. */
+async function readExecutionTargetBody(
+  response: FetchTimeoutResponse,
+  expectedByteLength: number,
+  maxBytes: number,
+  stage: "component" | "descriptor" | "browser-actor",
+  control: ExecutionTargetReadControl,
+  report: (progress: DocumentExecutionTargetProgressV1) => void,
+): Promise<Uint8Array> {
+  return readBoundedExecutionTargetBody(response, expectedByteLength, maxBytes, control, (completedBytes, totalBytes) => report({ stage, completedBytes, totalBytes }));
 }
 
 /** 📜️ Strictly admits the raw descriptor bytes: canonical re-encoding equality first, then exact
@@ -704,61 +902,80 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
   const dialect = app === undefined ? undefined : record(app.dialect);
   const windowKinds = app !== undefined && Array.isArray(app.windowKinds) ? (app.windowKinds as readonly PackValue[]).map(record) : [];
   if (
-    packUIntSafeOrNull(descriptor.descriptorVersion) !== 1
-    || descriptor.packageId !== fields.package.packageId
-    || descriptor.execution !== "isolated"
-    || manifest.pluginId !== fields.package.pluginId
-    || manifest.version !== fields.package.version
-    || hashes.wasmSha256 !== fields.component.sha256
-    || app === undefined
-    || dialect === undefined
-    || app.id !== fields.surface.surfaceId
-    || app.role !== fields.surface.role
-    || dialect.artifactKind !== fields.parentDialect.artifactKind
-    || dialect.standard !== fields.parentDialect.standard
-    || dialect.subset !== fields.parentDialect.subset
-    || !windowKinds.some((window) => window.id === fields.surface.windowKindId)
-    || !artifactKinds.some((kind) => kind.id === fields.artifact.kind && kind.schema === fields.artifact.schema)
-  ) throw new Error("document execution target: descriptor mismatch");
+    packUIntSafeOrNull(descriptor.descriptorVersion) !== 1 ||
+    descriptor.packageId !== fields.package.packageId ||
+    descriptor.execution !== "isolated" ||
+    manifest.pluginId !== fields.package.pluginId ||
+    manifest.version !== fields.package.version ||
+    hashes.wasmSha256 !== fields.component.sha256 ||
+    app === undefined ||
+    dialect === undefined ||
+    app.id !== fields.surface.surfaceId ||
+    app.role !== fields.surface.role ||
+    dialect.artifactKind !== fields.parentDialect.artifactKind ||
+    dialect.standard !== fields.parentDialect.standard ||
+    dialect.subset !== fields.parentDialect.subset ||
+    !windowKinds.some((window) => window.id === fields.surface.windowKindId) ||
+    !artifactKinds.some((kind) => kind.id === fields.artifact.kind && kind.schema === fields.artifact.schema)
+  )
+    throw new Error("document execution target: descriptor mismatch");
 }
 
 /** 🛡️ Acquires the server-selected verified execution target for one live plan and mints the private
  * lease only after every byte verifies. It shares {@link ArtifactState.docAbort} and the current
  * document-open deadline with {@link requestDocumentSocketAuthority}; a mismatch, cancellation or
  * deadline wipes every retained buffer and returns no lease. */
-async function installDocumentExecutionTargetLease(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>, plan: DocumentOpenPlanV1, intent: DocumentOpenIntentV1): Promise<DocumentExecutionTargetLease> {
+async function installDocumentExecutionTargetLease(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>, plan: DocumentOpenPlanV1, intent: DocumentOpenIntentV1, assertOwner: () => void): Promise<DocumentExecutionTargetLease> {
   const signal = state.docAbort.signal;
   const options = { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal } as const;
+  const readControl = (): ExecutionTargetReadControl => ({ signal, deadlineAtMs: Math.min(plan.expiresAtUnixMs, Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS), assertCurrent: assertOwner });
   const report = (progress: DocumentExecutionTargetProgressV1): void => emitExecutionTargetStatus(state, binding, "verifying", progress);
   let component: Uint8Array | null = null;
   let descriptorBytes: Uint8Array | null = null;
   try {
     if (signal.aborted) throw new Error("document execution target: cancelled");
     report({ stage: "manifest", completedBytes: 0, totalBytes: 1 });
+    const manifestControl = readControl();
+    assertExecutionTargetRead(manifestControl);
     const manifestResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "manifest", intent, options);
-    if (!manifestResponse.ok) throw new Error("document execution target: unavailable");
-    const fields = parseDocumentExecutionTargetLeaseFieldsV1(await readExecutionTargetManifestJson(manifestResponse));
-    if (!sameLeaseFieldsV1(fields, receiptFreeFields(plan, { component: fields.component.byteLength, descriptor: fields.descriptor.byteLength }))) throw new Error("document execution target: manifest mismatch");
+    const fields = parseDocumentExecutionTargetLeaseFieldsV1(await readExecutionTargetJson(manifestResponse, EXECUTION_TARGET_MANIFEST_MAX_BYTES, manifestControl));
+    if (
+      !sameLeaseFieldsV1(
+        fields,
+        receiptFreeFields(plan, { component: fields.component.byteLength, descriptor: fields.descriptor.byteLength, browserActor: fields.browserActor.kind === "closed-browser-actor" ? fields.browserActor.byteLength : undefined }),
+      )
+    )
+      throw new Error("document execution target: manifest mismatch");
     report({ stage: "manifest", completedBytes: 1, totalBytes: 1 });
 
     if (signal.aborted) throw new Error("document execution target: cancelled");
+    const componentControl = readControl();
+    assertExecutionTargetRead(componentControl);
     const componentResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "component", intent, options);
-    component = await readExecutionTargetBody(componentResponse, fields.component.byteLength, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "component", signal, report);
+    component = await readExecutionTargetBody(componentResponse, fields.component.byteLength, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "component", componentControl, report);
 
     if (signal.aborted) throw new Error("document execution target: cancelled");
+    const descriptorControl = readControl();
+    assertExecutionTargetRead(descriptorControl);
     const descriptorResponse = await browserExecutionTargetAssetRequest(binding, state.config.documentId, "descriptor", intent, options);
-    descriptorBytes = await readExecutionTargetBody(descriptorResponse, fields.descriptor.byteLength, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, "descriptor", signal, report);
+    descriptorBytes = await readExecutionTargetBody(descriptorResponse, fields.descriptor.byteLength, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, "descriptor", descriptorControl, report);
 
     if (signal.aborted) throw new Error("document execution target: cancelled");
+    const verifyControl = readControl();
+    assertExecutionTargetRead(verifyControl);
     report({ stage: "verify", completedBytes: 0, totalBytes: 3 });
-    if (await executionTargetSha256Hex(component) !== fields.component.sha256) throw new Error("document execution target: component integrity");
+    if ((await executionTargetSha256Hex(component)) !== fields.component.sha256) throw new Error("document execution target: component integrity");
+    assertExecutionTargetRead(verifyControl);
     report({ stage: "verify", completedBytes: 1, totalBytes: 3 });
     if (blake3Hex(component) !== fields.component.blake3) throw new Error("document execution target: component integrity");
+    assertExecutionTargetRead(verifyControl);
     report({ stage: "verify", completedBytes: 2, totalBytes: 3 });
-    if (await executionTargetSha256Hex(descriptorBytes) !== fields.descriptor.sha256) throw new Error("document execution target: descriptor integrity");
+    if ((await executionTargetSha256Hex(descriptorBytes)) !== fields.descriptor.sha256) throw new Error("document execution target: descriptor integrity");
     parseVerifiedPackageDescriptorV1(descriptorBytes, fields);
+    assertExecutionTargetRead(verifyControl);
     report({ stage: "verify", completedBytes: 3, totalBytes: 3 });
     if (signal.aborted) throw new Error("document execution target: cancelled");
+    assertExecutionTargetRead(verifyControl);
     const lease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, fields, binding.baseUrl.replace(/\/+$/u, ""), component, descriptorBytes);
     component = null;
     descriptorBytes = null;
@@ -770,20 +987,179 @@ async function installDocumentExecutionTargetLease(state: ArtifactState, binding
 }
 
 function dropDocumentExecutionTargetLease(state: ArtifactState): void {
+  state.browserActorReservation?.close();
   state.executionTargetLease?.drop();
   state.executionTargetLease = null;
 }
+
+type DocumentBrowserActorChild = Awaited<ReturnType<typeof reserveBrowserActorChild>>;
+type DocumentBrowserActorOpen = Readonly<{ binding: Extract<PersistenceBinding, { kind: "hub" }>; intent: DocumentOpenIntentV1; assertCurrent(): void }>;
+type DocumentBrowserActorGrant = Readonly<{ actorId: string; reserveBeforeMs: number; retireAtMs: number }>;
+let documentBrowserActorGeneration = 0n;
+
+/** 🧷️ Owns one document's reserved child; only the live private lease and exchanged grant select it. */
+class DocumentBrowserActorReservation {
+  readonly generation: bigint;
+  private readonly abort = new AbortController();
+  private child: DocumentBrowserActorChild | null = null;
+  private activation: Promise<void> | null = null;
+  private socket: WebSocket | null = null;
+  private closed = false;
+  private readonly timer: ReturnType<typeof setTimeout>;
+  private readonly retire = () => this.close();
+
+  constructor(
+    private readonly state: ArtifactState,
+    private readonly lease: DocumentExecutionTargetLease,
+    private readonly grant: DocumentBrowserActorGrant,
+  ) {
+    if (documentBrowserActorGeneration === 0xffffffffffffffffn) throw new Error("document browser actor: generation exhausted");
+    this.generation = ++documentBrowserActorGeneration;
+    state.docAbort.signal.addEventListener("abort", this.retire, { once: true });
+    lease.retirement.addEventListener("abort", this.retire, { once: true });
+    this.timer = setTimeout(this.retire, Math.min(0x7fffffff, Math.max(0, grant.retireAtMs - Date.now())));
+  }
+
+  async reserve(): Promise<void> {
+    const fields = this.lease.fields();
+    if (fields.browserActor.kind !== "closed-browser-actor") throw new Error("document browser actor: unavailable");
+    const child = await reserveBrowserActorChild({ actorId: this.grant.actorId, activationGeneration: this.generation, bundleSha256: fields.browserActor.sha256, bundleByteLength: fields.browserActor.byteLength }, this.abort.signal);
+    this.child = child;
+    if (this.closed || this.state.browserActorReservation !== this || documentBrowserActorLease(this.state) !== this.lease || this.lease.browserActorGrant() !== this.grant || Date.now() >= this.grant.reserveBeforeMs) {
+      this.close();
+      throw new Error("document browser actor: stale reservation");
+    }
+  }
+
+  activate(socket: WebSocket): Promise<void> {
+    if (this.activation) {
+      if (this.socket !== socket) return Promise.reject(new Error("document browser actor: activation socket mismatch"));
+      return this.activation;
+    }
+    this.socket = socket;
+    this.activation = (async () => {
+      const assertCurrent = () => {
+        if (
+          this.closed ||
+          this.state.socket !== socket ||
+          !this.state.hubActorReady ||
+          this.state.actor !== this.grant.actorId ||
+          this.state.pendingSocketActorId !== null ||
+          this.state.browserActorReservation !== this ||
+          documentBrowserActorLease(this.state) !== this.lease ||
+          this.lease.browserActorGrant() !== this.grant ||
+          Date.now() >= this.grant.reserveBeforeMs ||
+          Date.now() >= this.grant.retireAtMs
+        )
+          throw new Error("document browser actor: stale Session");
+        this.lease.assertBrowserActorCurrent();
+      };
+      assertCurrent();
+      const child = this.child,
+        binding = hubBinding(this.state.config);
+      if (!child || !binding) throw new Error("document browser actor: unavailable child");
+      await this.lease.activateBrowserActor(child, this.abort.signal, assertCurrent, (progress) => {
+        assertCurrent();
+        emitExecutionTargetStatus(this.state, binding, "verifying", progress);
+      });
+      assertCurrent();
+      emitExecutionTargetStatus(this.state, binding, "renderer-unavailable");
+      assertCurrent();
+    })();
+    return this.activation;
+  }
+  close(): void {
+    if (this.closed) return;
+    this.closed = true;
+    clearTimeout(this.timer);
+    this.state.docAbort.signal.removeEventListener("abort", this.retire);
+    this.lease.retirement.removeEventListener("abort", this.retire);
+    this.abort.abort();
+    this.child?.close();
+    this.child = null;
+    if (this.state.browserActorReservation === this) this.state.browserActorReservation = null;
+  }
+}
+
+/** 🔐️ Resolves authority only from the current document owner, never caller-supplied actor metadata. */
+function documentBrowserActorLease(state: ArtifactState): DocumentExecutionTargetLease {
+  const lease = state.executionTargetLease,
+    binding = hubBinding(state.config);
+  if (state.closed || state.docAbort.signal.aborted || artifacts.get(state.runtimeKey) !== state || !binding || !lease?.live) throw new Error("document browser actor: unavailable");
+  const fields = lease.fields();
+  if (
+    state.runtimeKey !== documentRuntimeKeyForConfig(state.config) ||
+    fields.scope.spaceId !== binding.spaceId ||
+    fields.scope.documentId !== state.config.documentId ||
+    fields.artifact.schema !== state.config.schema ||
+    lease.hubOrigin !== binding.baseUrl.replace(/\/+$/u, "")
+  )
+    throw new Error("document browser actor: scope mismatch");
+  if ((binding.requestedSurfaceId !== undefined && binding.requestedSurfaceId !== fields.surface.surfaceId) || (binding.installedTarget !== undefined && !sameLeaseFieldsV1(binding.installedTarget, fields)))
+    throw new Error("document browser actor: selection mismatch");
+  return lease;
+}
+
+/** 🪪️ Claims a private document slot before reserving worker capacity, with no body fetch or activation. */
+async function reserveDocumentBrowserActorChild(state: ArtifactState): Promise<DocumentBrowserActorReservation | null> {
+  const lease = documentBrowserActorLease(state);
+  if (lease.fields().browserActor.kind === "none") return null;
+  const grant = lease.browserActorGrant();
+  if (!grant || Date.now() >= grant.reserveBeforeMs || state.browserActorReservation !== null) throw new Error("document browser actor: admission denied");
+  const owner = new DocumentBrowserActorReservation(state, lease, grant);
+  state.browserActorReservation = owner;
+  try {
+    await owner.reserve();
+    return owner;
+  } catch (error) {
+    owner.close();
+    if (state.executionTargetLease === lease) state.executionTargetLease = null;
+    lease.drop();
+    throw error;
+  }
+}
+
+/** 🚦️ Activates once under the actual accepted socket; a failed exchange owner cannot be reused. */
+async function activateDocumentBrowserActorAfterSession(state: ArtifactState, socket: WebSocket): Promise<void> {
+  const lease = state.executionTargetLease,
+    attempt = state.executionTargetOpen,
+    binding = hubBinding(state.config);
+  if (!lease || !binding) return;
+  let owner: DocumentBrowserActorReservation | null = null;
+  try {
+    if (state.socket !== socket || !state.hubActorReady || state.actor !== lease.browserActorGrant()?.actorId) throw new Error("document browser actor: missing Session");
+    if (documentBrowserActorLease(state).fields().browserActor.kind === "none") return;
+    lease.assertBrowserActorDescribeCapacity();
+    owner = await reserveDocumentBrowserActorChild(state);
+    if (!owner) throw new Error("document browser actor: reservation unavailable");
+    await owner.activate(socket);
+  } catch {
+    owner?.close();
+    const current = state.socket === socket && state.executionTargetOpen === attempt && (state.executionTargetLease === lease || state.executionTargetLease === null);
+    if (state.executionTargetLease === lease) state.executionTargetLease = null;
+    lease.drop();
+    if (current && !state.closed) emitExecutionTargetStatus(state, binding, state.docAbort.signal.aborted ? "cancelled" : "integrity-failed");
+    socket.close(1008, "browser actor activation failed");
+  }
+}
+
 //#endregion 🪪️ExecutionTargetLease
 
 /** ⚖️ Compares one server plan against the complete locally installed execution-target fields through
  * the single shared {@link sameLeaseFieldsV1} relation. A non-`react` renderer target is admitted
  * only when the caller owns a live private lease whose own verified fields are the comparison input;
  * the verified target is then routed to an explicit renderer state, never to a module loader. */
-function documentOpenPlanAuthority(plan: DocumentOpenPlanV1, intent: DocumentOpenIntentV1, config: ArtifactActorConfig, installed: NonNullable<Extract<PersistenceBinding, { kind: "hub" }>["installedTarget"]>, lease?: DocumentExecutionTargetLease): Omit<BrowserDocumentSocketAuthorityV1, "receipt"> {
+function documentOpenPlanAuthority(
+  plan: DocumentOpenPlanV1,
+  intent: DocumentOpenIntentV1,
+  config: ArtifactActorConfig,
+  installed: NonNullable<Extract<PersistenceBinding, { kind: "hub" }>["installedTarget"]>,
+  lease?: DocumentExecutionTargetLease,
+): Omit<BrowserDocumentSocketAuthorityV1, "receipt"> {
   const leaseFields = lease !== undefined && lease.live ? lease.fields() : undefined;
   const projected = ((): DocumentExecutionTargetLeaseFieldsV1 | null => {
     try {
-      return receiptFreeFields(plan, { component: installed.component.byteLength, descriptor: installed.descriptor.byteLength });
+      return receiptFreeFields(plan, { component: installed.component.byteLength, descriptor: installed.descriptor.byteLength, browserActor: installed.browserActor.kind === "closed-browser-actor" ? installed.browserActor.byteLength : undefined });
     } catch {
       return null;
     }
@@ -796,17 +1172,53 @@ function documentOpenPlanAuthority(plan: DocumentOpenPlanV1, intent: DocumentOpe
     intent.requestedSurfaceId !== installed.surface.surfaceId ||
     !sameLeaseFieldsV1(projected, installed) ||
     (plan.surface.rendererTarget !== "react" && (leaseFields === undefined || !sameLeaseFieldsV1(leaseFields, installed)))
-  ) throw new Error("document open: authority mismatch");
+  )
+    throw new Error("document open: authority mismatch");
   const packSchemaHash = Array.from({ length: 32 }, (_unused, index) => Number.parseInt(plan.artifact.packSchemaHash.slice(index * 2, index * 2 + 2), 16));
   const configured = config.packSchemaHash;
   if (configured && configured.some((byte) => byte !== 0) && (configured.length !== 32 || configured.some((byte, index) => byte !== packSchemaHash[index]))) throw new Error("document open: authority mismatch");
   return { schema: plan.artifact.schema, packSchemaHash, parentDialect: plan.parentDialect, surfaceId: plan.surface.surfaceId };
 }
+/** 🧭️ Captures a single document-open attempt and rejects every later owner or selection change. */
+function captureDocumentOpenOwner(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>, intent: DocumentOpenIntentV1): () => void {
+  const attempt = Symbol("document-open"),
+    runtimeKey = state.runtimeKey,
+    schema = state.config.schema;
+  const origin = binding.baseUrl.replace(/\/+$/u, ""),
+    installed = binding.installedTarget === undefined ? undefined : structuredClone(binding.installedTarget);
+  state.executionTargetOpen = attempt;
+  return () => {
+    const current = hubBinding(state.config);
+    if (
+      state.closed ||
+      state.docAbort.signal.aborted ||
+      state.executionTargetOpen !== attempt ||
+      state.runtimeKey !== runtimeKey ||
+      artifacts.get(runtimeKey) !== state ||
+      runtimeKey !== documentRuntimeKeyForConfig(state.config) ||
+      state.config.schema !== schema ||
+      state.config.documentId !== intent.scope.documentId ||
+      state.openClientInstanceId !== intent.clientInstanceId ||
+      !current ||
+      current.spaceId !== intent.scope.spaceId ||
+      current.baseUrl.replace(/\/+$/u, "") !== origin ||
+      (current.requestedSurfaceId ?? current.installedTarget?.surface.surfaceId) !== intent.requestedSurfaceId ||
+      (installed === undefined ? current.installedTarget !== undefined : current.installedTarget === undefined || !sameLeaseFieldsV1(current.installedTarget, installed))
+    )
+      throw new Error("document execution target: stale owner");
+  };
+}
+
 async function requestDocumentSocketAuthority(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): Promise<BrowserDocumentSocketAuthorityV1> {
   const grantPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket-grants`;
   if (socketGrantTestIssue) {
     const receipt = await socketGrantTestIssue(binding.baseUrl, grantPath, state.docAbort.signal);
-    return { receipt, schema: state.config.schema, packSchemaHash: state.config.packSchemaHash ?? new Array(32).fill(0), ...(binding.installedTarget ? { surfaceId: binding.installedTarget.surface.surfaceId } : binding.requestedSurfaceId ? { surfaceId: binding.requestedSurfaceId } : {}) };
+    return {
+      receipt,
+      schema: state.config.schema,
+      packSchemaHash: state.config.packSchemaHash ?? new Array(32).fill(0),
+      ...(binding.installedTarget ? { surfaceId: binding.installedTarget.surface.surfaceId } : binding.requestedSurfaceId ? { surfaceId: binding.requestedSurfaceId } : {}),
+    };
   }
   const requestedSurfaceId = binding.requestedSurfaceId ?? binding.installedTarget?.surface.surfaceId;
   if (requestedSurfaceId === undefined) throw new Error("document open: installed target unavailable");
@@ -817,63 +1229,89 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
     requestedSurfaceId,
     clientInstanceId: state.openClientInstanceId,
   });
+  const assertOwner = captureDocumentOpenOwner(state, binding, intent);
+  const openControl: ExecutionTargetReadControl = { signal: state.docAbort.signal, deadlineAtMs: Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS, assertCurrent: assertOwner };
+  assertExecutionTargetRead(openControl);
   const openPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/open-plan`;
-  const openResponse = await browserBrokerFetch(`/_semio/hub${openPath}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal });
+  const openResponse = await browserBrokerFetch(
+    `/_semio/hub${openPath}`,
+    { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) },
+    { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal },
+  );
   if (!openResponse.ok) throw new Error("document open: unavailable");
   let plan: DocumentOpenPlanV1;
   try {
-    plan = parseDocumentOpenPlanV1(await readDocumentOpenJson(openResponse), Date.now());
+    plan = parseDocumentOpenPlanV1(await readDocumentOpenJson(openResponse, openControl), Date.now());
   } catch {
     clearLocalBrowserBrokerProof();
-    throw new Error("document open: invalid plan");
+    throw new Error(state.docAbort.signal.aborted ? "document open: cancelled" : "document open: invalid plan");
   }
+  assertOwner();
   dropDocumentExecutionTargetLease(state);
   let lease: DocumentExecutionTargetLease | undefined;
-  if (plan.surface.rendererTarget !== "react" || binding.installedTarget === undefined) {
+  let published = false;
+  try {
+    if (plan.surface.rendererTarget !== "react" || binding.installedTarget === undefined) {
+      try {
+        lease = await installDocumentExecutionTargetLease(state, binding, plan, intent, assertOwner);
+      } catch (error) {
+        const cancelled = state.docAbort.signal.aborted || String((error as Error).message).includes("cancelled");
+        emitExecutionTargetStatus(state, binding, cancelled ? "cancelled" : "integrity-failed");
+        clearLocalBrowserBrokerProof();
+        throw new Error(cancelled ? "document open: cancelled" : "document open: invalid execution target");
+      }
+    }
+    let authority: Omit<BrowserDocumentSocketAuthorityV1, "receipt">;
     try {
-      lease = await installDocumentExecutionTargetLease(state, binding, plan, intent);
-    } catch (error) {
-      const cancelled = state.docAbort.signal.aborted || String((error as Error).message).includes("cancelled");
-      emitExecutionTargetStatus(state, binding, cancelled ? "cancelled" : "integrity-failed");
+      const installed = lease === undefined ? binding.installedTarget : lease.fields();
+      if (installed === undefined) throw new Error("document open: installed target unavailable");
+      authority = documentOpenPlanAuthority(plan, intent, state.config, installed, lease);
+    } catch {
+      lease?.drop();
+      emitExecutionTargetStatus(state, binding, "stale");
       clearLocalBrowserBrokerProof();
-      throw new Error(cancelled ? "document open: cancelled" : "document open: invalid execution target");
+      throw new Error("document open: invalid plan");
     }
-  }
-  let authority: Omit<BrowserDocumentSocketAuthorityV1, "receipt">;
-  try {
-    const installed = lease === undefined ? binding.installedTarget : lease.fields();
-    if (installed === undefined) throw new Error("document open: installed target unavailable");
-    authority = documentOpenPlanAuthority(plan, intent, state.config, installed, lease);
-  } catch {
-    lease?.drop();
-    emitExecutionTargetStatus(state, binding, "stale");
-    clearLocalBrowserBrokerProof();
-    throw new Error("document open: invalid plan");
-  }
-  if (state.docAbort.signal.aborted || (lease !== undefined && !lease.live)) {
-    lease?.drop();
-    emitExecutionTargetStatus(state, binding, "cancelled");
-    throw new Error("document open: cancelled");
-  }
-  const exchange = parseDocumentPlanSocketGrantIntentV1({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt });
-  const grantResponse = await browserBrokerFetch(`/_semio/hub${grantPath}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(exchange) }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal });
-  if (!grantResponse.ok) {
-    lease?.drop();
-    if (lease !== undefined) emitExecutionTargetStatus(state, binding, "stale");
-    throw new Error("document open: unavailable");
-  }
-  try {
-    const receipt = parseSocketGrantReceiptV1(await readDocumentOpenJson(grantResponse));
-    if (receipt.expiresAtMs <= Date.now() || receipt.expiresAtMs > plan.expiresAtUnixMs || (lease !== undefined && !lease.live)) throw new Error("document open: invalid grant");
-    if (lease !== undefined) {
-      state.executionTargetLease = lease;
-      emitExecutionTargetStatus(state, binding, "renderer-unavailable");
+    if (state.docAbort.signal.aborted || (lease !== undefined && !lease.live)) {
+      lease?.drop();
+      emitExecutionTargetStatus(state, binding, "cancelled");
+      throw new Error("document open: cancelled");
     }
-    return { receipt, ...authority };
-  } catch {
-    lease?.drop();
-    clearLocalBrowserBrokerProof();
-    throw new Error("document open: invalid grant");
+    const grantControl: ExecutionTargetReadControl = { signal: state.docAbort.signal, deadlineAtMs: Math.min(plan.expiresAtUnixMs, Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS), assertCurrent: assertOwner };
+    assertExecutionTargetRead(grantControl);
+    const exchange = parseDocumentPlanSocketGrantIntentV1({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt });
+    const grantResponse = await browserBrokerFetch(
+      `/_semio/hub${grantPath}`,
+      { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(exchange) },
+      { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal },
+    );
+    if (!grantResponse.ok) {
+      lease?.drop();
+      if (lease !== undefined) emitExecutionTargetStatus(state, binding, "stale");
+      throw new Error("document open: unavailable");
+    }
+    try {
+      const receipt = parseSocketGrantReceiptV1(await readDocumentOpenJson(grantResponse, grantControl));
+      assertExecutionTargetRead(grantControl);
+      if (receipt.expiresAtMs <= Date.now() || receipt.expiresAtMs > plan.expiresAtUnixMs || (lease !== undefined && !lease.live)) throw new Error("document open: invalid grant");
+      if (lease !== undefined) {
+        lease.admitBrowserActor(documentExecutionTargetLeaseMintToken, receipt, plan.expiresAtUnixMs, { binding, intent, assertCurrent: assertOwner });
+        state.executionTargetLease = lease;
+        emitExecutionTargetStatus(state, binding, "renderer-unavailable");
+      }
+      assertExecutionTargetRead(grantControl);
+      published = true;
+      return { receipt, ...authority };
+    } catch {
+      lease?.drop();
+      clearLocalBrowserBrokerProof();
+      throw new Error("document open: invalid grant");
+    }
+  } finally {
+    if (!published && lease !== undefined) {
+      if (state.executionTargetLease === lease) dropDocumentExecutionTargetLease(state);
+      lease.drop();
+    }
   }
 }
 
@@ -881,12 +1319,13 @@ function browserDirectoryRequest(input: string, init: RequestInit = {}, options:
   const url = new URL(input, "http://browser-broker.invalid");
   const method = init.method ?? "GET";
   const after = url.searchParams.get("after") ?? "";
-  const eventPage = url.pathname === "/_semio/hub/directory/event-page/v1"
-    && [...url.searchParams].length === 1
-    && /^(?:0|[1-9]\d*)$/u.test(after)
-    && Number.isSafeInteger(Number(after));
-  const allowed = (method === "GET" && (((url.pathname === "/_semio/hub/directory/spaces" || /^\/_semio\/hub\/directory\/spaces\/[^/]+$/u.test(url.pathname)) && url.search === "") || (url.pathname === "/_semio/hub/directory/events" && [...url.searchParams].length === 1 && /^\d+$/u.test(url.searchParams.get("since") ?? "")) || eventPage))
-    || (method === "POST" && url.pathname === "/_semio/hub/directory/commands" && url.search === "");
+  const eventPage = url.pathname === "/_semio/hub/directory/event-page/v1" && [...url.searchParams].length === 1 && /^(?:0|[1-9]\d*)$/u.test(after) && Number.isSafeInteger(Number(after));
+  const allowed =
+    (method === "GET" &&
+      (((url.pathname === "/_semio/hub/directory/spaces" || /^\/_semio\/hub\/directory\/spaces\/[^/]+$/u.test(url.pathname)) && url.search === "") ||
+        (url.pathname === "/_semio/hub/directory/events" && [...url.searchParams].length === 1 && /^\d+$/u.test(url.searchParams.get("since") ?? "")) ||
+        eventPage)) ||
+    (method === "POST" && url.pathname === "/_semio/hub/directory/commands" && url.search === "");
   if (!allowed) return Promise.reject(new Error("browser directory operation denied"));
   return browserBrokerFetch(`${url.pathname}${url.search}`, init, options);
 }
@@ -1249,9 +1688,7 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
     // change (its flag byte is full and the file is peer-leased).
     const surfaceQuery = authority.surfaceId ? `?surface=${encodeURIComponent(authority.surfaceId)}` : "";
     const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/socket/v1${surfaceQuery}`, [...socketGrantProtocolsV1(receipt)]);
-    const presenceCandidate = authority.surfaceId
-      ? { socket, scope: { spaceId: binding.spaceId, documentId: state.config.documentId }, verifiedSurfaceId: authority.surfaceId }
-      : null;
+    const presenceCandidate = authority.surfaceId ? { socket, scope: { spaceId: binding.spaceId, documentId: state.config.documentId }, verifiedSurfaceId: authority.surfaceId } : null;
     // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
     socket.binaryType = "arraybuffer";
     state.socket = socket;
@@ -1268,26 +1705,30 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
       sustainedHealthTimer = setTimeout(() => {
         sustainedHealthReached = true;
       }, SUSTAINED_HEALTHY_MS);
-      sendWireFrame(state, {
-        SocketHelloV1: {
-          wire_version: 1,
-          protocol_version: 1,
-          schema: authority.schema,
-          // 🧬️ W5.7: real hash when the shell supplied one via `ArtifactActorConfig.packSchemaHash`
-          // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
-          // hub treats as "schema-agnostic client" and never validates.
-          pack_schema_hash: [...authority.packSchemaHash],
-          resume_token: state.resumeToken,
-          frontier: state.frontier,
+      sendWireFrame(
+        state,
+        {
+          SocketHelloV1: {
+            wire_version: 1,
+            protocol_version: 1,
+            schema: authority.schema,
+            // 🧬️ W5.7: real hash when the shell supplied one via `ArtifactActorConfig.packSchemaHash`
+            // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
+            // hub treats as "schema-agnostic client" and never validates.
+            pack_schema_hash: [...authority.packSchemaHash],
+            resume_token: state.resumeToken,
+            frontier: state.frontier,
+          },
         },
-      }, "command");
+        "command",
+      );
     };
     socket.onmessage = (messageEvent) => {
       state.hubFrameChain = state.hubFrameChain.then(async () => {
         if (state.socket !== socket) return;
         try {
           const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
-          await handleHubFrame(state, decodeServerFrame(bytes).frame, presenceCandidate);
+          await handleHubFrame(state, decodeServerFrame(bytes).frame, presenceCandidate, socket);
         } catch (error) {
           console.error("[backbone-worker] malformed hub frame", state.config.documentId, error);
           rejectArtifactBootstrap(state, error);
@@ -1297,6 +1738,10 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
     socket.onclose = () => {
       state.docAbort.signal.removeEventListener("abort", onAbort);
       if (sustainedHealthTimer != null) clearTimeout(sustainedHealthTimer);
+      if (state.socket !== socket) {
+        resolve();
+        return;
+      }
       if (state.socket === socket) {
         if (state.presenceAuthority?.socket === socket) emitEvent(state, { kind: "presence", peers: [] });
         state.presenceAuthority = null;
@@ -1440,11 +1885,7 @@ function equalByteArrays(left: readonly number[], right: readonly number[]): boo
 }
 
 function equalFrontiers(left: WireFrontierSummary, right: WireFrontierSummary): boolean {
-  return left.document_id === right.document_id
-    && left.head_edit_ordinal === right.head_edit_ordinal
-    && left.head_edit_id === right.head_edit_id
-    && left.last_commit_seq === right.last_commit_seq
-    && equalByteArrays(left.chain_hash, right.chain_hash);
+  return left.document_id === right.document_id && left.head_edit_ordinal === right.head_edit_ordinal && left.head_edit_id === right.head_edit_id && left.last_commit_seq === right.last_commit_seq && equalByteArrays(left.chain_hash, right.chain_hash);
 }
 
 function queueOutbox(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
@@ -1468,20 +1909,94 @@ function emitBootstrapProgress(state: ArtifactState, progress: ArtifactBootstrap
   if (previous && (progress.receivedBytes < previous.receivedBytes || progress.receivedChunks < previous.receivedChunks)) throw new Error("artifact bootstrap progress regressed");
   state.artifactBootstrapProgress.push(progress);
   const scope = artifactScope(state);
-  post({ kind: "artifact-bootstrap-progress", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), receivedBytes: progress.receivedBytes, totalBytes: progress.totalBytes, receivedChunks: progress.receivedChunks, totalChunks: progress.totalChunks });
+  post({
+    kind: "artifact-bootstrap-progress",
+    documentId: state.config.documentId,
+    ...(scope === undefined ? {} : { scope }),
+    receivedBytes: progress.receivedBytes,
+    totalBytes: progress.totalBytes,
+    receivedChunks: progress.receivedChunks,
+    totalChunks: progress.totalChunks,
+  });
 }
 
-function bootstrapControl(state: ArtifactState): ArtifactBootstrapControl {
+type DocumentArtifactBootstrapOwner = { assembler: ArtifactBootstrapAssembler | null; readonly socket: WebSocket | null; assertCurrent(): void };
+
+/** 🧷️ Retains the document and transport selection that admitted one canonical pair transfer. */
+function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBootstrapOwner {
+  const config = state.config,
+    runtimeKey = state.runtimeKey,
+    socket = state.socket,
+    client = state.openClientInstanceId;
+  const attempt = state.executionTargetOpen,
+    lease = state.executionTargetLease,
+    schema = config.schema,
+    documentId = config.documentId;
+  const binding = hubBinding(config),
+    spaceId = binding?.spaceId,
+    origin = binding?.baseUrl,
+    surface = binding?.requestedSurfaceId;
+  const installed = binding?.installedTarget === undefined ? undefined : structuredClone(binding.installedTarget);
+  const packSchemaHash = config.packSchemaHash?.slice(),
+    folder = folderBinding(config)?.path;
+  const owner: DocumentArtifactBootstrapOwner = {
+    assembler: null,
+    socket,
+    assertCurrent() {
+      const current = hubBinding(state.config);
+      if (
+        state.closed ||
+        state.docAbort.signal.aborted ||
+        state.artifactBootstrapOwner !== owner ||
+        state.config !== config ||
+        state.runtimeKey !== runtimeKey ||
+        artifacts.get(runtimeKey) !== state ||
+        state.socket !== socket ||
+        state.openClientInstanceId !== client ||
+        state.executionTargetOpen !== attempt ||
+        state.executionTargetLease !== lease ||
+        config.schema !== schema ||
+        config.documentId !== documentId ||
+        current?.spaceId !== spaceId ||
+        current?.baseUrl !== origin ||
+        current?.requestedSurfaceId !== surface ||
+        folderBinding(config)?.path !== folder ||
+        (packSchemaHash === undefined ? config.packSchemaHash !== undefined : config.packSchemaHash === undefined || !equalByteArrays(config.packSchemaHash, packSchemaHash)) ||
+        (installed === undefined ? current?.installedTarget !== undefined : current?.installedTarget === undefined || !sameLeaseFieldsV1(current.installedTarget, installed)) ||
+        (owner.assembler !== null && state.artifactBootstrap !== owner.assembler) ||
+        (lease !== null && !lease.live)
+      )
+        throw new Error("artifact bootstrap stale owner");
+    },
+  };
+  state.artifactBootstrapOwner = owner;
+  owner.assertCurrent();
+  return owner;
+}
+
+function bootstrapControl(state: ArtifactState, owner = state.artifactBootstrapOwner): ArtifactBootstrapControl {
+  const cancelled = () => {
+    if (state.closed || state.docAbort.signal.aborted) return true;
+    try {
+      owner?.assertCurrent();
+      return false;
+    } catch {
+      return true;
+    }
+  };
   return {
-    isCancelled: () => state.closed || state.docAbort.signal.aborted,
+    isCancelled: cancelled,
     nowMs: () => Date.now(),
-    onProgress: (progress) => emitBootstrapProgress(state, progress),
+    onProgress: (progress) => {
+      if (!cancelled()) emitBootstrapProgress(state, progress);
+    },
   };
 }
 
 function abortArtifactBootstrap(state: ArtifactState): void {
   state.artifactBootstrap?.abort();
   state.artifactBootstrap = null;
+  state.artifactBootstrapOwner = null;
   state.artifactBootstrapDeadlineMs = null;
   state.pendingResumeToken = null;
   state.requiredTailFrontier = null;
@@ -1500,17 +2015,33 @@ function artifactBootstrapFailure(state: ArtifactState, error: unknown): Extract
   const normalized = message.toLowerCase();
   const cancelled = state.closed || state.docAbort.signal.aborted || normalized.includes("cancel");
   const deadline = normalized.includes("deadline") || normalized.includes("timed out") || normalized.includes("timeout");
-  const invalid = normalized.includes("snapshot") || normalized.includes("schema") || normalized.includes("digest") || normalized.includes("descriptor") || normalized.includes("scope") || normalized.includes("chunk") || normalized.includes("frontier") || normalized.includes("without an active transfer") || normalized.includes("before artifact");
+  const invalid =
+    normalized.includes("snapshot") ||
+    normalized.includes("schema") ||
+    normalized.includes("digest") ||
+    normalized.includes("descriptor") ||
+    normalized.includes("scope") ||
+    normalized.includes("chunk") ||
+    normalized.includes("frontier") ||
+    normalized.includes("without an active transfer") ||
+    normalized.includes("before artifact");
   const code = cancelled ? "cancelled" : deadline ? "deadline-exceeded" : invalid ? "invalid-bootstrap" : "transport-failure";
   const scope = artifactScope(state);
   return { kind: "artifact-bootstrap-failed", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), code, message, retryable: code !== "invalid-bootstrap" };
 }
 
-function rejectArtifactBootstrap(state: ArtifactState, error: unknown): void {
+function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = state.artifactBootstrapOwner): void {
+  if (owner && (state.artifactBootstrapOwner !== owner || state.artifactBootstrap !== owner.assembler || state.socket !== owner.socket)) {
+    owner.assembler?.abort();
+    if (state.artifactBootstrapOwner === owner && state.artifactBootstrap === owner.assembler) abortArtifactBootstrap(state);
+    if (state.socket !== owner.socket) owner.socket?.close();
+    return;
+  }
   const failure = artifactBootstrapFailure(state, error);
+  const socket = owner ? owner.socket : state.socket;
   abortArtifactBootstrap(state);
   post(failure);
-  state.socket?.close();
+  socket?.close();
 }
 
 function requireArtifactRebootstrap(state: ArtifactState): void {
@@ -1528,10 +2059,35 @@ function requireArtifactRebootstrap(state: ArtifactState): void {
 
 function validateArtifactBootstrapIdentity(state: ArtifactState, bootstrap: WireArtifactBootstrap, serverFrontier: WireFrontierSummary): void {
   if (bootstrap.artifact_schema !== state.config.schema) throw new Error("artifact bootstrap schema mismatch");
-  if (bootstrap.baseline_frontier.document_id !== state.config.documentId || bootstrap.required_tail_frontier.document_id !== state.config.documentId || serverFrontier.document_id !== state.config.documentId) throw new Error("artifact bootstrap document mismatch");
+  if (bootstrap.baseline_frontier.document_id !== state.config.documentId || bootstrap.required_tail_frontier.document_id !== state.config.documentId || serverFrontier.document_id !== state.config.documentId)
+    throw new Error("artifact bootstrap document mismatch");
   const packSchemaHash = state.config.packSchemaHash;
   if (!packSchemaHash || packSchemaHash.length !== 32 || packSchemaHash.every((byte) => byte === 0) || !equalByteArrays(bootstrap.pack_schema_hash, packSchemaHash)) throw new Error("artifact bootstrap pack schema mismatch");
   if (!equalFrontiers(bootstrap.required_tail_frontier, serverFrontier)) throw new Error("artifact bootstrap required tail does not match welcome frontier");
+  const lease = state.executionTargetLease;
+  if (lease) {
+    const fields = lease.fields(),
+      checkpoint = fields.checkpoint,
+      binding = hubBinding(state.config);
+    if (
+      !binding ||
+      fields.scope.spaceId !== binding.spaceId ||
+      fields.scope.documentId !== state.config.documentId ||
+      lease.hubOrigin !== binding.baseUrl.replace(/\/+$/u, "") ||
+      fields.descriptorDigestV1 !== executionTargetHex(new Uint8Array(bootstrap.descriptor_hash)) ||
+      fields.artifact.kind !== bootstrap.artifact_kind ||
+      fields.artifact.schema !== bootstrap.artifact_schema ||
+      fields.artifact.packSchemaHash !== executionTargetHex(new Uint8Array(bootstrap.pack_schema_hash)) ||
+      !checkpoint ||
+      checkpoint.descriptorDigestV1 !== fields.descriptorDigestV1 ||
+      checkpoint.aggregateSha256 !== executionTargetHex(new Uint8Array(bootstrap.aggregate_hash))
+    )
+      throw new Error("artifact bootstrap execution-target checkpoint mismatch");
+    const frontier = checkpoint.baselineFrontier;
+    if (!equalFrontiers(bootstrap.baseline_frontier, { document_id: frontier.documentId, head_edit_ordinal: frontier.headEditOrdinal, head_edit_id: frontier.headEditId, last_commit_seq: frontier.lastCommitSeq, chain_hash: frontier.chainHash }))
+      throw new Error("artifact bootstrap execution-target frontier mismatch");
+    if (lease.browserActorGrant()) lease.assertBrowserActorCurrent();
+  }
 }
 
 function finishCatchupIfReady(state: ArtifactState): void {
@@ -1546,39 +2102,61 @@ function finishCatchupIfReady(state: ArtifactState): void {
   }
 }
 
-async function installArtifactBootstrap(state: ArtifactState, assembler: ArtifactBootstrapAssembler, done: { readonly descriptor_hash: readonly number[]; readonly chunk_count: number } | null): Promise<void> {
-  const pair = await assembler.finish(done, bootstrapControl(state));
-  const folder = folderBinding(state.config);
-  if (folder) await writeFolder(state, folder, Array.from(pair.pack), Array.from(pair.spr));
-  state.currentPack = Uint8Array.from(pair.pack);
-  state.currentSpr = Uint8Array.from(pair.spr);
-  state.artifactBootstrap = null;
-  state.artifactBootstrapDeadlineMs = null;
-  state.frontier = assembler.bootstrap.baseline_frontier;
-  emitEvent(state, { kind: "snapshotReplaced", pack: Array.from(pair.pack), spr: Array.from(pair.spr) });
-  if (state.outbox.length > 0) emitEvent(state, { kind: "remoteMutations", envelopes: [...state.outbox] });
-  finishCatchupIfReady(state);
+async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArtifactBootstrapOwner, done: { readonly descriptor_hash: readonly number[]; readonly chunk_count: number } | null): Promise<void> {
+  const assembler = owner.assembler;
+  if (!assembler) throw new Error("artifact bootstrap missing assembler");
+  let pair: { readonly pack: Uint8Array; readonly spr: Uint8Array } | undefined;
+  try {
+    owner.assertCurrent();
+    pair = await assembler.finish(done, bootstrapControl(state, owner));
+    owner.assertCurrent();
+    const folder = folderBinding(state.config);
+    if (folder) {
+      await writeFolder(state, folder, Array.from(pair.pack), Array.from(pair.spr));
+      owner.assertCurrent();
+    }
+    state.currentPack = Uint8Array.from(pair.pack);
+    state.currentSpr = Uint8Array.from(pair.spr);
+    state.frontier = assembler.bootstrap.baseline_frontier;
+    emitEvent(state, { kind: "snapshotReplaced", pack: Array.from(pair.pack), spr: Array.from(pair.spr) });
+    owner.assertCurrent();
+    if (state.outbox.length > 0) {
+      emitEvent(state, { kind: "remoteMutations", envelopes: [...state.outbox] });
+      owner.assertCurrent();
+    }
+    state.artifactBootstrap = null;
+    state.artifactBootstrapOwner = null;
+    state.artifactBootstrapDeadlineMs = null;
+    finishCatchupIfReady(state);
+  } finally {
+    pair?.pack.fill(0);
+    pair?.spr.fill(0);
+  }
 }
 
 async function startArtifactBootstrap(state: ArtifactState, bootstrap: WireArtifactBootstrap, resumeToken: string, serverFrontier: WireFrontierSummary): Promise<void> {
   abortArtifactBootstrap(state);
   state.artifactBootstrapProgress = [];
   validateArtifactBootstrapIdentity(state, bootstrap, serverFrontier);
-  state.pendingResumeToken = resumeToken;
-  state.requiredTailFrontier = bootstrap.required_tail_frontier;
-  state.artifactBootstrapDeadlineMs = Date.now() + ARTIFACT_BOOTSTRAP_DEADLINE_MS;
-  const assembler = new ArtifactBootstrapAssembler(bootstrap, bootstrap.descriptor_hash, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, state.artifactBootstrapDeadlineMs, bootstrapControl(state));
-  state.artifactBootstrap = assembler;
-  if (bootstrap.inline !== null) {
-    await installArtifactBootstrap(state, assembler, null);
+  const owner = captureArtifactBootstrapOwner(state);
+  let assembler: ArtifactBootstrapAssembler | undefined;
+  try {
+    state.pendingResumeToken = resumeToken;
+    state.requiredTailFrontier = bootstrap.required_tail_frontier;
+    state.artifactBootstrapDeadlineMs = Date.now() + ARTIFACT_BOOTSTRAP_DEADLINE_MS;
+    assembler = new ArtifactBootstrapAssembler(bootstrap, bootstrap.descriptor_hash, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, state.artifactBootstrapDeadlineMs, bootstrapControl(state, owner));
+    owner.assertCurrent();
+    owner.assembler = assembler;
+    state.artifactBootstrap = assembler;
+    if (bootstrap.inline !== null) await installArtifactBootstrap(state, owner, null);
+  } catch (error) {
+    assembler?.abort();
+    rejectArtifactBootstrap(state, error, owner);
   }
 }
 
-async function handleHubFrame(
-  state: ArtifactState,
-  frame: ServerFrame,
-  presenceCandidate: Readonly<{ socket: WebSocket; scope: DocumentScope; verifiedSurfaceId: string }> | null = null,
-): Promise<void> {
+async function handleHubFrame(state: ArtifactState, frame: ServerFrame, presenceCandidate: Readonly<{ socket: WebSocket; scope: DocumentScope; verifiedSurfaceId: string }> | null = null, sourceSocket: WebSocket | null = null): Promise<void> {
+  if (sourceSocket !== null && state.socket !== sourceSocket) return;
   if (typeof frame === "string") return; // no unit-variant `ServerFrame` exists today; defensive.
   if ("Welcome" in frame) {
     requeuePendingBatches(state);
@@ -1629,10 +2207,13 @@ async function handleHubFrame(
       rejectArtifactBootstrap(state, new Error("artifact bootstrap chunk arrived without an active transfer"));
       return;
     }
+    const owner = state.artifactBootstrapOwner;
     try {
-      assembler.push(frame.ArtifactBootstrapChunk, bootstrapControl(state));
+      if (!owner || owner.assembler !== assembler) throw new Error("artifact bootstrap owner mismatch");
+      assembler.push(frame.ArtifactBootstrapChunk, bootstrapControl(state, owner));
+      owner.assertCurrent();
     } catch (error) {
-      rejectArtifactBootstrap(state, error);
+      rejectArtifactBootstrap(state, error, owner);
     }
     return;
   }
@@ -1642,10 +2223,12 @@ async function handleHubFrame(
       rejectArtifactBootstrap(state, new Error("artifact bootstrap completion arrived without an active transfer"));
       return;
     }
+    const owner = state.artifactBootstrapOwner;
     try {
-      await installArtifactBootstrap(state, assembler, frame.ArtifactBootstrapDone);
+      if (!owner || owner.assembler !== assembler) throw new Error("artifact bootstrap owner mismatch");
+      await installArtifactBootstrap(state, owner, frame.ArtifactBootstrapDone);
     } catch (error) {
-      rejectArtifactBootstrap(state, error);
+      rejectArtifactBootstrap(state, error, owner);
     }
     return;
   }
@@ -1708,6 +2291,7 @@ async function handleHubFrame(
       state.presenceAuthority = null;
       const scope = artifactScope(state);
       post({ kind: "socket-actor-failed", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), code: "session-mismatch" });
+      dropDocumentExecutionTargetLease(state);
       state.socket?.close(1008, "socket actor mismatch");
       return;
     }
@@ -1720,6 +2304,7 @@ async function handleHubFrame(
     const scope = artifactScope(state);
     post({ kind: "socket-actor", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), actorId: expectedActor });
     emitEvent(state, { kind: "session", actor: frame.Session.actor, color: frame.Session.color });
+    if (sourceSocket && state.executionTargetLease) void activateDocumentBrowserActorAfterSession(state, sourceSocket);
     return;
   }
   if ("Error" in frame) {
@@ -1787,12 +2372,16 @@ export class DirectoryEventPageBootstrapV1 {
 
   acknowledge(ack: DirectoryEventPageAckV1): DirectoryBootstrapTransition {
     const page = this.pending;
-    if (this.phase !== "awaiting-ack" || page === null
-      || ack.bootstrapEpoch !== this.bootstrapEpoch
-      || ack.receiptSha256 !== page.receiptSha256
-      || ack.sessionBindingSha256 !== page.sessionBindingSha256
-      || ack.authorizationGeneration !== page.authorizationGeneration
-      || ack.throughSeqInclusive !== page.throughSeqInclusive) throw new Error("directory bootstrap: acknowledgement mismatch");
+    if (
+      this.phase !== "awaiting-ack" ||
+      page === null ||
+      ack.bootstrapEpoch !== this.bootstrapEpoch ||
+      ack.receiptSha256 !== page.receiptSha256 ||
+      ack.sessionBindingSha256 !== page.sessionBindingSha256 ||
+      ack.authorizationGeneration !== page.authorizationGeneration ||
+      ack.throughSeqInclusive !== page.throughSeqInclusive
+    )
+      throw new Error("directory bootstrap: acknowledgement mismatch");
     this.acknowledgedThrough = page.throughSeqInclusive;
     this.pending = null;
     this.phase = page.hasMore ? "fetching" : "live";
@@ -2460,10 +3049,14 @@ async function inferenceBrokerFetch(operation: InferenceOperationV1, suffix: str
   if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/inference\/gis-map\/jobs(?:\/[0-9a-f]{32}\/(?:events\?after=\d{1,3}|cancel|approval))?$/u.test(path)) throw new Error("gis map inference: operation denied");
   const documentAbort = artifactState(operation.scope.documentId, operation.scope.spaceId)?.docAbort.signal;
   if (documentAbort?.aborted ?? true) throw new Error("gis map inference: document closed");
-  return browserBrokerFetch(`/_semio/hub${path}`, {
-    method: init.method,
-    ...(init.body === undefined ? {} : { headers: { "content-type": "application/json" }, body: init.body }),
-  }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: operation.abort.signal });
+  return browserBrokerFetch(
+    `/_semio/hub${path}`,
+    {
+      method: init.method,
+      ...(init.body === undefined ? {} : { headers: { "content-type": "application/json" }, body: init.body }),
+    },
+    { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: operation.abort.signal },
+  );
 }
 
 /** 📥️ Reads one bounded owner-private JSON body under the shared response maximum. */
@@ -2633,14 +3226,15 @@ async function cancelInferenceJob(operationEpoch: number): Promise<void> {
 async function approveInferenceProposal(operationEpoch: number): Promise<void> {
   const operation = liveInferencePort(operationEpoch);
   if (
-    operation === null
-    || operation.status.phase !== "offered"
-    || operation.status.jobId === null
-    || operation.status.proposalHash === null
-    || operation.status.preview?.jobId !== operation.status.jobId
-    || operation.status.preview.proposalHash !== operation.status.proposalHash
-    || operation.inFlight
-  ) return;
+    operation === null ||
+    operation.status.phase !== "offered" ||
+    operation.status.jobId === null ||
+    operation.status.proposalHash === null ||
+    operation.status.preview?.jobId !== operation.status.jobId ||
+    operation.status.preview.proposalHash !== operation.status.proposalHash ||
+    operation.inFlight
+  )
+    return;
   let body: string;
   try {
     body = JSON.stringify(sealGisMapInferenceApprovalRequestV1(operation.status.jobId, operation.status.proposalHash));
@@ -2844,7 +3438,9 @@ function openArtifact(config: ArtifactActorConfig): void {
     socket: null,
     presenceAuthority: null,
     docAbort: new AbortController(),
+    executionTargetOpen: null,
     executionTargetLease: null,
+    browserActorReservation: null,
     sanityPollTimer: null,
     sseHealthy: false,
     revalidateFolder: async () => {}, // 🔧 replaced below once a folder binding exists.
@@ -2856,6 +3452,7 @@ function openArtifact(config: ArtifactActorConfig): void {
     pendingResumeToken: null,
     requiredTailFrontier: null,
     artifactBootstrap: null,
+    artifactBootstrapOwner: null,
     artifactBootstrapDeadlineMs: null,
     artifactBootstrapProgress: [],
     currentPack: null,
@@ -3315,7 +3912,6 @@ if (import.meta.vitest) {
       handleHubFrame(state, { Session: { actor: "actor-1", color: 3 } });
       expect(state.sessionColor).toBe(3);
     });
-
   });
 
   //#region 🧪️ArtifactBootstrapRestore
@@ -3335,7 +3931,14 @@ if (import.meta.vitest) {
   }
 
   function fixtureConfig(fixture: ArtifactBootstrapFixture): ArtifactActorConfig {
-    return { documentId: fixture.artifact.requiredTailFrontier.documentId, schema: fixture.artifact.schema, packSchemaHash: Array.from(bytesFromHex(fixture.artifact.packSchemaHash)), bindings: [], actor: "actor-bootstrap-test", watchExternal: false };
+    return {
+      documentId: fixture.artifact.requiredTailFrontier.documentId,
+      schema: fixture.artifact.schema,
+      packSchemaHash: Array.from(bytesFromHex(fixture.artifact.packSchemaHash)),
+      bindings: [],
+      actor: "actor-bootstrap-test",
+      watchExternal: false,
+    };
   }
 
   function decodeFixtureFrame(hex: string): ServerFrame {
@@ -3360,6 +3963,127 @@ if (import.meta.vitest) {
   }
 
   describe("artifact bootstrap atomic restore", () => {
+    it("retains the exact bootstrap owner across hash completion and progress callbacks", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { default: Ajv } = await import("ajv");
+      const { createHash } = await import("node:crypto");
+      const corpus = JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/🧵️artifact-bootstrap-owner-v1.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/🧬️artifact-bootstrap-owner-v1.schema.json", import.meta.url), "utf8"));
+      expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
+      const fixture = await artifactBootstrapFixture(),
+        frame = decodeFixtureFrame(fixture.wire.inlineWelcomeHex);
+      if (!("Welcome" in frame) || typeof frame.Welcome.bootstrap !== "object" || !("ArtifactBootstrap" in frame.Welcome.bootstrap)) throw new Error("fixture bootstrap");
+      const bootstrap = frame.Welcome.bootstrap.ArtifactBootstrap;
+      expect(createHash("sha256").update(bytesFromHex(fixture.payload.packHex)).digest("hex")).toBe(executionTargetHex(new Uint8Array(bootstrap.pack_hash)));
+      expect(createHash("sha256").update(bytesFromHex(fixture.payload.sprHex)).digest("hex")).toBe(executionTargetHex(new Uint8Array(bootstrap.spr_hash)));
+      const originalFinish = ArtifactBootstrapAssembler.prototype.finish,
+        originalPost = workerPostTestSink;
+      for (const row of corpus.cases) {
+        const config = fixtureConfig(fixture);
+        openArtifact(config);
+        const state = artifactState(config.documentId)!;
+        artifacts.delete(state.runtimeKey);
+        const binding = { kind: "hub" as const, baseUrl: "http://hub.test", spaceId: "bootstrap-owner-space" };
+        state.config = { ...state.config, bindings: [binding] };
+        state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+        artifacts.set(state.runtimeKey, state);
+        state.currentPack = new Uint8Array([9]);
+        state.currentSpr = new Uint8Array([8]);
+        if (row.name.startsWith("lease-")) {
+          const leaseFixture = JSON.parse(await readFile(new URL("../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json", import.meta.url), "utf8")),
+            fields = structuredClone(leaseFixture.manifest),
+            frontier = bootstrap.baseline_frontier;
+          fields.scope = { spaceId: binding.spaceId, documentId: config.documentId };
+          fields.descriptorDigestV1 = executionTargetHex(new Uint8Array(bootstrap.descriptor_hash));
+          fields.artifact = { kind: bootstrap.artifact_kind, schema: bootstrap.artifact_schema, packSchemaHash: executionTargetHex(new Uint8Array(bootstrap.pack_schema_hash)) };
+          fields.parentDialect.artifactKind = fields.artifact.kind;
+          fields.checkpoint = {
+            checkpointId: "a".repeat(64),
+            descriptorDigestV1: fields.descriptorDigestV1,
+            aggregateSha256: executionTargetHex(new Uint8Array(bootstrap.aggregate_hash)),
+            baselineFrontier: { documentId: frontier.document_id, headEditOrdinal: frontier.head_edit_ordinal, headEditId: frontier.head_edit_id, lastCommitSeq: frontier.last_commit_seq, chainHash: [...frontier.chain_hash] },
+          };
+          if (row.name === "lease-descriptor") {
+            fields.descriptorDigestV1 = "f".repeat(64);
+            fields.checkpoint.descriptorDigestV1 = fields.descriptorDigestV1;
+          }
+          if (row.name === "lease-aggregate") fields.checkpoint.aggregateSha256 = "f".repeat(64);
+          if (row.name === "lease-baseline") fields.checkpoint.baselineFrontier.headEditId = "foreign-head";
+          if (row.name === "lease-missing-checkpoint") delete fields.checkpoint;
+          if (row.name === "lease-scope") fields.scope.spaceId = "foreign-space";
+          if (row.name === "lease-kind") {
+            fields.artifact.kind = "foreign-kind";
+            fields.parentDialect.artifactKind = fields.artifact.kind;
+          }
+          state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), binding.baseUrl, new Uint8Array([1]), new Uint8Array([2]));
+        }
+        let originalCloses = 0,
+          replacementCloses = 0;
+        const socket = {
+          close() {
+            originalCloses++;
+          },
+        } as unknown as WebSocket;
+        const replacementSocket = {
+          close() {
+            replacementCloses++;
+          },
+        } as unknown as WebSocket;
+        state.socket = socket;
+        let successor: ArtifactBootstrapAssembler | undefined;
+        const returned: { pack: Uint8Array; spr: Uint8Array }[] = [];
+        const finish = vi.spyOn(ArtifactBootstrapAssembler.prototype, "finish").mockImplementation(async function (done, control) {
+          const pair = await originalFinish.call(this, done, control);
+          returned.push(pair);
+          queueMicrotask(() => {
+            if (row.name === "client-after-hash") state.openClientInstanceId = "foreign-client";
+            if (row.name === "schema-after-hash") state.config = { ...state.config, schema: "foreign-schema" };
+            if (row.name === "space-after-hash") binding.spaceId = "foreign-space";
+            if (row.name === "attempt-after-hash") state.executionTargetOpen = Symbol("foreign-open");
+            if (row.name === "lease-drop-after-hash") state.executionTargetLease!.drop();
+            if (row.name.includes("socket-after-hash")) state.socket = replacementSocket;
+            if (row.name.includes("assembler-after-hash")) {
+              void handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkedWelcomeHex), null, socket);
+              successor = state.artifactBootstrap ?? undefined;
+            }
+          });
+          return pair;
+        });
+        workerPostTestSink = (message) => {
+          if (row.name === "client-during-progress" && message.kind === "artifact-bootstrap-progress") state.openClientInstanceId = "foreign-progress-client";
+        };
+        try {
+          if (row.name.startsWith("chunked-")) {
+            await handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkedWelcomeHex), null, socket);
+            for (const chunk of fixture.wire.chunkHex) await handleHubFrame(state, decodeFixtureFrame(chunk), null, socket);
+            await handleHubFrame(state, decodeFixtureFrame(fixture.wire.doneHex), null, socket);
+          } else await handleHubFrame(state, structuredClone(frame), null, socket);
+          expect({ name: row.name, installed: state.currentPack?.length === bytesFromHex(fixture.payload.packHex).length && state.currentPack[0] !== 9 }).toEqual(row);
+          if (!row.installed) {
+            expect(state.currentPack).toEqual(new Uint8Array([9]));
+            expect(state.currentSpr).toEqual(new Uint8Array([8]));
+          }
+          expect(replacementCloses).toBe(0);
+          if (row.name.includes("socket-after-hash")) {
+            expect(state.artifactBootstrap).toBeNull();
+            expect(state.artifactBootstrapOwner).toBeNull();
+          }
+          if (successor) {
+            expect(state.artifactBootstrap, row.name).toBe(successor);
+            expect(successor.retainedBytes).toBeGreaterThan(0);
+          }
+          if (row.installed) expect(originalCloses).toBe(0);
+          expect(returned.every((pair) => pair.pack.every((byte) => byte === 0) && pair.spr.every((byte) => byte === 0))).toBe(true);
+        } finally {
+          finish.mockRestore();
+          workerPostTestSink = originalPost;
+          successor?.abort();
+          closeArtifactRuntime(state.runtimeKey);
+        }
+      }
+      console.log("artifact-bootstrap-owner: AJV=1 node-sha256=2 neutral=" + corpus.cases.length + " passed");
+    });
+
     it("installs the exact neutral inline and chunked pair and reaches Live only at the authenticated tail", async () => {
       const fixture = await artifactBootstrapFixture();
       const pack = bytesFromHex(fixture.payload.packHex);
@@ -3438,7 +4162,7 @@ if (import.meta.vitest) {
       await handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkedWelcomeHex));
       const malformed = structuredClone(decodeFixtureFrame(fixture.wire.chunkHex[0]!));
       if (!("ArtifactBootstrapChunk" in malformed)) throw new Error("fixture chunk expected");
-      const malformedFrame: ServerFrame = { ArtifactBootstrapChunk: { ...malformed.ArtifactBootstrapChunk, descriptor_hash: malformed.ArtifactBootstrapChunk.descriptor_hash.map((byte, index) => index === 0 ? byte ^ 0xff : byte) } };
+      const malformedFrame: ServerFrame = { ArtifactBootstrapChunk: { ...malformed.ArtifactBootstrapChunk, descriptor_hash: malformed.ArtifactBootstrapChunk.descriptor_hash.map((byte, index) => (index === 0 ? byte ^ 0xff : byte)) } };
       await handleHubFrame(state, malformedFrame);
       expect(state.currentPack).toEqual(Uint8Array.of(9));
       expect(state.currentSpr).toEqual(Uint8Array.of(8));
@@ -3556,7 +4280,17 @@ if (import.meta.vitest) {
       };
       const envelope = (payload: unknown): ArtifactEvent => ({
         kind: "remoteMutations",
-        envelopes: [{ id: "e", actor: "a", document: IDENTITY_CONFIG_SCHEMA, schemaVersion: IDENTITY_CONFIG_SCHEMA, payloadHash: "", diff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload }, inverse: { targetOperation: "e", inverseDiff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: null }, baseVersion: 0, undoPolicy: "exactBaseOnly" } }],
+        envelopes: [
+          {
+            id: "e",
+            actor: "a",
+            document: IDENTITY_CONFIG_SCHEMA,
+            schemaVersion: IDENTITY_CONFIG_SCHEMA,
+            payloadHash: "",
+            diff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload },
+            inverse: { targetOperation: "e", inverseDiff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: null }, baseVersion: 0, undoPolicy: "exactBaseOnly" },
+          },
+        ],
       });
 
       let state: Identity | null = null;
@@ -3581,10 +4315,20 @@ if (import.meta.vitest) {
       const viewer = { pluginId: "cad", appId: "viewer" };
       const editor = { pluginId: "cad", appId: "editor" };
       const replacement = { pluginId: "draft", appId: "drafting" };
-      const base = { defaults: [{ dialect, role: "viewer" as const, app: viewer }, { dialect, role: "editor" as const, app: editor }] };
+      const base = {
+        defaults: [
+          { dialect, role: "viewer" as const, app: viewer },
+          { dialect, role: "editor" as const, app: editor },
+        ],
+      };
       const set = setDefaultApp(dialect, "editor", replacement);
       const afterSet = applyOpeningConfigMutation(base, set);
-      expect(afterSet).toEqual({ defaults: [{ dialect, role: "viewer", app: viewer }, { dialect, role: "editor", app: replacement }] });
+      expect(afterSet).toEqual({
+        defaults: [
+          { dialect, role: "viewer", app: viewer },
+          { dialect, role: "editor", app: replacement },
+        ],
+      });
       expect(inverseOpeningConfigMutation(set, base)).toEqual([setDefaultApp(dialect, "editor", editor)]);
       const clear = clearDefaultApp(dialect, "editor");
       expect(applyOpeningConfigMutation(base, clear)).toEqual({ defaults: [{ dialect, role: "viewer", app: viewer }] });
@@ -3604,11 +4348,9 @@ if (import.meta.vitest) {
       const tsProject = JSON.parse(await readFile(new URL("./📦️packages/🟦️typescript/📋️project.json", import.meta.url), "utf8")) as { namedInputs: { default: string[] } };
       const hostProject = JSON.parse(await readFile(new URL("./🖥️host/📦️packages/🦀️rust/📋️project.json", import.meta.url), "utf8")) as { namedInputs: { default: string[] } };
       expect(tsProject.namedInputs.default).toContain("{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*");
-      expect(hostProject.namedInputs.default).toEqual(expect.arrayContaining([
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.rs",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.rs",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.json",
-      ]));
+      expect(hostProject.namedInputs.default).toEqual(
+        expect.arrayContaining(["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.json"]),
+      );
     });
   });
   //#endregion 🔖️ConfigMutationTests
@@ -3707,13 +4449,21 @@ if (import.meta.vitest) {
         requests,
         bodies,
         fetches,
-        release: () => { workerPostTestSink = original; },
+        release: () => {
+          workerPostTestSink = original;
+        },
       };
     }
 
     it("drives loading → ready → submitting → receipt → refreshing without changing state before the receipt", async () => {
       const harness = administrationHarness([200, 200]);
-      const first = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }, { userId: "user-b", email: "b@example.invalid", role: "spectator", owner: false }], [{ inviteId: "invite-1", createdAtMs: 20 }]);
+      const first = await sealAdministrationPage(
+        [
+          { userId: "user-a", email: "a@example.invalid", role: "author", owner: true },
+          { userId: "user-b", email: "b@example.invalid", role: "spectator", owner: false },
+        ],
+        [{ inviteId: "invite-1", createdAtMs: 20 }],
+      );
       try {
         directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
         harness.bodies.push(first);
@@ -3896,7 +4646,10 @@ if (import.meta.vitest) {
       onmessage: ((event: { data: string }) => void) | null = null;
       onclose: ((event: { code: number }) => void) | null = null;
       onerror: (() => void) | null = null;
-      constructor(url: string, readonly protocols?: string | string[]) {
+      constructor(
+        url: string,
+        readonly protocols?: string | string[],
+      ) {
         this.url = url;
         FakeDirectoryWebSocket.instances.push(this);
       }
@@ -4032,7 +4785,12 @@ if (import.meta.vitest) {
         expect(directoryCommandQueue).toHaveLength(0);
         expect(directoryCommandOperations.size).toBe(0);
         expect(JSON.stringify([...directoryCommandOperations.values(), ...directoryCommandQueue])).not.toContain(token);
-        expect(errorSpy.mock.calls.flat().map((entry) => String(entry)).join("|")).not.toContain(token);
+        expect(
+          errorSpy.mock.calls
+            .flat()
+            .map((entry) => String(entry))
+            .join("|"),
+        ).not.toContain(token);
       } finally {
         errorSpy.mockRestore();
         closeDirectory();
@@ -4155,10 +4913,37 @@ if (import.meta.vitest) {
     const DOCUMENT = "doc-inference";
     const JOB = "1".repeat(32);
     const HASH = "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130";
-    const PREVIEW: GisMapInferencePreviewV1 = { schema: "semio.hub.gis-map-inference-preview/v1", jobId: JOB, proposalHash: HASH, regionId: `inference-${JOB}`, ring: [[7, 46], [9, 46], [9, 48], [7, 48], [7, 46]] };
+    const PREVIEW: GisMapInferencePreviewV1 = {
+      schema: "semio.hub.gis-map-inference-preview/v1",
+      jobId: JOB,
+      proposalHash: HASH,
+      regionId: `inference-${JOB}`,
+      ring: [
+        [7, 46],
+        [9, 46],
+        [9, 48],
+        [7, 48],
+        [7, 46],
+      ],
+    };
 
     function leaseFields(write: boolean): DocumentExecutionTargetLeaseFieldsV1 {
-      return { scope: { spaceId: SPACE, documentId: DOCUMENT }, grant: { read: true, write, observe: true } } as unknown as DocumentExecutionTargetLeaseFieldsV1;
+      return parseDocumentExecutionTargetLeaseFieldsV1({
+        schema: "semio.os.document-execution-target-lease/v1",
+        version: 1,
+        scope: { spaceId: SPACE, documentId: DOCUMENT },
+        descriptorDigestV1: HASH,
+        catalog: { generationId: HASH },
+        package: { pluginId: "gis", packageId: "semio:gis", version: "0.1.0", componentSha256: HASH, componentBlake3: HASH, descriptorByteSha256: HASH },
+        component: { sha256: HASH, blake3: HASH, byteLength: 1 },
+        descriptor: { sha256: HASH, byteLength: 1 },
+        browserActor: { kind: "none" },
+        artifact: { kind: "s.gis.gismap", schema: "gis.map", packSchemaHash: HASH },
+        parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" },
+        surface: { surfaceId: "inference", appId: "gis", windowKindId: "gis-main", role: write ? "editor" : "viewer", rendererTarget: "wgpu" },
+        grant: { read: true, write, observe: true },
+        revalidation: { directoryRevision: 1, membershipGeneration: 1, sessionGeneration: 1 },
+      });
     }
 
     function inferenceHarness(options: { readonly lease: "none" | "viewer" | "editor" }) {
@@ -4173,7 +4958,14 @@ if (import.meta.vitest) {
         requests.push(`${init?.method ?? "GET"} ${input}`);
         const status = statuses.shift() ?? 200;
         const body = bodies.shift() ?? "";
-        return { ok: status < 400, status, statusText: "", headers: new Headers({ "content-type": "application/json", "content-length": String(new TextEncoder().encode(body).length), "x-semio-browser-broker-advanced": "1" }), text: async () => body, json: async () => JSON.parse(body) };
+        return {
+          ok: status < 400,
+          status,
+          statusText: "",
+          headers: new Headers({ "content-type": "application/json", "content-length": String(new TextEncoder().encode(body).length), "x-semio-browser-broker-advanced": "1" }),
+          text: async () => body,
+          json: async () => JSON.parse(body),
+        };
       };
       clearLocalBrowserBrokerProof();
       installLocalBrowserBrokerProof("b".repeat(64));
@@ -4204,7 +4996,11 @@ if (import.meta.vitest) {
     const receiptBody = (state: string, proposalState: string, cursor: number, proposalHash?: string): string =>
       JSON.stringify({ schema: "semio.hub.inference-receipt/v1", jobId: JOB, state, proposalState, ...(proposalHash === undefined ? {} : { proposalHash }), cursor, expiresAtMs: 1_700_000_060_000 });
 
-    const pageBody = (state: string, proposalState: string, options: { readonly nextCursor: number; readonly completed: number; readonly total: number; readonly proposalHash?: string; readonly preview?: GisMapInferencePreviewV1; readonly cancelRequested?: boolean; readonly stale?: boolean }): string =>
+    const pageBody = (
+      state: string,
+      proposalState: string,
+      options: { readonly nextCursor: number; readonly completed: number; readonly total: number; readonly proposalHash?: string; readonly preview?: GisMapInferencePreviewV1; readonly cancelRequested?: boolean; readonly stale?: boolean },
+    ): string =>
       JSON.stringify({
         schema: "semio.hub.inference-events/v1",
         jobId: JOB,
@@ -4477,7 +5273,17 @@ if (import.meta.vitest) {
       installedTarget: NonNullable<Extract<PersistenceBinding, { kind: "hub" }>["installedTarget"]>;
       plan: DocumentOpenPlanV1;
       socketGrant: SocketGrantReceiptV1;
-      expected: { httpPaths: [string, string]; webSocketPath: string; protocol: string; helloSchema: string; helloPackSchemaHashByte: number; responseMaxBytes: number; rustWorkerBypassDenied: true; scopeIsolation: { left: { spaceId: string; documentId: string }; right: { spaceId: string; documentId: string }; leftKey: string; rightKey: string; localKey: string }; forbiddenSocketFragments: string[] };
+      expected: {
+        httpPaths: [string, string];
+        webSocketPath: string;
+        protocol: string;
+        helloSchema: string;
+        helloPackSchemaHashByte: number;
+        responseMaxBytes: number;
+        rustWorkerBypassDenied: true;
+        scopeIsolation: { left: { spaceId: string; documentId: string }; right: { spaceId: string; documentId: string }; leftKey: string; rightKey: string; localKey: string };
+        forbiddenSocketFragments: string[];
+      };
     };
 
     async function browserDocumentOpenFixture(): Promise<BrowserDocumentOpenFixture> {
@@ -4516,7 +5322,13 @@ if (import.meta.vitest) {
         postReady: () => {},
       };
       const dispatch = (request: BackboneWorkerRequest): void => dispatchBackboneWorkerRequest(request, host, (value) => typescriptRequests.push(value));
-      dispatch({ kind: "open", documentId, schema: fixture.plan.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+      dispatch({
+        kind: "open",
+        documentId,
+        schema: fixture.plan.artifact.schema,
+        bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
+        actor: "caller-selected-actor",
+      });
       dispatch({ kind: "send", documentId, spaceId: fixture.intent.scope.spaceId, message: { kind: "detach" } });
       dispatch({ kind: "close", documentId, spaceId: fixture.intent.scope.spaceId });
       expect(typescriptRequests.map(({ kind }) => kind)).toEqual(["open", "send", "close"]);
@@ -4532,8 +5344,18 @@ if (import.meta.vitest) {
       const left = fixture.expected.scopeIsolation.left;
       const right = fixture.expected.scopeIsolation.right;
       try {
-        openArtifact({ documentId: left.documentId, schema: fixture.installedTarget.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: left.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
-        openArtifact({ documentId: right.documentId, schema: fixture.installedTarget.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: right.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+        openArtifact({
+          documentId: left.documentId,
+          schema: fixture.installedTarget.artifact.schema,
+          bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: left.spaceId, installedTarget: fixture.installedTarget }],
+          actor: "caller-selected-actor",
+        });
+        openArtifact({
+          documentId: right.documentId,
+          schema: fixture.installedTarget.artifact.schema,
+          bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: right.spaceId, installedTarget: fixture.installedTarget }],
+          actor: "caller-selected-actor",
+        });
         expect(documentRuntimeKeyV1({ kind: "hub", ...left })).toBe(fixture.expected.scopeIsolation.leftKey);
         expect(documentRuntimeKeyV1({ kind: "hub", ...right })).toBe(fixture.expected.scopeIsolation.rightKey);
         expect(documentRuntimeKeyV1({ kind: "local", documentId: left.documentId })).toBe(fixture.expected.scopeIsolation.localKey);
@@ -4606,7 +5428,12 @@ if (import.meta.vitest) {
         return Response.json(response, { headers: { "x-semio-browser-broker-advanced": "1" } });
       };
       try {
-        openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+        openArtifact({
+          documentId: fixture.intent.scope.documentId,
+          schema: fixture.plan.artifact.schema,
+          bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
+          actor: "caller-selected-actor",
+        });
         const socket = await waitForDocumentSocket();
         expect(requests).toHaveLength(2);
         expect(requests.map(({ url }) => url)).toEqual(fixture.expected.httpPaths.map((path) => `/_semio/hub${path}`));
@@ -4660,7 +5487,12 @@ if (import.meta.vitest) {
         return Response.json(effects === 1 ? current.plan : current.grant, { headers: { "x-semio-browser-broker-advanced": "1" } });
       };
       try {
-        openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }], actor: "caller-selected-actor" });
+        openArtifact({
+          documentId: fixture.intent.scope.documentId,
+          schema: fixture.plan.artifact.schema,
+          bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
+          actor: "caller-selected-actor",
+        });
         const socket = await waitForDocumentSocket();
         socket.open();
         const state = artifactState(fixture.intent.scope.documentId, fixture.intent.scope.spaceId)!;
@@ -4751,6 +5583,10 @@ if (import.meta.vitest) {
       // 🪪️ The caller declares only which surface it wants: nothing forgeable is supplied, so the
       // verified lease is the sole local comparison input for this wasm target.
       const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: fixture.hubOrigin, spaceId: fixture.intent.scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId };
+      artifacts.delete(state.runtimeKey);
+      state.config = { ...state.config, bindings: [binding] };
+      state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+      artifacts.set(state.runtimeKey, state);
       clearLocalBrowserBrokerProof();
       installLocalBrowserBrokerProof("a".repeat(64));
       (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: RequestInit) => {
@@ -4790,11 +5626,7 @@ if (import.meta.vitest) {
         expect(fixture.manifest.grant.write).toBe(false);
         const authority = await requestDocumentSocketAuthority(harness.state, harness.binding);
         expect(authority.surfaceId).toBe(fixture.manifest.surface.surfaceId);
-        expect(harness.requests.map(({ url }) => url)).toEqual([
-          `/_semio/hub${fixture.expected.openPlanPath}`,
-          ...fixture.expected.assetPaths.map((path) => `/_semio/hub${path}`),
-          `/_semio/hub${fixture.expected.socketGrantPath}`,
-        ]);
+        expect(harness.requests.map(({ url }) => url)).toEqual([`/_semio/hub${fixture.expected.openPlanPath}`, ...fixture.expected.assetPaths.map((path) => `/_semio/hub${path}`), `/_semio/hub${fixture.expected.socketGrantPath}`]);
         for (const index of [1, 2, 3]) {
           expect(harness.requests[index]!.method).toBe("POST");
           expect(JSON.parse(harness.requests[index]!.body)).toEqual(fixture.intent);
@@ -4823,11 +5655,12 @@ if (import.meta.vitest) {
       for (const vector of fixture.hostile) {
         const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
         if (vector.kind === "stale-plan" || vector.kind === "mixed-generation") plan.catalog = { generationId: fixture.expected.rotation.generationA };
-        const manifest = vector.kind === "manifest-field"
-          ? executionTargetMutate(fixture.manifest, vector.path!, vector.value)
-          : vector.kind === "mixed-generation"
-            ? structuredClone(fixture.manifest) as unknown as Record<string, unknown>
-            : structuredClone(fixture.manifest) as unknown as Record<string, unknown>;
+        const manifest =
+          vector.kind === "manifest-field"
+            ? executionTargetMutate(fixture.manifest, vector.path!, vector.value)
+            : vector.kind === "mixed-generation"
+              ? (structuredClone(fixture.manifest) as unknown as Record<string, unknown>)
+              : (structuredClone(fixture.manifest) as unknown as Record<string, unknown>);
         const harness = executionTargetHarness(fixture, (url, requests) => {
           if (url.endsWith("/open-plan")) return Response.json(vector.kind === "stale-plan" ? { ...plan, catalog: { generationId: fixture.expected.rotation.generationB } } : plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
           if (url.endsWith("/execution-target/manifest")) {
@@ -4854,7 +5687,8 @@ if (import.meta.vitest) {
             if (vector.kind === "descriptor-max-plus-one") return executionTargetBodyResponse(descriptor, fixture.expected.descriptorMaxBytes + 1);
             if (vector.kind === "descriptor-trailing-byte") return executionTargetBodyResponse(new Uint8Array([...descriptor, 0]));
             if (vector.kind === "descriptor-noncanonical") return executionTargetBodyResponse(encodePackValue({ descriptorVersion: 1, packageId: "semio:gis" }));
-            if (vector.kind === "descriptor-self-hash") return executionTargetBodyResponse(encodePackValue({ ...(decodePackValue(descriptor) as Record<string, unknown>), hashes: { wasmSha256: "a".repeat(64), coreWasmSha256: "9".repeat(64), descriptorSha256: "8".repeat(64) } }));
+            if (vector.kind === "descriptor-self-hash")
+              return executionTargetBodyResponse(encodePackValue({ ...(decodePackValue(descriptor) as Record<string, unknown>), hashes: { wasmSha256: "a".repeat(64), coreWasmSha256: "9".repeat(64), descriptorSha256: "8".repeat(64) } }));
             if (vector.kind === "descriptor-bytes") {
               const substituted = new Uint8Array(descriptor);
               substituted[substituted.length - 1] = substituted[substituted.length - 1]! ^ 0xff;
@@ -4869,7 +5703,9 @@ if (import.meta.vitest) {
         }
         try {
           if (vector.kind === "caller-url" || vector.kind === "caller-path" || vector.kind === "caller-module") {
-            const denied = await browserExecutionTargetAssetRequest(harness.binding, `${harness.state.config.documentId}/../${String(vector.value)}`, "component", fixture.intent, { timeoutMs: 1_000, signal: harness.state.docAbort.signal }).catch((error: unknown) => error as Error);
+            const denied = await browserExecutionTargetAssetRequest(harness.binding, `${harness.state.config.documentId}/../${String(vector.value)}`, "component", fixture.intent, { timeoutMs: 1_000, signal: harness.state.docAbort.signal }).catch(
+              (error: unknown) => error as Error,
+            );
             expect((denied as Error).message).toBe("document execution target: operation denied");
             expect(harness.requests).toHaveLength(0);
             rejected.push(vector.name);
@@ -4908,6 +5744,597 @@ if (import.meta.vitest) {
       }
       expect(rejected).toHaveLength(fixture.hostile.length);
       expect(new Set(rejected).size).toBe(fixture.hostile.length);
+    });
+
+    it("execution target body reader bounds cancellation, retirement and late publication", async () => {
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧫️fixtures/📇️directory/🧵️execution-target-body-read-v1.json", import.meta.url), "utf8"));
+      for (const row of corpus.cases) {
+        const abort = new AbortController(),
+          chunk = new Uint8Array([7, 8, 9]);
+        let current = true,
+          source: ReadableStreamDefaultController<Uint8Array> | undefined,
+          cancelCalls = 0;
+        let pending!: () => void;
+        const pulled = new Promise<void>((resolve) => {
+          pending = resolve;
+        });
+        const body = new ReadableStream<Uint8Array>({
+          start(controller) {
+            source = controller;
+            controller.enqueue(chunk);
+            if (["success", "short", "oversize"].includes(row.name)) controller.close();
+          },
+          pull(controller) {
+            pending();
+            if (row.name === "stale-after-read") {
+              current = false;
+              controller.close();
+            }
+            if (row.name === "abort-at-eof") {
+              abort.abort();
+              try {
+                controller.close();
+              } catch {}
+            }
+          },
+          cancel() {
+            cancelCalls++;
+            return new Promise<void>(() => {});
+          },
+        });
+        const length = row.name === "short" ? 4 : row.name === "oversize" ? 2 : 3;
+        const response = new Response(body, { headers: { "content-length": String(length) } });
+        const control = {
+          signal: abort.signal,
+          deadlineAtMs: Date.now() + corpus.deadlineMs,
+          assertCurrent() {
+            if (!current) throw new Error("fixture stale body owner");
+          },
+        };
+        const reading = readExecutionTargetBody(response, length, 8, "component", control, () => {}).then(
+          (bytes) => {
+            const result = { kind: "fulfilled", bytes };
+            return result;
+          },
+          () => ({ kind: "rejected", bytes: null }),
+        );
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          if (row.name === "pending-abort") {
+            await pulled;
+            abort.abort();
+          }
+          const result = await Promise.race([
+            reading,
+            new Promise<{ kind: string; bytes: null }>((resolve) => {
+              timer = setTimeout(() => resolve({ kind: "stranded", bytes: null }), corpus.completionMs);
+            }),
+          ]);
+          expect({ name: row.name, outcome: result.kind, locked: body.locked, chunkWiped: chunk.every((byte) => byte === 0) }).toEqual(row);
+          if (result.bytes) {
+            expect(Array.from(result.bytes)).toEqual([7, 8, 9]);
+            result.bytes.fill(0);
+          }
+          expect(cancelCalls).toBeLessThanOrEqual(1);
+        } finally {
+          clearTimeout(timer);
+          abort.abort();
+          try {
+            source?.close();
+          } catch {}
+          await reading;
+        }
+      }
+    });
+
+    it("execution target body reader prevents stale owners publishing a lease or grant", async () => {
+      const fixture = await executionTargetLeaseFixture();
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧫️fixtures/📇️directory/🧵️execution-target-body-read-v1.json", import.meta.url), "utf8"));
+      const component = executionTargetBytes(fixture.componentHex),
+        descriptor = executionTargetBytes(fixture.descriptorHex);
+      for (const row of corpus.ownership) {
+        const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
+        const grant = { ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 };
+        const originalDigest = crypto.subtle.digest;
+        let changed = false,
+          pendingBody: ReadableStream<Uint8Array> | undefined,
+          pendingChunk: Uint8Array | undefined;
+        const mutate = (): void => {
+          if (changed) return;
+          changed = true;
+          const state = harness.state,
+            binding = harness.binding;
+          if (row.name.endsWith("-abort")) state.docAbort.abort();
+          else if (row.name === "grant-eof-stale") artifacts.delete(state.runtimeKey);
+          else if (row.name === "superseded-open") state.executionTargetOpen = Symbol("replacement-open");
+          else if (row.name === "component-client") state.openClientInstanceId = "replaced-client";
+          else if (row.name === "component-schema") state.config = { ...state.config, schema: "replaced-schema" };
+          else {
+            const changedBinding = { ...binding };
+            if (row.name === "component-scope") changedBinding.spaceId = "replaced-space";
+            else if (row.name === "component-origin") changedBinding.baseUrl = "https://replaced.test";
+            else changedBinding.requestedSurfaceId = "replaced-surface";
+            state.config = { ...state.config, bindings: [changedBinding] };
+          }
+        };
+        const harness = executionTargetHarness(fixture, (url) => {
+          const headers: Record<string, string> = { "x-semio-browser-broker-advanced": "1" };
+          const pendingStage = row.name.replace("-pending-abort", "");
+          if (row.name.includes("-pending-abort") && url.endsWith("/" + pendingStage)) {
+            pendingChunk =
+              pendingStage === "component"
+                ? new Uint8Array(component)
+                : pendingStage === "descriptor"
+                  ? new Uint8Array(descriptor)
+                  : new TextEncoder().encode(JSON.stringify(pendingStage === "open-plan" ? plan : pendingStage === "manifest" ? fixture.manifest : grant));
+            if (pendingStage === "component" || pendingStage === "descriptor") headers["content-length"] = String(pendingChunk.byteLength);
+            pendingBody = new ReadableStream<Uint8Array>({
+              start(controller) {
+                controller.enqueue(pendingChunk!);
+              },
+              pull() {
+                mutate();
+              },
+              cancel() {
+                return new Promise<void>(() => {});
+              },
+            });
+            return new Response(pendingBody, { headers });
+          }
+          if (url.endsWith("/open-plan")) return Response.json(plan, { headers });
+          if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest, { headers });
+          if (url.endsWith("/execution-target/component")) {
+            if (row.name.startsWith("component-") || row.name === "superseded-open") mutate();
+            return executionTargetBodyResponse(component);
+          }
+          if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
+          if (row.name.startsWith("grant-eof-"))
+            return new Response(
+              new ReadableStream<Uint8Array>({
+                start(controller) {
+                  controller.enqueue(new TextEncoder().encode(JSON.stringify(grant)));
+                },
+                pull(controller) {
+                  mutate();
+                  controller.close();
+                },
+              }),
+              { headers },
+            );
+          return Response.json(grant, { headers });
+        });
+        if (row.name === "status-owner-change")
+          executionTargetStatusObserver = (status) => {
+            if (status.code === "renderer-unavailable") mutate();
+          };
+        crypto.subtle.digest = async function (algorithm, bytes) {
+          const result = await originalDigest.call(this, algorithm, bytes);
+          if (row.name.startsWith("hash-") && bytes instanceof Uint8Array && bytes.byteLength === component.byteLength) mutate();
+          return result;
+        };
+        try {
+          const result = await requestDocumentSocketAuthority(harness.state, harness.binding).then(
+            () => "fulfilled",
+            () => "rejected",
+          );
+          expect({ name: row.name, outcome: result, lease: harness.state.executionTargetLease !== null, reservation: harness.state.browserActorReservation !== null }).toEqual(row);
+          expect(changed).toBe(true);
+          if (pendingBody) {
+            expect(pendingBody.locked).toBe(false);
+            expect(pendingChunk!.every((byte) => byte === 0)).toBe(true);
+          }
+        } finally {
+          crypto.subtle.digest = originalDigest;
+          dropDocumentExecutionTargetLease(harness.state);
+          closeArtifactRuntime(harness.state.runtimeKey);
+          harness.release();
+        }
+      }
+    });
+
+    it("browser document actor reservation obeys private grant, scope, generation and retirement laws", async () => {
+      const fixture = await executionTargetLeaseFixture();
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧫️fixtures/📇️directory/🧵️browser-actor-reservation-v1.json", import.meta.url), "utf8"));
+      const originalWorker = globalThis.Worker,
+        originalFetch = globalThis.fetch;
+      let bodyRequests = 0;
+      globalThis.fetch = async () => {
+        bodyRequests++;
+        throw new Error("fixture forbids body fetch");
+      };
+      const instances: FakeReservationWorker[] = [];
+      let delayed = false,
+        failFactory = false,
+        loads = 0;
+      let beforeTerminate: (() => void) | undefined;
+      class FakeReservationWorker {
+        port: MessagePort | null = null;
+        initialization: Record<string, any> | null = null;
+        terminated = false;
+        constructor() {
+          if (failFactory) throw new Error("fixture worker failure");
+          instances.push(this);
+        }
+        postMessage(message: Record<string, any>): void {
+          this.initialization = message;
+          this.port = message.port;
+          this.port!.onmessage = (event) => {
+            if (event.data.kind === "load") loads++;
+          };
+          this.port!.start();
+          if (!delayed) this.ready();
+        }
+        ready(): void {
+          const message = this.initialization!;
+          this.port!.postMessage({ schema: message.schema, nonce: message.nonce, generation: message.generation, kind: "ready" });
+        }
+        terminate(): void {
+          beforeTerminate?.();
+          this.terminated = true;
+          this.port?.close();
+        }
+      }
+      (globalThis as unknown as { Worker: unknown }).Worker = FakeReservationWorker;
+      const setup = (name: string, spaceId = "reservation-space") => {
+        const documentId = "reservation-" + name;
+        openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
+        const state = artifactState(documentId)!;
+        artifacts.delete(state.runtimeKey);
+        const binding = { kind: "hub", baseUrl: fixture.hubOrigin, spaceId } as const;
+        state.config = { ...state.config, bindings: [binding] };
+        if (name === "foreign-origin") state.config = { ...state.config, bindings: [{ ...binding, baseUrl: "http://foreign.test" }] };
+        if (name === "foreign-schema") state.config = { ...state.config, schema: "foreign-schema" };
+        if (name === "foreign-surface") state.config = { ...state.config, bindings: [{ ...binding, requestedSurfaceId: "foreign-surface" }] };
+        state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+        artifacts.set(state.runtimeKey, state);
+        const fields = structuredClone(fixture.manifest);
+        fields.scope = { spaceId, documentId };
+        if (fields.checkpoint) fields.checkpoint = { ...fields.checkpoint, baselineFrontier: { ...fields.checkpoint.baselineFrontier, documentId } };
+        if (name === "none") {
+          fields.browserActor = { kind: "none" };
+          fields.surface = { ...fields.surface, rendererTarget: "wgpu" };
+        }
+        if (name === "foreign-scope") fields.scope.spaceId = "foreign";
+        const component = new Uint8Array([1]),
+          descriptor = new Uint8Array([2]);
+        const lease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, component, descriptor);
+        state.executionTargetLease = name === "no-lease" ? null : lease;
+        if (name !== "ungranted-lease")
+          lease.admitBrowserActor(
+            documentExecutionTargetLeaseMintToken,
+            { ...fixture.socketGrant, expiresAtMs: name === "expired-grant" ? Date.now() - 1 : Date.now() + (name === "grant-expired-during-reserve" ? 50 : name === "expiry" ? 500 : 25000) },
+            Date.now() + (name === "expiry" ? 500 : 30000),
+            { binding, intent: { ...fixture.intent, scope: { spaceId, documentId } }, assertCurrent() {} },
+          );
+        if (name === "dropped-lease") lease.drop();
+        if (name === "stale-state") artifacts.delete(state.runtimeKey);
+        return { state, lease, component, descriptor };
+      };
+      const created: ReturnType<typeof setup>[] = [];
+      const cleanup = () => {
+        beforeTerminate = undefined;
+        for (const entry of created.splice(0)) {
+          artifacts.set(entry.state.runtimeKey, entry.state);
+          closeArtifactRuntime(entry.state.runtimeKey);
+          entry.lease.drop();
+        }
+      };
+      try {
+        for (const row of corpus.cases) {
+          const count = instances.length;
+          let outcome = "denied";
+          delayed = ["close-during-reserve", "replace-during-reserve", "grant-expired-during-reserve"].includes(row.name);
+          failFactory = row.name === "factory-failure";
+          try {
+            const entry = setup(row.name);
+            created.push(entry);
+            const reserving = reserveDocumentBrowserActorChild(entry.state);
+            if (row.name === "close-during-reserve") closeArtifactRuntime(entry.state.runtimeKey);
+            if (row.name === "replace-during-reserve") entry.state.executionTargetLease = null;
+            if (row.name === "grant-expired-during-reserve") await new Promise((resolve) => setTimeout(resolve, 80));
+            if (delayed) instances.at(-1)?.ready();
+            const owner = await reserving;
+            outcome = owner === null ? "none" : "reserved";
+            if (row.name === "duplicate") {
+              await expect(reserveDocumentBrowserActorChild(entry.state)).rejects.toThrow();
+              outcome = "denied";
+            }
+            if (owner !== null) expect(owner.generation > 0n).toBe(true);
+          } catch {
+            outcome = "denied";
+          } finally {
+            cleanup();
+            delayed = false;
+            failFactory = false;
+          }
+          expect({ name: row.name, expected: outcome, created: instances.length - count }).toEqual(row);
+          expect(instances.every((worker) => worker.terminated)).toBe(true);
+        }
+        let entry = setup("lifecycle");
+        created.push(entry);
+        const first = await reserveDocumentBrowserActorChild(entry.state);
+        expect(instances.at(-1)!.initialization!.actorId).toBe(fixture.socketGrant.actorId);
+        expect(instances.at(-1)!.initialization!.actorId).not.toBe(entry.state.config.actor);
+        expect(() => entry.lease.admitBrowserActor(Symbol("foreign"), fixture.socketGrant, Date.now() + 30000, { binding: hubBinding(entry.state.config)!, intent: fixture.intent, assertCurrent() {} })).toThrow();
+        expect(() => entry.lease.admitBrowserActor(documentExecutionTargetLeaseMintToken, fixture.socketGrant, Date.now() + 30000, { binding: hubBinding(entry.state.config)!, intent: fixture.intent, assertCurrent() {} })).toThrow();
+        beforeTerminate = () => {
+          expect(entry.component[0]).toBe(1);
+          expect(entry.descriptor[0]).toBe(2);
+        };
+        dropDocumentExecutionTargetLease(entry.state);
+        expect(entry.component[0]).toBe(0);
+        expect(entry.state.browserActorReservation).toBeNull();
+        beforeTerminate = undefined;
+        cleanup();
+        entry = setup("lifecycle");
+        created.push(entry);
+        const reopened = await reserveDocumentBrowserActorChild(entry.state);
+        expect(reopened!.generation).toBeGreaterThan(first!.generation);
+        const peer = setup("lifecycle", "second-space");
+        created.push(peer);
+        const peerOwner = await reserveDocumentBrowserActorChild(peer.state);
+        expect(peerOwner).not.toBe(reopened);
+        entry.lease.drop();
+        expect(entry.state.browserActorReservation).toBeNull();
+        expect(peer.state.browserActorReservation).toBe(peerOwner);
+        cleanup();
+        entry = setup("expiry");
+        created.push(entry);
+        const retired = new Promise<void>((resolve) => {
+          beforeTerminate = resolve;
+        });
+        await reserveDocumentBrowserActorChild(entry.state);
+        await retired;
+        expect(entry.state.browserActorReservation).toBeNull();
+        expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
+        expect(loads).toBe(corpus.loadedActors);
+        expect(bodyRequests).toBe(corpus.bodyRequests);
+        expect(corpus.lifecycle).toHaveLength(7);
+      } finally {
+        cleanup();
+        globalThis.fetch = originalFetch;
+        (globalThis as unknown as { Worker: unknown }).Worker = originalWorker;
+      }
+    });
+
+    it("browser document actor reservation activates only after an exact current socket Session", async () => {
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🧫️fixtures/📇️directory/🧵️browser-actor-session-v1.json", import.meta.url), "utf8"));
+      const fixture = await executionTargetLeaseFixture();
+      const component = executionTargetBytes(fixture.componentHex),
+        descriptor = executionTargetBytes(fixture.descriptorHex),
+        actor = new TextEncoder().encode("abc");
+      const originalFetch = globalThis.fetch,
+        originalWorker = globalThis.Worker,
+        originalSocket = globalThis.WebSocket;
+      const wait = async (done: () => boolean) => {
+        const deadline = Date.now() + 3000;
+        while (!done()) {
+          if (Date.now() > deadline) throw new Error("session activation test deadline");
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+      };
+      const guest = decodePackValue(descriptor) as Record<string, any>;
+      for (const key of Object.keys(guest.hashes)) guest.hashes[key] = "";
+      try {
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+        for (const row of corpus.cases) {
+          let bodies = 0,
+            loads = 0,
+            describes = 0,
+            activated = 0;
+          const workers: SessionWorker[] = [],
+            records: { fixture: ExecutionTargetLeaseFixture; state: ArtifactState; socket: FakeHubWebSocket; connected: Promise<void> }[] = [];
+          const streams: { stream: ReadableStream<Uint8Array>; chunk: Uint8Array; cancelled: number }[] = [];
+          const requests: { url: string; method: string; body: string }[] = [];
+          const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
+          const bodyProgress = new Set<string>();
+          const describeApi = await import("./🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts");
+          const originalVerify = describeApi.verifyBrowserActorDescribeV1;
+          const verifySpy = ["client-change-after-describe", "socket-close-after-describe"].includes(row.name)
+            ? vi.spyOn(describeApi, "verifyBrowserActorDescribeV1").mockImplementation((guest, staged, codec) => {
+                originalVerify(guest, staged, codec);
+                queueMicrotask(() => {
+                  if (row.name === "socket-close-after-describe") records[0]!.socket.close();
+                  else records[0]!.state.openClientInstanceId = "replaced-after-describe";
+                });
+              })
+            : undefined;
+          class SessionWorker {
+            port!: MessagePort;
+            binding!: { schema: string; nonce: string; generation: string };
+            held: Record<string, any> | null = null;
+            terminations = 0;
+            postMessage(init: Record<string, any>): void {
+              this.port = init.port;
+              this.binding = { schema: init.schema, nonce: init.nonce, generation: init.generation };
+              this.port.onmessage = (event) => {
+                const message = event.data;
+                if (message.kind === "load") {
+                  loads++;
+                  expect(new Uint8Array(message.bytes)).toEqual(actor);
+                  if (["socket-replaced-during-load", "duplicate-session-during-load"].includes(row.name) && workers[0] === this) this.held = message;
+                  else {
+                    if (row.name === "client-replaced-during-load") records[0]!.state.openClientInstanceId = "replacement-client";
+                    this.loaded(message);
+                  }
+                }
+                if (message.kind === "invoke") {
+                  describes++;
+                  expect(message.path).toEqual(["describe", "describe"]);
+                  expect(message.args).toEqual([]);
+                  const value = structuredClone(guest);
+                  if (row.name === "descriptor-mismatch") value.manifest.pluginId = "foreign";
+                  const encoded = encodePackValue(value);
+                  const bytes = row.name === "descriptor-noncanonical" ? new Uint8Array([...encoded, 0]) : encoded;
+                  this.port.postMessage({ ...this.binding, kind: "result", sequence: message.sequence, value: row.name === "descriptor-result-shape" ? [bytes] : bytes }, [bytes.buffer]);
+                  expect(bytes.byteLength).toBe(0);
+                  this.port.postMessage({ ...this.binding, kind: "transferred", sequence: message.sequence, detached: 1 });
+                }
+              };
+              this.port.start();
+              this.port.postMessage({ ...this.binding, kind: "ready" });
+            }
+            constructor() {
+              workers.push(this);
+            }
+            loaded(message: Record<string, any>): void {
+              this.port.postMessage({ ...this.binding, kind: "loaded", byteLength: message.bytes.byteLength, sha256: message.sha256 });
+              new Uint8Array(message.bytes).fill(0);
+            }
+            terminate(): void {
+              this.terminations++;
+              if (this.held) new Uint8Array(this.held.bytes).fill(0);
+              this.port?.close();
+            }
+          }
+          (globalThis as unknown as { Worker: unknown }).Worker = SessionWorker;
+          socketGrantTestIssue = null;
+          executionTargetStatusObserver = (status) => {
+            statuses.push(status);
+            if (status.progress?.stage === "manifest") bodyProgress.delete(status.spaceId);
+            if (status.progress?.stage === corpus.progressStage) {
+              bodyProgress.add(status.spaceId);
+              if (row.name === "client-change-during-progress") records[0]!.state.openClientInstanceId = "replaced-by-progress-observer";
+            }
+            if (status.code === "renderer-unavailable" && bodyProgress.delete(status.spaceId)) activated++;
+          };
+          clearLocalBrowserBrokerProof();
+          installLocalBrowserBrokerProof("a".repeat(64));
+          globalThis.fetch = async (input, init) => {
+            const url = String(input);
+            requests.push({ url, method: String(init?.method ?? "GET"), body: String(init?.body ?? "") });
+            const record = records.find((record) => url.includes("/spaces/" + encodeURIComponent(record.fixture.intent.scope.spaceId) + "/"));
+            if (!record) throw new Error("unowned session fixture request");
+            const current = record.fixture;
+            if (url.endsWith("/open-plan")) return Response.json(current.plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (url.endsWith("/execution-target/manifest")) return Response.json(current.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
+            if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
+            if (url.endsWith("/execution-target/browser-actor")) {
+              bodies++;
+              expect(init?.method).toBe("POST");
+              expect(JSON.parse(String(init?.body))).toEqual(current.intent);
+              if (row.name === "socket-close-during-body" || row.name === "scope-change-at-headers") {
+                const retained = { stream: null as unknown as ReadableStream<Uint8Array>, chunk: new Uint8Array([97]), cancelled: 0 };
+                retained.stream = new ReadableStream({
+                  start(controller) {
+                    if (row.name === "socket-close-during-body") controller.enqueue(retained.chunk);
+                  },
+                  cancel() {
+                    retained.cancelled++;
+                    return new Promise(() => {});
+                  },
+                });
+                streams.push(retained);
+                if (row.name === "scope-change-at-headers") record.state.config = { ...record.state.config, schema: "foreign-schema" };
+                return new Response(retained.stream, { headers: { "content-length": "3", "x-semio-browser-broker-advanced": "1" } });
+              }
+              return executionTargetBodyResponse(row.name === "body-hash-mismatch" ? new Uint8Array([0, 0, 0]) : actor);
+            }
+            return Response.json(current.socketGrant, { headers: { "x-semio-browser-broker-advanced": "1" } });
+          };
+          const setup = async (spaceId: string) => {
+            const current = structuredClone(fixture);
+            current.intent.scope.spaceId = spaceId;
+            current.plan.scope.spaceId = spaceId;
+            current.manifest.scope.spaceId = spaceId;
+            current.plan.expiresAtUnixMs = Date.now() + 30000;
+            current.socketGrant.expiresAtMs = Date.now() + 25000;
+            openArtifact({ documentId: current.intent.scope.documentId, schema: current.plan.artifact.schema, bindings: [] });
+            const state = artifactState(current.intent.scope.documentId)!;
+            state.openClientInstanceId = current.intent.clientInstanceId;
+            artifacts.delete(state.runtimeKey);
+            const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: current.hubOrigin, spaceId, requestedSurfaceId: current.intent.requestedSurfaceId };
+            state.config = { ...state.config, bindings: [binding] };
+            state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+            artifacts.set(state.runtimeKey, state);
+            const record = { fixture: current, state, socket: null as unknown as FakeHubWebSocket, connected: null as unknown as Promise<void> };
+            records.push(record);
+            const count = FakeHubWebSocket.instances.length;
+            record.connected = connectHubOnce(state, binding);
+            void record.connected.catch(() => {});
+            await wait(() => FakeHubWebSocket.instances.length > count);
+            record.socket = FakeHubWebSocket.instances.at(-1)!;
+            record.socket.open();
+            return record;
+          };
+          const session = async (record: (typeof records)[number], actorId = record.fixture.socketGrant.actorId) => {
+            record.socket.onmessage?.({ data: encodeServerFrame({ Session: { actor: actorId, color: 3 } }, "command").buffer as ArrayBuffer });
+            await record.state.hubFrameChain;
+          };
+          try {
+            const first = await setup("session-" + row.name);
+            const initialLease = first.state.executionTargetLease!;
+            expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
+            expect(bodies).toBe(0);
+            if (row.name !== "before-session") await session(first, row.name === "wrong-session" ? "hub.v1." + "f".repeat(64) : first.fixture.socketGrant.actorId);
+            if (row.name === "socket-close-during-body") {
+              await wait(() => bodies === 1 && streams[0]?.stream.locked);
+              first.socket.close();
+              await wait(() => !streams[0]!.stream.locked);
+              expect(streams[0]!.cancelled).toBe(1);
+              expect(streams[0]!.chunk.every((byte) => byte === 0)).toBe(true);
+            } else if (row.name === "duplicate-session-during-load") {
+              await wait(() => loads === 1);
+              await session(first);
+              await wait(() => !initialLease.live);
+              expect(workers).toHaveLength(1);
+            } else if (row.name === "socket-replaced-during-load") {
+              await wait(() => loads === 1);
+              const staleSocket = first.socket;
+              staleSocket.close();
+              const binding = hubBinding(first.state.config)!;
+              first.connected = connectHubOnce(first.state, binding);
+              void first.connected.catch(() => {});
+              await wait(() => FakeHubWebSocket.instances.at(-1) !== staleSocket);
+              first.socket = FakeHubWebSocket.instances.at(-1)!;
+              first.socket.open();
+              const nextLease = first.state.executionTargetLease!;
+              await session(first);
+              staleSocket.onmessage?.({ data: encodeServerFrame({ Session: { actor: first.fixture.socketGrant.actorId, color: 9 } }, "command").buffer as ArrayBuffer });
+              await wait(() => activated === 1);
+              expect(initialLease.live).toBe(false);
+              expect(first.state.executionTargetLease).toBe(nextLease);
+              expect(nextLease.live).toBe(true);
+            } else if (row.name === "same-document-other-space") {
+              await wait(() => activated === 1);
+              const peer = await setup(first.fixture.intent.scope.spaceId + "-peer");
+              await session(peer);
+              await wait(() => activated === 2);
+              const peerOwner = peer.state.browserActorReservation;
+              first.socket.close();
+              expect(peer.state.browserActorReservation).toBe(peerOwner);
+              expect(peer.state.executionTargetLease?.live).toBe(true);
+              expect(peer.socket.readyState).toBe(FakeHubWebSocket.OPEN);
+            } else if (row.activated > 0) await wait(() => activated === row.activated);
+            else if (row.name !== "before-session" && row.name !== "socket-close-during-body") await wait(() => !initialLease.live);
+            if (row.name === "scope-change-at-headers") {
+              expect(streams[0]!.cancelled).toBe(1);
+              expect(streams[0]!.stream.locked).toBe(false);
+            }
+            expect({ name: row.name, bodies, loads, describes, activated }).toEqual(row);
+            if (row.name !== "before-session" && row.activated === 0) expect(first.state.executionTargetLease).toBeNull();
+            expect(requests.filter((request) => request.url.endsWith("/browser-actor")).every((request) => !request.body.includes("open.v1.") && !request.body.includes("socket.v1."))).toBe(true);
+            expect(records.every((record) => record.state.outbox.length === 0)).toBe(true);
+            expect(statuses.every((status) => !JSON.stringify(status).includes("open.v1.") && !JSON.stringify(status).includes("socket.v1."))).toBe(true);
+          } finally {
+            verifySpy?.mockRestore();
+            for (const record of records) {
+              closeArtifactRuntime(record.state.runtimeKey);
+              await record.connected.catch(() => {});
+            }
+            for (const worker of workers) expect(worker.terminations).toBe(1);
+            expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
+            executionTargetStatusObserver = null;
+            clearLocalBrowserBrokerProof();
+          }
+        }
+        console.log("document-session-activation: socket-path=1 neutral=" + corpus.cases.length + " worker=mocked final-capacity=0");
+      } finally {
+        globalThis.fetch = originalFetch;
+        (globalThis as unknown as { Worker: unknown }).Worker = originalWorker;
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalSocket;
+      }
     });
 
     it("browser GIS viewer exposes localized renderer-unavailable after verified lease", async () => {
@@ -4962,6 +6389,10 @@ if (import.meta.vitest) {
       const state = artifactState(fixture.intent.scope.documentId)!;
       state.openClientInstanceId = fixture.intent.clientInstanceId;
       const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget };
+      artifacts.delete(state.runtimeKey);
+      state.config = { ...state.config, bindings: [binding] };
+      state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+      artifacts.set(state.runtimeKey, state);
       try {
         const hostileReceipt = current.plan.receipt;
         let effects = 0;
@@ -5509,16 +6940,17 @@ if (import.meta.vitest) {
       workerPostTestSink = (message) => responses.push(message);
       const socketA = { close: vi.fn() } as unknown as WebSocket;
       const socketB = { close: vi.fn() } as unknown as WebSocket;
-      const makeState = (spaceId: string, socket: WebSocket): ArtifactState => ({
-        config: { documentId: "same-document", schema: "demo/v1", actor: "requested", bindings: [{ kind: "hub", baseUrl: "https://hub.example", spaceId }] },
-        socket,
-        actor: "",
-        hubActorReady: false,
-        pendingSocketActorId: `hub.v1.${spaceId === "space-a" ? "a" : "b"}`.padEnd(71, spaceId === "space-a" ? "a" : "b"),
-        presenceAuthority: null,
-        outbox: [],
-        sessionColor: null,
-      }) as unknown as ArtifactState;
+      const makeState = (spaceId: string, socket: WebSocket): ArtifactState =>
+        ({
+          config: { documentId: "same-document", schema: "demo/v1", actor: "requested", bindings: [{ kind: "hub", baseUrl: "https://hub.example", spaceId }] },
+          socket,
+          actor: "",
+          hubActorReady: false,
+          pendingSocketActorId: `hub.v1.${spaceId === "space-a" ? "a" : "b"}`.padEnd(71, spaceId === "space-a" ? "a" : "b"),
+          presenceAuthority: null,
+          outbox: [],
+          sessionColor: null,
+        }) as unknown as ArtifactState;
       const stateA = makeState("space-a", socketA);
       const stateB = makeState("space-b", socketB);
       const actorA = stateA.pendingSocketActorId!;

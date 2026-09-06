@@ -3,7 +3,7 @@
   "$id": "https://semio.tech/schemas/db/durable-group-journal-v1.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "record", "limits", "lifecycle", "cases", "committedDecisionWitnessCases", "nonClaims"],
+  "required": ["version", "record", "limits", "lifecycle", "cases", "committedDecisionWitnessCases", "committedRecovery", "nonClaims"],
   "properties": {
     "version": { "const": 1 },
     "record": {
@@ -76,11 +76,48 @@
         }
       }
     },
+    "committedRecovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority", "cases"],
+      "properties": {
+        "authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["consumer", "recordEscape", "receiptSource", "cancelAfterCommit", "errorSurface", "terminalHandoff"],
+          "properties": {
+            "consumer": { "const": "db-wal-witness" },
+            "recordEscape": { "const": false },
+            "receiptSource": { "const": "derived" },
+            "cancelAfterCommit": { "const": false },
+            "errorSurface": { "const": "retaining-fault" },
+            "terminalHandoff": { "const": "stores-and-ack-once" }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "frontier", "expected", "mutations", "returnedStoreOwners"],
+            "properties": {
+              "id": { "enum": ["pre-mutation-frontier-rejection", "all-base", "all-post", "mixed-frontier"] },
+              "frontier": { "enum": ["foreign", "base", "post", "mixed"] },
+              "expected": { "enum": ["fault", "complete", "already-applied"] },
+              "mutations": { "type": "integer", "minimum": 0, "maximum": 3 },
+              "returnedStoreOwners": { "const": 3 }
+            }
+          }
+        }
+      }
+    },
     "nonClaims": {
       "type": "array",
       "minItems": 3,
       "uniqueItems": true,
-      "items": { "enum": ["decision-recovery", "inference-witness", "three-store-publication"] }
+      "items": { "enum": ["production-recovery-consumer", "inference-witness", "hub-approval"] }
     }
   },
   "$defs": {

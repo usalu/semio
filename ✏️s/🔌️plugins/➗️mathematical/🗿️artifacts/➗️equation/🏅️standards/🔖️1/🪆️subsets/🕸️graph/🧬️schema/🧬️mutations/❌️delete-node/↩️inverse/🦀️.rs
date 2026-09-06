@@ -5,7 +5,7 @@ use crate::artifacts::equation::mutations::{connect_nodes, create_node};
 use crate::artifacts::equation::{equation_graph, EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::DeleteNode, base: &EquationSnapshot) -> Vec<EquationMutation> {
+pub fn inverse(payload: &super::DeleteNode, base: &EquationSnapshot) -> Vec<EquationMutation> {
     let graph = crate::artifacts::equation::equation_graph(base);
     let Some(node) = graph.nodes.iter().find(|node| node.id == payload.id) else {
         return Vec::new();

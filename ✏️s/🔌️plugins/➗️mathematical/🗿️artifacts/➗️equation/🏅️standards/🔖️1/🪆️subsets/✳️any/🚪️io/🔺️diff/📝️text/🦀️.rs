@@ -15,7 +15,7 @@ pub use crate::artifacts::equation::schema::diff::*;
 //#region 🔖️Apply
 impl EquationDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &EquationArtifact) -> protocol::MutationApplyResult<EquationArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &EquationArtifact) -> protocol::MutationApplyResult<EquationArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(notation) = &self.notation {
@@ -48,7 +48,7 @@ impl EquationDiff {
 }
 
 impl MutationDiff<EquationSnapshot> for EquationDiff {
-    async fn apply(&self, snapshot: &EquationSnapshot) -> protocol::MutationApplyResult<EquationSnapshot> {
+    fn apply(&self, snapshot: &EquationSnapshot) -> protocol::MutationApplyResult<EquationSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(notation) = &self.notation {
@@ -66,7 +66,7 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.notation.is_some() {
             self.notation = other.notation;
         }
@@ -103,7 +103,7 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
 /// geometry-scoped mutation always regenerates all three co-derived children together (text/table/
 /// value are three projections of the SAME `(graph, geometry)` state, not independently-editable
 /// slots).
-pub async fn diff_from_state(graph: EquationGraph, geometry: EquationGeometry) -> EquationDiff {
+pub fn diff_from_state(graph: EquationGraph, geometry: EquationGeometry) -> EquationDiff {
     let (notation, results, computed) = equation_children_from_state(&graph, &geometry);
     EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() }
 }

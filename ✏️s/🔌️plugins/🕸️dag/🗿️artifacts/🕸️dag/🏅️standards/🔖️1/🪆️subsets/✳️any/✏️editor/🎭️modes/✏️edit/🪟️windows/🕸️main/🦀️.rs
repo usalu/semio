@@ -15,7 +15,7 @@ const DAG_PLAY_SURFACE_MAIN: &str = "dag.play.main";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::dag::create_dag_app`. `options.measures` stays
 /// empty here on purpose: this window has no chrome measures at all (no `🎚️options`).
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: DAG_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("DAG", "DAG"),
@@ -42,7 +42,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `space`'s workflow window's identical gap.
-pub async fn render(document: &DagSnapshot, camera: &DagCamera, _labels: &DagPlayLabels) -> UiNode {
+pub fn render(document: &DagSnapshot, camera: &DagCamera, _labels: &DagPlayLabels) -> UiNode {
     let (nodes, edges) = document_to_workflow(document);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
     build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, crate::editor::dag::DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })

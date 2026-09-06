@@ -2,10 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "identity", "actors", "limits", "streamClose", "lateStreamFault", "failedStreamRetirement"],
+  "required": ["schema", "identity", "actors", "limits", "streamClose", "guestStreamDrop", "lateStreamFault", "failedStreamRetirement"],
   "properties": {
     "schema": { "const": "semio.browser-actor-import/v1" },
     "streamClose": { "const": { "phase": "closed", "activeInvocations": 0, "cancellations": 1, "result": "rejected", "locked": false } },
+    "guestStreamDrop": { "const": { "phase": "closed", "activeInvocations": 0, "cancellations": 1, "result": "fulfilled", "locked": false } },
     "lateStreamFault": { "const": { "code": "browser.host.stream-failed", "message": "fixture late stream fault" } },
     "failedStreamRetirement": { "const": { "code": "browser.host.stream-failed", "message": "browser host: invalid stream chunk", "cancelMessage": "fixture stream cancellation failed" } },
     "identity": {
@@ -55,8 +56,8 @@
           "maxItems": 3,
           "prefixItems": [
             { "const": { "trampoline": "19", "fnName": "wasi:io/poll@0.2.9#block" } },
-            { "const": { "trampoline": "32", "fnName": "wasi:io/poll@0.2.9#poll" } },
-            { "const": { "trampoline": "35", "fnName": "wasi:io/streams@0.2.9#blockingFlush" } }
+            { "const": { "trampoline": "33", "fnName": "wasi:io/poll@0.2.9#poll" } },
+            { "const": { "trampoline": "36", "fnName": "wasi:io/streams@0.2.9#blockingFlush" } }
           ],
           "items": false
         },

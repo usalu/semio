@@ -11,11 +11,11 @@ use dsl::DslValue as Value;
 use semio_framework_plugin::{SurfaceKind, UiComponentSceneNode, UiPresence};
 
 //#region 🔖️Labels
-pub async fn element_label(program: &ProgramSnapshot, id: &EntityId) -> String {
+pub fn element_label(program: &ProgramSnapshot, id: &EntityId) -> String {
     program.elements.iter().find(|element| &element.header.id == id).map_or_else(|| id.to_string(), |element| element.header.name.clone())
 }
 
-pub async fn adjacency_kind_label(kind: &AdjacencyKind) -> &'static str {
+pub fn adjacency_kind_label(kind: &AdjacencyKind) -> &'static str {
     match kind {
         AdjacencyKind::Required => "Required",
         AdjacencyKind::Preferred => "Preferred",
@@ -24,21 +24,21 @@ pub async fn adjacency_kind_label(kind: &AdjacencyKind) -> &'static str {
     }
 }
 
-pub async fn entity_to_json<T: dsl::ToValue>(entity: &T) -> Value {
+pub fn entity_to_json<T: dsl::ToValue>(entity: &T) -> Value {
     dsl::ToValue::to_value(entity)
 }
 
-pub async fn entity_id_from_json(value: &Value) -> Option<String> {
+pub fn entity_id_from_json(value: &Value) -> Option<String> {
     value.get("id").and_then(|id| id.as_str()).map(str::to_string).or_else(|| value.get("header").and_then(|header| header.get("id")).and_then(|id| id.as_str()).map(str::to_string))
 }
 
-pub async fn entity_name_from_json(value: &Value) -> String {
+pub fn entity_name_from_json(value: &Value) -> String {
     value.get("name").and_then(|name| name.as_str()).map(str::to_string).or_else(|| value.get("header").and_then(|header| header.get("name")).and_then(|name| name.as_str()).map(str::to_string)).unwrap_or_else(|| "Untitled".into())
 }
 //#endregion 🔖️Labels
 
 //#region 🔖️Scene
-pub async fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
+pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
         surface_id: surface_id.into(),
         controller_id: ARCHITECT_APP_ID.into(),

@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `FormMutation` vocabulary (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `CreateStep`/
 /// `DeleteStep`/`ChangeFormTitle`, reading through `forms_steps` now that `FormsSnapshot` no longer
 /// carries a bare `steps` field) so it still records a true inverse.
-async fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
+fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
     use crate::artifacts::forms::mutations::{change_form_title, create_step, delete_step};
     let mut operations: Vec<FormMutation> = forms_steps(current).iter().map(|step| FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: step.id.clone() })).collect();
     if next.title != current.title {
@@ -34,7 +34,7 @@ pub struct SetSpecJson {
     pub json: String,
 }
 
-pub async fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     // 🩹️ `FormsSnapshot` composes `structure`/`results` handles (ticket
     // 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM) so it no longer deserializes raw step/block
     // JSON directly; `flow::playbook::PlaybookSpec` is the SAME `{schema,id,version,title,steps}`

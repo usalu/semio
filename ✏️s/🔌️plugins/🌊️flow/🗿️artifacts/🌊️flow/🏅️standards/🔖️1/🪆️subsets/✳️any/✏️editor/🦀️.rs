@@ -1274,7 +1274,7 @@ impl FlowChildGroupWork {
     fn admitted_child<'a>(
         command: &'a FlowCommand,
         snapshot: &'a FlowSnapshot,
-        context: Option<&'a semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        context: Option<&'a semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
     ) -> Option<(&'a add_widget::AddWidget, store::SnapshotReadRef<'a, semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>)> {
         let FlowCommand::AddWidget(payload) = command else { return None };
         let context = context?;
@@ -1298,7 +1298,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         command: &FlowCommand,
         snapshot: &FlowSnapshot,
         _interaction: &protocol::InteractionState,
-        context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
     ) -> Option<usize> {
         if self.closing || self.completed || command.command_id() != "addWidget" {
             return None;
@@ -1318,7 +1318,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         history: &semio_framework_plugin::HistoryView,
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
-        context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
         _operation: &semio_framework_plugin::AppOperationContext,
     ) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         if self.closing || self.completed {

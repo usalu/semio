@@ -23,7 +23,7 @@ pub use crate::artifacts::dag::schema::diff::*;
 /// via `crate::artifacts::dag::dag_working_scene`, apply its own specific semantics to a clone of
 /// that scene, then mint+cache a whole new content handle here — the "mint+cache whole handle, never
 /// apply-then-capture" pattern flow's `diff_replace_content`/writer's `diff_set_text` established.
-pub async fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagDiff {
+pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagDiff {
     DagDiff { content: Some(crate::artifacts::dag::dag_content_child_with_owner(nodes, edges)), ..Default::default() }
 }
 //#endregion 🔖️ReplaceContent
@@ -31,7 +31,7 @@ pub async fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixture
 //#region 🔖️Apply
 impl DagDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &DagArtifact) -> protocol::MutationApplyResult<DagArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &DagArtifact) -> protocol::MutationApplyResult<DagArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
@@ -55,7 +55,7 @@ impl DagDiff {
 }
 
 impl MutationDiff<DagSnapshot> for DagDiff {
-    async fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
+    fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
@@ -67,7 +67,7 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {

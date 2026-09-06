@@ -12,7 +12,7 @@ const FORMS_PLAY_SURFACE_BLUEPRINT: &str = "forms.play.blueprint";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FORMS_PLAY_WINDOW_BLUEPRINT.into(),
         label: LocalizedLabel::native("Blueprint", "Entwurf"),
@@ -34,7 +34,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
+fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
     crate::playbook::PlaybookBuilderConfig { action_namespace: "forms-blueprint", controller_id: crate::editor::forms::FORMS_PLAY_APP_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
@@ -42,7 +42,7 @@ async fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConf
 /// `InteractionView` (a known SDK gap — matches `gis2d`'s and `note`'s inspection panel precedent), so
 /// this block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`)
 /// can no longer be driven from live framework selection — it always renders with none highlighted now.
-pub async fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     let contributions = crate::editor::forms::parse_contributions(config);
     let palette: Vec<BlockPaletteEntry> = crate::editor::forms::catalogue_kinds(&contributions, labels).into_iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind, label, icon_id }).collect();
     let builder_config = forms_playbook_builder_config();

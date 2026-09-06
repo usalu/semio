@@ -20,23 +20,23 @@ pub struct ChangeBlockFontSize {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_block_font_size(id: String, new_font_size: f64) -> NoteMutation {
+pub fn change_block_font_size(id: String, new_font_size: f64) -> NoteMutation {
     NoteMutation::ChangeBlockFontSize(ChangeBlockFontSize { id, new_font_size })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockFontSize {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-font-size", kind: "change-block-font-size", record: "ChangedBlockFontSize" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change block \"{}\" font size to {}", self.id, self.new_font_size)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

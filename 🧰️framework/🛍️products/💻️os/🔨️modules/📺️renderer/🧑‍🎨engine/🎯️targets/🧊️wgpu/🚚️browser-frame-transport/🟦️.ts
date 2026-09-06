@@ -5,11 +5,17 @@ import { BrowserInteractiveJobPort, type InteractiveJobUiMessage, type Interacti
 
 export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
-export const FRAME_WORKER_BOOT_TIMEOUT_MS = 15_000;
+/** @emoji ⏳️ A boot STALL bound, not a total-boot deadline: every `boot-progress` the Worker reports is
+ * proof of liveness and rearms it. The `s` boot plan mounts 57 plugin modules one macrotask at a time, so a
+ * healthy cold boot legitimately outruns any fixed total budget, while a Worker that stops reporting still
+ * fails closed within this window. */
+export const FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = 15_000;
 export const FRAME_WORKER_POINTER_CAPACITY = 16;
 export const FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 export const FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
 export const FRAME_UI_TURN_BUDGET_MS = 2;
+export const FRAME_WORKER_INTROSPECTION_CAPACITY = 4;
+export const FRAME_WORKER_INTROSPECTION_TIMEOUT_MS = 10_000;
 
 export type BrowserFrameWorkerFaultCode =
   | "worker-unavailable"
@@ -83,7 +89,15 @@ export type BrowserFrameWireLosslessEvent =
   | Exclude<BrowserFrameLosslessEvent, { readonly kind: "text" | "paste" | "ime-update" | "ime-commit" }>
   | { readonly kind: "text-chunk"; readonly streamId: number; readonly target: "text" | "paste" | "ime-update" | "ime-commit"; readonly text: string; readonly totalBytes: number; readonly final: boolean; readonly cursor?: number };
 
-export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | InteractiveJobUiMessage | { readonly kind: "close"; readonly lifecycle: number };
+/** @emoji 🔬️ The renderer's `#[wasm_bindgen]` introspection exports (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
+ * region `🔬️IntrospectionExports`) read `UI_ENGINE`, a thread-local that lives inside `semio-frame-worker`.
+ * The UI isolate therefore cannot call them directly and asks across the same fail-closed seam every other
+ * frame message uses. Read-only by construction: no probe mutates renderer state. */
+export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats";
+
+export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe };
+
+export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | { readonly kind: "close"; readonly lifecycle: number };
 
 export type BrowserFrameWorkerMessage =
   | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number }
@@ -103,6 +117,7 @@ export type BrowserFrameWorkerMessage =
       readonly faultCode?: string;
       readonly faultDetail?: string;
     }
+  | { readonly kind: "introspection"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly json: string | null; readonly detail?: string }
   | { readonly kind: "fault"; readonly lifecycle: number; readonly code: string; readonly detail: string }
   | { readonly kind: "closed"; readonly lifecycle: number }
   | InteractiveJobWorkerMessage;
@@ -180,6 +195,8 @@ export class BrowserFrameTransport {
   private closeRequested = false;
   private readonly uiTurnSamples = new Float64Array(64);
   private uiTurnSampleCount = 0;
+  private readonly introspections = new Map<number, { readonly resolve: (json: string | null) => void; readonly timer: number }>();
+  private nextIntrospectionId = 1;
 
   constructor(options: BrowserFrameTransportOptions) {
     this.worker = options.worker;
@@ -197,7 +214,7 @@ export class BrowserFrameTransport {
     this.worker.onmessage = (event) => this.receive(event.data);
     this.worker.onerror = (event) => this.fail("worker-message-failed", event.message || "Worker error");
     this.worker.onmessageerror = () => this.fail("worker-message-failed", "Worker message could not be decoded");
-    this.bootTimer = setTimer(() => this.fail("worker-boot-timeout", `Worker did not boot within ${FRAME_WORKER_BOOT_TIMEOUT_MS} ms`), FRAME_WORKER_BOOT_TIMEOUT_MS);
+    this.armBootStallTimer();
     try {
       this.worker.postMessage({ kind: "boot", lifecycle: this.lifecycle, ...options.boot }, [options.boot.canvas]);
     } catch (error) {
@@ -301,6 +318,33 @@ export class BrowserFrameTransport {
     }
   }
 
+  /** @emoji 🔬️ Requests one read-only introspection dump from the frame Worker's renderer thread-local.
+   * Resolves `null` — never rejects and never faults the surface — when the Worker is not ready, when the
+   * fixed in-flight credit is exhausted, or when the answer misses `FRAME_WORKER_INTROSPECTION_TIMEOUT_MS`,
+   * so a diagnostic can distinguish "no hooks" from "empty dump" without ever taking the shell down. The
+   * batch flushed first is what makes the answer meaningful: message order guarantees the Worker has ticked
+   * at least one frame before it reads the retained tree. */
+  introspect(probe: BrowserFrameIntrospectionProbe): Promise<string | null> {
+    if (this.status !== "ready" || this.introspections.size >= FRAME_WORKER_INTROSPECTION_CAPACITY) return Promise.resolve(null);
+    const requestId = this.nextIntrospectionId++;
+    this.requestFrame();
+    this.flush();
+    return new Promise<string | null>((resolve) => {
+      const timer = this.setTimer(() => {
+        this.introspections.delete(requestId);
+        resolve(null);
+      }, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS);
+      this.introspections.set(requestId, { resolve, timer });
+      try {
+        this.worker.postMessage({ kind: "introspect", lifecycle: this.lifecycle, requestId, probe });
+      } catch {
+        this.introspections.delete(requestId);
+        this.clearTimer(timer);
+        resolve(null);
+      }
+    });
+  }
+
   /** @emoji 🛑 Cancels queued work and terminates the dedicated Worker. */
   close(): void {
     if (this.status === "closed") return;
@@ -333,6 +377,11 @@ export class BrowserFrameTransport {
     return samples[Math.min(count - 1, Math.ceil(count * 0.99) - 1)]!;
   }
 
+  private armBootStallTimer(): void {
+    if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
+    this.bootTimer = this.setTimer(() => this.fail("worker-boot-timeout", `Worker reported no boot progress for ${FRAME_WORKER_BOOT_STALL_TIMEOUT_MS} ms`), FRAME_WORKER_BOOT_STALL_TIMEOUT_MS);
+  }
+
   private accepting(): boolean {
     return this.status === "booting" || this.status === "ready";
   }
@@ -341,6 +390,14 @@ export class BrowserFrameTransport {
     if (message.lifecycle !== this.lifecycle) return;
     if (message.kind === "job-input-pull" || message.kind === "job-output-page" || message.kind === "job-terminal") {
       this.interactiveJobs.receive(message);
+      return;
+    }
+    if (message.kind === "introspection") {
+      const pending = this.introspections.get(message.requestId);
+      if (!pending) return;
+      this.introspections.delete(message.requestId);
+      this.clearTimer(pending.timer);
+      pending.resolve(message.json);
       return;
     }
     if (message.kind === "closed") {
@@ -358,7 +415,9 @@ export class BrowserFrameTransport {
       return;
     }
     if (message.kind === "boot-progress") {
-      if (this.status === "booting") this.runUiHook("progress-hook", () => this.onProgress?.(message.stage, message.progress));
+      if (this.status !== "booting") return;
+      this.armBootStallTimer();
+      this.runUiHook("progress-hook", () => this.onProgress?.(message.stage, message.progress));
       return;
     }
     if (message.kind === "wake") {
@@ -426,6 +485,11 @@ export class BrowserFrameTransport {
   }
 
   private clearQueues(): void {
+    for (const pending of this.introspections.values()) {
+      this.clearTimer(pending.timer);
+      pending.resolve(null);
+    }
+    this.introspections.clear();
     this.pointerMoves.fill(undefined);
     this.pointerCount = 0;
     this.wheel = undefined;

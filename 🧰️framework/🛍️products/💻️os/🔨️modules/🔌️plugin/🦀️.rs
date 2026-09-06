@@ -14214,7 +14214,10 @@ pub mod app {
 
     /// 📦️ Sized ActionBus payload around one app-owned concrete resumable state machine.
     struct ArtifactReservedToolJobState {
-        inner: std::mem::ManuallyDrop<Option<Box<dyn ArtifactReservedJob>>>,
+        /// 🧵️ `+ Send`: this state lives behind an `Arc<Mutex<…>>` the host moves across pool
+        /// threads, so the box states the thread-transfer requirement itself now that
+        /// `InteractiveJob` no longer imposes `Send` on single-threaded targets.
+        inner: std::mem::ManuallyDrop<Option<Box<dyn ArtifactReservedJob + Send>>>,
         operation: Option<semio_framework_job::Operation>,
     }
 
@@ -14224,7 +14227,7 @@ pub mod app {
     }
 
     impl ArtifactReservedToolJob {
-        pub fn new<J: ArtifactReservedJob + 'static>(job: J) -> Self {
+        pub fn new<J: ArtifactReservedJob + Send + 'static>(job: J) -> Self {
             Self { state: std::sync::Arc::new(std::sync::Mutex::new(ArtifactReservedToolJobState { inner: std::mem::ManuallyDrop::new(Some(Box::new(job))), operation: None })) }
         }
 
@@ -19231,7 +19234,7 @@ pub mod app {
             self.tool_cancellations.clone()
         }
 
-        async fn run_framework_reserved_job<J: semio_framework_job::InteractiveJob + 'static>(
+        async fn run_framework_reserved_job<J: semio_framework_job::InteractiveJob + Send + 'static>(
             &mut self,
             verb: &str,
             raw: &[u8],
@@ -29232,6 +29235,7 @@ pub mod plugin_runtime {
 
     /// 🧩️ Typed state owned by each embedding plugin's `plugin_exports!` expansion.
     pub struct PluginRuntime<PA: PluginApp> {
+        pub(crate) guest_lifetimes: RefCell<crate::reactor::instance_lifetime::NativeLifecycleRegistry<PA>>,
         plugin: RefCell<Option<Plugin<PA>>>,
         plugin_assembly_error: RefCell<Option<Fault>>,
         instances: RefCell<RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>>,
@@ -29248,6 +29252,7 @@ pub mod plugin_runtime {
         /// 🧩️ Creates an empty typed runtime without erasing the plugin-owned app enum.
         pub fn new() -> Self {
             Self {
+                guest_lifetimes: RefCell::new(crate::reactor::instance_lifetime::NativeLifecycleRegistry::new()),
                 plugin: RefCell::new(None),
                 plugin_assembly_error: RefCell::new(None),
                 instances: RefCell::new(RuntimeInstanceRegistry::new()),
@@ -29328,12 +29333,11 @@ pub mod plugin_runtime {
     /// to `instance-open`/`instance-close` at the reactor level). That sole caller lives in
     /// `wit_bridge`, so this is gated identically (native never reaches it; `instance_actor`'s
     /// `"local"` fallback below is what native sees).
-    #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
     pub(crate) async fn set_instance_actor<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, actor: String) -> Result<(), Fault> {
         let actor = RuntimeActorAuthority::new(actor)?;
         let mut actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?;
         let index = RuntimeInstanceRegistry::<RuntimeActorAuthority>::index(instance_id);
-        if !actors.allocation_admitted || actors.entry(index).is_some_and(|(candidate, _)| *candidate != instance_id) {
+        if !actors.allocation_admitted || actors.entry(index).is_some() {
             return Err(plugin_internal_fault("fixed runtime actor authority is saturated or collided"));
         }
         let previous = actors.take(instance_id);
@@ -29341,6 +29345,8 @@ pub mod plugin_runtime {
         drop(previous);
         Ok(())
     }
+
+    pub(crate) fn remove_instance_actor<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance: u32) { drop(runtime.instance_actors.borrow_mut().take(instance)); }
 
     /// 🪪️ The actor id last recorded for `instance_id` via `set_instance_actor`, or `"local"` when no
     /// `Hello` has been processed yet (mirrors `plugin_handle_action`'s own `"local"` fallback).
@@ -29662,6 +29668,32 @@ pub mod plugin_runtime {
             let op = WireTestMutation::decode_op(&result.owner_ops[0]).expect("owner op decodes");
             assert_eq!(op, WireTestMutation::AddValue(AddValue { delta: 5 }));
         }
+    }
+
+
+    /// 🪪️ Preflights every runtime row before factory work and publishes its allocation-bound lifecycle together.
+    pub(crate) async fn plugin_open_actor_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, request: semio_framework::kernel::ActorInstanceOpenRequest, app_id: &str, actor: String) -> Result<(), Fault> {
+        let actor = RuntimeActorAuthority::new(actor)?;
+        let mut lifetimes = runtime.guest_lifetimes.try_borrow_mut().map_err(|_| plugin_internal_fault("lifecycle authority busy"))?;
+        let slot = lifetimes.get_mut(request.instance_id).filter(|slot| slot.cell.matches_open(request)).ok_or_else(|| plugin_internal_fault("exact opening lifecycle missing"))?;
+        if slot.native_created || slot.cell.owner().is_some() { return Err(plugin_internal_fault("native opening already captured")); }
+        let mut instances = runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority busy"))?;
+        let quarantine = runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime quarantine authority busy"))?;
+        let mut actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority busy"))?;
+        if !instances.can_insert(request.instance_id) || !quarantine.can_insert(request.instance_id) || !actors.can_insert(request.instance_id) { return Err(plugin_internal_fault("native opening slot collided")); }
+        if let Some(fault) = runtime.plugin_assembly_error.try_borrow().map_err(|_| plugin_internal_fault("plugin assembly authority busy"))?.clone() { return Err(fault); }
+        let program = runtime.plugin.try_borrow().map_err(|_| plugin_internal_fault("plugin factory authority busy"))?;
+        let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
+        let mut app = program.create_app(app_id).ok_or_else(|| plugin_internal_fault("unknown app"))?;
+        resolve_ready(app.bind_instance_id(request.instance_id));
+        let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: request.instance_id, app }));
+        let lease = PluginInstanceCloseLease::from_cell(request.instance_id, &cell);
+        let owner = crate::reactor::instance_lifetime::NativeLifetimeOwner::from_lease(slot.cell.lifetime(), lease).expect("preflighted exact native lifetime");
+        slot.cell.install_owner(owner).unwrap_or_else(|_| panic!("preflighted opening owner slot"));
+        instances.insert_admitted(request.instance_id, cell);
+        actors.insert_admitted(request.instance_id, actor);
+        slot.native_created = true;
+        Ok(())
     }
 
     pub async fn plugin_create_app<PA: PluginApp>(runtime: &PluginRuntime<PA>, app_id: &str) -> Result<u32, Fault> {
@@ -31621,6 +31653,14 @@ pub mod plugin_runtime {
     }
 
     impl PluginCommandIngress {
+        pub(crate) fn retire_step(self) -> Option<Self> {
+            match self.cancel(plugin_internal_fault("command lifetime is closing")).step() {
+                PluginCommandIngressStep::Pending(owner) => Some(owner),
+                PluginCommandIngressStep::TerminalFault(_) => None,
+                PluginCommandIngressStep::Ready(_) => unreachable!("cancelled ingress cannot dispatch"),
+            }
+        }
+
         pub fn cancel(self, fault: Fault) -> Self {
             match self {
                 Self::Encoded(command) => Self::Closing { cursor: protocol::PagedAppCommandDecodeCursor::new(command), fault },
@@ -31740,6 +31780,7 @@ pub mod plugin_runtime {
             if first == Some(index) { break; }
             first.get_or_insert(index);
             cursor = (index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS;
+            if runtime.guest_lifetimes.try_borrow().map_err(|_| plugin_internal_fault("lifecycle authority busy"))?.get(id).is_some_and(|slot| !slot.cell.is_live()) { continue; }
             match cell.instance.try_lock() {
                 Ok(instance) if instance.app.has_runnable_typed_operations() => return Ok((Some((index, id)), true)),
                 Ok(_) => {}
@@ -32899,7 +32940,7 @@ pub mod plugin_runtime {
                 let plugin_id = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_manifest(runtime))).plugin_id;
                 let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::describe::describe_plugin(runtime)));
                 let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");
-                const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning-mindmap", "animate", "draw", "energy", "layout"];
+                const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning", "animate", "draw", "energy", "layout"];
                 match std::fs::read(expected_path) {
                     Ok(expected) => {
                         if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
@@ -35591,6 +35632,8 @@ pub mod plugin_runtime {
             }
             object
         }
+
+        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime.rs"));
 
         async fn __semio_plugin_bundle() -> Result<crate::Plugin<TestRuntimeApps>, crate::PluginAssemblyError> {
             crate::Plugin::<TestRuntimeApps>::builder("synthetic").label("Synthetic").version("0.0.1").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()

@@ -19,16 +19,16 @@ pub struct CreateLink {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLink {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "link", kind: "create-link", record: "CreatedLink" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_link(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_create_link(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create link \"{}\"", self.link.path)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.link.id.clone()]
     }
 }
@@ -36,7 +36,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLink {
 
 
 //#region 🖇️CreateLink
-pub async fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.links.iter().any(|link| link.id == payload.link.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A link with id \"{}\" already exists.", payload.link.id), [payload.link.id.clone()]);
     }
@@ -46,7 +46,7 @@ pub async fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> pr
 
 
 //#region 🖇️CreateLink
-pub async fn inverse_create_link(payload: &CreateLink, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_create_link(payload: &CreateLink, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     vec![LayoutMutation::DeleteLink(delete_link::DeleteLink { id: payload.link.id.clone() })]
 }
 //#endregion 🖇️CreateLink

@@ -18,7 +18,7 @@ pub mod import_snapshot_json {
         pub json: String,
     }
 
-    pub async fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let parsed: Result<ShootingSnapshot, ()> = dsl::os_pack::json::parse(&payload.json).map_err(|_| ()).and_then(|json_value| {
             let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
             dsl::FromValue::from_value(dsl_value).map_err(|_: dsl::ValueError| ())
@@ -43,7 +43,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() {
             Some(crate::artifacts::shooting::empty_shooting_snapshot())
         } else if payload.example_id == SHOOTING_EXAMPLE_DEFAULT_ID || payload.example_id == "base" {
@@ -67,7 +67,7 @@ pub mod reset_snapshot {
     #[dsl(keyword = "reset-snapshot")]
     pub struct ResetSnapshot {}
 
-    pub async fn handle(_payload: &ResetSnapshot, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &ResetSnapshot, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&crate::artifacts::shooting::schema::default_snapshot())], ..Default::default() })
     }
 }
@@ -81,7 +81,7 @@ pub mod save_download {
     #[dsl(keyword = "save-download")]
     pub struct SaveDownload {}
 
-    pub async fn handle(_payload: &SaveDownload, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &SaveDownload, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(doc.snapshot));
         let fixture_text = dsl::os_pack::json::to_string_pretty(&value);
         Ok(Emit::effect(Effect::DownloadMediaExport { filename: "shooting.shooting.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None }))
@@ -97,7 +97,7 @@ pub mod load_request {
     #[dsl(keyword = "load-request")]
     pub struct LoadRequest {}
 
-    pub async fn handle(_payload: &LoadRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &LoadRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(109), accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "importSnapshotJson".into(), multiple: false }))
     }
 }

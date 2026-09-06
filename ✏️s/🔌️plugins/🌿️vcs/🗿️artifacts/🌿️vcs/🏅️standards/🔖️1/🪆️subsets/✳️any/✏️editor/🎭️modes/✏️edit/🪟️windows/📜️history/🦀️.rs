@@ -2,6 +2,7 @@
 
 use crate::editor::vcs::VCS_PLAY_APP_ID;
 use semio_framework_plugin::{scene_surface, BuiltNode, HistoryView, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_scene::GraphTimelineScene;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_WINDOW_HISTORY: &str = "vcs-history";
@@ -35,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(history: &HistoryView) -> UiAssemblyResult<BuiltNode> {
-    let scene = semio_framework_ui_scene::GraphTimelineScene { columns_json: dsl::json::to_json_string(&history.columns) };
+    let scene = GraphTimelineScene { columns_json: dsl::json::to_json_string(&history.columns) };
     scene_surface(VCS_PLAY_SURFACE_HISTORY, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::GraphTimeline, &scene)
 }
 //#endregion 🔖️Render

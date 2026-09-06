@@ -14,6 +14,7 @@ interface actor-import-probe {
   use types.{pack};
   link-roundtrip: async func(link: pack) -> result<pack, pack>;
   blob-collect: async func(hash: string) -> result<pack, pack>;
+  blob-drop: async func(hash: string) -> result<_, pack>;
   timer-roundtrip: async func(delay-ms: u32) -> u32;
 }
 

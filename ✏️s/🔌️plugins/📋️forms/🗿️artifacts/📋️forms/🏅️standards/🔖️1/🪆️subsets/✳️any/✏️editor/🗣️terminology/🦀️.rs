@@ -66,7 +66,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn forms_play_labels(cfg: &FormsConfig) -> &'static FormsLabels {
+pub fn forms_play_labels(cfg: &FormsConfig) -> &'static FormsLabels {
     semio_framework_plugin::resolve_labels_for_locale::<FormsLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers

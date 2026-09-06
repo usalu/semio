@@ -17,16 +17,16 @@ pub struct DeleteStory {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteStory {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "story", kind: "delete-story", record: "DeletedStory" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_story(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_delete_story(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete story \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
@@ -34,7 +34,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteStory {
 
 
 //#region 🗑️DeleteStory
-pub async fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.stories.iter().any(|story| story.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
@@ -44,7 +44,7 @@ pub async fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> 
 
 
 //#region 🗑️DeleteStory
-pub async fn inverse_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.stories.iter().position(|story| story.id == payload.id) {
         Some(index) => vec![LayoutMutation::CreateStory(create_story::CreateStory { story: base.stories[index].clone(), index: Some(index) })],
         None => Vec::new(),

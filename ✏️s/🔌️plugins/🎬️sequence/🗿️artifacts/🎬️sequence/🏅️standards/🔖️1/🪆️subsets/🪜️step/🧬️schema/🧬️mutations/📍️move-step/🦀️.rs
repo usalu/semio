@@ -19,23 +19,23 @@ pub struct MoveStep {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn move_step(id: String, x: f64, y: f64) -> SequenceMutation {
+pub fn move_step(id: String, x: f64, y: f64) -> SequenceMutation {
     SequenceMutation::MoveStep(MoveStep { id, x, y })
 }
 
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for MoveStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "step", kind: "move-step", record: "MovedStep" };
 
-    async fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
+    fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Move step \"{}\" to ({}, {})", self.id, self.x, self.y)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

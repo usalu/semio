@@ -23,7 +23,7 @@ const WIRES_VIEW_CANVAS_SURFACE_ID: &str = "reasoning.wires.view.composite";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::wires::create_wires_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WIRES_VIEW_WINDOW_CANVAS.into(),
         label: LocalizedLabel::native("Canvas", "Leinwand"),
@@ -48,7 +48,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// degenerate edge for any relationship whose board edge is missing — own copy of the editor
 /// window's identically named helper (duplication is the deliberate cost of a genuinely independent
 /// viewer, contract §2.2).
-async fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
+fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
     let mut layers = Vec::new();
     for relationship in wires_relationships(wires) {
         let edge_id = relationship.get("edgeId").and_then(|value| value.as_str()).unwrap_or("");
@@ -73,7 +73,7 @@ async fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Val
 
 /// 👁️ Read-only render straight off a `WiresSnapshot` — no config/runtime/utility state, matching the
 /// viewer's `ViewEmit`-only contract.
-pub async fn render(document: &WiresSnapshot) -> UiNode {
+pub fn render(document: &WiresSnapshot) -> UiNode {
     let board = crate::artifacts::wires::wires_working_board(document);
     let wires = &document.wires_fixture;
     let (camera_x, camera_y, zoom) = fixture_camera(&board);

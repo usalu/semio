@@ -15,7 +15,7 @@ const WIRES_PLAY_DOCUMENT_NAMESPACE: &str = "wires-play-document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -27,11 +27,11 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn identity_label_lookup(wires: &dsl::DslValue, identity_id: u64) -> Option<String> {
+fn identity_label_lookup(wires: &dsl::DslValue, identity_id: u64) -> Option<String> {
     wires_identities(wires).iter().find(|identity| dsl_id(identity.get("identityId")) == Some(identity_id)).and_then(|identity| identity.get("label").and_then(|value| value.as_str())).map(str::to_string)
 }
 
-async fn wires_identity_kind_name(wires: &dsl::DslValue, identity_kind_id: &str) -> Option<String> {
+fn wires_identity_kind_name(wires: &dsl::DslValue, identity_kind_id: &str) -> Option<String> {
     wires
         .get("kindCatalogs")
         .and_then(|value| value.get("identityKinds"))
@@ -44,7 +44,7 @@ async fn wires_identity_kind_name(wires: &dsl::DslValue, identity_kind_id: &str)
         .map(str::to_string)
 }
 
-async fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str, labels: &WiresLabels) -> Option<String> {
+fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str, labels: &WiresLabels) -> Option<String> {
     let relationship = wires_relationships(wires).iter().find(|row| row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id))?;
     let kind = relationship.get("kind")?.as_str()?;
     let source_id = dsl_id(relationship.get("sourceIdentityId"))?;
@@ -69,7 +69,7 @@ fn selection_args(id: &str, granularity: &str) -> semio_framework_plugin::UiAsse
 /// ids against a row's own `id` verbatim, and canvas hit-testing resolves those exact bare ids too;
 /// a prefixed row id would desync tree/canvas cross-highlighting (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub async fn render(document: &WiresSnapshot, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &WiresSnapshot, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let wires = &document.wires_fixture;
     let board = &crate::artifacts::wires::wires_working_board(document);
     let mut identity_items = UiFixedList::<BuiltNode>::default();
@@ -78,7 +78,7 @@ pub async fn render(document: &WiresSnapshot, labels: &WiresLabels) -> semio_fra
         let label = identity.get("label").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.document", "wires identity label is required"))?;
         let identity_kind = identity.get("identityKind").and_then(|value| value.as_str());
         let description = match identity_kind {
-            Some(kind) => wires_identity_kind_name(wires, kind).await.filter(|kind_name| kind_name != label),
+            Some(kind) => wires_identity_kind_name(wires, kind).filter(|kind_name| kind_name != label),
             None => None,
         };
         let item = tree_item_with_action(node_id, Label::data(label), description, wires_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(node_id, WIRES_GRANULARITY_NODE)?))?)?;
@@ -87,7 +87,7 @@ pub async fn render(document: &WiresSnapshot, labels: &WiresLabels) -> semio_fra
     let mut relationship_items = UiFixedList::<BuiltNode>::default();
     for edge in fixture_edges(board) {
         let edge_id = edge.get("id").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.document", "wires relationship id is required"))?;
-        let label = wires_relationship_document_label(wires, edge_id, labels).await.unwrap_or_else(|| edge_id.into());
+        let label = wires_relationship_document_label(wires, edge_id, labels).unwrap_or_else(|| edge_id.into());
         let item = tree_item_with_action(edge_id, Label::data(label), None, wires_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(edge_id, WIRES_GRANULARITY_EDGE)?))?)?;
         relationship_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "wires relationship admission failed"))?;
     }

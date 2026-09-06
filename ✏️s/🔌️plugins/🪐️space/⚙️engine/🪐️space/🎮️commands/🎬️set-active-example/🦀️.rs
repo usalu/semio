@@ -81,7 +81,7 @@ mod tests {
         let empty = empty_workflow_snapshot().await;
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "demo".into() })).await.expect("handle");
-        let (projection, id) = load_document_snapshot(&emit);
+        let (projection, id) = load_document_snapshot(&emit).await;
         assert!(id.contains("demo-studio"));
         assert!(!projection.graph.nodes.is_empty());
     }
@@ -108,7 +108,7 @@ mod tests {
         let empty = empty_workflow_snapshot().await;
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: space_id.clone() })).await.expect("handle");
-        let (projection, id) = load_document_snapshot(&emit);
+        let (projection, id) = load_document_snapshot(&emit).await;
         assert_eq!(id, space_id);
         assert!(projection.graph.nodes.is_empty());
     }

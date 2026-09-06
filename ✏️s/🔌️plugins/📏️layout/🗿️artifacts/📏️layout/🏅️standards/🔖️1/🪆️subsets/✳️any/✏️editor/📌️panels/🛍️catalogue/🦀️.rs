@@ -15,7 +15,7 @@ const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-k
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub(crate) async fn definition() -> PanelTabDefinition {
+pub(crate) fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -27,7 +27,7 @@ pub(crate) async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let action = if kind == "page" { layout_action("addPage", None)? } else { layout_action("addFrame", Some(ui_value_map([("kind", ui_value_text(kind)?)])?))? };
     let mut item = tree_item_with_action(format!("layout-catalogue.{kind}"), label, Some(kind.into()), action)?;
     let mut drag_data = UiFixedMap::default();
@@ -49,7 +49,7 @@ async fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) ->
     Ok(item)
 }
 
-pub(crate) async fn render(labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut items = UiFixedList::default();
     let page = catalogue_tree_item("page", labels.catalogue_page, "file")?;
     items.try_push(page).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue page admission failed"))?;

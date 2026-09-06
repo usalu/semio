@@ -52,8 +52,8 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 10,
-      "maxItems": 10,
+      "minItems": 11,
+      "maxItems": 11,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -68,7 +68,7 @@
               "additionalProperties": false,
               "required": ["action", "generation"],
               "properties": {
-                "action": { "enum": ["install", "join", "cancel-waiter", "catalog-published", "emit-begin", "emit-complete", "fill-waiters", "reject-over-capacity", "release-slot", "shutdown-interrupted", "close-fault", "resume-cleanup", "close-terminal", "prepare-fanout", "unlock-registry", "wake-waiter", "owner-poll-active", "request-drive", "owner-poll-release", "ready", "retry"] },
+                "action": { "enum": ["install", "join", "cancel-waiter", "catalog-published", "emit-begin", "emit-complete", "fill-waiters", "reject-over-capacity", "release-slot", "shutdown-interrupted", "close-fault", "resume-cleanup", "explicit-retirement-retry", "close-terminal", "prepare-fanout", "unlock-registry", "wake-waiter", "owner-poll-active", "request-drive", "owner-poll-release", "ready", "retry"] },
                 "generation": { "type": "string", "pattern": "^[1-9][0-9]*$" }
               }
             }

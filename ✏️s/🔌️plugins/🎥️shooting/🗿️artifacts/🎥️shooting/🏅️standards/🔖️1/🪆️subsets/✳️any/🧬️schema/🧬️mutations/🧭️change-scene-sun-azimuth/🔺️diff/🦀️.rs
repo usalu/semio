@@ -4,7 +4,7 @@ use super::ChangeSceneSunAzimuth;
 use crate::artifacts::shooting::diff::ShootingDiff;
 use crate::artifacts::shooting::ShootingSnapshot;
 
-pub async fn diff(payload: &ChangeSceneSunAzimuth, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub fn diff(payload: &ChangeSceneSunAzimuth, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !payload.new_azimuth.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Sun azimuth must be a finite number, got {}.", payload.new_azimuth), Vec::<String>::new());
     }

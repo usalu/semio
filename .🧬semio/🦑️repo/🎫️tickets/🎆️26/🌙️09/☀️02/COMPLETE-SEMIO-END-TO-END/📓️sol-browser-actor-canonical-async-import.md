@@ -44,3 +44,18 @@ Receipt `actor-import-9Uq185` first exposed a strict-Node orphan when closing wi
 The separate registered `pending-host-close-check` is green at `actor-import-Xekpga` with `host-close-laws=3`. It strictly decodes the rejected `Uint8Array` as `{origin:"os",code:"capability-revoked",severity:"error",message:"browser host: closed",scope:{},retryable:false}` and proves: queued close cancellation; invalid cancellation admission leaves the invocation typed while `close()` rejects its retirement AggregateError and reaches `closed/0`; abort returns the same typed fault and reaches `closed/0`.
 
 The semantic receipt ran through the permanent `📜️script.ts` command. During this pass, Nx's project graph intermittently reported the project missing for `nx run` even while `nx show project @semio-tech/browser-actor-import-fixture` returned both registered targets. The target remains registered and must receive an Nx-level freshness rerun after the shared registry/project-graph generation stabilizes.
+
+## Genuine guest stream drop
+
+The remaining guest-resource P1 is now qualified through the real component boundary. The WIT exports `blob-drop: async func(hash: string) -> result<_, pack>`. Its Rust implementation awaits the canonical imported `blob-read`, drops the returned `stream<u8>` without calling `next`, and returns `ok(())`. This is not the direct JavaScript iterator law.
+
+The language-neutral fixture schema pins a fulfilled export, exactly one cancellation, an unlocked browser `ReadableStream`, and `closed/0`. The strict-Node actor law first proves those cancellation, lock, and `open/0` facts after the guest export settles, then closes the actor and proves `closed/0`. Adding the export changed actual JCO trampoline numbering; the first bounded run rejected the stale fingerprint, and the captured source established the current exact bindings: pollable block `19`, poll `33`, and blocking flush `36`.
+
+The registered `pending-host-close-check` is terminal GREEN at `browser-actor-import-exact/actor-import-5UDfwr`:
+
+```text
+browser-actor-import: AJV=1 JCO=1 Wasm=1 JSPI=8 emitted=3 actors=2 pack-ok=2 pack-err=2 stream-ok=2 stream-err=2 closed-laws=15 host-close-laws=9 guest-stream-drop=1 interface=semio:framework/host-async@1.0.0 factory=raw+closed unsupported-wasi=wasi:filesystem/types@0.2.0
+NX Successfully ran target pending-host-close-check for project @semio-tech/browser-actor-import-fixture
+```
+
+The current component SHA-256 is `2d1318eae4143b4e990d51cc8af0de82e9504d5e7d241093561cd6170a56a82d`; the sealed closed module SHA-256 is `fa1af345ca10535419f36978817b531fe0cab33646688e9e8397bbc82b322042`. The retained `closed-runtime.stdout.json` records `laws:15`, `hostCloseLaws:9`, and both terminal actors at `closed/0`. This receipt closes the genuine cooperative guest-drop gap only; it does not claim forced containment of a non-cooperative stream or production GIS activation.

@@ -18,7 +18,29 @@ import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../
 
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV, loadFrameworkOsPlaygroundCatalog } from "../../🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
-import { BUILD_BUDGET_MS, CMD_BUDGET_MS, budgetTimeoutHint, buildBudgetMs, cargoProfileDir, cmdBudgetMs, defaultBudgetMs, daemonBudgetMs, daemonBudgetOpts, orchestratorBudgetMs, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioShipEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "../../🏃️process/🟦️.ts";
+import {
+  BUILD_BUDGET_MS,
+  CMD_BUDGET_MS,
+  budgetTimeoutHint,
+  buildBudgetMs,
+  cargoProfileDir,
+  cmdBudgetMs,
+  defaultBudgetMs,
+  daemonBudgetMs,
+  daemonBudgetOpts,
+  orchestratorBudgetMs,
+  orchestratorBudgetOpts,
+  resolveWorkspaceBin,
+  runCmd,
+  runCmdStatus,
+  runNodeBin,
+  runNodeBinStatus,
+  semioBuildMode,
+  semioShipEnv,
+  tryRun,
+  type RunCmdOpts,
+  type SemioBuildMode,
+} from "../../🏃️process/🟦️.ts";
 
 export const SEMIO_ROOT_DIR = ".🧬semio";
 export const REPO_META_DIR_NAME = "🦑️repo";
@@ -46,7 +68,9 @@ export function readStableBuildFile(path: string, maximum: number, admission: { 
     }
     if (!same(fstatSync(file), before) || !same(lstatSync(path), before)) throw new Error("build input: file changed while reading");
     return bytes;
-  } finally { closeSync(file); }
+  } finally {
+    closeSync(file);
+  }
 }
 
 /** 🧬️Workspace-local semio root (`.🧬semio/`). */
@@ -215,10 +239,7 @@ export abstract class BaseLinter {
   readonly entityId: string;
   protected readonly repoRoot: string;
 
-  constructor(
-    entityId: string,
-    repoRoot: string = getWorkspaceRoot(),
-  ) {
+  constructor(entityId: string, repoRoot: string = getWorkspaceRoot()) {
     this.entityId = entityId;
     this.repoRoot = repoRoot;
   }
@@ -645,7 +666,6 @@ export function dependencyBoundaryBreachesForBundleDir(repoRoot: string, bundleR
 }
 //#endregion 🔖️dependency-boundary
 
-
 //#region 🏛️Layering
 /** 🏛️ One place where repo-wide or framework code names an implementation area. */
 export type LayeringReference = Readonly<{ file: string; area: string; count: number }>;
@@ -661,11 +681,12 @@ const LAYERING_SKIPPED_DIRS = new Set(["node_modules", ".git", ".nx", ".venv", "
 
 function layeringTaxonomy(): { layers: Record<string, string>; repoWide: string[]; generated: string[]; banners: string[] } {
   const taxonomy = loadTaxonomy();
-  const rootContracts = (contractIds: readonly string[], key: string): string[] => contractIds.map((id) => {
-    const contract = taxonomy.fixedFilenameContracts[id];
-    if (!contract) throw new Error(`${key} references missing fixed contract ${JSON.stringify(id)}.`);
-    return fixedContractFilename(contract);
-  });
+  const rootContracts = (contractIds: readonly string[], key: string): string[] =>
+    contractIds.map((id) => {
+      const contract = taxonomy.fixedFilenameContracts[id];
+      if (!contract) throw new Error(`${key} references missing fixed contract ${JSON.stringify(id)}.`);
+      return fixedContractFilename(contract);
+    });
   return {
     layers: { ...taxonomy.areaLayers },
     repoWide: rootContracts(taxonomy.repoWideContractIds, "repoWideContractIds"),
@@ -773,7 +794,10 @@ export function layeringBreaches(repoRoot: string): BreachRecord[] {
 export function writeLayeringBaseline(repoRoot: string): LayeringBaseline {
   const counts = layeringCounts(layeringReferences(repoRoot));
   const baseline: LayeringBaseline = { schemaVersion: 1, allowed: Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b))) };
-  writeFileSync(join(repoRoot, LAYERING_BASELINE_REL_PATH), `${JSON.stringify({ _comment: "🏛️ Shrink-only layering ratchet. Each entry is how many references to an implementation area (`areaLayers` in 🔣️taxonomy.json) one repo-wide or framework file is still allowed. A count may fall, never rise; a file that reaches zero should be removed from this list. Regenerate deliberately with `bun ./📜️script.ts verify layering write-baseline` AFTER a migration, never to make a failure go away.", ...baseline }, null, 2)}\n`);
+  writeFileSync(
+    join(repoRoot, LAYERING_BASELINE_REL_PATH),
+    `${JSON.stringify({ _comment: "🏛️ Shrink-only layering ratchet. Each entry is how many references to an implementation area (`areaLayers` in 🔣️taxonomy.json) one repo-wide or framework file is still allowed. A count may fall, never rise; a file that reaches zero should be removed from this list. Regenerate deliberately with `bun ./📜️script.ts verify layering write-baseline` AFTER a migration, never to make a failure go away.", ...baseline }, null, 2)}\n`,
+  );
   return baseline;
 }
 
@@ -995,10 +1019,7 @@ export abstract class Script {
   protected readonly root: string;
   protected readonly repoRoot: string;
 
-  constructor(
-    root: string,
-    repoRoot: string,
-  ) {
+  constructor(root: string, repoRoot: string) {
     this.root = root;
     this.repoRoot = repoRoot;
   }
@@ -1022,10 +1043,7 @@ export class ScriptRouter {
   readonly bundleRoot: string;
   readonly repoRoot: string;
 
-  constructor(
-    bundleRoot: string,
-    repoRoot: string = findRepoRoot(bundleRoot),
-  ) {
+  constructor(bundleRoot: string, repoRoot: string = findRepoRoot(bundleRoot)) {
     this.bundleRoot = bundleRoot;
     this.repoRoot = repoRoot;
   }
@@ -1261,21 +1279,11 @@ function killBudgetTree(pid: number): void {
   }
 }
 
-
-
-
 /** @emoji 🎭️ Playwright is TEST-ONLY and loaded lazily. The specifier is indirected so no bundler can
  * statically resolve it: this module is reachable from `⚙️vite.config.ts`, and a literal
  * `import("playwright")` makes bun follow it into a browser build, failing on the uninstalled
  * optional `chromium-bidi`. Runtime behaviour is identical. */
 const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
-
-
-
-
-
-
-
 
 /**
  * ⏱️Runs a command under a hard wall-clock budget; SIGKILLs the whole process tree and fails loudly past it.
@@ -1317,9 +1325,7 @@ export function capturedTestFailureDiagnostics(stdout: string, stderr: string): 
       }
     } catch {}
   }
-  const stderrErrors = stderr
-    .split(/\r?\n/)
-    .filter((line) => /^(?:error(?:\[[A-Z]\d+\])?:|Caused by:)/.test(line));
+  const stderrErrors = stderr.split(/\r?\n/).filter((line) => /^(?:error(?:\[[A-Z]\d+\])?:|Caused by:)/.test(line));
   const diagnostics = [...rendered, ...stderrErrors];
   return diagnostics.length > 0 ? diagnostics.join("\n") : `${stdout.slice(-16 * 1024)}${stderr.slice(-16 * 1024)}`;
 }
@@ -1471,14 +1477,9 @@ export function resolveCargoPackageName(pkg: string, cwd: string): string {
         const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
         const libMatch = content.match(/\[lib\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
         const localPkg = pkgMatch ? pkgMatch[1] : null;
-        const localLib = libMatch ? libMatch[1] : (localPkg ? localPkg.replaceAll("-", "_") : null);
+        const localLib = libMatch ? libMatch[1] : localPkg ? localPkg.replaceAll("-", "_") : null;
         if (localPkg) {
-          if (
-            pkg === localLib ||
-            pkg === localPkg ||
-            pkg.replaceAll("-", "_") === localLib ||
-            pkg.replaceAll("_", "-") === localPkg
-          ) {
+          if (pkg === localLib || pkg === localPkg || pkg.replaceAll("-", "_") === localLib || pkg.replaceAll("_", "-") === localPkg) {
             return localPkg;
           }
         }
@@ -1562,10 +1563,48 @@ export function resolveCargoPackageNames(packages: string[], cwd: string): strin
 /** 🧪️ Keeps runtime selection on the metadata execution command and build selection on the warm build. */
 export function partitionNextestExecutionFilters(args: readonly string[]): { buildArgs: string[]; executionArgs: string[]; libtestArgs: string[] } {
   const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored"]);
-  const requiredBuildOptions = new Set(["-p", "--package", "--exclude", "--manifest-path", "--target", "--target-dir", "--features", "-F", "--jobs", "-j", "--build-jobs", "--cargo-profile", "--cargo-message-format", "--config", "-Z", "--color", "--profile", "-P", "--test", "--bin", "--bench", "--example", "--message-format", "-T", "--list-type", "--archive-file", "--archive-format", "--extract-to", "--cargo-metadata", "--workspace-remap", "--binaries-metadata", "--target-dir-remap", "--build-dir-remap", "--config-file", "--user-config-file", "--tool-config-file"]);
+  const requiredBuildOptions = new Set([
+    "-p",
+    "--package",
+    "--exclude",
+    "--manifest-path",
+    "--target",
+    "--target-dir",
+    "--features",
+    "-F",
+    "--jobs",
+    "-j",
+    "--build-jobs",
+    "--cargo-profile",
+    "--cargo-message-format",
+    "--config",
+    "-Z",
+    "--color",
+    "--profile",
+    "-P",
+    "--test",
+    "--bin",
+    "--bench",
+    "--example",
+    "--message-format",
+    "-T",
+    "--list-type",
+    "--archive-file",
+    "--archive-format",
+    "--extract-to",
+    "--cargo-metadata",
+    "--workspace-remap",
+    "--binaries-metadata",
+    "--target-dir-remap",
+    "--build-dir-remap",
+    "--config-file",
+    "--user-config-file",
+    "--tool-config-file",
+  ]);
   const optionalBuildOptions = new Set(["--timings"]);
   const joinedBuildOptions = ["-p", "-F", "-j", "-Z", "-P", "-T"];
-  const buildArgs: string[] = [], executionArgs: string[] = [];
+  const buildArgs: string[] = [],
+    executionArgs: string[] = [];
   const separator = args.indexOf("--");
   const cargoArgs = separator < 0 ? args : args.slice(0, separator);
   const libtestArgs = separator < 0 ? [] : args.slice(separator + 1);
@@ -1663,15 +1702,33 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
     const metadataDir = mkdtempSync(join(artifactLocation.directory, "semio-nextest-"));
     const binariesMetadataPath = join(metadataDir, "binaries-metadata.json");
     try {
-      const binariesMetadata = await runTestCapturedBudgeted(
-        "cargo",
-        ["nextest", "list", "--list-type", "binaries-only", "--message-format", "json", ...profileArgs, ...packageArgs, ...buildArgs],
-        { cwd, env, budgetMs: buildBudgetMs(), onTimeoutHint: budgetTimeoutHint("cargo") },
-      );
+      const binariesMetadata = await runTestCapturedBudgeted("cargo", ["nextest", "list", "--list-type", "binaries-only", "--message-format", "json", ...profileArgs, ...packageArgs, ...buildArgs], {
+        cwd,
+        env,
+        budgetMs: buildBudgetMs(),
+        onTimeoutHint: budgetTimeoutHint("cargo"),
+      });
       writeFileSync(binariesMetadataPath, binariesMetadata);
       await runTestBudgeted(
         "cargo",
-        ["nextest", "run", "--binaries-metadata", binariesMetadataPath, "--no-tests", "warn", "--status-level", "fail", "--final-status-level", "fail", ...assertionThreadArgs, ...profileArgs, ...executionArgs, "--", ...nextestLibtestArgs, ...skipArgs],
+        [
+          "nextest",
+          "run",
+          "--binaries-metadata",
+          binariesMetadataPath,
+          "--no-tests",
+          "warn",
+          "--status-level",
+          "fail",
+          "--final-status-level",
+          "fail",
+          ...assertionThreadArgs,
+          ...profileArgs,
+          ...executionArgs,
+          "--",
+          ...nextestLibtestArgs,
+          ...skipArgs,
+        ],
         { cwd, env, budgetMs: testLevelBudgetMs(level) },
       );
     } finally {
@@ -1694,13 +1751,6 @@ function cargoNextestAvailable(): boolean {
   const result = spawnSync("cargo", ["nextest", "--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   return result.status === 0;
 }
-
-
-
-
-
-
-
 
 export interface RunProbeResult {
   status: number | null;
@@ -1746,7 +1796,10 @@ function spawnCapturedSync(cmd: string, args: readonly string[], opts: CapturedS
   const metaPath = join(captureRoot, "meta.json");
   const specPath = join(captureRoot, "spec.json");
   const env = Object.fromEntries(Object.entries(opts.env ?? process.env).filter((entry): entry is [string, string] => entry[1] !== undefined));
-  writeFileSync(specPath, JSON.stringify({ cmd, args, cwd: opts.cwd, env, input: opts.input === undefined ? undefined : Buffer.from(opts.input).toString("base64"), timeout: opts.timeout, killSignal: opts.killSignal, stdoutPath, stderrPath, metaPath }));
+  writeFileSync(
+    specPath,
+    JSON.stringify({ cmd, args, cwd: opts.cwd, env, input: opts.input === undefined ? undefined : Buffer.from(opts.input).toString("base64"), timeout: opts.timeout, killSignal: opts.killSignal, stdoutPath, stderrPath, metaPath }),
+  );
   try {
     const launcher = spawnSync(process.execPath, ["-e", CAPTURE_WRAPPER_SOURCE], {
       env: { ...process.env, SEMIO_PROCESS_CAPTURE_SPEC: specPath },
@@ -1796,8 +1849,13 @@ export type ExactCargoLawGroup = {
 export type ExactCargoLawStage = "build" | "list" | "native";
 export type ExactCargoLawProcessResult = RunProbeResult & { reason?: "exit" | "timeout" | "cancelled" | "output-limit" | "spawn-error" };
 export type ExactCargoLawProcessOptions = {
-  cwd: string; env: NodeJS.ProcessEnv; budgetMs: number; maxOutputBytes: number;
-  stdoutPath: string; stderrPath: string; cancelled: () => boolean;
+  cwd: string;
+  env: NodeJS.ProcessEnv;
+  budgetMs: number;
+  maxOutputBytes: number;
+  stdoutPath: string;
+  stderrPath: string;
+  cancelled: () => boolean;
 };
 /** 🔌️ Owned process/fingerprint port permits deterministic hostile runner laws without compiling Cargo. */
 export type ExactCargoLawPort = {
@@ -1805,14 +1863,28 @@ export type ExactCargoLawPort = {
   fingerprint: (path: string) => { path: string; sha256: string };
 };
 export type ExactCargoLawOptions = {
-  cwd: string; groups: readonly ExactCargoLawGroup[]; manifestPath?: string; cargoArgs?: readonly string[];
-  env?: NodeJS.ProcessEnv; nativeEnv?: NodeJS.ProcessEnv; artifactDir?: string; buildBudgetMs?: number; listBudgetMs?: number; lawBudgetMs?: number;
+  cwd: string;
+  groups: readonly ExactCargoLawGroup[];
+  manifestPath?: string;
+  cargoArgs?: readonly string[];
+  env?: NodeJS.ProcessEnv;
+  nativeEnv?: NodeJS.ProcessEnv;
+  artifactDir?: string;
+  buildBudgetMs?: number;
+  listBudgetMs?: number;
+  lawBudgetMs?: number;
   cancelled?: () => boolean;
   progress?: (event: { stage: ExactCargoLawStage; package: string; law?: string; artifactDir: string }) => void;
 };
 export type ExactCargoLawReceipt = {
-  package: string; target: ExactCargoLawGroup["target"]; executable: string; sha256: string;
-  laws: readonly string[]; assertions: number; artifactDir: string; cargoTargetDir: string;
+  package: string;
+  target: ExactCargoLawGroup["target"];
+  executable: string;
+  sha256: string;
+  laws: readonly string[];
+  assertions: number;
+  artifactDir: string;
+  cargoTargetDir: string;
 };
 
 export const EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX = ".exact-cargo-laws-active-";
@@ -1836,11 +1908,19 @@ export function exactCargoGeneratedOutputHasLiveLease(root: string): boolean {
   while (stack.length > 0) {
     const current = stack.pop()!;
     let names: string[];
-    try { names = readdirSync(current.path); } catch { continue; }
+    try {
+      names = readdirSync(current.path);
+    } catch {
+      continue;
+    }
     for (const name of names) {
       const path = join(current.path, name);
       let state;
-      try { state = lstatSync(path); } catch { continue; }
+      try {
+        state = lstatSync(path);
+      } catch {
+        continue;
+      }
       if (!state.isDirectory() || state.isSymbolicLink()) continue;
       if (name.startsWith(EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX)) {
         const manifestPath = join(path, EXACT_CARGO_ACTIVE_LEASE_MANIFEST);
@@ -1849,8 +1929,15 @@ export function exactCargoGeneratedOutputHasLiveLease(root: string): boolean {
           if (!manifestState.isFile() || manifestState.isSymbolicLink() || manifestState.size > 128 || Date.now() - manifestState.mtimeMs > EXACT_CARGO_ACTIVE_LEASE_MAX_AGE_MS || manifestState.mtimeMs - Date.now() > 5_000) continue;
           const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { version?: unknown; pid?: unknown };
           if (manifest.version !== 1 || !Number.isSafeInteger(manifest.pid) || Number(manifest.pid) < 1) continue;
-          try { process.kill(Number(manifest.pid), 0); return true; } catch (error) { if ((error as NodeJS.ErrnoException).code === "EPERM") return true; }
-        } catch { continue; }
+          try {
+            process.kill(Number(manifest.pid), 0);
+            return true;
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === "EPERM") return true;
+          }
+        } catch {
+          continue;
+        }
       } else if (current.depth < 4) stack.push({ path, depth: current.depth + 1 });
     }
   }
@@ -1861,23 +1948,38 @@ export function exactCargoGeneratedOutputHasLiveLease(root: string): boolean {
 function beginExactCargoLease(artifactRoot: string): () => void {
   const leaseRoot = mkdtempSync(join(artifactRoot, EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX));
   const manifestPath = join(leaseRoot, EXACT_CARGO_ACTIVE_LEASE_MANIFEST);
-  const heartbeat = (): void => { try { writeFileSync(manifestPath, JSON.stringify({ version: 1, pid: process.pid }), { mode: 0o600 }); } catch {} };
+  const heartbeat = (): void => {
+    try {
+      writeFileSync(manifestPath, JSON.stringify({ version: 1, pid: process.pid }), { mode: 0o600 });
+    } catch {}
+  };
   heartbeat();
   const timer = setInterval(heartbeat, 10_000);
   timer.unref?.();
-  return () => { clearInterval(timer); rmSync(leaseRoot, { recursive: true, force: true }); };
+  return () => {
+    clearInterval(timer);
+    rmSync(leaseRoot, { recursive: true, force: true });
+  };
 }
 
 /** 🚫️ Preserves the precise failing stage and actual child status independently of assertion parsing. */
 export class ExactCargoLawError extends Error {
-  constructor(readonly stage: ExactCargoLawStage, readonly status: number | null, readonly signal: NodeJS.Signals | null, readonly artifactDir: string, detail: string) {
+  constructor(
+    readonly stage: ExactCargoLawStage,
+    readonly status: number | null,
+    readonly signal: NodeJS.Signals | null,
+    readonly artifactDir: string,
+    detail: string,
+  ) {
     super(`exact Cargo law ${stage} failed: status=${status} signal=${signal ?? "none"} artifacts=${artifactDir}; ${detail}`);
   }
 }
 
 /** 🔬️ Fingerprints one retained executable descriptor with bounded streaming and cancellation. */
 export function exactExecutableFingerprint(path: string, control: Readonly<{ cancelled?: () => boolean; progress?: (completed: number, total: number) => void }> = {}): { path: string; sha256: string; byteLength: number } {
-  const check = () => { if (control.cancelled?.()) throw new Error("Executable fingerprint cancelled"); };
+  const check = () => {
+    if (control.cancelled?.()) throw new Error("Executable fingerprint cancelled");
+  };
   check();
   if (!isAbsolute(path) || lstatSync(path).isSymbolicLink()) throw new Error("Executable must be one absolute regular file");
   const canonical = realpathSync(path);
@@ -1901,18 +2003,20 @@ export function exactExecutableFingerprint(path: string, control: Readonly<{ can
     const after = fstatSync(descriptor);
     if (count !== before.size || !same(after) || !same(lstatSync(canonical))) throw new Error("Executable changed while hashing");
     return { path: canonical, sha256: digest.digest("hex"), byteLength: count };
-  } finally { closeSync(descriptor); }
+  } finally {
+    closeSync(descriptor);
+  }
 }
 
 /** 📥️ Captures a bounded process into caller-owned evidence files and terminates its tree on timeout or cancellation. */
 export async function runExactCargoLawProcess(command: string, args: string[], options: ExactCargoLawProcessOptions): Promise<ExactCargoLawProcessResult> {
   const stdout = openSync(options.stdoutPath, "wx", 0o600);
   const stderr = openSync(options.stderrPath, "wx", 0o600);
-  return await new Promise(resolveResult => {
+  return await new Promise((resolveResult) => {
     let reason: ExactCargoLawProcessResult["reason"] = "exit";
     let count = 0;
     let finished = false;
-    const child = spawn(command, args, { cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+    const child = spawn(command, args, { cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", windowsHide: true });
     const terminate = (cause: NonNullable<ExactCargoLawProcessResult["reason"]>): void => {
       if (reason !== "exit") return;
       reason = cause;
@@ -1924,11 +2028,16 @@ export async function runExactCargoLawProcess(command: string, args: string[], o
       count += bytes.length;
       if (count > options.maxOutputBytes) terminate("output-limit");
     };
-    child.stdout?.on("data", bytes => append(stdout, bytes));
-    child.stderr?.on("data", bytes => append(stderr, bytes));
+    child.stdout?.on("data", (bytes) => append(stdout, bytes));
+    child.stderr?.on("data", (bytes) => append(stderr, bytes));
     const timer = setTimeout(() => terminate("timeout"), options.budgetMs);
-    const cancel = setInterval(() => { if (options.cancelled()) terminate("cancelled"); }, 100);
-    child.on("error", error => { reason = "spawn-error"; append(stderr, Buffer.from(error.message)); });
+    const cancel = setInterval(() => {
+      if (options.cancelled()) terminate("cancelled");
+    }, 100);
+    child.on("error", (error) => {
+      reason = "spawn-error";
+      append(stderr, Buffer.from(error.message));
+    });
     child.on("close", (status, signal) => {
       if (finished) return;
       finished = true;
@@ -1952,90 +2061,139 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
   const env = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
   const nativeEnv = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
   if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
-  const groupKeys = options.groups.map(group => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));
+  const groupKeys = options.groups.map((group) => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));
   if (new Set(groupKeys).size !== groupKeys.length) throw new Error("Exact Cargo groups must combine laws for the same package/target");
   for (const group of options.groups) {
-    if (!group.package || !group.laws.length || group.laws.length > 256 || new Set(group.laws).size !== group.laws.length || group.laws.some(law => !/^[A-Za-z_][A-Za-z0-9_:]*$/u.test(law))) throw new Error("Exact Cargo law identities must be nonempty and unique");
+    if (!group.package || !group.laws.length || group.laws.length > 256 || new Set(group.laws).size !== group.laws.length || group.laws.some((law) => !/^[A-Za-z_][A-Za-z0-9_:]*$/u.test(law)))
+      throw new Error("Exact Cargo law identities must be nonempty and unique");
   }
   mkdirSync(artifactRoot, { recursive: true });
   const endLease = beginExactCargoLease(artifactRoot);
   try {
-  const runRoot = mkdtempSync(join(artifactRoot, "exact-cargo-laws-"));
-  const cancelled = options.cancelled ?? (() => false);
-  const receipts: ExactCargoLawReceipt[] = [];
-  const checkedBudget = (value: number): number => {
-    if (!Number.isSafeInteger(value) || value < 1 || value > 24 * 60 * 60 * 1000) throw new Error("Exact Cargo budget must be finite and positive");
-    return value;
-  };
-  for (const [index, group] of options.groups.entries()) {
-    const groupRoot = join(runRoot, String(index).padStart(2, "0"));
-    mkdirSync(groupRoot);
-    let stage: ExactCargoLawStage = "build";
-    let last: ExactCargoLawProcessResult = { status: null, signal: null, stdout: "", stderr: "" };
-    const fail = (detail: string): never => { throw new ExactCargoLawError(stage, last.status, last.signal, groupRoot, detail); };
-    const checkpoint = (): void => { if (cancelled()) fail("cancelled"); };
-    const capture = async (next: ExactCargoLawStage, command: string, args: string[], budget: number, name: string): Promise<ExactCargoLawProcessResult> => {
-      stage = next;
-      checkpoint();
-      options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
-      const stdoutPath = join(groupRoot, `${name}.stdout`);
-      const stderrPath = join(groupRoot, `${name}.stderr`);
-      last = await port.probe(command, args, { cwd: options.cwd, env: next === "build" ? env : nativeEnv, budgetMs: checkedBudget(budget), maxOutputBytes: next === "build" ? 256 * 1024 * 1024 : 8 * 1024 * 1024, stdoutPath, stderrPath, cancelled });
-      if (!existsSync(stdoutPath)) writeFileSync(stdoutPath, last.stdout, { flag: "wx", mode: 0o600 });
-      if (!existsSync(stderrPath)) writeFileSync(stderrPath, last.stderr, { flag: "wx", mode: 0o600 });
-      writeFileSync(join(groupRoot, `${name}.json`), JSON.stringify({ command, args, cargoTargetDir, status: last.status, signal: last.signal, reason: last.reason ?? "exit" }), { flag: "wx", mode: 0o600 });
-      checkpoint();
-      return last;
+    const runRoot = mkdtempSync(join(artifactRoot, "exact-cargo-laws-"));
+    const cancelled = options.cancelled ?? (() => false);
+    const receipts: ExactCargoLawReceipt[] = [];
+    const checkedBudget = (value: number): number => {
+      if (!Number.isSafeInteger(value) || value < 1 || value > 24 * 60 * 60 * 1000) throw new Error("Exact Cargo budget must be finite and positive");
+      return value;
     };
-    const target = group.target.kind === "lib" ? ["--lib"] : [`--${group.target.kind}`, group.target.name];
-    const cargoArgs = [...options.cargoArgs ?? [], ...group.cargoArgs ?? []];
-    if (cargoArgs.some(arg => ["--", "--test", "--bin", "--lib", "-p", "--package", "--no-run", "--message-format", "--target-dir", "--manifest-path"].includes(arg) || ["--message-format=", "--target-dir=", "--manifest-path="].some(prefix => arg.startsWith(prefix)))) fail("Cargo target/control arguments are helper-owned");
-    const built = await capture("build", "cargo", ["test", "--manifest-path", options.manifestPath ?? "Cargo.toml", "-p", group.package, ...target, ...cargoArgs, "--no-run", "--message-format=json"], options.buildBudgetMs ?? buildBudgetMs(), "build");
-    const messages = built.stdout.split("\n").flatMap(line => { try { return [JSON.parse(line)]; } catch { return []; } });
-    const errors = messages.filter(message => message.reason === "compiler-message" && message.message?.level === "error").map(message => message.message.rendered ?? message.message.message);
-    if (built.status !== 0 || built.signal !== null || (built.reason && built.reason !== "exit")) fail(`${built.reason ?? "exit"}; ${(errors.length ? errors.slice(0, 3).join("\n") : built.stderr).slice(0, 6000)}`);
-    const artifacts = messages.filter(message => message.reason === "compiler-artifact" && message.profile?.test === true && typeof message.executable === "string");
-    if (artifacts.length !== 1) fail(`expected one Cargo executable artifact, got ${artifacts.length}`);
-    const artifact = artifacts[0];
-    const packageId = String(artifact.package_id);
-    const packageName = packageId.includes("#") ? packageId.slice(packageId.lastIndexOf("#") + 1).split("@")[0] : packageId.split(" ")[0];
-    const kinds = artifact.target?.kind;
-    if (packageName !== group.package || !Array.isArray(kinds) || !kinds.some(kind => group.target.kind === "lib" ? ["lib", "rlib", "dylib", "cdylib", "staticlib", "proc-macro"].includes(kind) : kind === group.target.kind) || (group.target.name && artifact.target?.name !== group.target.name) || !isAbsolute(artifact.executable)) fail("Cargo executable package/target/path does not match the explicit group");
-    const fingerprint = (): { path: string; sha256: string } => {
-      try { return port.fingerprint(artifact.executable); } catch (error) { return fail(String(error)); }
-    };
-    const initial = fingerprint();
-    const verify = (): void => {
-      checkpoint();
-      const current = fingerprint();
-      if (current.path !== initial.path || current.sha256 !== initial.sha256) fail("Cargo executable changed after its build receipt");
-    };
-    if (!isAbsolute(initial.path) || !/^[0-9a-f]{64}$/u.test(initial.sha256)) fail("Cargo executable fingerprint is invalid");
-    writeFileSync(join(groupRoot, "executable.json"), JSON.stringify({ package: group.package, target: group.target, ...initial }), { flag: "wx", mode: 0o600 });
-    verify();
-    const listed = await capture("list", initial.path, ["--list"], options.listBudgetMs ?? 60_000, "list");
-    verify();
-    if (listed.status !== 0 || listed.signal !== null || (listed.reason && listed.reason !== "exit")) fail(`list ${listed.reason ?? "exit"}; ${listed.stderr.slice(0, 4000)}`);
-    const discovered = listed.stdout.split(/\r?\n/u).filter(line => line.endsWith(": test")).map(line => line.slice(0, -6));
-    const laws = group.laws.map(selector => {
-      const matches = discovered.filter(name => name === selector || name.endsWith(`::${selector}`));
-      if (matches.length !== 1) fail(`expected exactly one ${selector}, selected=${matches.length}`);
-      return matches[0]!;
-    });
-    if (new Set(laws).size !== laws.length) fail("Law selectors resolve to the same native assertion");
-    for (const [lawIndex, law] of laws.entries()) {
+    for (const [index, group] of options.groups.entries()) {
+      const groupRoot = join(runRoot, String(index).padStart(2, "0"));
+      mkdirSync(groupRoot);
+      let stage: ExactCargoLawStage = "build";
+      let last: ExactCargoLawProcessResult = { status: null, signal: null, stdout: "", stderr: "" };
+      const fail = (detail: string): never => {
+        throw new ExactCargoLawError(stage, last.status, last.signal, groupRoot, detail);
+      };
+      const checkpoint = (): void => {
+        if (cancelled()) fail("cancelled");
+      };
+      const capture = async (next: ExactCargoLawStage, command: string, args: string[], budget: number, name: string): Promise<ExactCargoLawProcessResult> => {
+        stage = next;
+        checkpoint();
+        options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
+        const stdoutPath = join(groupRoot, `${name}.stdout`);
+        const stderrPath = join(groupRoot, `${name}.stderr`);
+        last = await port.probe(command, args, { cwd: options.cwd, env: next === "build" ? env : nativeEnv, budgetMs: checkedBudget(budget), maxOutputBytes: next === "build" ? 256 * 1024 * 1024 : 8 * 1024 * 1024, stdoutPath, stderrPath, cancelled });
+        if (!existsSync(stdoutPath)) writeFileSync(stdoutPath, last.stdout, { flag: "wx", mode: 0o600 });
+        if (!existsSync(stderrPath)) writeFileSync(stderrPath, last.stderr, { flag: "wx", mode: 0o600 });
+        writeFileSync(join(groupRoot, `${name}.json`), JSON.stringify({ command, args, cargoTargetDir, status: last.status, signal: last.signal, reason: last.reason ?? "exit" }), { flag: "wx", mode: 0o600 });
+        checkpoint();
+        return last;
+      };
+      const target = group.target.kind === "lib" ? ["--lib"] : [`--${group.target.kind}`, group.target.name];
+      const cargoArgs = [...(options.cargoArgs ?? []), ...(group.cargoArgs ?? [])];
+      if (
+        cargoArgs.some(
+          (arg) =>
+            ["--", "--test", "--bin", "--lib", "-p", "--package", "--no-run", "--message-format", "--target-dir", "--manifest-path"].includes(arg) || ["--message-format=", "--target-dir=", "--manifest-path="].some((prefix) => arg.startsWith(prefix)),
+        )
+      )
+        fail("Cargo target/control arguments are helper-owned");
+      const built = await capture(
+        "build",
+        "cargo",
+        ["test", "--manifest-path", options.manifestPath ?? "Cargo.toml", "-p", group.package, ...target, ...cargoArgs, "--no-run", "--message-format=json"],
+        options.buildBudgetMs ?? buildBudgetMs(),
+        "build",
+      );
+      const messages = built.stdout.split("\n").flatMap((line) => {
+        try {
+          return [JSON.parse(line)];
+        } catch {
+          return [];
+        }
+      });
+      const errors = messages.filter((message) => message.reason === "compiler-message" && message.message?.level === "error").map((message) => message.message.rendered ?? message.message.message);
+      if (built.status !== 0 || built.signal !== null || (built.reason && built.reason !== "exit")) fail(`${built.reason ?? "exit"}; ${(errors.length ? errors.slice(0, 3).join("\n") : built.stderr).slice(0, 6000)}`);
+      const artifacts = messages.filter((message) => message.reason === "compiler-artifact" && message.profile?.test === true && typeof message.executable === "string");
+      if (artifacts.length !== 1) fail(`expected one Cargo executable artifact, got ${artifacts.length}`);
+      const artifact = artifacts[0];
+      const packageId = String(artifact.package_id);
+      const packageName = packageId.includes("#") ? packageId.slice(packageId.lastIndexOf("#") + 1).split("@")[0] : packageId.split(" ")[0];
+      const kinds = artifact.target?.kind;
+      if (
+        packageName !== group.package ||
+        !Array.isArray(kinds) ||
+        !kinds.some((kind) => (group.target.kind === "lib" ? ["lib", "rlib", "dylib", "cdylib", "staticlib", "proc-macro"].includes(kind) : kind === group.target.kind)) ||
+        (group.target.name && artifact.target?.name !== group.target.name) ||
+        !isAbsolute(artifact.executable)
+      )
+        fail("Cargo executable package/target/path does not match the explicit group");
+      const fingerprint = (): { path: string; sha256: string } => {
+        try {
+          return port.fingerprint(artifact.executable);
+        } catch (error) {
+          return fail(String(error));
+        }
+      };
+      const initial = fingerprint();
+      const verify = (): void => {
+        checkpoint();
+        const current = fingerprint();
+        if (current.path !== initial.path || current.sha256 !== initial.sha256) fail("Cargo executable changed after its build receipt");
+      };
+      if (!isAbsolute(initial.path) || !/^[0-9a-f]{64}$/u.test(initial.sha256)) fail("Cargo executable fingerprint is invalid");
+      writeFileSync(join(groupRoot, "executable.json"), JSON.stringify({ package: group.package, target: group.target, ...initial }), { flag: "wx", mode: 0o600 });
       verify();
-      const result = await capture("native", initial.path, [law, "--exact", "--test-threads=1", "--show-output"], options.lawBudgetMs ?? 60_000, `law-${lawIndex}`);
+      const listed = await capture("list", initial.path, ["--list"], options.listBudgetMs ?? 60_000, "list");
       verify();
-      const terminals = [...result.stdout.matchAll(/^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;/gm)];
-      if (result.status !== 0 || result.signal !== null || (result.reason && result.reason !== "exit") || terminals.length !== 1 || terminals[0]?.[1] !== "1" || terminals[0]?.[2] !== "0" || terminals[0]?.[3] !== "0" || !result.stdout.split(/\r?\n/u).includes(`test ${law} ... ok`)) fail(`native assertion ${law} did not pass exactly once; ${(result.stdout + result.stderr).slice(-6000)}`);
+      if (listed.status !== 0 || listed.signal !== null || (listed.reason && listed.reason !== "exit")) fail(`list ${listed.reason ?? "exit"}; ${listed.stderr.slice(0, 4000)}`);
+      const discovered = listed.stdout
+        .split(/\r?\n/u)
+        .filter((line) => line.endsWith(": test"))
+        .map((line) => line.slice(0, -6));
+      const laws = group.laws.map((selector) => {
+        const matches = discovered.filter((name) => name === selector || name.endsWith(`::${selector}`));
+        if (matches.length !== 1) fail(`expected exactly one ${selector}, selected=${matches.length}`);
+        return matches[0]!;
+      });
+      if (new Set(laws).size !== laws.length) fail("Law selectors resolve to the same native assertion");
+      for (const [lawIndex, law] of laws.entries()) {
+        verify();
+        const result = await capture("native", initial.path, [law, "--exact", "--test-threads=1", "--show-output"], options.lawBudgetMs ?? 60_000, `law-${lawIndex}`);
+        verify();
+        const terminals = [...result.stdout.matchAll(/^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;/gm)];
+        if (
+          result.status !== 0 ||
+          result.signal !== null ||
+          (result.reason && result.reason !== "exit") ||
+          terminals.length !== 1 ||
+          terminals[0]?.[1] !== "1" ||
+          terminals[0]?.[2] !== "0" ||
+          terminals[0]?.[3] !== "0" ||
+          !result.stdout.split(/\r?\n/u).includes(`test ${law} ... ok`)
+        )
+          fail(`native assertion ${law} did not pass exactly once; ${(result.stdout + result.stderr).slice(-6000)}`);
+      }
+      const receipt = { package: group.package, target: group.target, executable: initial.path, sha256: initial.sha256, laws, assertions: laws.length, artifactDir: groupRoot, cargoTargetDir };
+      writeFileSync(join(groupRoot, "receipt.json"), JSON.stringify(receipt), { flag: "wx", mode: 0o600 });
+      receipts.push(receipt);
     }
-    const receipt = { package: group.package, target: group.target, executable: initial.path, sha256: initial.sha256, laws, assertions: laws.length, artifactDir: groupRoot, cargoTargetDir };
-    writeFileSync(join(groupRoot, "receipt.json"), JSON.stringify(receipt), { flag: "wx", mode: 0o600 });
-    receipts.push(receipt);
+    return receipts;
+  } finally {
+    endLease();
   }
-  return receipts;
-  } finally { endLease(); }
 }
 
 export interface SpawnDaemonHandle {
@@ -2343,7 +2501,6 @@ function bunArgsForVite(args: readonly string[]): string[] {
 }
 //#endregion ⚙️ViteConfigLoader
 
-
 function bunxCmdArgs(args: readonly string[], cwd: string): string[] {
   const formatted = bunArgsForVite(args);
   const viteIdx = formatted.indexOf("vite");
@@ -2369,8 +2526,6 @@ function bunxCmdArgs(args: readonly string[], cwd: string): string[] {
 export function runBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
   runCmd(process.execPath, bunArgsForVite(args), { cwd, env });
 }
-
-
 
 /** 🥖️Runs `bunx` synchronously in `cwd`, returning status code. */
 export function runBunxStatus(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): number {
@@ -2439,9 +2594,7 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
  */
 /** 🧪️ Builds Vitest argv without overriding the owning config's no-test policy. */
 export function vitestRunArguments(bundleRoot: string, segments: string[], config: string, collectingCoverage = coverageEnabled()): string[] {
-  const coverageArgs = collectingCoverage
-    ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findRepoRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`]
-    : [];
+  const coverageArgs = collectingCoverage ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findRepoRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`] : [];
   const vitestBin = join(findRepoRoot(bundleRoot), "node_modules", "vitest", "vitest.mjs");
   return [vitestBin, "run", "--config", config, ...vitestLevelArgs(), ...coverageArgs, ...segments];
 }
@@ -2882,7 +3035,6 @@ export function runWasmPackWebBuild(opts: {
   /** 🔿️ Ship-mode Cargo/wasm-pack profile. `release`/`dev` map to `--release`/`--dev`; any other name
    * (e.g. `wasm-release`) passes `--profile <name>`. Dev mode always uses `--dev` regardless. */
   shipProfile?: string;
-
 }): void {
   const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release" } = opts;
   if (!outputDirectory || /[/\\:*?"<>|\u0000]|[. ]$/u.test(outputDirectory)) throw new Error("WASM outputDirectory must be one portable literal directory name");
@@ -2985,7 +3137,10 @@ function parseCargoTomlStringArray(block: string, key: string): string[] {
 /** 🧩️ Reads one extension crate's Cargo identity — the crate name every extension route (`package`'s
  * `.sxt` and `describe`'s owner descriptor pair alike) builds from, its component package id, and its
  * declared `extends` host. */
-export function parseExtensionCargoManifest(manifestPath: string, repoRoot: string): {
+export function parseExtensionCargoManifest(
+  manifestPath: string,
+  repoRoot: string,
+): {
   readonly packageName: string;
   readonly version: string;
   readonly description: string;
@@ -3022,12 +3177,7 @@ export function parseExtensionCargoManifest(manifestPath: string, repoRoot: stri
 }
 
 /** @emoji 📦 Builds a wasip2 component and writes a runtime-installable `.sxt` beside the crate (`dist/<id>.sxt` by default). */
-export async function runExtensionComponentPackage(opts: {
-  readonly rsDir: string;
-  readonly repoRoot?: string;
-  readonly outPath?: string;
-  readonly logPrefix?: string;
-}): Promise<string> {
+export async function runExtensionComponentPackage(opts: { readonly rsDir: string; readonly repoRoot?: string; readonly outPath?: string; readonly logPrefix?: string }): Promise<string> {
   const repoRoot = opts.repoRoot ?? getWorkspaceRoot();
   const rsDir = resolve(opts.rsDir);
   const manifestPath = join(rsDir, "Cargo.toml");
@@ -3315,9 +3465,11 @@ type JsonUlocUnits = Map<string, string>;
 function jsonUlocUnitFingerprint(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value);
   if (Array.isArray(value)) {
-    return `array:${value.map((item) => item !== null && typeof item === "object" ? Array.isArray(item) ? "[]" : "{}" : JSON.stringify(item)).join("\\u0000")}`;
+    return `array:${value.map((item) => (item !== null && typeof item === "object" ? (Array.isArray(item) ? "[]" : "{}") : JSON.stringify(item))).join("\\u0000")}`;
   }
-  return `object:${Object.keys(value as Record<string, unknown>).map((key) => JSON.stringify(key)).join("\\u0000")}`;
+  return `object:${Object.keys(value as Record<string, unknown>)
+    .map((key) => JSON.stringify(key))
+    .join("\\u0000")}`;
 }
 
 function collectJsonUlocUnits(value: unknown, path: string, units: JsonUlocUnits): void {
@@ -3761,11 +3913,7 @@ function metricsPathPair(row: { path: string }): MetricsPathPair | null {
   return { oldPath: paths[0]!, newPath: paths[1]! };
 }
 
-function addLanguageDelta(
-  deltas: Map<string, { added: number; removed: number; edited: number }>,
-  language: string,
-  delta: { added: number; removed: number; edited: number },
-): void {
+function addLanguageDelta(deltas: Map<string, { added: number; removed: number; edited: number }>, language: string, delta: { added: number; removed: number; edited: number }): void {
   const current = deltas.get(language) ?? { added: 0, removed: 0, edited: 0 };
   current.added += delta.added;
   current.removed += delta.removed;
@@ -3786,10 +3934,7 @@ function ulocDeltaEntries(root: string, rows: { path: string; added: number; rem
 }
 
 function ulocBlobSpecs(entries: UlocDeltaEntry[], oldRev: string, newRev: string): string[] {
-  return entries.flatMap(({ pair }) => [
-    ...(isJsonMetricsPath(pair.oldPath) ? [`${oldRev}:${pair.oldPath}`] : []),
-    ...(isJsonMetricsPath(pair.newPath) ? [`${newRev}:${pair.newPath}`] : []),
-  ]);
+  return entries.flatMap(({ pair }) => [...(isJsonMetricsPath(pair.oldPath) ? [`${oldRev}:${pair.oldPath}`] : []), ...(isJsonMetricsPath(pair.newPath) ? [`${newRev}:${pair.newPath}`] : [])]);
 }
 
 function ulocDeltaForEntry(root: string, entry: UlocDeltaEntry, oldRev: string, newRev: string, blobs: Map<string, string | null>): Map<string, { added: number; removed: number; edited: number }> {
@@ -3797,8 +3942,8 @@ function ulocDeltaForEntry(root: string, entry: UlocDeltaEntry, oldRev: string, 
   const deltas = new Map<string, { added: number; removed: number; edited: number }>();
   const oldLanguage = pair.oldPath && !shouldSkipPathForUloc(root, pair.oldPath) ? classifyPathForMetrics(pair.oldPath) : "";
   const newLanguage = pair.newPath && !shouldSkipPathForUloc(root, pair.newPath) ? classifyPathForMetrics(pair.newPath) : "";
-  const oldJson = isJsonMetricsPath(pair.oldPath) ? blobs.get(`${oldRev}:${pair.oldPath}`) ?? null : null;
-  const newJson = isJsonMetricsPath(pair.newPath) ? blobs.get(`${newRev}:${pair.newPath}`) ?? null : null;
+  const oldJson = isJsonMetricsPath(pair.oldPath) ? (blobs.get(`${oldRev}:${pair.oldPath}`) ?? null) : null;
+  const newJson = isJsonMetricsPath(pair.newPath) ? (blobs.get(`${newRev}:${pair.newPath}`) ?? null) : null;
   if (oldLanguage === "JSON" && newLanguage === "JSON") {
     const delta = diffJsonUloc(oldJson, newJson);
     if (delta !== null) {
@@ -3827,13 +3972,7 @@ function ulocDeltaForEntry(root: string, entry: UlocDeltaEntry, oldRev: string, 
   return deltas;
 }
 
-function accumulateUlocDeltasByRow(
-  root: string,
-  rows: { path: string; added: number; removed: number }[],
-  oldRev: string,
-  newRev: string,
-  pathPrefixes?: string[],
-): Map<string, { added: number; removed: number; edited: number }>[] {
+function accumulateUlocDeltasByRow(root: string, rows: { path: string; added: number; removed: number }[], oldRev: string, newRev: string, pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }>[] {
   const deltas = rows.map(() => new Map<string, { added: number; removed: number; edited: number }>());
   const entries = ulocDeltaEntries(root, rows, pathPrefixes);
   const blobs = gitBlobTextsAtSpecs(root, ulocBlobSpecs(entries, oldRev, newRev));
@@ -3842,13 +3981,7 @@ function accumulateUlocDeltasByRow(
 }
 
 /** 🧩️Accumulates per-language ULOC deltas from revision blobs, retaining JSON's key-based unit. */
-export function accumulateUlocDeltasFromPaths(
-  root: string,
-  rows: { path: string; added: number; removed: number }[],
-  oldRev: string,
-  newRev: string,
-  pathPrefixes?: string[],
-): Map<string, { added: number; removed: number; edited: number }> {
+export function accumulateUlocDeltasFromPaths(root: string, rows: { path: string; added: number; removed: number }[], oldRev: string, newRev: string, pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }> {
   const deltas = new Map<string, { added: number; removed: number; edited: number }>();
   for (const rowDeltas of accumulateUlocDeltasByRow(root, rows, oldRev, newRev, pathPrefixes)) {
     for (const [language, delta] of rowDeltas) addLanguageDelta(deltas, language, delta);
@@ -3857,19 +3990,10 @@ export function accumulateUlocDeltasFromPaths(
 }
 
 /** ➕️Accumulates per-language byte deltas from path size changes between two git revisions. */
-export function accumulateSizeDeltasFromPaths(
-  root: string,
-  rows: { path: string }[],
-  oldRev: string,
-  newRev: string,
-  pathPrefixes?: string[],
-): Map<string, { added: number; removed: number; edited: number }> {
+export function accumulateSizeDeltasFromPaths(root: string, rows: { path: string }[], oldRev: string, newRev: string, pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }> {
   const m = new Map<string, { added: number; removed: number; edited: number }>();
   const paths = rows.flatMap((row) => pathsFromNumstatRow(row.path)).filter((path) => !shouldSkipPathForUloc(root, path) && (!pathPrefixes || pathUnderPrefixes(path, pathPrefixes)));
-  const specs = paths.flatMap((path) => [
-    `${oldRev}:${path}`,
-    `${newRev === ":0" ? ":0" : newRev}:${path}`,
-  ]);
+  const specs = paths.flatMap((path) => [`${oldRev}:${path}`, `${newRev === ":0" ? ":0" : newRev}:${path}`]);
   const sizes = gitObjectSizesAtSpecs(root, specs);
   for (const path of paths) {
     const lang = classifyPathForMetrics(path);
@@ -3943,19 +4067,11 @@ export function formatBundleMetricSuffixes(
   langEmoji?: string,
   langSlug?: string,
 ): string {
-  return (
-    formatMetricBody({ kind: "uloc", code: ulocBloc, ...ulocDelta, langEmoji, langSlug }) +
-    formatMetricBody({ kind: "size", code: sizeBloc, ...sizeDelta, langEmoji, langSlug })
-  );
+  return formatMetricBody({ kind: "uloc", code: ulocBloc, ...ulocDelta, langEmoji, langSlug }) + formatMetricBody({ kind: "size", code: sizeBloc, ...sizeDelta, langEmoji, langSlug });
 }
 
 /** 📊️Full `📊️uloc💯️…` metrics line from bloc and git deltas (bundle header, footer, languages). */
-export function formatBundleUlocSuffix(
-  d: { added: number; removed: number; edited: number },
-  code: number,
-  langEmoji?: string,
-  langSlug?: string,
-): string {
+export function formatBundleUlocSuffix(d: { added: number; removed: number; edited: number }, code: number, langEmoji?: string, langSlug?: string): string {
   return formatMetricBody({ kind: "uloc", code, ...d, langEmoji, langSlug });
 }
 //#endregion Git deltas
@@ -3998,9 +4114,18 @@ function expandScientificDecimal(n: number): string {
   const abs = Math.abs(n);
   if (abs >= 1e-6 && abs < 1e21) {
     const decimals = Math.max(0, Math.min(16, -Math.floor(Math.log10(abs)) + 2));
-    return (n < 0 ? "-" : "") + abs.toFixed(decimals).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+    return (
+      (n < 0 ? "-" : "") +
+      abs
+        .toFixed(decimals)
+        .replace(/(\.\d*?)0+$/, "$1")
+        .replace(/\.$/, "")
+    );
   }
-  let s = abs.toFixed(20).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+  let s = abs
+    .toFixed(20)
+    .replace(/(\.\d*?)0+$/, "$1")
+    .replace(/\.$/, "");
   return n < 0 ? `-${s}` : s;
 }
 
@@ -4239,13 +4364,7 @@ export function buildCommitMetrics(root: string, runner: MetricsRunner = createD
 }
 
 /** 📊️Builds uloc + size metrics for a git revision range (optional path prefixes). */
-export function buildCommitMetricsForRange(
-  root: string,
-  base: string,
-  head = "HEAD",
-  pathPrefixes?: string[],
-  runner: MetricsRunner = createDefaultMetricsRunner(),
-): CommitMetricsBundle {
+export function buildCommitMetricsForRange(root: string, base: string, head = "HEAD", pathPrefixes?: string[], runner: MetricsRunner = createDefaultMetricsRunner()): CommitMetricsBundle {
   const repoRoot = gitRepoRoot(root);
   const numstat = gitRangeNumstat(repoRoot, base, head);
   const ulocDeltas = accumulateUlocDeltasFromPaths(repoRoot, numstat, base, head, pathPrefixes);
@@ -4335,10 +4454,7 @@ export function formatCommitMetricsLines(bundle: CommitMetricsBundle): string[] 
     lines.push(formatMetricBody({ kind: "size", code: sizeTotal.code, added: sizeTotal.added, edited: sizeTotal.edited, removed: sizeTotal.removed }));
   }
   const sizeByLang = new Map(size.map((m) => [m.lang, m]));
-  const langs = sortMetricLanguages(
-    Object.fromEntries(uloc.map((m) => [m.lang, m.code])),
-    new Map(uloc.map((m) => [m.lang, { edited: m.edited }])),
-  );
+  const langs = sortMetricLanguages(Object.fromEntries(uloc.map((m) => [m.lang, m.code])), new Map(uloc.map((m) => [m.lang, { edited: m.edited }])));
   for (const lang of langs) {
     const u = uloc.find((m) => m.lang === lang);
     const s = sizeByLang.get(lang);
@@ -4617,12 +4733,7 @@ export function contributorWipLine1Base(root: string, contributor: Contributor):
 }
 
 /** 🎆️Bumps counter from recent `…🚩️NNN` or numeric GitKraken subjects (newest first). */
-export function bumpCounterFromHistory(
-  subjectsNewestFirst: string[],
-  contributor: Contributor,
-  now = new Date(),
-  wipLine1Base: string | null = null,
-): { line1Base: string; nnn: string } {
+export function bumpCounterFromHistory(subjectsNewestFirst: string[], contributor: Contributor, now = new Date(), wipLine1Base: string | null = null): { line1Base: string; nnn: string } {
   const yy = pad2(now.getFullYear() % 100);
   const mm = pad2(now.getMonth() + 1);
   const dd = pad2(now.getDate());
@@ -4873,10 +4984,7 @@ export function buildMicroCommitMessage(root: string, contributor: Contributor, 
   if (bullets.length === 0) {
     throw new Error("micro-commit: at least one description bullet is required");
   }
-  const runner =
-    metricsRunner && "countRepoUlocByLanguage" in metricsRunner
-      ? metricsRunner
-      : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
+  const runner = metricsRunner && "countRepoUlocByLanguage" in metricsRunner ? metricsRunner : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
   const metricBundle = buildCommitMetrics(root, runner);
   if (metricBundle.uloc.length === 0 && metricBundle.size.length === 0) {
     throw new Error("micro-commit: required 📊️metric footer could not be built because no language metrics were collected");
@@ -5615,13 +5723,7 @@ export function normalizeBundleDateLine(line: string): string {
 }
 
 /** 🎆️Bundle squash only: `🎆️YY🌙️MM☀️DD` + full per-day `📊️metric…` suffixes. */
-export function formatBundleDateLine(
-  dateLine: string,
-  ulocDelta: GitDeltaSum,
-  sizeDelta: GitDeltaSum,
-  ulocBloc: number,
-  sizeBloc: number,
-): string {
+export function formatBundleDateLine(dateLine: string, ulocDelta: GitDeltaSum, sizeDelta: GitDeltaSum, ulocBloc: number, sizeBloc: number): string {
   return `${normalizeBundleDateLine(dateLine)}${formatBundleMetricSuffixes(ulocDelta, sizeDelta, ulocBloc, sizeBloc)}`;
 }
 
@@ -5921,14 +6023,7 @@ export function partitionRangeSizeDeltasByBundle(root: string, base: string, hea
   return { bundleTotals, rangeTotal };
 }
 
-export function validateBundleDayDeltasAttribution(
-  bundles: CommitBundleSection[],
-  prefixSets: string[][],
-  dateDeltas: BundleDateDeltasMap,
-  bundleTotals: GitDeltaSum[],
-  kindToken = "📃uloc",
-  additive = true,
-): void {
+export function validateBundleDayDeltasAttribution(bundles: CommitBundleSection[], prefixSets: string[][], dateDeltas: BundleDateDeltasMap, bundleTotals: GitDeltaSum[], kindToken = "📃uloc", additive = true): void {
   for (let bi = 0; bi < bundles.length; bi++) {
     const bundle = bundles[bi]!;
     const total = bundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 };
@@ -5947,7 +6042,9 @@ export function validateBundleDayDeltasAttribution(
       }
     }
     if (additive && (daySum.added !== total.added || daySum.edited !== total.edited || daySum.removed !== total.removed)) {
-      throw new Error(`commit: per-day 📊️metric${kindToken} for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`);
+      throw new Error(
+        `commit: per-day 📊️metric${kindToken} for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`,
+      );
     }
   }
 }
@@ -5955,10 +6052,7 @@ export function validateBundleDayDeltasAttribution(
 /** 🚫️All bundle-commit metrics constraints (days→bundle, bundles→range, languages→range). */
 export function validateBundleCommitAttribution(root: string, base: string, head: string, bundles: CommitBundleSection[], metricsRunner?: MetricsRunner | UlocRunner): void {
   root = gitRepoRoot(root);
-  const runner =
-    metricsRunner && "countRepoUlocByLanguage" in metricsRunner
-      ? metricsRunner
-      : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
+  const runner = metricsRunner && "countRepoUlocByLanguage" in metricsRunner ? metricsRunner : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
   const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
   const { bundleTotals: ulocPartitioned, rangeTotal: ulocRangeTotal } = partitionRangeDeltasByBundle(root, base, head, bundles, prefixSets);
   const { bundleTotals: sizePartitioned, rangeTotal: sizeRangeTotal } = partitionRangeSizeDeltasByBundle(root, base, head, bundles, prefixSets);
@@ -5993,10 +6087,7 @@ export function buildCommitMessage(root: string, contributor: Contributor, bundl
   const pathAssignments = assignChangedPathsToBundles(root, wipSha, head, bundles);
   const sorted = sortCommitBundlesByEditTotal(root, wipSha, head, bundles, pathAssignments);
   bundles = sorted.bundles;
-  const runner =
-    metricsRunner && "countRepoUlocByLanguage" in metricsRunner
-      ? metricsRunner
-      : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
+  const runner = metricsRunner && "countRepoUlocByLanguage" in metricsRunner ? metricsRunner : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
   validateBundleCommitAttribution(root, wipSha, head, bundles, runner);
   const prefixSets = buildBundlePathPrefixSets(root, wipSha, head, bundles);
   const { bundleTotals: ulocBundleTotals } = partitionRangeDeltasByBundle(root, wipSha, head, bundles, prefixSets);
@@ -6010,15 +6101,7 @@ export function buildCommitMessage(root: string, contributor: Contributor, bundl
     const bundle = bundles[bi]!;
     const ulocBloc = ulocBundleBlocs[bi] ?? 0;
     const sizeBloc = sizeBundleBlocs[bi] ?? 0;
-    lines.push(
-      formatBundleHeaderLine(
-        bundle.label,
-        ulocBundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 },
-        sizeBundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 },
-        ulocBloc,
-        sizeBloc,
-      ),
-    );
+    lines.push(formatBundleHeaderLine(bundle.label, ulocBundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 }, sizeBundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 }, ulocBloc, sizeBloc));
     const perDay = dateDeltas.get(bi);
     const perSizeDay = dateSizeDeltas.get(bi);
     for (const section of bundle.dates) {
@@ -6446,10 +6529,37 @@ export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path
 /** 🔣️ Shared taxonomy vocabulary + repo-wide package discovery contract — see
  * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`. */
 export * from "../../🔍️discovery/🟦️.ts";
-export { cargoProviderTomlParser, inspectMutationMetadataSource, projectCargoProviderManifest, resolveCargoProviderBinding, type CargoProviderBinding, type CargoProviderBindingInput, type CargoProviderDependencyProjection, type CargoProviderLibraryProjection, type CargoProviderManifestProjection, type CargoProviderManifestProjectionInput, type CargoProviderTomlParser, type MutationMetadataProviderIdentity, type MutationMetadataSourceInput, type MutationMetadataSourceOrigin, type MutationMetadataSourceProof } from "../../🔍️discovery/🟦️.ts";
+export {
+  cargoProviderTomlParser,
+  inspectMutationMetadataSource,
+  projectCargoProviderManifest,
+  resolveCargoProviderBinding,
+  type CargoProviderBinding,
+  type CargoProviderBindingInput,
+  type CargoProviderDependencyProjection,
+  type CargoProviderLibraryProjection,
+  type CargoProviderManifestProjection,
+  type CargoProviderManifestProjectionInput,
+  type CargoProviderTomlParser,
+  type MutationMetadataProviderIdentity,
+  type MutationMetadataSourceInput,
+  type MutationMetadataSourceOrigin,
+  type MutationMetadataSourceProof,
+} from "../../🔍️discovery/🟦️.ts";
 //#endregion 🔣️TaxonomyDiscovery
 
-export { authorArtifactScaffold, ArtifactScaffoldError, type ArtifactScaffoldDirectory, type ArtifactScaffoldFile, type ArtifactScaffoldLeaf, type ArtifactScaffoldOptions, type ArtifactScaffoldOwner, type ArtifactScaffoldPartial, type ArtifactScaffoldProgress, type ArtifactScaffoldResult } from "../../🏗️builder/🟦️.ts";
+export {
+  authorArtifactScaffold,
+  ArtifactScaffoldError,
+  type ArtifactScaffoldDirectory,
+  type ArtifactScaffoldFile,
+  type ArtifactScaffoldLeaf,
+  type ArtifactScaffoldOptions,
+  type ArtifactScaffoldOwner,
+  type ArtifactScaffoldPartial,
+  type ArtifactScaffoldProgress,
+  type ArtifactScaffoldResult,
+} from "../../🏗️builder/🟦️.ts";
 
 //#region 🗂️Workspaces
 /** 🗂️ Generated root `package.json` `workspaces` array from a real on-disk package scan — see

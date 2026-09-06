@@ -19,23 +19,23 @@ pub struct RemoveTableRow {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn remove_table_row(id: String) -> NoteMutation {
+pub fn remove_table_row(id: String) -> NoteMutation {
     NoteMutation::RemoveTableRow(RemoveTableRow { id })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for RemoveTableRow {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "table-row", kind: "remove-table-row", record: "RemovedTableRow" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Remove row from table \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

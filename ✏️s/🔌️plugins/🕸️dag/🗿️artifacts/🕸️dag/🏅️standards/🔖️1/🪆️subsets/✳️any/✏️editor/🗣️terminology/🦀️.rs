@@ -38,12 +38,12 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven locale read.
-pub async fn is_de_locale(cfg: &DagConfig) -> bool {
+pub fn is_de_locale(cfg: &DagConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
 /// 🗣️ Derives the compile-time-checked `Locale` from the BCP-47 `cfg.locale` tag.
-pub async fn dag_locale(cfg: &DagConfig) -> semio_framework_plugin::Locale {
+pub fn dag_locale(cfg: &DagConfig) -> semio_framework_plugin::Locale {
     if is_de_locale(cfg) {
         semio_framework_plugin::Locale::De
     } else {
@@ -53,7 +53,7 @@ pub async fn dag_locale(cfg: &DagConfig) -> semio_framework_plugin::Locale {
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; this app has no terminology variant, so
 /// `Terminology` is always `Native`.
-pub async fn dag_play_labels(cfg: &DagConfig) -> &'static DagPlayLabels {
+pub fn dag_play_labels(cfg: &DagConfig) -> &'static DagPlayLabels {
     DagPlayLabels::labels(dag_locale(cfg), semio_framework_plugin::Terminology::Native)
 }
 //#endregion 🔖️Resolvers

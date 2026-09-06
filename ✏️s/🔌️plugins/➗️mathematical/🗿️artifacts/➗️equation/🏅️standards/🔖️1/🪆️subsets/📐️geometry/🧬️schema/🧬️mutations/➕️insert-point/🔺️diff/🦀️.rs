@@ -5,7 +5,7 @@ use crate::artifacts::equation::{equation_children_from_state, equation_geometry
 //#region 🔖️Diff
 /// 🔺️ Ascending-insert-clamped: an out-of-range `index` lands at the end rather than panicking,
 /// reported as Warning `clamped`.
-pub async fn diff(payload: &super::InsertPoint, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::InsertPoint, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     let mut geometry = equation_geometry(base);
     let index = payload.index.min(geometry.points.len());
     let was_clamped = index != payload.index;

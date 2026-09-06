@@ -25,7 +25,7 @@ pub struct SequenceInference {
 }
 
 impl protocol::Inference<SequenceSnapshot> for SequenceInference {
-    async fn infer(snapshot: &SequenceSnapshot) -> Self {
+    fn infer(snapshot: &SequenceSnapshot) -> Self {
         Self { topology: compute_sequence_topology(snapshot) }
     }
 }
@@ -41,13 +41,13 @@ impl Default for SequenceInference {
 }
 
 impl protocol::InferenceSpec<SequenceSnapshot> for SequenceInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.sequence.sequence.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.sequence.sequence.inference.topology", reads: &["content"] }]
     }
 }
@@ -74,7 +74,7 @@ impl ArtifactInferrer for SequenceInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sequence.sequence.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `sequence_artifact_schema_descriptor`'s registration.
-pub async fn sequence_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn sequence_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.sequence.sequence.inference",
         inference: schema::FacetLeaves {
@@ -96,11 +96,11 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn step(id: &str) -> SequenceStep {
+    fn step(id: &str) -> SequenceStep {
         SequenceStep { id: id.into(), kind: "state.set".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false }
     }
 
-    async fn sample_snapshot() -> SequenceSnapshot {
+    fn sample_snapshot() -> SequenceSnapshot {
         SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(), steps: vec![step("a"), step("b")], edges: vec![SequenceEdge { id: "e1".into(), from: "a".into(), to: "b".into() }] })
     }
     //#endregion 🧸️Fixtures

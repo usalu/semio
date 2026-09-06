@@ -299,11 +299,14 @@ impl ToolExecutionContract {
 }
 
 pub struct ErasedToolJob {
-    inner: Box<dyn InteractiveJob>,
+    /// 🧵️ `+ Send`: an erased tool job is dispatched onto the pool, so the object type states the
+    /// thread-transfer requirement itself now that `InteractiveJob` no longer imposes `Send` on
+    /// single-threaded targets (see `semio_framework_job::JobThreadTransfer`).
+    inner: Box<dyn InteractiveJob + Send>,
 }
 
 impl ErasedToolJob {
-    fn new<J: InteractiveJob + 'static>(job: J) -> Self {
+    fn new<J: InteractiveJob + Send + 'static>(job: J) -> Self {
         Self { inner: Box::new(job) }
     }
 }
@@ -328,7 +331,10 @@ impl InteractiveJob for ErasedToolJob {
 
 pub trait ToolJobFactory: Send + 'static {
     type Payload: Send + 'static;
-    type Job: InteractiveJob + 'static;
+    /// 🧵️ `+ Send`: a factory-produced job is erased into [`ErasedToolJob`] and dispatched onto the
+    /// worker pool, so the bound is stated where the transfer happens rather than on every
+    /// `InteractiveJob` (see `semio_framework_job::JobThreadTransfer`).
+    type Job: InteractiveJob + Send + 'static;
 
     fn keys(&self) -> &[ToolFactoryKey];
     fn payload_schema_id(&self) -> &str;

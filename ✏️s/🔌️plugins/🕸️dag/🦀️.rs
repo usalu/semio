@@ -24,7 +24,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// reasoning the `🎬️sequence` W4 pass documented). `.activation()`/`.execution()`/`.requests()`
 /// are unrelated microkernel-actor-runtime wiring (ticket MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
 /// live peer) — untouched by this pass.
-pub async fn plugin() -> Result<Plugin<DagApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<DagApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<DagApps>::builder("dag")
         .label("DAG")
         .version("0.1.0")

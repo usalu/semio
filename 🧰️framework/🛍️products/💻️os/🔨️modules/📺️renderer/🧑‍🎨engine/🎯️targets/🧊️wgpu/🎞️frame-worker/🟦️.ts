@@ -29,6 +29,8 @@ type BrowserRendererBootStep = { readonly stage: string; readonly progress: numb
 
 type RendererBindings = {
   default?: (moduleOrPath?: WebAssembly.Module | RequestInfo | URL) => Promise<unknown>;
+  dumpStructure?: () => string;
+  dumpFrameStats?: () => string;
   semioWgpuSetAppRole?: (role: string) => void;
   semioWgpuSetHubEnv?: (hubUrl: string, user: string, dataDir: string) => void;
   semioWgpuWorkerBootstrap?: (
@@ -46,20 +48,35 @@ type RendererBindings = {
 //#region ⏱️StepAuthority
 const WORKER_STEP_BUDGET_MS = 8;
 const BOOT_HEARTBEAT_MS = 2;
-const PLUGIN_BOOT_CAPACITY = 32;
+/** @emoji 🧮️ Fixed boot credit taken from the generated catalog itself. A boot plan is by construction a
+ * subset of the catalog's own plugin and extension rows, so no legitimate plan can exceed it, and unlike a
+ * magic number it cannot go stale as the product grows — a hardcoded 32 rejected the `s` plan's 57 rows
+ * outright and made every wgpu boot impossible. */
+const PLUGIN_BOOT_CAPACITY = PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length;
 const PLUGIN_MANIFEST_CODE_UNIT_CAPACITY = 64 * 1024;
 const ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
 const ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
+/** @emoji 🔬️ Introspection walks the whole retained tree, so it earns a wider turn than a frame step —
+ * and a breach is reported on the answer instead of faulting the shell, because a diagnostic must never
+ * be the thing that takes the surface down. */
+const INTROSPECTION_STEP_BUDGET_MS = 64;
+/** @emoji 🧱️ Ceiling for the boot stages whose blocking time is spent inside the browser itself — the module
+ * loader, the WebAssembly compiler, and the GPU driver. `WORKER_STEP_BUDGET_MS` bounds turns *this* Worker
+ * owns and can slice; a `WebAssembly.instantiate` of the renderer module or a `requestDevice` is neither
+ * ours nor sliceable, so measuring it against the frame budget only ever reports the browser's own cost as a
+ * Worker fault (measured: instantiating the debug renderer blocks ~62 ms, which failed the 8 ms frame
+ * budget and killed every boot). The UI isolate's `FRAME_WORKER_BOOT_TIMEOUT_MS` remains the outer bound. */
+const BROWSER_OWNED_SUSPENSION_BUDGET_MS = 1_000;
 
-function ownedStep<T>(stage: string, callback: () => T): T {
+function ownedStep<T>(stage: string, callback: () => T, budgetMs: number = WORKER_STEP_BUDGET_MS): T {
   const startedAt = performance.now();
   const value = callback();
   const duration = performance.now() - startedAt;
-  if (duration >= WORKER_STEP_BUDGET_MS) throw new Error(`worker-boot-step-overrun: ${stage} took ${duration.toFixed(3)} ms`);
+  if (duration >= budgetMs) throw new Error(`worker-boot-step-overrun: ${stage} took ${duration.toFixed(3)} ms against a ${budgetMs} ms budget`);
   return value;
 }
 
-async function monitoredSuspension<T>(stage: string, operation: () => Promise<T>): Promise<T> {
+async function monitoredSuspension<T>(stage: string, operation: () => Promise<T>, blockBudgetMs: number = WORKER_STEP_BUDGET_MS): Promise<T> {
   let lastBeat = performance.now();
   let maximumBlockMs = 0;
   const heartbeat = setInterval(() => {
@@ -68,10 +85,10 @@ async function monitoredSuspension<T>(stage: string, operation: () => Promise<T>
     lastBeat = now;
   }, BOOT_HEARTBEAT_MS);
   try {
-    const result = await ownedStep(`${stage}:start`, operation);
+    const result = await ownedStep(`${stage}:start`, operation, blockBudgetMs);
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
     if (closed || closing) throw new Error(`worker-boot-cancelled: ${stage}`);
-    if (maximumBlockMs >= WORKER_STEP_BUDGET_MS) throw new Error(`worker-boot-step-overrun: ${stage} blocked the Worker for ${maximumBlockMs.toFixed(3)} ms`);
+    if (maximumBlockMs >= blockBudgetMs) throw new Error(`worker-boot-step-overrun: ${stage} blocked the Worker for ${maximumBlockMs.toFixed(3)} ms against a ${blockBudgetMs} ms budget`);
     return result;
   } finally {
     clearInterval(heartbeat);
@@ -89,6 +106,7 @@ async function macrotask(): Promise<void> {
 const scope = self as DedicatedWorkerGlobalScope;
 let lifecycle = 0;
 let runtime: BrowserRendererWorkerHandle | undefined;
+let bindings: RendererBindings | undefined;
 let interactiveJobs: InteractiveWorkerScheduler | undefined;
 let closed = false;
 let closing = false;
@@ -104,6 +122,22 @@ let assetAbort: AbortController | undefined;
 
 scope.onmessage = (event: MessageEvent<BrowserFrameUiMessage>) => void receive(event.data);
 
+/** @emoji 🧯️ Last-resort seam for a throw that escapes every awaited step — a trap raised inside a wasm
+ * callback the renderer scheduled itself, or a rejection nothing awaited. Without this the UI isolate only
+ * sees `worker.onerror`'s bare message as `worker-message-failed`, with no stack and no code to triage; the
+ * protocol already carries a typed fault, so route it there instead and let the close ladder run. */
+scope.onerror = (event) => {
+  const error = event instanceof ErrorEvent ? event : undefined;
+  const stack = error?.error instanceof Error ? `\n${error.error.stack ?? ""}` : "";
+  requestFault("worker-uncaught", `${error?.message ?? "uncaught worker error"} (${error?.filename ?? "?"}:${error?.lineno ?? 0}:${error?.colno ?? 0})${stack}`);
+  return true;
+};
+
+scope.onunhandledrejection = (event) => {
+  const reason = (event as PromiseRejectionEvent).reason;
+  requestFault("worker-unhandled-rejection", reason instanceof Error ? `${reason.message}\n${reason.stack ?? ""}` : String(reason));
+};
+
 async function receive(message: BrowserFrameUiMessage): Promise<void> {
   if (message.kind === "boot") {
     await boot(message);
@@ -113,6 +147,10 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
   if (message.kind === "close") {
     if (closed || closing) return;
     beginClose();
+    return;
+  }
+  if (message.kind === "introspect") {
+    answerIntrospection(message);
     return;
   }
   if (closed || closing || failed || quarantined) return;
@@ -143,6 +181,32 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     else scheduleAssetPump();
   } catch (error) {
     fault("frame-runtime-fault", error instanceof Error ? error.message : String(error));
+  }
+}
+
+/** @emoji 🔬️ Answers one read-only introspection request from the renderer's own thread-local, which only
+ * exists in this isolate. It never faults the Worker: a missing export, a throwing export, or a turn wider
+ * than `INTROSPECTION_STEP_BUDGET_MS` all come back as `json: null` plus a `detail`, so a probe can tell
+ * "no hooks" from "empty dump" while the surface keeps running. */
+function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "introspect" }>): void {
+  const respond = (json: string | null, detail?: string) => post({ kind: "introspection", lifecycle, requestId: message.requestId, probe: message.probe, json, ...(detail === undefined ? {} : { detail }) });
+  if (closed) return;
+  if (!runtime || !bindings) {
+    respond(null, "renderer bindings are not mounted in this Worker");
+    return;
+  }
+  const hook = message.probe === "structure" ? bindings.dumpStructure : bindings.dumpFrameStats;
+  if (!hook) {
+    respond(null, `renderer bindings expose no ${message.probe} introspection export`);
+    return;
+  }
+  const startedAt = performance.now();
+  try {
+    const json = hook();
+    const duration = performance.now() - startedAt;
+    respond(json, duration >= INTROSPECTION_STEP_BUDGET_MS ? `${message.probe} introspection took ${duration.toFixed(3)} ms` : undefined);
+  } catch (error) {
+    respond(null, error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -189,6 +253,36 @@ function beginClose(): void {
   void closeRuntime();
 }
 
+type PluginHandleMount = { readonly pluginId: string; readonly handle: ReturnType<typeof pluginHandleForBridge> };
+
+/** @emoji 🧩️ Mounts every plugin the boot plan names, isolating each one. A module that fails to load, or
+ * whose manifest overruns its fixed credits, is reported as a `plugin-fault:` boot-progress stage and
+ * skipped — the same per-plugin isolation the React shell's router gives a descriptor fault, rather than
+ * taking the whole surface down. The catalogue cache legitimately carries stale or missing descriptors
+ * while plugin cores are rebuilt, and a shell that boots only when all of them are fresh never boots.
+ * Cancellation (`closed`/`closing`) is re-thrown, never swallowed; an empty result is still fatal upstream. */
+async function mountPluginHandles(targets: readonly { readonly pluginId: string; readonly moduleUrl: string }[]): Promise<PluginHandleMount[]> {
+  const mounted: PluginHandleMount[] = [];
+  for (let index = 0; index < targets.length; index++) {
+    const target = targets[index]!;
+    const share = 0.3 + 0.3 * (index / Math.max(1, targets.length));
+    progress(`plugin:${target.pluginId}`, share);
+    await macrotask();
+    try {
+      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+      ownedStep(`plugin-manifest:${target.pluginId}`, () => {
+        const manifest = JSON.stringify(module.manifest);
+        if (manifest.length > PLUGIN_MANIFEST_CODE_UNIT_CAPACITY) throw new Error(`plugin-manifest-credits: ${target.pluginId} exceeds ${PLUGIN_MANIFEST_CODE_UNIT_CAPACITY} code units`);
+      });
+      mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
+    } catch (error) {
+      if (closed || closing) throw error;
+      progress(`plugin-fault:${target.pluginId}: ${error instanceof Error ? error.message : String(error)}`, share);
+    }
+  }
+  return mounted;
+}
+
 async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): Promise<void> {
   if (runtime || lifecycle !== 0) {
     fault("duplicate-boot", "the frame Worker accepts exactly one boot lifecycle");
@@ -197,35 +291,25 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
   lifecycle = message.lifecycle;
   try {
     progress("renderer-module", 0.05);
-    const bindings = await monitoredSuspension("renderer-module", () => import(/* @vite-ignore */ message.bindingsModuleUrl) as Promise<RendererBindings>);
-    if (bindings.default) {
+    const loaded = await monitoredSuspension("renderer-module", () => import(/* @vite-ignore */ message.bindingsModuleUrl) as Promise<RendererBindings>, BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    bindings = loaded;
+    if (loaded.default) {
       progress("wasm-instance", 0.15);
-      await monitoredSuspension("wasm-instance", () => bindings.default!(message.bindingsWasmUrl));
+      await monitoredSuspension("wasm-instance", () => loaded.default!(message.bindingsWasmUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     }
-    if (!bindings.semioWgpuWorkerBootstrap) throw new Error("renderer bindings missing semioWgpuWorkerBootstrap");
+    if (!loaded.semioWgpuWorkerBootstrap) throw new Error("renderer bindings missing semioWgpuWorkerBootstrap");
     ownedStep("runtime-environment", () => {
-      bindings.semioWgpuSetAppRole?.(message.appRole);
-      if (message.hub) bindings.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
+      loaded.semioWgpuSetAppRole?.(message.appRole);
+      if (message.hub) loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
     });
     progress("plugin-graph", 0.25);
     const bootPlan = ownedStep("plugin-graph", () => resolvePlaygroundBoot(PLUGIN_CATALOG, message.pluginVariant));
     if (bootPlan.plugins.length > PLUGIN_BOOT_CAPACITY) throw new Error(`plugin-credits: boot plan exceeds ${PLUGIN_BOOT_CAPACITY} plugins`);
     for (const error of bootPlan.dependencyErrors) progress(pluginGraphErrorMessage(error, message.locale), 0.3);
-    const plugins: { pluginId: string; handle: ReturnType<typeof pluginHandleForBridge> }[] = [];
-    for (let index = 0; index < bootPlan.plugins.length; index++) {
-      const target = bootPlan.plugins[index]!;
-      progress(`plugin:${target.pluginId}`, 0.3 + 0.3 * (index / Math.max(1, bootPlan.plugins.length)));
-      await macrotask();
-      const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl));
-      ownedStep(`plugin-manifest:${target.pluginId}`, () => {
-        const manifest = JSON.stringify(module.manifest);
-        if (manifest.length > PLUGIN_MANIFEST_CODE_UNIT_CAPACITY) throw new Error(`plugin-manifest-credits: ${target.pluginId} exceeds ${PLUGIN_MANIFEST_CODE_UNIT_CAPACITY} code units`);
-      });
-      plugins.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
-    }
+    const plugins = await mountPluginHandles(bootPlan.plugins);
     if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.pluginVariant}`);
     progress("renderer-runtime", 0.65);
-    let bootstrap = await monitoredSuspension("gpu-platform", () => bindings.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })));
+    let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     while (true) {
       await macrotask();
       const step = ownedStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep);

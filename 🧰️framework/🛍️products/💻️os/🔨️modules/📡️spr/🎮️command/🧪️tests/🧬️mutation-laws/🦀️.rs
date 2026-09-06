@@ -6,18 +6,26 @@ pub type Counter = i64;
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub struct CounterDiff { pub deltas: Vec<i64> }
+pub struct CounterDiff {
+    pub deltas: Vec<i64>,
+}
 
 impl MutationDiff<Counter> for CounterDiff {
     fn apply(&self, base: &Counter) -> MutationApplyResult<Counter> {
         self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))
     }
-    fn absorb(&mut self, other: Self) { self.deltas.extend(other.deltas); }
+    fn absorb(&mut self, other: Self) {
+        self.deltas.extend(other.deltas);
+    }
 }
 
 impl DiffRegions for CounterDiff {
     fn touches(&self) -> TouchedPaths {
-        if self.deltas.iter().any(|delta| *delta != 0) { TouchedPaths::new(["value"]) } else { TouchedPaths::default() }
+        if self.deltas.iter().any(|delta| *delta != 0) {
+            TouchedPaths::new(["value"])
+        } else {
+            TouchedPaths::default()
+        }
     }
 }
 
@@ -44,7 +52,9 @@ mod tests {
     use super::*;
     use crate::os_spr::{fold_plan_diff, fold_plan_inverse, Mutation, OpBinary, OpText};
 
-    fn cases() -> serde_json::Value { serde_json::from_str(include_str!("🔣️.json")).unwrap() }
+    fn cases() -> serde_json::Value {
+        serde_json::from_str(include_str!("🔣️.json")).unwrap()
+    }
 
     #[test]
     fn counter_fixture_codecs_and_descriptors() {
@@ -64,7 +74,9 @@ mod tests {
             let base = row["before"].as_i64().unwrap();
             let mut current = op.diff(&base).diff().apply(&base).unwrap();
             assert_eq!(current, row["after"].as_i64().unwrap());
-            for inverse in op.inverse(&base).iter().rev() { current = inverse.diff(&current).diff().apply(&current).unwrap(); }
+            for inverse in op.inverse(&base).iter().rev() {
+                current = inverse.diff(&current).diff().apply(&current).unwrap();
+            }
             assert_eq!(current, base);
             let mut unknown = wire.clone();
             unknown["unknown"] = serde_json::json!(true);
@@ -76,7 +88,8 @@ mod tests {
                 assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&missing.to_string()).is_err());
                 assert!(serde_json::from_value::<CounterMutation>(missing).is_err());
                 for value in [serde_json::json!(null), serde_json::json!(true), serde_json::json!("1"), serde_json::json!(1e21)] {
-                    let mut invalid = wire.clone(); invalid[key] = value;
+                    let mut invalid = wire.clone();
+                    invalid[key] = value;
                     assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&invalid.to_string()).is_err());
                     assert!(serde_json::from_value::<CounterMutation>(invalid).is_err());
                 }
@@ -91,14 +104,19 @@ mod tests {
             let deltas = row["deltas"].as_array().unwrap().iter().map(|delta| delta.as_str().unwrap().parse::<i64>().unwrap()).collect::<Vec<_>>();
             let diff = CounterDiff { deltas };
             let result = diff.apply(&base);
-            if row["error"] == true { assert_eq!(result.unwrap_err().code, "mutation.apply.invariant"); continue; }
+            if row["error"] == true {
+                assert_eq!(result.unwrap_err().code, "mutation.apply.invariant");
+                continue;
+            }
             let expected = row["after"].as_str().unwrap().parse::<i64>().unwrap();
             assert_eq!(result, Ok(expected));
             assert_eq!(crate::os_pack::json::from_json_str::<CounterDiff>(&crate::os_pack::json::to_json_string(&diff)).unwrap().apply(&base), Ok(expected));
             assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&diff)).unwrap(), serde_json::to_value(&diff).unwrap());
             assert_eq!(serde_json::from_value::<CounterDiff>(serde_json::to_value(&diff).unwrap()).unwrap().apply(&base), Ok(expected));
             let mut joined = CounterDiff::default();
-            for delta in &diff.deltas { joined.absorb(CounterDiff { deltas: vec![*delta] }); }
+            for delta in &diff.deltas {
+                joined.absorb(CounterDiff { deltas: vec![*delta] });
+            }
             assert_eq!(joined, diff);
         }
     }
@@ -111,9 +129,17 @@ mod tests {
             let mut current = fold_plan_diff(&kind, &base).diff().apply(&base).unwrap();
             assert_eq!(current, row["after"].as_str().unwrap().parse::<i64>().unwrap());
             let stored = fold_plan_inverse(&kind, &base);
-            let deltas = stored.iter().map(|op| match op { CounterMutation::AddCounter(add) => add.delta.to_string(), _ => panic!("inverse must be direct addition") }).collect::<Vec<_>>();
+            let deltas = stored
+                .iter()
+                .map(|op| match op {
+                    CounterMutation::AddCounter(add) => add.delta.to_string(),
+                    _ => panic!("inverse must be direct addition"),
+                })
+                .collect::<Vec<_>>();
             assert_eq!(serde_json::to_value(deltas).unwrap(), row["storedInverse"]);
-            for inverse in stored.iter().rev() { current = inverse.diff(&current).diff().apply(&current).unwrap(); }
+            for inverse in stored.iter().rev() {
+                current = inverse.diff(&current).diff().apply(&current).unwrap();
+            }
             assert_eq!(current, base);
         }
     }
@@ -129,7 +155,9 @@ mod tests {
                 assert_eq!(CounterMutation::decode_op(&op.encode_op().unwrap()).unwrap(), op);
             }
         }
-        for bytes in [vec![], vec![255], vec![1, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1]] { assert!(CounterMutation::decode_op(&bytes).is_err()); }
+        for bytes in [vec![], vec![255], vec![1, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1]] {
+            assert!(CounterMutation::decode_op(&bytes).is_err());
+        }
     }
 
     #[test]

@@ -52,7 +52,7 @@ pub use navigator::{NOTE_PLAY_BODY_NAVIGATOR, NOTE_PLAY_WINDOW_NAVIGATOR};
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
-pub async fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
+pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
     let pack = <NoteSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("note document spr encode is infallible for a fresh, edit-free envelope");
@@ -63,19 +63,19 @@ pub async fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::
 //#region 🔖️Utilities
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`☑️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub async fn note_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+pub fn note_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: NOTE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/keybound vocabulary
 /// dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
-async fn note_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
+fn note_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()`/
 /// utility bar).
-async fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 //#endregion 🔖️Utilities
@@ -100,8 +100,8 @@ pub struct NoteDispatchCtx {
 /// 🌳️ `blocks` domain topology from the document's own Group nesting — row-id-prefixed ids (matching
 /// the document panel tree's own item ids), so `validate_state` prunes deleted blocks and
 /// range/transitive selection walk the real tree structure.
-async fn note_blocks_topology(document: &NoteSnapshot) -> DomainTopology {
-    async fn visit(blocks: &[NoteBlockNode], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
+fn note_blocks_topology(document: &NoteSnapshot) -> DomainTopology {
+    fn visit(blocks: &[NoteBlockNode], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         for block in blocks {
             let id = crate::artifacts::note::schema::block_tree_row_id(block);
             out.push(TopologyNode { id: id.clone(), granularity: "block".into(), parent: parent.map(str::to_string) });
@@ -217,8 +217,8 @@ impl ArtifactEditor for NotePlayApp {
         crate::editor::note::retained::register(registry)
     }
 
-    async fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        crate::editor::note::retained::build(request).await
+    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        crate::editor::note::retained::build(request)
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -229,22 +229,22 @@ impl ArtifactEditor for NotePlayApp {
         Some(crate::editor::note::retained::config_preparation_factory())
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::note::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> NoteSnapshot {
+    fn initial_snapshot() -> NoteSnapshot {
         empty_note_snapshot()
     }
 
     /// 🏷️ Maps each `NoteCommand` variant back to the action id it was declared under in
     /// `create_note_app` — used by `VcsArtifactApp` for command-log labeling and the registry's
     /// View/Shell kind-discipline check.
-    async fn command_id(command: &NoteCommand) -> &'static str {
+    fn command_id(command: &NoteCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &NoteCommand,
         doc: &ArtifactView<'_, NoteSnapshot>,
         cfg: &ConfigView<'_, NoteConfig>,
@@ -259,13 +259,13 @@ impl ArtifactEditor for NotePlayApp {
 
     /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own Group nesting — see
     /// `note_blocks_topology`'s doc comment.
-    async fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(NOTE_INTERACTION_BLOCKS.to_string(), note_blocks_topology(doc.snapshot));
         InteractionTopology { domains }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = note_play_labels(config);
@@ -279,12 +279,12 @@ impl ArtifactEditor for NotePlayApp {
         }
     }
 
-    async fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(&config.active_utility_id))])
     }
 
-    async fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = note_play_labels(config);
         HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::window_measures(doc.snapshot, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::window_measures(doc.snapshot, &config.camera, labels))])
@@ -506,25 +506,25 @@ pub(crate) mod testkit {
     /// convention — this tiny local wrapper adapts it back into the `App { definition, examples }`
     /// shape that fn still expects (mirrors trinity/jack's `trinity_jack_manifest_for_testkit`, the
     /// first real W2 packet to hit this exact gap).
-    async fn note_manifest_for_testkit() -> App {
+    fn note_manifest_for_testkit() -> App {
         App { definition: create_note_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn note_app() -> NoteApp {
+    pub fn note_app() -> NoteApp {
         new_app::<EditorApp<NotePlayApp>>()
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn note_app_with_registry() -> NoteApp {
+    pub fn note_app_with_registry() -> NoteApp {
         new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut NoteApp, command: NoteCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut NoteApp, command: NoteCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut NoteApp, body_key: &str) -> String {
+    pub fn render(app: &mut NoteApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
@@ -534,7 +534,7 @@ pub(crate) mod testkit {
     /// select against). `ids` are raw block ids, converted to the row-id-prefixed `InteractionTarget`
     /// id the document panel tree/`interaction_topology` both use (see `note_blocks_topology`'s doc
     /// comment).
-    pub async fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
+    pub fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "block", "id": format!("note-play-block:{id}") })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
         app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
@@ -573,7 +573,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<NoteCommand> {
+    pub(super) fn every_command() -> Vec<NoteCommand> {
         vec![
             NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: Some(true) }),
             NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 16.0 }),

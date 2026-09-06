@@ -6,7 +6,7 @@ use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::fi
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::DeleteNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
+pub fn inverse(payload: &super::DeleteNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
     match find_board_node(base, &payload.node_id) {
         Some(node) => vec![crate::artifacts::wires::mutations::create_node::create_node(node.clone())],
         None => Vec::new(),

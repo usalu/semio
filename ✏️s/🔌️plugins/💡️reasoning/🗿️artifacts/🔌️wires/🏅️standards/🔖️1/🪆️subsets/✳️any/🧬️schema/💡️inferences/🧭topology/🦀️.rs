@@ -29,7 +29,7 @@ impl Default for WiresTopology {
 }
 
 /// 🔍️ Union-find root lookup with no path compression (pilot-scale graphs only).
-async fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
+fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
     let mut root = id.to_string();
     while let Some(next) = parent.get(&root) {
         if next == &root {
@@ -44,7 +44,7 @@ async fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
 /// board connects node ids directly, no ports) and folds them through a union-find — an edge
 /// whose endpoints already share a root closes a cycle; `component_count` is the final number of
 /// distinct roots among every counted node.
-pub async fn compute_wires_topology(board_fixture: &DslValue) -> WiresTopology {
+pub fn compute_wires_topology(board_fixture: &DslValue) -> WiresTopology {
     let ids: BTreeSet<String> = board_fixture.get("nodes").and_then(DslValue::as_array).map(|items| items.iter().filter_map(|item| item.get("id").and_then(DslValue::as_str)).map(str::to_string).collect()).unwrap_or_default();
 
     let edges: Vec<(String, String)> = board_fixture
@@ -89,7 +89,7 @@ pub async fn compute_wires_topology(board_fixture: &DslValue) -> WiresTopology {
 mod tests {
     use super::*;
 
-    async fn board(nodes: &[&str], edges: &[(&str, &str)]) -> DslValue {
+    fn board(nodes: &[&str], edges: &[(&str, &str)]) -> DslValue {
         DslValue::object([
             ("nodes".into(), DslValue::Array(nodes.iter().map(|id| DslValue::object([("id".into(), DslValue::String((*id).into()))])).collect())),
             ("edges".into(), DslValue::Array(edges.iter().map(|(source, target)| DslValue::object([("source".into(), DslValue::String((*source).into())), ("target".into(), DslValue::String((*target).into()))])).collect())),

@@ -18,7 +18,7 @@ pub struct AddRelationship {
 /// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
 /// the newly created edge is selected via a requested `interactionSelect` effect instead of a
 /// `WiresConfigMutation::SetSelection`.
-pub async fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
+pub fn handle(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "owns" } else { payload.kind.as_str() };
     let edge_id = format!("edge-{}", fixture_edges(&crate::artifacts::wires::wires_working_board(document)).len() + 1);

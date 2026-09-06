@@ -18,23 +18,23 @@ pub struct ChangeGridOpacity {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_grid_opacity(new_opacity: Option<f64>) -> NoteMutation {
+pub fn change_grid_opacity(new_opacity: Option<f64>) -> NoteMutation {
     NoteMutation::ChangeGridOpacity(ChangeGridOpacity { new_opacity })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridOpacity {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-opacity", kind: "change-grid-opacity", record: "ChangedGridOpacity" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change grid opacity to {:?}", self.new_opacity)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

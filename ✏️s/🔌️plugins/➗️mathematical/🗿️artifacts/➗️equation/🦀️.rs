@@ -380,7 +380,7 @@ pub fn equation_snapshot_from_fixture(fixture: EquationFixture) -> EquationSnaps
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::equation::create_equation_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.equation".into(),
         name: "Equation".into(),
@@ -409,7 +409,7 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// execution — built once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't
 /// `const fn`, mirroring note's `pilot_languages()` convention.
 #[allow(dead_code)]
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -476,7 +476,7 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// from this file's own `.setup()`: it registers the `EquationPlayApp` CONFIG/PRESENCE schema, an
 /// app-scope concern `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
 /// `register_app_schema_descriptor` is not in the §6 artifact-scoped set.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.mathematical.equation.standard.v1", "standard", "1", &[], None),
@@ -527,7 +527,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// deleted repo-wide only in W6); wiring them into this field too is real follow-up work, not
 /// required for the tree to register or for any law to hold (mirrors `🎬️sequence`'s and the stdio
 /// pilot's own documented deviation).
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.mathematical.equation").expect("canonical mathematical.equation kind"), localization: &[], standards: vec![crate::artifacts::equation::standards::v1::standard()] }
@@ -545,7 +545,7 @@ mod tests {
         EquationWorkingScene { graph, geometry: EquationGeometry::default() }
     }
 
-    async fn owned_snapshot(directed: bool) -> EquationSnapshot {
+    fn owned_snapshot(directed: bool) -> EquationSnapshot {
         let scene = scene(directed);
         equation_snapshot_with_state(scene.graph, scene.geometry)
     }

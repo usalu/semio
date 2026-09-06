@@ -176,6 +176,18 @@ pub fn build_catalog() -> Catalog {
         compile(&gateway_only, semio_framework::Locale::En, semio_framework::Terminology::Native).expect("core gateway capabilities alone never collide with themselves")
     })
 }
+
+/// 🔐 Compiles a capability catalog from descriptors already verified by an external authority.
+/// Unlike installed discovery, this function never reads a registry or descriptor path.
+pub(crate) fn catalog_from_descriptors(descriptors: Vec<semio_framework::PackageDescriptor>) -> Result<Catalog, GatewayError> {
+    let source = CatalogSource { descriptors, os_commands: Vec::new(), shell: Vec::new(), gateway: core_tool_capabilities() };
+    compile(&source, semio_framework::Locale::En, semio_framework::Terminology::Native)
+        .map_err(|error| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("authenticated Hub descriptor catalog did not compile: {error}")).retryable())
+}
+
+fn gateway_only_catalog() -> std::sync::Arc<Catalog> {
+    std::sync::Arc::new(catalog_from_descriptors(Vec::new()).expect("core gateway capabilities alone never collide with themselves"))
+}
 //#endregion 🔖️Catalog
 
 //#region 🔖️Tools
@@ -604,17 +616,79 @@ pub fn build_server() -> McpServer {
 /// callers in this same in-flight packet's own tests (`P6-actions-policy`) this packet must not
 /// disturb mid-flight.
 pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<ArtifactChannels>, bridge: Option<BridgeSlot>) -> McpServer {
-    let catalog = std::sync::Arc::new(build_catalog());
+    let catalog = workspace.discovery_catalog().unwrap_or_else(|_| gateway_only_catalog());
     let handles = std::sync::Arc::new(HandleTable::new());
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
-    let mut tools = build_tool_registry(catalog.clone(), actions, principal.clone(), Some(workspace.clone()), bridge.clone());
-    let context_tool = tool_from_capability(catalog.get("context.resolve").expect("context.resolve compiled"), "context_resolve");
-    let (workspace_for_context, principal_id) = (workspace.clone(), principal.id.clone());
-    registry_override_context_resolve(&mut tools, context_tool, workspace_for_context, principal_id);
+    let tools = WorkspaceToolRegistry { workspace: workspace.clone(), actions, principal, bridge: bridge.clone() };
     let resources = WorkspaceResourceRegistry::with_workspace(catalog, workspace.clone()).with_bridge(bridge);
     McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::WorkspaceArc(workspace)))
+}
+
+/// 🔄 Rebuilds the discovery projection for every list/call observation. A Hub binding that is
+/// refreshing or revoked gets only gateway-owned tools; installed plugin descriptors are never a
+/// fallback. Folder workspaces retain their installed catalog.
+struct WorkspaceToolRegistry {
+    workspace: std::sync::Arc<HeadlessWorkspace>,
+    actions: std::sync::Arc<ActionAdapter>,
+    principal: AgentPrincipal,
+    bridge: Option<BridgeSlot>,
+}
+
+impl WorkspaceToolRegistry {
+    fn current(&self) -> InMemoryToolRegistry {
+        let catalog = self.workspace.discovery_catalog().unwrap_or_else(|_| gateway_only_catalog());
+        let mut tools = build_tool_registry(catalog.clone(), self.actions.clone(), self.principal.clone(), Some(self.workspace.clone()), self.bridge.clone());
+        let context_tool = tool_from_capability(catalog.get("context.resolve").expect("context.resolve compiled"), "context_resolve");
+        registry_override_context_resolve(&mut tools, context_tool, self.workspace.clone(), self.principal.id.clone());
+        tools
+    }
+}
+
+impl ToolRegistry for WorkspaceToolRegistry {
+    fn list(&self) -> Vec<Tool> {
+        let mut tools = self.current().list();
+        if let Some(selection) = workspace_tool_catalog_meta(&self.workspace) {
+            for tool in &mut tools {
+                if matches!(tool.name.as_str(), "capabilities_search" | "capabilities_describe" | "inference_list" | "inference_get") {
+                    tool.meta = Some(selection.clone());
+                }
+            }
+        }
+        tools
+    }
+
+    fn call(&self, name: &str, arguments: serde_json::Value) -> Result<CallToolResult, GatewayError> {
+        self.current().call(name, arguments)
+    }
+}
+
+fn workspace_tool_catalog_meta(workspace: &HeadlessWorkspace) -> Option<serde_json::Value> {
+    if !matches!(workspace.origin(), WorkspaceOrigin::Hub { .. }) {
+        return None;
+    }
+    let selected = workspace.verified_hub_catalog_selections().ok()?;
+    Some(serde_json::json!({
+        "semio": {
+            "hubSelectedPackages": selected.selections.iter().map(|selection| serde_json::json!({
+                "scope": {
+                    "spaceId": selection.scope.space_id,
+                    "documentId": selection.scope.document_id,
+                },
+                "descriptorDigestV1": selection.descriptor_digest_v1,
+                "catalogGenerationId": selection.lease.catalog.generation_id,
+                "package": {
+                    "pluginId": selection.lease.package.plugin_id,
+                    "packageId": selection.lease.package.package_id,
+                    "version": selection.lease.package.version,
+                    "componentSha256": selection.lease.package.component_sha256,
+                    "componentBlake3": selection.lease.package.component_blake3,
+                    "descriptorByteSha256": selection.lease.package.descriptor_byte_sha256,
+                }
+            })).collect::<Vec<_>>()
+        }
+    }))
 }
 
 /// 🔁️ `InMemoryToolRegistry::register` overwrites an existing entry by name (`HashMap::insert`) —
@@ -657,16 +731,16 @@ impl std::fmt::Debug for HubOptions {
 /// exclusive; neither given falls back to [`build_server_with_principal`] (`NullBackend` +
 /// `MockArtifactChannel`), which is the honest "bare" tier, not a failure.
 fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, bridge: Option<BridgeSlot>) -> Result<McpServer, GatewayError> {
-    let catalog = std::sync::Arc::new(build_catalog());
     let origin_label;
     let workspace = if let Some(folder) = folder {
         origin_label = format!("folder {folder}");
+        let catalog = std::sync::Arc::new(build_catalog());
         std::sync::Arc::new(HeadlessWorkspace::open_folder(std::path::PathBuf::from(folder), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
     } else if let Some(hub) = hub {
         origin_label = format!("hub {}/{}", hub.base_url, hub.space_id);
         let credential = semio_framework_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
             .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "hub workspace requires a protected process-entry MCP credential"))?;
-        std::sync::Arc::new(HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential, principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
+        std::sync::Arc::new(HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential, principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect())?)
     } else {
         return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), bridge));
     };

@@ -20,23 +20,23 @@ pub struct ChangeBlockLocked {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_block_locked(id: String, new_locked: bool) -> NoteMutation {
+pub fn change_block_locked(id: String, new_locked: bool) -> NoteMutation {
     NoteMutation::ChangeBlockLocked(ChangeBlockLocked { id, new_locked })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockLocked {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-locked", kind: "change-block-locked", record: "ChangedBlockLocked" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change block \"{}\" locked to {}", self.id, self.new_locked)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

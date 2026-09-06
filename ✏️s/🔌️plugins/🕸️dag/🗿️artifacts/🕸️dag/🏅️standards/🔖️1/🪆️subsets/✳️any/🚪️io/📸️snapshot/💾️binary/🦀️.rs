@@ -15,32 +15,32 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `DagSnapshot` to its binary pack form.
-pub async fn encode(document: &DagSnapshot) -> Vec<u8> {
+pub fn encode(document: &DagSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `DagSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<DagSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<DagSnapshot, PackError> {
     <DagSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🔖️BinaryPrimitives
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-async fn encode_dag_snapshot_binary(s: &DagSnapshot) -> Vec<u8> {
+fn encode_dag_snapshot_binary(s: &DagSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let scene = crate::artifacts::dag::dag_working_scene(s);
     let mut out = Vec::new();
@@ -50,7 +50,7 @@ async fn encode_dag_snapshot_binary(s: &DagSnapshot) -> Vec<u8> {
     write_str_lp(&mut out, &dsl::json::to_json_string(&scene.edges));
     out
 }
-async fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
+fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -67,13 +67,13 @@ async fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String>
 
 //#region 🔖️HandcraftedArtifactPack
 impl store::ArtifactPack for DagSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_dag_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

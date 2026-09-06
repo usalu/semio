@@ -125,12 +125,12 @@ pub type IntentExchange = fn(UiIntent) -> Pin<Box<dyn Future<Output = KernelOutc
 // "async at boundaries only" rule), never inside a frame transaction.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn default_intent_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome> + Send>> {
-    Box::pin(async move { KernelOutcome { surface: intent.surface.0, detail: Box::new(()) } })
+    Box::pin(async move { KernelOutcome { surface: intent.surface.0.as_str().to_string(), detail: Box::new(()) } })
 }
 
 #[cfg(target_arch = "wasm32")]
 pub fn default_intent_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome>>> {
-    Box::pin(async move { KernelOutcome { surface: intent.surface.0, detail: Box::new(()) } })
+    Box::pin(async move { KernelOutcome { surface: intent.surface.0.as_str().to_string(), detail: Box::new(()) } })
 }
 
 /// 🚀️ The one [`KernelSeam`] impl (U3: no `dyn`, and — per this file's own docstring — no cfg pair

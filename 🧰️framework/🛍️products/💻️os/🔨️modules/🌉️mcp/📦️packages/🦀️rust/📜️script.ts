@@ -3,6 +3,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
+import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
 import {
   BundleScript,
@@ -124,7 +125,8 @@ class InferenceDiscoveryOracleScript extends BundleScript {
       if (segments.length !== 3 || segments[0] !== "s" || segments[1] !== identity.pluginId || kinds.has(artifact.kind)) throw new Error("GIS artifact identity must have one exact plugin owner");
       kinds.add(artifact.kind);
       if (artifact.nativeDialect !== `${artifact.kind}@1/*` || artifact.documentSchema !== (segments[2] === "gismap" ? "gis.map" : "gis.terrain")) throw new Error("GIS native identity and payload schema were conflated");
-      if (artifact.extension !== segments[2] || artifact.codecExtension !== `${Buffer.byteLength(artifact.documentSchema, "utf8")}:${artifact.documentSchema}:${artifact.extension}`) throw new Error("GIS codec extension must bind its exact payload schema");
+      if (artifact.extension !== segments[2] || artifact.codecExtension !== `${Buffer.byteLength(artifact.documentSchema, "utf8")}:${artifact.documentSchema}:${artifact.extension}`)
+        throw new Error("GIS codec extension must bind its exact payload schema");
     }
     for (const kind of identity.hostileKinds) {
       const candidate = structuredClone(identity);
@@ -152,14 +154,42 @@ class InferenceDiscoveryOracleScript extends BundleScript {
     for (const feature of [...control.snapshot.positions, ...control.snapshot.routes, ...control.snapshot.regions]) scan(feature.data);
     checkpoints.push(work);
     deepStrictEqual(checkpoints, control.checkpoints);
-    deepStrictEqual({ positionCount: control.snapshot.positions.length, routeCount: control.snapshot.routes.length, regionCount: control.snapshot.regions.length, bounds: {
-      lonMin: Math.min(...coordinates.map(([lon]) => lon!)), lonMax: Math.max(...coordinates.map(([lon]) => lon!)), latMin: Math.min(...coordinates.map(([, lat]) => lat!)), latMax: Math.max(...coordinates.map(([, lat]) => lat!)),
-    } }, control.expected);
+    deepStrictEqual(
+      {
+        positionCount: control.snapshot.positions.length,
+        routeCount: control.snapshot.routes.length,
+        regionCount: control.snapshot.regions.length,
+        bounds: {
+          lonMin: Math.min(...coordinates.map(([lon]) => lon!)),
+          lonMax: Math.max(...coordinates.map(([lon]) => lon!)),
+          latMin: Math.min(...coordinates.map(([, lat]) => lat!)),
+          latMax: Math.max(...coordinates.map(([, lat]) => lat!)),
+        },
+      },
+      control.expected,
+    );
     for (const interruption of control.interruptions) {
       if (checkpoints.indexOf(interruption.at) + 1 !== interruption.calls) throw new Error(`control does not stop at first interruption ${interruption.name}`);
     }
     const { lonMin, lonMax, latMin, latMax } = control.expected.bounds;
-    deepStrictEqual(control.proposal, { CreateRegion: { index: control.snapshot.regions.length, item: { id: `inference-${control.proposalJobId}`, data: { kind: "inference-bounds", ring: [[lonMin, latMin], [lonMax, latMin], [lonMax, latMax], [lonMin, latMax], [lonMin, latMin]] } } } });
+    deepStrictEqual(control.proposal, {
+      CreateRegion: {
+        index: control.snapshot.regions.length,
+        item: {
+          id: `inference-${control.proposalJobId}`,
+          data: {
+            kind: "inference-bounds",
+            ring: [
+              [lonMin, latMin],
+              [lonMax, latMin],
+              [lonMax, latMax],
+              [lonMin, latMax],
+              [lonMin, latMin],
+            ],
+          },
+        },
+      },
+    });
     console.log(`gis-inference-control-oracle: checkpoints=${checkpoints.length} interruptions=${control.interruptions.length} typed-proposal=1; no hub execution claim`);
     const fixtureRoot = join(this.root, "..", "..", "💡️inference", "🧪️fixtures", "🗺️gis-discovery");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
@@ -194,12 +224,154 @@ class InferenceDiscoveryCheckScript extends BundleScript {
     ];
     for (const packet of packets) {
       const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", packet.suffix, "--", "--list"], { cwd: packet.root, budgetMs: buildBudgetMs() });
-      const matches = listed.stdout.split("\n").filter((line) => line.endsWith(": test")).map((line) => line.slice(0, -6)).filter((name) => name.endsWith(packet.suffix));
+      const matches = listed.stdout
+        .split("\n")
+        .filter((line) => line.endsWith(": test"))
+        .map((line) => line.slice(0, -6))
+        .filter((name) => name.endsWith(packet.suffix));
       if (listed.status !== 0 || matches.length !== 1) throw new Error(`GIS discovery exact-one preflight failed ${packet.suffix}: status=${listed.status} matches=${matches.length} diagnostic=${listed.stderr.slice(-4000)}`);
       runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], packet.root);
     }
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features"], this.root);
     console.log("gis-inference-discovery-check: committed descriptor, exact MCP tool trace, all-feature compile; no execution claim");
+  }
+}
+
+/** 🔐 Independently validates the fail-closed Hub-selected discovery contract. */
+class HubLiveCatalogOracleScript extends BundleScript {
+  run(): void {
+    const fixtureRoot = join(this.root, "..", "..", "🏠️workspace", "🧫️fixtures", "🔐️hub-live-catalog");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+    if (!validate(fixture)) throw new Error("invalid Hub live-catalog fixture: " + JSON.stringify(validate.errors));
+    const project = (binding: string): string[] => (binding === "ready" ? [fixture.selection.package.pluginId] : []);
+    for (const state of fixture.states) {
+      deepStrictEqual(project(state.binding), state.selectedPlugins);
+      if (state.selectedPlugins.includes(fixture.localOnly.pluginId) || state.localFallback) throw new Error(state.binding + " admitted installed fallback");
+    }
+    const matches = (candidate: any): boolean => {
+      const packageIdentity = candidate.package;
+      return (
+        candidate.scope.spaceId === fixture.selection.scope.spaceId &&
+        candidate.scope.documentId === fixture.selection.scope.documentId &&
+        candidate.descriptorDigestV1 === fixture.selection.descriptorDigestV1 &&
+        packageIdentity.pluginId === fixture.selection.package.pluginId &&
+        packageIdentity.packageId === fixture.selection.package.packageId &&
+        packageIdentity.version === fixture.selection.package.version &&
+        packageIdentity.componentSha256 === fixture.selection.package.componentSha256 &&
+        packageIdentity.descriptorByteSha256 === fixture.selection.package.descriptorByteSha256
+      );
+    };
+    if (!matches(fixture.selection)) throw new Error("positive Hub selection did not match itself");
+    for (const hostile of fixture.hostile) {
+      const candidate = structuredClone(fixture.selection);
+      if (hostile.field === "scope" || hostile.field === "descriptorDigestV1") candidate[hostile.field] = hostile.value;
+      else candidate.package[hostile.field] = hostile.value;
+      if (matches(candidate)) throw new Error("Hub live-catalog oracle admitted " + hostile.name);
+    }
+    console.log("hub-live-catalog-oracle: AJV=1 states=" + fixture.states.length + " hostile=" + fixture.hostile.length + " local-fallback=denied");
+  }
+}
+
+/** 🧪 Runs source/neutral checks without claiming native transport execution. */
+class HubLiveCatalogCheckScript extends BundleScript {
+  run(): void {
+    runCmd("bun", ["./📜️script.ts", "hub-live-catalog-oracle"], { cwd: this.root, budgetMs: 60_000 });
+    const workspace = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🦀️.rs"), "utf8");
+    const remote = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), "utf8");
+    const inference = readFileSync(join(this.root, "..", "..", "💡️inference", "🦀️.rs"), "utf8");
+    const root = readFileSync(join(this.root, "..", "..", "🦀️.rs"), "utf8");
+    for (const marker of ["verified_hub_catalog_selections", "discovery_descriptors", "ready_catalog_snapshot"]) if (!workspace.includes(marker)) throw new Error("workspace live-catalog source missing " + marker);
+    for (const marker of ["document_execution_target_manifest", "document_execution_target_descriptor", "authority_generation", "descriptor_byte_sha256"]) if (!remote.includes(marker)) throw new Error("remote live-catalog source missing " + marker);
+    const inferenceDiscovery = inference.slice(inference.indexOf("pub fn declared_inferences_for_workspace"), inference.indexOf("fn resolve_artifact_schema"));
+    if (inferenceDiscovery.includes("find_plugin_entry") || inferenceDiscovery.includes("load_plugin_registry") || !inferenceDiscovery.includes("workspace.discovery_descriptors()"))
+      throw new Error("Hub inference discovery still owns a registry fallback");
+    if (!root.includes("struct WorkspaceToolRegistry") || !root.includes("workspace.discovery_catalog()") || !root.includes("workspace_tool_catalog_meta") || !root.includes("hubSelectedPackages"))
+      throw new Error("tools/list is not projected from live workspace discovery");
+    console.log("hub-live-catalog-source: workspace=3 remote=4 inference=no-registry-fallback tools=live-selection-projection");
+  }
+}
+
+/** 🦀 Runs the exact native Hub selection/revocation laws. */
+class HubLiveCatalogNativeCheckScript extends BundleScript {
+  run(): void {
+    const suffixes = ["authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revocation_removes_it", "authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallback"];
+    for (const suffix of suffixes) {
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      const matches = listed.stdout
+        .split("\n")
+        .filter((line) => line.endsWith(": test"))
+        .map((line) => line.slice(0, -6))
+        .filter((name) => name.endsWith(suffix));
+      if (listed.status !== 0 || matches.length !== 1) throw new Error("Hub live-catalog exact-one preflight failed " + suffix + ": status=" + listed.status + " matches=" + matches.length + " diagnostic=" + listed.stderr.slice(-16_000));
+      const executed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      if (executed.status !== 0) throw new Error("Hub live-catalog exact law failed " + matches[0] + ": status=" + executed.status + " stdout=" + executed.stdout.slice(-8_000) + " stderr=" + executed.stderr.slice(-8_000));
+    }
+    console.log("hub-live-catalog-native: laws=" + suffixes.length + " authenticated-selection=1 revoked-fallback=denied");
+  }
+}
+
+class CanonicalCheckpointResourceOracleScript extends BundleScript {
+  run(): void {
+    const fixtureRoot = join(this.root, "..", "..", "🏠️workspace", "🧫️fixtures", "🔐️canonical-checkpoint-resource");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+    if (!validate(fixture)) throw new Error("invalid canonical checkpoint resource fixture: " + JSON.stringify(validate.errors));
+    const digest = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
+    const pack = Buffer.from(fixture.resource.value.pack.base64, "base64");
+    const spr = Buffer.from(fixture.resource.value.spr.base64, "base64");
+    deepStrictEqual(
+      {
+        pack: { byteLength: pack.byteLength, sha256: digest(pack), base64: pack.toString("base64") },
+        spr: { byteLength: spr.byteLength, sha256: digest(spr), base64: spr.toString("base64") },
+      },
+      { pack: fixture.resource.value.pack, spr: fixture.resource.value.spr },
+    );
+    const scopedUri = (spaceId: string, documentId: string): string => `semio://workspace/scopes/${encodeURIComponent(spaceId)}/${encodeURIComponent(documentId)}/checkpoint`;
+    if (scopedUri(fixture.resource.value.scope.spaceId, fixture.resource.value.scope.documentId) !== fixture.resource.uri) throw new Error("checkpoint URI is not exact percent-encoded scope");
+    const matchesGis = (candidate: { artifactKind: string; artifactSchema: string }): boolean => candidate.artifactKind === fixture.selector.artifactKind && candidate.artifactSchema === fixture.selector.artifactSchema;
+    if (!matchesGis(fixture.selector) || fixture.selector.hostile.some(matchesGis)) throw new Error("GIS kind/schema selector admitted a partial identity");
+    const rawLength = pack.byteLength + spr.byteLength;
+    const base64Length = (length: number): number => Math.ceil(length / 3) * 4;
+    if (rawLength > fixture.limits.pairBytes || base64Length(pack.byteLength) + base64Length(spr.byteLength) + fixture.limits.metadataBytes > fixture.limits.textBytes)
+      throw new Error("fixture violates checkpoint resource budgets");
+    console.log(`canonical-checkpoint-resource-oracle: AJV=1 parts=2 hostile=${fixture.hostile.length} lifecycle=${fixture.lifecycle.length} selector=${fixture.selector.hostile.length}`);
+  }
+}
+
+class CanonicalCheckpointResourceCheckScript extends BundleScript {
+  run(): void {
+    runCmd("bun", ["./📜️script.ts", "canonical-checkpoint-resource-oracle"], { cwd: this.root, budgetMs: 60_000 });
+    const workspace = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🦀️.rs"), "utf8");
+    const remote = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), "utf8");
+    const pair = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🧩️pair", "🦀️.rs"), "utf8");
+    const context = readFileSync(join(this.root, "..", "..", "🧠️context", "🦀️.rs"), "utf8");
+    for (const marker of ["checkpoint_resource_uri", "parse_checkpoint_resource_uri", "read_canonical_checkpoint", "CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES"])
+      if (!remote.includes(marker)) throw new Error("remote checkpoint source missing " + marker);
+    for (const marker of ["project_mounted_canonical_pair", "project_mounted", "validate_mount_current"])
+      if (!pair.includes(marker)) throw new Error("retained pair projection missing " + marker);
+    if (!workspace.includes("parse_checkpoint_resource_uri") || !workspace.includes("checkpoint_resource_uri") || !workspace.includes("is_gis_map_descriptor"))
+      throw new Error("workspace checkpoint routing or exact GIS selector is missing");
+    if (!context.includes('uri.starts_with("semio://workspace/scopes/")')) throw new Error("workspace resource registry rejects exact scoped checkpoint URIs");
+    console.log("canonical-checkpoint-resource-source: uri=scope-exact retained-pair=private final-fence=2 raw-limit=4MiB text-limit=6MiB GIS-selector=exact");
+  }
+}
+
+class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
+  run(): void {
+    const suffixes = ["authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope", "gis_map_inference_selector_requires_the_exact_kind_and_schema_pair"];
+    for (const suffix of suffixes) {
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      const matches = listed.stdout
+        .split("\n")
+        .filter((line) => line.endsWith(": test"))
+        .map((line) => line.slice(0, -6))
+        .filter((name) => name.endsWith(suffix));
+      if (listed.status !== 0 || matches.length !== 1) throw new Error(`canonical checkpoint resource exact-one preflight failed ${suffix}: status=${listed.status} matches=${matches.length} diagnostic=${listed.stderr.slice(-16_000)}`);
+      const executed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      if (executed.status !== 0) throw new Error(`canonical checkpoint resource exact law failed ${matches[0]}: status=${executed.status} stdout=${executed.stdout.slice(-8_000)} stderr=${executed.stderr.slice(-8_000)}`);
+    }
+    console.log(`canonical-checkpoint-resource-native: laws=${suffixes.length} retained-pair=1 GIS-selector=exact`);
   }
 }
 
@@ -213,6 +385,19 @@ class DevScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("check", CheckScript).register("test", TestScript).register("canonical-pair-check", CanonicalPairCheckScript).register("inference-discovery-oracle", InferenceDiscoveryOracleScript).register("inference-discovery-check", InferenceDiscoveryCheckScript).register("dev", DevScript);
+const router = new ScriptRouter(import.meta.dir)
+  .register("build", BuildScript)
+  .register("check", CheckScript)
+  .register("test", TestScript)
+  .register("canonical-pair-check", CanonicalPairCheckScript)
+  .register("inference-discovery-oracle", InferenceDiscoveryOracleScript)
+  .register("inference-discovery-check", InferenceDiscoveryCheckScript)
+  .register("hub-live-catalog-oracle", HubLiveCatalogOracleScript)
+  .register("hub-live-catalog-check", HubLiveCatalogCheckScript)
+  .register("hub-live-catalog-native-check", HubLiveCatalogNativeCheckScript)
+  .register("canonical-checkpoint-resource-oracle", CanonicalCheckpointResourceOracleScript)
+  .register("canonical-checkpoint-resource-check", CanonicalCheckpointResourceCheckScript)
+  .register("canonical-checkpoint-resource-native-check", CanonicalCheckpointResourceNativeCheckScript)
+  .register("dev", DevScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });

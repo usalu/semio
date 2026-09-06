@@ -180,6 +180,51 @@ class ArtifactAdmissionCheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("test-codec-send-source", CodecSendSourceScript).register("artifact-admission-check", ArtifactAdmissionCheckScript);
+
+/** 🪪️ Validates neutral admission laws with independent AJV predicates and pins the real reducer. */
+export function guestLifecycleOracle(): number {
+  const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/🚪️lifetime/🧫️fixture/🧵️production.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../⚛️reactor/🚪️lifetime/🧬️schema/🧵️production.json", import.meta.url), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  const validate = ajv.compile(schema);
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  const admit = ajv.compile({ type: "object", required: ["exact", "live", "capacity"], properties: { exact: { const: true }, live: { const: true }, capacity: { const: true } } });
+  for (const row of fixture.cases) {
+    assert.equal(row.exact && row.live && row.capacity, row.accepted, row.id);
+    assert.equal(admit(row), row.accepted, row.id);
+  }
+  const reactor = readFileSync(new URL("../../⚛️reactor/🦀️.rs", import.meta.url), "utf8");
+  assert(reactor.includes("pub use turn::poll_kernel;"), "production reducer must be native-testable");
+  const turn = readFileSync(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url), "utf8");
+  assert(!turn.includes("plugin_destroy_app(runtime"), "exact captured close must not admit twice");
+  for (const token of ["guest_lifetimes", "stage_ack", "finish_turn", "record_close_admission"]) assert(turn.includes(token), token);
+  const owner = readFileSync(new URL("../../⚛️reactor/🚪️lifetime/🦀️.rs", import.meta.url), "utf8");
+  for (const token of ["PluginInstanceCloseLease<PA>", "lease.is_retired()", "release_reactor_close", "GuestLifecycleCell<NativeLifetimeOwner<PA>>"]) assert(owner.includes(token), token);
+  return fixture.cases.length;
+}
+
+class GuestLifecycleCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    assert(segments.every(segment => segment === "--native"), "guest-lifecycle-check accepts only --native");
+    console.log(`guest-lifecycle-oracle cases=${guestLifecycleOracle()}`);
+    if (!segments.includes("--native")) return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
+      groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, laws: [
+        "component::reactor::instance_lifetime::tests::guest_instance_lifecycle_ack_fault_keeps_exact_receipt_and_owner",
+        "component::reactor::instance_lifetime::tests::guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated_after_late_clock",
+        "component::reactor::instance_lifetime::tests::guest_instance_lifecycle_same_activation_reopen_rejects_old_authority",
+        "component::plugin_runtime::plugin_builder_contract_tests::reactor_native_lifecycle_retains_exact_close_until_ack",
+        "component::plugin_runtime::plugin_builder_contract_tests::reactor_native_lifecycle_rejects_foreign_and_colliding_owners",
+        "component::plugin_runtime::plugin_builder_contract_tests::reactor_native_lifecycle_output_failure_preserves_ack_and_owner"
+      ] }],
+      buildBudgetMs: 86_400_000, lawBudgetMs: 60_000,
+      progress(event) { console.log(`guest-lifecycle ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    console.log(`guest-lifecycle-receipts: ${JSON.stringify(receipts)}`);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("guest-lifecycle-check", GuestLifecycleCheckScript).register("check", CheckScript).register("test", TestScript).register("test-codec-send-source", CodecSendSourceScript).register("artifact-admission-check", ArtifactAdmissionCheckScript);
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
 //#endregion 🎯️Tasks

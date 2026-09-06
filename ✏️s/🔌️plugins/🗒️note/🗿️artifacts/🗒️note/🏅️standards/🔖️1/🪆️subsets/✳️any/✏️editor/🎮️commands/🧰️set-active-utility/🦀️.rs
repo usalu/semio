@@ -12,7 +12,7 @@ pub struct SetActiveUtility {
     pub utility_id: String,
 }
 
-pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::config(vec![NoteConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
 }
 

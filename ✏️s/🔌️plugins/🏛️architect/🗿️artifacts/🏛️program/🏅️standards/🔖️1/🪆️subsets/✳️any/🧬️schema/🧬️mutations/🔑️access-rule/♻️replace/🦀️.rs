@@ -19,16 +19,16 @@ pub struct ReplaceAccessRule {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceAccessRule {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "access-rule", kind: "replace-access-rule", record: "ReplacedAccessRule" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace access rule \"{}\"", self.access_rule.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.access_rule.header.id.0.clone()]
     }
 }

@@ -19,23 +19,23 @@ pub struct CreateNode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_node(node: DslValue) -> WiresMutation {
+pub fn create_node(node: DslValue) -> WiresMutation {
     WiresMutation::CreateNode(CreateNode { node })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for CreateNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    async fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
-        super::diff::diff(self, base).await
+    fn diff(&self, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+        super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
-        super::inverse::inverse(self, base).await
+    fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
+        super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add node \"{}\"", entity_id(&self.node, "id").unwrap_or("?"))
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         entity_id(&self.node, "id").map(|id| vec![id.to_string()]).unwrap_or_default()
     }
 }

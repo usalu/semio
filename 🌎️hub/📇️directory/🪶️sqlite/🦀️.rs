@@ -16,7 +16,8 @@ use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
     active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
-    directory_command_result_kind_from_str, directory_command_result_kind_str, validate_admin_operation_audit, validate_bounded_auth_text, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory, InviteCapability, NewDirectoryEvent,
+    directory_command_result_kind_from_str, directory_command_result_kind_str, validate_admin_operation_audit, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim,
+    validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory, InviteCapability, NewDirectoryEvent,
     ProjectionRebuildControl, SessionCapability, ShareCapability,
     InviteRedemptionPreflight, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES,
     UNCONTROLLED_PROJECTION_REBUILD,
@@ -218,6 +219,16 @@ CREATE TABLE IF NOT EXISTS hub_directory_command_receipt (
     completed_at INTEGER,
     PRIMARY KEY (actor_user_id, request_id)
 );
+CREATE TABLE IF NOT EXISTS hub_checkpoint_publication_receipt (
+    actor_user_id TEXT NOT NULL,
+    correlation_id TEXT NOT NULL CHECK (length(correlation_id) = 32),
+    command_sha256 TEXT NOT NULL CHECK (length(command_sha256) = 64),
+    disposition TEXT NOT NULL CHECK (disposition IN ('pending', 'completed')),
+    checkpoint_id BLOB CHECK (checkpoint_id IS NULL OR length(checkpoint_id) = 32),
+    claimed_at INTEGER NOT NULL,
+    completed_at INTEGER,
+    PRIMARY KEY (actor_user_id, correlation_id)
+);
 CREATE TABLE IF NOT EXISTS hub_directory_event (
     seq INTEGER PRIMARY KEY AUTOINCREMENT CHECK (seq <= 9007199254740991),
     id TEXT NOT NULL UNIQUE,
@@ -386,6 +397,24 @@ fn directory_command_receipt_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Di
     })
 }
 
+fn checkpoint_publication_receipt_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<CheckpointPublicationReceiptRecordV1> {
+    let disposition = match row.get::<_, String>(3)?.as_str() {
+        "pending" => CheckpointPublicationDispositionV1::Pending,
+        "completed" => CheckpointPublicationDispositionV1::Completed,
+        other => return Err(rusqlite::Error::FromSqlConversionFailure(3, rusqlite::types::Type::Text, std::io::Error::other(format!("unknown checkpoint publication disposition '{other}'")).into())),
+    };
+    let checkpoint_id = row.get::<_, Option<Vec<u8>>>(4)?.map(|bytes| bytes.try_into().map(ArtifactHash).map_err(|bytes: Vec<u8>| rusqlite::Error::FromSqlConversionFailure(4, rusqlite::types::Type::Blob, std::io::Error::other(format!("expected 32 bytes, got {}", bytes.len())).into()))).transpose()?;
+    Ok(CheckpointPublicationReceiptRecordV1 {
+        actor_user_id: row.get(0)?,
+        correlation_id: row.get(1)?,
+        command_sha256: row.get(2)?,
+        disposition,
+        checkpoint_id,
+        claimed_at: row.get(5)?,
+        completed_at: row.get(6)?,
+    })
+}
+
 fn admin_operation_audit_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<AdminOperationAuditRecord> {
     let sequence: i64 = row.get(0)?;
     let principal_generation: i64 = row.get(12)?;
@@ -464,6 +493,11 @@ impl SqliteDirectory {
     #[cfg(test)]
     pub(crate) fn clear_invite_projection_failure(&self) -> DirectoryResult<()> {
         self.lock()?.execute_batch("DROP TRIGGER hub_test_fail_invite_projection;").map_err(backend)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn install_invite_acceptance_marker_for_test(&self, invite_id: &str, event_id: &str) -> DirectoryResult<()> {
+        self.lock()?.execute("UPDATE hub_space_invite SET accepted_event_id = ?1 WHERE id = ?2", rusqlite::params![event_id, invite_id]).map(|_| ()).map_err(backend)
     }
 
     fn revoke_auth_sessions_matching(&self, predicate: &str, key: &str, subject_digest: Option<[u8; 32]>, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
@@ -1325,6 +1359,49 @@ impl HubDirectory for SqliteDirectory {
         Ok(())
     }
 
+    async fn claim_or_read_checkpoint_publication(&self, claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<CheckpointPublicationClaimV1> {
+        validate_checkpoint_publication_claim(claim)?;
+        let mut conn = self.lock()?;
+        let tx = conn.transaction().map_err(backend)?;
+        let existing = tx
+            .query_row(
+                "SELECT actor_user_id, correlation_id, command_sha256, disposition, checkpoint_id, claimed_at, completed_at FROM hub_checkpoint_publication_receipt WHERE actor_user_id = ?1 AND correlation_id = ?2",
+                rusqlite::params![claim.actor_user_id, claim.correlation_id],
+                checkpoint_publication_receipt_row,
+            )
+            .optional()
+            .map_err(backend)?;
+        if let Some(record) = existing {
+            tx.rollback().map_err(backend)?;
+            return Ok(if record.command_sha256 == claim.command_sha256 { CheckpointPublicationClaimV1::Existing(record) } else { CheckpointPublicationClaimV1::Conflict });
+        }
+        tx.execute(
+            "INSERT INTO hub_checkpoint_publication_receipt(actor_user_id, correlation_id, command_sha256, disposition, checkpoint_id, claimed_at, completed_at) VALUES (?1, ?2, ?3, 'pending', NULL, ?4, NULL)",
+            rusqlite::params![claim.actor_user_id, claim.correlation_id, claim.command_sha256, claim.claimed_at],
+        )
+        .map_err(backend)?;
+        tx.commit().map_err(backend)?;
+        Ok(CheckpointPublicationClaimV1::Claimed(CheckpointPublicationReceiptRecordV1 {
+            actor_user_id: claim.actor_user_id.clone(),
+            correlation_id: claim.correlation_id.clone(),
+            command_sha256: claim.command_sha256.clone(),
+            disposition: CheckpointPublicationDispositionV1::Pending,
+            checkpoint_id: None,
+            claimed_at: claim.claimed_at,
+            completed_at: None,
+        }))
+    }
+
+    async fn release_checkpoint_publication(&self, actor_user_id: &str, correlation_id: &str, command_sha256: &str) -> DirectoryResult<()> {
+        self.lock()?
+            .execute(
+                "DELETE FROM hub_checkpoint_publication_receipt WHERE actor_user_id = ?1 AND correlation_id = ?2 AND command_sha256 = ?3 AND disposition = 'pending'",
+                rusqlite::params![actor_user_id, correlation_id, command_sha256],
+            )
+            .map_err(backend)?;
+        Ok(())
+    }
+
     async fn admin_operation_audit_for_request(&self, request_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
         validate_bounded_auth_text(request_id, "admin request id", AUTH_TEXT_MAX_BYTES)?;
         let conn = self.lock()?;
@@ -1649,7 +1726,14 @@ impl HubDirectory for SqliteDirectory {
         Ok(reservation)
     }
 
-    async fn append_reserved_artifact_checkpoint(&self, event: Option<&NewDirectoryEvent>, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, now_ms: u64) -> DirectoryResult<Vec<DirectoryEvent>> {
+    async fn append_reserved_artifact_checkpoint(
+        &self,
+        event: Option<&NewDirectoryEvent>,
+        checkpoint: &ArtifactCheckpoint,
+        reservation: &ArtifactCasReservation,
+        completion: Option<&CheckpointPublicationCompletionV1>,
+        now_ms: u64,
+    ) -> DirectoryResult<Vec<DirectoryEvent>> {
         validate_artifact_cas_publication_v1(&reservation.plan, checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
         if let Some(event) = event {
             validate_verified_checkpoint_append(event, checkpoint)?;
@@ -1707,6 +1791,18 @@ impl HubDirectory for SqliteDirectory {
         )
         .map_err(backend)?;
         Self::cas_project_publish(&tx, reservation, generation)?;
+        if let Some(completion) = completion {
+            validate_checkpoint_publication_completion(completion)?;
+            let changed = tx
+                .execute(
+                    "UPDATE hub_checkpoint_publication_receipt SET disposition = 'completed', checkpoint_id = ?4, completed_at = ?5 WHERE actor_user_id = ?1 AND correlation_id = ?2 AND command_sha256 = ?3 AND disposition = 'pending'",
+                    rusqlite::params![completion.actor_user_id, completion.correlation_id, completion.command_sha256, completion.checkpoint_id.0.as_slice(), completion.completed_at],
+                )
+                .map_err(backend)?;
+            if changed != 1 {
+                return Err(DirectoryError::Conflict("checkpoint publication claim is missing, substituted, or already completed".into()));
+            }
+        }
         tx.commit().map_err(backend)?;
         Ok(vec![full])
     }

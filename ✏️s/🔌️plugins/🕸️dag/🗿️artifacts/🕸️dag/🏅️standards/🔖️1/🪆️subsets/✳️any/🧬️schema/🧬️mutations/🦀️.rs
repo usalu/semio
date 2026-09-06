@@ -127,14 +127,14 @@ pub fn seed_dag_working_scene_with(snapshot: &mut DagSnapshot, mutation: &DagMut
 //#endregion 🌉️ExternalCodecBridge
 
 /// ▶️ Applies `mutation` via its diff.
-pub async fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> protocol::MutationApplyResult<()> {
     use store::MutationDiff;
     let next = <DagMutation as protocol::Mutation<DagSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
     *snapshot = next;
     Ok(())
 }
 
-pub async fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
+pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
     <DagMutation as protocol::Mutation<DagSnapshot>>::inverse(mutation, snapshot)
 }
 
@@ -143,7 +143,7 @@ pub async fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation
 /// auto-reorganize) now go through instead of a snapshot swap. Doesn't detect node id renames
 /// (shows as a delete+create pair); `🎮️commands/➕️add-node::rename_dag_node` uses the dedicated
 /// `rename-node` mutation directly for that gesture instead of this generic differ.
-pub async fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<DagMutation> {
+pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<DagMutation> {
     let before_nodes = before.nodes();
     let after_nodes = after.nodes();
     let before_edges = before.edges();
@@ -231,7 +231,7 @@ mod tests {
         assert!(!manifest.contains("\"set-snapshot\"") && !manifest.contains("\"no-mutation\""), "whole-document replace is banned vocabulary here — the catalog must not smuggle it back in");
     }
 
-    async fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
+    fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
         let (forward, _messages) = apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(snapshot);
@@ -244,7 +244,7 @@ mod tests {
         forward
     }
 
-    async fn sample_node(id: &str, x: f64, y: f64) -> crate::artifacts::dag::DagNodeSpec {
+    fn sample_node(id: &str, x: f64, y: f64) -> crate::artifacts::dag::DagNodeSpec {
         crate::artifacts::dag::schema::default_node_for_kind("note", id, x, y)
     }
 

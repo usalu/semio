@@ -7,7 +7,7 @@ use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{f
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ConnectNodes, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
+pub fn diff(payload: &super::ConnectNodes, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
     if let Some(id) = entity_id(&payload.edge, "id") {
         if find_board_edge(base, id).is_some() {
             return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", id), [id.to_string()]);

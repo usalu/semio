@@ -16,7 +16,7 @@ pub const ARCHITECT_BODY_DOCUMENT: &str = "architect.document";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -36,7 +36,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// the active register is unrelated to entity selection) and sit in the SAME tree, unaffected —
 /// mirrors note's document panel (`action_rows` + bare `block_items` coexisting under one
 /// `.interaction_domain(...)?`).
-pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let summary = status_summary(program);
     let mut element_items = UiFixedList::default();
     for element in &program.elements {

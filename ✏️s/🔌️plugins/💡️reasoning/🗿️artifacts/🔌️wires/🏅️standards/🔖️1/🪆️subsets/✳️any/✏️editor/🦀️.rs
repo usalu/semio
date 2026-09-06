@@ -113,7 +113,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
 /// `🎮️commands/🧬️set-active-example::set_active_example` uses instead of a banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
-pub async fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
+pub fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
     let pack = <WiresSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("wires document spr encode is infallible for a fresh, edit-free envelope");
@@ -136,7 +136,7 @@ pub const WIRES_GRANULARITY_EDGE: &str = "edge";
 /// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` at `granularity` — shared by
 /// the canvas pointer/add commands (wrapped into a `Effect::DispatchAction`) and any document-tree
 /// row whose click should select a real canvas identity/relationship.
-pub async fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) -> Value {
+pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) -> Value {
     let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect();
     json!({ "domainId": WIRES_INTERACTION_GRAPH, "targets": serde_json::to_string(&targets).unwrap_or_default(), "merge": merge, "method": "pick" })
 }
@@ -146,7 +146,7 @@ pub async fn wires_select_action_args(ids: &[String], granularity: &str, merge: 
 /// `ArtifactApp::handle`, so a plain config mutation can no longer express a selection change; the app
 /// asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
-pub async fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Effect {
+pub fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Effect {
     Effect::DispatchAction { req: semio_framework_plugin::RequestId(112), action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(wires_select_action_args(ids, granularity, merge))), delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
@@ -453,16 +453,16 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::wires::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> WiresSnapshot {
+    fn initial_snapshot() -> WiresSnapshot {
         crate::artifacts::wires::empty_wires_snapshot()
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &WiresCommand) -> &'static str {
+    fn command_id(command: &WiresCommand) -> &'static str {
         command.command_id()
     }
 
@@ -470,7 +470,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)`
     /// signature is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    async fn handle(
+    fn handle(
         command: &WiresCommand,
         doc: &ArtifactView<'_, WiresSnapshot>,
         cfg: &ConfigView<'_, WiresConfig>,
@@ -484,7 +484,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::wires::terminology::WiresLabels>(&cfg.snapshot.locale);
         match body_key {
@@ -508,7 +508,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 /// silently lost. The subset's own `📚️examples/🎬️demo` facet is the documented replacement mechanism
 /// for the former; `metabolism_wires_example_snapshot()` itself still lives on and is exercised
 /// directly by this file's own tests below.
-pub async fn create_wires_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::wires::WIRES_DIALECT)
         .document(["semio", "reasoning", "mindmap", "wires"])
         .artifact_kind(crate::artifacts::wires::artifact_kind())
@@ -580,7 +580,7 @@ pub(crate) mod testkit {
     pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn new_app() -> WiresApp {
+    pub fn new_app() -> WiresApp {
         new_test_app::<EditorApp<ReasoningWiresPlayApp>>()
     }
 
@@ -589,18 +589,18 @@ pub(crate) mod testkit {
     /// unchanged for this ticket, while `create_wires_app` now returns `AppDefinition` — this tiny
     /// local wrapper bridges the two shapes with an empty `examples` list (dropped per `create_wires_app`'s
     /// own doc comment).
-    async fn wires_manifest_for_testkit() -> App {
+    fn wires_manifest_for_testkit() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
-    pub async fn app_with_registry() -> WiresApp {
+    pub fn app_with_registry() -> WiresApp {
         new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(wires_manifest_for_testkit)
     }
 
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
-    pub async fn metabolism_app() -> WiresApp {
+    pub fn metabolism_app() -> WiresApp {
         let mut app = new_app();
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
@@ -609,11 +609,11 @@ pub(crate) mod testkit {
         app
     }
 
-    pub async fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut WiresApp, body_key: &str) -> String {
+    pub fn render(app: &mut WiresApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -730,7 +730,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<WiresCommand> {
+    pub(super) fn every_command() -> Vec<WiresCommand> {
         vec![
             WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }),
             WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),

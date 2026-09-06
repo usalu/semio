@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   BrowserFrameTransport,
   FRAME_WORKER_BYTE_CAPACITY,
+  FRAME_WORKER_INTROSPECTION_CAPACITY,
   FRAME_WORKER_LOSSLESS_ITEM_CAPACITY,
   FRAME_WORKER_MESSAGE_BYTE_CAPACITY,
   FRAME_WORKER_POINTER_CAPACITY,
@@ -264,6 +265,42 @@ describe("browser frame worker transport", () => {
     worker.reply({ kind: "booted", lifecycle: 1 });
     expect(subject.flush()).toBe(false);
     expect(subject.fault?.code).toBe("ui-turn-overrun");
+  });
+
+  it("routes an introspection dump across the Worker seam behind a flushed frame", async () => {
+    const worker = new FakeWorker();
+    const subject = transport(worker);
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    const pending = subject.introspect("structure");
+    expect(worker.messages.map((message) => message.kind)).toEqual(["boot", "batch", "introspect"]);
+    const request = worker.messages[2] as Extract<BrowserFrameUiMessage, { kind: "introspect" }>;
+    expect(request.probe).toBe("structure");
+    worker.reply({ kind: "introspection", lifecycle: 1, requestId: request.requestId, probe: "structure", json: '{"nodes":[]}' });
+    await expect(pending).resolves.toBe('{"nodes":[]}');
+  });
+
+  it("answers null rather than faulting when introspection is unavailable, over-subscribed, or abandoned", async () => {
+    const worker = new FakeWorker();
+    const faults: string[] = [];
+    const subject = transport(worker, { faults });
+    await expect(subject.introspect("structure")).resolves.toBeNull();
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    const inFlight = Array.from({ length: FRAME_WORKER_INTROSPECTION_CAPACITY }, () => subject.introspect("frame-stats"));
+    await expect(subject.introspect("frame-stats")).resolves.toBeNull();
+    subject.close();
+    for (const answer of inFlight) await expect(answer).resolves.toBeNull();
+    expect(faults).toEqual([]);
+  });
+
+  it("publishes the introspection hooks on the UI isolate only after the Worker reports booted", () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const bootSource = readFileSync(join(root, "../🚀️browser-boot/🟦️.ts"), "utf8");
+    const workerSource = readFileSync(join(root, "../🎞️frame-worker/🟦️.ts"), "utf8");
+    expect(bootSource).toContain("host.semioWgpuIntrospection = { dumpStructure:");
+    expect(bootSource).not.toContain("wasmBindings =");
+    expect(bootSource.indexOf("detachIntrospection = attachIntrospectionBindings(transport)")).toBeGreaterThan(bootSource.indexOf("onReady: () => {"));
+    expect(workerSource).toContain('message.probe === "structure" ? bindings.dumpStructure : bindings.dumpFrameStats');
+    expect(workerSource).toContain("INTROSPECTION_STEP_BUDGET_MS");
   });
 
   it("keeps product discovery and native UI capability out of the UI/Worker seams", () => {

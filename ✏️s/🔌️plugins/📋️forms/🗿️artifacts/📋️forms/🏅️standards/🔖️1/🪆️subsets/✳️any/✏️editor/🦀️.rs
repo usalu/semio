@@ -121,7 +121,7 @@ pub const FORMS_INTERACTION_GRANULARITY_SECTION: &str = "section";
 /// raw question ids (matching both the document panel tree's item ids and every question-editing
 /// command's own id vocabulary), so `validate_state` prunes deleted steps/questions and range/
 /// transitive selection walk the real document structure.
-async fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
+fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
     let mut ordered = Vec::new();
     for step in forms_steps(spec) {
         let step_id = crate::artifacts::forms::schema::forms_play_step_tree_id(&step.id);
@@ -136,7 +136,7 @@ async fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
 
 //#region 🔖️Values
 /// 🔠️ Materializes the independently stored answer leaves for rendering and validation.
-pub async fn try_values_map(config: &FormsConfig) -> Object {
+pub fn try_values_map(config: &FormsConfig) -> Object {
     config
         .try_values
         .iter_chunks()
@@ -151,21 +151,21 @@ pub async fn try_values_map(config: &FormsConfig) -> Object {
         .collect()
 }
 
-pub async fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Object {
+pub fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Object {
     crate::artifacts::forms::schema::initial_try_values(spec, &try_values_map(config))
 }
 
 /// 🌱️ Building block for every `handle()` arm that must both clear the Try wizard's answers and reset its
 /// active step — was `reset_try_runtime`'s effect on the old `FormsPlayRuntime`, now two config operations
 /// instead of two field writes.
-pub async fn reset_try_config_mutations() -> Vec<FormsConfigMutation> {
+pub fn reset_try_config_mutations() -> Vec<FormsConfigMutation> {
     vec![FormsConfigMutation::ClearTryValues, FormsConfigMutation::SetStepIndex { index: 0 }]
 }
 
 /// 🔠️ Parses a command's JSON-blob payload field (`value_json`/`values_json`/…), falling back to
 /// `Value::Null` on malformed or absent JSON — every one of these fields is best-effort text carried
 /// across the wire, not a validated protocol.
-pub async fn parse_value_json(value_json: &str) -> Value {
+pub fn parse_value_json(value_json: &str) -> Value {
     dsl::os_pack::json::parse(value_json).unwrap_or(Value::Null)
 }
 //#endregion 🔖️Values
@@ -173,7 +173,7 @@ pub async fn parse_value_json(value_json: &str) -> Value {
 //#region 🔖️Contributions
 pub use semio_framework::ProgramContributionEntry;
 
-pub async fn forms_parse_contributions(config: &FormsConfig) -> Vec<ProgramContributionEntry> {
+pub fn forms_parse_contributions(config: &FormsConfig) -> Vec<ProgramContributionEntry> {
     semio_framework::parse_contributions(&config.contributions_json)
 }
 
@@ -201,7 +201,7 @@ struct QuestionKindRoute {
     preview_body_key: String,
 }
 
-async fn question_kind_route_from_topic(topic_contribution: &semio_framework_plugin::TopicContribution, kind: &str) -> Option<QuestionKindRoute> {
+fn question_kind_route_from_topic(topic_contribution: &semio_framework_plugin::TopicContribution, kind: &str) -> Option<QuestionKindRoute> {
     if topic_contribution.topic != FORMS_QUESTION_KIND_TOPIC {
         return None;
     }
@@ -210,18 +210,18 @@ async fn question_kind_route_from_topic(topic_contribution: &semio_framework_plu
 }
 
 /// 🗂️ Reads the open `TopicContribution` (`"forms.questionKind"` topic) shape per entry.
-async fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, QuestionKindRoute)> {
+fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, QuestionKindRoute)> {
     contributions.iter().find_map(|entry| {
         let route = entry.topic_contribution.as_ref().and_then(|topic_contribution| question_kind_route_from_topic(topic_contribution, kind))?;
         Some((entry.plugin_id.as_str(), route))
     })
 }
 
-async fn extension_params_value(question: &FormQuestion, values: &Object) -> Value {
+fn extension_params_value(question: &FormQuestion, values: &Object) -> Value {
     values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::artifacts::forms::schema::dsl_to_value)).unwrap_or_else(|| Value::Object(Object::new()))
 }
 
-async fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &str, interactive: bool) -> String {
+fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &str, interactive: bool) -> String {
     let payload = object([
         ("fixtureSlug".to_string(), Value::from(question.fixture_slug.clone().unwrap_or_else(|| "hexagonal-mushroom-column".into()))),
         ("params".to_string(), params.clone()),
@@ -236,7 +236,7 @@ async fn extension_render_payload(question: &FormQuestion, params: &Value, surfa
 /// 🧩️ Renders a contributed (extension) question kind as a pair of external slots (params editor +
 /// preview), or an "Extension unavailable" diagnostic when no contribution is registered for it. Shared
 /// by the try wizard and the inspection panel's kind-specific editor fields.
-pub async fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: &str, interactive: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: &str, interactive: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some((plugin_id, route)) = find_question_kind_contribution(contributions, &question.kind) else {
         return semio_framework_plugin::ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
     };
@@ -251,7 +251,7 @@ pub async fn render_extension_question(question: &FormQuestion, values: &Object,
 /// 🗂️ Every kind offered by the catalogue/inspector kind selector: the built-in kinds (labeled from
 /// `labels`) followed by every contributed extension kind. Shared by the blueprint builder's palette, the
 /// catalogue panel, and the inspection panel's kind select.
-pub async fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &FormsLabels) -> Vec<(String, String, IconName)> {
+pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &FormsLabels) -> Vec<(String, String, IconName)> {
     let mut kinds: Vec<(String, String, IconName)> = FORM_BUILTIN_KINDS
         .iter()
         .map(|kind| {
@@ -347,7 +347,7 @@ semio_framework_plugin::app_commands! {
 /// object keyed by question id — the layout app's `fields:in` counterpart. Relocated from the deleted
 /// artifact `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is the app's
 /// own IO surface, not artifact behaviour.
-pub async fn forms_io() -> semio_framework_plugin::AppIo {
+pub fn forms_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: FORMS_DOCUMENT_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
@@ -811,26 +811,26 @@ impl ArtifactEditor for FormsPlayApp {
         }
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::forms::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> FormsSnapshot {
+    fn initial_snapshot() -> FormsSnapshot {
         crate::artifacts::forms::schema::building_component_spec()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(forms_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale`/`setContributions` have no manifest
     /// declaration (host-pushed, not user-facing actions).
-    async fn command_id(command: &FormsCommand) -> &'static str {
+    fn command_id(command: &FormsCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &FormsCommand,
         doc: &ArtifactView<'_, FormsSnapshot>,
         cfg: &ConfigView<'_, FormsConfig>,
@@ -843,7 +843,7 @@ impl ArtifactEditor for FormsPlayApp {
 
     /// 🕹️ `fields` domain: `HierarchyProvider::Topology` from the document's own step/question nesting —
     /// see `forms_fields_topology`'s doc comment.
-    async fn interaction_topology(doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(FORMS_INTERACTION_FIELDS.to_string(), forms_fields_topology(doc.snapshot));
         InteractionTopology { domains }
@@ -856,7 +856,7 @@ impl ArtifactEditor for FormsPlayApp {
     /// `form.dictionary` JSON object keyed by question id — no `cfg` parameter reaches this method, so
     /// this is the form's authored defaults, not a live in-progress Try-wizard session (that lives in
     /// `Self::Config`).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "document:out" => {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
@@ -875,7 +875,7 @@ impl ArtifactEditor for FormsPlayApp {
     }
     //#endregion 🔖️Media
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let labels = forms_play_labels(config);
@@ -1049,7 +1049,7 @@ pub(crate) mod testkit {
     pub type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn forms_app() -> FormsApp {
+    pub fn forms_app() -> FormsApp {
         new_app::<EditorApp<FormsPlayApp>>()
     }
 
@@ -1057,27 +1057,27 @@ pub(crate) mod testkit {
     /// still take `fn() -> App` (the pre-migration manifest wrapper), unchanged for this ticket —
     /// `create_forms_app` now returns `AppDefinition`, so wrap it in a throwaway `App` (empty examples)
     /// rather than widen the framework testkit signature.
-    async fn forms_manifest_for_testkit() -> App {
+    fn forms_manifest_for_testkit() -> App {
         App { definition: create_forms_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addQuestion` materializes host-side.
-    pub async fn forms_app_with_registry() -> FormsApp {
+    pub fn forms_app_with_registry() -> FormsApp {
         new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut FormsApp, command: FormsCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut FormsApp, command: FormsCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut FormsApp, body_key: &str) -> String {
+    pub fn render(app: &mut FormsApp, body_key: &str) -> String {
         dsl::os_pack::json::to_json_string(&app.render(body_key, None, &ViewModel::default()).expect("render"))
     }
 
     /// 🧩️ A host contribution registering `"buildingComponent"` as an extension question kind rendered
     /// by `forms-module-procedural` — shared by every test exercising the extension-question path.
-    pub async fn building_component_contributions() -> Vec<ProgramContributionEntry> {
+    pub fn building_component_contributions() -> Vec<ProgramContributionEntry> {
         vec![ProgramContributionEntry {
             plugin_id: "forms-module-procedural".into(),
             topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
@@ -1096,7 +1096,7 @@ pub(crate) mod testkit {
 
     /// 🧩️ A standalone `buildingComponent` question, for tests that exercise `render_extension_question`
     /// directly without going through a full document.
-    pub async fn building_component_question() -> FormQuestion {
+    pub fn building_component_question() -> FormQuestion {
         let mut question = crate::editor::forms::commands::add_question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
         question.params = Some(crate::artifacts::forms::schema::value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
@@ -1183,7 +1183,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<FormsCommand> {
+    pub(super) fn every_command() -> Vec<FormsCommand> {
         vec![
             FormsCommand::SetTryValue(set_try_value::SetTryValue { key: "q1".into(), value_json: Some("\"Ada\"".into()), ..Default::default() }),
             FormsCommand::SetTryValues(set_try_values::SetTryValues { values_json: r#"{"name":"Ada"}"#.into(), ..Default::default() }),

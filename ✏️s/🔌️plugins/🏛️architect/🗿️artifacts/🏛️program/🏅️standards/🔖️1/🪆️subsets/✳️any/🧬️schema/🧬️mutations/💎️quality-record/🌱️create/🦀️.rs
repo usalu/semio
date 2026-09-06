@@ -18,16 +18,16 @@ pub struct CreateQualityRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateQualityRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "quality-record", kind: "create-quality-record", record: "CreatedQualityRecord" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create quality record \"{}\"", self.quality_record.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.quality_record.header.id.0.clone()]
     }
 }

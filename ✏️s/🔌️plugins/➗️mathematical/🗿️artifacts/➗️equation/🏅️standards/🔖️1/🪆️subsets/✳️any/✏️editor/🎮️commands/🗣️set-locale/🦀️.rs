@@ -12,7 +12,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
+pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
     Ok(Emit::config(vec![EquationConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 

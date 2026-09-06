@@ -18,16 +18,16 @@ pub struct DeleteStatusRecord {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteStatusRecord {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "status-record", kind: "delete-status-record", record: "DeletedStatusRecord" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete status record \"{}\"", self.id.0)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]
     }
 }

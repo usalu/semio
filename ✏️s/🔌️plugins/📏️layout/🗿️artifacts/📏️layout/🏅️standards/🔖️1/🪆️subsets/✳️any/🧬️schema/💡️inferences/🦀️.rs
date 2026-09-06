@@ -34,19 +34,19 @@ impl Default for LayoutInference {
 }
 
 impl protocol::Inference<LayoutSnapshot> for LayoutInference {
-    async fn infer(snapshot: &LayoutSnapshot) -> Self {
+    fn infer(snapshot: &LayoutSnapshot) -> Self {
         Self { topology: compute_layout_topology(&snapshot.parent_pages, &snapshot.spreads, &snapshot.pages) }
     }
 }
 
 impl protocol::InferenceSpec<LayoutSnapshot> for LayoutInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.layout.layout.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.layout.layout.inference.topology", reads: &["parentPages", "spreads", "pages"] }]
     }
 }
@@ -62,7 +62,7 @@ impl ArtifactInferrer for crate::artifacts::layout::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.layout.layout.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `layout_artifact_schema_descriptor`'s registration.
-pub async fn layout_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn layout_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.layout.layout.inference",
         inference: schema::FacetLeaves {
@@ -83,7 +83,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn snapshot_with_master_and_spread() -> LayoutSnapshot {
+    fn snapshot_with_master_and_spread() -> LayoutSnapshot {
         let json = serde_json::json!({
             "schema": "semio.layout/v1",
             "name": "doc",

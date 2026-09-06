@@ -19,16 +19,16 @@ pub struct ReplaceFunction {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceFunction {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "function", kind: "replace-function", record: "ReplacedFunction" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace function \"{}\"", self.function.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.function.header.id.0.clone()]
     }
 }

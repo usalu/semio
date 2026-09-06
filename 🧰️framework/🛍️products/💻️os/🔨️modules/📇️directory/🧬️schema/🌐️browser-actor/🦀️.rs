@@ -16,7 +16,7 @@ impl DocumentBrowserActorByteLengthV1 {
     }
 
     /// 🔢️ Returns the already-bounded body length.
-    pub fn get(self) -> u64 {
+    pub const fn get(self) -> u64 {
         self.0
     }
 }
@@ -164,6 +164,14 @@ impl DocumentOpenBrowserActorV1 {
 }
 
 impl DocumentExecutionTargetBrowserActorV1 {
+    /// 📐️ Exact admitted byte count, absent only for a non-actor renderer.
+    pub const fn byte_length(&self) -> Option<u64> {
+        match self {
+            Self::None => None,
+            Self::ClosedBrowserActor { byte_length, .. } => Some(byte_length.get()),
+        }
+    }
+
     /// ☑️ Enforces all plan identity relations and the independently bounded length.
     pub fn validate(&self, source: DocumentBrowserActorSourceV1<'_>, renderer: &str) -> Result<(), DocumentBrowserActorErrorV1> {
         let row = match self {

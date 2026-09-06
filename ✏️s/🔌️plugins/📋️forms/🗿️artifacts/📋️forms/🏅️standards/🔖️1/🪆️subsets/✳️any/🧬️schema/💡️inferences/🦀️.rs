@@ -32,19 +32,19 @@ impl Default for FormsInference {
 }
 
 impl protocol::Inference<FormsSnapshot> for FormsInference {
-    async fn infer(snapshot: &FormsSnapshot) -> Self {
+    fn infer(snapshot: &FormsSnapshot) -> Self {
         Self { topology: compute_forms_topology(&forms_steps(snapshot)) }
     }
 }
 
 impl protocol::InferenceSpec<FormsSnapshot> for FormsInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.forms.forms.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.forms.forms.inference.topology", reads: &["steps"] }]
     }
 }
@@ -92,7 +92,7 @@ mod tests {
     /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM) so it no longer deserializes raw step/block JSON
     /// directly — `flow::playbook::PlaybookSpec` is the SAME `{schema,id,version,title,steps}`
     /// camelCase shape, so this fixture deserializes through it instead.
-    async fn step_with_conditional_block() -> FormsSnapshot {
+    fn step_with_conditional_block() -> FormsSnapshot {
         let json = r#"{
             "schema": "forms.form",
             "id": "forms",

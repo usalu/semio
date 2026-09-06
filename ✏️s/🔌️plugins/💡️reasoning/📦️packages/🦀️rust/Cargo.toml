@@ -11,7 +11,7 @@ description = "Reasoning plugin - one crate for the wires artifact (diff/op/dsl/
 workspace = true
 
 [package.metadata.component]
-package = "semio:reasoning-mindmap"
+package = "semio:reasoning"
 
 [package.metadata.semio]
 role = "plugin"

@@ -148,7 +148,7 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
     std::fs::write(&bundle_path, serde_json::to_vec_pretty(&bundle).map_err(|error| AuthorityError::Catalog(format!("bundle encode failed: {error}")))?).map_err(|error| AuthorityError::Catalog(format!("bundle write failed: {error}")))?;
     let control = BuilderControl;
     let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
-    let catalog = Arc::new(TrustedCatalogLoader::load(&bundle_path, GIS_MAP_TEST_PROFILE_ID, &NativeCodecProviderSetV1::linked(), &context).await?);
+    let catalog = Arc::new(TrustedCatalogLoader::load_fixture(&bundle_path, GIS_MAP_TEST_PROFILE_ID, &NativeCodecProviderSetV1::linked(), &context).await?);
     let binding = crate::inference::verified_gis_map_binding(catalog.clone())
         .map_err(|error| AuthorityError::Catalog(format!("verified GIS Map binding rejected the test-support profile: {error:?}")))?
         .ok_or_else(|| AuthorityError::Catalog("test-support profile did not select a writable GIS Map editor".to_owned()))?;

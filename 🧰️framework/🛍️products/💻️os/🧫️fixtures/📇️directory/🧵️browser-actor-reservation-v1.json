@@ -1,0 +1,96 @@
+{
+  "schema": "semio.os.document-browser-actor-reservation/v1",
+  "cases": [
+    {
+      "name": "closed",
+      "expected": "reserved",
+      "created": 1
+    },
+    {
+      "name": "none",
+      "expected": "none",
+      "created": 0
+    },
+    {
+      "name": "no-lease",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "dropped-lease",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "ungranted-lease",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "expired-grant",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "foreign-scope",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "stale-state",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "duplicate",
+      "expected": "denied",
+      "created": 1
+    },
+    {
+      "name": "close-during-reserve",
+      "expected": "denied",
+      "created": 1
+    },
+    {
+      "name": "replace-during-reserve",
+      "expected": "denied",
+      "created": 1
+    },
+    {
+      "name": "factory-failure",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "foreign-origin",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "foreign-schema",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "foreign-surface",
+      "expected": "denied",
+      "created": 0
+    },
+    {
+      "name": "grant-expired-during-reserve",
+      "expected": "denied",
+      "created": 1
+    }
+  ],
+  "lifecycle": [
+    "child-close-before-lease-wipe",
+    "scope-reopen-increases-generation",
+    "same-document-two-spaces",
+    "direct-lease-drop-closes-child",
+    "authenticated-actor-identity",
+    "single-use-private-grant",
+    "plan-expiry-closes-child"
+  ],
+  "bodyRequests": 0,
+  "loadedActors": 0
+}

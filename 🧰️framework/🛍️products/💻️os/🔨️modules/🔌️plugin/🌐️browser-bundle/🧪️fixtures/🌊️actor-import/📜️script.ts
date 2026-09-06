@@ -13,7 +13,7 @@ export type ActorImportFactoryPort = (source: string, cores: readonly ActorImpor
 type ActorSpec = Readonly<{ actorId: string; link: Readonly<{ okRequest: readonly number[]; okValue: readonly number[]; errorRequest: readonly number[]; errorValue: readonly number[] }>; blob: Readonly<{ okHash: string; chunks: readonly (readonly number[])[]; errorHash: string; errorValue: readonly number[] }>; timer: Readonly<{ delayMs: number }> }>;
 type JcoPolicy = Readonly<{ asyncMode: "jspi"; asyncImports: readonly string[] }>;
 type EmittedAsyncBinding = Readonly<{ trampoline: string; fnName: string }>;
-type Fixture = Readonly<{ identity: Readonly<{ component: string; canonicalInterface: string; expectedImports: readonly string[]; jco: JcoPolicy; emittedAsyncBindings: readonly EmittedAsyncBinding[]; unsupportedImport: string; productionHostAsyncAbiQualified: true; artifactPolicy: string }>; actors: readonly ActorSpec[]; limits: Readonly<{ buildBudgetMs: number; runtimeBudgetMs: number; maximumOutputBytes: number; actors: number }>; streamClose: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "rejected"; locked: false }>; lateStreamFault: Readonly<{ code: string; message: string }>; failedStreamRetirement: Readonly<{ code: string; message: string; cancelMessage: string }> }>;
+type Fixture = Readonly<{ identity: Readonly<{ component: string; canonicalInterface: string; expectedImports: readonly string[]; jco: JcoPolicy; emittedAsyncBindings: readonly EmittedAsyncBinding[]; unsupportedImport: string; productionHostAsyncAbiQualified: true; artifactPolicy: string }>; actors: readonly ActorSpec[]; limits: Readonly<{ buildBudgetMs: number; runtimeBudgetMs: number; maximumOutputBytes: number; actors: number }>; streamClose: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "rejected"; locked: false }>; guestStreamDrop: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "fulfilled"; locked: false }>; lateStreamFault: Readonly<{ code: string; message: string }>; failedStreamRetirement: Readonly<{ code: string; message: string; cancelMessage: string }> }>;
 
 function repositoryRoot(start: string): string {
   let cursor = resolve(start);
@@ -233,7 +233,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, closeFacto
   let closedLaws = 0;
   if (actorModulePath) {
     const actorInputPath = join(evidence, "closed-input.json");
-    writeFileSync(actorInputPath, JSON.stringify({ actors: fixture.actors, component: fixture.identity.component, moduleUrl: pathToFileURL(actorModulePath).href, pendingHostClose, streamClose: fixture.streamClose, lateStreamFault: fixture.lateStreamFault, failedStreamRetirement: fixture.failedStreamRetirement }), { mode: 0o600 });
+    writeFileSync(actorInputPath, JSON.stringify({ actors: fixture.actors, component: fixture.identity.component, moduleUrl: pathToFileURL(actorModulePath).href, pendingHostClose, streamClose: fixture.streamClose, guestStreamDrop: fixture.guestStreamDrop, lateStreamFault: fixture.lateStreamFault, failedStreamRetirement: fixture.failedStreamRetirement }), { mode: 0o600 });
     const closedRuntime = await runExactCargoLawProcess("node", ["--unhandled-rejections=strict", "--experimental-wasm-jspi", "--input-type=module", "-e", `
       import assert from "node:assert/strict";
       import { readFileSync } from "node:fs";
@@ -380,6 +380,22 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, closeFacto
         await streamActor.close();
         const [streamResult] = await streamSettled;
         assert.deepEqual({ ...streamActor.progress(), cancellations: streamCancellations, result: streamResult.status, locked: streamBody.locked }, fixture.streamClose);
+        const dropConnection = basePort(pendingActor, false);
+        const dropActor = await module.activate({ actorId: "guest-stream-drop", activationGeneration: 1n }, dropConnection.port);
+        dropConnection.bind(dropActor);
+        const dropSettled = Promise.allSettled([dropActor.invoke([fixture.component, "blobDrop"], [pendingActor.blob.okHash])]);
+        await settle(() => dropConnection.frames.length === 1);
+        let dropCancellations = 0;
+        const dropBody = new ReadableStream({ cancel() { dropCancellations++; } }, { highWaterMark: 0 });
+        const dropRequest = dropConnection.frames[0].frame.envelope.payload.payload;
+        assert.equal(dropActor.resolveEffect(dropRequest.requestId, { tag: "ok", val: dropBody }), true);
+        const [dropResult] = await dropSettled;
+        assert.equal(dropResult.status, "fulfilled");
+        if (dropResult.status === "fulfilled") assert.equal(dropResult.value, undefined);
+        await settle(() => dropCancellations === 1 && !dropBody.locked && dropActor.progress().activeInvocations === 0);
+        assert.deepEqual(dropActor.progress(), { phase: "open", activeInvocations: 0 });
+        await dropActor.close();
+        assert.deepEqual({ ...dropActor.progress(), cancellations: dropCancellations, result: dropResult.status, locked: dropBody.locked }, fixture.guestStreamDrop);
         const lateConnection = basePort(pendingActor, false);
         const lateActor = await module.activate({ actorId: "late-stream-failure", activationGeneration: 1n }, lateConnection.port);
         lateConnection.bind(lateActor);
@@ -409,7 +425,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, closeFacto
         assert.equal(retirementCancels, 1);
         assert.equal(retirementBody.locked, false);
         assert.deepEqual(retirementActor.progress(), { phase: "closed", activeInvocations: 0 });
-        hostCloseLaws = 8;
+        hostCloseLaws = 9;
       }
       const abortController = new AbortController();
       const abortConnection = basePort(pendingActor);
@@ -422,7 +438,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, closeFacto
       await settle(() => aborted.progress().phase === "closed");
       assert.deepEqual(aborted.progress(), { phase: "closed", activeInvocations: 0 });
       await assert.rejects(module.activate({ actorId: "missing-wasi", activationGeneration: 1n }, { ...abortConnection.port, wasi: undefined }), /WASI port required/);
-      console.log(JSON.stringify({ observations, pending: pending.progress(), aborted: aborted.progress(), laws: 14, hostCloseLaws }));
+      console.log(JSON.stringify({ observations, pending: pending.progress(), aborted: aborted.progress(), laws: 15, hostCloseLaws }));
     `, actorInputPath], {
       cwd: repoRoot,
       env: process.env,
@@ -435,10 +451,10 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, closeFacto
     assert.equal(closedRuntime.status, 0, `${closedRuntime.reason}: ${closedRuntime.stderr}`);
     const closedObservation = JSON.parse(closedRuntime.stdout) as { laws: number; hostCloseLaws: number; observations: unknown[] };
     assert.equal(closedObservation.observations.length, fixture.actors.length);
-    assert.equal(closedObservation.hostCloseLaws, pendingHostClose ? 8 : 0);
+    assert.equal(closedObservation.hostCloseLaws, pendingHostClose ? 9 : 0);
     closedLaws = closedObservation.laws;
   }
-  console.log(`browser-actor-import: AJV=1 JCO=1 Wasm=1 JSPI=${fixture.identity.jco.asyncImports.length} emitted=${fixture.identity.emittedAsyncBindings.length} actors=${fixture.actors.length} pack-ok=2 pack-err=2 stream-ok=2 stream-err=2 closed-laws=${closedLaws} host-close-laws=${pendingHostClose ? 8 : 0} interface=${fixture.identity.canonicalInterface} factory=${actorModulePath ? "raw+closed" : observation.mode} unsupported-wasi=${closeActorBundle ? fixture.identity.unsupportedImport : "unchecked"} evidence=${evidence}`);
+  console.log(`browser-actor-import: AJV=1 JCO=1 Wasm=1 JSPI=${fixture.identity.jco.asyncImports.length} emitted=${fixture.identity.emittedAsyncBindings.length} actors=${fixture.actors.length} pack-ok=2 pack-err=2 stream-ok=2 stream-err=2 closed-laws=${closedLaws} host-close-laws=${pendingHostClose ? 9 : 0} guest-stream-drop=1 interface=${fixture.identity.canonicalInterface} factory=${actorModulePath ? "raw+closed" : observation.mode} unsupported-wasi=${closeActorBundle ? fixture.identity.unsupportedImport : "unchecked"} evidence=${evidence}`);
 }
 
 if (import.meta.main) {

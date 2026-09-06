@@ -110,10 +110,10 @@ struct UnadmittedSlot {
 }
 
 /// 🎟️ Exact mounted render reservation; the tree cannot exist before its fixed slot does.
-pub struct MountedReconcileGrant<'a> {
+pub struct MountedReconcileGrant {
     key: NativeCloseKey,
     output_index: usize,
-    tracker: &'a PatchTracker,
+    state: std::rc::Rc<RefCell<PatchTrackerState>>,
     index: usize,
     surface_index: usize,
     rejected_index: usize,
@@ -127,9 +127,9 @@ enum MountedReconcileOwner {
     Transferred,
 }
 
-impl MountedReconcileGrant<'_> {
+impl MountedReconcileGrant {
     pub fn commit_source(mut self, root: TreeNode) -> Result<(), TreeNode> {
-        let mut state = self.tracker.state.borrow_mut();
+        let mut state = self.state.borrow_mut();
         if state.closing_instances.iter().flatten().any(|closing| closing.key == self.key) { return Err(root); }
         if state.unadmitted[self.index].as_ref().is_none_or(|slot| slot.generation != self.generation) {
             return Err(root);
@@ -170,7 +170,7 @@ impl MountedReconcileGrant<'_> {
 
     #[cfg(test)]
     pub fn commit(mut self, tree: ComponentTree) {
-        let mut state = self.tracker.state.borrow_mut();
+        let mut state = self.state.borrow_mut();
         let owner = std::mem::replace(&mut self.owner, MountedReconcileOwner::Transferred);
         let MountedReconcileOwner::Live { reconciler, reservation } = owner else { return };
         let admission = SurfaceReconcileJob::try_new_reserved(reconciler, tree, reservation);
@@ -212,7 +212,7 @@ impl MountedReconcileGrant<'_> {
     }
 
     pub fn cancel(mut self) {
-        let mut state = self.tracker.state.borrow_mut();
+        let mut state = self.state.borrow_mut();
         if state.unadmitted[self.index].as_ref().is_some_and(|slot| slot.generation == self.generation) {
             state.unadmitted[self.index] = None;
         }
@@ -232,12 +232,12 @@ impl MountedReconcileGrant<'_> {
     }
 }
 
-impl Drop for MountedReconcileGrant<'_> {
+impl Drop for MountedReconcileGrant {
     fn drop(&mut self) {
         if !self.active {
             return;
         }
-        let mut state = self.tracker.state.borrow_mut();
+        let mut state = self.state.borrow_mut();
         if state.unadmitted[self.index].as_ref().is_some_and(|slot| slot.generation == self.generation) {
             state.unadmitted[self.index] = None;
         }
@@ -305,7 +305,7 @@ fn fixed_slots<T>(capacity: usize) -> Box<[Option<T>]> {
 /// 🧵️ Fixed surface, rejected-owner, terminal-owner, and ready-publication authority.
 #[derive(Default)]
 pub struct PatchTracker {
-    state: RefCell<PatchTrackerState>,
+    state: std::rc::Rc<RefCell<PatchTrackerState>>,
 }
 
 impl PatchTracker {
@@ -373,12 +373,12 @@ impl PatchTracker {
         self.begin(surface, tree)
     }
 
-    pub(crate) fn reserve_mounted(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant<'_>, ui_contract::SurfaceId> {
+    pub(crate) fn reserve_mounted(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
         if surface_instance(surface.as_ref()) != Some(key.instance()) { return Err(surface); }
         self.reserve_mounted_owned(surface, key)
     }
 
-    fn reserve_mounted_owned(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant<'_>, ui_contract::SurfaceId> {
+    fn reserve_mounted_owned(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
         let mut state = self.state.borrow_mut();
         if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface.as_ref()) == Some(closing.instance)) {
             return Err(surface);
@@ -425,7 +425,7 @@ impl PatchTracker {
         state.rejected_reserved[rejected_index] = Some(generation);
         state.unadmitted[index] = Some(UnadmittedSlot { key, generation, surface });
         drop(state);
-        Ok(MountedReconcileGrant { key, output_index, tracker: self, index, surface_index, rejected_index, generation, owner: MountedReconcileOwner::Live { reconciler, reservation }, active: true })
+        Ok(MountedReconcileGrant { key, output_index, state: self.state.clone(), index, surface_index, rejected_index, generation, owner: MountedReconcileOwner::Live { reconciler, reservation }, active: true })
     }
 
     pub fn drive_one(&self) -> bool {
@@ -643,6 +643,23 @@ impl PatchTracker {
                 )
             })
             .unwrap_or_default()
+    }
+
+    pub(crate) fn preflight_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+        let state = self.state.try_borrow().map_err(|_| "patch close reservation is busy")?;
+        if let Some(closing) = state.closing_instances.iter().flatten().find(|closing| closing.instance == key.instance()) {
+            return if closing.key == key { Ok(()) } else { Err("patch close reservation belongs to another allocation") };
+        }
+        if state.slots.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.ready.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.rejected.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.producer_terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.unadmitted.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key) {
+            return Err("patch descendants belong to another allocation");
+        }
+        if state.closing_instances.iter().all(Option::is_some) { return Err("patch close reservation is full"); }
+        Ok(())
     }
 
     pub(crate) fn reserve_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
@@ -964,7 +981,7 @@ mod tests {
         if PANIC_AFTER_PRODUCER_STEP.with(|pending| pending.replace(false)) { panic!("[DEBUG] actual mounted producer partial-step unwind"); }
     }
 
-    fn reserve<'a>(tracker: &'a PatchTracker, surface: ui_contract::SurfaceId) -> Result<MountedReconcileGrant<'a>, ui_contract::SurfaceId> {
+    fn reserve(tracker: &PatchTracker, surface: ui_contract::SurfaceId) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
         let key = NativeCloseKey::fixture(surface_instance(surface.as_ref()).expect("numeric test surface"), 1);
         tracker.reserve_mounted(surface, key)
     }

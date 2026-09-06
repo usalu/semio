@@ -19,23 +19,23 @@ pub struct DeleteBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_block(id: String) -> NoteMutation {
+pub fn delete_block(id: String) -> NoteMutation {
     NoteMutation::DeleteBlock(DeleteBlock { id })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for DeleteBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "block", kind: "delete-block", record: "DeletedBlock" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete block \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -18,16 +18,16 @@ pub struct InsertPoint {
 impl protocol::MutationKind<EquationSnapshot, EquationMutation> for InsertPoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "point", kind: "insert-point", record: "InsertedPoint" };
 
-    async fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
-        super::inverse::inverse(self, base).await
+    fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
+        super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Insert point at {}", self.index)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec!["geometry".into(), "points".into(), self.index.to_string()]
     }
 }

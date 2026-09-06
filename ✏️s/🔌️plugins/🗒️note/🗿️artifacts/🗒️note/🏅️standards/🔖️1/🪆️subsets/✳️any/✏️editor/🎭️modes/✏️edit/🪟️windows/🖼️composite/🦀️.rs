@@ -17,7 +17,7 @@ const NOTE_PLAY_SURFACE_COMPOSITE: &str = "note.play.composite";
 /// 🧱️ Stitched into the app manifest by `crate::editor::note::create_note_app`. `options.measures` stays
 /// empty here on purpose: note's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: NOTE_PLAY_WINDOW_COMPOSITE.into(),
         label: LocalizedLabel::native("Canvas", "Zeichenfläche"),
@@ -38,7 +38,7 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
-pub async fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
     vec![
         options::camera::measure(camera, labels),
         options::grid::measure(document, labels),
@@ -54,7 +54,7 @@ pub async fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, label
 // no longer tell which blocks are selected — the status line drops the selection count and the
 // engagement input is always enabled now (its own `engagementSubmit` handler still correctly no-ops
 // unless exactly one block is selected, read via `NoteDispatchCtx`).
-pub async fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input: &str) -> WindowEngagement {
+pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input: &str) -> WindowEngagement {
     let block_count = crate::artifacts::note::schema::flatten_blocks(&document.blocks).len();
     let zoom = camera.zoom;
     let snap_status = if document.snap_enabled.unwrap_or(false) { format!("snap {}px", document.snap_grid_spacing.unwrap_or(8.0)) } else { "snap off".into() };
@@ -88,7 +88,7 @@ pub async fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement
 /// threaded an `InteractionView`, so selection/hover are no longer stamped into the scene here — the
 /// "blocks" domain's presence is a known gap for canvas surfaces this wave (matches lowpoly/gis2d's
 /// `render` precedent), left at `InkCanvasScene::base`'s empty defaults.
-pub async fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiNode {
+pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiNode {
     let mut document_value = serde_json::to_value(document).unwrap_or_else(|_| serde_json::json!({}));
     if let Some(map) = document_value.as_object_mut() {
         map.insert("camera".into(), serde_json::to_value(camera).unwrap_or_else(|_| serde_json::json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 })));
@@ -97,7 +97,7 @@ pub async fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, a
     build_ink_canvas_scene(surface_id, NOTE_PLAY_CONTROLLER_ID, InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
 }
 
-pub async fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
+pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
     render_canvas_scene(document, &cfg.camera, &cfg.active_utility_id, NOTE_PLAY_SURFACE_COMPOSITE, "composite")
 }
 //#endregion 🔖️Render

@@ -8,13 +8,13 @@ use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Outline
-async fn block_name(block: &NoteBlockNode) -> &str {
+fn block_name(block: &NoteBlockNode) -> &str {
     match block {
         NoteBlockNode::Text { name, .. } | NoteBlockNode::Image { name, .. } | NoteBlockNode::Table { name, .. } | NoteBlockNode::Math { name, .. } | NoteBlockNode::Ink { name, .. } | NoteBlockNode::Group { name, .. } => name,
     }
 }
 
-async fn flatten_blocks<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteBlockNode>) {
+fn flatten_blocks<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteBlockNode>) {
     for block in blocks {
         out.push(block);
         if let NoteBlockNode::Group { children, .. } = block {
@@ -23,7 +23,7 @@ async fn flatten_blocks<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteB
     }
 }
 
-async fn block_word_count(block: &NoteBlockNode) -> u32 {
+fn block_word_count(block: &NoteBlockNode) -> u32 {
     match block {
         NoteBlockNode::Text { content, .. } => crate::artifacts::note::note_block_text(content).iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.split_whitespace().count()).sum::<usize>()).sum::<usize>() as u32,
         _ => 0,
@@ -41,7 +41,7 @@ pub struct NoteOutline {
 }
 
 impl NoteOutline {
-    pub async fn compute(snapshot: &NoteSnapshot) -> Self {
+    pub fn compute(snapshot: &NoteSnapshot) -> Self {
         let mut flat = Vec::new();
         flatten_blocks(&snapshot.blocks, &mut flat);
         let section_outline = flat.iter().map(|block| block_name(block).to_string()).collect();
@@ -58,7 +58,7 @@ mod tests {
     use super::*;
     use crate::artifacts::note::{NoteTextParagraph, NoteTextRun};
 
-    async fn text_block(id: &str, name: &str, text: &str) -> NoteBlockNode {
+    fn text_block(id: &str, name: &str, text: &str) -> NoteBlockNode {
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }];
         NoteBlockNode::Text {
             content: crate::artifacts::note::note_text_child_record(id, &paragraphs),

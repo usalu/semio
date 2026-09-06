@@ -13,12 +13,12 @@ use crate::artifacts::wires::schema::mutations::WiresMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `WiresMutation` to its binary command form.
-pub async fn encode_op(operation: &WiresMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &WiresMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `WiresMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<WiresMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<WiresMutation, protocol::ProtocolError> {
     WiresMutation::decode_op(bytes)
 }
 

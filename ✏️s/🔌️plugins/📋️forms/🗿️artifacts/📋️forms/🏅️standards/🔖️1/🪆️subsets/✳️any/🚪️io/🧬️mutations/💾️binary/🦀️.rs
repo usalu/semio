@@ -19,12 +19,12 @@ use crate::artifacts::forms::op::FormMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `FormMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &FormMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &FormMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `FormMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<FormMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<FormMutation, protocol::ProtocolError> {
     FormMutation::decode_op(bytes)
 }
 

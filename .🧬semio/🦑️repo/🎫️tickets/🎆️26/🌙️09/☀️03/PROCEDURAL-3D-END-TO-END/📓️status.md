@@ -1162,3 +1162,100 @@ Relaunched with both addressed:
 Note for anyone reading the green check above: that used `--profile debug` in the isolated dir, while
 `describe` uses `--profile wasm-dev`. Different profiles share no artifacts, which is why a green
 `cargo check` did not shorten `describe` at all.
+
+## 🎯 ROOT CAUSE of the empty windows: a `Dictionary` retirement leak in the flow host (2026-09-06 14:0x)
+
+The app now boots. The shell chrome renders, the title reads `semio · procedural · 3d`, the example
+switcher is populated and shows the boot default **Hexagonal Mushroom Column**, Edit/Generate modes are
+present, and the flow extensions (`brep`, `list`, `logic`, `primitive`, `text`, `dictionary`) all hot-swap
+in. The Sep-1 `unknown app` fault is **gone** — the regenerated descriptor fixed it.
+
+But every render traps the actor, and the window area shows `unreachable`:
+
+```
+panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs:101:13:
+final Dictionary ownership must be explicitly retired or owned by a cold boundary
+```
+
+Stack, bottom-up: `generation3d::editor::modes::edit::windows::flow::render`
+→ `flow_backed_node_graph_extras` → `FlowEvalSession::status_json_for_host`
+→ `FlowHost::pending_eval_widget_ids` → drop glue `Tree` → `Vec<Neuron>` → `Neuron` → `Dictionary::drop`.
+
+### The contract
+
+`Dictionary` (`🧠️neural/⚙️engine/🦀️.rs:98-104`) asserts on drop:
+
+```rust
+impl Drop for Dictionary {
+    fn drop(&mut self) {
+        if let Err(_retirement) = std::mem::take(&mut self.pairs).release_shared() {
+            assert!(std::thread::panicking(), "final Dictionary ownership must be explicitly retired or owned by a cold boundary");
+        }
+    }
+}
+```
+
+`release_shared()` fails when the dictionary holds *unique* ownership, so a freshly built one must be
+retired explicitly. The `ColdRetire` trait exists for exactly this and **already implements `Tree`,
+`Neuron`, `EvalChannels`, `HashMap` and `Vec`** (`🧠️neural/⚙️engine/🧊️cold/🦀️.rs:29-46`). The flow host
+simply never called it on the throwaway trees it builds per render.
+
+Both files are **unmodified from HEAD** (`git diff HEAD --stat` empty, and HEAD already contains the
+assert), so this is committed latent behaviour, not a peer's in-flight edit.
+
+### Five leak sites fixed in `🌊️flow/🖥️host/🦀️.rs`
+
+| Site | Leak |
+|---|---|
+| `pending_eval_widget_ids` | `tree` + `seeds` on both exits, plus `BudgetedEval.channels` |
+| `widget_blocked_ports` | `tree` + `outputs` |
+| `evaluate_step` | `tree` + `seeds` on all four exits, plus `channels` on the `remaining` early return |
+| `probe_eval_outputs_converged` | `BudgetedEval.channels` discarded by `..` |
+| `apply_eval_outputs_json` | `tree` + `seeds`, plus `channels` on the non-converged branch |
+
+The `..` in `Ok(BudgetedEval { remaining, .. })` was the subtle one — it silently discarded an
+`EvalChannels` full of dictionaries at two sites.
+
+`TreeSnapshot` was checked and does **not** need retirement: it holds only
+`BTreeMap<String, NeuronSnapshot>` (hashes/signatures) and `BTreeMap<String, u64>`, no `Dictionary`.
+
+Rebuilding the component via `describe` against the warm `target-gen3d` with `CARGO_PROFILE_WASM_DEV_DEBUG=false`.
+
+### Sixth leak site — `build_flow_status_json`
+
+Found by scanning for the pattern rather than waiting to hit it on the next rebuild:
+`build_flow_status_json` (`:2588`) calls `host.build_tree_for_status()` + `build_seeds_for_status()`
+(`:2590-2591`) and drops both. It sits directly in the same render path
+(`status_json_for_host` → `pending_eval_widget_ids` **and** → `build_flow_status_json`), so it would have
+faulted on the very next boot after the first five fixes. Retired at the function's single exit.
+
+Verified there are no others of this shape: every `BudgetedEval` destructure in the flow host now binds
+`channels` (`:349`, `:1031`, `:1132`), and `build_tree()`/`build_seeds()` have no remaining unretired
+call sites outside `#[cfg(test)]`.
+
+## Rebuild blocked twice more, both environmental (18:04-18:55)
+
+**1. OOM.** `describe` was `killed by signal SIGKILL` — the OOM killer, not a compile error. macOS had
+resized swap down to 8 GB (7.2 used, 982 MB free) while `wasm-dev`'s `codegen-units = 1` was compiling
+procedural. Retried with `CARGO_BUILD_JOBS=3` to cap concurrent rustc peak rather than changing
+`codegen-units`, which would invalidate the whole profile and force a from-scratch rebuild.
+
+**2. A peer mid-refactor of the plugin reactor.** The retry then failed with:
+
+```
+error[E0432]: unresolved import `wit_bridge::drain_task_resumes`
+error: could not compile `semio-framework-plugin` (lib)
+```
+
+`🔌️plugin/⚛️reactor/🦀️.rs` was rewritten at **18:53** — after this build started — and
+`git diff HEAD --stat` shows **23 insertions, 1028 deletions**. `git show HEAD` still contains
+`fn drain_task_resumes`; the working tree no longer does, while `⚛️reactor/🦀️.rs:1020` still does
+`pub use wit_bridge::drain_task_resumes;` and `🔄️turn/🦀️.rs:690` still calls it.
+
+Same shape as the `📇️directory` blocker earlier in this ticket, and the same decision: **not ours, do not
+guess.** A 1028-line deletion is a restructure in progress; inventing the missing symbol would fight its
+author. Left a patient retry loop that re-runs `describe` and bails only if the first error is inside
+`procedural`.
+
+Nothing about the six flow-host fixes is invalidated by either failure — neither error came from that
+file. But they remain **unverified at runtime**: no rebuild has completed since they were written.

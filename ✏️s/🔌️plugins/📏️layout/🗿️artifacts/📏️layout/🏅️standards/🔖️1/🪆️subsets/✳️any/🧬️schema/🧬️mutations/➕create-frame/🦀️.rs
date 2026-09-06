@@ -21,16 +21,16 @@ pub struct CreateFrame {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateFrame {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "frame", kind: "create-frame", record: "CreatedFrame" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_frame(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_create_frame(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create frame \"{}\"", self.frame.id())
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame.id().to_string()]
     }
 }
@@ -38,7 +38,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateFrame {
 
 
 //#region ➕️CreateFrame
-pub async fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.page_id), [payload.page_id.clone()]);
     };
@@ -57,7 +57,7 @@ pub async fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> 
 
 
 //#region ➕️CreateFrame
-pub async fn inverse_create_frame(payload: &CreateFrame, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_create_frame(payload: &CreateFrame, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     vec![LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: payload.page_id.clone(), frame_id: payload.frame.id().to_string() })]
 }
 //#endregion ➕️CreateFrame

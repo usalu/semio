@@ -7,7 +7,7 @@ use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry,
 use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff_create_block(payload: &CreateBlock, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+pub fn diff_create_block(payload: &CreateBlock, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
     let steps = forms_steps(base);
     let Some(step) = steps.iter().find(|step| step.id == payload.step_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Step \"{}\" does not exist.", payload.step_id), [payload.step_id.clone()]);

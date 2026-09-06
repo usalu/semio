@@ -37,6 +37,7 @@
     "writerAuthority": "retained-artifact-wal",
     "activeSegmentAuthority": "artifact-wal",
     "leaseBefore": ["snapshot-floor", "wal-horizon", "wal-delete"],
+    "indexBudgetContinuation": "same-owned-future-cooperative-yield",
     "payloadReclamation": "deferred-global-reference-authority",
     "queuedSubmitDuring": "pending",
     "queuedSubmitAfter": "accepted"

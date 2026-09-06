@@ -13,7 +13,7 @@ const SEQUENCE_PLAY_SURFACE_MAIN: &str = "sequence.play.main";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SEQUENCE_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Sequence", "Sequenz"),
@@ -35,11 +35,11 @@ pub async fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Helpers
 /// 🎯️ Single consumer (this window's `render`), so it lives here rather than the artifact engine.
-async fn split_endpoint(endpoint: &str) -> (String, String) {
+fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "next".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-async fn fixture_to_workflow(fixture: &infinite_board_port_directed_dag::DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+fn fixture_to_workflow(fixture: &infinite_board_port_directed_dag::DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -69,7 +69,7 @@ async fn fixture_to_workflow(fixture: &infinite_board_port_directed_dag::DagFixt
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub async fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
+pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
     let mut host = host_from_snapshot(fixture);
     host.layout_expanded_slots();
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);

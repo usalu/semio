@@ -668,6 +668,7 @@ impl BrowserRendererBootstrap {
             }),
             draw: DrawList::default(),
             overlay: DrawList::default(),
+            pending_frame_deferred: None,
         });
         let token = OffscreenPresentToken::mint_for_dedicated_worker().map_err(|error| js_error("worker-capability", error))?;
         let presenter = AppPresenter {
@@ -681,6 +682,7 @@ impl BrowserRendererBootstrap {
             last_cursor: None,
             pending: None,
             retirement: None,
+            retained_fault: None,
             surface_resize: None,
         };
         let mut host = crate::os_host::OsHost::new(runtime, presenter);

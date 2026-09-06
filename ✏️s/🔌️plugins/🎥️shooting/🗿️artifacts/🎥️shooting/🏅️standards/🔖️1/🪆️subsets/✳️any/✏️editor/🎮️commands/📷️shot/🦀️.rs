@@ -19,7 +19,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🩹️ Builds the single-field `ShootingMutation` for a `patchShot`/`patchShots`/`setActiveShot*`
 /// field write, addressed at `id` — shared by `set_active_shot_format`/`set_active_shot_shape` and
 /// `patch_shots` below.
-async fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
+fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
     match field {
         "label" => value.as_str().map(|v| ShootingMutation::RenameShot(RenameShot { id, new_label: v.into() })),
         "width" => value.as_u64().map(|v| ShootingMutation::ChangeShotWidth(ChangeShotWidth { id, new_width: v as u32 })),
@@ -30,7 +30,7 @@ async fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Opti
     }
 }
 
-async fn active_shot_id(fixture: &crate::artifacts::shooting::ShootingSnapshot) -> Option<String> {
+fn active_shot_id(fixture: &crate::artifacts::shooting::ShootingSnapshot) -> Option<String> {
     crate::artifacts::shooting::schema::active_shot(fixture).map(|shot| shot.id.clone())
 }
 
@@ -44,7 +44,7 @@ pub mod set_active_shot {
         pub shot_id: Option<String>,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetActiveShot,
         _doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
@@ -68,7 +68,7 @@ pub mod set_active_shot_label {
         pub value: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetActiveShotLabel,
         doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
@@ -92,7 +92,7 @@ pub mod set_active_shot_format {
         pub value: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetActiveShotFormat,
         doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
@@ -116,7 +116,7 @@ pub mod set_active_shot_shape {
         pub value: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetActiveShotShape,
         doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
@@ -142,7 +142,7 @@ pub mod patch_shots {
         pub value: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &PatchShots,
         _doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
@@ -174,7 +174,7 @@ pub mod add_shot {
         pub shape: String,
     }
 
-    pub async fn handle(payload: &AddShot, doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &AddShot, doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("shot");
         let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, camera_id: None };

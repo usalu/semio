@@ -80,7 +80,7 @@ pub struct DisplayList {
 }
 
 impl DisplayList {
-    pub async fn hit_test(&self, x: f32, y: f32) -> Option<String> {
+    pub fn hit_test(&self, x: f32, y: f32) -> Option<String> {
         for rect in self.rects.iter().rev() {
             if x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height {
                 return Some(rect.object_id.clone());
@@ -95,11 +95,11 @@ impl DisplayList {
     }
 }
 
-pub async fn page_margin_guides(page: &Page) -> Vec<DisplayGuide> {
+pub fn page_margin_guides(page: &Page) -> Vec<DisplayGuide> {
     vec![DisplayGuide { rect: LayoutRect { x: page.margins.left, y: page.margins.top, width: page.width - page.margins.left - page.margins.right, height: page.height - page.margins.top - page.margins.bottom }, kind: "margin".into() }]
 }
 
-pub async fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited: bool, selected: bool, hovered: bool, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> DisplayRect {
+pub fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited: bool, selected: bool, hovered: bool, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> DisplayRect {
     DisplayRect { object_id: object_id.into(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, fill: fill.map(DisplayColor), stroke: stroke.map(DisplayColor), inherited, selected, hovered }
 }
 //#endregion 🖼️Display
@@ -160,7 +160,7 @@ pub fn layout_story_in_frame(engine: &mut LayoutEngine, story: &TextStory, parag
     engine.layout_story(story, paragraph, frame_width, frame_height)
 }
 
-pub async fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
+pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
     let resolved = resolve_page(doc, page);
     let mut rects = Vec::new();
     let mut text_runs = Vec::new();
@@ -226,7 +226,7 @@ pub async fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &Layout
     DisplayList { page_id: page.id.clone(), page_width: page.width as f32, page_height: page.height as f32, rects, text_runs, images, guides }
 }
 
-async fn color_from(c: &DisplayColor) -> Color {
+fn color_from(c: &DisplayColor) -> Color {
     Color::new(c.0)
 }
 
@@ -241,7 +241,7 @@ pub struct LayoutDropPreview {
 const DROP_PREVIEW_WIDTH: f64 = 200.0;
 const DROP_PREVIEW_HEIGHT: f64 = 120.0;
 
-async fn append_drop_preview(scene: &mut Scene, transform: Affine, preview: &LayoutDropPreview) {
+fn append_drop_preview(scene: &mut Scene, transform: Affine, preview: &LayoutDropPreview) {
     if preview.kind == "page" {
         return;
     }
@@ -256,7 +256,7 @@ async fn append_drop_preview(scene: &mut Scene, transform: Affine, preview: &Lay
     scene.stroke(&Stroke::new(2.0), transform, Color::new([0.1, 0.45, 0.95, 0.85]), None, &shape);
 }
 
-pub async fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera: &Camera, viewport: &Viewport, drop_preview: Option<&LayoutDropPreview>) -> Scene {
+pub fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera: &Camera, viewport: &Viewport, drop_preview: Option<&LayoutDropPreview>) -> Scene {
     let mut scene = Scene::new();
     let transform = camera::camera_content_affine(camera, viewport);
     let page_bg = if chrome_blueprint { Color::new([0.97, 0.97, 0.98, 1.0]) } else { Color::new([1.0, 1.0, 1.0, 1.0]) };
@@ -339,14 +339,14 @@ pub struct SceneQuery<'a> {
     pub viewport: &'a Viewport,
 }
 
-pub async fn build_scene_from_document_json(engine: &mut LayoutEngine, json: &str, query: &SceneQuery<'_>, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, LayoutError> {
+pub fn build_scene_from_document_json(engine: &mut LayoutEngine, json: &str, query: &SceneQuery<'_>, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, LayoutError> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
     let list = build_display_list_for_page(engine, &doc, page, query.page_id, query.selected_ids, query.hovered_id, query.chrome_blueprint);
     Ok(display_list_to_scene(&list, query.chrome_blueprint, query.camera, query.viewport, drop_preview))
 }
 
-pub async fn hit_test_document_json(engine: &mut LayoutEngine, json: &str, sx: f64, sy: f64, query: &SceneQuery<'_>) -> Result<Option<String>, LayoutError> {
+pub fn hit_test_document_json(engine: &mut LayoutEngine, json: &str, sx: f64, sy: f64, query: &SceneQuery<'_>) -> Result<Option<String>, LayoutError> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
     let list = build_display_list_for_page(engine, &doc, page, query.page_id, query.selected_ids, query.hovered_id, true);
@@ -354,7 +354,7 @@ pub async fn hit_test_document_json(engine: &mut LayoutEngine, json: &str, sx: f
     Ok(list.hit_test(world.x as f32, world.y as f32))
 }
 
-pub async fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f64) -> String {
+pub fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f64) -> String {
     let world = camera::screen_to_world(camera, viewport, Point::new(sx, sy));
     serde_json::json!({ "x": world.x, "y": world.y }).to_string()
 }
@@ -371,7 +371,7 @@ pub use crate::editor::layout::engine::export::{export_document_pdf_headless_bat
 mod tests {
     use super::*;
 
-    async fn sample_document() -> LayoutSnapshot {
+    fn sample_document() -> LayoutSnapshot {
         crate::artifacts::layout::dsl::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
     }
 

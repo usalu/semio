@@ -8,7 +8,7 @@ pub const NOTE_PLAY_BODY_CATALOGUE: &str = "note.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -20,7 +20,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(labels: &NotePlayLabels) -> UiNode {
+pub fn render(labels: &NotePlayLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "note-catalogue".into(),
         label: Some(labels.catalogue_title.into()),

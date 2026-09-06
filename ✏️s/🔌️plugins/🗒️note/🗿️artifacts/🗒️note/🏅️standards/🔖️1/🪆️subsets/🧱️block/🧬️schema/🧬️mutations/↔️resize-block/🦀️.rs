@@ -21,23 +21,23 @@ pub struct ResizeBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn resize_block(id: String, new_width: f64, new_height: f64) -> NoteMutation {
+pub fn resize_block(id: String, new_width: f64, new_height: f64) -> NoteMutation {
     NoteMutation::ResizeBlock(ResizeBlock { id, new_width, new_height })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ResizeBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "block", kind: "resize-block", record: "ResizedBlock" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Resize block \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

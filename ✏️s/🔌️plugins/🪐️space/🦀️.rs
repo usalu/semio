@@ -837,22 +837,22 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn home_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::home::HomeViewer>();
+        assert_viewer_never_mutates::<crate::viewer::home::HomeViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn home_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::home::HomeApp, crate::viewer::home::HomeViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::home::HomeApp, crate::viewer::home::HomeViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn space_index_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::space_index::SpaceIndexViewer>();
+        assert_viewer_never_mutates::<crate::viewer::space_index::SpaceIndexViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn space_index_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::space_index::SpaceIndexEditor, crate::viewer::space_index::SpaceIndexViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::space_index::SpaceIndexEditor, crate::viewer::space_index::SpaceIndexViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

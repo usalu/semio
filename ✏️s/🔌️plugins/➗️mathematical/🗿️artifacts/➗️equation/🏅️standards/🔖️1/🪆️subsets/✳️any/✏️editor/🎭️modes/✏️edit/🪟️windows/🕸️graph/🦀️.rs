@@ -11,7 +11,7 @@ pub const MATH_PLAY_BODY_GRAPH: &str = "equation.play.graph";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::equation::create_equation_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: MATH_PLAY_WINDOW_GRAPH.into(),
         label: LocalizedLabel::native("Graph", "Graph"),
@@ -32,7 +32,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(graph: &EquationGraph, camera: &EquationCamera) -> UiNode {
+pub fn render(graph: &EquationGraph, camera: &EquationCamera) -> UiNode {
     let (nodes, edges) = workflow_json(graph);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
     let mut scene = empty_component_scene(MATH_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph);

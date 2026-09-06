@@ -19,16 +19,16 @@ pub struct ReorderPages {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderPages {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "pages", kind: "reorder-pages", record: "ReorderedPages" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_reorder_pages(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_reorder_pages(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Reorder page \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
@@ -36,7 +36,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderPages {
 
 
 //#region 🔀ReorderPages
-pub async fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.pages.iter().any(|page| page.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
@@ -56,7 +56,7 @@ pub async fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -
 
 
 //#region 🔀ReorderPages
-pub async fn inverse_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.pages.iter().position(|page| page.id == payload.id) {
         Some(original_index) => vec![LayoutMutation::ReorderPages(ReorderPages { id: payload.id.clone(), to_index: original_index })],
         None => Vec::new(),

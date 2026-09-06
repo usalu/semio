@@ -16,7 +16,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🩹️ Builds the single-field `ShootingMutation` for a `patchAsset`/`patchAssets` field write,
 /// addressed at `id`.
-async fn asset_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
+fn asset_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
     match field {
         "name" => value.as_str().map(|v| ShootingMutation::RenameAsset(RenameAsset { id, new_name: v.into() })),
         "url" => value.as_str().map(|v| ShootingMutation::ChangeAssetUrl(ChangeAssetUrl { id, new_url: v.into() })),
@@ -34,7 +34,7 @@ pub mod set_active_asset {
         pub asset_id: Option<String>,
     }
 
-    pub async fn handle(payload: &SetActiveAsset, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveAsset, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match payload.asset_id.as_deref().filter(|id| !id.is_empty()) {
             Some(id) => Ok(Emit {
                 artifact_mutations: vec![ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id.into()) })],
@@ -59,7 +59,7 @@ pub mod patch_assets {
         pub value: String,
     }
 
-    pub async fn handle(payload: &PatchAssets, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &PatchAssets, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         if payload.asset_ids.is_empty() {
             return Ok(Emit::default());
         }
@@ -88,7 +88,7 @@ pub mod add_asset {
     /// itself here — the `"assets"` domain's selection is framework-owned `InteractionState` now, only
     /// ever mutated by the framework's own injected `interactionSelect` handling, never by an app
     /// command's `Emit::config_mutations` (matches `raster`'s `add-layer` precedent).
-    pub async fn handle(payload: &AddAsset, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &AddAsset, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("asset");
         let format = &payload.format;
@@ -112,7 +112,7 @@ pub mod import_asset {
 
     /// 🕹️ Same dropped auto-select as `add_asset::handle` above (see its doc comment) — `fit_revision`
     /// still bumps here, that stays a genuinely app-owned config field.
-    pub async fn handle(payload: &ImportAsset, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportAsset, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("asset");
         let resolved_name = payload.name.as_deref().map(|name| name.trim_end_matches(".glb").to_string()).filter(|name| !name.is_empty()).unwrap_or_else(|| format!("Asset {}", snapshot.assets.len() + 1));
@@ -134,7 +134,7 @@ pub mod import_asset_request {
     #[dsl(keyword = "import-asset-request")]
     pub struct ImportAssetRequest {}
 
-    pub async fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(108), accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
     }
 }

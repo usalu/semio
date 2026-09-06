@@ -19,9 +19,13 @@
 //! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
 use super::schema::{
-    DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DocumentView, MemberSpaceViewV1, DirectoryStreamMessage, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
-    DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1,
-    DocumentPlanSocketGrantIntentV1, DocumentScope, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1, GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR, GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, lease_fields_from_plan_v1, same_lease_fields_v1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
+    lease_fields_from_plan_v1, same_lease_fields_v1, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1, DirectorySpaceAdministrationCapabilitiesV1,
+    DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectoryStreamMessage,
+    DocumentBrowserActorSourceV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1,
+    DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1,
+    DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1, GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1,
+    GisMapInferencePortCodeV1, MemberSpaceViewV1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES,
+    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR, GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
 };
 use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
@@ -229,9 +233,15 @@ pub struct CanonicalDirectorySpaceAdministrationPageV1 {
 }
 
 impl CanonicalDirectorySpaceAdministrationPageV1 {
-    pub fn canonical_json(&self) -> &str { &self.canonical_json }
-    pub fn page(&self) -> &DirectorySpaceAdministrationPageV1 { &self.page }
-    pub fn receipt_sha256(&self) -> &str { self.page.receipt_sha256() }
+    pub fn canonical_json(&self) -> &str {
+        &self.canonical_json
+    }
+    pub fn page(&self) -> &DirectorySpaceAdministrationPageV1 {
+        &self.page
+    }
+    pub fn receipt_sha256(&self) -> &str {
+        self.page.receipt_sha256()
+    }
 }
 
 /// 📄️ Immutable original page bytes plus only the authenticated header needed for ACK ordering.
@@ -247,13 +257,27 @@ pub struct CanonicalDirectoryEventPageV1 {
 }
 
 impl CanonicalDirectoryEventPageV1 {
-    pub fn canonical_json(&self) -> &str { &self.canonical_json }
-    pub fn session_binding_sha256(&self) -> &str { &self.session_binding_sha256 }
-    pub fn authorization_generation(&self) -> u64 { self.authorization_generation }
-    pub fn after_seq_exclusive(&self) -> u64 { self.after_seq_exclusive }
-    pub fn through_seq_inclusive(&self) -> u64 { self.through_seq_inclusive }
-    pub fn has_more(&self) -> bool { self.has_more }
-    pub fn receipt_sha256(&self) -> &str { &self.receipt_sha256 }
+    pub fn canonical_json(&self) -> &str {
+        &self.canonical_json
+    }
+    pub fn session_binding_sha256(&self) -> &str {
+        &self.session_binding_sha256
+    }
+    pub fn authorization_generation(&self) -> u64 {
+        self.authorization_generation
+    }
+    pub fn after_seq_exclusive(&self) -> u64 {
+        self.after_seq_exclusive
+    }
+    pub fn through_seq_inclusive(&self) -> u64 {
+        self.through_seq_inclusive
+    }
+    pub fn has_more(&self) -> bool {
+        self.has_more
+    }
+    pub fn receipt_sha256(&self) -> &str {
+        &self.receipt_sha256
+    }
 
     /// ✅️ Captures the exact non-secret header a retained Home action must acknowledge.
     pub fn acknowledgement(&self, bootstrap_epoch: u64) -> DirectoryEventPageAckV1 {
@@ -390,6 +414,7 @@ impl Drop for SocketGrantReceiptV1 {
 /// 🔐 Receipt-free server-selected authority retained by a native document connection.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DocumentSocketAuthorityV1 {
+    pub(crate) admitted_lease: Option<DocumentExecutionTargetLeaseFieldsV1>,
     pub hub_origin: String,
     pub expires_at_unix_ms: u64,
     pub scope: DocumentScope,
@@ -400,16 +425,46 @@ pub struct DocumentSocketAuthorityV1 {
     pub parent_dialect: DocumentOpenParentDialectV1,
     pub pack_schema_hash: [u8; 32],
     pub surface: DocumentOpenSurfaceV1,
+    pub browser_actor: DocumentOpenBrowserActorV1,
     pub grant: DocumentOpenGrantV1,
     pub checkpoint: Option<DocumentOpenCheckpointV1>,
     pub revalidation: DocumentOpenRevalidationV1,
 }
 
 impl DocumentSocketAuthorityV1 {
-    /// 🧾 Receipt-free lease projection of this retained authority at the byte lengths under
-    /// comparison. The plan constrains every identity but no byte length.
-    pub fn lease_fields(&self, component_byte_length: u64, descriptor_byte_length: u64) -> DocumentExecutionTargetLeaseFieldsV1 {
-        DocumentExecutionTargetLeaseFieldsV1 {
+    /// 🏗️ Builds receipt-free authority only from a valid plan and its exact local codec/lease expectation.
+    pub fn from_plan(hub_origin: String, plan: &DocumentOpenPlanV1, expectation: &DocumentSocketExpectationV1, now_ms: u64) -> Result<Self, DocumentOpenPlanErrorCodeV1> {
+        plan.validate(now_ms)?;
+        let pack_schema_hash = decode_lower_hex_32(&plan.artifact.pack_schema_hash).ok_or(DocumentOpenPlanErrorCodeV1::Denied)?;
+        if expectation.artifact_schema != plan.artifact.schema
+            || pack_schema_hash != expectation.pack_schema_hash
+            || expectation.requested_surface_id.as_ref().is_some_and(|surface| surface != &plan.surface.surface_id)
+            || expectation.lease.as_ref().is_some_and(|lease| !lease_fields_from_plan_v1(plan, lease.component.byte_length, lease.descriptor.byte_length, lease.browser_actor.byte_length()).is_ok_and(|fields| same_lease_fields_v1(&fields, lease)))
+        {
+            return Err(DocumentOpenPlanErrorCodeV1::Denied);
+        }
+        Ok(Self {
+            admitted_lease: expectation.lease.clone(),
+            hub_origin,
+            expires_at_unix_ms: plan.expires_at_unix_ms,
+            scope: plan.scope.clone(),
+            descriptor_digest_v1: plan.descriptor_digest_v1.clone(),
+            catalog: plan.catalog.clone(),
+            package: plan.package.clone(),
+            artifact: plan.artifact.clone(),
+            parent_dialect: plan.parent_dialect.clone(),
+            pack_schema_hash,
+            surface: plan.surface.clone(),
+            browser_actor: plan.browser_actor.clone(),
+            grant: plan.grant,
+            checkpoint: plan.checkpoint.clone(),
+            revalidation: plan.revalidation,
+        })
+    }
+
+    /// 🧾 Receipt-free plan projection at independently retained byte lengths.
+    pub fn lease_fields(&self, component_byte_length: u64, descriptor_byte_length: u64, browser_actor_byte_length: Option<u64>) -> Result<DocumentExecutionTargetLeaseFieldsV1, DocumentOpenPlanErrorCodeV1> {
+        let fields = DocumentExecutionTargetLeaseFieldsV1 {
             schema: "semio.os.document-execution-target-lease/v1".to_string(),
             version: 1,
             scope: self.scope.clone(),
@@ -418,13 +473,19 @@ impl DocumentSocketAuthorityV1 {
             package: self.package.clone(),
             component: DocumentExecutionTargetComponentV1 { sha256: self.package.component_sha256.clone(), blake3: self.package.component_blake3.clone(), byte_length: component_byte_length },
             descriptor: DocumentExecutionTargetDescriptorV1 { sha256: self.package.descriptor_byte_sha256.clone(), byte_length: descriptor_byte_length },
+            browser_actor: self
+                .browser_actor
+                .to_lease(DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str(), browser_actor_byte_length)
+                .map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?,
             artifact: self.artifact.clone(),
             parent_dialect: self.parent_dialect.clone(),
             surface: self.surface.clone(),
             grant: self.grant,
             checkpoint: self.checkpoint.clone(),
             revalidation: self.revalidation,
-        }
+        };
+        fields.validate()?;
+        Ok(fields)
     }
 
     /// ⚖️ The one shared full-field lease relation, replacing every partial surface predicate: it
@@ -432,7 +493,9 @@ impl DocumentSocketAuthorityV1 {
     /// digests, both byte lengths, artifact, parent dialect, every surface field, every grant bit,
     /// the checkpoint and every revalidation generation.
     pub fn matches_lease_fields(&self, expected: &DocumentExecutionTargetLeaseFieldsV1) -> bool {
-        same_lease_fields_v1(&self.lease_fields(expected.component.byte_length, expected.descriptor.byte_length), expected)
+        self.admitted_lease.as_ref().is_some_and(|admitted| {
+            same_lease_fields_v1(admitted, expected) && self.lease_fields(admitted.component.byte_length, admitted.descriptor.byte_length, admitted.browser_actor.byte_length()).is_ok_and(|fields| same_lease_fields_v1(&fields, expected))
+        })
     }
 }
 
@@ -457,15 +520,7 @@ pub struct DocumentSocketExpectationV1 {
 }
 
 pub trait HubSocketGrantSource: Send + Sync {
-    fn admit_document_socket(
-        &self,
-        ctx: &OperationContext,
-        space_id: &str,
-        document_id: &str,
-        expectation: &DocumentSocketExpectationV1,
-        client_instance_id: &str,
-        timeout_ms: u64,
-    ) -> Result<DocumentSocketAdmissionV1, DirectoryClientError>;
+    fn admit_document_socket(&self, ctx: &OperationContext, space_id: &str, document_id: &str, expectation: &DocumentSocketExpectationV1, client_instance_id: &str, timeout_ms: u64) -> Result<DocumentSocketAdmissionV1, DirectoryClientError>;
 }
 //#endregion 🔖️Wire
 
@@ -910,6 +965,54 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         self.request_json(ctx, HttpMethod::Get, "/auth/sessions/me", None).await
     }
 
+    /// 🪪️ Fetches the authenticated server-selected execution-target manifest for one exact
+    /// document scope. The caller supplies only structural intent; package, descriptor and component
+    /// identities all come back from the protected Hub route.
+    pub async fn document_execution_target_manifest(&self, ctx: &OperationContext, intent: &DocumentOpenIntentV1) -> Result<DocumentExecutionTargetLeaseFieldsV1, DirectoryClientError> {
+        intent.validate().map_err(|_| DirectoryClientError::Decode("document execution-target intent is invalid".into()))?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = format!("/spaces/{}/documents/{}/execution-target/manifest", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(crate::os_pack::json::to_json_string(intent).into_bytes())).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => return Err(DirectoryClientError::Unauthorized),
+            200..=299 => {}
+            status => return Err(DirectoryClientError::Http { status, body: String::new() }),
+        }
+        if response.body.len() > 64 * 1024 {
+            return Err(DirectoryClientError::Decode("document execution-target manifest exceeded its fixed byte limit".into()));
+        }
+        let manifest: DocumentExecutionTargetLeaseFieldsV1 = decode_json_bytes(&response.body)?;
+        manifest.validate().map_err(|_| DirectoryClientError::Decode("document execution-target manifest is invalid".into()))?;
+        Ok(manifest)
+    }
+
+    /// 📖 Fetches exact descriptor bytes for the same protected structural intent. Raw bytes are
+    /// bounded before return; their declared length and SHA-256 remain the caller's comparison input.
+    pub async fn document_execution_target_descriptor(&self, ctx: &OperationContext, intent: &DocumentOpenIntentV1) -> Result<Vec<u8>, DirectoryClientError> {
+        intent.validate().map_err(|_| DirectoryClientError::Decode("document execution-target intent is invalid".into()))?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = format!("/spaces/{}/documents/{}/execution-target/descriptor", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(crate::os_pack::json::to_json_string(intent).into_bytes())).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => Err(DirectoryClientError::Unauthorized),
+            200..=299 if response.body.len() <= DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES as usize => Ok(response.body),
+            200..=299 => Err(DirectoryClientError::Decode("document execution-target descriptor exceeded its fixed byte limit".into())),
+            status => Err(DirectoryClientError::Http { status, body: String::new() }),
+        }
+    }
+
     /// 🧾️ Posts one sealed V1 request and parses only a raw-byte-capped canonical receipt bound to
     /// it. Every non-2xx becomes a closed {@link DirectoryCommandErrorCodeV1}; the response body is
     /// never decoded into a UI-facing error. `ctx.cancel` cancels the HTTP wait only — a command
@@ -1046,11 +1149,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         if scope.space_id.is_empty() || scope.document_id.is_empty() || scope.space_id.len() > DIRECTORY_SCOPE_ID_MAX_BYTES || scope.document_id.len() > DIRECTORY_SCOPE_ID_MAX_BYTES {
             return Err(DirectoryClientError::Decode("directory stream scope invalid".into()));
         }
-        let prefix = format!(
-            "/directory/spaces/{}/documents/{}",
-            encode_url_component(&scope.space_id),
-            encode_url_component(&scope.document_id),
-        );
+        let prefix = format!("/directory/spaces/{}/documents/{}", encode_url_component(&scope.space_id), encode_url_component(&scope.document_id),);
         let mut receipt = self.issue_socket_grant(ctx, &format!("{prefix}/socket-grants"), b"", timeout_ms)?;
         if ctx.cancel.is_cancelled_now() {
             return Err(DirectoryClientError::Cancelled);
@@ -1111,23 +1210,9 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClient<T> {
-    fn admit_document_socket(
-        &self,
-        ctx: &OperationContext,
-        space_id: &str,
-        document_id: &str,
-        expectation: &DocumentSocketExpectationV1,
-        client_instance_id: &str,
-        timeout_ms: u64,
-    ) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
+    fn admit_document_socket(&self, ctx: &OperationContext, space_id: &str, document_id: &str, expectation: &DocumentSocketExpectationV1, client_instance_id: &str, timeout_ms: u64) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
         let scope = DocumentScope::new(space_id, document_id);
-        let intent = DocumentOpenIntentV1 {
-            schema: "semio.hub.document-open-intent/v1".into(),
-            version: 1,
-            scope: scope.clone(),
-            requested_surface_id: expectation.requested_surface_id.clone(),
-            client_instance_id: client_instance_id.to_string(),
-        };
+        let intent = DocumentOpenIntentV1 { schema: "semio.hub.document-open-intent/v1".into(), version: 1, scope: scope.clone(), requested_surface_id: expectation.requested_surface_id.clone(), client_instance_id: client_instance_id.to_string() };
         if intent.validate().is_err() || expectation.artifact_schema.is_empty() {
             return Err(DirectoryClientError::Decode("document open intent invalid".into()));
         }
@@ -1140,14 +1225,9 @@ impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClie
         let surface_matches = expectation
             .lease
             .as_ref()
-            .is_none_or(|expected| same_lease_fields_v1(&lease_fields_from_plan_v1(&plan, expected.component.byte_length, expected.descriptor.byte_length), expected))
+            .is_none_or(|expected| lease_fields_from_plan_v1(&plan, expected.component.byte_length, expected.descriptor.byte_length, expected.browser_actor.byte_length()).is_ok_and(|fields| same_lease_fields_v1(&fields, expected)))
             && expectation.requested_surface_id.as_ref().is_none_or(|surface| plan.surface.surface_id == *surface);
-        if plan.validate(now_ms).is_err()
-            || plan.scope != scope
-            || plan.artifact.schema != expectation.artifact_schema
-            || pack_schema_hash != Some(expectation.pack_schema_hash)
-            || !surface_matches
-        {
+        if plan.validate(now_ms).is_err() || plan.scope != scope || plan.artifact.schema != expectation.artifact_schema || pack_schema_hash != Some(expectation.pack_schema_hash) || !surface_matches {
             wipe_string(&mut plan.receipt);
             return Err(DirectoryClientError::Decode("document open plan binding invalid".into()));
         }
@@ -1155,33 +1235,17 @@ impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClie
             wipe_string(&mut plan.receipt);
             return Err(DirectoryClientError::Cancelled);
         }
-        let exchange = WipeDocumentPlanSocketGrantIntent(DocumentPlanSocketGrantIntentV1 {
-            schema: "semio.hub.document-plan-socket-grant-intent/v1".into(),
-            version: 1,
-            plan_receipt: std::mem::take(&mut plan.receipt),
-        });
+        let credential_origin = self.credential.as_ref().ok_or(DirectoryClientError::Unauthorized)?.hub_origin().trim_end_matches('/');
+        let authority = DocumentSocketAuthorityV1::from_plan(credential_origin.to_string(), &plan, expectation, now_ms).map_err(|_| DirectoryClientError::Decode("document open authority invalid".into()))?;
+        let exchange = WipeDocumentPlanSocketGrantIntent(DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: std::mem::take(&mut plan.receipt) });
         let exchange_body = WipeBytes { bytes: crate::os_pack::json::to_json_string(&exchange.0).into_bytes(), observer: None };
         let socket = self.issue_socket_grant(ctx, &format!("{prefix}/socket-grants"), &exchange_body.bytes, timeout_ms)?;
         if ctx.cancel.is_cancelled_now() {
             return Err(DirectoryClientError::Cancelled);
         }
-        let pack_schema_hash = pack_schema_hash.ok_or_else(|| DirectoryClientError::Decode("document open plan schema hash invalid".into()))?;
-        let credential_origin = self.credential.as_ref().ok_or(DirectoryClientError::Unauthorized)?.hub_origin().trim_end_matches('/');
-        let authority = DocumentSocketAuthorityV1 {
-            hub_origin: credential_origin.to_string(),
-            expires_at_unix_ms: plan.expires_at_unix_ms,
-            scope: plan.scope,
-            descriptor_digest_v1: plan.descriptor_digest_v1,
-            catalog: plan.catalog,
-            package: plan.package,
-            artifact: plan.artifact,
-            parent_dialect: plan.parent_dialect,
-            pack_schema_hash,
-            surface: plan.surface,
-            grant: plan.grant,
-            checkpoint: plan.checkpoint,
-            revalidation: plan.revalidation,
-        };
+        if authority.expires_at_unix_ms <= u64::try_from(wall_now_ms()).map_err(|_| DirectoryClientError::Decode("document open clock invalid".into()))? {
+            return Err(DirectoryClientError::Decode("document open authority expired".into()));
+        }
         Ok(DocumentSocketAdmissionV1 { socket, authority })
     }
 }
@@ -1207,11 +1271,7 @@ pub fn directory_scoped_ws_url(base_url: &str, scope: &DocumentScope, since: u64
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map_or(base_url, |(_, rest)| rest).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    format!(
-        "{scheme}://{authority}/directory/spaces/{}/documents/{}/socket/v1?since={since}",
-        encode_url_component(&scope.space_id),
-        encode_url_component(&scope.document_id),
-    )
+    format!("{scheme}://{authority}/directory/spaces/{}/documents/{}/socket/v1?since={since}", encode_url_component(&scope.space_id), encode_url_component(&scope.document_id),)
 }
 
 /// ⏱️ Doubling backoff capped at `HUB_RECONNECT_MAX_MS`, floored at `HUB_RECONNECT_MIN_MS`.
@@ -1685,11 +1745,7 @@ pub mod native {
             };
             let status = response.status();
             let mut body = Vec::new();
-            response
-                .into_reader()
-                .take((super::DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES + 1) as u64)
-                .read_to_end(&mut body)
-                .map_err(|error| TransportError::Io(error.to_string()))?;
+            response.into_reader().take((super::DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES + 1) as u64).read_to_end(&mut body).map_err(|error| TransportError::Io(error.to_string()))?;
             Ok(HttpResponse { status, body })
         }
 
@@ -2311,16 +2367,11 @@ mod tests {
         plan["surface"]["surfaceId"] = serde_json::json!(surface_id);
         plan["checkpoint"]["baselineFrontier"]["documentId"] = serde_json::json!(document_id);
         let decoded: DocumentOpenPlanV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&plan).expect("plan json")).expect("neutral plan");
-        lease_fields_from_plan_v1(&decoded, 1_024, 512)
+        lease_fields_from_plan_v1(&decoded, 1_024, 512, None).expect("non-actor fixture projection")
     }
 
     fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocketExpectationV1 {
-        DocumentSocketExpectationV1 {
-            artifact_schema: schema.to_string(),
-            pack_schema_hash: [0x11; 32],
-            requested_surface_id: surface_id.map(str::to_string),
-            lease: None,
-        }
+        DocumentSocketExpectationV1 { artifact_schema: schema.to_string(), pack_schema_hash: [0x11; 32], requested_surface_id: surface_id.map(str::to_string), lease: None }
     }
 
     /// 🪪️ The one shared full-field lease relation, driven by the language-neutral
@@ -2331,9 +2382,8 @@ mod tests {
     #[test]
     fn execution_target_lease_compares_every_plan_and_verified_byte_field() {
         let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
-        let decode_fields = |value: &serde_json::Value| -> Result<DocumentExecutionTargetLeaseFieldsV1, ()> {
-            crate::os_pack::json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&serde_json::to_string(value).expect("fields json")).map_err(|_| ())
-        };
+        let decode_fields =
+            |value: &serde_json::Value| -> Result<DocumentExecutionTargetLeaseFieldsV1, ()> { crate::os_pack::json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&serde_json::to_string(value).expect("fields json")).map_err(|_| ()) };
         let manifest = decode_fields(&corpus["manifest"]).expect("corpus manifest");
         manifest.validate().expect("corpus manifest is a valid lease projection");
         let hex_bytes = |text: &str| -> Vec<u8> { (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("hex")).collect() };
@@ -2349,25 +2399,20 @@ mod tests {
         plan_json["expiresAtUnixMs"] = serde_json::json!(u64::try_from(wall_now_ms()).expect("wall clock") + 20_000);
         let plan: DocumentOpenPlanV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&plan_json).expect("plan json")).expect("corpus plan");
         plan.validate(u64::try_from(wall_now_ms()).expect("wall clock")).expect("corpus plan validates");
-        let projected = lease_fields_from_plan_v1(&plan, manifest.component.byte_length, manifest.descriptor.byte_length);
+        let projected = lease_fields_from_plan_v1(&plan, manifest.component.byte_length, manifest.descriptor.byte_length, manifest.browser_actor.byte_length()).expect("closed actor projection");
         assert!(same_lease_fields_v1(&projected, &manifest));
 
-        let authority = DocumentSocketAuthorityV1 {
-            hub_origin: corpus["hubOrigin"].as_str().expect("hub origin").to_string(),
-            expires_at_unix_ms: plan.expires_at_unix_ms,
-            scope: plan.scope.clone(),
-            descriptor_digest_v1: plan.descriptor_digest_v1.clone(),
-            catalog: plan.catalog.clone(),
-            package: plan.package.clone(),
-            artifact: plan.artifact.clone(),
-            parent_dialect: plan.parent_dialect.clone(),
+        let expectation = DocumentSocketExpectationV1 {
+            artifact_schema: plan.artifact.schema.clone(),
             pack_schema_hash: decode_lower_hex_32(&plan.artifact.pack_schema_hash).expect("pack schema hash"),
-            surface: plan.surface.clone(),
-            grant: plan.grant,
-            checkpoint: plan.checkpoint.clone(),
-            revalidation: plan.revalidation,
+            requested_surface_id: Some(plan.surface.surface_id.clone()),
+            lease: Some(manifest.clone()),
         };
+        let authority = DocumentSocketAuthorityV1::from_plan(corpus["hubOrigin"].as_str().expect("hub origin").to_string(), &plan, &expectation, u64::try_from(wall_now_ms()).expect("wall clock")).expect("validated retained authority");
         assert!(authority.matches_lease_fields(&manifest));
+        let mut unbound = authority.clone();
+        unbound.admitted_lease = None;
+        assert!(!unbound.matches_lease_fields(&manifest));
 
         let mut substitutions = 0usize;
         for vector in corpus["hostile"].as_array().expect("hostile rows") {
@@ -2410,9 +2455,7 @@ mod tests {
         let mut expectation = document_expectation("demo/v1", Some(surface_id));
         expectation.lease = Some(document_lease_fields(space_id, document_id, "demo/v1", surface_id));
 
-        let admission = client
-            .admit_document_socket(&root_ctx(), space_id, document_id, &expectation, "native-instance", 30_000)
-            .expect("document admission");
+        let admission = client.admit_document_socket(&root_ctx(), space_id, document_id, &expectation, "native-instance", 30_000).expect("document admission");
         assert_eq!(admission.authority.scope, DocumentScope::new(space_id, document_id));
         assert_eq!(admission.authority.artifact.schema, "demo/v1");
         assert_eq!(admission.authority.surface.surface_id, surface_id);
@@ -2420,10 +2463,7 @@ mod tests {
         assert_eq!(admission.authority.package.plugin_id, "s.gis:地図");
         assert_eq!(admission.authority.package.package_id, "s.gis.gismap:codec");
         assert_eq!(admission.authority.package.version, "1.0.0:β");
-        assert_eq!(
-            admission.authority.parent_dialect,
-            DocumentOpenParentDialectV1 { artifact_kind: "s.gis:gismap".into(), standard: "1".into(), subset: "*".into() }
-        );
+        assert_eq!(admission.authority.parent_dialect, DocumentOpenParentDialectV1 { artifact_kind: "s.gis:gismap".into(), standard: "1".into(), subset: "*".into() });
         assert_eq!(admission.authority.surface.app_id, "app.gis");
         assert_eq!(admission.authority.surface.window_kind_id, "window.document");
         assert_eq!(admission.authority.surface.renderer_target, DocumentOpenRendererTargetV1::React);
@@ -2433,19 +2473,25 @@ mod tests {
         assert_eq!(requests[0].url, "http://hub.local/spaces/space%20%2F%E6%9D%B1%E4%BA%AC%3F/documents/document%23%C3%A4/open-plan");
         assert_eq!(requests[1].url, "http://hub.local/spaces/space%20%2F%E6%9D%B1%E4%BA%AC%3F/documents/document%23%C3%A4/socket-grants");
         let intent: serde_json::Value = serde_json::from_slice(&requests[0].body).expect("independent intent decode");
-        assert_eq!(intent, serde_json::json!({
-            "schema": "semio.hub.document-open-intent/v1",
-            "version": 1,
-            "scope": { "spaceId": space_id, "documentId": document_id },
-            "requestedSurfaceId": surface_id,
-            "clientInstanceId": "native-instance"
-        }));
+        assert_eq!(
+            intent,
+            serde_json::json!({
+                "schema": "semio.hub.document-open-intent/v1",
+                "version": 1,
+                "scope": { "spaceId": space_id, "documentId": document_id },
+                "requestedSurfaceId": surface_id,
+                "clientInstanceId": "native-instance"
+            })
+        );
         let exchange: serde_json::Value = serde_json::from_slice(&requests[1].body).expect("independent exchange decode");
-        assert_eq!(exchange, serde_json::json!({
-            "schema": "semio.hub.document-plan-socket-grant-intent/v1",
-            "version": 1,
-            "planReceipt": receipt
-        }));
+        assert_eq!(
+            exchange,
+            serde_json::json!({
+                "schema": "semio.hub.document-plan-socket-grant-intent/v1",
+                "version": 1,
+                "planReceipt": receipt
+            })
+        );
         assert!(!requests[0].body.windows(receipt.len()).any(|window| window == receipt.as_bytes()));
     }
 
@@ -2530,10 +2576,7 @@ mod tests {
     async fn ws_url_switches_scheme_and_encodes_query() {
         assert_eq!(directory_ws_url("http://127.0.0.1:8787", 0), "ws://127.0.0.1:8787/directory/socket/v1?since=0");
         assert_eq!(directory_ws_url("https://hub.example", 42), "wss://hub.example/directory/socket/v1?since=42");
-        assert_eq!(
-            directory_scoped_ws_url("https://hub.example", &DocumentScope::new("space /a", "document#b"), 7),
-            "wss://hub.example/directory/spaces/space%20%2Fa/documents/document%23b/socket/v1?since=7"
-        );
+        assert_eq!(directory_scoped_ws_url("https://hub.example", &DocumentScope::new("space /a", "document#b"), 7), "wss://hub.example/directory/spaces/space%20%2Fa/documents/document%23b/socket/v1?since=7");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2720,13 +2763,7 @@ mod tests {
         let capability = format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64));
         let command = DirectoryCommand::CreateInvite { space_id: "space-a".into(), role: DirectorySpaceRole::Spectator, ttl_secs: 3_600 };
         let request = DirectoryCommandRequestV1::new("1f2e3d4c5b6a7988a1b2c3d4e5f60718", command.clone());
-        let receipt = DirectoryCommandReceiptV1::seal(
-            request.request_id.clone(),
-            directory_command_sha256(&command),
-            DirectoryCommandOutcomeV1::Accepted,
-            Vec::new(),
-            DirectoryCommandResultV1::Invite { invite_token: "invite.v1.one-shot".into() },
-        );
+        let receipt = DirectoryCommandReceiptV1::seal(request.request_id.clone(), directory_command_sha256(&command), DirectoryCommandOutcomeV1::Accepted, Vec::new(), DirectoryCommandResultV1::Invite { invite_token: "invite.v1.one-shot".into() });
         let canonical = crate::os_pack::json::to_json_string(&receipt);
 
         let transport = FakeTransport::default();
@@ -2737,7 +2774,14 @@ mod tests {
         assert_eq!(delivered.receipt, receipt);
         assert_eq!(transport.requests.lock().unwrap().first().map(|entry| entry.body.clone()).expect("sealed request bytes"), request.canonical_json().into_bytes());
 
-        for (status, code) in [(401u16, DirectoryCommandErrorCodeV1::Unauthorized), (403, DirectoryCommandErrorCodeV1::Forbidden), (409, DirectoryCommandErrorCodeV1::RequestConflict), (413, DirectoryCommandErrorCodeV1::TooLarge), (503, DirectoryCommandErrorCodeV1::Overloaded), (500, DirectoryCommandErrorCodeV1::Invalid)] {
+        for (status, code) in [
+            (401u16, DirectoryCommandErrorCodeV1::Unauthorized),
+            (403, DirectoryCommandErrorCodeV1::Forbidden),
+            (409, DirectoryCommandErrorCodeV1::RequestConflict),
+            (413, DirectoryCommandErrorCodeV1::TooLarge),
+            (503, DirectoryCommandErrorCodeV1::Overloaded),
+            (500, DirectoryCommandErrorCodeV1::Invalid),
+        ] {
             let transport = FakeTransport::default();
             transport.push_response(Ok(HttpResponse { status, body: b"hub text a UI-facing error must never carry".to_vec() })).await;
             let client = authenticated_client(transport, &capability);
@@ -2757,7 +2801,8 @@ mod tests {
         assert_eq!(authenticated_client(forged, &capability).command(&root_ctx(), &request).await.expect_err("digest substitution"), DirectoryCommandErrorCodeV1::Invalid);
 
         let redacted = FakeTransport::default();
-        let leaking = DirectoryCommandReceiptV1::seal(request.request_id.clone(), directory_command_sha256(&command), DirectoryCommandOutcomeV1::SecretUndeliverable, Vec::new(), DirectoryCommandResultV1::Invite { invite_token: "invite.v1.replayed".into() });
+        let leaking =
+            DirectoryCommandReceiptV1::seal(request.request_id.clone(), directory_command_sha256(&command), DirectoryCommandOutcomeV1::SecretUndeliverable, Vec::new(), DirectoryCommandResultV1::Invite { invite_token: "invite.v1.replayed".into() });
         redacted.push_response(Ok(HttpResponse { status: 200, body: crate::os_pack::json::to_json_string(&leaking).into_bytes() })).await;
         assert_eq!(authenticated_client(redacted, &capability).command(&root_ctx(), &request).await.expect_err("redaction violation"), DirectoryCommandErrorCodeV1::Invalid);
 

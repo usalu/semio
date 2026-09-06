@@ -3,7 +3,7 @@
 use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationGeometry, EquationSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::ReplacePoints, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
+pub fn diff(payload: &super::ReplacePoints, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
     if equation_geometry(base).points == payload.points {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Points are already identical to the requested replacement.");
     }

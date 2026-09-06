@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🎯️ Falls back to the current `"assets"` interaction-domain selection (read once per dispatch into
 /// `ShootingDispatchCtx::selected_asset_ids` — see that struct's doc comment) when the command carries
 /// no explicit ids.
-async fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
+fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
     if ids.is_empty() {
         fallback.to_vec()
     } else {
@@ -32,7 +32,7 @@ pub mod translate_selection {
         pub dz: f64,
     }
 
-    pub async fn handle(payload: &TranslateSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &TranslateSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &ctx.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
@@ -57,7 +57,7 @@ pub mod rotate_selection {
         pub angle: f64,
     }
 
-    pub async fn handle(payload: &RotateSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &RotateSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &ctx.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())
@@ -81,7 +81,7 @@ pub mod scale_selection {
         pub sz: f64,
     }
 
-    pub async fn handle(payload: &ScaleSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &ScaleSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let ids = mesh_selection_ids_typed(&payload.asset_ids, &ctx.selected_asset_ids);
         if ids.is_empty() {
             Ok(Emit::default())

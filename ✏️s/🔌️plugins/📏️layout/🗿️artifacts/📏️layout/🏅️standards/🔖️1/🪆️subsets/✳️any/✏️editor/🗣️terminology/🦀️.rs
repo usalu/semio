@@ -76,12 +76,12 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from the config-carried locale; unknown locales fall back to native English.
-pub async fn layout_labels(cfg: &LayoutConfig) -> &'static LayoutLabels {
+pub fn layout_labels(cfg: &LayoutConfig) -> &'static LayoutLabels {
     semio_framework_plugin::resolve_labels_for_locale::<LayoutLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.
-pub async fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> Label {
+pub fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> Label {
     match kind {
         "rect" => labels.kind_rect.into(),
         "text" => labels.kind_text.into(),
@@ -91,7 +91,7 @@ pub async fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> 
 }
 
 /// 🗣️ Fills a localized preflight message template's positional `{}` placeholders, in order, with the given values.
-pub async fn preflight_msg(template: LabelText, args: &[&str]) -> String {
+pub fn preflight_msg(template: LabelText, args: &[&str]) -> String {
     let mut result = template.as_str().to_string();
     for arg in args {
         result = result.replacen("{}", arg, 1);

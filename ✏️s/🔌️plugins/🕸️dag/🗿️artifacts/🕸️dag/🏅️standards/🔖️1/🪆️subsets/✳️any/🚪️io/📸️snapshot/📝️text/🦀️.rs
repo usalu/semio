@@ -19,12 +19,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub const DAG_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
 
 /// 📖️ Parses `.dag` DSL text into a `DagSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<DagSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<DagSnapshot, store::TextError> {
     <DagSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `DagSnapshot` back to `.dag` DSL text.
-pub async fn print_dsl(document: &DagSnapshot) -> String {
+pub fn print_dsl(document: &DagSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -32,29 +32,29 @@ pub async fn print_dsl(document: &DagSnapshot) -> String {
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
 /// style stdio's own `✳️graph`/`✳️text` facets already establish, duplicated locally (not imported
 /// across crates) to keep this facet independently compilable.
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
+pub(crate) fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-async fn print_dag_snapshot_body(s: &DagSnapshot) -> String {
+fn print_dag_snapshot_body(s: &DagSnapshot) -> String {
     let scene = crate::artifacts::dag::dag_working_scene(s);
     let nodes_json = dsl::json::to_json_string(&scene.nodes);
     let edges_json = dsl::json::to_json_string(&scene.edges);
     format!("schema={}\nnodes={}\nedges={}", enc_str(&s.schema), enc_str(&nodes_json), enc_str(&edges_json))
 }
-async fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
+fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
     let mut schema = None;
     let mut nodes: Option<Vec<DagNodeSpec>> = None;
     let mut edges: Option<Vec<DagFixtureEdge>> = None;
@@ -84,10 +84,10 @@ async fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
 //#region 🔖️HandcraftedArtifactDsl
 impl store::ArtifactDsl for DagSnapshot {
     const EXTENSION: &'static str = "dag";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "dag.dag"
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -96,7 +96,7 @@ impl store::ArtifactDsl for DagSnapshot {
         snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
         Ok(snapshot)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = print_dag_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)

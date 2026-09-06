@@ -29,7 +29,7 @@ pub mod set_shot_selection {
         pub shot_ids: Vec<String>,
     }
 
-    pub async fn handle(payload: &SetShotSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetShotSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetShotSelection { shot_ids: payload.shot_ids.clone() }]))
     }
 }
@@ -43,7 +43,7 @@ pub mod world_pointer_down {
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {}
 
-    pub async fn handle(_payload: &WorldPointerDown, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &WorldPointerDown, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -57,7 +57,7 @@ pub mod world_pointer_move {
     #[dsl(keyword = "world-pointer-move")]
     pub struct WorldPointerMove {}
 
-    pub async fn handle(_payload: &WorldPointerMove, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(_payload: &WorldPointerMove, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -73,7 +73,7 @@ pub mod set_center_model {
         pub pressed: Option<bool>,
     }
 
-    pub async fn handle(payload: &SetCenterModel, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCenterModel, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let next = payload.pressed.unwrap_or(!config.center_model);
         let mut config_mutations = vec![ShootingConfigMutation::SetCenterModel { value: next }];
@@ -99,7 +99,7 @@ pub mod set_active_utility {
     /// `Emit` has no channel into `InteractionState` any more (only the framework's own injected
     /// `interactionHover` dispatch writes it), so switching the transform utility no longer clears
     /// hover. Documented behavior change, matching this wave's other apps (e.g. `raster`'s `add-layer`).
-    pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         Ok(Emit::config(vec![ShootingConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
     }
 }

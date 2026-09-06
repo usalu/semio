@@ -20,16 +20,16 @@ pub struct CreatePage {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for CreatePage {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "page", kind: "create-page", record: "CreatedPage" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_page(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_create_page(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create page \"{}\"", self.page.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.page.id.clone()]
     }
 }
@@ -37,7 +37,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreatePage {
 
 
 //#region 🌱️CreatePage
-pub async fn diff_create_page(payload: &CreatePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_create_page(payload: &CreatePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.pages.iter().any(|page| page.id == payload.page.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A page with id \"{}\" already exists.", payload.page.id), [payload.page.id.clone()]);
     }
@@ -47,7 +47,7 @@ pub async fn diff_create_page(payload: &CreatePage, base: &LayoutSnapshot) -> pr
 
 
 //#region 🌱️CreatePage
-pub async fn inverse_create_page(payload: &CreatePage, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_create_page(payload: &CreatePage, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     vec![LayoutMutation::DeletePage(delete_page::DeletePage { id: payload.page.id.clone() })]
 }
 //#endregion 🌱️CreatePage

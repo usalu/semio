@@ -202,8 +202,8 @@ pub struct SemanticDescriptor {
 //#region 🪪️MutationLeafDescriptor
 /// 🪞️ Reexports the lower mutation metadata contract through the public OS command façade.
 pub use protocol::mutation::{
-    validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_source, MutationComposition, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeaf,
-    MutationDomainOperation, MutationOwnerLayout, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationOutcomeClass, MutationSourceProvenance,
+    validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_source, MutationComposition, MutationDiffParticipation, MutationDomainOperation, MutationInvertibility, MutationLanguageSurface, MutationLeaf,
+    MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance,
 };
 //#endregion 🪪️MutationLeafDescriptor
 
@@ -438,13 +438,7 @@ pub struct MutationDescriptor {
 
 impl MutationDescriptor {
     /// 🏗️ Validates all required metadata and fingerprints the complete immutable identity.
-    pub fn new(
-        id: crate::os_spr::ids::SchemaId,
-        schema_version: crate::os_spr::ids::SchemaVersion,
-        state_class: crate::os_spr::StateClass,
-        leaf: MutationLeafDescriptor,
-        semantics: SemanticDescriptor,
-    ) -> Result<Self, MutationDescriptorError> {
+    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, leaf: MutationLeafDescriptor, semantics: SemanticDescriptor) -> Result<Self, MutationDescriptorError> {
         if id.0.trim().is_empty() {
             return Err(MutationDescriptorError::InvalidField { field: "id", requirement: "must be nonblank" });
         }
@@ -465,21 +459,27 @@ impl MutationDescriptor {
         Ok(Self { id, schema_version, state_class, leaf, semantics, fingerprint })
     }
 
-    pub fn id(&self) -> &crate::os_spr::ids::SchemaId { &self.id }
-    pub fn schema_version(&self) -> crate::os_spr::ids::SchemaVersion { self.schema_version }
-    pub fn state_class(&self) -> crate::os_spr::StateClass { self.state_class }
-    pub fn leaf(&self) -> &MutationLeafDescriptor { &self.leaf }
-    pub fn semantics(&self) -> &SemanticDescriptor { &self.semantics }
-    pub fn fingerprint(&self) -> &[u8; 32] { &self.fingerprint }
+    pub fn id(&self) -> &crate::os_spr::ids::SchemaId {
+        &self.id
+    }
+    pub fn schema_version(&self) -> crate::os_spr::ids::SchemaVersion {
+        self.schema_version
+    }
+    pub fn state_class(&self) -> crate::os_spr::StateClass {
+        self.state_class
+    }
+    pub fn leaf(&self) -> &MutationLeafDescriptor {
+        &self.leaf
+    }
+    pub fn semantics(&self) -> &SemanticDescriptor {
+        &self.semantics
+    }
+    pub fn fingerprint(&self) -> &[u8; 32] {
+        &self.fingerprint
+    }
 }
 
-fn descriptor_fingerprint(
-    id: &crate::os_spr::ids::SchemaId,
-    schema_version: crate::os_spr::ids::SchemaVersion,
-    state_class: crate::os_spr::StateClass,
-    leaf: &MutationLeafDescriptor,
-    semantics: &SemanticDescriptor,
-) -> [u8; 32] {
+fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, leaf: &MutationLeafDescriptor, semantics: &SemanticDescriptor) -> [u8; 32] {
     #[derive(ToValue)]
     #[value(rename_all = "camelCase")]
     struct Canonical<'a> {
@@ -520,10 +520,18 @@ pub struct MutationDescriptorRegistry {
 }
 
 impl MutationDescriptorRegistry {
-    pub fn new() -> Self { Self::default() }
-    pub fn len(&self) -> usize { self.entries.len() }
-    pub fn is_empty(&self) -> bool { self.entries.is_empty() }
-    pub fn get(&self, id: &str) -> Option<&MutationDescriptor> { self.entries.get(id) }
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+    pub fn get(&self, id: &str) -> Option<&MutationDescriptor> {
+        self.entries.get(id)
+    }
 
     pub fn register(&mut self, descriptor: MutationDescriptor) -> Result<(), MutationDescriptorError> {
         self.register_all([descriptor])
@@ -886,8 +894,8 @@ mod mutation_laws_fixture;
 
 #[cfg(test)]
 mod tests {
+    use super::mutation_laws_fixture::{foreign_step_fixture, AddCounter, AddCounterFourTimes, AddCounterThenNotifyForeign, AddCounterTwice, CounterDiff, CounterMutation};
     use super::*;
-    use super::mutation_laws_fixture::{AddCounter, AddCounterTwice, AddCounterFourTimes, AddCounterThenNotifyForeign, CounterDiff, CounterMutation, foreign_step_fixture};
 
     fn json_oracle<T: protocol::value::ToValue>(value: &T) -> serde_json::Value {
         serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("independent JSON parser accepts first-party value encoding")
@@ -1312,24 +1320,110 @@ mod tests {
     static MUTATION_LEAF_DESCRIPTOR_OUTCOMES: [MutationOutcomeClass; 1] = [MutationOutcomeClass::Applied];
     static MUTATION_LEAF_DESCRIPTOR_SURFACES: [MutationLanguageSurface; 1] = [MutationLanguageSurface::Rust];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT: &str = "✏️s/🔌️plugins/🧪️probe/🧬️mutations";
-    static MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT: MutationLeafDescriptor = MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page", semantic_kind: "insert-page", display_name: "Insert Page", emoji: "➕️", aggregate_variant: "InsertPage", payload_schema: "🦀️.rs#InsertPage", text_opcode: Some("insert-page"), binary_tag: Some(1), invertibility: MutationInvertibility::ExplicitMutation, diff_participation: MutationDiffParticipation::ApplyOnly, outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES, composition: MutationComposition::Atomic, required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES };
-    static MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE: MutationLeafDescriptor = MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page", semantic_kind: "remove-page", display_name: "Remove Page", emoji: "➖️", aggregate_variant: "RemovePage", payload_schema: "🦀️.rs#RemovePage", text_opcode: Some("remove-page"), binary_tag: Some(2), invertibility: MutationInvertibility::ExplicitMutation, diff_participation: MutationDiffParticipation::ApplyOnly, outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES, composition: MutationComposition::Atomic, required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES };
-    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE: MutationLeafDescriptor = MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/♻️replace-page", semantic_kind: "replace-page", display_name: "Replace Page", emoji: "♻️", aggregate_variant: "ReplacePage", payload_schema: "🦀️.rs#ReplacePage", text_opcode: None, binary_tag: None, invertibility: MutationInvertibility::ExplicitMutation, diff_participation: MutationDiffParticipation::ApplyOnly, outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES, composition: MutationComposition::Atomic, required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES };
-    static MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER: MutationLeafDescriptor = MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧪️other/🧬️mutations/➕️insert-page", semantic_kind: "insert-page", display_name: "Insert Page", emoji: "➕️", aggregate_variant: "InsertPage", payload_schema: "🦀️.rs#InsertPage", text_opcode: Some("insert-page"), binary_tag: Some(1), invertibility: MutationInvertibility::ExplicitMutation, diff_participation: MutationDiffParticipation::ApplyOnly, outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES, composition: MutationComposition::Atomic, required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES };
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT: MutationLeafDescriptor = MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page",
+        semantic_kind: "insert-page",
+        display_name: "Insert Page",
+        emoji: "➕️",
+        aggregate_variant: "InsertPage",
+        payload_schema: "🦀️.rs#InsertPage",
+        text_opcode: Some("insert-page"),
+        binary_tag: Some(1),
+        invertibility: MutationInvertibility::ExplicitMutation,
+        diff_participation: MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES,
+        composition: MutationComposition::Atomic,
+        required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES,
+    };
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE: MutationLeafDescriptor = MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page",
+        semantic_kind: "remove-page",
+        display_name: "Remove Page",
+        emoji: "➖️",
+        aggregate_variant: "RemovePage",
+        payload_schema: "🦀️.rs#RemovePage",
+        text_opcode: Some("remove-page"),
+        binary_tag: Some(2),
+        invertibility: MutationInvertibility::ExplicitMutation,
+        diff_participation: MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES,
+        composition: MutationComposition::Atomic,
+        required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES,
+    };
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE: MutationLeafDescriptor = MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/♻️replace-page",
+        semantic_kind: "replace-page",
+        display_name: "Replace Page",
+        emoji: "♻️",
+        aggregate_variant: "ReplacePage",
+        payload_schema: "🦀️.rs#ReplacePage",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: MutationInvertibility::ExplicitMutation,
+        diff_participation: MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES,
+        composition: MutationComposition::Atomic,
+        required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES,
+    };
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER: MutationLeafDescriptor = MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🧪️other/🧬️mutations/➕️insert-page",
+        semantic_kind: "insert-page",
+        display_name: "Insert Page",
+        emoji: "➕️",
+        aggregate_variant: "InsertPage",
+        payload_schema: "🦀️.rs#InsertPage",
+        text_opcode: Some("insert-page"),
+        binary_tag: Some(1),
+        invertibility: MutationInvertibility::ExplicitMutation,
+        diff_participation: MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES,
+        composition: MutationComposition::Atomic,
+        required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES,
+    };
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_SEMANTIC: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MutationLeafDescriptor { semantic_kind: "insert-page", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OPCODE: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MutationLeafDescriptor { text_opcode: Some("insert-page"), ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_TAG: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MutationLeafDescriptor { binary_tag: Some(1), ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
-    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE_REPEAT: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE, MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/🗄️archive-page", semantic_kind: "archive-page", display_name: "Archive Page", emoji: "🗄️", aggregate_variant: "ArchivePage", payload_schema: "🦀️.rs#ArchivePage", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE_REPEAT: [MutationLeafDescriptor; 2] = [
+        MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE,
+        MutationLeafDescriptor {
+            owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/🗄️archive-page",
+            semantic_kind: "archive-page",
+            display_name: "Archive Page",
+            emoji: "🗄️",
+            aggregate_variant: "ArchivePage",
+            payload_schema: "🦀️.rs#ArchivePage",
+            ..MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE
+        },
+    ];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_OWNER_MISMATCH: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER];
-    static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OWNER: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MutationLeafDescriptor { semantic_kind: "restore-page", display_name: "Restore Page", emoji: "↩️", aggregate_variant: "RestorePage", payload_schema: "🦀️.rs#RestorePage", text_opcode: Some("restore-page"), binary_tag: Some(3), ..MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT }];
-    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NESTED_OWNER: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page/🧪️tests", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OWNER: [MutationLeafDescriptor; 2] = [
+        MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT,
+        MutationLeafDescriptor {
+            semantic_kind: "restore-page",
+            display_name: "Restore Page",
+            emoji: "↩️",
+            aggregate_variant: "RestorePage",
+            payload_schema: "🦀️.rs#RestorePage",
+            text_opcode: Some("restore-page"),
+            binary_tag: Some(3),
+            ..MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT
+        },
+    ];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NESTED_OWNER: [MutationLeafDescriptor; 1] =
+        [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page/🧪️tests", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_PARENT_CHILD: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/..", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
-    static MUTATION_LEAF_DESCRIPTOR_ROSTER_BACKSLASH_CHILD: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page\\🧪️tests", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_BACKSLASH_CHILD: [MutationLeafDescriptor; 1] =
+        [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page\\🧪️tests", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_NUL_CHILD: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page\0", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
     static MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER_SINGLE: [MutationLeafDescriptor; 1] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER];
     const MUTATION_LEAF_DESCRIPTOR_CONST_VALID: Result<(), MutationLeafDescriptorValidationError> = validate_mutation_leaf_descriptor(&MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT);
-    const MUTATION_LEAF_DESCRIPTOR_CONST_ROSTER_VALID: Result<(), MutationLeafDescriptorRosterValidationError> = validate_mutation_leaf_descriptor_roster(MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE, MutationOwnerLayout::Flat);
+    const MUTATION_LEAF_DESCRIPTOR_CONST_ROSTER_VALID: Result<(), MutationLeafDescriptorRosterValidationError> =
+        validate_mutation_leaf_descriptor_roster(MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE, MutationOwnerLayout::Flat);
 
     #[test]
     fn mutation_leaf_descriptor_serializes_all_schema_fields() {
@@ -1420,7 +1514,12 @@ mod tests {
     #[test]
     fn mutation_leaf_descriptor_owner_boundaries_match_neutral_vectors() {
         let fixture = mutation_leaf_descriptor_fixture_json();
-        let neutral: Vec<(&str, &str, bool)> = fixture["ownerBoundaryVectors"].as_array().expect("owner boundary vectors").iter().map(|vector| (vector["name"].as_str().expect("name"), vector["owner"].as_str().expect("owner"), vector["expected"].as_bool().expect("expected"))).collect();
+        let neutral: Vec<(&str, &str, bool)> = fixture["ownerBoundaryVectors"]
+            .as_array()
+            .expect("owner boundary vectors")
+            .iter()
+            .map(|vector| (vector["name"].as_str().expect("name"), vector["owner"].as_str().expect("owner"), vector["expected"].as_bool().expect("expected")))
+            .collect();
         assert_eq!(neutral, MUTATION_LEAF_DESCRIPTOR_OWNER_BOUNDARIES);
         for (name, owner, expected) in MUTATION_LEAF_DESCRIPTOR_OWNER_BOUNDARIES {
             let mut descriptor = mutation_leaf_descriptor_fixture();
@@ -1435,7 +1534,31 @@ mod tests {
         assert_eq!(MUTATION_LEAF_DESCRIPTOR_CONST_ROSTER_VALID, Ok(()));
         let fixture = mutation_leaf_descriptor_fixture_json();
         let names: Vec<(&str, bool)> = fixture["rosterVectors"].as_array().expect("roster vectors").iter().map(|vector| (vector["name"].as_str().expect("name"), vector["expected"].as_bool().expect("expected"))).collect();
-        assert_eq!(names, [("same-owner-unique", true), ("duplicate-semantic-kind", false), ("duplicate-text-opcode", false), ("duplicate-binary-tag", false), ("nullable-identities-repeat", true), ("unrelated-owner", false), ("duplicate-owner", false), ("nested-child", false), ("parent-child", false), ("backslash-child", false), ("absolute-root", false), ("windows-root", false), ("windows-slash-drive-root", false), ("windows-relative-drive-root", false), ("empty-segment-root", false), ("dot-root", false), ("parent-root", false), ("nul-root", false), ("nul-child", false), ("distinct-owner-same-identities", true)]);
+        assert_eq!(
+            names,
+            [
+                ("same-owner-unique", true),
+                ("duplicate-semantic-kind", false),
+                ("duplicate-text-opcode", false),
+                ("duplicate-binary-tag", false),
+                ("nullable-identities-repeat", true),
+                ("unrelated-owner", false),
+                ("duplicate-owner", false),
+                ("nested-child", false),
+                ("parent-child", false),
+                ("backslash-child", false),
+                ("absolute-root", false),
+                ("windows-root", false),
+                ("windows-slash-drive-root", false),
+                ("windows-relative-drive-root", false),
+                ("empty-segment-root", false),
+                ("dot-root", false),
+                ("parent-root", false),
+                ("nul-root", false),
+                ("nul-child", false),
+                ("distinct-owner-same-identities", true)
+            ]
+        );
         let root = MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT;
         assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE, MutationOwnerLayout::Flat), Ok(()));
         assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_SEMANTIC, MutationOwnerLayout::Flat).expect_err("duplicate semantic kind").field, "semanticKind");
@@ -1448,7 +1571,16 @@ mod tests {
         assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_PARENT_CHILD, MutationOwnerLayout::Flat).expect_err("parent child").field, "owner");
         assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_BACKSLASH_CHILD, MutationOwnerLayout::Flat).expect_err("backslash child").field, "owner");
         assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NUL_CHILD, MutationOwnerLayout::Flat).expect_err("nul child").field, "owner");
-        for unsafe_root in ["/✏️s/🔌️plugins/🧪️probe/🧬️mutations", "C:\\✏️s\\🔌️plugins\\🧪️probe\\🧬️mutations", "C:/✏️s/🔌️plugins/🧪️probe/🧬️mutations", "C:✏️s/🔌️plugins/🧪️probe/🧬️mutations", "✏️s//🔌️plugins/🧪️probe/🧬️mutations", "./✏️s/🔌️plugins/🧪️probe/🧬️mutations", "../✏️s/🔌️plugins/🧪️probe/🧬️mutations", "✏️s/\0🔌️plugins/🧪️probe/🧬️mutations"] {
+        for unsafe_root in [
+            "/✏️s/🔌️plugins/🧪️probe/🧬️mutations",
+            "C:\\✏️s\\🔌️plugins\\🧪️probe\\🧬️mutations",
+            "C:/✏️s/🔌️plugins/🧪️probe/🧬️mutations",
+            "C:✏️s/🔌️plugins/🧪️probe/🧬️mutations",
+            "✏️s//🔌️plugins/🧪️probe/🧬️mutations",
+            "./✏️s/🔌️plugins/🧪️probe/🧬️mutations",
+            "../✏️s/🔌️plugins/🧪️probe/🧬️mutations",
+            "✏️s/\0🔌️plugins/🧪️probe/🧬️mutations",
+        ] {
             assert_eq!(validate_mutation_leaf_descriptor_roster(unsafe_root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE, MutationOwnerLayout::Flat).expect_err("unsafe root").field, "owner");
         }
         assert_eq!(validate_mutation_leaf_descriptor_roster("✏️s/🔌️plugins/🧪️other/🧬️mutations", &MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER_SINGLE, MutationOwnerLayout::Flat), Ok(()));
@@ -1509,7 +1641,6 @@ mod tests {
             &[InferenceFieldSpec { id: "isEven", reads: &["value"] }, InferenceFieldSpec { id: "absValue", reads: &["value"] }]
         }
     }
-
 
     #[test]
     fn inference_determinism_law() {

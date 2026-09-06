@@ -495,6 +495,25 @@ impl CanonicalPairActor {
         self.cache.clear();
         self.cached_bytes = 0;
     }
+
+    fn project_mounted<T>(
+        &self,
+        mount: &CanonicalPairMount,
+        project: impl FnOnce(&CanonicalPairMountIdentity, &ArtifactFrontier, &[u8], &[u8]) -> Result<T, CanonicalPairMountError>,
+    ) -> Result<T, CanonicalPairMountError> {
+        if self.binding_generation != mount.identity.authority_generation
+            || !matches!(self.state, CanonicalPairActorState::Mounted | CanonicalPairActorState::Loading)
+            || self.mounted.as_ref().is_none_or(|active| active.identity != mount.identity || active.mount_id != mount.mount_id)
+        {
+            return Err(CanonicalPairMountError::StaleCompletion);
+        }
+        let entry = self
+            .cache
+            .iter()
+            .find(|entry| entry.mount_id == mount.mount_id && entry.pair.identity == mount.identity)
+            .ok_or(CanonicalPairMountError::StaleCompletion)?;
+        project(&entry.pair.identity, &entry.pair.baseline, &entry.pair.bytes.pack, &entry.pair.bytes.spr)
+    }
 }
 
 impl Drop for CanonicalPairActor {
@@ -653,6 +672,19 @@ impl HubRemoteBinding {
     ) -> Result<CanonicalPairMount, CanonicalPairMountError> {
         #[cfg(test)]
         self.pause_mount_return_for_test();
+        self.validate_mount_current(&mount, binding_generation, authority_generation, scope, descriptor_digest_v1, wall_now_ms)?;
+        Ok(mount)
+    }
+
+    fn validate_mount_current(
+        &self,
+        mount: &CanonicalPairMount,
+        binding_generation: u64,
+        authority_generation: u64,
+        scope: &DocumentScope,
+        descriptor_digest_v1: &str,
+        wall_now_ms: i64,
+    ) -> Result<(), CanonicalPairMountError> {
         let binding_matches = || self.generation.load(Ordering::SeqCst) == binding_generation && self.authority_generation.load(Ordering::SeqCst) == authority_generation;
         if !binding_matches() {
             return Err(CanonicalPairMountError::StaleCompletion);
@@ -675,7 +707,28 @@ impl HubRemoteBinding {
         if !actor_matches || !binding_matches() {
             return Err(CanonicalPairMountError::StaleCompletion);
         }
-        Ok(mount)
+        Ok(())
+    }
+
+    /// 🧪 Borrows one exact mounted canonical pair only while its private cache actor remains
+    /// locked, then repeats the full binding/descriptor/actor fence before publishing the owned
+    /// projection. The callback is deliberately synchronous and cannot escape the retained bytes.
+    pub(crate) fn project_mounted_canonical_pair<T>(
+        &self,
+        mount: &CanonicalPairMount,
+        wall_now_ms: i64,
+        project: impl FnOnce(&CanonicalPairMountIdentity, &ArtifactFrontier, &[u8], &[u8]) -> Result<T, CanonicalPairMountError>,
+    ) -> Result<T, CanonicalPairMountError> {
+        let binding_generation = self.generation.load(Ordering::SeqCst);
+        let authority_generation = mount.identity.authority_generation;
+        let scope = mount.identity.scope.clone();
+        let descriptor_digest_v1 = mount.identity.descriptor_digest_v1.clone();
+        self.validate_mount_current(mount, binding_generation, authority_generation, &scope, &descriptor_digest_v1, wall_now_ms)?;
+        let projected = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner).project_mounted(mount, project)?;
+        #[cfg(test)]
+        self.pause_mount_return_for_test();
+        self.validate_mount_current(mount, binding_generation, authority_generation, &scope, &descriptor_digest_v1, wall_now_ms)?;
+        Ok(projected)
     }
 
     #[cfg(test)]
@@ -1317,6 +1370,71 @@ mod tests {
         let (state, loadings, entries, bytes, _, _) = binding.canonical_pair_test_stats();
         assert_eq!(state, CanonicalPairActorState::Revoked);
         assert_eq!((loadings, entries, bytes), (0, 0, 0));
+    }
+
+    #[tokio::test]
+    async fn authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope() {
+        let contract = fixture();
+        let resource_contract: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
+        let wire = decode_hex(contract["valid"]["wireHex"].as_str().unwrap());
+        let etag = contract["valid"]["etag"].as_str().unwrap().to_string();
+        let scope = DocumentScope::new(contract["binding"]["spaceId"].as_str().unwrap(), contract["binding"]["documentId"].as_str().unwrap());
+        assert_eq!(super::super::checkpoint_resource_uri(&scope), resource_contract["resource"]["uri"]);
+        assert_eq!(super::super::parse_checkpoint_resource_uri(resource_contract["resource"]["uri"].as_str().unwrap()), Some(scope.clone()));
+
+        let binding = ready_binding(i64::MAX);
+        let transport = TestTransport::new(vec![response(wire.clone(), etag.clone())]);
+        let mount = binding.mount_canonical_pair(&transport, &scope, Some(9), None, &context(10_000), 1, 1).await.unwrap();
+        let text = binding.project_mounted_canonical_pair(&mount, 1, super::super::canonical_checkpoint_resource_text).unwrap();
+        let actual: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let mut expected = resource_contract["resource"]["value"].clone();
+        expected["authorityGeneration"] = mount.identity.authority_generation.into();
+        assert_eq!(actual, expected);
+        let pack = decode_hex(contract["valid"]["packHex"].as_str().unwrap());
+        let spr = decode_hex(contract["valid"]["sprHex"].as_str().unwrap());
+        assert_eq!(actual["pack"]["base64"], super::super::base64_encode_exact(&pack, super::super::checked_base64_length(pack.len()).unwrap()).unwrap());
+        assert_eq!(actual["spr"]["base64"], super::super::base64_encode_exact(&spr, super::super::checked_base64_length(spr.len()).unwrap()).unwrap());
+
+        let other_scope = DocumentScope::new(contract["binding"]["sameDocumentOtherSpace"].as_str().unwrap(), scope.document_id.clone());
+        let denied_transport = TestTransport::new(Vec::new());
+        assert_eq!(binding.mount_canonical_pair(&denied_transport, &other_scope, Some(9), None, &context(10_000), 1, 1).await.unwrap_err(), CanonicalPairMountError::DescriptorUnavailable);
+        assert!(denied_transport.requests.lock().unwrap().is_empty(), "cross-space scope must fail before transport or body allocation");
+
+        for revoke in [false, true] {
+            let binding = ready_binding(i64::MAX);
+            let transport = TestTransport::new(vec![response(wire.clone(), etag.clone())]);
+            let mount = binding.mount_canonical_pair(&transport, &scope, Some(9), None, &context(10_000), 1, 1).await.unwrap();
+            let reached = Arc::new(std::sync::Barrier::new(2));
+            let release = Arc::new(std::sync::Barrier::new(2));
+            binding.pause_next_canonical_pair_mount_return(reached.clone(), release.clone());
+            let contender = binding.clone();
+            let projected = std::thread::spawn(move || contender.project_mounted_canonical_pair(&mount, 1, super::super::canonical_checkpoint_resource_text));
+            reached.wait();
+            let wiped_before = test_wiped_bytes();
+            if revoke {
+                binding.revoke(HubBindingError::MembershipRequired);
+            } else {
+                binding.invalidate("descriptor refresh began before checkpoint resource publication");
+            }
+            release.wait();
+            assert_eq!(projected.join().unwrap().unwrap_err(), CanonicalPairMountError::StaleCompletion);
+            assert!(test_wiped_bytes() >= wiped_before + pack.len() as u64 + spr.len() as u64, "invalidated retained pair bytes must be wiped before no resource content is published");
+        }
+
+        let identity = CanonicalPairMountIdentity {
+            hub_origin: "https://hub.invalid".into(),
+            authority_generation: 7,
+            scope: scope.clone(),
+            descriptor_digest_v1: contract["binding"]["descriptorDigest"].as_str().unwrap().into(),
+            active_checkpoint_id: contract["binding"]["checkpointId"].as_str().unwrap().into(),
+            etag,
+            catalog_generation: Some(9),
+        };
+        let frontier = ArtifactFrontier { document_id: scope.document_id, head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: ArtifactHash::new([0; 32]) };
+        assert_eq!(
+            super::super::canonical_checkpoint_resource_text(&identity, &frontier, &vec![0; HUB_PAIR_MAX_VERIFIED_BYTES + 1], &[]).unwrap_err(),
+            CanonicalPairMountError::ResourceLimit
+        );
     }
 
     #[tokio::test]

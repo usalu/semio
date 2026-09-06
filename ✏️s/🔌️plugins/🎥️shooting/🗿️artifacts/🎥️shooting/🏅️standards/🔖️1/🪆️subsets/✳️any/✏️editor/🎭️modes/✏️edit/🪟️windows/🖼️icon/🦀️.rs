@@ -18,7 +18,7 @@ const SHOOTING_PLAY_SURFACE_ICON: &str = "shooting.play.icon";
 /// 🧱️ Stitched into the app manifest by `crate::editor::shooting::create_shooting_app`. `options.measures`
 /// stays empty here on purpose: shooting's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SHOOTING_PLAY_WINDOW_ICON.into(),
         label: LocalizedLabel::native("Icon", "Symbol"),
@@ -38,11 +38,11 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
-pub async fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
     vec![options::shot::measure(snapshot, labels), options::format::measure(snapshot, labels), options::shape::measure(snapshot, labels)]
 }
 
-pub async fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowEngagement {
+pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowEngagement {
     let shot = crate::artifacts::shooting::schema::active_shot(snapshot);
     WindowEngagement {
         session_active: Some(true),
@@ -66,7 +66,7 @@ pub async fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) ->
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
     let (request_json, footer) = match (crate::artifacts::shooting::schema::active_shot(snapshot), crate::artifacts::shooting::schema::active_asset(snapshot)) {
         (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),

@@ -19,23 +19,23 @@ pub struct EditStepParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn edit_step_params(id: String, params: StepParams) -> SequenceMutation {
+pub fn edit_step_params(id: String, params: StepParams) -> SequenceMutation {
     SequenceMutation::EditStepParams(EditStepParams { id, params })
 }
 
 impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for EditStepParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "step", kind: "edit-step-params", record: "EditedStep" };
 
-    async fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
+    fn diff(&self, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
+    fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Edit step \"{}\" parameters", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

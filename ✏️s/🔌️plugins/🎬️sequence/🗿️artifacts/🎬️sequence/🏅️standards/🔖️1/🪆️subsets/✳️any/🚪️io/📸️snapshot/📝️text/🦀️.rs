@@ -23,31 +23,31 @@ use crate::artifacts::sequence::{SequenceContentChild, SequenceSnapshot};
 /// `to_uri()`), never the child's own content. `SequenceSnapshot` no longer derives
 /// `dsl::DslRecord` (the composed child has no reachable `DslField` impl from this crate) — this
 /// facet hand-rolls the whole `ArtifactDsl`/`ArtifactPack` codec instead.
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String {
+fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-async fn dec_str(s: &str) -> Result<String, String> {
+fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
-async fn enc_child(c: &SequenceContentChild) -> String {
+fn enc_child(c: &SequenceContentChild) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-async fn dec_child(s: &str) -> Result<SequenceContentChild, String> {
+fn dec_child(s: &str) -> Result<SequenceContentChild, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -55,10 +55,10 @@ async fn dec_child(s: &str) -> Result<SequenceContentChild, String> {
 }
 //#endregion 🔖️ChildCodecPrimitives
 //#region 🔖️TextPrimitives
-async fn print_sequence_snapshot_body(s: &SequenceSnapshot) -> String {
+fn print_sequence_snapshot_body(s: &SequenceSnapshot) -> String {
     format!("schema={}\ncontent={}", enc_str(&s.schema), enc_child(&s.content))
 }
-async fn parse_sequence_snapshot_body(body: &str) -> Result<SequenceSnapshot, String> {
+fn parse_sequence_snapshot_body(body: &str) -> Result<SequenceSnapshot, String> {
     let mut schema = None;
     let mut content = None;
     for line in body.lines() {
@@ -80,17 +80,17 @@ async fn parse_sequence_snapshot_body(body: &str) -> Result<SequenceSnapshot, St
 //#region 🔖️ArtifactDslCodec
 impl store::ArtifactDsl for SequenceSnapshot {
     const EXTENSION: &'static str = "sequence";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "sequence.sequence"
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_sequence_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = print_sequence_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -105,12 +105,12 @@ impl store::ArtifactDsl for SequenceSnapshot {
 pub const SEQUENCE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
 
 /// 📖️ Parses `.sequence` DSL text into a `SequenceSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<SequenceSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<SequenceSnapshot, store::TextError> {
     <SequenceSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `SequenceSnapshot` back to `.sequence` DSL text.
-pub async fn print_dsl(snapshot: &SequenceSnapshot) -> String {
+pub fn print_dsl(snapshot: &SequenceSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 //#endregion 🔖️Example

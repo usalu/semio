@@ -21,23 +21,23 @@ pub struct CreateAsset {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_asset(key: String, asset: crate::artifacts::note::NoteImageAsset) -> NoteMutation {
+pub fn create_asset(key: String, asset: crate::artifacts::note::NoteImageAsset) -> NoteMutation {
     NoteMutation::CreateAsset(CreateAsset { key, asset })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for CreateAsset {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create asset \"{}\"", self.key)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
 }

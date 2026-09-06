@@ -11,7 +11,7 @@ pub const FORMS_PLAY_BODY_DOCUMENT: &str = "forms.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -29,7 +29,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// id — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
 /// action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
-pub async fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let step_items = ui_node_list(forms_steps(spec).iter().map(|step| {
         let question_items = ui_node_list(step.blocks.iter().map(|question| {
             let mut node = tree_item_desc(question.id.clone(), Label::data(question.label.clone()), Some(question.kind.clone()))?;

@@ -24,10 +24,10 @@ pub enum NoteViewCommand {
 }
 
 impl protocol::OpBinary for NoteViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(NoteViewCommand::Noop)
     }
 }
@@ -51,7 +51,7 @@ impl ArtifactViewer for NoteViewer {
     const DIALECT: Dialect = NOTE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> NoteSnapshot {
+    fn initial_snapshot() -> NoteSnapshot {
         empty_note_snapshot()
     }
 
@@ -59,7 +59,7 @@ impl ArtifactViewer for NoteViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a
     /// live pan/zoom) is a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -69,7 +69,7 @@ impl ArtifactViewer for NoteViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             composite::BODY_KEY => composite::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),

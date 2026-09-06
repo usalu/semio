@@ -198,7 +198,11 @@ pub(crate) struct ArtifactGroupReadDecision<'a> {
 
 impl ArtifactGroupReadDecision<'_> {
     pub(crate) fn committed_for(&self, visibility: &ArtifactGroupVisibility) -> Result<bool, ()> {
-        if std::ptr::eq(self.visibility, visibility) { Ok(self.committed) } else { Err(()) }
+        if std::ptr::eq(self.visibility, visibility) {
+            Ok(self.committed)
+        } else {
+            Err(())
+        }
     }
 }
 
@@ -877,14 +881,22 @@ impl<P, Mutation> ArtifactVcs<P, Mutation> {
     pub(crate) fn group_visibility(&self) -> Result<Option<&ArtifactGroupVisibility>, ()> {
         let mut visibility: Option<&ArtifactGroupVisibility> = None;
         for candidate in [self.edits.group_visibility(), self.changes.group_visibility(), self.checkpoints.group_visibility(), self.alternatives.group_visibility()].into_iter().flatten() {
-            if visibility.is_some_and(|owner| !std::ptr::eq(owner, candidate)) { return Err(()); }
+            if visibility.is_some_and(|owner| !std::ptr::eq(owner, candidate)) {
+                return Err(());
+            }
             visibility = Some(candidate);
         }
         Ok(visibility)
     }
 
     pub(crate) fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactVcsRead<'_, P, Mutation>, ()> {
-        Ok(ArtifactVcsRead { initial_snapshot: &self.initial_snapshot, edits: self.edits.read_group(decision)?, changes: self.changes.read_group(decision)?, checkpoints: self.checkpoints.read_group(decision)?, alternatives: self.alternatives.read_group(decision)? })
+        Ok(ArtifactVcsRead {
+            initial_snapshot: &self.initial_snapshot,
+            edits: self.edits.read_group(decision)?,
+            changes: self.changes.read_group(decision)?,
+            checkpoints: self.checkpoints.read_group(decision)?,
+            alternatives: self.alternatives.read_group(decision)?,
+        })
     }
 }
 

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.reasoning.plugin-identity/v1",
+  "title": "Reasoning plugin identity tuple",
+  "description": "The one identity every authority of the reasoning plugin must agree on: the Cargo component package, the plugin root builder id and package_id, the deployment catalog row, the generated registry row and the canonical `s.<plugin>.<artifact>` owner segment. The Cargo crate NAME and the playground VARIANT are deliberately different names and are pinned here so the three can never be conflated again.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "pluginId", "packageId", "packageName", "moduleDirectoryName", "artifactKindPrefix", "playgroundVariant"],
+  "properties": {
+    "schema": { "const": "semio.reasoning.plugin-identity/v1" },
+    "pluginId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "packageId": { "type": "string", "pattern": "^semio:[a-z][a-z0-9-]*$" },
+    "packageName": { "type": "string", "pattern": "^semio-s-plugin-[a-z0-9-]+$" },
+    "moduleDirectoryName": { "type": "string", "minLength": 2 },
+    "artifactKindPrefix": { "type": "string", "pattern": "^s\\.[a-z][a-z0-9-]*\\.$" },
+    "playgroundVariant": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }
+  }
+}

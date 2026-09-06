@@ -337,11 +337,13 @@ function admittedCount(value) {
 /* ../../🚚️browser-frame-transport/🟦️.ts */
 var FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 var FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
-var FRAME_WORKER_BOOT_TIMEOUT_MS = 15000;
+var FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = 15000;
 var FRAME_WORKER_POINTER_CAPACITY = 16;
 var FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 var FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
 var FRAME_UI_TURN_BUDGET_MS = 2;
+var FRAME_WORKER_INTROSPECTION_CAPACITY = 4;
+var FRAME_WORKER_INTROSPECTION_TIMEOUT_MS = 1e4;
 
 class BrowserFrameTransport {
   lifecycle = 1;
@@ -376,6 +378,8 @@ class BrowserFrameTransport {
   closeRequested = false;
   uiTurnSamples = new Float64Array(64);
   uiTurnSampleCount = 0;
+  introspections = new Map;
+  nextIntrospectionId = 1;
   constructor(options) {
     this.worker = options.worker;
     this.now = options.now ?? (() => performance.now());
@@ -392,7 +396,7 @@ class BrowserFrameTransport {
     this.worker.onmessage = (event) => this.receive(event.data);
     this.worker.onerror = (event) => this.fail("worker-message-failed", event.message || "Worker error");
     this.worker.onmessageerror = () => this.fail("worker-message-failed", "Worker message could not be decoded");
-    this.bootTimer = setTimer(() => this.fail("worker-boot-timeout", `Worker did not boot within ${FRAME_WORKER_BOOT_TIMEOUT_MS} ms`), FRAME_WORKER_BOOT_TIMEOUT_MS);
+    this.armBootStallTimer();
     try {
       this.worker.postMessage({ kind: "boot", lifecycle: this.lifecycle, ...options.boot }, [options.boot.canvas]);
     } catch (error) {
@@ -496,6 +500,27 @@ class BrowserFrameTransport {
       return false;
     }
   }
+  introspect(probe) {
+    if (this.status !== "ready" || this.introspections.size >= FRAME_WORKER_INTROSPECTION_CAPACITY)
+      return Promise.resolve(null);
+    const requestId = this.nextIntrospectionId++;
+    this.requestFrame();
+    this.flush();
+    return new Promise((resolve) => {
+      const timer = this.setTimer(() => {
+        this.introspections.delete(requestId);
+        resolve(null);
+      }, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS);
+      this.introspections.set(requestId, { resolve, timer });
+      try {
+        this.worker.postMessage({ kind: "introspect", lifecycle: this.lifecycle, requestId, probe });
+      } catch {
+        this.introspections.delete(requestId);
+        this.clearTimer(timer);
+        resolve(null);
+      }
+    });
+  }
   close() {
     if (this.status === "closed")
       return;
@@ -530,6 +555,11 @@ class BrowserFrameTransport {
     const samples = Array.from(this.uiTurnSamples.subarray(0, count)).sort((left, right) => left - right);
     return samples[Math.min(count - 1, Math.ceil(count * 0.99) - 1)];
   }
+  armBootStallTimer() {
+    if (this.bootTimer !== undefined)
+      this.clearTimer(this.bootTimer);
+    this.bootTimer = this.setTimer(() => this.fail("worker-boot-timeout", `Worker reported no boot progress for ${FRAME_WORKER_BOOT_STALL_TIMEOUT_MS} ms`), FRAME_WORKER_BOOT_STALL_TIMEOUT_MS);
+  }
   accepting() {
     return this.status === "booting" || this.status === "ready";
   }
@@ -538,6 +568,15 @@ class BrowserFrameTransport {
       return;
     if (message.kind === "job-input-pull" || message.kind === "job-output-page" || message.kind === "job-terminal") {
       this.interactiveJobs.receive(message);
+      return;
+    }
+    if (message.kind === "introspection") {
+      const pending = this.introspections.get(message.requestId);
+      if (!pending)
+        return;
+      this.introspections.delete(message.requestId);
+      this.clearTimer(pending.timer);
+      pending.resolve(message.json);
       return;
     }
     if (message.kind === "closed") {
@@ -558,8 +597,10 @@ class BrowserFrameTransport {
       return;
     }
     if (message.kind === "boot-progress") {
-      if (this.status === "booting")
-        this.runUiHook("progress-hook", () => this.onProgress?.(message.stage, message.progress));
+      if (this.status !== "booting")
+        return;
+      this.armBootStallTimer();
+      this.runUiHook("progress-hook", () => this.onProgress?.(message.stage, message.progress));
       return;
     }
     if (message.kind === "wake") {
@@ -633,6 +674,11 @@ class BrowserFrameTransport {
     return this.observeUiTurn(site, this.now() - startedAt);
   }
   clearQueues() {
+    for (const pending of this.introspections.values()) {
+      this.clearTimer(pending.timer);
+      pending.resolve(null);
+    }
+    this.introspections.clear();
     this.pointerMoves.fill(undefined);
     this.pointerCount = 0;
     this.wheel = undefined;
@@ -794,12 +840,21 @@ function bootDescriptor() {
     ...hubUrl ? { hub: { hubUrl: bounded(hubUrl, "hub"), user: bounded(params.get("user") ?? "", "user"), dataDir: bounded(params.get("dataDir") ?? "", "dataDir") } } : {}
   };
 }
+var WGPU_CANVAS_ID = "semio-wgpu-canvas";
 function canvasElement() {
   const canvas = document.createElement("canvas");
+  canvas.id = WGPU_CANVAS_ID;
   canvas.tabIndex = 0;
   canvas.setAttribute("aria-label", locale() === "de" ? "Semio Arbeitsfläche" : "Semio workspace");
   canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none;outline:none;";
   return canvas;
+}
+var WGPU_INTROSPECTION_GLOBAL = "semioWgpuIntrospection";
+function attachIntrospectionBindings(transport) {
+  const probe = (kind) => async () => await transport.introspect(kind) ?? "";
+  const host = window;
+  host.semioWgpuIntrospection = { dumpStructure: probe("structure"), dumpFrameStats: probe("frame-stats") };
+  return () => delete host.semioWgpuIntrospection;
 }
 function statusElement(root) {
   const status = document.createElement("div");
@@ -926,6 +981,7 @@ async function mount(root) {
     throw new Error(`worker-construction-failed: ${error instanceof Error ? error.message : String(error)}`);
   }
   let cleanupInput = () => {};
+  let detachIntrospection = () => {};
   const transport = new BrowserFrameTransport({
     worker,
     boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, hub: descriptor.hub },
@@ -936,6 +992,7 @@ async function mount(root) {
     },
     onReady: () => {
       status.remove();
+      detachIntrospection = attachIntrospectionBindings(transport);
       cleanupInput = wireInput(canvas, transport);
       transport.enqueueReplaceable({ kind: "resize", width, height, dpr });
       canvas.focus({ preventScroll: true });
@@ -949,6 +1006,7 @@ async function mount(root) {
     },
     onFault: (code, detail) => {
       cleanupInput();
+      detachIntrospection();
       renderFault(root, code, detail);
     }
   });
@@ -963,6 +1021,7 @@ async function mount(root) {
   window.addEventListener("pagehide", () => {
     resize.disconnect();
     cleanupInput();
+    detachIntrospection();
     setInteractiveJobPort(previousInteractiveJobPort);
     transport.close();
   }, { once: true });
@@ -977,3 +1036,7 @@ try {
   renderFault(root, "worker-boot-failed", detail);
   throw error;
 }
+export {
+  WGPU_INTROSPECTION_GLOBAL,
+  WGPU_CANVAS_ID
+};

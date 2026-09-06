@@ -16,7 +16,7 @@ pub struct JsonIntoForms;
 impl Deserializer<FormsSnapshot> for JsonIntoForms {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn deserialize(payload: &IoPayload) -> IoResult<FormsSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<FormsSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "JsonIntoForms: expected a binary json payload".to_string(), diagnostics: Vec::new() });
         };

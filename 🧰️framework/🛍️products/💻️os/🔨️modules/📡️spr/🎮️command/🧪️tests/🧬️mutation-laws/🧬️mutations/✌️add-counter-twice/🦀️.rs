@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-counter-twice")]
 #[composite(snapshot = Counter, op = CounterMutation)]
-pub struct AddCounterTwice { pub delta: i64 }
+pub struct AddCounterTwice {
+    pub delta: i64,
+}
 
 impl CompositeMutationKind<Counter, CounterMutation> for AddCounterTwice {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter-twice", record: "AddedCounterTwice" };
@@ -17,13 +19,23 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterTwice {
         planner.call(CounterMutation::AddCounter(AddCounter { delta: self.delta }))?;
         planner.call(CounterMutation::AddCounter(AddCounter { delta: self.delta }))
     }
-    fn label(&self) -> String { format!("Add {} twice", self.delta) }
+    fn label(&self) -> String {
+        format!("Add {} twice", self.delta)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn direct_counter_leaf_contract() { super::super::super::assert_counter_leaf_descriptor::<AddCounterTwice>(include_str!("🔣️.json")); }
-    #[test] fn plan_has_two_local_adds() { let base = 0; let mut planner = Planner::new(&base); AddCounterTwice { delta: 3 }.plan(&base, &mut planner).unwrap(); assert_eq!(planner.steps().len(), 2); }
+    fn direct_counter_leaf_contract() {
+        super::super::super::assert_counter_leaf_descriptor::<AddCounterTwice>(include_str!("🔣️.json"));
+    }
+    #[test]
+    fn plan_has_two_local_adds() {
+        let base = 0;
+        let mut planner = Planner::new(&base);
+        AddCounterTwice { delta: 3 }.plan(&base, &mut planner).unwrap();
+        assert_eq!(planner.steps().len(), 2);
+    }
 }

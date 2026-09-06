@@ -33,7 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `Isolated` (no cross-plugin extension attachment, the SDK default holds), and it asks the
 /// broker for document write access because `EquationPlayApp` persists graph edits back to
 /// the open document.
-pub async fn plugin() -> Result<Plugin<MathematicalApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<MathematicalApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<MathematicalApps>::builder("mathematical")
         .label("Mathematical")
         .version("0.1.0")

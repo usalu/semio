@@ -1,0 +1,48 @@
+{
+  "schema": "semio.hub.trusted-catalog-opened-root/v1",
+  "limits": {
+    "pathBytes": 1024,
+    "pathSegments": 64,
+    "chunkBytes": 65536,
+    "pointerBytes": 65536
+  },
+  "current": {
+    "profileId": "local-stdio-gis-open-v1",
+    "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bundleSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "relativePaths": [
+    { "id": "component", "value": "packages/gis/component.wasm", "accepted": true },
+    { "id": "descriptor", "value": "packages/gis/descriptor.pack", "accepted": true },
+    { "id": "actor", "value": "packages/gis/browser/closed-actor.mjs", "accepted": true },
+    { "id": "empty", "value": "", "accepted": false },
+    { "id": "dot", "value": ".", "accepted": false },
+    { "id": "dot-segment", "value": "packages/./component.wasm", "accepted": false },
+    { "id": "parent", "value": "../component.wasm", "accepted": false },
+    { "id": "parent-segment", "value": "packages/gis/../component.wasm", "accepted": false },
+    { "id": "absolute", "value": "/packages/gis/component.wasm", "accepted": false },
+    { "id": "backslash", "value": "packages\\gis\\component.wasm", "accepted": false },
+    { "id": "empty-segment", "value": "packages//component.wasm", "accepted": false },
+    { "id": "trailing-segment", "value": "packages/gis/", "accepted": false },
+    { "id": "nul", "value": "packages/gis/\u0000component.wasm", "accepted": false },
+    { "id": "too-many-segments", "value": "a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a", "accepted": false },
+    { "id": "too-many-bytes", "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "accepted": false }
+  ],
+  "denials": [
+    { "kind": "leaf-link", "providerCalls": 0, "codecPublished": false },
+    { "kind": "intermediate-link", "providerCalls": 0, "codecPublished": false },
+    { "kind": "actor-link", "providerCalls": 0, "codecPublished": false },
+    { "kind": "data-root-link", "providerCalls": 0, "codecPublished": false },
+    { "kind": "current-link", "providerCalls": 0, "codecPublished": false },
+    { "kind": "generation-link", "providerCalls": 0, "codecPublished": false },
+    { "kind": "reparse-point", "providerCalls": 0, "codecPublished": false }
+  ],
+  "openedHandle": {
+    "initialHex": "6f726967696e616c2d6279746573",
+    "replacementHex": "73756273746974757465642d6279746573",
+    "maximum": 65536,
+    "expectedHex": "6f726967696e616c2d6279746573",
+    "providerCalls": 0,
+    "codecPublished": false
+  }
+}

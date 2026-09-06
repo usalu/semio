@@ -14,17 +14,29 @@ pub struct AddMissingCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddMissingCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "missing-counter", kind: "add-missing-counter", record: "AddedMissingCounter" };
-    fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> { MutationOutcome::error("mutation.target-missing", "target absent", ["thing"]) }
-    fn inverse(&self, _base: &i64) -> Vec<CounterMutation> { Vec::new() }
-    fn label(&self) -> String { "Add to missing counter".into() }
+    fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
+        MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
+    }
+    fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
+        Vec::new()
+    }
+    fn label(&self) -> String {
+        "Add to missing counter".into()
+    }
 }
 //#endregion ⚙️Behavior
 
 //#region 📜️Text
 impl OpText for AddMissingCounter {
-    fn print_op(&self) -> String { "add-missing-counter".into() }
+    fn print_op(&self) -> String {
+        "add-missing-counter".into()
+    }
     fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
-        if line == "add-missing-counter" { Ok(Self {}) } else { Err(crate::os_dsl::TextError::new("expected add-missing-counter", crate::os_dsl::TextSpan::at(1, 1))) }
+        if line == "add-missing-counter" {
+            Ok(Self {})
+        } else {
+            Err(crate::os_dsl::TextError::new("expected add-missing-counter", crate::os_dsl::TextSpan::at(1, 1)))
+        }
     }
 }
 //#endregion 📜️Text
@@ -34,6 +46,8 @@ impl OpText for AddMissingCounter {
 mod tests {
     use super::*;
     #[test]
-    fn direct_fixture_contract() { super::super::super::tests::assert_leaf::<AddMissingCounter>(1, CounterMutation::AddMissingCounter, include_str!("🔣️.json")); }
+    fn direct_fixture_contract() {
+        super::super::super::tests::assert_leaf::<AddMissingCounter>(1, CounterMutation::AddMissingCounter, include_str!("🔣️.json"));
+    }
 }
 //#endregion 🧪️Contract

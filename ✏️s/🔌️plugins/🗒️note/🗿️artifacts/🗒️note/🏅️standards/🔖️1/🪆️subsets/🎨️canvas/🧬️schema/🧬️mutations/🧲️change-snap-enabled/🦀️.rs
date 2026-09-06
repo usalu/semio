@@ -18,23 +18,23 @@ pub struct ChangeSnapEnabled {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_snap_enabled(new_enabled: Option<bool>) -> NoteMutation {
+pub fn change_snap_enabled(new_enabled: Option<bool>) -> NoteMutation {
     NoteMutation::ChangeSnapEnabled(ChangeSnapEnabled { new_enabled })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeSnapEnabled {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "snap-enabled", kind: "change-snap-enabled", record: "ChangedSnapEnabled" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change snap enabled to {:?}", self.new_enabled)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

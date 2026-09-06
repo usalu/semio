@@ -410,10 +410,10 @@ pub enum RouterEffect {
 pub trait RouterEffectHandler: Send + Sync {
     /// 🏭️ Constructs persistent job state only. Effect work belongs in
     /// [`InteractiveJob::step`], where the runtime can bound, cancel, and resume it.
-    fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob>;
+    fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob + Send>;
 }
 
-struct DynRouterEffectJob(Box<dyn InteractiveJob>);
+struct DynRouterEffectJob(Box<dyn InteractiveJob + Send>);
 
 impl InteractiveJob for DynRouterEffectJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
@@ -610,7 +610,7 @@ pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, r
 /// pattern in `semio-framework-os-services`) — every call fails loudly.
 pub struct UnwiredRouterEffectHandler;
 impl RouterEffectHandler for UnwiredRouterEffectHandler {
-    fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob> {
+    fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob + Send> {
         Box::new(FaultRouterEffectJob { detail: Some(format!("AsyncEffectExecutor: no RouterEffectHandler wired yet for {effect:?} (see the packet report's honest gaps)").into_bytes()), writer: None, cursor: 0, closing: false })
     }
 }
@@ -1342,7 +1342,7 @@ mod tests {
     }
 
     impl RouterEffectHandler for RecordingRouterHandler {
-        fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob> {
+        fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob + Send> {
             Box::new(RecordingRouterJob { calls: Some(self.0.clone()), yielded: false, closing: false })
         }
     }
@@ -1382,7 +1382,7 @@ mod tests {
         // always succeeds.
         struct AlwaysOkRouterHandler;
         impl RouterEffectHandler for AlwaysOkRouterHandler {
-            fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob> {
+            fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob + Send> {
                 Box::new(CompleteRouterEffectJob { output: Some(b"ok".to_vec()), writer: None, cursor: 0, closing: false })
             }
         }

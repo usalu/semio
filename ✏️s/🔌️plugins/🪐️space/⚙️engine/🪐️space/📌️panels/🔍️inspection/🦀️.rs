@@ -164,16 +164,10 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
 
         let mut instance_fields = UiFixedList::<BuiltNode>::default();
         instance_fields
-            .try_push(plain_text(
-                &format!("{}: {}", term_labels.program_prefix.as_str(), if program_uniform { programs.first().cloned().unwrap_or_default() } else { term_labels.mixed_placeholder.as_str().to_string() }),
-                "ui.inspector.program-text",
-            )?)
+            .try_push(plain_text(&format!("{}: {}", term_labels.program_prefix.as_str(), if program_uniform { programs.first().cloned().unwrap_or_default() } else { term_labels.mixed_placeholder.as_str().to_string() }), "ui.inspector.program-text")?)
             .map_err(|_| PluginAssemblyError::new("ui.inspector.instance-fields", "app-instance field admission failed"))?;
         instance_fields
-            .try_push(plain_text(
-                &format!("{}: {}", term_labels.app_prefix.as_str(), if app_uniform { apps.first().cloned().unwrap_or_default() } else { term_labels.mixed_placeholder.as_str().to_string() }),
-                "ui.inspector.app-text",
-            )?)
+            .try_push(plain_text(&format!("{}: {}", term_labels.app_prefix.as_str(), if app_uniform { apps.first().cloned().unwrap_or_default() } else { term_labels.mixed_placeholder.as_str().to_string() }), "ui.inspector.app-text")?)
             .map_err(|_| PluginAssemblyError::new("ui.inspector.instance-fields", "app-instance field admission failed"))?;
         if selected_node_ids.len() == 1 {
             instance_fields
@@ -221,8 +215,7 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
                                 .try_item(fixed_text(&value_id, "ui.inspector.bind-select-item-value")?, fixed_label(&name, "ui.inspector.bind-select-item-label")?)
                                 .map_err(|_| PluginAssemblyError::new("ui.inspector.bind-select-item", "parameter-binding select item admission failed"))?;
                         }
-                        let bind_action_pair =
-                            crate::engine::space::s_play_action("bindParameterField", Some(ui_value_map([("nodeId", ui_value_text(node.id.as_str())?), ("fieldPath", ui_value_text(field_spec.field_path.as_str())?)])?))?;
+                        let bind_action_pair = crate::engine::space::s_play_action("bindParameterField", Some(ui_value_map([("nodeId", ui_value_text(node.id.as_str())?), ("fieldPath", ui_value_text(field_spec.field_path.as_str())?)])?))?;
                         let select_node = bind_action(select_builder, Trigger::Change, bind_action_pair)?.try_build().map_err(|_| PluginAssemblyError::new("ui.inspector.bind-select", "parameter-binding select admission failed"))?;
                         instance_fields
                             .try_push(field_node(&field_spec.label, "ui.inspector.bind-field", format!("s-play-inspector.app-parameter.{}", field_spec.field_path), select_node)?)
@@ -283,7 +276,8 @@ mod tests {
         let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
         let config = SpaceConfig::default();
         let node = render(&projection, &ids, semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale)).expect("render");
-        let json = pack::to_json_string(&node);
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node })
+            .expect("inspector tree projection");
         assert!(json.contains("s-play-inspector.app-instance.label"), "label field id must reach the tree: {json}");
         assert!(json.contains("patchAppInstances"), "label field action must reach the tree: {json}");
     }
@@ -292,7 +286,8 @@ mod tests {
     async fn empty_selection_renders_the_select_hint_only() {
         let projection = demo_space_projection().await;
         let node = render(&projection, &[], &SStudioLabels::NATIVE_EN).expect("render");
-        let json = pack::to_json_string(&node);
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node })
+            .expect("inspector tree projection");
         assert!(json.contains("s-play-inspector.header"), "header section must always render: {json}");
         assert!(!json.contains("s-play-inspector.media-nodes"), "no selection must not render the media-nodes section: {json}");
     }

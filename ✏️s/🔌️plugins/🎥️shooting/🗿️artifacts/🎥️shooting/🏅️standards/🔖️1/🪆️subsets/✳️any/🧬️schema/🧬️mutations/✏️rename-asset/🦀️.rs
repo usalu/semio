@@ -15,16 +15,16 @@ pub struct RenameAsset {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for RenameAsset {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "asset", kind: "rename-asset", record: "RenamedAsset" };
-    async fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename asset to \"{}\"", self.new_name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

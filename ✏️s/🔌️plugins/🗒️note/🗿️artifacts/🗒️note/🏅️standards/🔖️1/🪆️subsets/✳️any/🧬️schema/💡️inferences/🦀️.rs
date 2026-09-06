@@ -27,7 +27,7 @@ pub struct NoteInference {
 }
 
 impl protocol::Inference<NoteSnapshot> for NoteInference {
-    async fn infer(snapshot: &NoteSnapshot) -> Self {
+    fn infer(snapshot: &NoteSnapshot) -> Self {
         Self { outline: NoteOutline::compute(snapshot) }
     }
 }
@@ -41,13 +41,13 @@ impl Default for NoteInference {
 }
 
 impl protocol::InferenceSpec<NoteSnapshot> for NoteInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.note.note.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.note.note.inference.outline", reads: &["blocks"] }]
     }
 }

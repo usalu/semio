@@ -19,12 +19,12 @@ use crate::artifacts::shooting::schema::mutations::text::ShootingMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `ShootingMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &ShootingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &ShootingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `ShootingMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<ShootingMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<ShootingMutation, protocol::ProtocolError> {
     ShootingMutation::decode_op(bytes)
 }
 

@@ -161,7 +161,7 @@ impl WorkspaceResourceRegistry {
     }
 
     fn is_workspace_uri(uri: &str) -> bool {
-        uri == "semio://workspace" || uri == "semio://workspace/artifacts" || uri.starts_with("semio://artifact/")
+        uri == "semio://workspace" || uri == "semio://workspace/artifacts" || uri.starts_with("semio://workspace/scopes/") || uri.starts_with("semio://artifact/")
     }
 
     /// 🕳️ Structured, retryable `PLUGIN_UNAVAILABLE` naming the binding a workspace URI needs —
@@ -372,7 +372,7 @@ mod quick {
     #[test]
     fn bare_registry_read_of_a_workspace_uri_is_plugin_unavailable_not_not_found() {
         let registry = WorkspaceResourceRegistry::new(Arc::new(test_catalog()));
-        for uri in ["semio://workspace", "semio://workspace/artifacts", "semio://artifact/probe-a"] {
+        for uri in ["semio://workspace", "semio://workspace/artifacts", "semio://workspace/scopes/space-a/doc-a/checkpoint", "semio://artifact/probe-a"] {
             let error = registry.read(uri).expect_err("no workspace bound yet");
             assert_eq!(error.code, GatewayErrorCode::PluginUnavailable, "uri {uri} should report PLUGIN_UNAVAILABLE, not fabricate or panic");
             assert!(error.retryable);

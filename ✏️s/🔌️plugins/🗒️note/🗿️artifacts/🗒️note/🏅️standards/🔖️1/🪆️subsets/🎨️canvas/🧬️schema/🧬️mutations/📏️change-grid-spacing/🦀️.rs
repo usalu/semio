@@ -18,23 +18,23 @@ pub struct ChangeGridSpacing {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_grid_spacing(new_spacing: Option<f64>) -> NoteMutation {
+pub fn change_grid_spacing(new_spacing: Option<f64>) -> NoteMutation {
     NoteMutation::ChangeGridSpacing(ChangeGridSpacing { new_spacing })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridSpacing {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-spacing", kind: "change-grid-spacing", record: "ChangedGridSpacing" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change grid spacing to {:?}", self.new_spacing)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

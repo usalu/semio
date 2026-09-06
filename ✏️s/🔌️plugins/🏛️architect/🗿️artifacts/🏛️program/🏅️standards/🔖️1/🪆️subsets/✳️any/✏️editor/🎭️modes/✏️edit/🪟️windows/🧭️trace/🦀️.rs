@@ -11,7 +11,7 @@ pub const ARCHITECT_BODY_TRACE: &str = "architect.trace";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_TRACE.into(),
         label: LocalizedLabel::native("Trace", "Nachverfolgung"),
@@ -40,7 +40,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// longer scope trace chain/impact to a selected entity — both sections needed a root id and are
 /// gone with it; the audit trail degrades to the document-wide feed (`audit_trail(program, None)`)
 /// instead of one scoped to a selection.
-pub async fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let trail = audit_trail(program, None);
     let mut items = UiFixedList::default();
     for (index, event) in trail.events.iter().take(12).enumerate() {

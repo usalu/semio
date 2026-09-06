@@ -19,16 +19,16 @@ pub struct ReplaceProcess {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceProcess {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "process", kind: "replace-process", record: "ReplacedProcess" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace process \"{}\"", self.process.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.process.header.id.0.clone()]
     }
 }

@@ -14,7 +14,7 @@ pub struct SetPoints {
     pub geometry: EquationGeometry,
 }
 
-pub async fn handle(payload: &SetPoints, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
+pub fn handle(payload: &SetPoints, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![EquationMutation::ReplacePoints(ReplacePoints { points: payload.geometry.points.clone() })]))
 }
 

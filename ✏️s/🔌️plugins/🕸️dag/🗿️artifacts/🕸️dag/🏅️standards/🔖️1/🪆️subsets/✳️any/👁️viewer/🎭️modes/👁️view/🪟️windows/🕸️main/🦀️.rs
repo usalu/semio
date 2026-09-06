@@ -22,7 +22,7 @@ const DAG_VIEW_CONTROLLER_ID: &str = "dag-view";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::dag::create_dag_viewer`. `options.measures`
 /// stays empty here on purpose: this window has no chrome measures at all (no `🎚️options`), matching
 /// the editor's own main window.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: DAG_VIEW_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("DAG", "DAG"),
@@ -46,7 +46,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `DagSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
 /// camera — `Config = NoConfig`), `editable: Some(false)` — the one bit that distinguishes this from
 /// the editor's own main-window render.
-pub async fn render(document: &DagSnapshot) -> UiNode {
+pub fn render(document: &DagSnapshot) -> UiNode {
     let (nodes, edges) = document_to_workflow(document);
     let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
     build_node_graph_scene(DAG_VIEW_SURFACE_MAIN, DAG_VIEW_CONTROLLER_ID, NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })

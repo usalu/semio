@@ -30,11 +30,9 @@ use crate::kernel_runtime::{KernelClient, MountedProductReplayAdmission};
 #[cfg(not(target_arch = "wasm32"))]
 mod wasm_program_exchange {
     use super::*;
-    use dsl::{from_dsl_value, to_dsl_value, DslValue};
+    use dsl::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue};
     use protocol::{AppCommand, AppFrame};
     use semio_framework::kernel::{AppEvent, Effect, InvocationId, InvocationResult, UndoGroup};
-    use serde::de::DeserializeOwned;
-    use serde::Serialize;
     use std::sync::atomic::{AtomicU64, Ordering};
     use store::pack_rt;
 
@@ -43,12 +41,12 @@ mod wasm_program_exchange {
         SEQ.fetch_add(1, Ordering::Relaxed)
     }
 
-    fn encode_wire<T: Serialize>(value: &T) -> Result<Vec<u8>, String> {
+    fn encode_wire<T: ToValue>(value: &T) -> Result<Vec<u8>, String> {
         let dsl_value = to_dsl_value(value).map_err(|error| error.to_string())?;
         Ok(pack_rt::encode_wire_value(&dsl_value))
     }
 
-    fn decode_wire<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, String> {
+    fn decode_wire<T: FromValue>(bytes: &[u8]) -> Result<T, String> {
         let value = pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
         from_dsl_value(value)
     }
@@ -181,7 +179,7 @@ mod wasm_program_exchange {
     }
 
     pub async fn handle_action(client: &KernelClient, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
-        let invocation: semio_framework::manifest::ActionInvocation = serde_json::from_str(action_json).map_err(|error| error.to_string())?;
+        let invocation: semio_framework::manifest::ActionInvocation = dsl::json::from_json_str(action_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let commands = vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }];
         let admission = client.reserve_product_replay_admission(instance_id)?;
@@ -209,7 +207,7 @@ mod wasm_program_exchange {
     }
 
     pub async fn handle_command(client: &KernelClient, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
-        let invocation: semio_framework::manifest::CommandInvocation = serde_json::from_str(command_json).map_err(|error| error.to_string())?;
+        let invocation: semio_framework::manifest::CommandInvocation = dsl::json::from_json_str(command_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let admission = client.reserve_product_replay_admission(instance_id)?;
         let mut outcome = exchange(client, instance_id, vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }]).await?;
@@ -259,11 +257,11 @@ mod wasm_program_exchange {
     /// as a single `AppCommand::Presence`, one `encode_presence_peer` blob per peer. A plain `Done`
     /// reply, never decoded further here.
     pub async fn push_presence(client: &KernelClient, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), String> {
-        if peers.len() > protocol::PRESENCE_ROSTER_MAXIMUM_ITEMS {
+        if peers.len() > flow::os_spr::channel::PRESENCE_ROSTER_MAXIMUM_ITEMS {
             return Err("presence roster exceeds its fixed producer admission".into());
         }
         let seq = next_seq();
-        let mut peer_blobs = protocol::PresenceRosterWire::empty();
+        let mut peer_blobs = flow::os_spr::channel::PresenceRosterWire::empty();
         for peer in peers {
             peer_blobs.try_push(protocol::encode_presence_peer(peer).await).map_err(|rejected| rejected.reason.to_string())?;
         }
@@ -617,7 +615,7 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
     let result = action.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(action_json), &JsValue::from_str(&context_json)).map_err(|_| "handle_action failed")?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "handle_action promise failed")? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handle_action result not string".to_string())?;
-    serde_json::from_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
+    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -627,7 +625,7 @@ async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json:
     let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json)).map_err(|_| "handleCommand failed")?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "handleCommand promise failed")? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handleCommand result not string".to_string())?;
-    serde_json::from_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handleCommand result parse failed: {error}"))
+    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handleCommand result parse failed: {error}"))
 }
 
 #[cfg(target_arch = "wasm32")]

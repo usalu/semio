@@ -25,7 +25,7 @@ pub struct EquationTopology {
 //#region 🔖️Compute
 /// 🧭️ Builds the node/edge graph from the playground's own `source`/`target` edges and
 /// topologically sorts it.
-pub async fn compute_equation_topology(graph: &EquationGraph) -> EquationTopology {
+pub fn compute_equation_topology(graph: &EquationGraph) -> EquationTopology {
     let nodes: Vec<String> = graph.nodes.iter().map(|node| node.id.clone()).collect();
     let edges: Vec<(String, String)> = graph.edges.iter().map(|edge| (edge.source.clone(), edge.target.clone())).collect();
     topological_sort(nodes, edges)
@@ -34,7 +34,7 @@ pub async fn compute_equation_topology(graph: &EquationGraph) -> EquationTopolog
 /// 🧮️ Kahn's algorithm: a stable (declaration-order-first) topological sort that also yields each
 /// node's longest-path depth from a root, and reports `cycleFree = false` when the queue drains
 /// before every node is visited (the unvisited remainder is exactly the cyclic subgraph).
-async fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> EquationTopology {
+fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> EquationTopology {
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
@@ -89,15 +89,15 @@ mod tests {
     use super::*;
     use crate::artifacts::equation::{EquationEdge, EquationNode};
 
-    async fn node(id: &str) -> EquationNode {
+    fn node(id: &str) -> EquationNode {
         EquationNode { id: id.into(), label: id.into(), x: 0.0, y: 0.0 }
     }
 
-    async fn edge(id: &str, source: &str, target: &str) -> EquationEdge {
+    fn edge(id: &str, source: &str, target: &str) -> EquationEdge {
         EquationEdge { id: id.into(), source: source.into(), target: target.into() }
     }
 
-    async fn graph(nodes: Vec<EquationNode>, edges: Vec<EquationEdge>) -> EquationGraph {
+    fn graph(nodes: Vec<EquationNode>, edges: Vec<EquationEdge>) -> EquationGraph {
         EquationGraph { directed: true, nodes, edges, algorithm: "topo".into(), algorithm_seed: None }
     }
 

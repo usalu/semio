@@ -125,7 +125,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// `.artifact_kind(...)` literal (schema/media type copied verbatim) plus the extra `steps:in` input
 /// port (Wave-2 port recipe): incoming computation results from an upstream workflow node insert as
 /// new steps in the sequence document (see `SequencePlayApp::import_media` below).
-pub async fn sequence_io() -> AppIo {
+pub fn sequence_io() -> AppIo {
     AppIo {
         document_schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
         document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Computation, form: semio_framework::MediaForm::Sequence },
@@ -148,7 +148,7 @@ pub async fn sequence_io() -> AppIo {
 /// but never mutates a host's serial counter (there is no live `SequenceHost` in a pure
 /// `ArtifactApp::import_media` call): derives the next id purely from the fixture's own existing
 /// `step-N`/`edge-N` ids, exactly like `SequenceHost::from_snapshot`'s own initial-serial derivation.
-pub async fn next_available_step_id(fixture: &SequenceSnapshot) -> String {
+pub fn next_available_step_id(fixture: &SequenceSnapshot) -> String {
     format!("step-{}", max_serial_in_snapshot(&fixture.to_fixture()).max(100) + 1)
 }
 //#endregion 🔖️Io
@@ -159,11 +159,11 @@ pub async fn next_available_step_id(fixture: &SequenceSnapshot) -> String {
 /// is foreign (from the DAG layout kernel): neither type nor trait would be local to THIS file, so a
 /// trait impl here would violate the orphan rule. Only `SequenceHost` (which already depends on the DAG
 /// kernel for `DagHost`) needs the conversion, so plain functions here are both legal and sufficient.
-pub async fn sequence_camera_from_dag(value: &DagCamera) -> SequenceCamera {
+pub fn sequence_camera_from_dag(value: &DagCamera) -> SequenceCamera {
     SequenceCamera { x: value.x, y: value.y, zoom: value.zoom }
 }
 
-pub async fn dag_camera_from_sequence(value: &SequenceCamera) -> DagCamera {
+pub fn dag_camera_from_sequence(value: &SequenceCamera) -> DagCamera {
     DagCamera { x: value.x, y: value.y, zoom: value.zoom }
 }
 //#endregion 🔖️Camera
@@ -219,35 +219,35 @@ impl From<serde_json::Error> for SequenceCoreError {
 const SEQUENCE_DAG_COMPONENT_WIDTH: f64 = 200.0;
 const SEQUENCE_DAG_CHANNEL_ROW_HEIGHT: f64 = 24.0;
 
-async fn sequence_computation_node_width(_name: &str, _inputs: &[IoPortSpec], _outputs: &[IoPortSpec]) -> f64 {
+fn sequence_computation_node_width(_name: &str, _inputs: &[IoPortSpec], _outputs: &[IoPortSpec]) -> f64 {
     SEQUENCE_DAG_COMPONENT_WIDTH
 }
 
-async fn sequence_computation_node_height(input_count: usize, output_count: usize, _variadic_inputs: bool, _variadic_outputs: bool) -> f64 {
+fn sequence_computation_node_height(input_count: usize, output_count: usize, _variadic_inputs: bool, _variadic_outputs: bool) -> f64 {
     let rows = input_count.max(output_count).max(1);
     rows as f64 * SEQUENCE_DAG_CHANNEL_ROW_HEIGHT
 }
 const FLOW_INPUT_PORT: &str = "prev";
 const FLOW_OUTPUT_PORT: &str = "next";
 
-async fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
+fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
     serde_json::from_value(serde_json::to_value(dict).unwrap_or(Value::Null)).unwrap_or_default()
 }
 
 /// 🧭️ `pub` — reused by other app taxonomy nodes (panels/commands: control-flow nesting, catalogue slots).
-pub async fn is_control_kind(kind: &str) -> bool {
+pub fn is_control_kind(kind: &str) -> bool {
     matches!(kind, "control.if" | "control.while" | "control.repeat")
 }
 
-async fn is_function_kind(kind: &str) -> bool {
+fn is_function_kind(kind: &str) -> bool {
     kind.starts_with("math.") || kind.starts_with("logic.") || kind.starts_with("text.")
 }
 
-async fn parse_serial_suffix(prefix: &str, id: &str) -> Option<u64> {
+fn parse_serial_suffix(prefix: &str, id: &str) -> Option<u64> {
     id.strip_prefix(prefix)?.parse().ok()
 }
 
-async fn max_serial_in_snapshot(fixture: &SequenceFixture) -> u64 {
+fn max_serial_in_snapshot(fixture: &SequenceFixture) -> u64 {
     let mut max = 0u64;
     for step in &fixture.steps {
         if let Some(serial) = parse_serial_suffix("step-", &step.id) {
@@ -262,7 +262,7 @@ async fn max_serial_in_snapshot(fixture: &SequenceFixture) -> u64 {
     max
 }
 
-async fn default_control_slot(kind: &str) -> &'static str {
+fn default_control_slot(kind: &str) -> &'static str {
     if kind == "control.if" {
         "then"
     } else {
@@ -270,14 +270,14 @@ async fn default_control_slot(kind: &str) -> &'static str {
     }
 }
 
-async fn neural_value_to_dsl_value(value: &NeuralValue) -> DslValue {
+fn neural_value_to_dsl_value(value: &NeuralValue) -> DslValue {
     dsl::to_dsl_value(value).unwrap_or(DslValue::Null)
 }
 
 // 🧯️ `unnecessary_wraps` — mirrors `IoPortSpec::value_type`'s `Option<String>` field shape; every
 // branch here happens to be populated today, but the field itself is genuinely optional.
 #[allow(clippy::unnecessary_wraps)]
-async fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
+fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
     if spec.operators.is_empty() {
         Some("value".into())
     } else {
@@ -285,7 +285,7 @@ async fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
     }
 }
 
-async fn channel_spec_to_output_port(spec: &ChannelSpec) -> IoPortSpec {
+fn channel_spec_to_output_port(spec: &ChannelSpec) -> IoPortSpec {
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
     port.value_type = channel_spec_value_type(spec);
@@ -294,7 +294,7 @@ async fn channel_spec_to_output_port(spec: &ChannelSpec) -> IoPortSpec {
     port
 }
 
-async fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary) -> IoPortSpec {
+fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary) -> IoPortSpec {
     let value = params.get(&spec.name).or(spec.default.as_ref()).map(neural_value_to_dsl_value);
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
@@ -306,28 +306,28 @@ async fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary) -> IoPortSp
     port
 }
 
-async fn hidden_flow_input_port() -> IoPortSpec {
+fn hidden_flow_input_port() -> IoPortSpec {
     let mut port = IoPortSpec::named("", "", FLOW_INPUT_PORT, "");
     port.cardinality = String::new();
     port.visible = false;
     port
 }
 
-async fn hidden_flow_output_port() -> IoPortSpec {
+fn hidden_flow_output_port() -> IoPortSpec {
     let mut port = IoPortSpec::named("", "", FLOW_OUTPUT_PORT, "");
     port.cardinality = String::new();
     port.visible = false;
     port
 }
 
-async fn visible_flow_input_port() -> IoPortSpec {
+fn visible_flow_input_port() -> IoPortSpec {
     let mut port = IoPortSpec::named("", "", FLOW_INPUT_PORT, "Previous");
     port.shape = PortShape::Triangle;
     port.cardinality = String::new();
     port
 }
 
-async fn visible_flow_output_port() -> IoPortSpec {
+fn visible_flow_output_port() -> IoPortSpec {
     let mut port = IoPortSpec::named("", "", FLOW_OUTPUT_PORT, "Next");
     port.shape = PortShape::Triangle;
     port.cardinality = String::new();
@@ -335,7 +335,7 @@ async fn visible_flow_output_port() -> IoPortSpec {
 }
 
 /// 🧭️ `pub` — reused by other app taxonomy nodes (panels/commands: control-flow nesting, catalogue slots).
-pub async fn control_slots(kind: &str) -> &'static [&'static str] {
+pub fn control_slots(kind: &str) -> &'static [&'static str] {
     match kind {
         "control.if" => &["then", "else"],
         "control.while" | "control.repeat" => &["body"],
@@ -343,18 +343,18 @@ pub async fn control_slots(kind: &str) -> &'static [&'static str] {
     }
 }
 
-async fn slot_key(slot: Option<&SlotRef>) -> Option<(String, String)> {
+fn slot_key(slot: Option<&SlotRef>) -> Option<(String, String)> {
     slot.map(|entry| (entry.owner.clone(), entry.name.clone()))
 }
 
 #[cfg(test)]
-async fn ensure_imperative_modules_for_tests() {
+fn ensure_imperative_modules_for_tests() {
     use std::sync::Once;
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
         register_native_imperative_module("imperative-extension-math", semio_s_plugin_imperative_math::register);
         register_native_imperative_module("imperative-extension-text", semio_s_plugin_imperative_text::register);
-        register_native_imperative_module("imperative-extension-core", semio_s_plugin_imperative_effect::register);
+        register_native_imperative_module("imperative-extension-effect", semio_s_plugin_imperative_effect::register);
         let json = contributions_json_from_entries(&[
             semio_s_plugin_imperative_math::imperative_module_contribution(),
             semio_s_plugin_imperative_text::imperative_module_contribution(),
@@ -391,13 +391,13 @@ impl Default for SequenceHost {
 impl SequenceHost {
     /// 🌊️ Builds a live host from a persisted composed-child snapshot — reads the real steps/edges
     /// off the working-scene cache via `to_fixture()` (see `SequenceFixture`'s doc comment).
-    pub async fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
         Self::from_fixture(snapshot.to_fixture())
     }
 
     /// 🌊️ Builds a live host directly from a plain fixture (the WASM bridge's `loadFixtureJson`/
     /// `SequenceHost::load_json` entry point).
-    pub async fn from_fixture(fixture: SequenceFixture) -> Self {
+    pub fn from_fixture(fixture: SequenceFixture) -> Self {
         #[cfg(test)]
         ensure_imperative_modules_for_tests();
         let next_serial = max_serial_in_snapshot(&fixture).max(100);
@@ -412,7 +412,7 @@ impl SequenceHost {
         host
     }
 
-    pub async fn replace_snapshot(&mut self, fixture: SequenceFixture) -> Result<(), SequenceCoreError> {
+    pub fn replace_snapshot(&mut self, fixture: SequenceFixture) -> Result<(), SequenceCoreError> {
         if fixture.schema != "sequence.sequence" {
             return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
         }
@@ -422,7 +422,7 @@ impl SequenceHost {
         Ok(())
     }
 
-    pub async fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
+    pub fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
         let fixture: SequenceFixture = serde_json::from_str(json)?;
         if fixture.schema != "sequence.sequence" {
             return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
@@ -430,15 +430,15 @@ impl SequenceHost {
         Ok(Self::from_fixture(fixture))
     }
 
-    pub async fn to_json(&self) -> Result<String, SequenceCoreError> {
+    pub fn to_json(&self) -> Result<String, SequenceCoreError> {
         Ok(serde_json::to_string(&self.snapshot)?)
     }
 
-    pub async fn catalogue_json(&self) -> String {
+    pub fn catalogue_json(&self) -> String {
         imperative_catalogue_json(&self.registry)
     }
 
-    pub async fn pick_step_id_at_screen(&self, sx: f64, sy: f64, width: u32, height: u32, dpr: f64) -> Option<String> {
+    pub fn pick_step_id_at_screen(&self, sx: f64, sy: f64, width: u32, height: u32, dpr: f64) -> Option<String> {
         use infinite_canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
         use infinite_canvas::Point;
         let viewport = Viewport { width: width.max(1), height: height.max(1), dpr: dpr.max(1.0) };
@@ -454,11 +454,11 @@ impl SequenceHost {
         None
     }
 
-    pub async fn add_step(&mut self, kind: &str, x: f64, y: f64) -> String {
+    pub fn add_step(&mut self, kind: &str, x: f64, y: f64) -> String {
         self.add_step_in_slot(kind, x, y, None)
     }
 
-    pub async fn add_step_dropped(&mut self, kind: &str, x: f64, y: f64, picked_step_id: Option<&str>) -> String {
+    pub fn add_step_dropped(&mut self, kind: &str, x: f64, y: f64, picked_step_id: Option<&str>) -> String {
         if let Some(owner_id) = picked_step_id {
             if let Some(owner) = self.snapshot.steps.iter().find(|step| step.id == owner_id) {
                 if is_control_kind(&owner.kind) && !owner.collapsed {
@@ -469,7 +469,7 @@ impl SequenceHost {
         self.add_step(kind, x, y)
     }
 
-    async fn next_step_id(&mut self) -> String {
+    fn next_step_id(&mut self) -> String {
         loop {
             self.next_serial += 1;
             let id = format!("step-{}", self.next_serial);
@@ -479,7 +479,7 @@ impl SequenceHost {
         }
     }
 
-    async fn next_edge_id(&mut self) -> String {
+    fn next_edge_id(&mut self) -> String {
         loop {
             self.next_serial += 1;
             let id = format!("edge-{}", self.next_serial);
@@ -489,7 +489,7 @@ impl SequenceHost {
         }
     }
 
-    pub async fn add_step_in_slot(&mut self, kind: &str, x: f64, y: f64, slot: Option<SlotRef>) -> String {
+    pub fn add_step_in_slot(&mut self, kind: &str, x: f64, y: f64, slot: Option<SlotRef>) -> String {
         self.clear_ghost_step();
         let id = self.next_step_id();
         self.snapshot.steps.push(SequenceStep { id: id.clone(), kind: kind.into(), params: StepParams::new(), x, y, slot, collapsed: false });
@@ -497,7 +497,7 @@ impl SequenceHost {
         id
     }
 
-    pub async fn set_step_collapsed(&mut self, id: &str, collapsed: bool) -> bool {
+    pub fn set_step_collapsed(&mut self, id: &str, collapsed: bool) -> bool {
         let Some(step) = self.snapshot.steps.iter_mut().find(|step| step.id == id) else {
             return false;
         };
@@ -509,7 +509,7 @@ impl SequenceHost {
         true
     }
 
-    pub async fn remove_step(&mut self, id: &str) -> bool {
+    pub fn remove_step(&mut self, id: &str) -> bool {
         let before = self.snapshot.steps.len();
         let mut remove_ids = vec![id.to_string()];
         if self.snapshot.steps.iter().any(|step| step.id == id && is_control_kind(&step.kind)) {
@@ -528,7 +528,7 @@ impl SequenceHost {
         true
     }
 
-    pub async fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), SequenceCoreError> {
+    pub fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), SequenceCoreError> {
         let params: StepParams = serde_json::from_str(json)?;
         let Some(step) = self.snapshot.steps.iter_mut().find(|step| step.id == id) else {
             return Err(SequenceCoreError::UnknownStep(id.into()));
@@ -538,7 +538,7 @@ impl SequenceHost {
         Ok(())
     }
 
-    pub async fn connect_steps(&mut self, from_id: &str, to_id: &str) -> Result<String, SequenceCoreError> {
+    pub fn connect_steps(&mut self, from_id: &str, to_id: &str) -> Result<String, SequenceCoreError> {
         if from_id == to_id {
             return Err(SequenceCoreError::SelfConnect);
         }
@@ -563,7 +563,7 @@ impl SequenceHost {
         Ok(id)
     }
 
-    pub async fn disconnect_steps(&mut self, from_id: &str, to_id: &str) -> bool {
+    pub fn disconnect_steps(&mut self, from_id: &str, to_id: &str) -> bool {
         let before = self.snapshot.edges.len();
         self.snapshot.edges.retain(|edge| !(edge.from == from_id && edge.to == to_id));
         if self.snapshot.edges.len() == before {
@@ -573,7 +573,7 @@ impl SequenceHost {
         true
     }
 
-    pub async fn sync_edges_from_dag(&mut self) {
+    pub fn sync_edges_from_dag(&mut self) {
         let dag_pairs: Vec<(String, String)> = self
             .dag
             .fixture
@@ -600,7 +600,7 @@ impl SequenceHost {
         self.snapshot.edges = edges;
     }
 
-    pub async fn sync_from_dag(&mut self) {
+    pub fn sync_from_dag(&mut self) {
         self.camera = sequence_camera_from_dag(&self.dag.fixture.camera);
         self.sync_edges_from_dag();
         for step in &mut self.snapshot.steps {
@@ -612,15 +612,15 @@ impl SequenceHost {
         }
     }
 
-    pub async fn build_path(&self) -> Path {
+    pub fn build_path(&self) -> Path {
         self.build_path_for_slot(None)
     }
 
-    pub async fn build_path_json(&self) -> Result<String, SequenceCoreError> {
+    pub fn build_path_json(&self) -> Result<String, SequenceCoreError> {
         Ok(serde_json::to_string(&self.build_path())?)
     }
 
-    async fn build_path_for_slot(&self, slot: Option<&SlotRef>) -> Path {
+    fn build_path_for_slot(&self, slot: Option<&SlotRef>) -> Path {
         let slot_filter = slot_key(slot);
         let scoped_steps: Vec<&SequenceStep> = self.snapshot.steps.iter().filter(|step| slot_key(step.slot.as_ref()) == slot_filter).collect();
         let incoming: HashMap<&str, &str> = self.snapshot.edges.iter().map(|edge| (edge.to.as_str(), edge.from.as_str())).collect();
@@ -652,7 +652,7 @@ impl SequenceHost {
         Path { steps: ordered }
     }
 
-    async fn step_to_imperative_step(&self, step: &SequenceStep) -> Step {
+    fn step_to_imperative_step(&self, step: &SequenceStep) -> Step {
         let mut bodies = BTreeMap::new();
         if is_control_kind(&step.kind) {
             for slot_name in control_slots(&step.kind) {
@@ -663,7 +663,7 @@ impl SequenceHost {
         Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.0.clone(), bodies }
     }
 
-    async fn is_step_visible(&self, step: &SequenceStep) -> bool {
+    fn is_step_visible(&self, step: &SequenceStep) -> bool {
         let Some(slot) = &step.slot else {
             return true;
         };
@@ -673,11 +673,11 @@ impl SequenceHost {
         !owner.collapsed
     }
 
-    async fn slot_member_count(&self, owner_id: &str) -> usize {
+    fn slot_member_count(&self, owner_id: &str) -> usize {
         self.snapshot.steps.iter().filter(|step| step.slot.as_ref().is_some_and(|slot| slot.owner == owner_id)).count()
     }
 
-    pub async fn layout_expanded_slots(&mut self) {
+    pub fn layout_expanded_slots(&mut self) {
         let control_steps: Vec<(String, String, bool)> = self.snapshot.steps.iter().filter(|step| is_control_kind(&step.kind)).map(|step| (step.id.clone(), step.kind.clone(), step.collapsed)).collect();
         for (owner_id, kind, collapsed) in control_steps {
             if collapsed {
@@ -703,7 +703,7 @@ impl SequenceHost {
     }
 
     /// 🌳️ Recomputes visible step positions using the shared layered DAG tree layout, then rebuilds the DAG view.
-    pub async fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), SequenceCoreError> {
+    pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), SequenceCoreError> {
         self.dag.reorganize(opts).map_err(|e| SequenceCoreError::Dag(e.to_string()))?;
         let positions: HashMap<String, (f64, f64)> = self.dag.fixture.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
         for step in self.snapshot.steps.iter_mut() {
@@ -716,20 +716,20 @@ impl SequenceHost {
         Ok(())
     }
 
-    pub async fn run(&self) -> RunResult {
+    pub fn run(&self) -> RunResult {
         Executor::new(&self.registry).run(&self.build_path(), &Dictionary::new())
     }
 
-    pub async fn compile_text(&self) -> String {
+    pub fn compile_text(&self) -> String {
         imperative_compile_to_text(&self.build_path())
     }
 
     /// 📝️ Renders the compiled DAG fixture as wire-literal text.
-    pub async fn compiled_wire_literal(&self) -> String {
+    pub fn compiled_wire_literal(&self) -> String {
         dag_fixture_to_wire_literal(&self.build_dag_fixture())
     }
 
-    async fn rebuild_dag(&mut self) {
+    fn rebuild_dag(&mut self) {
         let selected = self.dag.selected_node_ids()?;
         let dag_fixture = self.build_dag_fixture();
         self.dag = DagHost::from_fixture_without_layout(dag_fixture);
@@ -739,7 +739,7 @@ impl SequenceHost {
         }
     }
 
-    async fn build_dag_fixture(&self) -> DagFixture {
+    fn build_dag_fixture(&self) -> DagFixture {
         let nodes: Vec<DagNodeSpec> = self.snapshot.steps.iter().filter(|step| self.is_step_visible(step)).map(|step| self.step_to_dag_node(step)).collect();
         let visible_ids: std::collections::HashSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
         let existing: Vec<(String, String)> = self.snapshot.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
@@ -754,7 +754,7 @@ impl SequenceHost {
         DagFixture { schema: "dag.fixture".into(), camera: dag_camera_from_sequence(&self.camera), nodes, edges }
     }
 
-    async fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
+    fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
         let info = self.registry.operator_info(&step.kind);
         let (name, mut abbreviation, icon) = info.as_ref().map_or_else(|| (step.kind.clone(), step.kind.clone(), "emoji:⚡️".into()), |entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone()));
         if is_control_kind(&step.kind) {
@@ -784,13 +784,13 @@ impl SequenceHost {
         node
     }
 
-    pub async fn set_ghost_step(&mut self, kind: &str, x: f64, y: f64) {
+    pub fn set_ghost_step(&mut self, kind: &str, x: f64, y: f64) {
         let ghost = SequenceStep { id: "__ghost__".into(), kind: kind.into(), params: StepParams::new(), x, y, slot: None, collapsed: false };
         let node = self.step_to_dag_node(&ghost);
         self.dag.set_ghost_node(Some(node));
     }
 
-    pub async fn clear_ghost_step(&mut self) {
+    pub fn clear_ghost_step(&mut self) {
         self.dag.set_ghost_node(None);
     }
 }
@@ -801,13 +801,13 @@ impl SequenceHost {
 /// host's cycle/slot/layout logic) and then diff the result into typed operations. More than one
 /// consumer across the taxonomy tree (commands, windows), so it lives here rather than in a single
 /// caller's file.
-pub async fn host_from_snapshot(fixture: &SequenceSnapshot) -> SequenceHost {
+pub fn host_from_snapshot(fixture: &SequenceSnapshot) -> SequenceHost {
     SequenceHost::from_snapshot(fixture.clone())
 }
 
 /// 🔀️ Runs a host mutation seeded from `fixture` and diffs the result into typed operations — a free
 /// function (not a method) since `SequencePlayApp` is a unit struct with nothing to borrow.
-pub async fn ops_from_host_mutation(fixture: &SequenceSnapshot, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceMutation> {
+pub fn ops_from_host_mutation(fixture: &SequenceSnapshot, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceMutation> {
     let mut host = host_from_snapshot(fixture);
     mutate(&mut host);
     sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)
@@ -2273,15 +2273,15 @@ impl ArtifactEditor for SequencePlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::sequence::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> SequenceSnapshot {
+    fn initial_snapshot() -> SequenceSnapshot {
         default_snapshot()
     }
 
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(sequence_io())
     }
 
@@ -2290,7 +2290,7 @@ impl ArtifactEditor for SequencePlayApp {
     /// scalar/array is wrapped under a single `"value"` key. Never mutates anything directly (matches
     /// every other `import_media` override): the caller (a headless runner or the UI) applies the
     /// returned `create-step` mutation through the ordinary, undoable document store.
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, SequenceSnapshot>) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, SequenceSnapshot>) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "steps:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -2310,7 +2310,7 @@ impl ArtifactEditor for SequencePlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &SequenceCommand) -> &'static str {
+    fn command_id(command: &SequenceCommand) -> &'static str {
         command.command_id()
     }
 
@@ -2318,7 +2318,7 @@ impl ArtifactEditor for SequencePlayApp {
     /// the `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)`
     /// signature is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    async fn handle(
+    fn handle(
         command: &SequenceCommand,
         doc: &ArtifactView<'_, SequenceSnapshot>,
         cfg: &ConfigView<'_, SequenceConfig>,
@@ -2337,7 +2337,7 @@ impl ArtifactEditor for SequencePlayApp {
     /// granularity, parented to its control-flow slot owner (`SlotRef.owner`) when nested inside a
     /// `then`/`else`/`body` slot, or as a root otherwise — mirrors the document panel's own nesting
     /// (`build_step_tree_item`) so a deleted step's id auto-prunes out of the live selection.
-    async fn interaction_topology(doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> InteractionTopology {
         let ordered = doc.snapshot.to_fixture().steps.iter().map(|step| TopologyNode { id: step.id.clone(), granularity: "step".into(), parent: step.slot.as_ref().map(|slot| slot.owner.clone()) }).collect();
         let mut domains = BTreeMap::new();
         domains.insert(SEQUENCE_INTERACTION_STEPS.to_string(), DomainTopology { ordered });
@@ -2345,7 +2345,7 @@ impl ArtifactEditor for SequencePlayApp {
     }
 
     /// 🧮️ This app's typed configuration spec — the layout orientation `reorganize` reads.
-    async fn config_spec() -> ConfigSpec {
+    fn config_spec() -> ConfigSpec {
         ConfigSpec {
             fields: vec![ConfigFieldSpec {
                 key: "orientation".into(),
@@ -2356,7 +2356,7 @@ impl ArtifactEditor for SequencePlayApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let fixture = doc.snapshot;
         let live = fixture.to_fixture();
         let config = cfg.snapshot;
@@ -2379,7 +2379,7 @@ impl ArtifactEditor for SequencePlayApp {
     /// 26/08/14's w3b-summary.md), so the selection-dependent rows built by
     /// `sequence_context_menu_items` below always take the "nothing selected" branch here rather than
     /// reading a stale/wrong selection.
-    async fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let is_de = cfg.snapshot.locale.starts_with("de");
         sequence_context_menu_items(registry, is_de, request.surface.as_ref(), &[])
     }
@@ -2393,7 +2393,7 @@ impl ArtifactEditor for SequencePlayApp {
 /// itself. Factored out of `ArtifactApp::context_menu` (which carries no `InteractionView` — ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) so a test can exercise the selection-dependent
 /// rows directly with a real `selected` slice, matching `space`'s own precedent.
-async fn sequence_context_menu_items(registry: &AppActionRegistry, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
+fn sequence_context_menu_items(registry: &AppActionRegistry, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
     let (nodes, edges) = selection_domains_from_surface(surface, selected, &[]);
@@ -2425,7 +2425,7 @@ async fn sequence_context_menu_items(registry: &AppActionRegistry, is_de: bool, 
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own
 /// `definition()`. Only the leaf action/keybinding declarations (which have no dedicated `_def`
 /// passthrough) are written out inline.
-pub async fn create_sequence_app() -> AppDefinition {
+pub fn create_sequence_app() -> AppDefinition {
     Editor::builder(crate::artifacts::sequence::SEQUENCE_DIALECT)
             .document(["semio", "sequence"])
             .artifact_kind(crate::artifacts::sequence::artifact_kind())
@@ -2540,7 +2540,7 @@ pub(crate) mod testkit {
     pub type SequenceApp = VcsArtifactApp<EditorApp<SequencePlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn new_app() -> SequenceApp {
+    pub fn new_app() -> SequenceApp {
         semio_framework_plugin::testkit::new_app::<EditorApp<SequencePlayApp>>()
     }
 
@@ -2548,20 +2548,20 @@ pub(crate) mod testkit {
     /// `App { definition, examples }` `new_app_with_registry` still expects (SDK gap, unchanged by
     /// this ticket — `testkit::assert_declared_actions_bridge_to_commands` carries the identical gap
     /// per `📓️w0-f-report.md` Gap 3) — wraps it with an empty `examples` list rather than porting one.
-    async fn sequence_manifest_for_testkit() -> App {
+    fn sequence_manifest_for_testkit() -> App {
         App { definition: create_sequence_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn new_app_with_registry_wired() -> SequenceApp {
+    pub fn new_app_with_registry_wired() -> SequenceApp {
         new_app_with_registry::<EditorApp<SequencePlayApp>>(sequence_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut SequenceApp, command: SequenceCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut SequenceApp, command: SequenceCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut SequenceApp, body_key: &str) -> String {
+    pub fn render(app: &mut SequenceApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
@@ -2570,7 +2570,7 @@ pub(crate) mod testkit {
     /// requires `new_app_with_registry_wired()` (a bare `new_app()` has no declared interaction
     /// domains to select against). `ids` are the steps' own raw document ids — the SAME ids the
     /// "steps" domain's topology/the document panel tree/the main node-graph canvas all use.
-    pub async fn select_steps(app: &mut SequenceApp, ids: &[&str]) {
+    pub fn select_steps(app: &mut SequenceApp, ids: &[&str]) {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "step", "id": id })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
         app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
@@ -2744,7 +2744,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<SequenceCommand> {
+    pub(super) fn every_command() -> Vec<SequenceCommand> {
         vec![
             SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 1.0, y: 2.0 }),
             SequenceCommand::AddStepToSlot(add_step_to_slot::AddStepToSlot { kind: "log.print".into(), x: 1.0, y: 2.0, owner: "step-1".into(), slot_name: "then".into() }),

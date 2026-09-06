@@ -11,6 +11,21 @@ pub struct PluginInstanceCloseLease<PA: PluginApp> {
 impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
     pub(crate) fn allocation_identity(&self) -> (u32, usize) { (self.instance_id, self.cell.as_ptr().cast::<()>() as usize) }
 
+    pub(crate) fn from_cell(instance_id: u32, cell: &std::sync::Arc<RuntimeAppCell<PA>>) -> Self {
+        Self { instance_id, cell: std::sync::Arc::downgrade(cell), admitted: None }
+    }
+
+    pub(crate) fn preflight_close(&self, runtime: &PluginRuntime<PA>) -> Result<(), Fault> {
+        if self.admitted.is_some() { return Ok(()); }
+        let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
+        let current = instances.get(self.instance_id).ok_or_else(|| plugin_internal_fault("captured app lifetime is absent"))?;
+        if !std::sync::Weak::ptr_eq(&self.cell, &std::sync::Arc::downgrade(current)) { return Err(plugin_internal_fault("captured app lifetime changed")); }
+        if !runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.can_insert(self.instance_id) { return Err(plugin_internal_fault("runtime close quarantine collided")); }
+        let _actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?;
+        checked_runtime_close_generation(runtime.close_generation.get())?;
+        Ok(())
+    }
+
     /// 🚪️ Admits at most one close for the captured allocation without retaining an app payload alias.
     pub fn begin_close(&mut self, runtime: &PluginRuntime<PA>) -> Result<(), Fault> {
         if self.admitted.is_some() { return Ok(()); }

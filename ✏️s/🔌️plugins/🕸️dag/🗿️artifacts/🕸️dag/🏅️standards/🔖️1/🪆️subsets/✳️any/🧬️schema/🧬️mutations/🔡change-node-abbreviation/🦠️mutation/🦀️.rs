@@ -14,23 +14,23 @@ pub struct ChangeNodeAbbreviation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_node_abbreviation(id: String, new_abbreviation: String) -> DagMutation {
+pub fn change_node_abbreviation(id: String, new_abbreviation: String) -> DagMutation {
     DagMutation::ChangeNodeAbbreviation(ChangeNodeAbbreviation { id, new_abbreviation })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeAbbreviation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-abbreviation", record: "ChangedNodeAbbreviation" };
 
-    async fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change node \"{}\" abbreviation to \"{}\"", self.id, self.new_abbreviation)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

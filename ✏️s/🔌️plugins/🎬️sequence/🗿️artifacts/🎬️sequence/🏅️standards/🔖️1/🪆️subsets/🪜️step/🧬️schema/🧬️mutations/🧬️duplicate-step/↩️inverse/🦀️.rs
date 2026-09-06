@@ -4,7 +4,7 @@ use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::DuplicateStep, _base: &SequenceSnapshot) -> Vec<SequenceMutation> {
+pub fn inverse(payload: &super::DuplicateStep, _base: &SequenceSnapshot) -> Vec<SequenceMutation> {
     vec![crate::artifacts::sequence::mutations::delete_step(payload.new_id.clone())]
 }
 //#endregion 🔖️Inverse

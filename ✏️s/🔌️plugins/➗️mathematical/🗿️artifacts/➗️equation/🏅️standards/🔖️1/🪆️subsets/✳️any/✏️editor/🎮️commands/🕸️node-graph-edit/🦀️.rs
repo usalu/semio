@@ -20,7 +20,7 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-pub async fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
+pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
     let edit_operations: Vec<JsonValue> = pack::json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(<[JsonValue]>::to_vec)).unwrap_or_default();
     let mut graph = crate::artifacts::equation::equation_graph(doc.snapshot);
     let mut changed = false;

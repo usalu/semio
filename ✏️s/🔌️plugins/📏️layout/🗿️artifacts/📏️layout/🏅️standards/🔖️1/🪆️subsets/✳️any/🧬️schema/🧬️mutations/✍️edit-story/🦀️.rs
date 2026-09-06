@@ -18,16 +18,16 @@ pub struct EditStory {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "story", kind: "edit-story", record: "EditedStory" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_edit_story(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_edit_story(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Edit story \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
@@ -35,7 +35,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
 
 
 //#region 📝EditStory
-pub async fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -51,7 +51,7 @@ pub async fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> prot
 
 
 //#region 📝EditStory
-pub async fn inverse_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.stories.iter().find(|story| story.id == payload.id) {
         Some(story) => vec![LayoutMutation::EditStory(EditStory { id: payload.id.clone(), new_content: story.content.clone() })],
         None => Vec::new(),

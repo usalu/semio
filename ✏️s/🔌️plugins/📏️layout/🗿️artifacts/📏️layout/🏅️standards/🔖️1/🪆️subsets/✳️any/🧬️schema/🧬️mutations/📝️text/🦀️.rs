@@ -21,10 +21,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️OpText
 impl protocol::OpText for LayoutMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::__rt::field_error(format!("invalid layout mutation line: {e}")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         serde_json::to_string(self).expect("LayoutMutation always serializes")
     }
 }
@@ -32,10 +32,10 @@ impl protocol::OpText for LayoutMutation {
 
 //#region 🔖️OpBinary
 impl protocol::OpBinary for LayoutMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(serde_json::to_vec(self).expect("LayoutMutation always serializes"))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "layout-mutation", offset: 0, detail: e.to_string() })
     }
 }

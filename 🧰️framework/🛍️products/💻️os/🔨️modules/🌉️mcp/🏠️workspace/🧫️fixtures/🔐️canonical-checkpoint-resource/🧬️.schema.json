@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.mcp.canonical-checkpoint-resource.fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "selector", "resource", "hostile", "lifecycle"],
+  "properties": {
+    "schema": { "const": "semio.mcp.canonical-checkpoint-resource.fixture/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pairBytes", "textBytes", "metadataBytes"],
+      "properties": {
+        "pairBytes": { "const": 4194304 },
+        "textBytes": { "const": 6291456 },
+        "metadataBytes": { "const": 16384 }
+      }
+    },
+    "selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "artifactSchema", "hostile"],
+      "properties": {
+        "artifactKind": { "const": "s.gis.gismap" },
+        "artifactSchema": { "const": "gis.map" },
+        "hostile": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "artifactKind", "artifactSchema"],
+            "properties": {
+              "name": { "enum": ["wrong-kind", "wrong-schema", "wrong-kind-and-schema"] },
+              "artifactKind": { "type": "string", "minLength": 1 },
+              "artifactSchema": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uri", "mimeType", "value"],
+      "properties": {
+        "uri": { "const": "semio://workspace/scopes/space%3Aalpha/doc%3Atokyo/checkpoint" },
+        "mimeType": { "const": "application/json" },
+        "value": { "$ref": "#/$defs/resourceValue" }
+      }
+    },
+    "hostile": {
+      "type": "array",
+      "minItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "same-document-other-space",
+          "wrong-descriptor-digest",
+          "wrong-checkpoint",
+          "wrong-etag",
+          "wrong-frontier",
+          "wrong-pack-length",
+          "wrong-pack-hash",
+          "wrong-pack-base64",
+          "wrong-spr-length",
+          "wrong-spr-hash",
+          "wrong-spr-base64",
+          "over-text-limit"
+        ]
+      }
+    },
+    "lifecycle": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["cancel", "deadline", "revoke-before-publish", "descriptor-refresh-before-publish"] }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["byteLength", "sha256", "base64"],
+      "properties": {
+        "byteLength": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "#/$defs/hash" },
+        "base64": { "type": "string", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$" }
+      }
+    },
+    "resourceValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "scope", "descriptorDigestV1", "activeCheckpointId", "etag", "authorityGeneration", "catalogGeneration", "frontier", "pack", "spr"],
+      "properties": {
+        "schema": { "const": "semio.mcp.canonical-checkpoint-resource/v1" },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["spaceId", "documentId"],
+          "properties": {
+            "spaceId": { "const": "space:alpha" },
+            "documentId": { "const": "doc:tokyo" }
+          }
+        },
+        "descriptorDigestV1": { "$ref": "#/$defs/hash" },
+        "activeCheckpointId": { "$ref": "#/$defs/hash" },
+        "etag": { "type": "string", "pattern": "^\"[0-9a-f]{64}\"$" },
+        "authorityGeneration": { "type": "integer", "minimum": 1 },
+        "catalogGeneration": { "type": ["integer", "null"], "minimum": 1 },
+        "frontier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"],
+          "properties": {
+            "documentId": { "const": "doc:tokyo" },
+            "headEditOrdinal": { "type": "integer", "minimum": 0 },
+            "headEditId": { "type": "string" },
+            "lastCommitSeq": { "type": "integer", "minimum": 0 },
+            "chainHash": { "$ref": "#/$defs/hash" }
+          }
+        },
+        "pack": { "$ref": "#/$defs/part" },
+        "spr": { "$ref": "#/$defs/part" }
+      }
+    }
+  }
+}

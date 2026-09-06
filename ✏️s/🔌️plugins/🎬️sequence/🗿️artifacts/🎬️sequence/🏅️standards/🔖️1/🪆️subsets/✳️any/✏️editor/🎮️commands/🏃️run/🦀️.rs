@@ -19,7 +19,7 @@ pub mod run_command {
     #[dsl(keyword = "run")]
     pub struct Run {}
 
-    pub async fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let result = host_from_snapshot(doc.snapshot).run();
         let json = serde_json::to_string(&result).unwrap_or_default();
         Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json }]))
@@ -35,7 +35,7 @@ pub mod stop_command {
     #[dsl(keyword = "stop")]
     pub struct Stop {}
 
-    pub async fn handle(_payload: &Stop, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    pub fn handle(_payload: &Stop, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json: String::new() }]))
     }
 }

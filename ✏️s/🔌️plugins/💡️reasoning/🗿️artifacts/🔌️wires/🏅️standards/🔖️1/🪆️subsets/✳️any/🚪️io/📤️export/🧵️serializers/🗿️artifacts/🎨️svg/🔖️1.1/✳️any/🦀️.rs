@@ -19,7 +19,7 @@ pub struct WiresIntoSvg;
 impl Serializer<WiresSnapshot> for WiresIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "svg export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

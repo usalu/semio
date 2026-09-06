@@ -17,16 +17,16 @@ pub struct DeletePage {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for DeletePage {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "page", kind: "delete-page", record: "DeletedPage" };
-    async fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_page(self, base)
     }
-    async fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_delete_page(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete page \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
@@ -34,7 +34,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeletePage {
 
 
 //#region 🗑️DeletePage
-pub async fn diff_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+pub fn diff_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if !base.pages.iter().any(|page| page.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
@@ -44,7 +44,7 @@ pub async fn diff_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> pr
 
 
 //#region 🗑️DeletePage
-pub async fn inverse_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
     match base.pages.iter().position(|page| page.id == payload.id) {
         Some(index) => vec![LayoutMutation::CreatePage(create_page::CreatePage { page: base.pages[index].clone(), index: Some(index) })],
         None => Vec::new(),

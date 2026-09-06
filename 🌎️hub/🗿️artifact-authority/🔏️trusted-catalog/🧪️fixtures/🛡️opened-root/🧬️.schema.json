@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/hub/trusted-catalog-opened-root.fixture.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "current", "relativePaths", "denials", "openedHandle"],
+  "properties": {
+    "schema": { "const": "semio.hub.trusted-catalog-opened-root/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pathBytes", "pathSegments", "chunkBytes", "pointerBytes"],
+      "properties": {
+        "pathBytes": { "const": 1024 },
+        "pathSegments": { "const": 64 },
+        "chunkBytes": { "const": 65536 },
+        "pointerBytes": { "const": 65536 }
+      }
+    },
+    "current": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profileId", "generationId", "bundleSha256"],
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "generationId": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bundleSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "relativePaths": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "value", "accepted"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "value": { "type": "string", "maxLength": 2048 },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    },
+    "denials": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "providerCalls", "codecPublished"],
+        "properties": {
+          "kind": {
+            "enum": ["leaf-link", "intermediate-link", "actor-link", "data-root-link", "current-link", "generation-link", "reparse-point"]
+          },
+          "providerCalls": { "const": 0 },
+          "codecPublished": { "const": false }
+        }
+      }
+    },
+    "openedHandle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initialHex", "replacementHex", "maximum", "expectedHex", "providerCalls", "codecPublished"],
+      "properties": {
+        "initialHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+        "replacementHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+        "maximum": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+        "expectedHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+        "providerCalls": { "const": 0 },
+        "codecPublished": { "const": false }
+      }
+    }
+  }
+}

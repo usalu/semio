@@ -50,17 +50,17 @@ impl Default for WiresArtifact {
 
 impl WiresArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::wires::WiresSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::wires::WiresSnapshot {
         crate::artifacts::wires::WiresSnapshot { wires_fixture: self.wires_fixture.clone(), content: self.content.clone(), camera: self.camera.clone(), meta: self.meta.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::wires::WiresSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::wires::WiresSnapshot) -> Self {
         Self { wires_fixture: snapshot.wires_fixture, content: snapshot.content, camera: snapshot.camera, meta: snapshot.meta, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::wires::WiresSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::wires::WiresSnapshot) {
         self.wires_fixture = snapshot.wires_fixture;
         self.content = snapshot.content;
         self.camera = snapshot.camera;
@@ -71,7 +71,7 @@ impl WiresArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.reasoning.wires` — twenty handcrafted schema leaves.
-pub async fn wires_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn wires_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.reasoning.wires",
         artifact: schema::FacetLeaves {
@@ -135,19 +135,19 @@ pub mod derived_construction {
         type Snapshot = WiresSnapshot;
         type Mutation = WiresMutation;
         type Diff = WiresDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: crate::artifacts::wires::empty_wires_snapshot(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -155,12 +155,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <WiresDiff as protocol::MutationDiff<WiresSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -178,7 +178,7 @@ pub use derived_construction::*;
 /// (never `WiresSnapshot`, never an app type) so it has no home more specific than the artifact schema.
 /// Reads that DO take `&WiresSnapshot` (`find_board_node`/`find_board_edge`/`find_relationship`) live
 /// in `💡️inferences/` instead — see that file's `🔖️LookupHelpers` region.
-pub async fn array_mut<'a>(fixture: &'a mut DslValue, key: &str) -> &'a mut Vec<DslValue> {
+pub fn array_mut<'a>(fixture: &'a mut DslValue, key: &str) -> &'a mut Vec<DslValue> {
     if !matches!(fixture, DslValue::Object(_)) {
         *fixture = DslValue::Object(vec![]);
     }
@@ -203,7 +203,7 @@ pub async fn array_mut<'a>(fixture: &'a mut DslValue, key: &str) -> &'a mut Vec<
     }
 }
 
-pub async fn entity_id<'a>(entity: &'a DslValue, key: &str) -> Option<&'a str> {
+pub fn entity_id<'a>(entity: &'a DslValue, key: &str) -> Option<&'a str> {
     entity.get(key).and_then(|value| value.as_str())
 }
 
@@ -213,19 +213,19 @@ pub async fn entity_id<'a>(entity: &'a DslValue, key: &str) -> Option<&'a str> {
 /// `IdentityDsl`/`RelationshipDsl`'s plain `u64` fields), so this fallback stays for documents built or
 /// patched outside that DSL path (e.g. hand-constructed `Value` fixtures), where nothing enforces the
 /// integer representation.
-pub async fn dsl_id(value: Option<&DslValue>) -> Option<u64> {
+pub fn dsl_id(value: Option<&DslValue>) -> Option<u64> {
     value.and_then(|value| value.as_f64().map(|float| float as u64))
 }
 
-pub async fn dsl_to_json(value: &DslValue) -> Value {
+pub fn dsl_to_json(value: &DslValue) -> Value {
     dsl::os_pack::json::from_dsl_value(value)
 }
 
-pub async fn fixture_json_string(fixture: &DslValue) -> String {
+pub fn fixture_json_string(fixture: &DslValue) -> String {
     dsl::os_pack::json::to_json_string(fixture)
 }
 
-pub async fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
+pub fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
     let camera = fixture.get("camera");
     (
         camera.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0),
@@ -234,31 +234,31 @@ pub async fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
     )
 }
 
-pub async fn fixture_nodes(fixture: &DslValue) -> &[DslValue] {
+pub fn fixture_nodes(fixture: &DslValue) -> &[DslValue] {
     fixture.get("nodes").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
-pub async fn fixture_edges(fixture: &DslValue) -> &[DslValue] {
+pub fn fixture_edges(fixture: &DslValue) -> &[DslValue] {
     fixture.get("edges").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
-pub async fn wires_identities(wires: &DslValue) -> &[DslValue] {
+pub fn wires_identities(wires: &DslValue) -> &[DslValue] {
     wires.get("identities").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
-pub async fn wires_relationships(wires: &DslValue) -> &[DslValue] {
+pub fn wires_relationships(wires: &DslValue) -> &[DslValue] {
     wires.get("relationships").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
 /// 📐️ A JSON node's position, defaulting missing coordinates to the origin.
-pub async fn node_position(node: &DslValue) -> (f64, f64) {
+pub fn node_position(node: &DslValue) -> (f64, f64) {
     (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0))
 }
 
 /// 🕸️ Re-lays out the board with the neutral `infinite_board_port_directed` force-graph solver — the
 /// same shared mechanism `puzzle/2d`'s `forceLayout`/`reorganize` uses, depended on directly rather
 /// than through puzzle's app program (mindmap's board schema is on its allowlist).
-pub async fn force_layout_board(board: &mut DslValue) {
+pub fn force_layout_board(board: &mut DslValue) {
     let Ok(layout_json) = infinite_board_port_directed::apply_force_graph_layout_to_fixture_v1_json(&fixture_json_string(board), r#"{"mode":"force-graph"}"#) else {
         return;
     };
@@ -271,7 +271,7 @@ pub async fn force_layout_board(board: &mut DslValue) {
 //#region 🔖️ExampleFixture
 /// 📄️ The `metabolism` example, parsed once from `crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`
 /// — falls back to the empty document if the fixture ever fails to parse.
-pub async fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
+pub fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
     match <crate::artifacts::wires::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
         Ok(snapshot) if fixture_nodes(&crate::artifacts::wires::wires_working_board(&snapshot)).len() >= 7 => Ok(snapshot),
         _ => handcrafted_metabolism_snapshot(),
@@ -279,7 +279,7 @@ pub async fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResul
 }
 
 /// 🧪️ Hand-built metabolism demo when the bundled `.dsl.semio` asset is still a stub envelope.
-async fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
+fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
     let mut snapshot = crate::artifacts::wires::empty_wires_snapshot();
     for i in 1..=7 {
         let node_id = format!("node-{i}");

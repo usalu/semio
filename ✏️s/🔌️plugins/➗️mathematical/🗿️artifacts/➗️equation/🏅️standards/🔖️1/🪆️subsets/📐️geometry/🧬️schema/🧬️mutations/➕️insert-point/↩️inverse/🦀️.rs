@@ -5,7 +5,7 @@ use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutati
 use crate::artifacts::equation::{equation_geometry, EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::InsertPoint, base: &EquationSnapshot) -> Vec<EquationMutation> {
+pub fn inverse(payload: &super::InsertPoint, base: &EquationSnapshot) -> Vec<EquationMutation> {
     let index = payload.index.min(crate::artifacts::equation::equation_geometry(base).points.len());
     vec![EquationMutation::RemovePoint(remove_point::RemovePoint { index })]
 }

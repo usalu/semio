@@ -560,6 +560,16 @@ impl Fault {
         self.retryable = retryable;
         self
     }
+
+    /// @emoji 🗣️ Canonical one-line rendering of a fault for `String` error channels.
+    ///
+    /// `Fault` deliberately has no `Display`: a structured abort must not be silently interpolated
+    /// into prose, and `to_string()` would hide the {@link FaultCode} every triage tool keys on.
+    /// Every boundary that has to collapse a fault into text calls this instead, so the
+    /// `code: message` shape is written once rather than re-derived per crate.
+    pub fn describe(&self) -> String {
+        format!("{}: {}", self.code.0, self.message)
+    }
 }
 
 /// @emoji 🔁️ Maps a domain error enum into a {@link Fault} at a boundary.
@@ -709,3 +719,29 @@ impl Limits {
     }
 }
 //#endregion 🔖️Limits
+
+//#region 🔖️FaultDescribeTests
+#[cfg(test)]
+mod fault_describe_tests {
+    use super::*;
+
+    #[test]
+    fn describe_pairs_the_code_with_the_message() {
+        let fault = Fault::new(FaultOrigin::Renderer, "renderer.command.rejected", "envelope set is full");
+        assert_eq!(fault.describe(), "renderer.command.rejected: envelope set is full");
+    }
+
+    #[test]
+    fn describe_keeps_the_code_when_the_message_is_empty() {
+        let fault = Fault::new(FaultOrigin::Os, "os.fault.decode", "");
+        assert_eq!(fault.describe(), "os.fault.decode: ");
+    }
+
+    #[test]
+    fn describe_survives_a_wire_round_trip() {
+        let fault = Fault::new(FaultOrigin::Plugin, "plugin.host.body-too-large", "body exceeds the admitted budget");
+        let decoded = decode_fault_bytes(&encode_fault_bytes(&fault));
+        assert_eq!(decoded.describe(), fault.describe());
+    }
+}
+//#endregion 🔖️FaultDescribeTests

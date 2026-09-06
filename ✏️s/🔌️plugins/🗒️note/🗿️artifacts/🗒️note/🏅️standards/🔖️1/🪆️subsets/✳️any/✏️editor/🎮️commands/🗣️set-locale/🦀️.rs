@@ -12,7 +12,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     Ok(Emit::config(vec![NoteConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 

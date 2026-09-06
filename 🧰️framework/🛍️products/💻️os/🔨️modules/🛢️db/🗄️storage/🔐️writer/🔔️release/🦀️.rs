@@ -340,6 +340,18 @@ pub(crate) fn request_controller(backend: DbIoBackendControl) {
     }
 }
 
+pub(crate) fn request_any_controller() {
+    for row in &WAL_WRITER_CONTROLLERS {
+        let controller = {
+            let row = row.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            row.as_ref().and_then(|row| Some((row.pool.clone(), row.ticket?)))
+        };
+        if controller.is_some_and(|(pool, ticket)| pool.request_maintenance(ticket).is_ok()) {
+            return;
+        }
+    }
+}
+
 pub(crate) fn defer_fault_notifications(backend: DbIoBackendControl) {
     let (slot, _) = db_io_backend_parts(backend);
     let controller = {
@@ -386,19 +398,26 @@ fn controller_step([slot, generation]: [u64; 2]) -> WorkerMaintenanceStep {
         let Some(row) = row.as_ref().filter(|row| db_io_backend_parts(row.backend) == (slot as u16, generation)) else { return WorkerMaintenanceStep::Idle };
         (row.backend, row.waker.clone())
     };
-    if !has_runnable_request(backend) {
-        return WorkerMaintenanceStep::Idle;
+    let writer = if has_runnable_request(backend) {
+        let result = super::super::db_io_writer_release_lane_step(backend, &mut Context::from_waker(&waker));
+        if let Err(error) = &result {
+            fault_all_requested(backend, error);
+        }
+        notify_terminal(backend);
+        notify_faults(backend);
+        Some(result)
+    } else {
+        None
+    };
+    match super::super::db_io_lost_owner_maintenance_batch() {
+        Ok(true) => return WorkerMaintenanceStep::More,
+        Err(_) => return WorkerMaintenanceStep::Fault,
+        Ok(false) => {}
     }
-    let result = super::super::db_io_writer_release_lane_step(backend, &mut Context::from_waker(&waker));
-    if let Err(error) = &result {
-        fault_all_requested(backend, error);
-    }
-    notify_terminal(backend);
-    notify_faults(backend);
-    match result {
-        Ok(DbIoWriterReleaseStep::More | DbIoWriterReleaseStep::Faulted) => WorkerMaintenanceStep::More,
-        Ok(DbIoWriterReleaseStep::Idle) => WorkerMaintenanceStep::Idle,
-        Err(_) => WorkerMaintenanceStep::Idle,
+    match writer {
+        Some(Ok(DbIoWriterReleaseStep::More | DbIoWriterReleaseStep::Faulted)) => WorkerMaintenanceStep::More,
+        Some(Ok(DbIoWriterReleaseStep::Idle)) | None => WorkerMaintenanceStep::Idle,
+        Some(Err(_)) => WorkerMaintenanceStep::Idle,
     }
 }
 

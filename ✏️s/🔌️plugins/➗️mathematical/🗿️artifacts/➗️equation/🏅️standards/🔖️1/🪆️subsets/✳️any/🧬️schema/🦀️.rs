@@ -80,22 +80,22 @@ impl Default for EquationArtifact {
 
 impl EquationArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::equation::EquationSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::equation::EquationSnapshot {
         crate::artifacts::equation::EquationSnapshot { notation: self.notation.clone(), results: self.results.clone(), computed: self.computed.clone(), equation: self.equation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::equation::EquationSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::equation::EquationSnapshot) -> Self {
         Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation, ..Self::default_ui() }
     }
 
-    async fn default_ui() -> Self {
+    fn default_ui() -> Self {
         let default_snapshot = crate::artifacts::equation::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
         Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation, camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, locale: "en-US".into() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::equation::EquationSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::equation::EquationSnapshot) {
         self.notation = snapshot.notation;
         self.results = snapshot.results;
         self.computed = snapshot.computed;
@@ -106,7 +106,7 @@ impl EquationArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.mathematical.equation` — twenty handcrafted schema leaves.
-pub async fn equation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn equation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.mathematical.equation",
         artifact: schema::FacetLeaves {

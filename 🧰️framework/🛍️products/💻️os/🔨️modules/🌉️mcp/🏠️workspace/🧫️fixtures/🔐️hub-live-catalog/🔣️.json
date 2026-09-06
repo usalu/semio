@@ -1,0 +1,37 @@
+{
+  "schema": "semio.mcp.hub-live-catalog/v1",
+  "selection": {
+    "scope": { "spaceId": "space-a", "documentId": "map-a" },
+    "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+    "catalogGenerationId": "2222222222222222222222222222222222222222222222222222222222222222",
+    "package": {
+      "pluginId": "gis",
+      "packageId": "semio:gis",
+      "version": "0.1.0",
+      "componentSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "descriptorByteSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "expectedInferenceOwners": ["gis"]
+  },
+  "localOnly": {
+    "pluginId": "local-only",
+    "packageId": "semio:local-only",
+    "version": "9.9.9",
+    "componentSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "descriptorByteSha256": "6666666666666666666666666666666666666666666666666666666666666666"
+  },
+  "states": [
+    { "binding": "ready", "selectedPlugins": ["gis"], "localFallback": false },
+    { "binding": "refreshing", "selectedPlugins": [], "localFallback": false },
+    { "binding": "revoked", "selectedPlugins": [], "localFallback": false }
+  ],
+  "hostile": [
+    { "name": "cross-space", "field": "scope", "value": { "spaceId": "space-b", "documentId": "map-a" } },
+    { "name": "descriptor-digest", "field": "descriptorDigestV1", "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    { "name": "plugin-id", "field": "pluginId", "value": "local-only" },
+    { "name": "package-id", "field": "packageId", "value": "semio:other" },
+    { "name": "package-version", "field": "version", "value": "9.9.9" },
+    { "name": "component-hash", "field": "componentSha256", "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+    { "name": "descriptor-byte-hash", "field": "descriptorByteSha256", "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }
+  ]
+}

@@ -19,7 +19,7 @@ const AVATAR_PLACEHOLDER_PNG_BASE64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAY
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FORMS_PLAY_WINDOW_TRY.into(),
         label: LocalizedLabel::native("Try", "Testen"),
@@ -41,11 +41,11 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn try_value_action(key: &str) -> ActionDescriptor {
+fn try_value_action(key: &str) -> ActionDescriptor {
     forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key))])))
 }
 
-async fn image_question_src(question: &FormQuestion) -> String {
+fn image_question_src(question: &FormQuestion) -> String {
     let src = question.src.as_deref().unwrap_or("");
     if src.is_empty() {
         return format!("data:image/png;base64,{AVATAR_PLACEHOLDER_PNG_BASE64}");
@@ -56,19 +56,19 @@ async fn image_question_src(question: &FormQuestion) -> String {
     format!("data:image/png;base64,{src}")
 }
 
-async fn render_image_question(question: &FormQuestion) -> UiNode {
+fn render_image_question(question: &FormQuestion) -> UiNode {
     semio_framework_plugin::ui_image(format!("forms-try.{}.image", question.id), image_question_src(question), Some(Label::data(question.label.clone())))
 }
 
-async fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
+fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
     UiNode::Text(UiTextNode { value: value.into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None })
 }
 
-async fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
+fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode { direction: "horizontal".into(), gap: Some("tight".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
 }
 
-async fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiNode {
+fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: format!("forms-try.{}", question.id),
         label: Label::data(question.label.clone()),
@@ -81,7 +81,7 @@ async fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) 
     })
 }
 
-async fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiNode {
+fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiNode {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| json_value_from_dsl(question));
     let key = question.id.clone();
     match question.kind.as_str() {
@@ -251,11 +251,11 @@ async fn render_try_question(question: &FormQuestion, values: &Object, contribut
 
 /// 🔄️ The question's typed default, as a `dsl::os_pack::json::Value` — used when no try value has been entered
 /// for it yet.
-async fn json_value_from_dsl(question: &FormQuestion) -> Value {
+fn json_value_from_dsl(question: &FormQuestion) -> Value {
     crate::artifacts::forms::schema::dsl_to_value(&default_value_for_question(question))
 }
 
-pub async fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
     let steps = crate::artifacts::forms::forms_steps(spec);
     if steps.is_empty() {
         return semio_framework_plugin::ui_text(labels.no_steps_in_form);

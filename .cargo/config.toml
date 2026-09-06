@@ -5,8 +5,15 @@ rustflags = ["-Z", "threads=8"]
 [unstable]
 no-embed-metadata = true
 
+# 🧊️ The browser renderer's shadow stack. LLVM's wasm-ld default is 1 MiB, and a debug build of the wgpu
+# renderer overruns it during ordinary construction — `<UiSurfaceRegistry as Default>::default` alone
+# materialises `[Option<UiSurfaceSlot>; 64]` on the stack — which traps as a bare `RuntimeError: memory
+# access out of bounds` with no Rust panic, since the overflow writes below the stack rather than aborting.
+# Measured: every `semioWgpuWorkerBootstrap` died there until this flag was set. 16 MiB is double the
+# 8 MiB the plugin components already pass explicitly (`🧑‍💻dev/…/📜️script.ts` `PLUGIN_WASM_STACK_BYTES`),
+# because the renderer's debug frames are far larger than a plugin's.
 [target.wasm32-unknown-unknown]
-rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"', '-C', 'link-arg=-zstack-size=16777216']
 
 # 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. Plugin components declare no memory `maximum`,
 # so V8 reserves the full 4GiB guard region per module per worker (~20 plugins/workers at boot).

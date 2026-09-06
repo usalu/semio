@@ -45,7 +45,7 @@ impl Default for ProgramTopology {
 ///   sorted-id order; any element unreached by that BFS (only possible inside a cycle) is appended
 ///   afterward in sorted-id order, so the output is always a total, deterministic order over every
 ///   element id regardless of `cycleFree`.
-pub async fn compute_topology(elements: &[ProgramElement]) -> ProgramTopology {
+pub fn compute_topology(elements: &[ProgramElement]) -> ProgramTopology {
     let ids: Vec<String> = elements.iter().map(|e| e.header.id.0.clone()).collect();
     let id_set: HashSet<&str> = ids.iter().map(|s| s.as_str()).collect();
     let parent_of: HashMap<String, Option<String>> = elements
@@ -73,11 +73,11 @@ enum Color {
     Black,
 }
 
-async fn is_cycle_free(ids: &[String], parent_of: &HashMap<String, Option<String>>) -> bool {
+fn is_cycle_free(ids: &[String], parent_of: &HashMap<String, Option<String>>) -> bool {
     let mut colors: HashMap<&str, Color> = ids.iter().map(|id| (id.as_str(), Color::White)).collect();
     let mut cycle_free = true;
 
-    async fn visit<'a>(node: &'a str, parent_of: &'a HashMap<String, Option<String>>, colors: &mut HashMap<&'a str, Color>, cycle_free: &mut bool) {
+    fn visit<'a>(node: &'a str, parent_of: &'a HashMap<String, Option<String>>, colors: &mut HashMap<&'a str, Color>, cycle_free: &mut bool) {
         match colors.get(node).copied() {
             Some(Color::Black) => return,
             Some(Color::Gray) => {
@@ -99,10 +99,10 @@ async fn is_cycle_free(ids: &[String], parent_of: &HashMap<String, Option<String
     cycle_free
 }
 
-async fn max_depth(ids: &[String], parent_of: &HashMap<String, Option<String>>) -> u64 {
+fn max_depth(ids: &[String], parent_of: &HashMap<String, Option<String>>) -> u64 {
     let mut depth_of: HashMap<&str, u64> = HashMap::new();
 
-    async fn depth<'a>(node: &'a str, parent_of: &'a HashMap<String, Option<String>>, depth_of: &mut HashMap<&'a str, u64>, guard: &mut HashSet<&'a str>) -> u64 {
+    fn depth<'a>(node: &'a str, parent_of: &'a HashMap<String, Option<String>>, depth_of: &mut HashMap<&'a str, u64>, guard: &mut HashSet<&'a str>) -> u64 {
         if let Some(d) = depth_of.get(node) {
             return *d;
         }
@@ -125,7 +125,7 @@ async fn max_depth(ids: &[String], parent_of: &HashMap<String, Option<String>>) 
     max
 }
 
-async fn topo_order(ids: &[String], parent_of: &HashMap<String, Option<String>>) -> Vec<String> {
+fn topo_order(ids: &[String], parent_of: &HashMap<String, Option<String>>) -> Vec<String> {
     let mut children_of: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
     for id in ids {
         if let Some(Some(parent)) = parent_of.get(id) {
@@ -168,7 +168,7 @@ mod tests {
     use crate::artifacts::program::kernel::{EntityHeader, EntityId, QuantitySpec};
     use crate::artifacts::program::standards::v1::subsets::any::schema::registers::ProgramElementKind;
 
-    async fn element(id: &str, parent: Option<&str>) -> ProgramElement {
+    fn element(id: &str, parent: Option<&str>) -> ProgramElement {
         ProgramElement {
             header: EntityHeader::new(EntityId(id.into()), id),
             code: id.into(),

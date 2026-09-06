@@ -2138,6 +2138,7 @@ pub enum ShellSpaceAdministrationPhaseV1 {
     Failed,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl ShellSpaceAdministrationPhaseV1 {
     /// 🏁️ A terminal phase never advances again and holds no page, receipt, or capability.
     pub fn is_terminal(self) -> bool {
@@ -3257,7 +3258,9 @@ impl ShellState {
             directory_cancel,
             #[cfg(not(target_arch = "wasm32"))]
             directory_commands: NativeDirectoryCommandQueueV1::default(),
+            #[cfg(not(target_arch = "wasm32"))]
             space_administration: None,
+            #[cfg(not(target_arch = "wasm32"))]
             space_administration_epoch: 0,
             #[cfg(not(target_arch = "wasm32"))]
             presence_peers: Vec::new(),
@@ -3557,8 +3560,8 @@ impl ShellState {
         if self.space_mode {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state) {
                 if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
-                    if let Some(spawn_plugin) = self.plugins.iter().find(|p| p.plugin_id == spawned.plugin_id) {
-                        let spawned_app = spawn_plugin.manifest.apps.iter().find(|app| app.id == spawned.app_id);
+                    if let Some(spawn_plugin) = self.plugins.iter().find(|p| p.plugin_id == spawned.plugin_id).cloned() {
+                        let spawned_app = spawn_plugin.manifest.apps.iter().find(|app| app.id == spawned.app_id).cloned();
                         if let Some(app) = spawned_app {
                             let body_key = app.window_kinds.first().body_key.clone();
                             let view_state = ViewModel {
@@ -4522,7 +4525,7 @@ impl ShellState {
     async fn touch_space_index_artifact(&mut self, space_id: &str, artifact_id: &str) {
         let now_ms = chrome_now_ms();
         let actor = self.identity.as_ref().map(|identity| identity.user_id.clone()).unwrap_or_else(|| self.shell_session_id.clone());
-        let arguments: BTreeMap<String, DslValue> = BTreeMap::from([("id".to_string(), DslValue::String(artifact_id.to_string())), ("nowMs".to_string(), DslValue::float(now_ms)), ("actor".to_string(), DslValue::String(actor))]);
+        let arguments: BTreeMap<String, DslValue> = BTreeMap::from([("id".to_string(), DslValue::String(artifact_id.to_string())), ("nowMs".to_string(), DslValue::float(now_ms)), ("actor".to_string(), DslValue::String(actor.clone()))]);
         // 🐚️ Reuse the live session outright when it's already this exact space's own index document.
         // Calls `program.handle_command` DIRECTLY rather than `self.dispatch_command` (which would
         // recurse back into `observe_invocation_history` → `touch_space_index_artifact` — `rustc`
@@ -4537,13 +4540,9 @@ impl ShellState {
                 address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: session.plugin_id.clone(), app_id: app.id.clone() }, command_id: "touchArtifact".into() },
                 arguments,
             };
-            match serde_json::to_string(&invocation) {
-                Ok(command_json) => {
-                    if let Err(error) = program.handle_command(session.instance_id, &command_json, &session.view_state).await {
-                        eprintln!("[DEBUG] wgpu shell touchArtifact (live session) failed: {error}");
-                    }
-                }
-                Err(error) => eprintln!("[DEBUG] wgpu shell touchArtifact (live session) encode failed: {error}"),
+            let command_json = dsl::os_pack::json::to_json_string(&invocation);
+            if let Err(error) = program.handle_command(session.instance_id, &command_json, &session.view_state).await {
+                eprintln!("[DEBUG] wgpu shell touchArtifact (live session) failed: {error}");
             }
             return;
         }
@@ -4591,14 +4590,10 @@ impl ShellState {
             address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: program.plugin_id.clone(), app_id: app.id.clone() }, command_id: "touchArtifact".into() },
             arguments,
         };
-        match serde_json::to_string(&invocation) {
-            Ok(command_json) => {
-                let view_state = ViewModel { locale: self.active_locale(), terminology: self.active_terminology(), ..Default::default() };
-                if let Err(error) = program.handle_command(instance_id, &command_json, &view_state).await {
-                    eprintln!("[DEBUG] wgpu shell touchArtifact dispatch failed: {error}");
-                }
-            }
-            Err(error) => eprintln!("[DEBUG] wgpu shell touchArtifact encode failed: {error}"),
+        let command_json = dsl::os_pack::json::to_json_string(&invocation);
+        let view_state = ViewModel { locale: self.active_locale(), terminology: self.active_terminology(), ..Default::default() };
+        if let Err(error) = program.handle_command(instance_id, &command_json, &view_state).await {
+            eprintln!("[DEBUG] wgpu shell touchArtifact dispatch failed: {error}");
         }
         self.document_host.close_key(&channels.document_key);
         program.destroy_app(instance_id);
@@ -4895,7 +4890,7 @@ impl ShellState {
             address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id, window_kind_id, window_instance_id, action_id: action.action.clone() },
             arguments,
         };
-        let action_json = serde_json::to_string(&invocation).map_err(|err| err.to_string())?;
+        let action_json = dsl::os_pack::json::to_json_string(&invocation);
         let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await?;
         // 🧾️ ticket §C5 — fold this dispatch's own `history_patch` into the check-in projection (idle
         // clock, checkpoint-landed detection + `TouchArtifact`) before anything else touches `self`.
@@ -5006,7 +5001,7 @@ impl ShellState {
             return Err(format!("command owner plugin {owner_plugin_id} is not active"));
         }
         let program = self.plugins.iter().find(|entry| entry.plugin_id == *owner_plugin_id).ok_or("command program missing")?;
-        let command_json = serde_json::to_string(&invocation).map_err(|error| error.to_string())?;
+        let command_json = dsl::os_pack::json::to_json_string(&invocation);
         let result = program.handle_command(session.instance_id, &command_json, &session.view_state).await?;
         // 🧾️ ticket §C5 — same fold `dispatch_action` performs; a command-boundary edit (e.g. a
         // plugin-owned command dispatched from the command palette) is just as real an uncommitted
@@ -5361,7 +5356,7 @@ impl ShellState {
             },
             arguments: BTreeMap::from([("pageJson".into(), DslValue::String(canonical_json))]),
         };
-        let action_json = serde_json::to_string(&invocation).map_err(|error| error.to_string())?;
+        let action_json = dsl::os_pack::json::to_json_string(&invocation);
         let (tx, rx) = std::sync::mpsc::channel();
         let expected_for_task = expected.clone();
         let pool = crate::renderer_worker_pool();
@@ -7276,7 +7271,7 @@ impl ShellState {
                 };
                 self.apply_os_command(&command_id, option_value.as_deref()).await?;
             } else if let Some(command_json) = action.strip_prefix("command:") {
-                let invocation: semio_framework::manifest::CommandInvocation = serde_json::from_str(command_json).map_err(|error| error.to_string())?;
+                let invocation: semio_framework::manifest::CommandInvocation = dsl::os_pack::json::from_json_str(command_json).map_err(|error| error.to_string())?;
                 self.dispatch_command(invocation).await?;
             }
         }
@@ -8218,7 +8213,7 @@ impl WindowMeasureActionRegistry {
 
     fn try_upsert(&mut self, control: &str, descriptor: &ActionDescriptor, kind: WindowMeasureActionKind) -> Result<(), ()> {
         let binding =
-            WindowMeasureActionBinding { control: UiText::try_from_str(control).map_err(|_| ())?, controller: UiText::try_from_str(&descriptor.controller_id).map_err(|_| ())?, action: UiText::try_from_str(&descriptor.action).map_err(|_| ())?, kind };
+            WindowMeasureActionBinding { control: UiText::try_from_str(control).ok_or(())?, controller: UiText::try_from_str(&descriptor.controller_id).ok_or(())?, action: UiText::try_from_str(&descriptor.action).ok_or(())?, kind };
         if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|slot| slot.control.as_str() == control)) {
             *slot = Some(binding);
             return Ok(());
@@ -9149,10 +9144,10 @@ impl ShellState {
     /// gate that keeps arg-carrying actions from firing partially (delegates to the core-side pure
     /// {@link semio_framework::missing_required_args}).
     pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
-        let staged_dsl = semio_framework::to_dsl_value(&Value::Object(staged.clone())).ok()?;
+        let staged_dsl = DslValue::from(Value::Object(staged.clone()));
         let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
         if semio_framework::missing_required_args(defs, &effective).is_empty() {
-            semio_framework::from_dsl_value::<Value>(effective).ok().and_then(|value| value.as_object().cloned())
+            Value::from(&effective).as_object().cloned()
         } else {
             None
         }
@@ -9285,7 +9280,7 @@ impl ShellState {
                     label: definition.label.resolve(self.active_terminology(), self.active_locale()).to_string(),
                     group,
                     dispatch_action: None,
-                    action: Some(if is_os { format!("os-command:{}", definition.id) } else { format!("command:{}", serde_json::to_string(&invocation).expect("command invocation serializes")) }),
+                    action: Some(if is_os { format!("os-command:{}", definition.id) } else { format!("command:{}", dsl::os_pack::json::to_json_string(&invocation)) }),
                     category: Some(category.clone()),
                 });
                 continue;
@@ -9300,7 +9295,7 @@ impl ShellState {
                             label: format!("{}: {}", definition.label.resolve(self.active_terminology(), self.active_locale()), option.label.resolve(self.active_terminology(), self.active_locale())),
                             group: group.clone(),
                             dispatch_action: None,
-                            action: Some(if is_os { format!("os-command:{}:{}", definition.id, option.value) } else { format!("command:{}", serde_json::to_string(&invocation).expect("command invocation serializes")) }),
+                            action: Some(if is_os { format!("os-command:{}:{}", definition.id, option.value) } else { format!("command:{}", dsl::os_pack::json::to_json_string(&invocation)) }),
                             category: Some(category.clone()),
                         });
                     }
@@ -12076,6 +12071,17 @@ pub(crate) struct ShellChromeFrameCursor {
     child: ShellChromeChildCursor,
 }
 
+/// 🧭️ Fixed 64-deep footer-utility tree cursor path. A newtype rather than a bare `[u16; 64]`
+/// field because std implements `Default` for arrays only up to length 32, and
+/// `ShellChromeChildCursor` must stay derivable — the bound is on the array, not on the cursor.
+struct ShellUtilityPath([u16; 64]);
+
+impl Default for ShellUtilityPath {
+    fn default() -> Self {
+        Self([0; 64])
+    }
+}
+
 #[derive(Default)]
 struct ShellChromeChildCursor {
     phase: u16,
@@ -12090,7 +12096,7 @@ struct ShellChromeChildCursor {
     document: UiDocumentFrameCursor,
     window: Option<UiText>,
     rect: Option<Rect>,
-    path: [u16; 64],
+    path: ShellUtilityPath,
     depth: usize,
     find_rejected: Option<ShellFindItem>,
     glyph: RetainedGlyphCursor,
@@ -12750,7 +12756,7 @@ impl ShellState {
                     cursor.phase = 5;
                     return false;
                 };
-                let document = if window.as_str() == "spawned" { self.spawned_ui.clone() } else { self.window_ui.get(window.as_str()).cloned() };
+                let document = if window.as_str() == "spawned" { self.spawned_ui.as_ref() } else { self.window_ui.get(window.as_str()) }.and_then(|lease| lease.try_alias().ok());
                 let Some(document) = document else {
                     cursor.phase = 5;
                     return false;
@@ -12856,7 +12862,7 @@ impl ShellState {
                     cursor.phase = 9;
                     return false;
                 };
-                let Some(document) = self.panel_documents.get(window.as_str()).cloned() else {
+                let Some(document) = self.panel_documents.get(window.as_str()).and_then(|lease| lease.try_alias().ok()) else {
                     cursor.phase = 9;
                     return false;
                 };
@@ -13209,7 +13215,7 @@ impl ShellState {
             }
             2 if self.session.is_some() => {
                 if cursor.scalar == 0 {
-                    let Some(utility) = footer_utility_at_path(&self.active_utilities, &cursor.path, cursor.depth) else {
+                    let Some(utility) = footer_utility_at_path(&self.active_utilities, &cursor.path.0, cursor.depth) else {
                         cursor.phase = 3;
                         return false;
                     };
@@ -13231,20 +13237,20 @@ impl ShellState {
                     return false;
                 }
                 if cursor.flag {
-                    let Some(next_depth) = cursor.depth.checked_add(1).filter(|depth| *depth < cursor.path.len()) else {
+                    let Some(next_depth) = cursor.depth.checked_add(1).filter(|depth| *depth < cursor.path.0.len()) else {
                         cursor.phase = u16::MAX;
                         return false;
                     };
                     cursor.depth = next_depth;
-                    cursor.path[next_depth] = 0;
+                    cursor.path.0[next_depth] = 0;
                     cursor.flag = false;
                     cursor.scalar = 0;
                     return false;
                 }
-                let sibling_count = footer_utility_sibling_count(&self.active_utilities, &cursor.path, cursor.depth).unwrap_or(0);
-                let next = cursor.path[cursor.depth] as usize + 1;
+                let sibling_count = footer_utility_sibling_count(&self.active_utilities, &cursor.path.0, cursor.depth).unwrap_or(0);
+                let next = cursor.path.0[cursor.depth] as usize + 1;
                 if next < sibling_count {
-                    cursor.path[cursor.depth] = next as u16;
+                    cursor.path.0[cursor.depth] = next as u16;
                     cursor.scalar = 0;
                     return false;
                 }
@@ -16114,7 +16120,7 @@ thread_local! {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-static CHROME_PREFS: WorkerCell<Option<ChromePrefsState>> = WorkerCell::new();
+static CHROME_PREFS: crate::interpreter::WorkerCell<Option<ChromePrefsState>> = crate::interpreter::WorkerCell::new();
 
 fn default_compute_worker_count() -> u32 {
     std::thread::available_parallelism().map(|n| n.get() as u32).unwrap_or(1)

@@ -10,12 +10,12 @@ use crate::artifacts::layout::LayoutSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `LayoutSnapshot` to its binary pack form.
-pub async fn encode(document: &LayoutSnapshot) -> Vec<u8> {
+pub fn encode(document: &LayoutSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `LayoutSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<LayoutSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<LayoutSnapshot, PackError> {
     <LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 

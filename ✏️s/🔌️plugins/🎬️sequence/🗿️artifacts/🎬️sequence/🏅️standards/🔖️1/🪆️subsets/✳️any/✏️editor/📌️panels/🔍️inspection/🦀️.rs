@@ -13,7 +13,7 @@ pub const SEQUENCE_PLAY_BODY_INSPECTOR: &str = "sequence.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -25,7 +25,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
+pub fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "sequence-play-inspector.empty".into(),

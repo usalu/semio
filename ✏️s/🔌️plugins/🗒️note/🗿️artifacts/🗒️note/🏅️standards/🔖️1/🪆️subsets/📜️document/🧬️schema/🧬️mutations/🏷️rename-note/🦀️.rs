@@ -18,23 +18,23 @@ pub struct RenameNote {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn rename_note(new_title: Option<String>) -> NoteMutation {
+pub fn rename_note(new_title: Option<String>) -> NoteMutation {
     NoteMutation::RenameNote(RenameNote { new_title })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for RenameNote {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "title", kind: "rename-note", record: "RenamedNote" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename note to {:?}", self.new_title)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }

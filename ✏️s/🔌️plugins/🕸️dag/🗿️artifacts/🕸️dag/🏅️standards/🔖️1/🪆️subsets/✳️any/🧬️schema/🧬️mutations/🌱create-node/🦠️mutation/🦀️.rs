@@ -15,23 +15,23 @@ pub struct CreateNode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_node(node: DagNodeSpec) -> DagMutation {
+pub fn create_node(node: DagNodeSpec) -> DagMutation {
     DagMutation::CreateNode(CreateNode { node })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for CreateNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    async fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
+    fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create node \"{}\"", self.node.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]
     }
 }

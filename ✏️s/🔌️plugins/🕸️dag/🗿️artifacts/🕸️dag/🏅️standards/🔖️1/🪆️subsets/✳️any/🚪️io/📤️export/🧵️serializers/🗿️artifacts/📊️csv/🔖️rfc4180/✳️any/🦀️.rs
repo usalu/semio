@@ -12,7 +12,7 @@ use semio_s_plugin_stdio::artifacts::csv::CsvSnapshot;
 
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
 
-pub async fn serialize(from: &DagSnapshot) -> Result<CsvSnapshot, store::PackError> {
+pub fn serialize(from: &DagSnapshot) -> Result<CsvSnapshot, store::PackError> {
     CsvSnapshot::from_value(from.to_value()).map_err(|e| store::PackError::Schema(e.to_string()))
 }
 
@@ -21,7 +21,7 @@ pub struct DagIntoCsv;
 impl Serializer<DagSnapshot> for DagIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
         let csv = serialize(from).map_err(|error| IoError { message: format!("DagIntoCsv: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<CsvSnapshot as store::ArtifactPack>::encode_pack(&csv))))
     }

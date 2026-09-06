@@ -15,7 +15,7 @@ pub struct FocusPreflightIssue {
 /// 👁️ `object_id` used to write straight into `LayoutConfigMutation::SetSelection`; selection is
 /// framework-owned now (domain "elements"), so a hit asks the host to redispatch `interactionSelect`
 /// via an effect instead — see `crate::editor::layout::layout_select_effect`.
-pub async fn handle(payload: &FocusPreflightIssue, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
+pub fn handle(payload: &FocusPreflightIssue, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let mut config_mutations = Vec::new();
     let mut effects = Vec::new();
     if let Some(object_id) = &payload.object_id {

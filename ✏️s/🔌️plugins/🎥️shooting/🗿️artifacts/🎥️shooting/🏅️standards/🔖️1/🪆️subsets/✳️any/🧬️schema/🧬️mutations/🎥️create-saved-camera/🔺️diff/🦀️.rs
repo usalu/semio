@@ -4,7 +4,7 @@ use super::CreateSavedCamera;
 use crate::artifacts::shooting::diff::{ShootingDiff, ShootingSavedCamerasDelta};
 use crate::artifacts::shooting::ShootingSnapshot;
 
-pub async fn diff(payload: &CreateSavedCamera, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
+pub fn diff(payload: &CreateSavedCamera, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if base.saved_cameras.iter().any(|camera| camera.id == payload.saved_camera.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A saved camera with id \"{}\" already exists.", payload.saved_camera.id), [payload.saved_camera.id.clone()]);
     }

@@ -8,7 +8,7 @@ pub const SHOOTING_PLAY_BODY_CATALOGUE: &str = "shooting.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -28,7 +28,7 @@ fn catalog_shot_item(id: &str, label: impl TryInto<Label>, format: &str, shape: 
     crate::editor::shooting::tree_item_with_icon(format!("shooting-play-catalogue.{id}"), label, "camera", crate::editor::shooting::shooting_action("addShot", Some(args)))
 }
 
-pub async fn render(labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let shot_items = crate::editor::shooting::ui_node_list([
         catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
         catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),

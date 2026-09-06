@@ -8,14 +8,45 @@ import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
 import Ajv from "ajv";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
-import { decodeClientFrame, decodePresencePeer, encodePresencePeer, encodeServerFrame, type ArtifactPresencePeer, type WireFrontierSummary } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
-import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequest, encodePackValue, packValueToExactJson } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame, type ArtifactPresencePeer, type WireFrontierSummary, type WireMutationEnvelope } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
+import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequest, encodePackValue, packValueToExactJson, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import type { PackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { parseDocumentOpenBrowserActorV1, documentBrowserActorLeaseFromPlanV1, type DocumentBrowserActorSourceV1, type DocumentClosedBrowserActorV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
-import { directoryCommandErrorFromStatus, directoryCommandErrorIsTransient, directoryCommandRequestJson, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, sealDirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import {
+  DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
+  DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
+  CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES,
+  parseCheckpointPublicationCommandV1,
+  parseDocumentOpenIntentV1,
+  parseDocumentOpenPlanV1,
+  parseDocumentPlanSocketGrantIntentV1,
+  parseDocumentExecutionTargetLeaseFieldsV1,
+  leaseFieldsFromPlanV1,
+  sameLeaseFieldsV1,
+} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import {
+  DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
+  parseDocumentOpenBrowserActorV1,
+  documentBrowserActorLeaseFromPlanV1,
+  type DocumentBrowserActorSourceV1,
+  type DocumentClosedBrowserActorV1,
+} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
+import {
+  directoryCommandErrorFromStatus,
+  directoryCommandErrorIsTransient,
+  directoryCommandRequestJson,
+  directoryCommandSha256,
+  parseDirectoryCommandReceiptV1,
+  parseDirectoryCommandRequestV1,
+  sealDirectoryCommandRequestV1,
+} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import type { DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { produceFreshComponentV1, testFreshComponentStagingV1, type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
+import {
+  produceFreshComponentV1,
+  testFreshComponentStagingV1,
+  testFreshComponentProcessV1,
+  type FreshBuildControlV1,
+  type FreshComponentReceiptV1,
+} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
 import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
@@ -28,6 +59,7 @@ import {
   runCargo,
   runCargoTestBudgeted,
   runExactCargoLaws,
+  runExactCargoLawProcess,
   runCmd,
   runProbe,
   buildBudgetMs,
@@ -103,13 +135,15 @@ export function orderedDirectoryPublicationOracle(repoRoot: string): number {
     const publish = body(text, "publish_persisted_locked");
     const common = ["execute", "execute_create_space_with_id", "execute_artifact_authority", "redeem_invite"].map((name) => body(text, name));
     const checkpoint = body(text, "publish_reserved_artifact_checkpoint");
-    return append.indexOf("self.dir.append_events(events).await?") >= 0
-      && append.indexOf("self.dir.append_events(events).await?") < append.indexOf("self.publish_persisted_locked(clock, persisted)")
-      && publish.includes("for event in &persisted")
-      && publish.includes("self.tx.send(DirectoryStreamMessage::Event { event: event.clone() })")
-      && common.every((method) => method.includes("self.append_and_publish_locked(&clock,") && !method.includes("drop(clock)"))
-      && checkpoint.includes("self.publish_persisted_locked(&clock, persisted)")
-      && !checkpoint.includes("drop(clock)");
+    return (
+      append.indexOf("self.dir.append_events(events).await?") >= 0 &&
+      append.indexOf("self.dir.append_events(events).await?") < append.indexOf("self.publish_persisted_locked(clock, persisted)") &&
+      publish.includes("for event in &persisted") &&
+      publish.includes("self.tx.send(DirectoryStreamMessage::Event { event: event.clone() })") &&
+      common.every((method) => method.includes("self.append_and_publish_locked(&clock,") && !method.includes("drop(clock)")) &&
+      checkpoint.includes("self.publish_persisted_locked(&clock, persisted)") &&
+      !checkpoint.includes("drop(clock)")
+    );
   };
   if (!exact(source)) throw new Error("directory append and broadcast do not share one writer-guard lifetime");
   const hostiles = [
@@ -347,15 +381,15 @@ function startLocalAdminRelay(hubOrigin: string, envelope: Record<string, any>, 
   };
 }
 
-function localRelayExecutionTargetAsset(path: string): "manifest" | "component" | "descriptor" | undefined {
-  const matched = /^\/spaces\/([^/]+)\/documents\/([^/]+)\/execution-target\/(manifest|component|descriptor)$/u.exec(path);
+function localRelayExecutionTargetAsset(path: string): "manifest" | "component" | "descriptor" | "browser-actor" | undefined {
+  const matched = /^\/spaces\/([^/]+)\/documents\/([^/]+)\/execution-target\/(manifest|component|descriptor|browser-actor)$/u.exec(path);
   if (!matched) return undefined;
   try {
     for (const encoded of [matched[1]!, matched[2]!]) {
       const id = decodeURIComponent(encoded);
       if (!id || id === "." || id === ".." || encodeURIComponent(id) !== encoded || /[\/\\\u0000-\u0020\u007f%?#]/u.test(id)) return undefined;
     }
-    return matched[3] as "manifest" | "component" | "descriptor";
+    return matched[3] as "manifest" | "component" | "descriptor" | "browser-actor";
   } catch {
     return undefined;
   }
@@ -382,7 +416,9 @@ async function readLocalRelayBody(request: Request, maximumBytes = LOCAL_RELAY_M
   const contentLength = Number(request.headers.get("content-length") ?? "0");
   if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > maximumBytes) throw new Error("payload too large");
   const reader = request.body.getReader();
-  const cancel = (): void => { void reader.cancel().catch(() => undefined); };
+  const cancel = (): void => {
+    void reader.cancel().catch(() => undefined);
+  };
   signal?.addEventListener("abort", cancel, { once: true });
   const chunks: Uint8Array[] = [];
   let retained = 0;
@@ -472,15 +508,23 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
       const fetchSite = request.headers.get("sec-fetch-site");
       const host = request.headers.get("host");
       const peer = relayServer.requestIP(request)?.address;
-      const rejection = stopping ? "stopping"
-        : !capability ? "capability"
-        : !matchesSecret(supplied, secret) ? "secret"
-        : host !== new URL(uiOrigin).host ? "host"
-        : peer !== "127.0.0.1" && peer !== "::1" ? "peer"
-        : origin !== uiOrigin ? "origin"
-        : referer === null || !referer.startsWith(`${uiOrigin}/`) ? "referer"
-        : fetchSite !== "same-origin" ? "fetch-site"
-        : "";
+      const rejection = stopping
+        ? "stopping"
+        : !capability
+          ? "capability"
+          : !matchesSecret(supplied, secret)
+            ? "secret"
+            : host !== new URL(uiOrigin).host
+              ? "host"
+              : peer !== "127.0.0.1" && peer !== "::1"
+                ? "peer"
+                : origin !== uiOrigin
+                  ? "origin"
+                  : referer === null || !referer.startsWith(`${uiOrigin}/`)
+                    ? "referer"
+                    : fetchSite !== "same-origin"
+                      ? "fetch-site"
+                      : "";
       if (rejection) {
         return new Response("unauthorized", { status: 401 });
       }
@@ -490,7 +534,16 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
       const executionTarget = localRelayExecutionTargetAsset(upstreamPath);
       if (executionTarget && executionTargetsInFlight >= EXECUTION_TARGET_RELAY_MAX_IN_FLIGHT) return new Response("unavailable", { status: 503 });
       const requestMaxBytes = executionTarget ? EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES : LOCAL_RELAY_MAX_BODY_BYTES;
-      const responseMaxBytes = executionTarget === "component" ? DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES : executionTarget === "descriptor" ? DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES : executionTarget === "manifest" ? EXECUTION_TARGET_RELAY_MANIFEST_MAX_BYTES : LOCAL_RELAY_MAX_BODY_BYTES;
+      const responseMaxBytes =
+        executionTarget === "browser-actor"
+          ? DOCUMENT_BROWSER_ACTOR_MAX_BYTES
+          : executionTarget === "component"
+            ? DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES
+            : executionTarget === "descriptor"
+              ? DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES
+              : executionTarget === "manifest"
+                ? EXECUTION_TARGET_RELAY_MANIFEST_MAX_BYTES
+                : LOCAL_RELAY_MAX_BODY_BYTES;
       const contentLength = Number(request.headers.get("content-length") ?? "0");
       if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > requestMaxBytes) return new Response("payload too large", { status: 413 });
       const currentProof = request.headers.get("x-semio-browser-broker");
@@ -528,7 +581,10 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
         if (upstream.status === 401) capability = "";
         const responseBody = await readLocalRelayResponse(upstream, responseMaxBytes);
         const contentType = upstream.headers.get("content-type");
-        return new Response(responseBody, { status: upstream.status, headers: { "x-semio-browser-broker-advanced": "1", "content-length": String(responseBody.byteLength), "cache-control": "no-store", ...(contentType ? { "content-type": contentType } : {}) } });
+        return new Response(responseBody, {
+          status: upstream.status,
+          headers: { "x-semio-browser-broker-advanced": "1", "content-length": String(responseBody.byteLength), "cache-control": "no-store", ...(contentType ? { "content-type": contentType } : {}) },
+        });
       } catch (error) {
         return new Response(error instanceof Error && error.message === "payload too large" ? "payload too large" : "unavailable", {
           status: error instanceof Error && error.message === "payload too large" ? 413 : 503,
@@ -702,7 +758,7 @@ async function startLocalHub(
   repoRoot: string,
   root: string,
   profiles: readonly LocalProfile[],
-  options: { readonly port?: number; readonly dataDir?: string; readonly capture?: boolean; readonly adminSubjects?: readonly string[]; readonly isolatedSecuritySmoke?: boolean; readonly trustedCatalog?: TrustedBootstrapMaterializationV1; readonly binaryPath?: string } = {},
+  options: { readonly port?: number; readonly dataDir?: string; readonly capture?: boolean; readonly adminSubjects?: readonly string[]; readonly isolatedSecuritySmoke?: boolean; readonly binaryPath?: string } = {},
 ): Promise<LocalHubRun> {
   if (profiles.length === 0 || profiles.length > 8) throw new Error("local bootstrap profiles must contain 1..=8 entries");
   const runId = randomBytes(16).toString("hex");
@@ -726,22 +782,18 @@ async function startLocalHub(
     OS_HUB_PORT: String(port),
     OS_HUB_DATA: options.dataDir ?? join(runRoot, "data"),
   };
+  delete env.OS_HUB_TRUSTED_CATALOG_BUNDLE;
+  delete env.OS_HUB_TRUSTED_CATALOG_PROFILE;
   delete env.OS_HUB_ADMIN_TOKEN;
   delete env.S_USER;
   for (const name of Object.keys(env)) if (/^S_.*TOKEN$/.test(name)) delete env[name];
   if (options.isolatedSecuritySmoke) {
     env.OS_HUB_STORAGE_BACKEND = "fs";
     env.OS_HUB_DIRECTORY_BACKEND = "sqlite";
-    delete env.OS_HUB_TRUSTED_CATALOG_BUNDLE;
-    delete env.OS_HUB_TRUSTED_CATALOG_PROFILE;
     delete env.OS_HUB_ADMIN_DIR;
   }
   if (options.adminSubjects?.length) env.OS_HUB_ADMIN_SUBJECTS = options.adminSubjects.join(",");
   else delete env.OS_HUB_ADMIN_SUBJECTS;
-  if (options.trustedCatalog) {
-    env.OS_HUB_TRUSTED_CATALOG_BUNDLE = options.trustedCatalog.bundlePath;
-    env.OS_HUB_TRUSTED_CATALOG_PROFILE = options.trustedCatalog.profileId;
-  }
   const outputMode: "pipe" | "inherit" = options.capture ? "pipe" : "inherit";
   const child = spawn(options.binaryPath ?? hubBinaryPath(repoRoot), [], { cwd: root, env, shell: false, stdio: ["ignore", outputMode, outputMode, "pipe"] });
   if (options.capture) {
@@ -1015,7 +1067,12 @@ function proveMcpCredentialSourceOrder(repoRoot: string): void {
   if (openHub < 0 || injectCredential < openHub || injectGrantSource < injectCredential || returnWorkspace < injectGrantSource) throw new Error("MCP ArtifactHost credential/grant injection no longer precedes document access");
   if (!workspace.includes(`PROBE_PACK_SCHEMA_HASH: &str = "${MCP_PROBE_PACK_SCHEMA_HASH}"`) || !workspace.includes("authenticated_probe_document_is_known") || !workspace.includes("Some(probe_record_spec())"))
     throw new Error("MCP authenticated probe document schema binding drift");
-  if (workspace.includes("probe_document_socket_surface") || workspace.includes("set_document_execution_target_lease(") || !workspace.includes("artifact_document_key(artifact_id)") || !workspace.includes("surface: Some(PROBE_SURFACE_ID.to_string())"))
+  if (
+    workspace.includes("probe_document_socket_surface") ||
+    workspace.includes("set_document_execution_target_lease(") ||
+    !workspace.includes("artifact_document_key(artifact_id)") ||
+    !workspace.includes("surface: Some(PROBE_SURFACE_ID.to_string())")
+  )
     throw new Error("MCP probe document transport regained a forgeable local execution-target claim or lost its full-scope requested surface");
   if (!directory.includes('"/directory/socket-grants"') || !directory.includes('"/directory/socket/v1"') || !directory.includes("directory_socket_hello_v1()")) throw new Error("MCP directory binding no longer uses the v1 receipt/tag7 protocol");
   if (runner.includes('runCmd("cargo", ["run"') || !runner.includes("runCmd(buildMcpBinary")) throw new Error("MCP runner is not a direct binary supervisor");
@@ -1034,18 +1091,18 @@ async function createMcpProbeWorkspace(run: LocalHubRun, envelope: Record<string
   if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("MCP process probe create-space response lacked its exact identifier");
   const documentId = "mcp-socket-grant-probe";
   const announced = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), {
-      kind: "announce-document",
-      descriptor: {
-        spaceId,
-        documentId,
-        artifactKind: "os.agent.probe",
-        artifactSchema: MCP_PROBE_SCHEMA,
-        owner: { pluginId: "os.mcp", packageId: "os.mcp.probe", version: "1.0.0", packageHash: "22".repeat(32) },
-        packSchemaHash: MCP_PROBE_PACK_SCHEMA_HASH,
-        bootstrapVersion: 1,
-        bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 },
-        bootstrapSnapshotHash: "33".repeat(32),
-      },
+    kind: "announce-document",
+    descriptor: {
+      spaceId,
+      documentId,
+      artifactKind: "os.agent.probe",
+      artifactSchema: MCP_PROBE_SCHEMA,
+      owner: { pluginId: "os.mcp", packageId: "os.mcp.probe", version: "1.0.0", packageHash: "22".repeat(32) },
+      packSchemaHash: MCP_PROBE_PACK_SCHEMA_HASH,
+      bootstrapVersion: 1,
+      bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 },
+      bootstrapSnapshotHash: "33".repeat(32),
+    },
   });
   if (announced.status !== 202) throw new Error(`MCP process probe could not announce its document: ${announced.status}`);
   return { spaceId, documentId };
@@ -1062,6 +1119,167 @@ async function startMcpWorkspaceChild(
   const { spaceId, documentId } = await createMcpProbeWorkspace(run, envelope);
   const child = await deliverCredentialEnvelopeToChild(executable, ["stdio", "--hub", `http://127.0.0.1:${run.port}`, "--space", spaceId], structuredClone(envelope), "mcp", `http://127.0.0.1:${run.port}`, environmentSource);
   return { child, spaceId, documentId };
+}
+
+type CheckpointPublicationProcessFixtureV1 = {
+  readonly schema: "semio.hub.checkpoint-publication-process-fixture/v1";
+  readonly profileId: string;
+  readonly generationId: string;
+  readonly documentId: string;
+  readonly mutationId: string;
+  readonly package: { readonly pluginId: string; readonly packageId: string; readonly version: string; readonly componentSha256: string };
+  readonly artifact: { readonly kind: "s.gis.gismap"; readonly schema: "gis.map"; readonly packSchemaHash: string };
+  readonly surfaceId: string;
+  readonly payload: {
+    readonly pack: { readonly path: string; readonly byteLength: number; readonly sha256: string };
+    readonly spr: { readonly path: string; readonly byteLength: number; readonly sha256: string };
+    readonly diff: { readonly path: string; readonly schema: "db.pathmap.v1" };
+    readonly inverse: { readonly path: string; readonly schema: "db.pathmap.v1" };
+  };
+};
+
+function checkpointPublicationProcessFixture(): { readonly root: string; readonly fixture: CheckpointPublicationProcessFixtureV1; readonly pack: Buffer; readonly spr: Buffer; readonly diff: Buffer; readonly inverse: Buffer } {
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot) throw new Error("checkpoint publication process requires its ticket-owned artifact root");
+  const root = join(resolve(artifactRoot), "checkpoint-publication-process-fixture");
+  const fixture = JSON.parse(readFileSync(join(root, "fixture.json"), "utf8")) as CheckpointPublicationProcessFixtureV1;
+  if (
+    fixture.schema !== "semio.hub.checkpoint-publication-process-fixture/v1" ||
+    fixture.profileId !== "gis-map-test-support" ||
+    !/^[0-9a-f]{64}$/u.test(fixture.generationId) ||
+    fixture.artifact.kind !== "s.gis.gismap" ||
+    fixture.artifact.schema !== "gis.map" ||
+    !/^[0-9a-f]{64}$/u.test(fixture.artifact.packSchemaHash) ||
+    fixture.payload.diff.schema !== "db.pathmap.v1" ||
+    fixture.payload.inverse.schema !== "db.pathmap.v1"
+  )
+    throw new Error("checkpoint publication process fixture identity is invalid");
+  const readPayload = (part: "pack" | "spr" | "diff" | "inverse"): Buffer => {
+    const record = fixture.payload[part];
+    const path = resolve(root, record.path);
+    if (relative(root, path).startsWith("..")) throw new Error(`checkpoint publication ${part} escaped its fixture root`);
+    return Buffer.from(readFileSync(path));
+  };
+  const pack = readPayload("pack");
+  const spr = readPayload("spr");
+  const diff = readPayload("diff");
+  const inverse = readPayload("inverse");
+  for (const [name, bytes, record] of [["pack", pack, fixture.payload.pack], ["spr", spr, fixture.payload.spr]] as const) {
+    if (bytes.byteLength !== record.byteLength || createHash("sha256").update(bytes).digest("hex") !== record.sha256) throw new Error(`checkpoint publication ${name} fixture bytes differ from their native receipt`);
+  }
+  if (pack.byteLength + spr.byteLength > CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES) throw new Error("checkpoint publication process fixture pair exceeds the public command bound");
+  return { root, fixture, pack, spr, diff, inverse };
+}
+
+async function startMcpBoundWorkspaceChild(repoRoot: string, run: LocalHubRun, envelope: Record<string, any>, spaceId: string, environmentSource: NodeJS.ProcessEnv): Promise<ChildProcess> {
+  const executable = mcpExecutable(repoRoot);
+  if (!existsSync(executable)) throw new Error("owned MCP binary missing after build");
+  return deliverCredentialEnvelopeToChild(executable, ["stdio", "--hub", `http://127.0.0.1:${run.port}`, "--space", spaceId], structuredClone(envelope), "mcp", `http://127.0.0.1:${run.port}`, environmentSource);
+}
+
+async function waitForCheckpointSocketFrame<T>(socket: WebSocket, frames: readonly Record<string, any>[], select: (frame: Record<string, any>) => T | undefined, label: string): Promise<T> {
+  const deadline = Date.now() + 10_000;
+  for (;;) {
+    for (const frame of frames) {
+      const selected = select(frame);
+      if (selected !== undefined) return selected;
+    }
+    if (socket.readyState >= WebSocket.CLOSING) throw new Error(`checkpoint publication socket closed before ${label}`);
+    if (Date.now() >= deadline) throw new Error(`checkpoint publication socket ${label} deadline exceeded`);
+    await Bun.sleep(20);
+  }
+}
+
+async function commitCheckpointPublicationProcessMutation(
+  run: LocalHubRun,
+  capability: string,
+  spaceId: string,
+  fixture: CheckpointPublicationProcessFixtureV1,
+  diff: Buffer,
+  inverse: Buffer,
+): Promise<{ readonly plan: ReturnType<typeof parseDocumentOpenPlanV1>; readonly frontier: WireFrontierSummary }> {
+  const descriptor = {
+    spaceId,
+    documentId: fixture.documentId,
+    artifactKind: fixture.artifact.kind,
+    artifactSchema: fixture.artifact.schema,
+    owner: { pluginId: fixture.package.pluginId, packageId: fixture.package.packageId, version: fixture.package.version, packageHash: fixture.package.componentSha256 },
+    packSchemaHash: fixture.artifact.packSchemaHash,
+    bootstrapVersion: 1,
+    bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 },
+    bootstrapSnapshotHash: "33".repeat(32),
+  };
+  const announced = await postLiveDirectoryCommand(run, capability, liveDirectoryCommandRequestId(), { kind: "announce-document", descriptor });
+  if (announced.status !== 202) throw new Error(`checkpoint publication process could not announce its GIS Map document: ${announced.status}`);
+  const documentRoot = `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(fixture.documentId)}`;
+  const planResponse = await fetch(`http://127.0.0.1:${run.port}${documentRoot}/open-plan`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${capability}`, "content-type": "application/json" },
+    body: JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId: fixture.documentId }, requestedSurfaceId: fixture.surfaceId, clientInstanceId: "checkpoint-publication-process" }),
+    signal: AbortSignal.timeout(5_000),
+  });
+  const plan = parseDocumentOpenPlanV1(await planResponse.json().catch(() => undefined));
+  if (!planResponse.ok || plan.scope.spaceId !== spaceId || plan.scope.documentId !== fixture.documentId || plan.catalog.generationId !== fixture.generationId) throw new Error("checkpoint publication process received a substituted GIS Map plan");
+  const grantIntent = parseDocumentPlanSocketGrantIntentV1({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt });
+  const grantResponse = await fetch(`http://127.0.0.1:${run.port}${documentRoot}/socket-grants`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${capability}`, "content-type": "application/json" },
+    body: JSON.stringify(grantIntent),
+    signal: AbortSignal.timeout(5_000),
+  });
+  const grant = parseSocketGrantReceiptV1(await grantResponse.json().catch(() => undefined));
+  if (!grantResponse.ok) throw new Error(`checkpoint publication socket grant failed: ${grantResponse.status}`);
+  const socket = new WebSocket(`ws://127.0.0.1:${run.port}${documentRoot}/socket/v1?surface=${encodeURIComponent(fixture.surfaceId)}`, [...socketGrantProtocolsV1(grant)]);
+  socket.binaryType = "arraybuffer";
+  const frames: Record<string, any>[] = [];
+  let socketError: unknown;
+  socket.onmessage = (event) => {
+    try {
+      frames.push(decodeServerFrame(new Uint8Array(event.data as ArrayBuffer)).frame as unknown as Record<string, any>);
+    } catch (error) {
+      socketError = error;
+    }
+  };
+  socket.onerror = (event) => {
+    socketError = event;
+  };
+  try {
+    await new Promise<void>((resolveOpen, rejectOpen) => {
+      const timer = setTimeout(() => rejectOpen(new Error("checkpoint publication socket open deadline exceeded")), 5_000);
+      socket.onopen = () => {
+        clearTimeout(timer);
+        resolveOpen();
+      };
+    });
+    if (socket.protocol !== "semio.socket.v1") throw new Error("checkpoint publication socket did not negotiate its exact protocol");
+    const packSchemaHash = Buffer.from(fixture.artifact.packSchemaHash, "hex");
+    socket.send(
+      encodeClientFrame(
+        { SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: fixture.artifact.schema, pack_schema_hash: Array.from(packSchemaHash), resume_token: null, frontier: null } },
+        "command",
+      ),
+    );
+    await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Welcome" in frame ? frame.Welcome : undefined), "Welcome");
+    await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Session" in frame && frame.Session.actor === grant.actorId ? frame.Session : undefined), "verified Session actor");
+    if (socketError) throw socketError;
+    const documentId = `v1:${Buffer.byteLength(spaceId)}:${Buffer.byteLength(fixture.documentId)}:${spaceId}${fixture.documentId}`;
+    const envelope: WireMutationEnvelope = {
+      mutation_id: fixture.mutationId,
+      document_id: documentId,
+      actor: grant.actorId,
+      dependencies: [],
+      diff: { schema: fixture.payload.diff.schema, payload: Array.from(diff) },
+      inverse: { schema: fixture.payload.inverse.schema, payload: Array.from(inverse) },
+      timestamp: { actor: 1, physical_ms: Date.now(), logical: 1 },
+    };
+    socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: [envelope] } }, "command"));
+    const ack = await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Ack" in frame && frame.Ack.batch_id === 1 ? frame.Ack : undefined), "persisted command acknowledgement");
+    const accepted = ack.stages.some((stage: any) => stage === "Persisted") && ack.stages.some((stage: any) => stage?.Applied?.outcome === "Accepted");
+    if (!accepted || ack.frontier.head_edit_id !== fixture.mutationId || ack.frontier.head_edit_ordinal !== 1 || ack.frontier.last_commit_seq !== 1) throw new Error("checkpoint publication process mutation was not durably accepted at its exact first frontier");
+    return { plan, frontier: ack.frontier as WireFrontierSummary };
+  } finally {
+    if (socket.readyState < WebSocket.CLOSING) socket.close(1000, "checkpoint published from durable frontier");
+  }
 }
 
 function jsonRpcResponses(chunks: readonly Buffer[]): Record<string, any>[] {
@@ -1240,6 +1458,190 @@ async function proveMcpWorkspaceProcess(repoRoot: string, run: LocalHubRun, enve
   }
 }
 
+async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: string): Promise<void> {
+  const { root: fixtureRoot, fixture, pack, spr, diff, inverse } = checkpointPublicationProcessFixture();
+  const profile: LocalProfile = { profileId: "checkpoint-publication-process", subject: "checkpoint-publication-process-author", displayName: "Checkpoint Publication Author", allowedClientClasses: ["native", "mcp"] };
+  const run = await startLocalHub(repoRoot, root, [profile], { capture: true, isolatedSecuritySmoke: true, dataDir: join(fixtureRoot, "data") });
+  let child: ChildProcess | undefined;
+  const retained: Buffer[] = [pack, spr, diff, inverse];
+  try {
+    const readiness = await waitForReadiness(run);
+    if (readiness.artifactAuthority?.ready !== true || readiness.features?.openPlan !== true || readiness.features?.openPlanExchange !== true) throw new Error("checkpoint publication process Hub did not load its verified GIS Map authority");
+    const author = await issueLocalCredential(run, profile.profileId, "native", 6);
+    const created = await postLiveDirectoryCommand(run, author.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "MCP Cold GIS Map", spaceKind: "studio", visibility: "private" });
+    const createdBody = created.status === 202 ? (JSON.parse(created.text) as Record<string, any>) : undefined;
+    const spaceId = createdBody?.events?.find((event: any) => event?.body?.kind === "space.created")?.body?.spaceId;
+    if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("checkpoint publication process could not create its private space");
+    const { plan, frontier } = await commitCheckpointPublicationProcessMutation(run, author.capability, spaceId, fixture, diff, inverse);
+    const chainSha256 = Buffer.from(frontier.chain_hash).toString("hex");
+    if (!/^[0-9a-f]{64}$/u.test(chainSha256)) throw new Error("checkpoint publication process actor returned an invalid chain hash");
+    for (const [bytes, record] of [[pack, fixture.payload.pack], [spr, fixture.payload.spr]] as const) {
+      const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/blobs/${record.sha256}`, {
+        method: "PUT",
+        headers: { authorization: `Bearer ${author.capability}`, "content-type": "application/octet-stream" },
+        body: bytes,
+        signal: AbortSignal.timeout(5_000),
+      });
+      if (!response.ok) throw new Error(`checkpoint publication process blob upload failed: ${response.status}`);
+    }
+    const command = parseCheckpointPublicationCommandV1(
+      JSON.stringify({
+        schema: "semio.hub.checkpoint-publication-command/v1",
+        correlationId: randomBytes(16).toString("hex"),
+        descriptorDigestV1: plan.descriptorDigestV1,
+        expectedDocumentFrontier: { headSeq: frontier.head_edit_ordinal, commitSeq: frontier.last_commit_seq, epoch: 0 },
+        expectedCurrent: { state: "none" },
+        baselineFrontier: { documentId: fixture.documentId, headEditOrdinal: frontier.head_edit_ordinal, headEditId: frontier.head_edit_id, lastCommitSeq: frontier.last_commit_seq, chainSha256 },
+        pack: { sha256: fixture.payload.pack.sha256, byteLength: pack.byteLength },
+        spr: { sha256: fixture.payload.spr.sha256, byteLength: spr.byteLength },
+      }),
+    );
+    const publication = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(fixture.documentId)}/checkpoint-publications`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${author.capability}`, "content-type": "application/json" },
+      body: JSON.stringify(command),
+      signal: AbortSignal.timeout(30_000),
+    });
+    const receipt = (await publication.json().catch(() => undefined)) as Record<string, any> | undefined;
+    if (
+      publication.status !== 200 ||
+      receipt?.schema !== "semio.hub.checkpoint-publication-receipt/v1" ||
+      receipt?.correlationId !== command.correlationId ||
+      receipt?.checkpoint?.scope?.spaceId !== spaceId ||
+      receipt?.checkpoint?.scope?.documentId !== fixture.documentId ||
+      receipt?.checkpoint?.descriptorDigestV1 !== command.descriptorDigestV1 ||
+      receipt?.checkpoint?.pack?.sha256 !== command.pack.sha256 ||
+      receipt?.checkpoint?.spr?.sha256 !== command.spr.sha256
+    )
+      throw new Error(`checkpoint publication public route did not return its exact receipt: ${publication.status}`);
+    const replay = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(fixture.documentId)}/checkpoint-publications`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${author.capability}`, "content-type": "application/json" },
+      body: JSON.stringify(command),
+      signal: AbortSignal.timeout(5_000),
+    });
+    const replayBody = await replay.text();
+    if (replay.status !== 200 || replayBody !== JSON.stringify(receipt)) throw new Error("checkpoint publication lost-response retry did not return its identical durable receipt");
+
+    const otherCreated = await postLiveDirectoryCommand(run, author.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "MCP Cross-Scope GIS Map", spaceKind: "studio", visibility: "private" });
+    const otherBody = otherCreated.status === 202 ? (JSON.parse(otherCreated.text) as Record<string, any>) : undefined;
+    const otherSpaceId = otherBody?.events?.find((event: any) => event?.body?.kind === "space.created")?.body?.spaceId;
+    if (typeof otherSpaceId !== "string" || otherSpaceId.length === 0) throw new Error("checkpoint publication process could not create its cross-scope space");
+    const otherDescriptor = {
+      spaceId: otherSpaceId,
+      documentId: fixture.documentId,
+      artifactKind: fixture.artifact.kind,
+      artifactSchema: fixture.artifact.schema,
+      owner: { pluginId: fixture.package.pluginId, packageId: fixture.package.packageId, version: fixture.package.version, packageHash: fixture.package.componentSha256 },
+      packSchemaHash: fixture.artifact.packSchemaHash,
+      bootstrapVersion: 1,
+      bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 },
+      bootstrapSnapshotHash: "33".repeat(32),
+    };
+    const otherAnnounced = await postLiveDirectoryCommand(run, author.capability, liveDirectoryCommandRequestId(), { kind: "announce-document", descriptor: otherDescriptor });
+    if (otherAnnounced.status !== 202) throw new Error("checkpoint publication process could not announce the same document id in its other space");
+
+    const mcpEnvelope = await issueLocalCredential(run, profile.profileId, "mcp", 2);
+    const protectedValues = ["poison-user", "poison-session", "poison-token", "poison-origin", "poison-auth", "poison-cookie"];
+    child = await startMcpBoundWorkspaceChild(
+      repoRoot,
+      run,
+      mcpEnvelope,
+      spaceId,
+      { ...process.env, [DIRECT_CHILD_BENIGN_ENV_KEY]: DIRECT_CHILD_BENIGN_ENV_VALUE, S_USER: protectedValues[0], S_SESSION: protectedValues[1], NPM_TOKEN: protectedValues[2], S_HUB_URL: protectedValues[3], AUTHORIZATION: protectedValues[4], COOKIE: protectedValues[5] },
+    );
+    const stdout: Buffer[] = [];
+    const stderr: Buffer[] = [];
+    let stdoutBytes = 0;
+    let stderrBytes = 0;
+    child.stdout?.on("data", (chunk: Buffer) => {
+      stdoutBytes += chunk.byteLength;
+      if (stdoutBytes <= 32_768) stdout.push(Buffer.from(chunk));
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      stderrBytes += chunk.byteLength;
+      if (stderrBytes <= 16_384) stderr.push(Buffer.from(chunk));
+    });
+    const writeRequest = (id: number, method: string, params: Record<string, unknown>): void => child?.stdin?.write(`${JSON.stringify({ jsonrpc: "2.0", id, method, params })}\n`);
+    try {
+      const boundDeadline = Date.now() + 10_000;
+      while (!Buffer.concat(stderr).toString("utf8").includes("real per-capability ArtifactChannel routing bound")) {
+        if (child.exitCode !== null) throw new Error(`checkpoint publication MCP child exited before workspace binding: ${child.exitCode}`);
+        if (Date.now() >= boundDeadline) throw new Error("checkpoint publication MCP child workspace binding deadline exceeded");
+        await Bun.sleep(20);
+      }
+      writeRequest(1, "initialize", { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "semio-checkpoint-publication-oracle", version: "1" } });
+      const initialized = await waitForJsonRpcResponse(child, stdout, 1);
+      if (initialized.result?.protocolVersion !== "2025-11-25") throw new Error("checkpoint publication MCP child initialization failed");
+      child.stdin?.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
+      writeRequest(2, "resources/list", {});
+      const listed = await waitForJsonRpcResponse(child, stdout, 2);
+      const checkpointUri = `semio://workspace/scopes/${encodeURIComponent(spaceId)}/${encodeURIComponent(fixture.documentId)}/checkpoint`;
+      const descriptorUri = `semio://workspace/scopes/${encodeURIComponent(spaceId)}/${encodeURIComponent(fixture.documentId)}/descriptor`;
+      if (!Array.isArray(listed.result?.resources) || !listed.result.resources.some((resource: any) => resource?.uri === checkpointUri) || !listed.result.resources.some((resource: any) => resource?.uri === descriptorUri)) {
+        throw new Error("checkpoint publication MCP resource list omitted its exact scoped GIS Map resources");
+      }
+      writeRequest(3, "resources/read", { uri: checkpointUri });
+      const read = await waitForJsonRpcResponse(child, stdout, 3);
+      const text = read.result?.contents?.[0]?.text;
+      const resource = typeof text === "string" ? (JSON.parse(text) as Record<string, any>) : undefined;
+      const decodedPack = typeof resource?.pack?.base64 === "string" ? Buffer.from(resource.pack.base64, "base64") : Buffer.alloc(0);
+      const decodedSpr = typeof resource?.spr?.base64 === "string" ? Buffer.from(resource.spr.base64, "base64") : Buffer.alloc(0);
+      if (
+        resource?.schema !== "semio.mcp.canonical-checkpoint-resource/v1" ||
+        resource?.scope?.spaceId !== spaceId ||
+        resource?.scope?.documentId !== fixture.documentId ||
+        resource?.descriptorDigestV1 !== command.descriptorDigestV1 ||
+        resource?.activeCheckpointId !== receipt.checkpoint.checkpointId ||
+        JSON.stringify(resource?.frontier) !== JSON.stringify(receipt.checkpoint.baselineFrontier) ||
+        !decodedPack.equals(pack) ||
+        !decodedSpr.equals(spr) ||
+        createHash("sha256").update(decodedPack).digest("hex") !== resource?.pack?.sha256 ||
+        createHash("sha256").update(decodedSpr).digest("hex") !== resource?.spr?.sha256
+      )
+        throw new Error("checkpoint publication MCP resource did not project the exact independently verified GIS Map pair");
+      decodedPack.fill(0);
+      decodedSpr.fill(0);
+
+      const crossUri = `semio://workspace/scopes/${encodeURIComponent(otherSpaceId)}/${encodeURIComponent(fixture.documentId)}/checkpoint`;
+      writeRequest(4, "resources/read", { uri: crossUri });
+      const cross = await waitForJsonRpcResponse(child, stdout, 4);
+      if (!cross.error || cross.result?.contents !== undefined) throw new Error("checkpoint publication MCP resource crossed its authenticated space boundary");
+
+      const changedDescriptor = { ...otherDescriptor, spaceId, bootstrapVersion: 2, bootstrapSnapshotHash: "44".repeat(32) };
+      const changed = await postLiveDirectoryCommand(run, author.capability, liveDirectoryCommandRequestId(), { kind: "announce-document", descriptor: changedDescriptor });
+      if (changed.status !== 202) throw new Error(`checkpoint publication process could not rotate its selected descriptor: ${changed.status}`);
+      let descriptorRefreshObserved = false;
+      for (let attempt = 0; attempt < 20 && !descriptorRefreshObserved; attempt += 1) {
+        const id = 10 + attempt;
+        writeRequest(id, "resources/read", { uri: descriptorUri });
+        const response = await waitForJsonRpcResponse(child, stdout, id);
+        const descriptorText = response.result?.contents?.[0]?.text;
+        if (typeof descriptorText === "string") descriptorRefreshObserved = JSON.parse(descriptorText)?.view?.descriptor?.bootstrapVersion === 2;
+        if (!descriptorRefreshObserved) await Bun.sleep(50);
+      }
+      if (!descriptorRefreshObserved) throw new Error("checkpoint publication MCP binding did not observe descriptor rotation");
+      writeRequest(40, "resources/read", { uri: checkpointUri });
+      const stale = await waitForJsonRpcResponse(child, stdout, 40);
+      if (!stale.error || stale.result?.contents !== undefined) throw new Error("checkpoint publication MCP resource returned stale pair bytes after descriptor rotation");
+      child.stdin?.end();
+      await waitForChildExit(child, 5_000);
+      const output = Buffer.concat(stdout);
+      const diagnostics = Buffer.concat(stderr).toString("utf8");
+      if (child.exitCode !== 0 || stdoutBytes !== output.byteLength || stdoutBytes > 32_768 || stderrBytes > 16_384 || output.includes(Buffer.from(mcpEnvelope.capability)) || diagnostics.includes(mcpEnvelope.capability) || protectedValues.some((value) => output.includes(Buffer.from(value)) || diagnostics.includes(value))) {
+        throw new Error(`checkpoint publication MCP process byte-clean law failed: exit=${child.exitCode} stdout=${stdoutBytes} stderr=${stderrBytes}`);
+      }
+    } finally {
+      stdout.forEach((bytes) => bytes.fill(0));
+      stderr.forEach((bytes) => bytes.fill(0));
+    }
+  } finally {
+    retained.forEach((bytes) => bytes.fill(0));
+    if (child?.exitCode === null) child.kill();
+    await finishLocalHub(run);
+  }
+}
+
 async function proveNativeCredentialEnvelopeDelivery(repoRoot: string, envelope: Record<string, any>, hubOrigin: string): Promise<void> {
   const executable = nativeWgpuExecutable(repoRoot);
   if (!existsSync(executable)) throw new Error("owned WGPU native binary missing after native-build");
@@ -1328,7 +1730,7 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
       const url = new URL(request.url);
       if (request.method === "POST" && url.pathname === "/spaces/probe-space/documents/probe-document/open-plan") {
         if (request.headers.get("authorization") !== `Bearer ${capability}` || request.headers.get("content-length") === "0") return new Response("", { status: 401 });
-        const intent = await request.json().catch(() => undefined) as Record<string, any> | undefined;
+        const intent = (await request.json().catch(() => undefined)) as Record<string, any> | undefined;
         if (
           intent?.schema !== "semio.hub.document-open-intent/v1" ||
           intent?.version !== 1 ||
@@ -1338,7 +1740,8 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
           typeof intent?.clientInstanceId !== "string" ||
           !/^native-document-[0-9a-f]{16}$/u.test(intent.clientInstanceId) ||
           Object.keys(intent).some((key) => !["schema", "version", "scope", "requestedSurfaceId", "clientInstanceId"].includes(key))
-        ) return new Response("", { status: 400 });
+        )
+          return new Response("", { status: 400 });
         planCount += 1;
         const planReceipt = `open.v1.${Buffer.alloc(32, planCount).toString("base64url")}`;
         planReceipts.set(planReceipt, false);
@@ -1368,20 +1771,22 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
             role: "editor",
             rendererTarget: "wgpu",
           },
+          browserActor: { kind: "none" },
           grant: { read: true, write: true, observe: true },
           revalidation: { directoryRevision: planCount, membershipGeneration: 1, sessionGeneration: 1 },
         });
       }
       if (request.method === "POST" && url.pathname === "/spaces/probe-space/documents/probe-document/socket-grants") {
         if (request.headers.get("authorization") !== `Bearer ${capability}`) return new Response("", { status: 401 });
-        const exchange = await request.json().catch(() => undefined) as Record<string, any> | undefined;
+        const exchange = (await request.json().catch(() => undefined)) as Record<string, any> | undefined;
         if (
           exchange?.schema !== "semio.hub.document-plan-socket-grant-intent/v1" ||
           exchange?.version !== 1 ||
           typeof exchange?.planReceipt !== "string" ||
           planReceipts.get(exchange.planReceipt) !== false ||
           Object.keys(exchange).some((key) => !["schema", "version", "planReceipt"].includes(key))
-        ) return new Response("", { status: 401 });
+        )
+          return new Response("", { status: 401 });
         planReceipts.set(exchange.planReceipt, true);
         exchangeCount += 1;
         grantCount += 1;
@@ -1452,7 +1857,9 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
       [...planReceipts.values()].some((used) => !used) ||
       [...issued.values()].some((used) => !used)
     ) {
-      throw new Error(`native socket actor law failed: exit=${child.exitCode} plans=${planCount} exchanges=${exchangeCount} grants=${grantCount} sockets=${socketCount} hellos=${helloCount} mutations=${mutationCount} preSessionCommands=${preSessionCommands} stderr=${errorOutput}`);
+      throw new Error(
+        `native socket actor law failed: exit=${child.exitCode} plans=${planCount} exchanges=${exchangeCount} grants=${grantCount} sockets=${socketCount} hellos=${helloCount} mutations=${mutationCount} preSessionCommands=${preSessionCommands} stderr=${errorOutput}`,
+      );
     }
     if (output.includes(capability) || errorOutput.includes(capability) || [...planReceipts.keys(), ...issued.keys()].some((secret) => output.includes(secret) || errorOutput.includes(secret)))
       throw new Error("native socket actor law leaked protected admission material");
@@ -1750,7 +2157,23 @@ type BrowserDocumentOpenFixture = {
   readonly installedTarget: Record<string, any>;
   readonly plan: Record<string, any>;
   readonly socketGrant: Record<string, any>;
-  readonly expected: { readonly httpPaths: readonly [string, string]; readonly webSocketPath: string; readonly protocol: string; readonly helloSchema: string; readonly helloPackSchemaHashByte: number; readonly responseMaxBytes: number; readonly rustWorkerBypassDenied: true; readonly scopeIsolation: { readonly left: { readonly spaceId: string; readonly documentId: string }; readonly right: { readonly spaceId: string; readonly documentId: string }; readonly leftKey: string; readonly rightKey: string; readonly localKey: string }; readonly forbiddenSocketFragments: readonly string[] };
+  readonly expected: {
+    readonly httpPaths: readonly [string, string];
+    readonly webSocketPath: string;
+    readonly protocol: string;
+    readonly helloSchema: string;
+    readonly helloPackSchemaHashByte: number;
+    readonly responseMaxBytes: number;
+    readonly rustWorkerBypassDenied: true;
+    readonly scopeIsolation: {
+      readonly left: { readonly spaceId: string; readonly documentId: string };
+      readonly right: { readonly spaceId: string; readonly documentId: string };
+      readonly leftKey: string;
+      readonly rightKey: string;
+      readonly localKey: string;
+    };
+    readonly forbiddenSocketFragments: readonly string[];
+  };
   readonly hostile: readonly { readonly name: string; readonly stage: string; readonly replacePath?: string; readonly value?: unknown; readonly expected: string }[];
 };
 
@@ -1760,6 +2183,7 @@ async function browserDocumentOpenFixture(repoRoot: string): Promise<BrowserDocu
   const fixture = JSON.parse(readFileSync(join(root, "🌐️browser-document-open-v1.json"), "utf8")) as BrowserDocumentOpenFixture;
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const ajv = new Ajv2020({ allErrors: true, strict: true });
+  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
   ajv.addSchema(schema);
   const validate = ajv.getSchema(schema.$id)!;
   if (!validate(fixture)) throw new Error(`browser document-open fixture invalid: ${JSON.stringify(validate.errors)}`);
@@ -1780,32 +2204,39 @@ function browserDocumentOpenAuthority(plan: Record<string, any>, fixture: Browse
   const intent = fixture.intent;
   const installed = fixture.installedTarget;
   const sameJson = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
-  return installed.schema === "semio.os.document-execution-target-lease/v1"
-    && installed.version === 1
-    && plan.scope?.spaceId === intent.scope?.spaceId
-    && plan.scope?.documentId === intent.scope?.documentId
-    && sameJson(plan.scope, installed.scope)
-    && plan.descriptorDigestV1 === installed.descriptorDigestV1
-    && sameJson(plan.catalog, installed.catalog)
-    && sameJson(plan.package, installed.package)
-    && installed.component?.sha256 === installed.package?.componentSha256
-    && installed.component?.blake3 === installed.package?.componentBlake3
-    && installed.descriptor?.sha256 === installed.package?.descriptorByteSha256
-    && Number.isSafeInteger(installed.component?.byteLength) && installed.component.byteLength >= 1 && installed.component.byteLength <= 64 * 1024 * 1024
-    && Number.isSafeInteger(installed.descriptor?.byteLength) && installed.descriptor.byteLength >= 1 && installed.descriptor.byteLength <= 4 * 1024 * 1024
-    && sameJson(plan.artifact, installed.artifact)
-    && plan.artifact?.schema === fixture.expected.helloSchema
-    && plan.artifact?.packSchemaHash === fixture.expected.helloPackSchemaHashByte.toString(16).padStart(2, "0").repeat(32)
-    && sameJson(plan.parentDialect, installed.parentDialect)
-    && plan.parentDialect?.artifactKind === plan.artifact?.kind
-    && sameJson(plan.surface, installed.surface)
-    && plan.surface?.surfaceId === intent.requestedSurfaceId
-    && sameJson(plan.grant, installed.grant)
-    && plan.grant?.write === (plan.surface?.role === "editor")
-    && sameJson(plan.checkpoint, installed.checkpoint)
-    && sameJson(plan.revalidation, installed.revalidation)
-    && plan.expiresAtUnixMs > fixture.nowMs
-    && plan.expiresAtUnixMs - fixture.nowMs <= 30_000;
+  return (
+    installed.schema === "semio.os.document-execution-target-lease/v1" &&
+    installed.version === 1 &&
+    plan.scope?.spaceId === intent.scope?.spaceId &&
+    plan.scope?.documentId === intent.scope?.documentId &&
+    sameJson(plan.scope, installed.scope) &&
+    plan.descriptorDigestV1 === installed.descriptorDigestV1 &&
+    sameJson(plan.catalog, installed.catalog) &&
+    sameJson(plan.package, installed.package) &&
+    installed.component?.sha256 === installed.package?.componentSha256 &&
+    installed.component?.blake3 === installed.package?.componentBlake3 &&
+    installed.descriptor?.sha256 === installed.package?.descriptorByteSha256 &&
+    Number.isSafeInteger(installed.component?.byteLength) &&
+    installed.component.byteLength >= 1 &&
+    installed.component.byteLength <= 64 * 1024 * 1024 &&
+    Number.isSafeInteger(installed.descriptor?.byteLength) &&
+    installed.descriptor.byteLength >= 1 &&
+    installed.descriptor.byteLength <= 4 * 1024 * 1024 &&
+    sameJson(plan.artifact, installed.artifact) &&
+    plan.artifact?.schema === fixture.expected.helloSchema &&
+    plan.artifact?.packSchemaHash === fixture.expected.helloPackSchemaHashByte.toString(16).padStart(2, "0").repeat(32) &&
+    sameJson(plan.parentDialect, installed.parentDialect) &&
+    plan.parentDialect?.artifactKind === plan.artifact?.kind &&
+    sameJson(plan.surface, installed.surface) &&
+    sameJson(plan.browserActor?.kind === "none" ? plan.browserActor : { ...plan.browserActor, byteLength: installed.browserActor?.byteLength }, installed.browserActor) &&
+    plan.surface?.surfaceId === intent.requestedSurfaceId &&
+    sameJson(plan.grant, installed.grant) &&
+    plan.grant?.write === (plan.surface?.role === "editor") &&
+    sameJson(plan.checkpoint, installed.checkpoint) &&
+    sameJson(plan.revalidation, installed.revalidation) &&
+    plan.expiresAtUnixMs > fixture.nowMs &&
+    plan.expiresAtUnixMs - fixture.nowMs <= 30_000
+  );
 }
 
 async function proveBrowserDocumentOpenFixture(repoRoot: string): Promise<BrowserDocumentOpenFixture> {
@@ -1819,9 +2250,11 @@ async function proveBrowserDocumentOpenFixture(repoRoot: string): Promise<Browse
   const runtimeKey = (scope: { readonly spaceId: string; readonly documentId: string }): string => `v1:${Buffer.byteLength(scope.spaceId, "utf8")}:${Buffer.byteLength(scope.documentId, "utf8")}:${scope.spaceId}${scope.documentId}`;
   const isolation = fixture.expected.scopeIsolation;
   const localKey = `local:v1:${Buffer.byteLength(isolation.left.documentId, "utf8")}:${isolation.left.documentId}`;
-  if (runtimeKey(isolation.left) !== isolation.leftKey || runtimeKey(isolation.right) !== isolation.rightKey || localKey !== isolation.localKey || isolation.leftKey === isolation.rightKey || isolation.leftKey === isolation.localKey) throw new Error("browser document-open scope-key oracle mismatch");
+  if (runtimeKey(isolation.left) !== isolation.leftKey || runtimeKey(isolation.right) !== isolation.rightKey || localKey !== isolation.localKey || isolation.leftKey === isolation.rightKey || isolation.leftKey === isolation.localKey)
+    throw new Error("browser document-open scope-key oracle mismatch");
   const exchange = { schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: fixture.plan.receipt };
-  if (Object.keys(exchange).join(",") !== "schema,version,planReceipt" || fixture.socketGrant.expiresAtMs > fixture.plan.expiresAtUnixMs || fixture.socketGrant.protocol !== fixture.expected.protocol) throw new Error("browser document-open receipt exchange oracle mismatch");
+  if (Object.keys(exchange).join(",") !== "schema,version,planReceipt" || fixture.socketGrant.expiresAtMs > fixture.plan.expiresAtUnixMs || fixture.socketGrant.protocol !== fixture.expected.protocol)
+    throw new Error("browser document-open receipt exchange oracle mismatch");
   const hello = { SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: fixture.plan.artifact.schema, pack_schema_hash: new Array(32).fill(fixture.expected.helloPackSchemaHashByte), resume_token: null, frontier: null } };
   const publicTransport = JSON.stringify({ webSocketPath, protocol: fixture.socketGrant.protocol, hello });
   for (const fragment of fixture.expected.forbiddenSocketFragments) if (publicTransport.includes(fragment)) throw new Error(`browser document-open public transport leaked ${fragment}`);
@@ -1844,7 +2277,9 @@ async function proveBrowserDocumentOpenFixture(repoRoot: string): Promise<Browse
     }
     hostile += 1;
   }
-  console.log(`browser-document-open-oracle: ajv=1 paths=3 installed-target=1 scope-keys=2 authority=1 exchange=1 websocket=1 rust-worker-bypass=denied hostile=${hostile} bound=${fixture.expected.responseMaxBytes} redaction=${fixture.expected.forbiddenSocketFragments.length} passed`);
+  console.log(
+    `browser-document-open-oracle: ajv=1 paths=3 installed-target=1 scope-keys=2 authority=1 exchange=1 websocket=1 rust-worker-bypass=denied hostile=${hostile} bound=${fixture.expected.responseMaxBytes} redaction=${fixture.expected.forbiddenSocketFragments.length} passed`,
+  );
   return fixture;
 }
 
@@ -1869,7 +2304,17 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
           if (url.pathname === current.expected.httpPaths[0]) {
             const intent = value as Record<string, any>;
             const clientInstanceBytes = typeof intent.clientInstanceId === "string" ? Buffer.byteLength(intent.clientInstanceId, "utf8") : 0;
-            if (JSON.stringify(Object.keys(intent).sort()) !== JSON.stringify(["clientInstanceId", "requestedSurfaceId", "schema", "scope", "version"]) || intent.schema !== current.intent.schema || intent.version !== current.intent.version || JSON.stringify(intent.scope) !== JSON.stringify(current.intent.scope) || intent.requestedSurfaceId !== current.intent.requestedSurfaceId || clientInstanceBytes === 0 || clientInstanceBytes > 128 || /[\u0000-\u001f\u007f]/u.test(intent.clientInstanceId)) return new Response("", { status: 400 });
+            if (
+              JSON.stringify(Object.keys(intent).sort()) !== JSON.stringify(["clientInstanceId", "requestedSurfaceId", "schema", "scope", "version"]) ||
+              intent.schema !== current.intent.schema ||
+              intent.version !== current.intent.version ||
+              JSON.stringify(intent.scope) !== JSON.stringify(current.intent.scope) ||
+              intent.requestedSurfaceId !== current.intent.requestedSurfaceId ||
+              clientInstanceBytes === 0 ||
+              clientInstanceBytes > 128 ||
+              /[\u0000-\u001f\u007f]/u.test(intent.clientInstanceId)
+            )
+              return new Response("", { status: 400 });
             effects.open += 1;
             return Response.json(current.plan, { headers: { "cache-control": "no-store" } });
           }
@@ -1895,7 +2340,8 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
         const decoded = decodeClientFrame(bytes);
         if (typeof decoded.frame === "string" || !("SocketHelloV1" in decoded.frame)) return;
         const hello = decoded.frame.SocketHelloV1;
-        if (hello.schema !== current.expected.helloSchema || hello.pack_schema_hash.length !== 32 || hello.pack_schema_hash.some((byte) => byte !== current.expected.helloPackSchemaHashByte) || hello.resume_token !== null || hello.frontier !== null) return;
+        if (hello.schema !== current.expected.helloSchema || hello.pack_schema_hash.length !== 32 || hello.pack_schema_hash.some((byte) => byte !== current.expected.helloPackSchemaHashByte) || hello.resume_token !== null || hello.frontier !== null)
+          return;
         effects.hello += 1;
         documentSocket = socket;
         const frontier = { document_id: current.intent.scope.documentId, head_edit_ordinal: 0, head_edit_id: "", last_commit_seq: 0, chain_hash: new Array(32).fill(0) };
@@ -1904,14 +2350,16 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
     },
   });
   const hubOrigin = `http://127.0.0.1:${authorityServer.port}`;
-  const openWire = Array.from(encodeBackboneWorkerRequest({
-    kind: "open",
-    documentId: current.intent.scope.documentId,
-    schema: current.expected.helloSchema,
-    bindings: [{ kind: "hub", baseUrl: hubOrigin, spaceId: current.intent.scope.spaceId, installedTarget: current.installedTarget as unknown as import("@semio-tech/framework-os").DocumentExecutionTargetLeaseFieldsV1 }],
-    actor: "browser-untrusted-actor",
-    packSchemaHash: new Array(32).fill(current.expected.helloPackSchemaHashByte),
-  }));
+  const openWire = Array.from(
+    encodeBackboneWorkerRequest({
+      kind: "open",
+      documentId: current.intent.scope.documentId,
+      schema: current.expected.helloSchema,
+      bindings: [{ kind: "hub", baseUrl: hubOrigin, spaceId: current.intent.scope.spaceId, installedTarget: current.installedTarget as unknown as import("@semio-tech/framework-os").DocumentExecutionTargetLeaseFieldsV1 }],
+      actor: "browser-untrusted-actor",
+      packSchemaHash: new Array(32).fill(current.expected.helloPackSchemaHashByte),
+    }),
+  );
   const bootstrapProof = randomBytes(32);
   let proofHex = "";
   let relay: LocalBrowserRelay | undefined;
@@ -1962,29 +2410,32 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
     const liveProof = randomBytes(32);
     proofHex = liveProof.toString("hex");
     relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, liveProof, BROWSER_BROKER_PROOF_TTL_MS, { port: relayPort, secret: relaySecret });
-    await page.evaluate(({ workerUrl, proof, openWire }) => {
-      const state = (globalThis as any).__semio = { messages: [], errors: [], started: false };
-      history.replaceState(history.state, "", `${location.pathname}${location.search}`);
-      const worker = new Worker(workerUrl, { type: "module" });
-      const channel = new MessageChannel();
-      worker.postMessage({ kind: "semio-browser-broker-port", port: channel.port2 }, [channel.port2]);
-      channel.port1.onmessage = (event) => {
-        if (event.data?.kind !== "initialized" || state.started) return;
-        if (event.data.ok !== true) {
-          state.errors.push("broker bootstrap rejected");
-          return;
-        }
-        state.started = true;
-        worker.postMessage({ wire: new Uint8Array(openWire) });
-      };
-      channel.port1.start();
-      channel.port1.postMessage({ kind: "initialize", proof });
-      worker.onerror = (event) => state.errors.push(String(event.message ?? "worker error"));
-      worker.onmessage = (event) => {
-        state.messages.push(event.data?.wire ? Array.from(event.data.wire) : event.data);
-      };
-      state.worker = worker;
-    }, { workerUrl: `/@fs${join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts")}`, proof: proofHex, openWire });
+    await page.evaluate(
+      ({ workerUrl, proof, openWire }) => {
+        const state = ((globalThis as any).__semio = { messages: [], errors: [], started: false });
+        history.replaceState(history.state, "", `${location.pathname}${location.search}`);
+        const worker = new Worker(workerUrl, { type: "module" });
+        const channel = new MessageChannel();
+        worker.postMessage({ kind: "semio-browser-broker-port", port: channel.port2 }, [channel.port2]);
+        channel.port1.onmessage = (event) => {
+          if (event.data?.kind !== "initialized" || state.started) return;
+          if (event.data.ok !== true) {
+            state.errors.push("broker bootstrap rejected");
+            return;
+          }
+          state.started = true;
+          worker.postMessage({ wire: new Uint8Array(openWire) });
+        };
+        channel.port1.start();
+        channel.port1.postMessage({ kind: "initialize", proof });
+        worker.onerror = (event) => state.errors.push(String(event.message ?? "worker error"));
+        worker.onmessage = (event) => {
+          state.messages.push(event.data?.wire ? Array.from(event.data.wire) : event.data);
+        };
+        state.worker = worker;
+      },
+      { workerUrl: `/@fs${join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts")}`, proof: proofHex, openWire },
+    );
     await page.waitForFunction(() => (globalThis as any).__semio?.errors?.length > 0 || (globalThis as any).__semio?.messages?.length > 1, undefined, { timeout: 10_000 });
     const deadline = Date.now() + 10_000;
     let browserState = await page.evaluate(() => ({ hash: location.hash, errors: (globalThis as any).__semio?.errors ?? [], messages: (globalThis as any).__semio?.messages ?? [] }));
@@ -2022,7 +2473,17 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
         }
       });
     }
-    if (effects.open !== 1 || effects.exchange !== 1 || effects.socket !== 1 || effects.hello !== 1 || activation.length !== 1 || activation[0]!.actorId !== current.socketGrant.actorId || browserState.hash !== "" || browserState.errors.length !== 0 || browserState.messages.length < 2)
+    if (
+      effects.open !== 1 ||
+      effects.exchange !== 1 ||
+      effects.socket !== 1 ||
+      effects.hello !== 1 ||
+      activation.length !== 1 ||
+      activation[0]!.actorId !== current.socketGrant.actorId ||
+      browserState.hash !== "" ||
+      browserState.errors.length !== 0 ||
+      browserState.messages.length < 2
+    )
       throw new Error(`browser document-open runtime mismatch effects=${JSON.stringify(effects)} state=${JSON.stringify(browserState)} diagnostics=${browserDiagnostics.slice(-8).join("|")}`);
     console.log("browser-document-open-runtime: chromium-worker=1 authenticated-open=1 receipt-exchange=1 credential-free-websocket=1 authoritative-tag7=1 pre-session-activation=0 matched-session-activation=1 fragment-cleared=1 passed");
   } finally {
@@ -2266,7 +2727,10 @@ async function adminLiveJourneyFixture(repoRoot: string): Promise<AdminLiveJourn
   const frame = Buffer.from(admission.frameHex, "hex");
   const payload = Buffer.from(admission.payloadHex, "hex");
   if (admission.idleBeforeAdmissionMs <= admission.exchangeDeadlineMs || frame.readUInt32BE(0) !== payload.byteLength || !frame.subarray(4).equals(payload)) throw new Error("local bootstrap idle/admitted-frame oracle mismatch");
-  const locales = fixture.languages.map(({ locale }) => locale).sort().join(",");
+  const locales = fixture.languages
+    .map(({ locale }) => locale)
+    .sort()
+    .join(",");
   if (locales !== "de,en" || fixture.languages[0]?.overview === fixture.languages[1]?.overview) throw new Error("admin live journey bilingual inventory drift");
   if (Buffer.byteLength(JSON.stringify(fixture.mutation), "utf8") > 8 * 1024 || Buffer.byteLength(JSON.stringify(fixture.operation), "utf8") > 8 * 1024) throw new Error("admin live journey intent exceeded relay bound");
   console.log("admin-live-journey fixture: AJV 2/2; idle/admitted frame 2/2; bilingual inventory 2/2; bounded intents 2/2");
@@ -2385,7 +2849,12 @@ async function proveAdminLiveJourney(repoRoot: string, root: string, fixture: Ad
     await page.locator("#admin-locale-switch").click();
     await page.getByRole("option", { name: "DE", exact: true }).click();
     const german = fixture.languages.find(({ locale }) => locale === "de")!;
-    if ((await page.locator("#admin-tab-overview").textContent())?.trim() !== german.overview || (await page.locator("#admin-tab-spaces").textContent())?.trim() !== german.spaces || (await page.locator("#admin-space-create-open").textContent())?.trim() !== german.newSpace) throw new Error("admin live journey German navigation mismatch");
+    if (
+      (await page.locator("#admin-tab-overview").textContent())?.trim() !== german.overview ||
+      (await page.locator("#admin-tab-spaces").textContent())?.trim() !== german.spaces ||
+      (await page.locator("#admin-space-create-open").textContent())?.trim() !== german.newSpace
+    )
+      throw new Error("admin live journey German navigation mismatch");
     const spaces = await request("GET", "/admin/api/spaces?limit=100");
     if (spaces.status !== 200 || !Array.isArray(spaces.value?.rows) || !spaces.value.rows.some((space: any) => space.name === fixture.mutation.name)) throw new Error("admin live journey bounded created-space read mismatch");
     console.log(`admin-live-journey: SQLite overview/create/read, EN/DE UI, operation poll, and ${terminal.state === "cancelled" ? "cancel" : "already-terminal cancel race"} passed`);
@@ -2466,7 +2935,7 @@ async function proveScopedDirectorySocketRevocationFixture(repoRoot: string): Pr
     { ...fixture, scope: { ...fixture.scope, spaceId: "x".repeat(129) } },
     { ...fixture, clientCloses: [...fixture.clientCloses, fixture.clientCloses[0]] },
   ];
-  if (hostile.some(candidate => validate(candidate))) throw new Error("scoped directory schema admitted a hostile boundary mutation");
+  if (hostile.some((candidate) => validate(candidate))) throw new Error("scoped directory schema admitted a hostile boundary mutation");
   for (const close of fixture.clientCloses) {
     const terminal = close.code === 4401;
     if (terminal !== close.terminal || close.reconnect === terminal) throw new Error(`scoped directory client close mismatch for ${close.code}`);
@@ -2516,28 +2985,43 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
     if (segments.length > 1 || !["all", "source", "native", "process"].includes(phase)) throw new Error("scoped-directory-socket-check accepts source, native, or process");
     await proveScopedDirectorySocketRevocationFixture(this.repoRoot);
     if (phase === "all" || phase === "source") {
-      runCmd("bun", [join(this.repoRoot, "📜️script.ts"), "nx", "run", "@semio-tech/framework-os:test-quick", "--skip-nx-cache", "--", "--run", "-t", "round trips scoped directory worker ownership without flattening scope|binds one document scope and treats close 4401 as terminal without reacquiring|backbone worker owns one full scoped stream and retires it terminally on 4401"], {
-        cwd: this.repoRoot,
-        ...orchestratorBudgetOpts(),
-      });
+      runCmd(
+        "bun",
+        [
+          join(this.repoRoot, "📜️script.ts"),
+          "nx",
+          "run",
+          "@semio-tech/framework-os:test-quick",
+          "--skip-nx-cache",
+          "--",
+          "--run",
+          "-t",
+          "round trips scoped directory worker ownership without flattening scope|binds one document scope and treats close 4401 as terminal without reacquiring|backbone worker owns one full scoped stream and retires it terminally on 4401",
+        ],
+        {
+          cwd: this.repoRoot,
+          ...orchestratorBudgetOpts(),
+        },
+      );
       console.log("scoped-directory-socket-source-check: neutral=19 hostile=3 browser-terminal=3");
     }
     if (phase === "all" || phase === "native") {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
-        groups: [{
-          package: "semio-framework-os-kernel",
-          target: { kind: "lib", name: "semio_framework_os_kernel" },
-          laws: [
-            "scoped_stream_close_4401_is_terminal_and_never_redials",
-            "scoped_stream_issues_and_dials_the_same_encoded_scope",
-          ],
-        }],
+        groups: [
+          {
+            package: "semio-framework-os-kernel",
+            target: { kind: "lib", name: "semio_framework_os_kernel" },
+            laws: ["scoped_stream_close_4401_is_terminal_and_never_redials", "scoped_stream_issues_and_dials_the_same_encoded_scope"],
+          },
+        ],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
         lawBudgetMs: 60_000,
-        progress(event) { console.log(`scoped-directory-socket-native ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`scoped-directory-socket-native ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`scoped-directory-socket-native-receipt: ${JSON.stringify(receipt)}`);
     }
@@ -2545,23 +3029,27 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
         ...exactCargoStageEnvironments(),
-        groups: [{
-          package: "semio-hub",
-          target: { kind: "bin", name: "os-hub" },
-          cargoArgs: ["--all-features"],
-          laws: [
-            "scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership",
-            "scoped_directory_socket_message_matching_is_body_exact_and_removal_private",
-            "scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event",
-            "scoped_directory_socket_admin_removal_uses_the_same_membership_fence",
-            "scoped_directory_socket_removal_and_delivery_have_one_total_membership_order",
-          ],
-        }],
+        groups: [
+          {
+            package: "semio-hub",
+            target: { kind: "bin", name: "os-hub" },
+            cargoArgs: ["--all-features"],
+            laws: [
+              "scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership",
+              "scoped_directory_socket_message_matching_is_body_exact_and_removal_private",
+              "scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event",
+              "scoped_directory_socket_admin_removal_uses_the_same_membership_fence",
+              "scoped_directory_socket_removal_and_delivery_have_one_total_membership_order",
+            ],
+          },
+        ],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
         lawBudgetMs: 60_000,
-        progress(event) { console.log(`scoped-directory-socket-process ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`scoped-directory-socket-process ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`scoped-directory-socket-process-receipt: ${JSON.stringify(receipt)}`);
       runCmd("cargo", ["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], { cwd: this.root, budgetMs: buildBudgetMs() });
@@ -2571,7 +3059,16 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
 
 type ExecutionTargetRelayFixture = {
   readonly intent: Record<string, unknown>;
-  readonly limits: { readonly requestBytes: number; readonly manifestBytes: number; readonly componentBytes: number; readonly descriptorBytes: number; readonly inFlight: number; readonly hubDeadlineMs: number; readonly relayDeadlineMs: number };
+  readonly limits: {
+    readonly requestBytes: number;
+    readonly manifestBytes: number;
+    readonly componentBytes: number;
+    readonly descriptorBytes: number;
+    readonly browserActorBytes: number;
+    readonly inFlight: number;
+    readonly hubDeadlineMs: number;
+    readonly relayDeadlineMs: number;
+  };
   readonly routes: readonly { readonly id: string; readonly method: string; readonly path: string; readonly admitted: boolean }[];
   readonly responses: readonly { readonly id: string; readonly asset: string; readonly bytes: number; readonly delayMs: number; readonly status: number }[];
   readonly fences: readonly { readonly mutation: string; readonly expected: string }[];
@@ -2598,7 +3095,7 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   if (!validate(fixture)) throw new Error("native artifact provider frontier fixture: " + JSON.stringify(validate.errors));
   const manifest = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const feature = fixture.production.feature.replace(/[.*+?^$()|[\]\\]/gu, "\\$&");
-  if (!new RegExp("^default\\s*=\\s*\\[\"sqlite\",\\s*\"" + feature + "\"\\]$", "mu").test(manifest)) throw new Error("production Hub default does not retain native artifact execution");
+  if (!new RegExp('^default\\s*=\\s*\\["sqlite",\\s*"' + feature + '"\\]$', "mu").test(manifest)) throw new Error("production Hub default does not retain native artifact execution");
   const featureRow = manifest.match(new RegExp("^" + feature + "\\s*=\\s*\\[([^\\n]+)\\]$", "mu"))?.[1] ?? "";
   for (const dependency of ['"dep:semio-s-plugin-stdio"', '"semio-s-plugin-stdio/full-artifact-catalog"', '"dep:semio-s-plugin-gis"', '"dep:semio-s-plugin-vcs"']) {
     if (!featureRow.includes(dependency)) throw new Error("native artifact execution feature omitted " + dependency);
@@ -2612,10 +3109,25 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   const trusted = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
   if (!trusted.includes("pub trait NativeCodecProviderSourceV1: Sync") || trusted.includes("use super::native_openable_provider::NativeCodecProviderSetV1;")) throw new Error("trusted catalog core still owns a concrete native plugin provider");
   const provider = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
-  if (!provider.includes('pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "' + fixture.production.providerId + '";') || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = " + fixture.production.receiptCount + ";")) throw new Error("production provider identity or receipt closure drifted");
+  if (!provider.includes('pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "' + fixture.production.providerId + '";') || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = " + fixture.production.receiptCount + ";"))
+    throw new Error("production provider identity or receipt closure drifted");
   const startup = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
-  if (!startup.includes("providers: Option<&dyn NativeCodecProviderSourceV1>") || !startup.includes("configured trusted catalog requires the native-artifact-execution provider") || !startup.includes("configured_catalog_without_a_native_provider_fails_closed")) throw new Error("headless configured-catalog startup no longer fails closed");
-  console.log("hub-native-artifact-provider-frontier-oracle: AJV=1 headless=" + fixture.headless.features.join("+") + " plugin-deps=" + fixture.headless.directPluginDependencies.length + " production-receipts=" + fixture.production.receiptCount + " configured-no-provider=" + fixture.configuredWithoutProvider);
+  if (
+    !startup.includes("providers: Option<&dyn NativeCodecProviderSourceV1>") ||
+    !startup.includes("configured trusted catalog requires the native-artifact-execution provider") ||
+    !startup.includes("configured_catalog_without_a_native_provider_fails_closed")
+  )
+    throw new Error("headless configured-catalog startup no longer fails closed");
+  console.log(
+    "hub-native-artifact-provider-frontier-oracle: AJV=1 headless=" +
+      fixture.headless.features.join("+") +
+      " plugin-deps=" +
+      fixture.headless.directPluginDependencies.length +
+      " production-receipts=" +
+      fixture.production.receiptCount +
+      " configured-no-provider=" +
+      fixture.configuredWithoutProvider,
+  );
   return 12;
 }
 
@@ -2627,11 +3139,27 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
   const validate = ajv.compile(schema);
   if (!validate(fixture)) throw new Error(`execution-target relay fixture: ${JSON.stringify(validate.errors)}`);
   const limits = fixture.limits;
-  if (limits.requestBytes !== EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES || limits.manifestBytes !== EXECUTION_TARGET_RELAY_MANIFEST_MAX_BYTES || limits.componentBytes !== DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES || limits.descriptorBytes !== DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES || limits.inFlight !== EXECUTION_TARGET_RELAY_MAX_IN_FLIGHT || limits.relayDeadlineMs !== EXECUTION_TARGET_RELAY_DEADLINE_MS) throw new Error("execution-target relay bound drift");
+  if (
+    limits.requestBytes !== EXECUTION_TARGET_RELAY_REQUEST_MAX_BYTES ||
+    limits.manifestBytes !== EXECUTION_TARGET_RELAY_MANIFEST_MAX_BYTES ||
+    limits.componentBytes !== DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES ||
+    limits.descriptorBytes !== DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES ||
+    limits.browserActorBytes !== DOCUMENT_BROWSER_ACTOR_MAX_BYTES ||
+    limits.inFlight !== EXECUTION_TARGET_RELAY_MAX_IN_FLIGHT ||
+    limits.relayDeadlineMs !== EXECUTION_TARGET_RELAY_DEADLINE_MS
+  )
+    throw new Error("execution-target relay bound drift");
   const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
   const selection = hub.slice(hub.indexOf("async fn document_execution_target_selection("), hub.indexOf("async fn issue_document_execution_target("));
   const finalFence = selection.slice(selection.indexOf("fields.validate()"));
-  if (!hub.includes(`const DOCUMENT_EXECUTION_TARGET_DEADLINE_MS: u64 = ${limits.hubDeadlineMs.toLocaleString("en-US").replaceAll(",", "_")};`) || !finalFence.includes("subject.revalidate(") || !finalFence.includes("state.directory.head_seq().await") || !finalFence.includes("DocumentOpenPlanErrorCodeV1::Stale") || !hub.includes('fixture["fences"]')) throw new Error("execution-target final authorization/revision fence or native corpus missing");
+  if (
+    !hub.includes(`const DOCUMENT_EXECUTION_TARGET_DEADLINE_MS: u64 = ${limits.hubDeadlineMs.toLocaleString("en-US").replaceAll(",", "_")};`) ||
+    !finalFence.includes("subject.revalidate(") ||
+    !finalFence.includes("state.directory.head_seq().await") ||
+    !finalFence.includes("DocumentOpenPlanErrorCodeV1::Stale") ||
+    !hub.includes('fixture["fences"]')
+  )
+    throw new Error("execution-target final authorization/revision fence or native corpus missing");
   const admittedRoute = ajv.getSchema(`${schema.$id}#/definitions/admittedRoute`)!;
   for (const row of fixture.routes) {
     if (admittedRoute(row) !== row.admitted) throw new Error(`execution-target independent schema route mismatch: ${row.id}`);
@@ -2639,7 +3167,10 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
   }
   const slowAbort = new AbortController();
   const slowBody = new Request("http://127.0.0.1", { method: "POST", body: new ReadableStream<Uint8Array>() });
-  const slowRead = readLocalRelayBody(slowBody, limits.requestBytes, slowAbort.signal).then(() => false, () => true);
+  const slowRead = readLocalRelayBody(slowBody, limits.requestBytes, slowAbort.signal).then(
+    () => false,
+    () => true,
+  );
   slowAbort.abort();
   if (!(await Promise.race([slowRead, Bun.sleep(100).then(() => false)]))) throw new Error("execution-target slow upload did not release on cancellation");
   const uiOrigin = "http://127.0.0.1:6066";
@@ -2650,7 +3181,8 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
   let delayMs = 0;
   let release: Promise<void> | undefined;
   const upstream = Bun.serve({
-    hostname: "127.0.0.1", port: 0,
+    hostname: "127.0.0.1",
+    port: 0,
     async fetch(request): Promise<Response> {
       effects += 1;
       if (request.headers.get("authorization") !== `Bearer ${browserBrokerOracleEnvelope().capability}`) throw new Error("execution-target upstream credential mismatch");
@@ -2667,8 +3199,20 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
     const current = proof;
     proof = randomBytes(32);
     const response = await fetch(`${relay.url}${path}`, {
-      method, body: method === "GET" ? undefined : body, signal, redirect: "error",
-      headers: { host: new URL(uiOrigin).host, origin: uiOrigin, referer: `${uiOrigin}/`, "sec-fetch-site": "same-origin", "x-semio-local-relay": relay.secret.toString("hex"), "x-semio-browser-broker": current.toString("hex"), "x-semio-browser-broker-next": browserBrokerProofDigest(proof).toString("hex"), "content-type": "application/json" },
+      method,
+      body: method === "GET" ? undefined : body,
+      signal,
+      redirect: "error",
+      headers: {
+        host: new URL(uiOrigin).host,
+        origin: uiOrigin,
+        referer: `${uiOrigin}/`,
+        "sec-fetch-site": "same-origin",
+        "x-semio-local-relay": relay.secret.toString("hex"),
+        "x-semio-browser-broker": current.toString("hex"),
+        "x-semio-browser-broker-next": browserBrokerProofDigest(proof).toString("hex"),
+        "content-type": "application/json",
+      },
     });
     if (response.headers.get("x-semio-browser-broker-advanced") !== "1") proof = current;
     return response;
@@ -2687,7 +3231,8 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
       const response = await request(path(row.asset));
       if (response.status !== row.status) throw new Error(`execution-target live response mismatch: ${row.id}: ${response.status}`);
       const bytes = new Uint8Array(await response.arrayBuffer());
-      if (row.status === 200 && (response.headers.get("content-length") !== String(row.bytes) || response.headers.get("cache-control") !== "no-store" || bytes.length !== row.bytes || bytes.some((value) => value !== 73))) throw new Error(`execution-target live bytes mismatch: ${row.id}`);
+      if (row.status === 200 && (response.headers.get("content-length") !== String(row.bytes) || response.headers.get("cache-control") !== "no-store" || bytes.length !== row.bytes || bytes.some((value) => value !== 73)))
+        throw new Error(`execution-target live bytes mismatch: ${row.id}`);
     }
     const before = effects;
     const oversized = await request(path("manifest"), "POST", "x".repeat(fixture.limits.requestBytes + 1));
@@ -2695,7 +3240,9 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
     delayMs = 0;
     responseBytes = 1024 * 1024 + 17;
     let resolveRelease!: () => void;
-    release = new Promise<void>((resolve) => { resolveRelease = resolve; });
+    release = new Promise<void>((resolve) => {
+      resolveRelease = resolve;
+    });
     const pending: Promise<Response>[] = [];
     try {
       for (let index = 0; index < fixture.limits.inFlight; index += 1) {
@@ -2708,7 +3255,11 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
       if (saturated.status !== 503 || saturated.headers.has("x-semio-browser-broker-advanced") || effects !== before + fixture.limits.inFlight) throw new Error("execution-target saturation consumed authority or exceeded capacity");
     } finally {
       resolveRelease();
-      await Promise.all(pending.map(async (response) => { if (!(await response).ok) throw new Error("execution-target admitted concurrent request failed"); }));
+      await Promise.all(
+        pending.map(async (response) => {
+          if (!(await response).ok) throw new Error("execution-target admitted concurrent request failed");
+        }),
+      );
       release = undefined;
     }
     const recovered = await request(path("descriptor"));
@@ -2716,9 +3267,16 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
     await recovered.arrayBuffer();
     const cancelBefore = effects;
     let resolveCancelled!: () => void;
-    release = new Promise<void>((resolve) => { resolveCancelled = resolve; });
+    release = new Promise<void>((resolve) => {
+      resolveCancelled = resolve;
+    });
     const abort = new AbortController();
-    const cancelled = request(path("component"), "POST", intentBody, abort.signal).then(() => { throw new Error("execution-target cancelled request returned bytes"); }, () => undefined);
+    const cancelled = request(path("component"), "POST", intentBody, abort.signal).then(
+      () => {
+        throw new Error("execution-target cancelled request returned bytes");
+      },
+      () => undefined,
+    );
     try {
       const deadline = Date.now() + 2_000;
       while (effects < cancelBefore + 1 && Date.now() < deadline) await Bun.sleep(5);
@@ -2744,7 +3302,7 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
 class ExecutionTargetRelayCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("execution-target-relay-check accepts only --native");
-    console.log("execution-target-provider-frontier: checks=" + await proveNativeArtifactProviderFrontier(this.repoRoot));
+    console.log("execution-target-provider-frontier: checks=" + (await proveNativeArtifactProviderFrontier(this.repoRoot)));
     console.log(`execution-target-relay-check: checks=${await proveExecutionTargetRelay(this.repoRoot)}`);
     await proveBrowserBrokerRelay();
     console.log("execution-target-relay-check: existing browser proof-ratchet runtime regression clean");
@@ -2752,10 +3310,19 @@ class ExecutionTargetRelayCheckScript extends BundleScript {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
-        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: ["configured_catalog_without_a_native_provider_fails_closed", "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body", "execution_target_selection_final_fence_matches_neutral_races"] }],
+        groups: [
+          {
+            package: "semio-hub",
+            target: { kind: "bin", name: "os-hub" },
+            cargoArgs: ["--no-default-features", "--features", "sqlite"],
+            laws: ["configured_catalog_without_a_native_provider_fails_closed", "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body", "execution_target_selection_final_fence_matches_neutral_races"],
+          },
+        ],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
-        progress(event) { console.log(`execution-target-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`execution-target-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       console.log(`execution-target-native-receipts: ${JSON.stringify(receipts)}`);
     }
@@ -2903,9 +3470,50 @@ function documentOpenNeutralDialect(value: unknown, artifactKind: unknown): Reco
 }
 
 function documentOpenNeutralParentDialect(value: unknown): Record<string, string> {
-  const row = documentOpenNeutralObject(value, ["package", "artifact", "parentDialect", "surface", "grant"]);
+  const row = documentOpenNeutralObject(value, ["package", "artifact", "parentDialect", "surface", "browserActor", "grant"]);
   const artifact = documentOpenNeutralObject(row.artifact, ["kind", "schema", "packSchemaHash"]);
   return documentOpenNeutralDialect(row.parentDialect, artifact.kind);
+}
+
+/** 🌌️ Independent actor admission for complete plan and lease corpus consumers. */
+function documentOpenNeutralBrowserActor(actor: unknown, packageValue: Record<string, any>, renderer: unknown, lease: boolean): void {
+  const row = documentOpenNeutralObject(actor, ["kind"], ["schema", "codegenPolicy", "sha256", "sourceComponentSha256", "sourceDescriptorByteSha256", "policySha256", "importInterfaces", ...(lease ? ["byteLength"] : [])]);
+  if (row.kind === "none") {
+    if (Object.keys(row).length !== 1 || !["react", "wgpu"].includes(String(renderer))) throw new Error("actor-none");
+    return;
+  }
+  const keys = ["kind", "schema", "codegenPolicy", "sha256", "sourceComponentSha256", "sourceDescriptorByteSha256", "policySha256", "importInterfaces", ...(lease ? ["byteLength"] : [])];
+  documentOpenNeutralObject(row, keys);
+  const allowed = [
+    "semio:framework/host-async@1.0.0",
+    "semio:framework/pure@1.0.0",
+    ...[
+      "cli/environment",
+      "cli/exit",
+      "cli/stderr",
+      "cli/stdin",
+      "cli/stdout",
+      "cli/terminal-input",
+      "cli/terminal-output",
+      "cli/terminal-stderr",
+      "cli/terminal-stdin",
+      "cli/terminal-stdout",
+      "clocks/monotonic-clock",
+      "io/error",
+      "io/poll",
+      "io/streams",
+    ].map((name) => `wasi:${name}@0.2.0`),
+  ];
+  if (row.kind !== "closed-browser-actor" || renderer !== "wasm" || row.schema !== "semio.os.closed-browser-actor.v1" || row.codegenPolicy !== "semio.os.browser-jco-1.27.0-jspi.v1") throw new Error("actor-policy");
+  if (![row.sha256, row.sourceComponentSha256, row.sourceDescriptorByteSha256, row.policySha256].every((value) => typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value))) throw new Error("actor-digest");
+  if (row.sourceComponentSha256 !== packageValue.componentSha256 || row.sourceDescriptorByteSha256 !== packageValue.descriptorByteSha256) throw new Error("actor-source");
+  if (
+    !Array.isArray(row.importInterfaces) ||
+    row.importInterfaces.length > 16 ||
+    row.importInterfaces.some((value: unknown, index: number) => typeof value !== "string" || !allowed.includes(value) || (index > 0 && row.importInterfaces[index - 1] >= value))
+  )
+    throw new Error("actor-import");
+  if (lease && (!Number.isSafeInteger(row.byteLength) || row.byteLength < 1 || row.byteLength > 67_108_864)) throw new Error("actor-length");
 }
 
 function documentOpenNeutralReceipt(value: unknown): string {
@@ -2945,6 +3553,7 @@ function documentOpenNeutralIssueOutcome(candidate: Record<string, any>, subject
       const packageValue = documentOpenNeutralObject(row.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256"]);
       const artifact = documentOpenNeutralObject(row.artifact, ["kind", "schema", "packSchemaHash"]);
       const surface = documentOpenNeutralObject(row.surface, ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"]);
+      documentOpenNeutralBrowserActor(row.browserActor, packageValue, surface.rendererTarget, false);
       const grant = documentOpenNeutralObject(row.grant, ["read", "write", "observe"]);
       for (const text of [packageValue.pluginId, packageValue.packageId, packageValue.version, artifact.kind, artifact.schema, surface.surfaceId, surface.appId, surface.windowKindId]) documentOpenNeutralText(text);
       for (const digest of [packageValue.componentSha256, packageValue.componentBlake3, packageValue.descriptorByteSha256, artifact.packSchemaHash]) {
@@ -2980,7 +3589,11 @@ function documentOpenNeutralStructure(candidate: Record<string, any>, nowMs: num
     if (typeof value !== "number" || !Number.isSafeInteger(value) || value < (positive ? 1 : 0)) throw new Error("integer");
     return value;
   };
-  const root = documentOpenNeutralObject(candidate, ["schema", "version", "receipt", "expiresAtUnixMs", "scope", "descriptorDigestV1", "catalog", "package", "artifact", "parentDialect", "surface", "grant", "revalidation"], ["checkpoint"]);
+  const root = documentOpenNeutralObject(
+    candidate,
+    ["schema", "version", "receipt", "expiresAtUnixMs", "scope", "descriptorDigestV1", "catalog", "package", "artifact", "parentDialect", "surface", "browserActor", "grant", "revalidation"],
+    ["checkpoint"],
+  );
   if (root.schema !== "semio.hub.document-open-plan/v1" || root.version !== 1) throw new Error("version");
   documentOpenNeutralReceipt(root.receipt);
   const expiry = integer(root.expiresAtUnixMs, true);
@@ -3009,6 +3622,7 @@ function documentOpenNeutralStructure(candidate: Record<string, any>, nowMs: num
   documentOpenNeutralText(surface.appId);
   documentOpenNeutralText(surface.windowKindId);
   if (!new Set(["viewer", "editor"]).has(surface.role) || !new Set(["react", "wgpu", "wasm"]).has(surface.rendererTarget)) throw new Error("surface");
+  documentOpenNeutralBrowserActor(root.browserActor, packageValue, surface.rendererTarget, false);
   const grant = documentOpenNeutralObject(root.grant, ["read", "write", "observe"]);
   if (grant.read !== true || grant.observe !== true || typeof grant.write !== "boolean" || grant.write !== (surface.role === "editor")) throw new Error("grant");
   const revalidation = documentOpenNeutralObject(root.revalidation, ["directoryRevision", "membershipGeneration"], ["sessionGeneration", "shareGeneration"]);
@@ -3056,6 +3670,7 @@ function documentOpenNeutralOutcome(candidate: Record<string, any>, fixture: Rec
     JSON.stringify(candidate.artifact) === JSON.stringify(selected.artifact) &&
     JSON.stringify(candidate.parentDialect) === JSON.stringify(selected.parentDialect) &&
     JSON.stringify(candidate.surface) === JSON.stringify(selected.surface) &&
+    JSON.stringify(candidate.browserActor) === JSON.stringify(selected.browserActor) &&
     JSON.stringify(candidate.grant) === JSON.stringify(selected.grant) &&
     JSON.stringify(candidate.checkpoint) === JSON.stringify(selected.checkpoint) &&
     JSON.stringify(candidate.revalidation) === JSON.stringify(selected.revalidation);
@@ -3076,6 +3691,7 @@ function documentOpenNeutralSocketConsumeOutcome(candidate: Record<string, any>,
       JSON.stringify(row.artifact) === JSON.stringify(candidate.artifact) &&
       JSON.stringify(row.parentDialect) === JSON.stringify(candidate.parentDialect) &&
       JSON.stringify(row.surface) === JSON.stringify(candidate.surface) &&
+      JSON.stringify(row.browserActor) === JSON.stringify(candidate.browserActor) &&
       JSON.stringify(row.grant) === JSON.stringify(candidate.grant),
   );
   const exact =
@@ -3112,10 +3728,8 @@ async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
     !productionSource.includes("selected.parent_dialect != authority.parent_dialect")
   )
     throw new Error("document-open authority must retain and revalidate the verified full parent dialect");
-  if (routePaths.filter((path) => path === "/spaces/{space_id}/documents/{id}/open-plan").length !== 1)
-    throw new Error("document-open verified-catalog issuer route is not mounted exactly once");
-  if (routePaths.filter((path) => path === "/spaces/{space_id}/documents/{id}/socket-grants").length !== 1)
-    throw new Error("document-open plan exchange route is not mounted exactly once");
+  if (routePaths.filter((path) => path === "/spaces/{space_id}/documents/{id}/open-plan").length !== 1) throw new Error("document-open verified-catalog issuer route is not mounted exactly once");
+  if (routePaths.filter((path) => path === "/spaces/{space_id}/documents/{id}/socket-grants").length !== 1) throw new Error("document-open plan exchange route is not mounted exactly once");
   if (
     !productionSource.includes("issue_document_open_plan") ||
     !productionSource.includes("DocumentOpenCatalogAuthorityV1") ||
@@ -3148,7 +3762,11 @@ async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
     const value = Object.hasOwn(mutation, "unit") ? mutation.unit.repeat(mutation.repetitions) : mutation.value;
     const row = documentOpenMutation(fixture.catalogRows[0], mutation.path, value);
     let rejected = false;
-    try { documentOpenCatalogEncoding([row]); } catch { rejected = true; }
+    try {
+      documentOpenCatalogEncoding([row]);
+    } catch {
+      rejected = true;
+    }
     if (!rejected) throw new Error(`document-open parent dialect admitted hostile ${mutation.path}`);
     const candidateFixture = { ...fixture, catalogRows: [row] };
     if (documentOpenNeutralIssueOutcome(fixture.intent, "session", "author", candidateFixture).code !== "component-unavailable") throw new Error(`document-open issuer admitted hostile ${mutation.path}`);
@@ -3194,7 +3812,9 @@ async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
     const outcome = documentOpenNeutralSocketConsumeOutcome(candidate, consumeCase.dialSurfaceId ?? candidate.surface.surfaceId, fixture);
     if (outcome !== consumeCase.expected) throw new Error(`document-open socket-consume vector ${consumeCase.name} expected ${consumeCase.expected}, got ${outcome}`);
   }
-  console.log(`document-open-plan-oracle: descriptor=1 catalog=${fixture.catalogRows.length} receipt=1 independent-codecs=3 issuer=${fixture.issueCases.length} consume=${fixture.socketConsumeCases.length} negative=${fixture.negativeMutations.length} exchange-negative=${fixture.exchangeNegativeMutations.length} redaction=1 activation=catalog-gated-issuer+exchange passed`);
+  console.log(
+    `document-open-plan-oracle: descriptor=1 catalog=${fixture.catalogRows.length} receipt=1 independent-codecs=3 issuer=${fixture.issueCases.length} consume=${fixture.socketConsumeCases.length} negative=${fixture.negativeMutations.length} exchange-negative=${fixture.exchangeNegativeMutations.length} redaction=1 activation=catalog-gated-issuer+exchange passed`,
+  );
 
   if (JSON.stringify(parseDocumentOpenIntentV1(fixture.intent)) !== JSON.stringify(fixture.intent)) throw new Error("document-open intent codec mismatch");
   if (JSON.stringify(parseDocumentOpenPlanV1(fixture.validPlan, fixture.nowMs)) !== JSON.stringify(fixture.validPlan)) throw new Error("document-open plan codec mismatch");
@@ -3221,7 +3841,9 @@ async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
     }
     if (!rejected) throw new Error(`document-open production exchange codec admitted ${mutation.name}`);
   }
-  console.log(`document-open-plan-production-parity: codecs=3 rejected=${fixture.negativeMutations.filter((mutation: Record<string, any>) => mutation.code === "denied" || mutation.code === "expired").length} exchange-rejected=${fixture.exchangeNegativeMutations.length} passed`);
+  console.log(
+    `document-open-plan-production-parity: codecs=3 rejected=${fixture.negativeMutations.filter((mutation: Record<string, any>) => mutation.code === "denied" || mutation.code === "expired").length} exchange-rejected=${fixture.exchangeNegativeMutations.length} passed`,
+  );
 }
 
 type NativeOpenableProjectionReceipt = {
@@ -3267,7 +3889,10 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     if (code !== row.code) throw new Error(`native-openable claim oracle differs for ${row.id}`);
   }
   console.log(`native-openable-claim-oracle cases=${claimFixture.cases.length}`);
-  for (const [name, schema, value] of [["fixture", fixtureSchema, fixture], ["projection", projectionSchema, projection]] as const) {
+  for (const [name, schema, value] of [
+    ["fixture", fixtureSchema, fixture],
+    ["projection", projectionSchema, projection],
+  ] as const) {
     const validate = ajv.compile(schema);
     if (!validate(value)) throw new Error(`native-openable ${name} schema invalid: ${JSON.stringify(validate.errors)}`);
   }
@@ -3304,9 +3929,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     for (const codec of Array.isArray(definition.codecs) ? definition.codecs : []) {
       if (codec.executable_registration !== true) continue;
       const native = codec.native_factory;
-      const runtime = Array.isArray(definition.runtime_capabilities)
-        ? definition.runtime_capabilities.find((candidate: any) => candidate.id === native?.runtime_capability_id)
-        : undefined;
+      const runtime = Array.isArray(definition.runtime_capabilities) ? definition.runtime_capabilities.find((candidate: any) => candidate.id === native?.runtime_capability_id) : undefined;
       const claims = new Map(Array.isArray(runtime?.claims) ? runtime.claims.map((claim: any) => [claim.namespace, claim.value]) : []);
       owners.push({
         artifact: definition.artifact,
@@ -3317,7 +3940,11 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
         document_schema: native?.document_schema,
         extension: native?.extension,
         pack_schema_sha256: native?.pack_schema_hash,
-        runtimeAuthorized: runtime?.category === "codec" && claims.size === 2 && claims.get("codec") === native?.document_schema && claims.get("codec-extension") === `${Buffer.byteLength(native?.document_schema ?? "", "utf8")}:${native?.document_schema}:${native?.extension}`,
+        runtimeAuthorized:
+          runtime?.category === "codec" &&
+          claims.size === 2 &&
+          claims.get("codec") === native?.document_schema &&
+          claims.get("codec-extension") === `${Buffer.byteLength(native?.document_schema ?? "", "utf8")}:${native?.document_schema}:${native?.extension}`,
       });
     }
   }
@@ -3350,14 +3977,14 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     const json = candidate.projected.find((row) => row.factory_id === "stdio.native.json.v1");
     return Boolean(
       json &&
-        target.artifactKind === json.artifact_kind &&
-        target.artifactSchema === json.document_schema &&
-        target.packSchemaHash === json.pack_schema_sha256 &&
-        target.surfaceId === "s.stdio.json@rfc8259/*#viewer" &&
-        target.appId === target.surfaceId &&
-        target.windowKindId === "framework.window.tree" &&
-        target.role === "viewer" &&
-        target.rendererTarget === "wasm",
+      target.artifactKind === json.artifact_kind &&
+      target.artifactSchema === json.document_schema &&
+      target.packSchemaHash === json.pack_schema_sha256 &&
+      target.surfaceId === "s.stdio.json@rfc8259/*#viewer" &&
+      target.appId === target.surfaceId &&
+      target.windowKindId === "framework.window.tree" &&
+      target.role === "viewer" &&
+      target.rendererTarget === "wasm",
     );
   };
   const baseline = (): Candidate => ({
@@ -3371,20 +3998,47 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   for (const hostile of fixture.hostileCases as { name: string; mutation: string; outcome: "denied"; publishedTargets: 0 }[]) {
     const candidate = baseline();
     switch (hostile.mutation) {
-      case "missing-owner": candidate.owners.pop(); break;
-      case "extra-projection": candidate.projected.push({ ...candidate.projected[0]!, artifact: "foreign", factory_id: "stdio.native.foreign.v1" }); break;
-      case "duplicate-factory": candidate.owners[1]!.factory_id = candidate.owners[0]!.factory_id; break;
-      case "duplicate-descriptor-codec": candidate.owners[1]!.descriptor_codec_id = candidate.owners[0]!.descriptor_codec_id; break;
-      case "missing-runtime-capability": candidate.owners[0]!.runtimeAuthorized = false; break;
-      case "wrong-protocol-hash": candidate.projected[0]!.pack_schema_sha256 = "11".repeat(32); break;
-      case "zero-protocol-hash": candidate.projected[0]!.pack_schema_sha256 = "00".repeat(32); break;
-      case "wrong-component-hash": candidate.componentSha256 = "11".repeat(32); break;
-      case "wrong-descriptor-hash": candidate.descriptorSha256 = "11".repeat(32); break;
-      case "wrong-surface": candidate.targets[0]!.surfaceId = "s.stdio.json@rfc8259/*#foreign"; break;
-      case "wrong-role": candidate.targets[0]!.role = "editor"; break;
-      case "wrong-renderer": candidate.targets[0]!.rendererTarget = "wgpu"; break;
-      case "duplicate-target": candidate.targets.push(structuredClone(candidate.targets[0])); break;
-      default: throw new Error(`native-openable unknown hostile mutation ${hostile.mutation}`);
+      case "missing-owner":
+        candidate.owners.pop();
+        break;
+      case "extra-projection":
+        candidate.projected.push({ ...candidate.projected[0]!, artifact: "foreign", factory_id: "stdio.native.foreign.v1" });
+        break;
+      case "duplicate-factory":
+        candidate.owners[1]!.factory_id = candidate.owners[0]!.factory_id;
+        break;
+      case "duplicate-descriptor-codec":
+        candidate.owners[1]!.descriptor_codec_id = candidate.owners[0]!.descriptor_codec_id;
+        break;
+      case "missing-runtime-capability":
+        candidate.owners[0]!.runtimeAuthorized = false;
+        break;
+      case "wrong-protocol-hash":
+        candidate.projected[0]!.pack_schema_sha256 = "11".repeat(32);
+        break;
+      case "zero-protocol-hash":
+        candidate.projected[0]!.pack_schema_sha256 = "00".repeat(32);
+        break;
+      case "wrong-component-hash":
+        candidate.componentSha256 = "11".repeat(32);
+        break;
+      case "wrong-descriptor-hash":
+        candidate.descriptorSha256 = "11".repeat(32);
+        break;
+      case "wrong-surface":
+        candidate.targets[0]!.surfaceId = "s.stdio.json@rfc8259/*#foreign";
+        break;
+      case "wrong-role":
+        candidate.targets[0]!.role = "editor";
+        break;
+      case "wrong-renderer":
+        candidate.targets[0]!.rendererTarget = "wgpu";
+        break;
+      case "duplicate-target":
+        candidate.targets.push(structuredClone(candidate.targets[0]));
+        break;
+      default:
+        throw new Error(`native-openable unknown hostile mutation ${hostile.mutation}`);
     }
     if (valid(candidate) || hostile.outcome !== "denied" || hostile.publishedTargets !== 0) throw new Error(`native-openable hostile case admitted or partially published: ${hostile.name}`);
   }
@@ -3407,14 +4061,19 @@ async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise
     if (result) accepted++;
   }
   if (accepted !== 1) throw new Error("VCS provider corpus must admit exactly one selection");
-  const linked = new Map<string, number>([["semio:stdio", 26], ["semio:gis", 2], ["semio:vcs", receipts.receipts.length]]);
+  const linked = new Map<string, number>([
+    ["semio:stdio", 26],
+    ["semio:gis", 2],
+    ["semio:vcs", receipts.receipts.length],
+  ]);
   for (const profile of fixture.unconsumedProfiles) {
     const previewed = profile.selected.filter((packageId: string) => linked.has(packageId));
     if (JSON.stringify(previewed) !== JSON.stringify(profile.previews)) throw new Error(`VCS provider set previewed an unselected package: ${profile.name}`);
     if (previewed.reduce((sum: number, packageId: string) => sum + linked.get(packageId)!, 0) < 1) throw new Error(`VCS unconsumed profile is empty: ${profile.name}`);
   }
   const provider = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
-  if (!provider.includes('NativeCodecProviderEntryV1 { plugin_id: "vcs", package_id: "semio:vcs", preview: preview_vcs_bindings }') || !provider.includes('identity.factory_id != "vcs.vcs.v1"') || !provider.includes('identity.schema != "vcs.vcs"')) throw new Error("linked VCS provider entry or its exact identity fences are absent");
+  if (!provider.includes('NativeCodecProviderEntryV1 { plugin_id: "vcs", package_id: "semio:vcs", preview: preview_vcs_bindings }') || !provider.includes('identity.factory_id != "vcs.vcs.v1"') || !provider.includes('identity.schema != "vcs.vcs"'))
+    throw new Error("linked VCS provider entry or its exact identity fences are absent");
   if ([...linked.values()].reduce((sum, count) => sum + count, 0) !== 29 || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29;")) throw new Error("linked provider closure is not the exact stdio+GIS+VCS sum");
   console.log(`vcs-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} unconsumed-profiles=${fixture.unconsumedProfiles.length} linked-receipts=29; no native or catalog activation claim`);
 }
@@ -3429,21 +4088,29 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
       cwd: this.root,
       ...exactCargoStageEnvironments(),
       groups: [
-        { package: "semio-s-plugin-stdio", target: { kind: "test", name: "native_openable_provider" }, laws: [
-          "native_composition_and_validation_claims_are_disjoint_but_each_exclusive",
-          "artifact_owned_native_codec_receipts_form_one_complete_static_bijection",
-        ] },
-        { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--features", "native-artifact-execution"], laws: [
-          "native_openable_provider_consumes_exact_complete_stdio_factory_closure",
-          "native_openable_provider_rejects_missing_extra_and_duplicate_receipts_without_publication",
-          "native_openable_provider_rejects_identity_hash_schema_and_factory_substitution",
-          "descriptor_owned_surface_is_required_before_any_catalog_or_codec_publication",
-          "vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication",
-          "linked_provider_set_previews_only_the_selected_packages_of_a_stdio_gis_or_stdio_gis_vcs_profile",
-        ] },
+        {
+          package: "semio-s-plugin-stdio",
+          target: { kind: "test", name: "native_openable_provider" },
+          laws: ["native_composition_and_validation_claims_are_disjoint_but_each_exclusive", "artifact_owned_native_codec_receipts_form_one_complete_static_bijection"],
+        },
+        {
+          package: "semio-hub",
+          target: { kind: "lib", name: "semio_hub" },
+          cargoArgs: ["--features", "native-artifact-execution"],
+          laws: [
+            "native_openable_provider_consumes_exact_complete_stdio_factory_closure",
+            "native_openable_provider_rejects_missing_extra_and_duplicate_receipts_without_publication",
+            "native_openable_provider_rejects_identity_hash_schema_and_factory_substitution",
+            "descriptor_owned_surface_is_required_before_any_catalog_or_codec_publication",
+            "vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication",
+            "linked_provider_set_previews_only_the_selected_packages_of_a_stdio_gis_or_stdio_gis_vcs_profile",
+          ],
+        },
         { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "native-artifact-execution"], laws: ["native_openable_stdio_provider_is_the_only_atomic_readiness_transition"] },
       ],
-      progress(event) { console.log(`native-openable-provider ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      progress(event) {
+        console.log(`native-openable-provider ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
     });
     for (const receipt of receipts) console.log(`native-openable-provider-receipt: ${JSON.stringify(receipt)}`);
     console.log(`native-openable-catalog-provider-laws: passed=${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)}`);
@@ -3453,18 +4120,26 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
 
 class NativeCatalogSelectionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.some(segment => segment !== "--oracle-only")) throw new Error("unsupported native catalog selection argument");
+    if (segments.some((segment) => segment !== "--oracle-only")) throw new Error("unsupported native catalog selection argument");
     runCmd("bun", [join(this.repoRoot, "📜️script.ts"), "nx", "run", "@semio-tech/plugin-registry:native-catalog-selection-check", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({
       cwd: this.root,
       ...exactCargoStageEnvironments(),
-      groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: [
-        "selected_native_providers_are_descriptor_verified_dependency_first_and_only_selected",
-        "selected_native_provider_failure_substitution_and_conflict_publish_no_partial_closure",
-        "selected_native_provider_descriptor_and_cancellation_fences_precede_publication",
-      ] }],
-      progress(event) { console.log(`native-catalog-selection ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      groups: [
+        {
+          package: "semio-hub",
+          target: { kind: "lib", name: "semio_hub" },
+          laws: [
+            "selected_native_providers_are_descriptor_verified_dependency_first_and_only_selected",
+            "selected_native_provider_failure_substitution_and_conflict_publish_no_partial_closure",
+            "selected_native_provider_descriptor_and_cancellation_fences_precede_publication",
+          ],
+        },
+      ],
+      progress(event) {
+        console.log(`native-catalog-selection ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
     });
     console.log(`native-catalog-selection-laws: ${JSON.stringify(receipts)}`);
     console.log("native-catalog-selection-check: selected-only loader admission; no VCS provider, immutable bundle or client activation claim");
@@ -3479,32 +4154,102 @@ class DocumentBrowserActorIdentityCheckScript extends BundleScript {
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
       ...exactCargoStageEnvironments(),
-      groups: segments[0] === "--catalog-native" ? [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: [
-        "artifact_authority::trusted_catalog::browser_actor::tests::trusted_browser_actor_metadata_and_generation_match_neutral_corpus",
-        "artifact_authority::trusted_catalog::tests::trusted_browser_actor_loader_verifies_retains_and_cancels_before_publication",
-        "artifact_authority::trusted_catalog::tests::selected_execution_target_assets_are_generation_and_digest_bound",
-        "artifact_authority::trusted_catalog::tests::verified_trusted_catalog_document_open_generation_and_resolution_are_exact",
-        "artifact_authority::trusted_catalog::tests::trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
-      ] }] : [
-        { package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: [
-          "integer_from_value_matches_serde_without_coercion", "scalars_round_trip", "option_collapses_nested_none_like_naive_serde",
-          "vec_round_trips_and_reports_index_on_error", "btreemap_round_trips_in_key_order", "tuple_round_trips_as_two_element_array_like_serde_json",
-          "fixed_size_array_round_trips_and_rejects_wrong_length", "phantom_data_encodes_as_null_and_decodes_from_anything",
-          "u64_round_trips_as_uint_and_f64_round_trips_as_float", "i64_min_and_max_round_trip_exactly", "u64_max_round_trips_exactly_beyond_f64_2_pow_53",
-          "negative_zero_float_round_trips_and_stays_a_float", "whole_float_and_same_valued_integer_are_distinct_dsl_values",
-        ].map(law => `value::codec::tests::${law}`) },
-        { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
-          "os_directory::schema::tests::document_authority_json_integer_tokens_never_coerce",
-          "os_directory::schema::browser_actor::tests::document_browser_actor_v1_matches_language_neutral_fixture",
-        ] },
-      ],
+      groups:
+        segments[0] === "--catalog-native"
+          ? [
+              {
+                package: "semio-hub",
+                target: { kind: "lib", name: "semio_hub" },
+                laws: [
+                  "artifact_authority::trusted_catalog::browser_actor::tests::trusted_browser_actor_metadata_and_generation_match_neutral_corpus",
+                  "artifact_authority::trusted_catalog::tests::trusted_browser_actor_loader_verifies_retains_and_cancels_before_publication",
+                  "artifact_authority::trusted_catalog::tests::selected_execution_target_assets_are_generation_and_digest_bound",
+                  "artifact_authority::trusted_catalog::tests::verified_trusted_catalog_document_open_generation_and_resolution_are_exact",
+                  "artifact_authority::trusted_catalog::tests::trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
+                ],
+              },
+              { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, laws: ["tests::execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body"] },
+            ]
+          : [
+              {
+                package: "semio-framework-replication",
+                target: { kind: "lib", name: "protocol" },
+                laws: [
+                  "integer_from_value_matches_serde_without_coercion",
+                  "scalars_round_trip",
+                  "option_collapses_nested_none_like_naive_serde",
+                  "vec_round_trips_and_reports_index_on_error",
+                  "btreemap_round_trips_in_key_order",
+                  "tuple_round_trips_as_two_element_array_like_serde_json",
+                  "fixed_size_array_round_trips_and_rejects_wrong_length",
+                  "phantom_data_encodes_as_null_and_decodes_from_anything",
+                  "u64_round_trips_as_uint_and_f64_round_trips_as_float",
+                  "i64_min_and_max_round_trip_exactly",
+                  "u64_max_round_trips_exactly_beyond_f64_2_pow_53",
+                  "negative_zero_float_round_trips_and_stays_a_float",
+                  "whole_float_and_same_valued_integer_are_distinct_dsl_values",
+                ].map((law) => `value::codec::tests::${law}`),
+              },
+              {
+                package: "semio-framework-os-kernel",
+                target: { kind: "lib" },
+                laws: [
+                  "os_directory::schema::tests::document_authority_json_integer_tokens_never_coerce",
+                  "os_directory::schema::browser_actor::tests::document_browser_actor_v1_matches_language_neutral_fixture",
+                  "os_directory::schema::tests::document_open_plan_v1_matches_language_neutral_fixture",
+                  "os_directory::client::tests::execution_target_lease_compares_every_plan_and_verified_byte_field",
+                  "os_directory::client::tests::native_document_admission_issues_validates_and_exchanges_exactly_once",
+                  "os_directory::client::tests::hostile_or_cancelled_plan_never_reaches_receipt_exchange",
+                  "os_directory::client::tests::cancellation_after_receipt_exchange_never_reaches_a_document_socket",
+                  "os_directory::client::tests::mismatched_local_plugin_selection_never_exchanges_a_plan_receipt",
+                ],
+              },
+            ],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
       buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
       listBudgetMs: 60_000,
       lawBudgetMs: 180_000,
-      progress(event) { console.log(`document-browser-actor-identity-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      progress(event) {
+        console.log(`document-browser-actor-identity-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
     });
     console.log(`document-browser-actor-identity-native-receipts: ${JSON.stringify(receipts)}`);
+  }
+}
+
+class TrustedCatalogOpenedRootCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--native")) throw new Error("trusted-catalog-opened-root-check accepts only --native");
+    await proveTrustedCatalogOpenedRootFixture(this.repoRoot);
+    if (segments[0] === undefined) return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [
+        {
+          package: "semio-hub",
+          target: { kind: "lib", name: "semio_hub" },
+          laws: [
+            "artifact_authority::trusted_catalog::tests::trusted_catalog_opened_root_rejects_linked_roots_leaves_intermediates_and_actors",
+            "artifact_authority::trusted_catalog::tests::trusted_catalog_opened_handle_is_swap_stable_bounded_and_cancel_safe",
+            "artifact_authority::trusted_catalog::tests::trusted_catalog_relative_paths_match_the_neutral_no_link_corpus",
+          ],
+        },
+        {
+          package: "semio-hub",
+          target: { kind: "bin", name: "os-hub" },
+          laws: ["tests::trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root", "tests::configured_catalog_without_a_native_provider_fails_closed", "tests::native_openable_stdio_provider_is_the_only_atomic_readiness_transition"],
+        },
+      ],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 180_000,
+      progress(event) {
+        console.log(`trusted-catalog-opened-root-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
+    });
+    console.log(`trusted-catalog-opened-root-native: laws=${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} receipts=${JSON.stringify(receipts)}`);
   }
 }
 
@@ -3555,7 +4300,7 @@ class OpenPlanCheckScript extends BundleScript {
 
 class OpenPlanServerCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.some(segment => segment !== "--oracle-only")) throw new Error("unsupported open-plan server argument");
+    if (segments.some((segment) => segment !== "--oracle-only")) throw new Error("unsupported open-plan server argument");
     await proveDocumentOpenPlanFixture(this.repoRoot);
     if (segments.includes("--oracle-only")) return;
     const env = { ...process.env, RUST_MIN_STACK: "268435456" };
@@ -3607,50 +4352,121 @@ type ExecutionTargetLeaseFixture = {
  * the corpus oracle's only admission decision. */
 function executionTargetLeaseFieldsEqual(left: Record<string, any>, right: Record<string, any>): boolean {
   const scalarPaths = [
-    "schema", "version", "scope.spaceId", "scope.documentId", "descriptorDigestV1", "catalog.generationId",
-    "package.pluginId", "package.packageId", "package.version", "package.componentSha256", "package.componentBlake3", "package.descriptorByteSha256",
-    "component.sha256", "component.blake3", "component.byteLength", "descriptor.sha256", "descriptor.byteLength",
-    "artifact.kind", "artifact.schema", "artifact.packSchemaHash",
-    "parentDialect.artifactKind", "parentDialect.standard", "parentDialect.subset",
-    "surface.surfaceId", "surface.appId", "surface.windowKindId", "surface.role", "surface.rendererTarget",
-    "grant.read", "grant.write", "grant.observe",
-    "checkpoint.checkpointId", "checkpoint.descriptorDigestV1", "checkpoint.aggregateSha256",
-    "checkpoint.baselineFrontier.documentId", "checkpoint.baselineFrontier.headEditOrdinal", "checkpoint.baselineFrontier.headEditId", "checkpoint.baselineFrontier.lastCommitSeq",
-    "revalidation.directoryRevision", "revalidation.membershipGeneration", "revalidation.sessionGeneration", "revalidation.shareGeneration",
+    "schema",
+    "version",
+    "scope.spaceId",
+    "scope.documentId",
+    "descriptorDigestV1",
+    "catalog.generationId",
+    "package.pluginId",
+    "package.packageId",
+    "package.version",
+    "package.componentSha256",
+    "package.componentBlake3",
+    "package.descriptorByteSha256",
+    "component.sha256",
+    "component.blake3",
+    "component.byteLength",
+    "descriptor.sha256",
+    "descriptor.byteLength",
+    "browserActor.kind",
+    "browserActor.schema",
+    "browserActor.codegenPolicy",
+    "browserActor.sha256",
+    "browserActor.sourceComponentSha256",
+    "browserActor.sourceDescriptorByteSha256",
+    "browserActor.policySha256",
+    "browserActor.byteLength",
+    "artifact.kind",
+    "artifact.schema",
+    "artifact.packSchemaHash",
+    "parentDialect.artifactKind",
+    "parentDialect.standard",
+    "parentDialect.subset",
+    "surface.surfaceId",
+    "surface.appId",
+    "surface.windowKindId",
+    "surface.role",
+    "surface.rendererTarget",
+    "grant.read",
+    "grant.write",
+    "grant.observe",
+    "checkpoint.checkpointId",
+    "checkpoint.descriptorDigestV1",
+    "checkpoint.aggregateSha256",
+    "checkpoint.baselineFrontier.documentId",
+    "checkpoint.baselineFrontier.headEditOrdinal",
+    "checkpoint.baselineFrontier.headEditId",
+    "checkpoint.baselineFrontier.lastCommitSeq",
+    "revalidation.directoryRevision",
+    "revalidation.membershipGeneration",
+    "revalidation.sessionGeneration",
+    "revalidation.shareGeneration",
   ];
   const read = (source: Record<string, any>, path: string): unknown => path.split(".").reduce<any>((cursor, segment) => (cursor === undefined || cursor === null ? undefined : cursor[segment]), source);
-  return scalarPaths.every((path) => read(left, path) === read(right, path))
-    && JSON.stringify(read(left, "checkpoint.baselineFrontier.chainHash")) === JSON.stringify(read(right, "checkpoint.baselineFrontier.chainHash"));
+  return (
+    scalarPaths.every((path) => read(left, path) === read(right, path)) &&
+    JSON.stringify(read(left, "browserActor.importInterfaces")) === JSON.stringify(read(right, "browserActor.importInterfaces")) &&
+    JSON.stringify(read(left, "checkpoint.baselineFrontier.chainHash")) === JSON.stringify(read(right, "checkpoint.baselineFrontier.chainHash"))
+  );
 }
 
 /** 🪪️ Independent structural admission of one lease-fields value: every identity, byte bound and
  * grant/role invariant, decided without importing the production parser. */
 function executionTargetLeaseFieldsAdmissible(candidate: Record<string, any>, expected: Record<string, any>): boolean {
+  try {
+    documentOpenNeutralBrowserActor(candidate.browserActor, candidate.package, candidate.surface?.rendererTarget, true);
+  } catch {
+    return false;
+  }
   const hash = (value: unknown): boolean => typeof value === "string" && /^[0-9a-f]{64}$/u.test(value) && !/^0{64}$/u.test(value);
   const text = (value: unknown): boolean => typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= 256 && ![...value].some((character) => character.codePointAt(0)! < 0x20 || character.codePointAt(0)! === 0x7f);
   const length = (value: unknown, maximum: number): boolean => typeof value === "number" && Number.isSafeInteger(value) && value >= 1 && value <= maximum;
   const generation = (value: unknown): boolean => typeof value === "number" && Number.isSafeInteger(value) && value >= 1 && value <= 9_007_199_254_740_991;
-  return candidate.schema === "semio.os.document-execution-target-lease/v1"
-    && candidate.version === 1
-    && [candidate.scope?.spaceId, candidate.scope?.documentId, candidate.package?.pluginId, candidate.package?.packageId, candidate.package?.version, candidate.artifact?.kind, candidate.artifact?.schema, candidate.surface?.surfaceId, candidate.surface?.appId, candidate.surface?.windowKindId].every(text)
-    && [candidate.descriptorDigestV1, candidate.catalog?.generationId, candidate.package?.componentSha256, candidate.package?.componentBlake3, candidate.package?.descriptorByteSha256, candidate.artifact?.packSchemaHash, candidate.component?.sha256, candidate.component?.blake3, candidate.descriptor?.sha256].every(hash)
-    && candidate.component.sha256 === candidate.package.componentSha256
-    && candidate.component.blake3 === candidate.package.componentBlake3
-    && candidate.descriptor.sha256 === candidate.package.descriptorByteSha256
-    && length(candidate.component?.byteLength, expected.componentMaxBytes)
-    && length(candidate.descriptor?.byteLength, expected.descriptorMaxBytes)
-    && candidate.parentDialect?.artifactKind === candidate.artifact?.kind
-    && [candidate.parentDialect?.artifactKind, candidate.parentDialect?.standard, candidate.parentDialect?.subset].every((value) => text(value) && String(value).trim() === value)
-    && candidate.grant?.read === true
-    && candidate.grant?.observe === true
-    && typeof candidate.grant?.write === "boolean"
-    && ["viewer", "editor"].includes(candidate.surface?.role)
-    && ["react", "wgpu", "wasm"].includes(candidate.surface?.rendererTarget)
-    && candidate.grant.write === (candidate.surface.role === "editor")
-    && (candidate.checkpoint === undefined || (hash(candidate.checkpoint.checkpointId) && candidate.checkpoint.descriptorDigestV1 === candidate.descriptorDigestV1 && hash(candidate.checkpoint.aggregateSha256)))
-    && generation(candidate.revalidation?.directoryRevision)
-    && generation(candidate.revalidation?.membershipGeneration)
-    && (candidate.revalidation?.sessionGeneration === undefined) !== (candidate.revalidation?.shareGeneration === undefined);
+  return (
+    candidate.schema === "semio.os.document-execution-target-lease/v1" &&
+    candidate.version === 1 &&
+    [
+      candidate.scope?.spaceId,
+      candidate.scope?.documentId,
+      candidate.package?.pluginId,
+      candidate.package?.packageId,
+      candidate.package?.version,
+      candidate.artifact?.kind,
+      candidate.artifact?.schema,
+      candidate.surface?.surfaceId,
+      candidate.surface?.appId,
+      candidate.surface?.windowKindId,
+    ].every(text) &&
+    [
+      candidate.descriptorDigestV1,
+      candidate.catalog?.generationId,
+      candidate.package?.componentSha256,
+      candidate.package?.componentBlake3,
+      candidate.package?.descriptorByteSha256,
+      candidate.artifact?.packSchemaHash,
+      candidate.component?.sha256,
+      candidate.component?.blake3,
+      candidate.descriptor?.sha256,
+    ].every(hash) &&
+    candidate.component.sha256 === candidate.package.componentSha256 &&
+    candidate.component.blake3 === candidate.package.componentBlake3 &&
+    candidate.descriptor.sha256 === candidate.package.descriptorByteSha256 &&
+    length(candidate.component?.byteLength, expected.componentMaxBytes) &&
+    length(candidate.descriptor?.byteLength, expected.descriptorMaxBytes) &&
+    candidate.parentDialect?.artifactKind === candidate.artifact?.kind &&
+    [candidate.parentDialect?.artifactKind, candidate.parentDialect?.standard, candidate.parentDialect?.subset].every((value) => text(value) && String(value).trim() === value) &&
+    candidate.grant?.read === true &&
+    candidate.grant?.observe === true &&
+    typeof candidate.grant?.write === "boolean" &&
+    ["viewer", "editor"].includes(candidate.surface?.role) &&
+    ["react", "wgpu", "wasm"].includes(candidate.surface?.rendererTarget) &&
+    candidate.grant.write === (candidate.surface.role === "editor") &&
+    (candidate.checkpoint === undefined || (hash(candidate.checkpoint.checkpointId) && candidate.checkpoint.descriptorDigestV1 === candidate.descriptorDigestV1 && hash(candidate.checkpoint.aggregateSha256))) &&
+    generation(candidate.revalidation?.directoryRevision) &&
+    generation(candidate.revalidation?.membershipGeneration) &&
+    (candidate.revalidation?.sessionGeneration === undefined) !== (candidate.revalidation?.shareGeneration === undefined)
+  );
 }
 
 function executionTargetLeaseMutate(source: Record<string, any>, path: string, value: unknown): Record<string, any> {
@@ -3687,6 +4503,7 @@ function executionTargetLeaseInstall(
         package: projection.package,
         component: { sha256: projection.package.componentSha256, blake3: projection.package.componentBlake3, byteLength: input.manifest.component?.byteLength },
         descriptor: { sha256: projection.package.descriptorByteSha256, byteLength: input.manifest.descriptor?.byteLength },
+        browserActor: projection.browserActor.kind === "none" ? projection.browserActor : { ...projection.browserActor, byteLength: input.manifest.browserActor?.byteLength },
         artifact: projection.artifact,
         parentDialect: projection.parentDialect,
         surface: projection.surface,
@@ -3698,11 +4515,13 @@ function executionTargetLeaseInstall(
       continue;
     }
     if (stage === "component") {
-      if (input.declaredComponentLength !== input.manifest.component.byteLength || input.declaredComponentLength > fixture.expected.componentMaxBytes || input.component.length !== input.declaredComponentLength) return { outcome: "unpublished", stage };
+      if (input.declaredComponentLength !== input.manifest.component.byteLength || input.declaredComponentLength > fixture.expected.componentMaxBytes || input.component.length !== input.declaredComponentLength)
+        return { outcome: "unpublished", stage };
       continue;
     }
     if (stage === "descriptor") {
-      if (input.declaredDescriptorLength !== input.manifest.descriptor.byteLength || input.declaredDescriptorLength > fixture.expected.descriptorMaxBytes || input.descriptor.length !== input.declaredDescriptorLength) return { outcome: "unpublished", stage };
+      if (input.declaredDescriptorLength !== input.manifest.descriptor.byteLength || input.declaredDescriptorLength > fixture.expected.descriptorMaxBytes || input.descriptor.length !== input.declaredDescriptorLength)
+        return { outcome: "unpublished", stage };
       continue;
     }
     if (stage === "verify") {
@@ -3722,10 +4541,23 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const ajv = new Ajv2020({ allErrors: true, strict: true });
+  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
   ajv.addSchema(schema);
   const validate = ajv.getSchema(schema.$id)!;
   if (!validate(fixture)) throw new Error(`execution target lease corpus invalid: ${JSON.stringify(validate.errors)}`);
   const validateFields = ajv.getSchema(`${schema.$id}#/$defs/leaseFields`)!;
+  const canonical = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
+  ajv.addSchema(canonical);
+  for (const [name, row] of [
+    ["DocumentOpenPlanV1", fixture.plan],
+    ["DocumentExecutionTargetLeaseFieldsV1", fixture.manifest],
+  ] as const) {
+    const shape = ajv.getSchema(`${canonical.$id}#/$defs/${name}`)!;
+    if (!shape(row)) throw new Error(`canonical actor contract ${name}: ${JSON.stringify(shape.errors)}`);
+    const absent = structuredClone(row);
+    delete absent.browserActor;
+    if (shape(absent)) throw new Error(`canonical contract allows absent actor: ${name}`);
+  }
   const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🔨️modules/🔏️hash/🟦️.ts"));
   const component = Buffer.from(fixture.componentHex, "hex");
   const descriptor = Buffer.from(fixture.descriptorHex, "hex");
@@ -3736,10 +4568,28 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   const webComponentSha256 = Buffer.from(await webcrypto.subtle.digest("SHA-256", component)).toString("hex");
   if (componentSha256 !== webComponentSha256) throw new Error("execution target lease corpus Node and WebCrypto SHA-256 disagree");
   if (blake3Hex(Buffer.from("abc", "utf8")) !== "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85") throw new Error("first-party BLAKE3 known-answer vector regressed");
-  if (componentSha256 !== fixture.manifest.component.sha256 || componentBlake3 !== fixture.manifest.component.blake3 || descriptorSha256 !== fixture.manifest.descriptor.sha256) throw new Error("execution target lease corpus digests do not match its exact bytes");
+  if (componentSha256 !== fixture.manifest.component.sha256 || componentBlake3 !== fixture.manifest.component.blake3 || descriptorSha256 !== fixture.manifest.descriptor.sha256)
+    throw new Error("execution target lease corpus digests do not match its exact bytes");
   if (component.length !== fixture.manifest.component.byteLength || descriptor.length !== fixture.manifest.descriptor.byteLength) throw new Error("execution target lease corpus byte lengths drifted");
   if (fixture.plan.surface.rendererTarget !== "wasm" || fixture.manifest.surface.role !== "viewer" || fixture.manifest.grant.write !== false) throw new Error("execution target lease corpus lost its read-only GIS Map wasm viewer positive");
 
+  const parsedPlan = parseDocumentOpenPlanV1(fixture.plan, fixture.nowMs);
+  const parsedManifest = parseDocumentExecutionTargetLeaseFieldsV1(fixture.manifest);
+  const projected = leaseFieldsFromPlanV1(parsedPlan, { component: component.length, descriptor: descriptor.length, browserActor: fixture.manifest.browserActor.byteLength });
+  if (!sameLeaseFieldsV1(projected, parsedManifest)) throw new Error("execution target lease production projection differs");
+  for (const field of ["browserActor", "browserActor.sha256", "browserActor.policySha256", "browserActor.sourceComponentSha256", "browserActor.sourceDescriptorByteSha256", "browserActor.importInterfaces"]) {
+    const plan = structuredClone(fixture.plan);
+    const parts = field.split(".");
+    if (parts.length === 1) delete plan.browserActor;
+    else delete plan.browserActor[parts[1]!];
+    let denied = false;
+    try {
+      parseDocumentOpenPlanV1(plan, fixture.nowMs);
+    } catch {
+      denied = true;
+    }
+    if (!denied) throw new Error(`document plan admitted absent actor identity: ${field}`);
+  }
   const generationA = fixture.expected.rotation.generationA;
   const baseline = { manifest: fixture.manifest as Record<string, any>, component, declaredComponentLength: component.length, descriptor, declaredDescriptorLength: descriptor.length, planGeneration: generationA };
   const positive = executionTargetLeaseInstall(fixture, baseline, blake3Hex);
@@ -3754,17 +4604,33 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
       const mutated = executionTargetLeaseMutate(fixture.manifest, vector.path!, vector.value);
       const admitted = validateFields(mutated) && executionTargetLeaseInstall(fixture, { ...baseline, manifest: mutated }, blake3Hex).outcome === "published";
       if (admitted) throw new Error(`execution target lease corpus admitted single-field substitution ${vector.name}`);
+      let productionAdmitted = false;
+      try {
+        productionAdmitted = sameLeaseFieldsV1(projected, parseDocumentExecutionTargetLeaseFieldsV1(mutated));
+      } catch {}
+      if (productionAdmitted) throw new Error(`execution target lease production admitted substitution ${vector.name}`);
       manifestFields += 1;
       continue;
     }
-    if (vector.kind === "cancel" || vector.kind === "deadline" || vector.kind === "reconnect-after-invalidation" || vector.kind === "viewer-write" || vector.kind === "caller-url" || vector.kind === "caller-path" || vector.kind === "caller-module" || vector.kind === "stale-plan") {
+    if (
+      vector.kind === "cancel" ||
+      vector.kind === "deadline" ||
+      vector.kind === "reconnect-after-invalidation" ||
+      vector.kind === "viewer-write" ||
+      vector.kind === "caller-url" ||
+      vector.kind === "caller-path" ||
+      vector.kind === "caller-module" ||
+      vector.kind === "stale-plan"
+    ) {
       if (vector.kind === "cancel" || vector.kind === "deadline") {
         const stage = vector.kind === "deadline" ? "component" : vector.stage;
         if (executionTargetLeaseInstall(fixture, { ...baseline, cancelAt: stage }, blake3Hex).outcome === "published") throw new Error(`execution target lease corpus published through ${vector.name}`);
       }
-      if (vector.kind === "stale-plan" && executionTargetLeaseInstall(fixture, { ...baseline, planGeneration: fixture.expected.rotation.generationB }, blake3Hex).outcome === "published") throw new Error("execution target lease corpus exchanged a stale rotated plan");
+      if (vector.kind === "stale-plan" && executionTargetLeaseInstall(fixture, { ...baseline, planGeneration: fixture.expected.rotation.generationB }, blake3Hex).outcome === "published")
+        throw new Error("execution target lease corpus exchanged a stale rotated plan");
       if (vector.kind === "viewer-write" && fixture.expected.viewerWriteRejectedLocally !== true) throw new Error("execution target lease corpus lost its local viewer write rejection");
-      if ((vector.kind === "caller-url" || vector.kind === "caller-path" || vector.kind === "caller-module") && fixture.expected.assetPaths.includes(String(vector.value))) throw new Error(`execution target lease corpus accepted caller substitution ${vector.name}`);
+      if ((vector.kind === "caller-url" || vector.kind === "caller-path" || vector.kind === "caller-module") && fixture.expected.assetPaths.includes(String(vector.value)))
+        throw new Error(`execution target lease corpus accepted caller substitution ${vector.name}`);
       lifecycleVectors += 1;
       continue;
     }
@@ -3773,7 +4639,8 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
     else if (vector.kind === "component-truncated") mutated.component = component.subarray(0, component.length - 1);
     else if (vector.kind === "component-extra-byte") mutated.component = Buffer.concat([component, Buffer.from([7])]);
     else if (vector.kind === "component-max-plus-one") mutated.declaredComponentLength = Number(vector.value);
-    else if (vector.kind === "descriptor-bytes" || vector.kind === "descriptor-self-hash" || vector.kind === "descriptor-noncanonical") mutated.descriptor = Buffer.concat([descriptor.subarray(0, descriptor.length - 1), Buffer.from([descriptor.at(-1)! ^ 0xff])]);
+    else if (vector.kind === "descriptor-bytes" || vector.kind === "descriptor-self-hash" || vector.kind === "descriptor-noncanonical")
+      mutated.descriptor = Buffer.concat([descriptor.subarray(0, descriptor.length - 1), Buffer.from([descriptor.at(-1)! ^ 0xff])]);
     else if (vector.kind === "descriptor-trailing-byte") mutated.descriptor = Buffer.concat([descriptor, Buffer.from([0])]);
     else if (vector.kind === "descriptor-max-plus-one") mutated.declaredDescriptorLength = Number(vector.value);
     else if (vector.kind === "missing-body") mutated.missing = vector.stage;
@@ -3791,7 +4658,9 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
     if (role !== (code === "verifying" ? "status" : "alert")) throw new Error(`execution target lease corpus status ${code} has the wrong live-region role`);
   }
   if (Object.values(fixture.expected.rendererClaims).some((claim) => claim !== false)) throw new Error("execution target lease corpus claims a renderer it does not have");
-  console.log(`execution-target-lease-oracle: ajv=1 positive=1 manifest-fields=${manifestFields} byte-vectors=${byteVectors} lifecycle=${lifecycleVectors} hostile=${fixture.hostile.length} component-bytes=${component.length} descriptor-bytes=${descriptor.length} node+webcrypto-sha256=agree first-party-blake3=known-answer status=${statusCodes.length} passed`);
+  console.log(
+    `execution-target-lease-oracle: ajv=1 positive=1 manifest-fields=${manifestFields} byte-vectors=${byteVectors} lifecycle=${lifecycleVectors} hostile=${fixture.hostile.length} component-bytes=${component.length} descriptor-bytes=${descriptor.length} node+webcrypto-sha256=agree first-party-blake3=known-answer status=${statusCodes.length} passed`,
+  );
 }
 
 function proveExecutionTargetLeaseSource(repoRoot: string): void {
@@ -3801,11 +4670,11 @@ function proveExecutionTargetLeaseSource(repoRoot: string): void {
   for (const forbidden of ["loadPluginModule", "ActivationRegistry", "load_wasm_plugins", "attach_backbone"]) {
     if (region.includes(forbidden)) throw new Error(`browser execution-target lease region reached ${forbidden}`);
   }
-  if (!region.includes("crypto.subtle.digest(\"SHA-256\"") || !region.includes("blake3Hex(")) throw new Error("browser execution-target lease lost its Web Crypto SHA-256 or first-party BLAKE3 verification");
+  if (!region.includes('crypto.subtle.digest("SHA-256"') || !region.includes("blake3Hex(")) throw new Error("browser execution-target lease lost its Web Crypto SHA-256 or first-party BLAKE3 verification");
   if (!region.includes("state.docAbort.signal")) throw new Error("browser execution-target lease no longer shares the document cancellation scope");
-  if (!worker.includes("plan.surface.rendererTarget !== \"react\" && (leaseFields === undefined")) throw new Error("browser plan authority no longer gates a non-react renderer on a live lease");
+  if (!worker.includes('plan.surface.rendererTarget !== "react" && (leaseFields === undefined')) throw new Error("browser plan authority no longer gates a non-react renderer on a live lease");
   const bin = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
-  for (const asset of ["manifest", "component", "descriptor"]) {
+  for (const asset of ["manifest", "component", "descriptor", "browser-actor"]) {
     if (!bin.includes(`/spaces/{space_id}/documents/{id}/execution-target/${asset}`)) throw new Error(`hub execution-target ${asset} route is not mounted`);
   }
   if (!bin.includes("assets_for_current_selection(&descriptor, intent.requested_surface_id.as_deref(), writable, &generation_id)")) throw new Error("hub execution-target routes no longer resolve through the exact-selection accessor");
@@ -3815,7 +4684,7 @@ function proveExecutionTargetLeaseSource(repoRoot: string): void {
   if (client.includes("matches_surface") || client.includes("DocumentSocketSurfaceExpectationV1")) throw new Error("native directory client kept a partial surface predicate");
   const sync = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
   if (!sync.includes("authority.matches_lease_fields(lease)")) throw new Error("native reconnect no longer compares the complete lease fields");
-  console.log("execution-target-lease-source: browser lease region=renderer-free hub routes=3 accessor=generation-bound native=full-field passed");
+  console.log("execution-target-lease-source: browser lease region=renderer-free hub routes=4 accessor=generation-bound native=full-field passed");
 }
 
 class ExecutionTargetLeaseCheckScript extends BundleScript {
@@ -3853,8 +4722,594 @@ class ExecutionTargetLeaseBrowserCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveExecutionTargetLeaseCorpus(this.repoRoot);
     proveExecutionTargetLeaseSource(this.repoRoot);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test-long", "--skip-nx-cache", "--", "--run", "-t", "browser execution target lease|browser GIS viewer exposes localized renderer-unavailable"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test-long", "--skip-nx-cache", "--", "--run", "-t", "browser execution target lease|browser GIS viewer exposes localized renderer-unavailable"], {
+      cwd: this.repoRoot,
+      ...orchestratorBudgetOpts(),
+    });
     console.log("execution-target-lease-browser-check: neutral corpus, source boundary and browser Worker verify/reject/renderer-unavailable runtime passed");
+  }
+}
+
+class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
+  async run(): Promise<void> {
+    const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child";
+    const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧪️fixtures/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧬️schema/🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(schema);
+    if (!validate(fixture)) throw new Error("child Worker fixture: " + JSON.stringify(validate.errors));
+    const ts = await import("typescript");
+    const program = ts.createProgram([join(this.repoRoot, ownerPath, "🟦️.ts"), join(this.repoRoot, ownerPath, "🧵️worker.ts")], {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      allowImportingTsExtensions: true,
+      types: [],
+      lib: ["lib.es2023.d.ts", "lib.dom.d.ts", "lib.webworker.d.ts"],
+    });
+    const errors = ts.getPreEmitDiagnostics(program).filter((item) => item.category === ts.DiagnosticCategory.Error);
+    if (errors.length) throw new Error(ts.formatDiagnosticsWithColorAndContext(errors, { getCurrentDirectory: () => this.repoRoot, getCanonicalFileName: (name) => name, getNewLine: () => "\n" }));
+    const wireModules = Object.fromEntries(
+      fixture.wireRows.map((row: Record<string, any>) => [
+        row.name,
+        `const row = ${JSON.stringify(row)}; const nativePost = MessagePort.prototype.postMessage; let fired = false; MessagePort.prototype.postMessage = function(message, transfer) { if (message.kind !== row.at || fired) return nativePost.call(this, message, transfer); fired = true; if (row.duplicate) { nativePost.call(this, message, transfer); return nativePost.call(this, message); } const forged = { ...message, ...row.patch }; if (row.valueCase === 'non-finite') forged.value = Infinity; if (row.valueCase === 'alias') { const shared = {}; forged.value = [shared, shared]; } if (row.valueCase === 'oversized') forged.value = new ArrayBuffer(1048577); nativePost.call(this, forged, transfer); if (row.expected === 'ignored') nativePost.call(this, message); }; ${fixture.modules.normal}`,
+      ]),
+    );
+    const modules = Object.fromEntries(
+      Object.entries({ ...fixture.modules, ...wireModules } as Record<string, string>).map(([name, source]) => {
+        const bytes = Buffer.from(source);
+        return [name, { source, sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.length }];
+      }),
+    );
+    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!artifactRoot) throw new Error("child Worker gate requires SEMIO_TEST_ARTIFACT_DIR");
+    mkdirSync(artifactRoot, { recursive: true });
+    const cacheDir = mkdtempSync(join(artifactRoot, "browser-actor-child-vite-"));
+    const { createServer } = await import("vite");
+    const vite = await createServer({
+      configFile: false,
+      root: this.repoRoot,
+      cacheDir,
+      clearScreen: false,
+      optimizeDeps: { noDiscovery: true },
+      server: { host: "127.0.0.1", port: await freeLoopbackPort(), strictPort: true, watch: null },
+      plugins: [
+        {
+          name: "semio-containment-page",
+          configureServer(server) {
+            server.middlewares.use((request, response, next) => {
+              if (request.url !== "/__semio-containment.html") return next();
+              response.setHeader("content-type", "text/html");
+              response.end("<!doctype html><meta charset=utf-8><title>Actor Containment</title>");
+            });
+          },
+        },
+      ],
+    });
+    let browser: Awaited<ReturnType<(typeof import("playwright"))["chromium"]["launch"]>> | undefined;
+    const diagnostics: string[] = [],
+      workerRequests: string[] = [];
+    try {
+      await vite.listen();
+      const { chromium } = await import("playwright");
+      browser = await chromium.launch({ headless: true });
+      const page = await browser.newPage();
+      page.on("console", (message) => diagnostics.push(message.type() + ":" + message.text()));
+      page.on("pageerror", (error) => diagnostics.push("pageerror:" + error.message));
+      page.on("requestfailed", (request) => diagnostics.push("requestfailed:" + request.url()));
+      page.on("request", (request) => {
+        if (decodeURI(request.url()).includes("/🧵️child/")) workerRequests.push(request.url());
+      });
+      await page.goto(vite.resolvedUrls!.local[0]! + "__semio-containment.html", { timeout: 15000 });
+      const result = await page.evaluate(
+        async ({ url, modules, limits, laws, wireRows, ownerFaults }) => {
+          const api = await import(/* @vite-ignore */ url);
+          const passed: string[] = [];
+          const check = (condition: unknown, law: string) => {
+            if (!condition) throw new Error("child Worker law: " + law);
+          };
+          const rejected = async (operation: () => Promise<unknown>, law: string) => {
+            let failed = false;
+            try {
+              await operation();
+            } catch {
+              failed = true;
+            }
+            check(failed, law);
+          };
+          check(JSON.stringify(api.BROWSER_ACTOR_CHILD_LIMITS) === JSON.stringify(limits), "neutral limits");
+          const baseline = api.browserActorChildCapacity();
+          let generation = 0n;
+          const live = new Set<any>();
+          const reserve = async (name = "normal", signal?: AbortSignal) => {
+            const row = modules[name];
+            const owner = await api.reserveBrowserActorChild({ actorId: "fixture-actor", activationGeneration: ++generation, bundleSha256: row.sha256, bundleByteLength: row.byteLength }, signal);
+            live.add(owner);
+            return owner;
+          };
+          const load = async (owner: any, name = "normal") => {
+            const source = new TextEncoder().encode(modules[name].source);
+            await owner.load(source.buffer);
+            check(source.byteLength === 0 && owner.progress().sourceDetached, "verified source transfer");
+          };
+          const retire = (owner: any) => {
+            owner.close();
+            live.delete(owner);
+          };
+          try {
+            await rejected(
+              () => api.reserveBrowserActorChild({ actorId: "fixture-actor", activationGeneration: 1n, bundleSha256: modules.normal.sha256, bundleByteLength: modules.normal.byteLength, workerUrl: "https://invalid.test/worker.js" }),
+              "caller Worker URL",
+            );
+            passed.push("static-child");
+            let owner = await reserve();
+            await load(owner);
+            passed.push("verified-transfer");
+            const input = new Uint8Array([0, 17, 255]);
+            const reply = await owner.invoke(["echo"], [input.buffer]);
+            check(input.byteLength === 0 && reply instanceof ArrayBuffer && JSON.stringify(Array.from(new Uint8Array(reply))) === "[0,17,255]" && owner.progress().resultTransfersDetached === 1, "actual round trip transfer");
+            passed.push("round-trip");
+            const oversized = new ArrayBuffer(limits.messageBytes + 1);
+            await rejected(() => owner.invoke(["echo"], [oversized]), "input max + 1");
+            check(oversized.byteLength === limits.messageBytes + 1 && owner.progress().activeInvocations === 0, "rejected input remains attached");
+            passed.push("pre-transfer-bound");
+            const second = await reserve();
+            await rejected(() => reserve(), "global reservation cap");
+            check(api.browserActorChildCapacity().actors === 2, "aggregate reservation stable");
+            retire(second);
+            passed.push("aggregate-capacity");
+            const wasiOwner = await reserve("wasi");
+            await load(wasiOwner, "wasi");
+            check((await wasiOwner.invoke(["clock"], [])) === true, "local monotonic WASI clock");
+            passed.push("wasi-clock");
+            check((await wasiOwner.invoke(["output"], [])) === true, "local copied WASI output");
+            passed.push("wasi-output");
+            await rejected(() => wasiOwner.invoke(["bound"], []), "WASI output max + 1");
+            passed.push("wasi-output-bound");
+            await rejected(() => wasiOwner.invoke(["exit"], []), "WASI exit retires child");
+            check(wasiOwner.progress().phase === "closed", "WASI exit closes parent");
+            retire(wasiOwner);
+            passed.push("wasi-exit");
+            await rejected(() => owner.invoke(["effect"], []), "host dispatch denied");
+            passed.push("effect-denial");
+            await rejected(() => owner.invoke(["oversize"], []), "output max + 1");
+            passed.push("output-bound");
+            const controller = new AbortController();
+            retire(owner);
+            owner = await reserve("normal", controller.signal);
+            await load(owner);
+            const pending = owner.invoke(["wait"], []);
+            const settled = pending.then(
+              () => false,
+              () => true,
+            );
+            const busy = new ArrayBuffer(1);
+            await rejected(() => owner.invoke(["echo"], [busy]), "single invocation slot");
+            check(busy.byteLength === 1, "busy transfer remains attached");
+            passed.push("single-flight");
+            controller.abort();
+            check((await settled) && owner.progress().phase === "closed", "abort settles pending");
+            retire(owner);
+            passed.push("abort-retirement");
+            owner = await reserve();
+            await load(owner);
+            let timerFired = false;
+            const timer = setTimeout(() => {
+              timerFired = true;
+            }, 100);
+            await rejected(() => owner.invoke(["loop"], []), "tight loop invoke deadline");
+            clearTimeout(timer);
+            check(timerFired && owner.progress().phase === "closed", "parent remains responsive");
+            retire(owner);
+            passed.push("tight-loop-invoke");
+            owner = await reserve("loadLoop");
+            timerFired = false;
+            const loadTimer = setTimeout(() => {
+              timerFired = true;
+            }, 100);
+            await rejected(() => load(owner, "loadLoop"), "tight loop load deadline");
+            clearTimeout(loadTimer);
+            check(timerFired && owner.progress().phase === "closed", "load loop parent remains responsive");
+            retire(owner);
+            passed.push("tight-loop-load");
+            owner = await reserve("activationFailure");
+            await rejected(() => load(owner, "activationFailure"), "activation failure retires");
+            check(owner.progress().phase === "closed", "activation fault terminal");
+            retire(owner);
+            passed.push("activation-failure");
+            owner = await reserve();
+            const changed = new TextEncoder().encode(modules.normal.source);
+            changed[0] ^= 1;
+            await rejected(() => owner.load(changed.buffer), "hash mismatch");
+            check(changed.byteLength === 0 && owner.progress().phase === "closed", "digest rejection retires exclusive owner");
+            retire(owner);
+            passed.push("digest-denial");
+            owner = await reserve();
+            await load(owner);
+            check((await owner.invoke(["echo"], ["fresh"])) === "fresh", "fresh generation works");
+            retire(owner);
+            passed.push("fresh-generation");
+            let wireLaws = 0;
+            for (const row of wireRows) {
+              owner = await reserve(row.name);
+              let outcome: unknown;
+              try {
+                await load(owner, row.name);
+                outcome = await owner.invoke(["echo"], ["wire"]);
+              } catch {}
+              await new Promise((resolve) => setTimeout(resolve, 25));
+              check(row.expected === "ignored" ? outcome === "wire" && owner.progress().phase === "active" : owner.progress().phase === "closed", row.name);
+              retire(owner);
+              wireLaws++;
+            }
+            let faultLaws = 0;
+            for (const fault of ownerFaults) {
+              const NativeWorker = globalThis.Worker,
+                nativeWorkerPost = Worker.prototype.postMessage,
+                nativePortPost = MessagePort.prototype.postMessage,
+                nativeDigest = SubtleCrypto.prototype.digest;
+              const abort = new AbortController();
+              let hashBytes: ArrayBuffer | undefined, releaseDigest: (() => void) | undefined;
+              try {
+                if (fault === "constructor-failure")
+                  (globalThis as any).Worker = class {
+                    constructor() {
+                      throw new Error("fixture constructor");
+                    }
+                  };
+                if (fault === "boot-init-denial")
+                  Worker.prototype.postMessage = function (message, transfer) {
+                    return nativeWorkerPost.call(this, { ...message, extra: true }, transfer as Transferable[]);
+                  };
+                if (fault === "constructor-failure" || fault === "boot-init-denial") {
+                  await rejected(() => reserve(), fault);
+                  faultLaws++;
+                  continue;
+                }
+                owner = await reserve("normal", abort.signal);
+                if (fault === "abort-during-hash")
+                  SubtleCrypto.prototype.digest = function (algorithm, data) {
+                    hashBytes = data as ArrayBuffer;
+                    return new Promise((resolve, reject) => {
+                      releaseDigest = () => {
+                        nativeDigest.call(this, algorithm, data).then(resolve, reject);
+                      };
+                    });
+                  };
+                MessagePort.prototype.postMessage = function (message, transfer) {
+                  if ((message.kind === "load" && fault === "load-transfer-failure") || (message.kind === "invoke" && fault === "invoke-transfer-failure")) throw new Error("fixture transfer");
+                  if ((message.kind === "load" && fault === "child-load-shape") || (message.kind === "invoke" && fault === "child-invoke-shape")) message = { ...message, extra: true };
+                  if (message.kind === "load" && fault === "child-rehash-after-transfer") new Uint8Array(message.bytes)[modules.normal.source.indexOf("'echo'") + 1] = 69;
+                  return nativePortPost.call(this, message, transfer as Transferable[]);
+                };
+                const source = new TextEncoder().encode(modules.normal.source);
+                const loading = owner.load(source.buffer);
+                check(source.byteLength === 0, fault + " consuming call");
+                if (fault === "abort-during-hash") {
+                  abort.abort();
+                  await rejected(() => loading, fault);
+                  check(hashBytes && new Uint8Array(hashBytes).every((byte) => byte === 0), "cancelled exclusive hash owner wiped");
+                  releaseDigest?.();
+                } else if (["load-transfer-failure", "child-load-shape", "child-rehash-after-transfer"].includes(fault)) {
+                  await rejected(() => loading, fault);
+                  if (fault === "child-rehash-after-transfer") check(owner.progress().sourceDetached, "changed bytes reached child rehash");
+                } else {
+                  await loading;
+                  if (fault === "synchronous-source-consumption") check((await owner.invoke(["echo"], ["owned"])) === "owned", fault);
+                  else await rejected(() => owner.invoke(["echo"], ["transfer"]), fault);
+                }
+                if (fault !== "synchronous-source-consumption") check(owner.progress().phase === "closed", fault + " terminal");
+                retire(owner);
+                faultLaws++;
+              } finally {
+                (globalThis as any).Worker = NativeWorker;
+                NativeWorker.prototype.postMessage = nativeWorkerPost;
+                MessagePort.prototype.postMessage = nativePortPost;
+                SubtleCrypto.prototype.digest = nativeDigest;
+                releaseDigest?.();
+              }
+            }
+            check(JSON.stringify(passed.slice().sort()) === JSON.stringify(laws.slice().sort()), "exact fixture laws");
+            check(JSON.stringify(api.browserActorChildCapacity()) === JSON.stringify(baseline), "all reservations returned");
+            return { laws: passed.length, wireLaws, faultLaws, transfers: 2, forcedLoopTerminations: 2, capacity: api.browserActorChildCapacity() };
+          } finally {
+            for (const owner of live) owner.close();
+          }
+        },
+        { url: "/@fs" + join(this.repoRoot, ownerPath, "🟦️.ts"), modules, limits: fixture.limits, laws: fixture.laws, wireRows: fixture.wireRows, ownerFaults: fixture.ownerFaults },
+      );
+      if (!diagnostics.includes("log:[browser actor stdout] AB") || !diagnostics.includes("warning:[browser actor stderr] CD") || diagnostics.some((value) => value.includes("[browser actor stdout] ZZ")))
+        throw new Error("child WASI synchronous output was not observed exactly before caller mutation");
+      if (!workerRequests.some((url) => decodeURI(url).includes("/🧵️child/🧵️worker.ts"))) throw new Error("static child was not requested");
+      if (diagnostics.some((row) => row.startsWith("pageerror:"))) throw new Error(diagnostics.join("\n"));
+      console.log("browser-actor-child-worker-containment: ajv=1 typescript=1 chromium=1 " + JSON.stringify(result) + " passed");
+    } catch (error) {
+      console.error("browser-actor-child-worker-diagnostics: " + diagnostics.slice(-12).join("|"));
+      throw error;
+    } finally {
+      await browser?.close();
+      await vite.close();
+    }
+  }
+}
+
+class BrowserActorGisDescribeCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--source" && segments[0] !== "--native")) throw new Error("usage: browser-actor-gis-describe-check [--source|--native]");
+    const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
+    const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧪️fixtures/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧬️schema/🔣️.json"), "utf8"));
+    if (!new Ajv({ strict: true }).compile(schema)(fixture)) throw new Error("GIS describe fixture");
+    const ts = await import("typescript");
+    const program = ts.createProgram([join(this.repoRoot, ownerPath, "🧾️describe/🟦️.ts")], {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      allowImportingTsExtensions: true,
+      types: [],
+      lib: ["lib.es2023.d.ts", "lib.dom.d.ts"],
+    });
+    const errors = ts.getPreEmitDiagnostics(program).filter((item) => item.category === ts.DiagnosticCategory.Error);
+    if (errors.length) throw new Error(ts.formatDiagnosticsWithColorAndContext(errors, { getCurrentDirectory: () => this.repoRoot, getCanonicalFileName: (name) => name, getNewLine: () => "\n" }));
+    const api = await import(join(this.repoRoot, ownerPath, "🧾️describe/🟦️.ts"));
+    const codec = { encode: encodePackValue, decode: decodePackValue };
+    const deepEqual = (await import("fast-deep-equal")).default;
+    const expected = structuredClone(fixture.descriptor);
+    for (const key of fixture.hashKeys) expected.hashes[key] = "";
+    const staged = encodePackValue(fixture.descriptor);
+    for (const row of fixture.cases) {
+      const value = structuredClone(fixture.descriptor);
+      for (const key of fixture.hashKeys) value.hashes[key] = "";
+      if (row.name === "hash-not-empty") value.hashes.wasmSha256 = "a".repeat(64);
+      if (row.name === "plugin-change") value.manifest.pluginId = "stdio";
+      if (row.name === "extra-field") value.extra = true;
+      const encoded = row.name === "raw-staged" ? staged : encodePackValue(value);
+      const guest = row.name === "trailing-byte" ? new Uint8Array([...encoded, 0]) : encoded;
+      let accepted = true;
+      try {
+        api.assertBrowserActorDescribeCapacityV1(row.name === "capacity-over" ? 1024 * 1024 - 7 : staged.byteLength);
+        const changedStage = structuredClone(fixture.descriptor);
+        changedStage.hashes.coreWasmSha256 = "invalid";
+        const stagedInput = row.name === "staged-trailing-byte" ? new Uint8Array([...staged, 0]) : row.name === "staged-bad-hash" ? encodePackValue(changedStage) : staged;
+        api.verifyBrowserActorDescribeV1(guest, stagedInput, codec);
+      } catch {
+        accepted = false;
+      }
+      const oracle = row.name !== "capacity-over" && row.name !== "trailing-byte" && !row.name.startsWith("staged-") && deepEqual(row.name === "raw-staged" ? fixture.descriptor : value, expected);
+      if (accepted !== row.accepted || accepted !== oracle) throw new Error("GIS describe law: " + row.name);
+    }
+    await testFreshComponentProcessV1(this.repoRoot);
+    console.log("browser-actor-gis-describe: AJV=1 TypeScript=1 fast-deep-equal=9 normalization=9 source passed; real guest execution requires --native");
+    if (segments[0] !== "--native") return;
+    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    const ticketsRoot = resolve(this.repoRoot, ".🧬semio", "🦑️repo", "🎫️tickets");
+    const relativeRoot = artifactRoot ? relative(ticketsRoot, resolve(artifactRoot)) : "";
+    if (!artifactRoot || !isAbsolute(artifactRoot) || relativeRoot === "" || relativeRoot.startsWith("..") || isAbsolute(relativeRoot)) throw new Error("GIS child gate requires ticket-owned SEMIO_TEST_ARTIFACT_DIR");
+    mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
+    const work = mkdtempSync(join(artifactRoot, "gis-child-real-"));
+    const target = join(work, "target"),
+      stage = join(work, "stage");
+    mkdirSync(target, { mode: 0o700 });
+    mkdirSync(stage, { mode: 0o700 });
+    const build = trustedBootstrapBuildControl(buildBudgetMs());
+    let actor: ClosedBrowserActorArtifactV1 | undefined, descriptor: Uint8Array | undefined;
+    try {
+      const produced = await produceFreshComponentV1(
+        this.repoRoot,
+        { pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", componentProfile: "wasm-release", rootCdylib: true },
+        target,
+        stage,
+        build.control,
+        (lease) =>
+          lease.consume((component) =>
+            buildClosedBrowserActorArtifactV1(component, {
+              cancelled: () => build.control.cancelled() || build.control.remainingMs() <= 0,
+              progress: (phase, completed, total) => build.control.checkpoint("gis-child-" + phase, completed, total),
+            }),
+          ),
+      );
+      actor = produced.derived;
+      if (actor.componentSha256 !== produced.receipt.component.sha256 || createHash("sha256").update(actor.bytes).digest("hex") !== actor.sha256 || actor.bytes.byteLength !== actor.byteLength)
+        throw new Error("GIS child fresh actor receipt mismatch");
+      descriptor = trustedBootstrapReadRegular(join(stage, produced.receipt.descriptor.relativePath), 4 * 1024 * 1024, "GIS descriptor", () => {
+        if (build.control.cancelled() || build.control.remainingMs() <= 0) throw new Error("GIS child cancelled");
+      });
+      if (descriptor.byteLength !== produced.receipt.descriptor.byteLength || createHash("sha256").update(descriptor).digest("hex") !== produced.receipt.descriptor.sha256) throw new Error("GIS child staged descriptor mismatch");
+      api.assertBrowserActorDescribeCapacityV1(descriptor.byteLength);
+      const { createServer } = await import("vite");
+      const actorBytes = actor.bytes;
+      const vite = await createServer({
+        configFile: false,
+        root: this.repoRoot,
+        cacheDir: join(work, "vite"),
+        clearScreen: false,
+        optimizeDeps: { noDiscovery: true },
+        server: { host: "127.0.0.1", port: await freeLoopbackPort(), strictPort: true, watch: null },
+        plugins: [
+          {
+            name: "semio-real-gis-child-law",
+            configureServer(server) {
+              server.middlewares.use((request, response, next) => {
+                if (request.url === "/__semio-gis-child.html") {
+                  response.setHeader("content-type", "text/html");
+                  response.end("<!doctype html><meta charset=utf-8><title>Real GIS Child</title>");
+                  return;
+                }
+                if (request.url === "/__semio-gis-child-stall") {
+                  response.writeHead(200, { "content-type": "application/octet-stream", "content-length": String(actorBytes.byteLength) });
+                  response.flushHeaders();
+                  response.write(Buffer.from(actorBytes.subarray(0, 1)));
+                  return;
+                }
+                if (request.url === "/__semio-gis-child-body") {
+                  response.setHeader("content-type", "application/octet-stream");
+                  response.setHeader("content-length", String(actorBytes.byteLength));
+                  response.end(Buffer.from(actorBytes.buffer, actorBytes.byteOffset, actorBytes.byteLength));
+                  return;
+                }
+                next();
+              });
+            },
+          },
+        ],
+      });
+      let browser: Awaited<ReturnType<(typeof import("playwright"))["chromium"]["launch"]>> | undefined;
+      const diagnostics: string[] = [];
+      try {
+        await vite.listen();
+        browser = await (await import("playwright")).chromium.launch({ headless: true });
+        const page = await browser.newPage();
+        page.on("console", (message) => diagnostics.push(message.type() + ":" + message.text()));
+        page.on("pageerror", (error) => diagnostics.push("pageerror:" + error.message));
+        await page.goto(vite.resolvedUrls!.local[0]! + "__semio-gis-child.html", { timeout: 15000 });
+        const result = await page.evaluate(
+          async ({ url, sha256, byteLength, transport }) => {
+            const childApi = await import(/* @vite-ignore */ url);
+            const fetchBody = async (path: string, signal: AbortSignal): Promise<ArrayBuffer> => {
+              const response = await fetch(path, { signal, redirect: "error" });
+              if (!response.ok || response.redirected || response.headers.get("content-length") !== String(byteLength)) {
+                void response.body?.cancel().catch(() => {});
+                throw new Error("GIS local transport headers");
+              }
+              const bytes = await response.arrayBuffer();
+              if (bytes.byteLength !== byteLength) {
+                new Uint8Array(bytes).fill(0);
+                throw new Error("GIS local transport length");
+              }
+              return bytes;
+            };
+            const stalledAbort = new AbortController();
+            const stalled = await childApi.reserveBrowserActorChild({ actorId: "real-gis-describe-law", activationGeneration: 1n, bundleSha256: sha256, bundleByteLength: byteLength }, stalledAbort.signal);
+            const stalledTimer = setTimeout(() => stalledAbort.abort(), transport.stallMs);
+            let unexpected: ArrayBuffer | undefined;
+            try {
+              unexpected = await fetchBody("/__semio-gis-child-stall", stalledAbort.signal);
+              throw new Error("GIS stall unexpectedly completed");
+            } catch (error) {
+              if (!stalledAbort.signal.aborted) throw error;
+            } finally {
+              clearTimeout(stalledTimer);
+              stalledAbort.abort();
+              if (unexpected) new Uint8Array(unexpected).fill(0);
+              stalled.close();
+            }
+            if (childApi.browserActorChildCapacity().actors !== 0 || childApi.browserActorChildCapacity().bytes !== 0) throw new Error("GIS stalled body retained child");
+            const abort = new AbortController();
+            let owner: any, timer: ReturnType<typeof setTimeout> | undefined;
+            let guest: Uint8Array | undefined, source: ArrayBuffer | undefined;
+            try {
+              owner = await childApi.reserveBrowserActorChild({ actorId: "real-gis-describe-law", activationGeneration: 2n, bundleSha256: sha256, bundleByteLength: byteLength }, abort.signal);
+              timer = setTimeout(() => abort.abort(), transport.bodyMs);
+              const bytes = (source = await fetchBody("/__semio-gis-child-body", abort.signal));
+              clearTimeout(timer);
+              const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+              if (bytes.byteLength !== byteLength || digest !== sha256) throw new Error("real GIS browser byte identity");
+              await owner.load(bytes);
+              if (bytes.byteLength !== 0 || !owner.progress().sourceDetached) throw new Error("real GIS source not detached");
+              const value = await owner.invoke(["describe", "describe"], []);
+              if (!(value instanceof Uint8Array)) throw new Error("real GIS describe is not bytes");
+              guest = value;
+              const transferCount = owner.progress().resultTransfersDetached;
+              if (transferCount !== 1) throw new Error("real GIS result not detached");
+              owner.close();
+              const capacity = childApi.browserActorChildCapacity();
+              if (capacity.actors !== 0 || capacity.bytes !== 0) throw new Error("real GIS child capacity retained");
+              return { guest: Array.from(guest), stalledBodyRetired: true, sourceDetached: true, transferCount, capacity };
+            } finally {
+              clearTimeout(timer);
+              abort.abort();
+              guest?.fill(0);
+              if (source?.byteLength) new Uint8Array(source).fill(0);
+              owner?.close();
+            }
+          },
+          { url: "/@fs" + join(this.repoRoot, ownerPath, "🧵️child/🟦️.ts"), sha256: actor.sha256, byteLength: actor.byteLength, transport: fixture.localTransport },
+        );
+        const guest = new Uint8Array(result.guest);
+        try {
+          api.verifyBrowserActorDescribeV1(guest, descriptor, codec);
+        } finally {
+          guest.fill(0);
+          result.guest.fill(0);
+        }
+        if (diagnostics.some((value) => value.startsWith("pageerror:"))) throw new Error("real GIS page error");
+        console.log(
+          "browser-actor-gis-describe-native: " +
+            JSON.stringify({
+              receipt: produced.receipt,
+              actorSha256: actor.sha256,
+              actorByteLength: actor.byteLength,
+              normalizedDescriptor: true,
+              stalledBodyRetired: result.stalledBodyRetired,
+              sourceDetached: result.sourceDetached,
+              resultTransfers: result.transferCount,
+              capacity: result.capacity,
+            }) +
+            " passed; no Hub session, renderer, Map mutation or collaboration claim",
+        );
+      } catch (error) {
+        console.error("real-gis-child-diagnostics: " + diagnostics.slice(-16).join("|"));
+        throw error;
+      } finally {
+        await browser?.close();
+        await vite.close();
+      }
+    } finally {
+      actor?.bytes.fill(0);
+      descriptor?.fill(0);
+      build.close();
+      rmSync(work, { recursive: true, force: true });
+    }
+  }
+}
+
+class BrowserActorDocumentReservationCheckScript extends BundleScript {
+  async run(): Promise<void> {
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
+    const fixture = JSON.parse(readFileSync(join(root, "🧵️browser-actor-reservation-v1.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(root, "🧬️browser-actor-reservation-v1.schema.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(schema);
+    if (!validate(fixture)) throw new Error("document child reservation fixture: " + JSON.stringify(validate.errors));
+    const bodyRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
+    const bodySchema = JSON.parse(readFileSync(join(bodyRoot, "🧬️execution-target-body-read-v1.schema.json"), "utf8"));
+    const bodyFixture = JSON.parse(readFileSync(join(bodyRoot, "🧵️execution-target-body-read-v1.json"), "utf8"));
+    if (!new Ajv({ strict: true }).compile(bodySchema)(bodyFixture)) throw new Error("execution target body fixture");
+    const sessionFixture = JSON.parse(readFileSync(join(root, "🧵️browser-actor-session-v1.json"), "utf8"));
+    const sessionSchema = JSON.parse(readFileSync(join(root, "🧬️browser-actor-session-v1.schema.json"), "utf8"));
+    if (!new Ajv({ strict: true }).compile(sessionSchema)(sessionFixture)) throw new Error("document actor session fixture");
+    const bootstrapFixture = JSON.parse(readFileSync(join(root, "🧵️artifact-bootstrap-owner-v1.json"), "utf8"));
+    const bootstrapSchema = JSON.parse(readFileSync(join(root, "🧬️artifact-bootstrap-owner-v1.schema.json"), "utf8"));
+    if (!new Ajv({ strict: true }).compile(bootstrapSchema)(bootstrapFixture)) throw new Error("document bootstrap owner fixture");
+    runCmd(
+      "bun",
+      [
+        "nx",
+        "run",
+        "@semio-tech/framework-os:test-long",
+        "--skip-nx-cache",
+        "--",
+        "--run",
+        "-t",
+        "artifact bootstrap atomic restore|execution target body reader|browser document actor reservation|browser execution target lease|browser GIS viewer exposes localized renderer-unavailable",
+      ],
+      { cwd: this.repoRoot, ...orchestratorBudgetOpts() },
+    );
+    console.log(
+      "browser-actor-document-reservation: AJV=4 bootstrap-ownership=" +
+        bootstrapFixture.cases.length +
+        " body-read=7 ownership=16 cases=" +
+        fixture.cases.length +
+        " lifecycle=" +
+        fixture.lifecycle.length +
+        " session-activation=" +
+        sessionFixture.cases.length +
+        " passed; reserved-only rows fetch/load=0, Session rows exercise mocked child, real GIS Chromium remains separate",
+    );
   }
 }
 
@@ -3895,7 +5350,8 @@ async function proveSpacePublicBoundaryFixture(repoRoot: string): Promise<void> 
   const validateMember = ajv.getSchema(`${schema.$id}#/$defs/memberDetail`);
   const validateAuthor = ajv.getSchema(`${schema.$id}#/$defs/authorDetail`);
   if (!validateFixture?.(fixture)) throw new Error(`space public boundary fixture invalid: ${JSON.stringify(validateFixture?.errors)}`);
-  if (!validatePublic?.(fixture.positives.anonymous) || !validatePublic(fixture.positives.publicNonmember) || !validateMember?.(fixture.positives.member) || !validateAuthor?.(fixture.positives.author)) throw new Error("space public boundary positive projection drift");
+  if (!validatePublic?.(fixture.positives.anonymous) || !validatePublic(fixture.positives.publicNonmember) || !validateMember?.(fixture.positives.member) || !validateAuthor?.(fixture.positives.author))
+    throw new Error("space public boundary positive projection drift");
   const publicBytes = JSON.stringify([fixture.positives.anonymous, fixture.positives.publicNonmember]);
   for (const key of fixture.forbiddenPublicKeys) if (publicBytes.includes(`\"${key}\"`)) throw new Error(`space public boundary positive leaked ${key}`);
   for (const vector of fixture.hostileMutations) {
@@ -3947,21 +5403,45 @@ async function proveInferenceWalProofFixture(repoRoot: string): Promise<void> {
   const encoded: number[] = [];
   const integer = (value: number): void => {
     let remaining = BigInt(value);
-    do { const byte = Number(remaining & 127n); remaining >>= 7n; encoded.push(byte | (remaining ? 128 : 0)); } while (remaining);
+    do {
+      const byte = Number(remaining & 127n);
+      remaining >>= 7n;
+      encoded.push(byte | (remaining ? 128 : 0));
+    } while (remaining);
   };
-  const bytes = (value: Buffer): void => { integer(value.byteLength); encoded.push(...value); };
+  const bytes = (value: Buffer): void => {
+    integer(value.byteLength);
+    encoded.push(...value);
+  };
   const text = (value: string): void => bytes(Buffer.from(value, "utf8"));
   const command = fixture.command;
-  text(command.mutationId); text(command.documentId); text(command.actor);
-  integer(command.dependencies.length); command.dependencies.forEach(text);
-  text(command.diff.schema); bytes(Buffer.from(command.diff.payloadHex, "hex"));
-  text(command.inverse.schema); bytes(Buffer.from(command.inverse.payloadHex, "hex"));
-  integer(command.timestamp.actor); integer(command.timestamp.physicalMs); integer(command.timestamp.logical);
+  text(command.mutationId);
+  text(command.documentId);
+  text(command.actor);
+  integer(command.dependencies.length);
+  command.dependencies.forEach(text);
+  text(command.diff.schema);
+  bytes(Buffer.from(command.diff.payloadHex, "hex"));
+  text(command.inverse.schema);
+  bytes(Buffer.from(command.inverse.payloadHex, "hex"));
+  integer(command.timestamp.actor);
+  integer(command.timestamp.physicalMs);
+  integer(command.timestamp.logical);
   const canonical = Buffer.from(encoded);
   if (canonical.toString("hex") !== fixture.encodedHex || createHash("sha256").update(canonical).digest("hex") !== fixture.commandHash) throw new Error("independent protocol envelope/hash mismatch");
   const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
-  if (ledger.outbox.commandHex !== fixture.encodedHex || ledger.outbox.commandHash !== fixture.commandHash || ledger.outbox.mutationId !== command.mutationId || ledger.outbox.jobId !== fixture.jobId || ledger.outbox.proposalHash !== fixture.proposalHash || ledger.identity.spaceId !== fixture.scope.spaceId || ledger.identity.documentId !== fixture.scope.documentId) throw new Error("ledger and committed-WAL fixtures disagree on exact command authority");
-  if (createHash("sha256").update(`semio.hub.inference-approval-mutation/v1\0${fixture.jobId}\0${fixture.proposalHash}`).digest("hex").slice(0, 32) !== command.mutationId) throw new Error("committed-WAL mutation does not bind the exact job and proposal");
+  if (
+    ledger.outbox.commandHex !== fixture.encodedHex ||
+    ledger.outbox.commandHash !== fixture.commandHash ||
+    ledger.outbox.mutationId !== command.mutationId ||
+    ledger.outbox.jobId !== fixture.jobId ||
+    ledger.outbox.proposalHash !== fixture.proposalHash ||
+    ledger.identity.spaceId !== fixture.scope.spaceId ||
+    ledger.identity.documentId !== fixture.scope.documentId
+  )
+    throw new Error("ledger and committed-WAL fixtures disagree on exact command authority");
+  if (createHash("sha256").update(`semio.hub.inference-approval-mutation/v1\0${fixture.jobId}\0${fixture.proposalHash}`).digest("hex").slice(0, 32) !== command.mutationId)
+    throw new Error("committed-WAL mutation does not bind the exact job and proposal");
   for (const mismatch of fixture.bindingMismatches) if (mismatch.jobId === fixture.jobId && mismatch.proposalHash === fixture.proposalHash) throw new Error("hostile witness binding was not distinct");
   const outcome = (trace: any): string => {
     if (trace.cancelAfterRecords === 0) return "cancelled";
@@ -4021,17 +5501,25 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
   const digest = (bytes: Buffer): Buffer => Buffer.from(blake3Hex(bytes), "hex");
   const crc = (bytes: Buffer): number => {
     let value = 0xffffffff;
-    for (const byte of bytes) { value ^= byte; for (let bit = 0; bit < 8; bit++) value = (value >>> 1) ^ ((value & 1) ? 0x82f63b78 : 0); }
+    for (const byte of bytes) {
+      value ^= byte;
+      for (let bit = 0; bit < 8; bit++) value = (value >>> 1) ^ (value & 1 ? 0x82f63b78 : 0);
+    }
     return (value ^ 0xffffffff) >>> 0;
   };
   const integer = (value: number, width: 4 | 8): Buffer => {
     const bytes = Buffer.alloc(width);
-    if (width === 4) bytes.writeUInt32LE(value); else bytes.writeBigUInt64LE(BigInt(value));
+    if (width === 4) bytes.writeUInt32LE(value);
+    else bytes.writeBigUInt64LE(BigInt(value));
     return bytes;
   };
   const varint = (value: number): Buffer => {
     const bytes: number[] = [];
-    do { const byte = value % 128; value = Math.floor(value / 128); bytes.push(byte | (value ? 128 : 0)); } while (value);
+    do {
+      const byte = value % 128;
+      value = Math.floor(value / 128);
+      bytes.push(byte | (value ? 128 : 0));
+    } while (value);
     return Buffer.from(bytes);
   };
   type Frame = { start: number; body: number; end: number; next: number; kind: number };
@@ -4039,49 +5527,80 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
     const output: Frame[] = [];
     let at = 32;
     while (at < bytes.length) {
-      const start = at; let length = 0, scale = 1, byte = 128;
+      const start = at;
+      let length = 0,
+        scale = 1,
+        byte = 128;
       for (let count = 0; byte & 128; count++) {
         if (count === 10 || at >= bytes.length) throw new Error("invalid oracle frame length");
-        byte = bytes[at++]; length += (byte & 127) * scale; scale *= 128;
+        byte = bytes[at++];
+        length += (byte & 127) * scale;
+        scale *= 128;
       }
-      const end = at + length, next = end + 8;
+      const end = at + length,
+        next = end + 8;
       if (!Number.isSafeInteger(length) || length < 2 || next > bytes.length || bytes.readUInt32LE(end + 4) !== next - start) throw new Error("invalid oracle frame bounds");
-      output.push({ start, body: at, end, next, kind: bytes[at] }); at = next;
+      output.push({ start, body: at, end, next, kind: bytes[at] });
+      at = next;
     }
     return output;
   };
   const frame = (kind: number, payload: Buffer): Buffer => {
-    const body = Buffer.concat([Buffer.from([kind, 2]), payload]), prefix = varint(body.length);
+    const body = Buffer.concat([Buffer.from([kind, 2]), payload]),
+      prefix = varint(body.length);
     return Buffer.concat([prefix, body, integer(crc(body), 4), integer(prefix.length + body.length + 8, 4)]);
   };
   const build = (test: any): Buffer[] => {
     const segments: Buffer[] = [];
     for (let index = 0; index < test.segments; index++) {
-      const header = Buffer.alloc(32); Buffer.from([137, 83, 80, 82, 13, 10, 26, 10]).copy(header);
-      header.writeUInt16LE(1, 8); header.writeUInt32LE(test.mutation === "missing-required-chain" ? 0 : 1, 12); header.writeUInt32LE(crc(header.subarray(0, 20)), 20);
-      let bytes = header, chain = digest(header), sequence = 1, previousOffset = 0;
+      const header = Buffer.alloc(32);
+      Buffer.from([137, 83, 80, 82, 13, 10, 26, 10]).copy(header);
+      header.writeUInt16LE(1, 8);
+      header.writeUInt32LE(test.mutation === "missing-required-chain" ? 0 : 1, 12);
+      header.writeUInt32LE(crc(header.subarray(0, 20)), 20);
+      let bytes = header,
+        chain = digest(header),
+        sequence = 1,
+        previousOffset = 0;
       let pending: Buffer[] = [];
-      const append = (kind: number, payload: Buffer): void => { pending.push(frame(kind, payload)); };
+      const append = (kind: number, payload: Buffer): void => {
+        pending.push(frame(kind, payload));
+      };
       const commit = (): void => {
         chain = digest(Buffer.concat([chain, ...pending.map(digest)]));
         const length = pending.reduce((sum, item) => sum + item.length, 0);
         const payload = Buffer.concat([integer(sequence++, 8), integer(previousOffset, 8), integer(length, 8), integer(pending.length, 4), Buffer.alloc(4), chain]);
-        previousOffset = bytes.length + length; bytes = Buffer.concat([bytes, ...pending, frame(12, payload)]); pending = [];
+        previousOffset = bytes.length + length;
+        bytes = Buffer.concat([bytes, ...pending, frame(12, payload)]);
+        pending = [];
       };
       const document = Buffer.from(index === 1 && test.mutation === "wrong-segment-document" ? "other-document" : proof.documentKey);
       const previous = index ? Buffer.from(segments[index - 1].subarray(-40, -8)) : Buffer.alloc(0);
       if (index && test.mutation === "wrong-prior-tip") previous[0] ^= 1;
-      append(64, Buffer.concat([varint(document.length), document, integer(index === 1 && test.mutation === "skipped-segment-index" ? 2 : index, 8), Buffer.from([index ? 1 : 0]), previous])); commit();
+      append(64, Buffer.concat([varint(document.length), document, integer(index === 1 && test.mutation === "skipped-segment-index" ? 2 : index, 8), Buffer.from([index ? 1 : 0]), previous]));
+      commit();
       for (const tx of test.segments === 1 ? [1, 2] : [index + 1]) {
-        const command = Buffer.from(proof.encodedHex, "hex"); if (tx === 1) command[command.length - 1] ^= 1;
-        append(65, integer(tx, 8)); append(68, command); append(66, Buffer.concat([integer(tx, 8), integer(1, 4)])); commit();
+        const command = Buffer.from(proof.encodedHex, "hex");
+        if (tx === 1) command[command.length - 1] ^= 1;
+        append(65, integer(tx, 8));
+        append(68, command);
+        append(66, Buffer.concat([integer(tx, 8), integer(1, 4)]));
+        commit();
       }
       segments.push(bytes);
     }
     if (test.mutation.endsWith("crc-repaired")) {
-      const bytes = segments[0], all = frames(bytes);
+      const bytes = segments[0],
+        all = frames(bytes);
       const selected = test.mutation === "record-crc-repaired" ? all.find((item) => item.kind === 68)! : all.filter((item) => item.kind === 12)[1];
-      const offsets: Record<string, number> = { "commit-hash-crc-repaired": 32, "commit-count-crc-repaired": 24, "commit-length-crc-repaired": 16, "commit-sequence-crc-repaired": 0, "commit-offset-crc-repaired": 8, "commit-reserved-crc-repaired": 28 };
+      const offsets: Record<string, number> = {
+        "commit-hash-crc-repaired": 32,
+        "commit-count-crc-repaired": 24,
+        "commit-length-crc-repaired": 16,
+        "commit-sequence-crc-repaired": 0,
+        "commit-offset-crc-repaired": 8,
+        "commit-reserved-crc-repaired": 28,
+      };
       const offset = test.mutation === "record-crc-repaired" ? selected.end - 1 : test.mutation === "noncritical-commit-crc-repaired" ? selected.body + 1 : selected.body + 2 + offsets[test.mutation];
       if (!Number.isSafeInteger(offset)) throw new Error("unknown oracle mutation");
       bytes[offset] ^= ["record-crc-repaired", "noncritical-commit-crc-repaired"].includes(test.mutation) ? 2 : 1;
@@ -4095,16 +5614,33 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
     for (const [relative, bytes] of segments.slice(first).entries()) {
       const index = relative + first;
       if (bytes.readUInt32LE(12) !== 1 || bytes.readUInt32LE(20) !== crc(bytes.subarray(0, 20))) return false;
-      let chain = digest(bytes.subarray(0, 32)), count = 0, length = 0, sequence = 1, previousOffset = 0;
+      let chain = digest(bytes.subarray(0, 32)),
+        count = 0,
+        length = 0,
+        sequence = 1,
+        previousOffset = 0;
       let pending: Buffer[] = [chain];
       const all = frames(bytes);
       for (const [position, item] of all.entries()) {
         const payload = bytes.subarray(item.body + 2, item.end);
         if (bytes[item.body + 1] !== 2 || bytes.readUInt32LE(item.end) !== crc(bytes.subarray(item.body, item.end))) return false;
         if (item.kind === 12) {
-          if (payload.length !== 64 || item.next - item.start !== 75 || payload.readBigUInt64LE(0) !== BigInt(sequence++) || payload.readBigUInt64LE(8) !== BigInt(previousOffset)
-            || payload.readBigUInt64LE(16) !== BigInt(length) || payload.readUInt32LE(24) !== count || payload.readUInt32LE(28) !== 0 || !payload.subarray(32).equals(digest(Buffer.concat(pending)))) return false;
-          chain = Buffer.from(payload.subarray(32)); pending = [chain]; count = 0; length = 0; previousOffset = item.start;
+          if (
+            payload.length !== 64 ||
+            item.next - item.start !== 75 ||
+            payload.readBigUInt64LE(0) !== BigInt(sequence++) ||
+            payload.readBigUInt64LE(8) !== BigInt(previousOffset) ||
+            payload.readBigUInt64LE(16) !== BigInt(length) ||
+            payload.readUInt32LE(24) !== count ||
+            payload.readUInt32LE(28) !== 0 ||
+            !payload.subarray(32).equals(digest(Buffer.concat(pending)))
+          )
+            return false;
+          chain = Buffer.from(payload.subarray(32));
+          pending = [chain];
+          count = 0;
+          length = 0;
+          previousOffset = item.start;
         } else {
           if (position === 0) {
             const document = Buffer.from(proof.documentKey);
@@ -4112,7 +5648,9 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
             const expected = Buffer.concat([varint(document.length), document, integer(index, 8), Buffer.from([index ? 1 : 0]), tip]);
             if (item.kind !== 64 || !payload.equals(expected)) return false;
           } else if (item.kind === 64 || ![65, 66, 68].includes(item.kind)) return false;
-          pending.push(digest(bytes.subarray(item.start, item.next))); count++; length += item.next - item.start;
+          pending.push(digest(bytes.subarray(item.start, item.next)));
+          count++;
+          length += item.next - item.start;
         }
       }
       if (count !== 0 || sequence === 1 || all.at(-1)?.kind !== 12) return false;
@@ -4127,13 +5665,16 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
     if (accepted(segments) !== test.accepted) throw new Error(`WAL chain oracle mismatch: ${test.name}`);
   }
   for (const owner of fixture.hashingOwnership) {
-    if (owner.expected !== (owner.interrupt === "deadline" ? "expired" : "cancelled") || owner.hashingSteps !== 1 || owner.stoppedProgress !== 0 || owner.heldActive !== 1 || owner.releasedActive !== 0) throw new Error("hashing interrupt ownership fixture differs");
+    if (owner.expected !== (owner.interrupt === "deadline" ? "expired" : "cancelled") || owner.hashingSteps !== 1 || owner.stoppedProgress !== 0 || owner.heldActive !== 1 || owner.releasedActive !== 0)
+      throw new Error("hashing interrupt ownership fixture differs");
   }
   for (const boundary of fixture.retainedBoundaries) {
     const segments = build({ segments: 2, mutation: boundary.mutation });
     if (accepted(segments, 1, false) !== boundary.replayAccepted || accepted(segments, 1, true) !== boundary.genesisProofAccepted) throw new Error("unanchored retained suffix became a genesis proof");
   }
-  console.log(`inference-wal-chain-oracle: exact=${fixture.cases.length} hashing-ownership=${fixture.hashingOwnership.length} retained-boundaries=${fixture.retainedBoundaries.length} ajv=1 crc-valid=14 blake3-known-answer=1; Rust replay and third-party blake3 parity pending`);
+  console.log(
+    `inference-wal-chain-oracle: exact=${fixture.cases.length} hashing-ownership=${fixture.hashingOwnership.length} retained-boundaries=${fixture.retainedBoundaries.length} ajv=1 crc-valid=14 blake3-known-answer=1; Rust replay and third-party blake3 parity pending`,
+  );
 }
 
 async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<void> {
@@ -4149,16 +5690,31 @@ async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<
       for (const key of test.path.slice(0, -1)) at = at[key];
       at[test.path.at(-1)] = test.value;
     }
-    const descriptor = row.descriptor, owner = descriptor.owner, selected = row.package;
+    const descriptor = row.descriptor,
+      owner = descriptor.owner,
+      selected = row.package;
     const services = row.services.filter((service: any) => service.inferenceSchema === "s.gis.gismap.inference");
     const service = services[0];
-    const accepted = row.scope.spaceId === descriptor.spaceId && row.scope.documentId === descriptor.documentId
-      && descriptor.artifactKind === "s.gis.gismap" && descriptor.artifactSchema === "gis.map"
-      && owner.pluginId === "gis" && owner.packageId === "semio:gis"
-      && selected.pluginId === owner.pluginId && selected.packageId === owner.packageId && selected.version === owner.version && selected.componentSha256 === owner.packageHash
-      && row.services.length <= 64 && services.length === 1 && service.owner === "gis" && service.contributor === "gis" && service.artifactKind === descriptor.artifactKind
-      && service.artifactSchema === "s.gis.gismap" && service.documentSchema === descriptor.artifactSchema && service.dependsOn.length === 0
-      && [service.artifactSchemaVersion, service.documentSchemaVersion, service.inferenceSchemaVersion, service.algorithmVersion, service.policyVersion].every((version) => version === 1);
+    const accepted =
+      row.scope.spaceId === descriptor.spaceId &&
+      row.scope.documentId === descriptor.documentId &&
+      descriptor.artifactKind === "s.gis.gismap" &&
+      descriptor.artifactSchema === "gis.map" &&
+      owner.pluginId === "gis" &&
+      owner.packageId === "semio:gis" &&
+      selected.pluginId === owner.pluginId &&
+      selected.packageId === owner.packageId &&
+      selected.version === owner.version &&
+      selected.componentSha256 === owner.packageHash &&
+      row.services.length <= 64 &&
+      services.length === 1 &&
+      service.owner === "gis" &&
+      service.contributor === "gis" &&
+      service.artifactKind === descriptor.artifactKind &&
+      service.artifactSchema === "s.gis.gismap" &&
+      service.documentSchema === descriptor.artifactSchema &&
+      service.dependsOn.length === 0 &&
+      [service.artifactSchemaVersion, service.documentSchemaVersion, service.inferenceSchemaVersion, service.algorithmVersion, service.policyVersion].every((version) => version === 1);
     if (accepted !== test.accepted) throw new Error(`catalog selection mismatch: ${test.name}`);
   }
   console.log(`inference-catalog-projection-oracle: exact=${fixture.cases.length}; no native provider or route authority`);
@@ -4210,15 +5766,24 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   const bounds = { lonMin: sorted.lon[0]!, lonMax: sorted.lon[sorted.lon.length - 1]!, latMin: sorted.lat[0]!, latMax: sorted.lat[sorted.lat.length - 1]! };
   if (fold[0] !== bounds.lonMin || fold[1] !== bounds.lonMax || fold[2] !== bounds.latMin || fold[3] !== bounds.latMax) throw new Error("two independent bound folds disagree");
   const expected = fixture.base.expectedInference;
-  if (JSON.stringify({ positionCount: fixture.base.snapshot.positions.length, routeCount: fixture.base.snapshot.routes.length, regionCount: fixture.base.snapshot.regions.length, bounds }) !== JSON.stringify(expected)) throw new Error("independent counts/bounds differ from the fixture");
+  if (JSON.stringify({ positionCount: fixture.base.snapshot.positions.length, routeCount: fixture.base.snapshot.routes.length, regionCount: fixture.base.snapshot.regions.length, bounds }) !== JSON.stringify(expected))
+    throw new Error("independent counts/bounds differ from the fixture");
   const ring: number[][] = region.item.data.ring;
-  const corners = [[bounds.lonMin, bounds.latMin], [bounds.lonMax, bounds.latMin], [bounds.lonMax, bounds.latMax], [bounds.lonMin, bounds.latMax], [bounds.lonMin, bounds.latMin]];
+  const corners = [
+    [bounds.lonMin, bounds.latMin],
+    [bounds.lonMax, bounds.latMin],
+    [bounds.lonMax, bounds.latMax],
+    [bounds.lonMin, bounds.latMax],
+    [bounds.lonMin, bounds.latMin],
+  ];
   if (ring.length !== 5 || JSON.stringify(ring) !== JSON.stringify(corners)) throw new Error("proposal ring is not the closed bounds rectangle of the base snapshot");
-  if (fixture.preview.schema !== "semio.hub.gis-map-inference-preview/v1"
-    || fixture.preview.jobId !== fixture.sampleJobId
-    || fixture.preview.proposalHash !== fixture.proposalHash
-    || fixture.preview.regionId !== regionId
-    || JSON.stringify(fixture.preview.ring) !== JSON.stringify(corners)) {
+  if (
+    fixture.preview.schema !== "semio.hub.gis-map-inference-preview/v1" ||
+    fixture.preview.jobId !== fixture.sampleJobId ||
+    fixture.preview.proposalHash !== fixture.proposalHash ||
+    fixture.preview.regionId !== regionId ||
+    JSON.stringify(fixture.preview.ring) !== JSON.stringify(corners)
+  ) {
     throw new Error("owner preview is not the exact bounded projection of the canonical proposal");
   }
   const transitions: Record<string, readonly string[]> = {
@@ -4248,9 +5813,16 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   for (const rejection of fixture.approvalRejections) if (!statuses.has(rejection.code)) throw new Error(`approval rejection ${rejection.name} uses an unpublished code`);
   const frozen = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🧊️gis-map-frozen-binding-v1", "🔣️.json"), "utf8"));
   const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
-  if (fixture.binding.digest !== frozen.expectedDigest || fixture.binding.componentBlake3 !== frozen.binding.package.componentBlake3 || fixture.binding.packageVersion !== frozen.binding.package.version
-    || JSON.stringify(fixture.binding) !== JSON.stringify(ledger.identity.binding)) throw new Error("proposal, frozen-binding and ledger corpora disagree on the frozen executable identity");
-  console.log(`gis-map-proposal-oracle: ajv=1 hostile=${hostile.length} node-sha256=2 independent-bounds=2 preview=1 lifecycle=${fixture.lifecycle.length + fixture.cancelLifecycle.length} visibility=${fixture.visibility.length} errors=${fixture.errors.length} approval-rejections=${fixture.approvalRejections.length} cross-fixture=1; no external model provider, no WGPU rendering`);
+  if (
+    fixture.binding.digest !== frozen.expectedDigest ||
+    fixture.binding.componentBlake3 !== frozen.binding.package.componentBlake3 ||
+    fixture.binding.packageVersion !== frozen.binding.package.version ||
+    JSON.stringify(fixture.binding) !== JSON.stringify(ledger.identity.binding)
+  )
+    throw new Error("proposal, frozen-binding and ledger corpora disagree on the frozen executable identity");
+  console.log(
+    `gis-map-proposal-oracle: ajv=1 hostile=${hostile.length} node-sha256=2 independent-bounds=2 preview=1 lifecycle=${fixture.lifecycle.length + fixture.cancelLifecycle.length} visibility=${fixture.visibility.length} errors=${fixture.errors.length} approval-rejections=${fixture.approvalRejections.length} cross-fixture=1; no external model provider, no WGPU rendering`,
+  );
   return hostile.length;
 }
 
@@ -4261,10 +5833,14 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
   if (!validate(fixture)) throw new Error(`invalid frozen GIS Map binding fixture: ${JSON.stringify(validate.errors)}`);
-  const digest = (binding: unknown): string => createHash("sha256").update(Buffer.concat([Buffer.from("semio.hub.gis-map-frozen-binding/v1", "utf8"), Buffer.from([0])])).update(JSON.stringify(binding)).digest("hex");
+  const digest = (binding: unknown): string =>
+    createHash("sha256")
+      .update(Buffer.concat([Buffer.from("semio.hub.gis-map-frozen-binding/v1", "utf8"), Buffer.from([0])]))
+      .update(JSON.stringify(binding))
+      .digest("hex");
   if (digest(fixture.binding) !== fixture.expectedDigest) throw new Error("frozen GIS Map binding digest differs from the neutral fixture");
-  const leafPaths = (value: unknown, path: string[] = []): string[] => value !== null && typeof value === "object" && !Array.isArray(value)
-    ? Object.entries(value).flatMap(([key, child]) => leafPaths(child, [...path, key])) : [JSON.stringify(path)];
+  const leafPaths = (value: unknown, path: string[] = []): string[] =>
+    value !== null && typeof value === "object" && !Array.isArray(value) ? Object.entries(value).flatMap(([key, child]) => leafPaths(child, [...path, key])) : [JSON.stringify(path)];
   const remainingPaths = new Set(leafPaths(fixture.binding));
   const seen = new Set<string>();
   for (const hostile of fixture.hostile) {
@@ -4284,12 +5860,26 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
   const trusted = readFileSync(join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🦀️.rs"), "utf8");
   const startup = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "🚀️bin.rs"), "utf8");
   const required = [
-    "VerifiedGisMapArtifactBindingV1", "Arc<VerifiedTrustedCatalog>", "selected_document_open", "gis_map_inference_service",
-    "executable_identity", "component_blake3", "descriptor_byte_sha256", "parent_dialect", "DocumentOpenSurfaceRoleV1::Editor",
-    "grant.read", "grant.write", "grant.observe", "semio.hub.gis-map-frozen-binding/v1\\0",
+    "VerifiedGisMapArtifactBindingV1",
+    "Arc<VerifiedTrustedCatalog>",
+    "selected_document_open",
+    "gis_map_inference_service",
+    "executable_identity",
+    "component_blake3",
+    "descriptor_byte_sha256",
+    "parent_dialect",
+    "DocumentOpenSurfaceRoleV1::Editor",
+    "grant.read",
+    "grant.write",
+    "grant.observe",
+    "semio.hub.gis-map-frozen-binding/v1\\0",
   ];
-  if (required.some((needle) => !catalog.includes(needle)) || !trusted.includes("pub fn selected_document_open")
-      || !startup.includes("verified_catalog: Option<Arc<VerifiedTrustedCatalog>>") || !startup.includes("gis_map_binding: Option<Arc<VerifiedGisMapArtifactBindingV1>>")) {
+  if (
+    required.some((needle) => !catalog.includes(needle)) ||
+    !trusted.includes("pub fn selected_document_open") ||
+    !startup.includes("verified_catalog: Option<Arc<VerifiedTrustedCatalog>>") ||
+    !startup.includes("gis_map_binding: Option<Arc<VerifiedGisMapArtifactBindingV1>>")
+  ) {
     throw new Error("hub does not retain the exact verified GIS Map catalog and executable binding");
   }
   const checks = fixture.hostile.length + required.length + 5;
@@ -4314,10 +5904,11 @@ class GisInferenceLedgerOracleScript extends BundleScript {
     const identityRoot = join(this.repoRoot, "🌎️hub/🧪️fixtures/🖥️inference-server-identity-v1");
     const identityFixture = JSON.parse(readFileSync(join(identityRoot, "🔣️.json"), "utf8"));
     if (!ajv.compile(JSON.parse(readFileSync(join(identityRoot, "🧬️.schema.json"), "utf8")))(identityFixture)) throw new Error("invalid server identity corpus");
-    for (const row of identityFixture.cases) for (const field of identityFixture.fields) {
-      const candidate = { ...fixture.identity, headOrdinal: 1, headEditId: "0".repeat(32), [field]: row.value };
-      if (validateIdentity(candidate) !== row.accepted) throw new Error(`server identity parity: ${row.name}/${field}`);
-    }
+    for (const row of identityFixture.cases)
+      for (const field of identityFixture.fields) {
+        const candidate = { ...fixture.identity, headOrdinal: 1, headEditId: "0".repeat(32), [field]: row.value };
+        if (validateIdentity(candidate) !== row.accepted) throw new Error(`server identity parity: ${row.name}/${field}`);
+      }
     const maximumId = "a".repeat(identityFixture.maximumBytes);
     const documentKey = `v1:${maximumId.length}:${maximumId.length}:${maximumId}${maximumId}`;
     const actor = `user:${maximumId}#session:${maximumId}`;
@@ -4326,7 +5917,7 @@ class GisInferenceLedgerOracleScript extends BundleScript {
     for (const hostile of fixture.hostileIdentities) {
       const candidate = JSON.parse(JSON.stringify(fixture.identity));
       let at = candidate;
-      for (const segment of hostile.path.slice(0, -1)) at = (at[segment] ??= {});
+      for (const segment of hostile.path.slice(0, -1)) at = at[segment] ??= {};
       at[hostile.path[hostile.path.length - 1]] = hostile.value;
       if (validateIdentity(candidate)) throw new Error(`accepted hostile inference identity: ${hostile.name}`);
     }
@@ -4339,15 +5930,24 @@ class GisInferenceLedgerOracleScript extends BundleScript {
       const candidate = { ...fixture.identity.request, [hostile.field]: hostile.value };
       if (validate(candidate)) throw new Error(`AJV admitted ${hostile.name}`);
       let rejected = false;
-      try { parseInferenceRequestV1(candidate); } catch { rejected = true; }
+      try {
+        parseInferenceRequestV1(candidate);
+      } catch {
+        rejected = true;
+      }
       if (!rejected) throw new Error(`TypeScript admitted ${hostile.name}`);
     }
     const hash = (value: string) => createHash("sha256").update(value).digest("hex");
     if (hash(fixture.input) !== fixture.identity.inputHash || hash(`semio.hub.inference-identity/v1\0${JSON.stringify(fixture.identity)}`) !== fixture.identityDigest) throw new Error("neutral input/identity hash mismatch");
     const outbox = fixture.outbox;
     const jobId = hash(`semio.hub.inference-job-id/v1\0${fixture.identityDigest}`).slice(0, 32);
-    if (jobId !== outbox.jobId || hash(outbox.proposal) !== outbox.proposalHash || createHash("sha256").update(Buffer.from(outbox.commandHex, "hex")).digest("hex") !== outbox.commandHash
-      || hash(`semio.hub.inference-approval-mutation/v1\0${jobId}\0${outbox.proposalHash}`).slice(0, 32) !== outbox.mutationId) throw new Error("neutral durable outbox identity mismatch");
+    if (
+      jobId !== outbox.jobId ||
+      hash(outbox.proposal) !== outbox.proposalHash ||
+      createHash("sha256").update(Buffer.from(outbox.commandHex, "hex")).digest("hex") !== outbox.commandHash ||
+      hash(`semio.hub.inference-approval-mutation/v1\0${jobId}\0${outbox.proposalHash}`).slice(0, 32) !== outbox.mutationId
+    )
+      throw new Error("neutral durable outbox identity mismatch");
     const snapshot = JSON.parse(fixture.input);
     const points: number[][] = [];
     const scan = (value: any): void => {
@@ -4364,16 +5964,33 @@ class GisInferenceLedgerOracleScript extends BundleScript {
     const result = { positionCount: snapshot.positions.length, routeCount: snapshot.routes.length, regionCount: snapshot.regions.length, bounds };
     if (JSON.stringify(result) !== JSON.stringify(fixture.expectedInference)) throw new Error("independent deterministic GIS bounds/counts differ");
     for (const trace of fixture.traces) {
-      let state = "accepted", proposal = "none", events = 1, hasResult = false;
+      let state = "accepted",
+        proposal = "none",
+        events = 1,
+        hasResult = false;
       for (const operation of trace.operations) {
-        if (operation === "start" && state === "accepted") { state = "running"; events++; }
-        else if (operation === "succeed" && state === "running") { state = "succeeded"; proposal = "offered"; hasResult = true; events++; }
-        else if (operation === "cancel" && (state === "accepted" || state === "running")) { state = "cancelled"; events++; }
-        else if (operation === "cancel" && state === "succeeded" && proposal === "offered") { proposal = "cancelled"; hasResult = false; events++; }
+        if (operation === "start" && state === "accepted") {
+          state = "running";
+          events++;
+        } else if (operation === "succeed" && state === "running") {
+          state = "succeeded";
+          proposal = "offered";
+          hasResult = true;
+          events++;
+        } else if (operation === "cancel" && (state === "accepted" || state === "running")) {
+          state = "cancelled";
+          events++;
+        } else if (operation === "cancel" && state === "succeeded" && proposal === "offered") {
+          proposal = "cancelled";
+          hasResult = false;
+          events++;
+        }
       }
       if (state !== trace.state || proposal !== trace.proposalState || events !== trace.eventCount || hasResult !== trace.hasResult) throw new Error(`neutral lifecycle mismatch ${trace.name}`);
     }
-    console.log(`gis-inference-ledger-oracle: traces=${fixture.traces.length} hostile=${fixture.hostileRequests.length} identity-hostile=${fixture.hostileIdentities.length} sqlite-integers=${fixture.sqliteIntegers.length} ajv+typescript=1 hashes=6 independent-bounds=1; no executor/route/approval claim`);
+    console.log(
+      `gis-inference-ledger-oracle: traces=${fixture.traces.length} hostile=${fixture.hostileRequests.length} identity-hostile=${fixture.hostileIdentities.length} sqlite-integers=${fixture.sqliteIntegers.length} ajv+typescript=1 hashes=6 independent-bounds=1; no executor/route/approval claim`,
+    );
     await proveInferenceWalProofFixture(this.repoRoot);
     await proveInferenceCommandFixture(this.repoRoot);
     await proveInferenceApprovalRequestFixture(this.repoRoot);
@@ -4400,7 +6017,11 @@ async function proveInferenceApprovalRequestFixture(repoRoot: string): Promise<v
   const validate = ajv.getSchema(`${schema.$id}#/$defs/request`)!;
   const decode = (bytes: Buffer): boolean => {
     if (bytes.length > fixture.maximumBytes) return false;
-    try { return validate(JSON.parse(bytes.toString("utf8"))) as boolean; } catch { return false; }
+    try {
+      return validate(JSON.parse(bytes.toString("utf8"))) as boolean;
+    } catch {
+      return false;
+    }
   };
   const request = Buffer.from(JSON.stringify(fixture.request));
   if (!decode(request)) throw new Error("valid inference approval intent denied");
@@ -4424,33 +6045,77 @@ async function proveInferenceAuthorFixture(repoRoot: string): Promise<void> {
   const { Database } = await import("bun:sqlite");
   const database = new Database(":memory:");
   try {
-    database.exec("CREATE TABLE session(user TEXT, session TEXT, generation INTEGER, expires INTEGER, revoked INTEGER); INSERT INTO session VALUES('author','session',1,2000,0); CREATE TABLE membership(space TEXT,user TEXT,role TEXT); INSERT INTO membership VALUES('space','author','author')");
-    const predicate = database.query("SELECT EXISTS(SELECT 1 FROM session s JOIN membership m ON m.user=s.user WHERE s.user=?1 AND s.session=?2 AND s.generation=?3 AND s.revoked=0 AND s.expires>?4 AND s.expires>?9 AND ?9>=?4 AND m.space=?5 AND m.role='author' AND ?5='space' AND ?6='document' AND ?4>=0 AND ?7=0 AND ?8=0) AS accepted");
+    database.exec(
+      "CREATE TABLE session(user TEXT, session TEXT, generation INTEGER, expires INTEGER, revoked INTEGER); INSERT INTO session VALUES('author','session',1,2000,0); CREATE TABLE membership(space TEXT,user TEXT,role TEXT); INSERT INTO membership VALUES('space','author','author')",
+    );
+    const predicate = database.query(
+      "SELECT EXISTS(SELECT 1 FROM session s JOIN membership m ON m.user=s.user WHERE s.user=?1 AND s.session=?2 AND s.generation=?3 AND s.revoked=0 AND s.expires>?4 AND s.expires>?9 AND ?9>=?4 AND m.space=?5 AND m.role='author' AND ?5='space' AND ?6='document' AND ?4>=0 AND ?7=0 AND ?8=0) AS accepted",
+    );
     let accepted = 0;
     const seen = new Set<string>();
     for (const row of fixture.cases) {
       if (seen.has(row.operation)) throw new Error("duplicate inference Author operation");
       seen.add(row.operation);
       database.exec("UPDATE session SET revoked=0; DELETE FROM membership; INSERT INTO membership VALUES('space','author','author')");
-      let user = "author", session = "session", generation = 1, now = 1000, returnedAt = 1000, space = "space", document = "document", cancelled = 0, deadline = 0;
+      let user = "author",
+        session = "session",
+        generation = 1,
+        now = 1000,
+        returnedAt = 1000,
+        space = "space",
+        document = "document",
+        cancelled = 0,
+        deadline = 0;
       switch (row.operation) {
-        case "author": break;
-        case "cross-space": space = "other"; break;
-        case "cross-document": document = "other"; break;
-        case "wrong-user": user = "other"; break;
-        case "wrong-session": session = "other"; break;
-        case "rotated-generation": generation = 2; break;
-        case "spectator": database.exec("UPDATE membership SET role='spectator'"); break;
-        case "removed-member": database.exec("DELETE FROM membership"); break;
-        case "revoked": database.exec("UPDATE session SET revoked=1"); break;
-        case "expiry-exact": now = returnedAt = 2000; break;
-        case "expiry-past": now = returnedAt = 2001; break;
-        case "expiry-after-read": returnedAt = 2000; break;
-        case "clock-regressed": returnedAt = 999; break;
-        case "cancelled": cancelled = 1; break;
-        case "deadline": deadline = 1; break;
-        case "negative-clock": now = -1; break;
-        default: throw new Error("unknown inference Author operation");
+        case "author":
+          break;
+        case "cross-space":
+          space = "other";
+          break;
+        case "cross-document":
+          document = "other";
+          break;
+        case "wrong-user":
+          user = "other";
+          break;
+        case "wrong-session":
+          session = "other";
+          break;
+        case "rotated-generation":
+          generation = 2;
+          break;
+        case "spectator":
+          database.exec("UPDATE membership SET role='spectator'");
+          break;
+        case "removed-member":
+          database.exec("DELETE FROM membership");
+          break;
+        case "revoked":
+          database.exec("UPDATE session SET revoked=1");
+          break;
+        case "expiry-exact":
+          now = returnedAt = 2000;
+          break;
+        case "expiry-past":
+          now = returnedAt = 2001;
+          break;
+        case "expiry-after-read":
+          returnedAt = 2000;
+          break;
+        case "clock-regressed":
+          returnedAt = 999;
+          break;
+        case "cancelled":
+          cancelled = 1;
+          break;
+        case "deadline":
+          deadline = 1;
+          break;
+        case "negative-clock":
+          now = -1;
+          break;
+        default:
+          throw new Error("unknown inference Author operation");
       }
       const result = predicate.get(user, session, generation, now, space, document, cancelled, deadline, returnedAt) as { accepted: number };
       if ((result.accepted === 1) !== row.accepted) throw new Error(`inference Author predicate mismatch: ${row.operation}`);
@@ -4458,7 +6123,9 @@ async function proveInferenceAuthorFixture(repoRoot: string): Promise<void> {
     }
     if (accepted !== 1) throw new Error("inference Author corpus must admit exactly one case");
     console.log(`inference-author-oracle: cases=${fixture.cases.length} accepted=${accepted} ajv+sqlite=1; no retained grant or submit authority`);
-  } finally { database.close(); }
+  } finally {
+    database.close();
+  }
 }
 
 /** 🧷 Independently evaluates the exact GIS selection and admission fences. */
@@ -4491,16 +6158,29 @@ async function proveTrustedCatalogIdentityRolesFixture(repoRoot: string): Promis
   const bytes = Buffer.from(source.componentHex, "hex");
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   if (sha256 !== source.componentSha256 || source.componentSha256 === source.componentBlake3) throw new Error("catalog hash roles lost their independent byte identities");
-  const selected = source.bundle.packages[0], target = selected.openTargets[0];
+  const selected = source.bundle.packages[0],
+    target = selected.openTargets[0];
   if (!target.artifactKind.startsWith("s.") || target.surfaceId !== `${target.artifactKind}@1/*#editor` || target.appId !== target.surfaceId) throw new Error("catalog fixture kind/surface is not exact canonical identity");
   for (const test of fixture.cases) {
-    let ownerHash = source.componentSha256, kind = target.artifactKind, surface = target.surfaceId;
+    let ownerHash = source.componentSha256,
+      kind = target.artifactKind,
+      surface = target.surfaceId;
     switch (test.change) {
-      case "blake3-owner": ownerHash = source.componentBlake3; break;
-      case "descriptor-owner": ownerHash = selected.descriptor.sha256; break;
-      case "zero-owner": ownerHash = "00".repeat(32); break;
-      case "bare-kind": kind = kind.slice(2); break;
-      case "bare-surface": surface = surface.slice(2); break;
+      case "blake3-owner":
+        ownerHash = source.componentBlake3;
+        break;
+      case "descriptor-owner":
+        ownerHash = selected.descriptor.sha256;
+        break;
+      case "zero-owner":
+        ownerHash = "00".repeat(32);
+        break;
+      case "bare-kind":
+        kind = kind.slice(2);
+        break;
+      case "bare-surface":
+        surface = surface.slice(2);
+        break;
     }
     const codec = ownerHash === sha256 && kind === selected.nativeCodecs[0].artifactKind;
     const open = codec && surface === target.appId;
@@ -4512,7 +6192,8 @@ async function proveTrustedCatalogIdentityRolesFixture(repoRoot: string): Promis
 type TrustedBootstrapCodec = { readonly artifactKind: string; readonly artifactSchema: string; readonly packSchemaHash: string };
 
 function trustedBootstrapCodecOrder(left: TrustedBootstrapCodec, right: TrustedBootstrapCodec): number {
-  const a = JSON.stringify([left.artifactKind, left.artifactSchema, left.packSchemaHash]), b = JSON.stringify([right.artifactKind, right.artifactSchema, right.packSchemaHash]);
+  const a = JSON.stringify([left.artifactKind, left.artifactSchema, left.packSchemaHash]),
+    b = JSON.stringify([right.artifactKind, right.artifactSchema, right.packSchemaHash]);
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
@@ -4538,7 +6219,8 @@ function trustedBootstrapBrowserActorV1(candidate: unknown, source: DocumentBrow
   const { path, byteLength, ...identity } = row;
   const plan = parseDocumentOpenBrowserActorV1(identity, source, renderer);
   const lease = documentBrowserActorLeaseFromPlanV1(plan, source, renderer, byteLength);
-  if (lease.kind !== "closed-browser-actor" || typeof path !== "string" || Buffer.byteLength(path, "utf8") > 1024 || /[\\:\p{Cc}]/u.test(path) || path.split("/").some(part => part === "" || part === "." || part === "..")) throw new Error("trusted browser actor path or identity is invalid");
+  if (lease.kind !== "closed-browser-actor" || typeof path !== "string" || Buffer.byteLength(path, "utf8") > 1024 || /[\\:\p{Cc}]/u.test(path) || path.split("/").some((part) => part === "" || part === "." || part === ".."))
+    throw new Error("trusted browser actor path or identity is invalid");
   return Object.freeze({ ...lease, path });
 }
 
@@ -4565,7 +6247,13 @@ function trustedBootstrapProfileEncoding(profile: any, codecs: Readonly<Record<"
     for (const value of [selected.pluginId, selected.packageId, selected.version, selected.role, selected.componentSha256, selected.componentBlake3, selected.descriptorSha256]) {
       pieces.push(trustedBootstrapField(/^[0-9a-f]{64}$/u.test(value) ? Buffer.from(value, "hex") : value));
     }
-    pieces.push(trustedBootstrapBrowserActorEncoding(selected.browserActor, { componentSha256: selected.componentSha256, descriptorByteSha256: selected.descriptorSha256 }, selected.pluginId === profile.openTarget.pluginId ? profile.openTarget.rendererTarget : "react"));
+    pieces.push(
+      trustedBootstrapBrowserActorEncoding(
+        selected.browserActor,
+        { componentSha256: selected.componentSha256, descriptorByteSha256: selected.descriptorSha256 },
+        selected.pluginId === profile.openTarget.pluginId ? profile.openTarget.rendererTarget : "react",
+      ),
+    );
     pieces.push(trustedBootstrapCount(0));
     const rows = [...codecs[selected.pluginId as "gis" | "stdio"]].sort(trustedBootstrapCodecOrder);
     pieces.push(trustedBootstrapCount(rows.length));
@@ -4594,7 +6282,8 @@ function trustedBootstrapProfileEncoding(profile: any, codecs: Readonly<Record<"
     profile.openTarget.role,
     profile.openTarget.rendererTarget,
     Buffer.from([Number(profile.openTarget.grant.read), Number(profile.openTarget.grant.write), Number(profile.openTarget.grant.observe)]),
-  ]) pieces.push(trustedBootstrapField(value));
+  ])
+    pieces.push(trustedBootstrapField(value));
   return Buffer.concat(pieces);
 }
 
@@ -4619,7 +6308,8 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
   for (const target of integerFixture.targets) {
     if (target.name !== `${target.signed ? "i" : "u"}${target.bits}`) throw new Error("integer target policy mismatch");
     const limit = 1n << BigInt(target.bits - Number(target.signed));
-    const minimum = target.signed ? -limit : 0n, maximum = limit - 1n;
+    const minimum = target.signed ? -limit : 0n,
+      maximum = limit - 1n;
     for (const raw of integerFixture.raw) {
       JSON.parse(raw);
       const integer = /^-?(?:0|[1-9][0-9]*)$/u.test(raw) ? BigInt(raw) : undefined;
@@ -4642,12 +6332,19 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
     Object.assign(candidate, law.set);
     if (law.remove) delete candidate[law.remove];
     const shape = Boolean(validators[law.view as "plan" | "lease"](candidate));
-    const oracle = shape && (candidate.kind === "none" ? ["react", "wgpu"].includes(law.renderer) : law.renderer === "wasm"
-      && candidate.sourceComponentSha256 === fixture.componentSha256 && candidate.sourceDescriptorByteSha256 === fixture.descriptorByteSha256
-      && JSON.stringify(candidate.importInterfaces) === JSON.stringify([...new Set(candidate.importInterfaces)].sort()));
+    const oracle =
+      shape &&
+      (candidate.kind === "none"
+        ? ["react", "wgpu"].includes(law.renderer)
+        : law.renderer === "wasm" &&
+          candidate.sourceComponentSha256 === fixture.componentSha256 &&
+          candidate.sourceDescriptorByteSha256 === fixture.descriptorByteSha256 &&
+          JSON.stringify(candidate.importInterfaces) === JSON.stringify([...new Set(candidate.importInterfaces)].sort()));
     if (shape !== law.schemaAccepted || oracle !== law.accepted) throw new Error(`browser actor independent oracle mismatch: ${law.id}`);
     let parsed: ReturnType<typeof contract.parseDocumentOpenBrowserActorV1> | undefined;
-    try { parsed = parsers[law.view as "plan" | "lease"](candidate, source, law.renderer); } catch {}
+    try {
+      parsed = parsers[law.view as "plan" | "lease"](candidate, source, law.renderer);
+    } catch {}
     if (Boolean(parsed) !== oracle) throw new Error(`browser actor production admission mismatch: ${law.id}`);
     if (parsed) {
       if (canonicalJson(parsed) !== canonicalJson(candidate) || !Object.isFrozen(parsed)) throw new Error(`browser actor projection mismatch: ${law.id}`);
@@ -4667,21 +6364,61 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
   const none = contract.parseDocumentOpenBrowserActorV1({ kind: "none" }, source, "react");
   if (!contract.sameDocumentBrowserActorV1(none, contract.documentBrowserActorLeaseFromPlanV1(none, source, "react", undefined))) throw new Error("browser actor none projection mismatch");
   let denied = 0;
-  for (const [actor, length] of [[none, 1], [plan, undefined], [plan, 0], [plan, 67108865]] as const) {
-    try { contract.documentBrowserActorLeaseFromPlanV1(actor, source, actor.kind === "none" ? "react" : "wasm", length); } catch { denied++; }
+  for (const [actor, length] of [
+    [none, 1],
+    [plan, undefined],
+    [plan, 0],
+    [plan, 67108865],
+  ] as const) {
+    try {
+      contract.documentBrowserActorLeaseFromPlanV1(actor, source, actor.kind === "none" ? "react" : "wasm", length);
+    } catch {
+      denied++;
+    }
   }
   let accessorReads = 0;
-  for (const candidate of [undefined, null, [], Object.create(fixture.closed), { ...fixture.closed, get sha256() { accessorReads++; return fixture.closed.sha256; } }]) {
-    try { contract.parseDocumentOpenBrowserActorV1(candidate, source, "wasm"); } catch { denied++; }
+  for (const candidate of [
+    undefined,
+    null,
+    [],
+    Object.create(fixture.closed),
+    {
+      ...fixture.closed,
+      get sha256() {
+        accessorReads++;
+        return fixture.closed.sha256;
+      },
+    },
+  ]) {
+    try {
+      contract.parseDocumentOpenBrowserActorV1(candidate, source, "wasm");
+    } catch {
+      denied++;
+    }
   }
   if (denied !== 9 || accessorReads !== 0) throw new Error("browser actor exact data ownership mismatch");
   for (const field of ["sourceComponentSha256", "sourceDescriptorByteSha256"]) {
-    try { contract.documentBrowserActorLeaseFromPlanV1({ ...fixture.closed, [field]: "e".repeat(64) }, source, "wasm", fixture.byteLength); } catch { denied++; }
+    try {
+      contract.documentBrowserActorLeaseFromPlanV1({ ...fixture.closed, [field]: "e".repeat(64) }, source, "wasm", fixture.byteLength);
+    } catch {
+      denied++;
+    }
   }
-  try { contract.documentBrowserActorLeaseFromPlanV1(plan, source, "react", fixture.byteLength); } catch { denied++; }
-  try { contract.documentBrowserActorLeaseFromPlanV1(none, source, "wasm", undefined); } catch { denied++; }
+  try {
+    contract.documentBrowserActorLeaseFromPlanV1(plan, source, "react", fixture.byteLength);
+  } catch {
+    denied++;
+  }
+  try {
+    contract.documentBrowserActorLeaseFromPlanV1(none, source, "wasm", undefined);
+  } catch {
+    denied++;
+  }
   if (denied !== 13) throw new Error("browser actor projection bypassed package or renderer binding");
   console.log(`document-browser-actor-identity: AJV=2 cases=${fixture.cases.length} projection=2 equality=${Object.keys(lease).length + 1} ownership=9 projection-binding=4; metadata only, no catalog/activation claim`);
+  await proveDocumentOpenPlanFixture(repoRoot);
+  await proveBrowserDocumentOpenFixture(repoRoot);
+  await proveExecutionTargetLeaseCorpus(repoRoot);
   await proveTrustedBrowserActorCatalogFixture(repoRoot);
 }
 
@@ -4706,41 +6443,113 @@ async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise
     if (law.remove) delete actor[law.remove];
     const shape = Boolean(validate(actor));
     assert.equal(shape, law.shape, `${law.id} shape`);
-    const oracle = shape && (actor.kind === "none" ? law.renderer !== "wasm" : law.renderer === "wasm"
-      && actor.sourceComponentSha256 === source.componentSha256 && actor.sourceDescriptorByteSha256 === source.descriptorByteSha256
-      && JSON.stringify(actor.importInterfaces) === JSON.stringify([...new Set(actor.importInterfaces)].sort()));
+    const oracle =
+      shape &&
+      (actor.kind === "none"
+        ? law.renderer !== "wasm"
+        : law.renderer === "wasm" &&
+          actor.sourceComponentSha256 === source.componentSha256 &&
+          actor.sourceDescriptorByteSha256 === source.descriptorByteSha256 &&
+          JSON.stringify(actor.importInterfaces) === JSON.stringify([...new Set(actor.importInterfaces)].sort()));
     assert.equal(oracle, law.accepted, `${law.id} oracle`);
     let encoded: Buffer | undefined;
-    try { encoded = trustedBootstrapBrowserActorEncoding(actor, source, law.renderer); } catch {}
+    try {
+      encoded = trustedBootstrapBrowserActorEncoding(actor, source, law.renderer);
+    } catch {}
     assert.equal(Boolean(encoded), oracle, `${law.id} production`);
   }
   const bytes = Buffer.from(fixture.bodyHex, "hex");
   assert.equal(bytes.byteLength, fixture.closed.byteLength);
   assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex"), fixture.closed.sha256);
-  for (const [actor, renderer, expected] of [[fixture.closed, "wasm", fixture.encodingSha256], [{ kind: "none" }, "react", fixture.noneEncodingSha256]] as const) {
+  for (const [actor, renderer, expected] of [
+    [fixture.closed, "wasm", fixture.encodingSha256],
+    [{ kind: "none" }, "react", fixture.noneEncodingSha256],
+  ] as const) {
     const encoded = trustedBootstrapBrowserActorEncoding(actor, source, renderer);
     assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", encoded)).toString("hex"), expected);
     assert.equal(createHash("sha256").update(encoded).digest("hex"), expected);
   }
   for (const law of fixture.loadCases) {
     const body = law.bodyHex === null ? undefined : Buffer.from(law.bodyHex, "hex");
-    const oracle = body !== undefined && body.byteLength === law.byteLength && body.byteLength > 0
-      && Buffer.from(await crypto.subtle.digest("SHA-256", body)).toString("hex") === fixture.closed.sha256 && !law.cancelAfterDescriptor;
+    const oracle = body !== undefined && body.byteLength === law.byteLength && body.byteLength > 0 && Buffer.from(await crypto.subtle.digest("SHA-256", body)).toString("hex") === fixture.closed.sha256 && !law.cancelAfterDescriptor;
     assert.equal(oracle, law.accepted, `${law.id} body oracle`);
   }
   for (const law of fixture.rawLengths) {
     const actor = { ...fixture.closed, byteLength: JSON.parse(law.token) };
     assert.equal(Boolean(validate(actor)), law.accepted, `raw actor length ${law.token} AJV`);
     let accepted = false;
-    try { trustedBootstrapBrowserActorV1(actor, source, "wasm"); accepted = true; } catch {}
+    try {
+      trustedBootstrapBrowserActorV1(actor, source, "wasm");
+      accepted = true;
+    } catch {}
     assert.equal(accepted, law.accepted, `raw actor length ${law.token} production`);
   }
   console.log(`trusted-browser-actor-catalog: AJV=3 cases=${fixture.cases.length} bodies=${fixture.loadCases.length} raw-lengths=${fixture.rawLengths.length} WebCrypto=1; metadata/framing oracle only, no native loader/activation claim`);
 }
 
+async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
+  const fixtureRoot = join(root, "🧪️fixtures/🛡️opened-root");
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  const acceptedPath = (value: string): boolean => {
+    const bytes = new TextEncoder().encode(value).byteLength;
+    const segments = value.split("/");
+    return (
+      bytes > 0 &&
+      bytes <= fixture.limits.pathBytes &&
+      segments.length <= fixture.limits.pathSegments &&
+      !value.includes("\\") &&
+      !value.includes("\0") &&
+      !value.startsWith("/") &&
+      segments.every((segment: string) => segment.length > 0 && segment !== "." && segment !== "..")
+    );
+  };
+  assert.equal(new Set(fixture.relativePaths.map((row: any) => row.id)).size, fixture.relativePaths.length);
+  for (const row of fixture.relativePaths) assert.equal(acceptedPath(row.value), row.accepted, row.id);
+  const pointer = Buffer.from(`${JSON.stringify(fixture.current)}\n`, "utf8");
+  assert(pointer.byteLength > 0 && pointer.byteLength <= fixture.limits.pointerBytes);
+  assert.deepEqual(JSON.parse(pointer.toString("utf8")), fixture.current);
+  assert.equal(Buffer.from(fixture.openedHandle.initialHex, "hex").toString("hex"), fixture.openedHandle.expectedHex);
+  assert.notEqual(fixture.openedHandle.initialHex, fixture.openedHandle.replacementHex);
+  assert.deepEqual(
+    fixture.denials.map((row: any) => row.kind),
+    ["leaf-link", "intermediate-link", "actor-link", "data-root-link", "current-link", "generation-link", "reparse-point"],
+  );
+  assert(fixture.denials.every((row: any) => row.providerCalls === 0 && row.codecPublished === false));
+  const source = [readFileSync(join(root, "🦀️.rs"), "utf8"), readFileSync(join(root, "🛡️opened-root/🦀️.rs"), "utf8")].join("\n");
+  const startup = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const required = [
+    "TrustedCatalogDataRoot",
+    "TrustedCatalogGenerationRoot",
+    "TrustedCatalogRelativePath",
+    "TrustedCatalogOpenedFile",
+    "open_server_owned",
+    "open_current",
+    "open_regular",
+    "read_regular",
+    "O_NOFOLLOW",
+    "O_NONBLOCK",
+    "fstat",
+    "trusted_catalog_opened_root_rejects_linked_roots_leaves_intermediates_and_actors",
+    "trusted_catalog_opened_handle_is_swap_stable_bounded_and_cancel_safe",
+    "trusted_catalog_relative_paths_match_the_neutral_no_link_corpus",
+  ];
+  assert(
+    required.every((needle) => source.includes(needle)),
+    "trusted catalog lacks the opened-root/no-link owner or exact laws",
+  );
+  assert(startup.includes("configured_artifact_authority(&data_dir") && !startup.includes("OS_HUB_TRUSTED_CATALOG_BUNDLE") && !startup.includes("OS_HUB_TRUSTED_CATALOG_PROFILE"), "Hub startup still accepts ambient trusted bundle/profile paths");
+  console.log(`trusted-catalog-opened-root: AJV=1 paths=${fixture.relativePaths.length} denials=${fixture.denials.length} same-handle=1 source=${required.length} startup=no-ambient-path; source contract only, native platform laws require --native`);
+}
+
 async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<void> {
   await proveDocumentBrowserActorIdentityFixture(repoRoot);
   await testFreshComponentStagingV1(repoRoot);
+  await testFreshComponentProcessV1(repoRoot);
   await proveTrustedGenerationStageFixture(repoRoot);
   await proveTrustedBootstrapCodecCaptureFixture(repoRoot);
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap");
@@ -4758,10 +6567,29 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     gis: gis.receipts.map((row: any) => ({ artifactKind: row.kind, artifactSchema: row.schema, packSchemaHash: row.protocolSha256 })),
   };
   const profile = fixture.profile;
-  const unique = (rows: readonly TrustedBootstrapCodec[]): boolean => rows.length === new Set(rows.map((row) => JSON.stringify([row.artifactKind, row.artifactSchema, row.packSchemaHash]))).size && rows.every((row) => /^(?!0{64}$)[0-9a-f]{64}$/u.test(row.packSchemaHash));
+  const unique = (rows: readonly TrustedBootstrapCodec[]): boolean =>
+    rows.length === new Set(rows.map((row) => JSON.stringify([row.artifactKind, row.artifactSchema, row.packSchemaHash]))).size && rows.every((row) => /^(?!0{64}$)[0-9a-f]{64}$/u.test(row.packSchemaHash));
   if (stdio.plugin_id !== "stdio" || stdio.package_id !== "semio:stdio" || codecs.stdio.length !== 26 || !unique(codecs.stdio)) throw new Error("stdio bootstrap closure is not exact 26");
-  if (gis.pluginId !== "gis" || gis.packageId !== "semio:gis" || gis.packageVersion !== profile.selectedClosure[0].version || codecs.gis.length !== 2 || !unique(codecs.gis) || !codecs.gis.some((row) => row.artifactKind === "s.gis.gismap") || !codecs.gis.some((row) => row.artifactKind === "s.gis.gisterrain")) throw new Error("GIS bootstrap closure is not exact Map plus Terrain");
-  if (profile.packages.length !== 2 || profile.packages[0].pluginId !== "gis" || profile.packages[0].codecCount !== 2 || profile.packages[0].targetCount !== 1 || profile.packages[1].pluginId !== "stdio" || profile.packages[1].codecCount !== 26 || profile.packages[1].targetCount !== 0) throw new Error("trusted bootstrap package/target cardinality drifted");
+  if (
+    gis.pluginId !== "gis" ||
+    gis.packageId !== "semio:gis" ||
+    gis.packageVersion !== profile.selectedClosure[0].version ||
+    codecs.gis.length !== 2 ||
+    !unique(codecs.gis) ||
+    !codecs.gis.some((row) => row.artifactKind === "s.gis.gismap") ||
+    !codecs.gis.some((row) => row.artifactKind === "s.gis.gisterrain")
+  )
+    throw new Error("GIS bootstrap closure is not exact Map plus Terrain");
+  if (
+    profile.packages.length !== 2 ||
+    profile.packages[0].pluginId !== "gis" ||
+    profile.packages[0].codecCount !== 2 ||
+    profile.packages[0].targetCount !== 1 ||
+    profile.packages[1].pluginId !== "stdio" ||
+    profile.packages[1].codecCount !== 26 ||
+    profile.packages[1].targetCount !== 0
+  )
+    throw new Error("trusted bootstrap package/target cardinality drifted");
   const closure = trustedBootstrapClosureEncoding(profile);
   const closureNode = createHash("sha256").update(closure).digest("hex");
   const closureWeb = Buffer.from(await crypto.subtle.digest("SHA-256", closure)).toString("hex");
@@ -4776,21 +6604,57 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   changed.packages[1].componentSha256 = profile.packages[1].componentSha256;
   changed.packages[1].descriptorSha256 = "32".repeat(32);
   const changedDescriptor = createHash("sha256").update(trustedBootstrapProfileEncoding(changed, codecs)).digest("hex");
-  const changedCodecs = { ...codecs, stdio: codecs.stdio.map((row, index) => index === 0 ? { ...row, packSchemaHash: "33".repeat(32) } : row) };
+  const changedCodecs = { ...codecs, stdio: codecs.stdio.map((row, index) => (index === 0 ? { ...row, packSchemaHash: "33".repeat(32) } : row)) };
   const changedCodec = createHash("sha256").update(trustedBootstrapProfileEncoding(profile, changedCodecs)).digest("hex");
   if ([changedComponent, changedDescriptor, changedCodec].some((digest) => digest === generationNode)) throw new Error("trusted bootstrap generation omits zero-target stdio authority");
   const target = profile.openTarget;
-  if (target.pluginId !== "gis" || target.artifactKind !== "s.gis.gismap" || target.surfaceId !== "s.gis.gismap@1/*#editor" || target.appId !== target.surfaceId || target.windowKindId !== "gis2d-main" || target.role !== "editor" || target.rendererTarget !== "wasm" || !target.grant.read || !target.grant.write || !target.grant.observe || codecs.gis.some((row) => row.artifactKind === "s.gis.gisterrain" && row.artifactKind === target.artifactKind)) throw new Error("trusted bootstrap target is not the sole writable GIS Map editor surface");
+  if (
+    target.pluginId !== "gis" ||
+    target.artifactKind !== "s.gis.gismap" ||
+    target.surfaceId !== "s.gis.gismap@1/*#editor" ||
+    target.appId !== target.surfaceId ||
+    target.windowKindId !== "gis2d-main" ||
+    target.role !== "editor" ||
+    target.rendererTarget !== "wasm" ||
+    !target.grant.read ||
+    !target.grant.write ||
+    !target.grant.observe ||
+    codecs.gis.some((row) => row.artifactKind === "s.gis.gisterrain" && row.artifactKind === target.artifactKind)
+  )
+    throw new Error("trusted bootstrap target is not the sole writable GIS Map editor surface");
   const relative = (value: string): boolean => !/^[/\\]|^[A-Za-z]:[/\\]|(?:^|[/\\])\.\.(?:[/\\]|$)/u.test(value);
   if (!relative("packages/gis/component.wasm") || relative("../component.wasm") || relative("C:\\component.wasm")) throw new Error("trusted bootstrap path fence drifted");
   const rotation = fixture.rotation;
-  if (fixture.limits.descriptorBytes + 1 !== fixture.limits.descriptorBytesPlusOne || rotation.initialGenerationId !== generationNode || rotation.currentAfterFailedCandidate !== rotation.initialGenerationId || rotation.failedCandidateGenerationId === rotation.initialGenerationId || rotation.nextGenerationId === rotation.initialGenerationId || trustedBootstrapPlanGenerationOutcome(rotation.stalePlan.issuedGenerationId, rotation.stalePlan.observedGenerationId) !== rotation.stalePlan.expected || trustedBootstrapPlanGenerationOutcome(rotation.freshPlan.issuedGenerationId, rotation.freshPlan.observedGenerationId) !== rotation.freshPlan.expected || rotation.stalePlan.issuedGenerationId !== rotation.initialGenerationId || rotation.stalePlan.observedGenerationId !== rotation.nextGenerationId || rotation.freshPlan.issuedGenerationId !== rotation.nextGenerationId || fixture.cancellationStages.length !== 8 || fixture.hostile.length !== 19 || !fixture.hostile.includes("stale-plan-generation")) throw new Error("trusted bootstrap bounds/cancellation/cross-generation rotation corpus drifted");
+  if (
+    fixture.limits.descriptorBytes + 1 !== fixture.limits.descriptorBytesPlusOne ||
+    rotation.initialGenerationId !== generationNode ||
+    rotation.currentAfterFailedCandidate !== rotation.initialGenerationId ||
+    rotation.failedCandidateGenerationId === rotation.initialGenerationId ||
+    rotation.nextGenerationId === rotation.initialGenerationId ||
+    trustedBootstrapPlanGenerationOutcome(rotation.stalePlan.issuedGenerationId, rotation.stalePlan.observedGenerationId) !== rotation.stalePlan.expected ||
+    trustedBootstrapPlanGenerationOutcome(rotation.freshPlan.issuedGenerationId, rotation.freshPlan.observedGenerationId) !== rotation.freshPlan.expected ||
+    rotation.stalePlan.issuedGenerationId !== rotation.initialGenerationId ||
+    rotation.stalePlan.observedGenerationId !== rotation.nextGenerationId ||
+    rotation.freshPlan.issuedGenerationId !== rotation.nextGenerationId ||
+    fixture.cancellationStages.length !== 8 ||
+    fixture.hostile.length !== 19 ||
+    !fixture.hostile.includes("stale-plan-generation")
+  )
+    throw new Error("trusted bootstrap bounds/cancellation/cross-generation rotation corpus drifted");
   const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
   if (blake3Hex(Buffer.from("abc")) !== "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85") throw new Error("trusted bootstrap first-party BLAKE3 known answer mismatch");
   const descriptor: Record<string, any> = {
-    descriptorVersion: 1, packageId: "semio:gis", role: "plugin",
+    descriptorVersion: 1,
+    packageId: "semio:gis",
+    role: "plugin",
     manifest: { pluginId: "gis", label: "GIS", version: "0.1.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [], dependencies: [], contributions: [] },
-    activationEvents: [], capabilityRequests: [], extensionPoints: [], execution: "isolated", quotas: {}, contributions: {}, assets: [],
+    activationEvents: [],
+    capabilityRequests: [],
+    extensionPoints: [],
+    execution: "isolated",
+    quotas: {},
+    contributions: {},
+    assets: [],
     hashes: { wasmSha256: "41".repeat(32), coreWasmSha256: "42".repeat(32), descriptorSha256: "" },
   };
   descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor)).digest("hex");
@@ -4805,11 +6669,17 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   ] as const;
   for (const [json, pack] of hostilePairs) {
     let rejected = false;
-    try { verifyFreshCatalogPackageV1(json, pack, expected); } catch { rejected = true; }
+    try {
+      verifyFreshCatalogPackageV1(json, pack, expected);
+    } catch {
+      rejected = true;
+    }
     if (!rejected) throw new Error("fresh catalog package verifier admitted a hostile JSON/pack pair");
   }
   await proveTrustedRotationSourceFixture(fixture);
-  console.log(`trusted-stdio-gis-bootstrap-oracle: packages=2 codecs=${codecs.stdio.length + codecs.gis.length} targets=1 hostile=${fixture.hostile.length} cancellation=${fixture.cancellationStages.length} descriptor-pairs=4 stale-plan=1 ajv+node+webcrypto+first-party-pack+blake3=1; no materialization or hub activation claim`);
+  console.log(
+    `trusted-stdio-gis-bootstrap-oracle: packages=2 codecs=${codecs.stdio.length + codecs.gis.length} targets=1 hostile=${fixture.hostile.length} cancellation=${fixture.cancellationStages.length} descriptor-pairs=4 stale-plan=1 ajv+node+webcrypto+first-party-pack+blake3=1; no materialization or hub activation claim`,
+  );
 }
 
 type TrustedBootstrapMaterializationV1 = Readonly<{ profileId: string; generationId: string; bundleSha256: string; bundlePath: string }>;
@@ -4831,20 +6701,32 @@ function trustedBootstrapWriteNew(path: string, bytes: Uint8Array, check: () => 
     check();
     complete = true;
   } finally {
-    try { closeSync(output); } catch (error) { complete = false; throw error; }
-    finally { if (!complete) rmSync(path, { force: true }); }
+    try {
+      closeSync(output);
+    } catch (error) {
+      complete = false;
+      throw error;
+    } finally {
+      if (!complete) rmSync(path, { force: true });
+    }
   }
 }
 
 function trustedBootstrapFsyncDirectory(path: string): void {
   if (process.platform === "win32") return;
   const directory = openSync(path, "r");
-  try { fsyncSync(directory); } finally { closeSync(directory); }
+  try {
+    fsyncSync(directory);
+  } finally {
+    closeSync(directory);
+  }
 }
 
 /** 🪪️ Projects only the schema-admitted fixed native codec closure into immutable generation inputs. */
 function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly<{ gisVersion: string; codecs: Readonly<Record<"gis" | "stdio", readonly TrustedBootstrapCodec[]>> }> {
-  const fail = (): never => { throw new Error("trusted codec source is not the exact bounded native closure"); };
+  const fail = (): never => {
+    throw new Error("trusted codec source is not the exact bounded native closure");
+  };
   const record = (value: unknown, keys: readonly string[]): Record<string, any> => {
     if (!value || typeof value !== "object" || Array.isArray(value) || JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...keys].sort())) return fail();
     return value as Record<string, any>;
@@ -4855,17 +6737,39 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
   const g = record(gis, ["schema", "pluginId", "packageId", "packageVersion", "receipts", "hostile"]);
   if (s.schema !== "semio.stdio.native-openable-catalog-provider/v1" || s.provider_id !== "stdio/native-codecs/v1" || s.plugin_id !== "stdio" || s.package_id !== "semio:stdio" || !Array.isArray(s.receipts) || s.receipts.length !== 26) return fail();
   const hostile = ["missing", "duplicate", "foreign-package", "wrong-version", "bare-kind", "wrong-schema", "wrong-extension", "zero-hash"];
-  if (g.schema !== "semio.gis.native-codec-receipts/v1" || g.pluginId !== "gis" || g.packageId !== "semio:gis" || g.packageVersion !== "0.1.0" || !Array.isArray(g.receipts) || g.receipts.length !== 2 || !Array.isArray(g.hostile) || JSON.stringify([...g.hostile].sort()) !== JSON.stringify(hostile.sort())) return fail();
+  if (
+    g.schema !== "semio.gis.native-codec-receipts/v1" ||
+    g.pluginId !== "gis" ||
+    g.packageId !== "semio:gis" ||
+    g.packageVersion !== "0.1.0" ||
+    !Array.isArray(g.receipts) ||
+    g.receipts.length !== 2 ||
+    !Array.isArray(g.hostile) ||
+    JSON.stringify([...g.hostile].sort()) !== JSON.stringify(hostile.sort())
+  )
+    return fail();
   const stdioRows = s.receipts.map((value: unknown) => {
     const fields = ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "document_schema", "extension"];
     const row = record(value, [...fields, "pack_schema_sha256", "protocol_path"]);
-    if (!fields.every(field => identity(row[field])) || !digest(row.pack_schema_sha256) || typeof row.protocol_path !== "string" || row.protocol_path.length > 1024 || !/^🗿️artifacts\/.+\/📡️\.protocol\.semio$/u.test(row.protocol_path)) return fail();
+    if (!fields.every((field) => identity(row[field])) || !digest(row.pack_schema_sha256) || typeof row.protocol_path !== "string" || row.protocol_path.length > 1024 || !/^🗿️artifacts\/.+\/📡️\.protocol\.semio$/u.test(row.protocol_path))
+      return fail();
     return Object.freeze({ artifactKind: row.artifact_kind as string, artifactSchema: row.document_schema as string, packSchemaHash: row.pack_schema_sha256 });
   });
   const gisRows = g.receipts.map((value: unknown) => {
     const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "protocolPath", "protocolBytes", "protocolSha256"]);
     const family = row.kind === "s.gis.gismap" ? { id: "gismap", schema: "map", owner: "🗺️gismap" } : row.kind === "s.gis.gisterrain" ? { id: "gisterrain", schema: "terrain", owner: "🏔️gisterrain" } : fail();
-    if (row.factoryId !== `gis.${family.id}.v1` || row.schema !== `gis.${family.schema}` || row.extension !== family.id || row.capability !== `s.gis.${family.id}.codec.document` || row.protocolPath !== `🗿️artifacts/${family.owner}/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` || !Number.isSafeInteger(row.protocolBytes) || row.protocolBytes < 1 || row.protocolBytes > 65536 || !digest(row.protocolSha256)) return fail();
+    if (
+      row.factoryId !== `gis.${family.id}.v1` ||
+      row.schema !== `gis.${family.schema}` ||
+      row.extension !== family.id ||
+      row.capability !== `s.gis.${family.id}.codec.document` ||
+      row.protocolPath !== `🗿️artifacts/${family.owner}/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` ||
+      !Number.isSafeInteger(row.protocolBytes) ||
+      row.protocolBytes < 1 ||
+      row.protocolBytes > 65536 ||
+      !digest(row.protocolSha256)
+    )
+      return fail();
     return Object.freeze({ artifactKind: row.kind as string, artifactSchema: row.schema as string, packSchemaHash: row.protocolSha256 });
   });
   for (const rows of [stdioRows, gisRows]) if (new Set(rows.map((row: TrustedBootstrapCodec) => JSON.stringify([row.artifactKind, row.artifactSchema]))).size !== rows.length) return fail();
@@ -4882,8 +6786,12 @@ function captureTrustedBootstrapCodecsV1(repoRoot: string, check: (stage?: strin
     check("project-codecs");
     const decoder = new TextDecoder("utf-8", { fatal: true });
     return projectTrustedBootstrapCodecsV1(JSON.parse(decoder.decode(stdio)), JSON.parse(decoder.decode(gis)));
-  } catch (error) { throw new Error(`trusted codec capture: ${(error as Error).message}`); }
-  finally { stdio?.fill(0); gis?.fill(0); }
+  } catch (error) {
+    throw new Error(`trusted codec capture: ${(error as Error).message}`);
+  } finally {
+    stdio?.fill(0);
+    gis?.fill(0);
+  }
 }
 
 /** 🧪️ Compares fixed source admission with package schemas and independent generation hashes. */
@@ -4911,7 +6819,10 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
   const profile = JSON.parse(readFileSync(join(root, "../🧬️stdio-gis-bootstrap/🔣️.json"), "utf8")).profile;
   for (const test of fixture.cases) {
     const input = structuredClone(originals);
-    if (test.change === "permuted") { input.stdio.receipts.reverse(); input.gis.receipts.reverse(); }
+    if (test.change === "permuted") {
+      input.stdio.receipts.reverse();
+      input.gis.receipts.reverse();
+    }
     if (test.change === "invalid-hash") input.gis.receipts[0].protocolSha256 = "zz";
     if (test.change === "zero-hash") input.gis.receipts[0].protocolSha256 = "00".repeat(32);
     if (test.change === "duplicate-stdio") input.stdio.receipts[1] = structuredClone(input.stdio.receipts[0]);
@@ -4938,15 +6849,24 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
         for (const plugin of ["stdio", "gis"] as const) writeFileSync(join(testRoot, sourcePaths[plugin]), "replaced source");
       }
     };
-    if (!test.accepted) { assert.throws(() => captureTrustedBootstrapCodecsV1(testRoot, check), /codec|build input|UTF-8|encoded data/); continue; }
+    if (!test.accepted) {
+      assert.throws(() => captureTrustedBootstrapCodecsV1(testRoot, check), /codec|build input|UTF-8|encoded data/);
+      continue;
+    }
     const result = captureTrustedBootstrapCodecsV1(testRoot, check);
     assert(Object.isFrozen(result) && Object.isFrozen(result.codecs));
-    for (const rows of Object.values(result.codecs)) { assert(Object.isFrozen(rows)); for (const row of rows) assert(Object.isFrozen(row)); }
+    for (const rows of Object.values(result.codecs)) {
+      assert(Object.isFrozen(rows));
+      for (const row of rows) assert(Object.isFrozen(row));
+    }
     const canonical = JSON.stringify(result);
     const bytes = trustedBootstrapProfileEncoding(profile, result.codecs);
     const digest = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
     assert.equal(createHash("sha256").update(bytes).digest("hex"), digest);
-    if (expected === undefined) { expected = canonical; generation = digest; }
+    if (expected === undefined) {
+      expected = canonical;
+      generation = digest;
+    }
     assert.equal(canonical, expected, test.change);
     assert.equal(digest, generation, test.change);
     if (test.change === "replaced-source") assert(captured);
@@ -4962,7 +6882,8 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
     check();
     if (receipts.size !== 2 || !receipts.has("gis") || !receipts.has("stdio") || !bundle.byteLength || bundle.byteLength > 4 * 1024 * 1024) throw new Error("generation input closure differs");
     const directories = [
-      [root, ["packages", "trusted-catalog.json"]], [join(root, "packages"), ["gis", "stdio"]],
+      [root, ["packages", "trusted-catalog.json"]],
+      [join(root, "packages"), ["gis", "stdio"]],
       [join(root, "packages", "gis"), ["browser", "component.wasm", "descriptor.semio"]],
       [join(root, "packages", "gis", "browser"), ["closed-actor.mjs"]],
       [join(root, "packages", "stdio"), ["component.wasm", "descriptor.semio"]],
@@ -4992,14 +6913,19 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
       const bytes = readStableBuildFile(file.path, file.maximum, admission, check);
       try {
         if (bytes.byteLength !== file.byteLength || createHash("sha256").update(bytes).digest("hex") !== file.sha256) throw new Error("generation bytes differ from their verified receipt");
-      } finally { bytes.fill(0); }
+      } finally {
+        bytes.fill(0);
+      }
     }
     check("identity");
     for (const [path, before] of identities) {
       const after = lstatSync(path);
-      if (after.isSymbolicLink() || before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode || before.size !== after.size || before.mtimeMs !== after.mtimeMs || before.ctimeMs !== after.ctimeMs) throw new Error("generation path changed across the final fence");
+      if (after.isSymbolicLink() || before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode || before.size !== after.size || before.mtimeMs !== after.mtimeMs || before.ctimeMs !== after.ctimeMs)
+        throw new Error("generation path changed across the final fence");
     }
-  } catch (error) { throw new Error(`trusted generation fence: ${(error as Error).message}`); }
+  } catch (error) {
+    throw new Error(`trusted generation fence: ${(error as Error).message}`);
+  }
 }
 
 /** 🧪️ Exercises the actual pre-publication file fence against independent digest oracles. */
@@ -5015,13 +6941,22 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
   assert(artifactRoot?.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
   const evidence = mkdtempSync(join(artifactRoot, "generation-stage-"));
-  const component = Buffer.from(fixture.componentHex, "hex"), descriptor = Buffer.from(fixture.descriptorHex, "hex"), bundle = Buffer.from('{"neutral":true}\n');
+  const component = Buffer.from(fixture.componentHex, "hex"),
+    descriptor = Buffer.from(fixture.descriptorHex, "hex"),
+    bundle = Buffer.from('{"neutral":true}\n');
   const identity = async (bytes: Uint8Array) => ({ byteLength: bytes.byteLength, sha256: Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex") });
-  const receipts = new Map<string, TrustedBootstrapGenerationReceiptV1>(["gis", "stdio"].map(plugin => [plugin, { component: { byteLength: component.byteLength, sha256: "" }, descriptor: { byteLength: descriptor.byteLength, sha256: "" }, browserActor: { kind: "none" } }]));
+  const receipts = new Map<string, TrustedBootstrapGenerationReceiptV1>(
+    ["gis", "stdio"].map((plugin) => [plugin, { component: { byteLength: component.byteLength, sha256: "" }, descriptor: { byteLength: descriptor.byteLength, sha256: "" }, browserActor: { kind: "none" } }]),
+  );
   const actorFixture = JSON.parse(readFileSync(join(root, "../🌐️browser-actor/🔣️.json"), "utf8"));
   for (const [plugin] of receipts) {
-    const c = await identity(component), d = await identity(descriptor);
-    receipts.set(plugin, { component: c, descriptor: d, browserActor: plugin === "gis" ? { ...actorFixture.closed, path: "packages/gis/browser/closed-actor.mjs", sourceComponentSha256: c.sha256, sourceDescriptorByteSha256: d.sha256 } : { kind: "none" } });
+    const c = await identity(component),
+      d = await identity(descriptor);
+    receipts.set(plugin, {
+      component: c,
+      descriptor: d,
+      browserActor: plugin === "gis" ? { ...actorFixture.closed, path: "packages/gis/browser/closed-actor.mjs", sourceComponentSha256: c.sha256, sourceDescriptorByteSha256: d.sha256 } : { kind: "none" },
+    });
   }
   for (const test of fixture.cases) {
     const caseReceipts = structuredClone(receipts);
@@ -5041,8 +6976,14 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
     if (test.change === "bundle") writeFileSync(join(stage, "trusted-catalog.json"), '{"neutral":false}');
     if (test.change === "extra-file") writeFileSync(join(stage, "extra"), "extra");
     if (test.change === "missing-file") rmSync(componentPath);
-    if (test.change === "symlink-file") { rmSync(componentPath); symlinkSync(join(stage, process.platform === "win32" ? "packages/stdio" : "packages/stdio/component.wasm"), componentPath, process.platform === "win32" ? "junction" : "file"); }
-    if (test.change === "symlink-directory") { renameSync(join(stage, "packages/gis"), join(evidence, "external-gis")); symlinkSync(join(evidence, "external-gis"), join(stage, "packages/gis"), "junction"); }
+    if (test.change === "symlink-file") {
+      rmSync(componentPath);
+      symlinkSync(join(stage, process.platform === "win32" ? "packages/stdio" : "packages/stdio/component.wasm"), componentPath, process.platform === "win32" ? "junction" : "file");
+    }
+    if (test.change === "symlink-directory") {
+      renameSync(join(stage, "packages/gis"), join(evidence, "external-gis"));
+      symlinkSync(join(evidence, "external-gis"), join(stage, "packages/gis"), "junction");
+    }
     if (test.change === "oversize-component") truncateSync(componentPath, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES + 1);
     if (test.change === "receipt-path") Object.assign(caseReceipts.get("gis")!.component, { path: "untrusted-receipt-cannot-select-path" });
     if (test.change === "actor") writeFileSync(actorPath, "xbc");
@@ -5050,35 +6991,56 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
     if (test.change === "actor-path") Object.assign(caseReceipts.get("gis")!.browserActor, { path: "packages/gis/component.wasm" });
     if (test.change === "missing-actor") rmSync(actorPath);
     if (test.change === "oversize-actor") truncateSync(actorPath, 67_108_865);
-    if (test.change === "actor-symlink") { rmSync(actorPath); symlinkSync(join(stage, process.platform === "win32" ? "packages/stdio" : "packages/stdio/component.wasm"), actorPath, process.platform === "win32" ? "junction" : "file"); }
-    let replaced = false, identityChecks = 0;
+    if (test.change === "actor-symlink") {
+      rmSync(actorPath);
+      symlinkSync(join(stage, process.platform === "win32" ? "packages/stdio" : "packages/stdio/component.wasm"), actorPath, process.platform === "win32" ? "junction" : "file");
+    }
+    let replaced = false,
+      identityChecks = 0;
     const check = (phase?: string) => {
       if (identityChecks) throw new Error("generation checkpoint after the final identity fence began");
       if (phase === "identity") identityChecks++;
       if (test.change === "cancelled") throw new Error("generation stage cancelled");
-      if (test.change === "post-read-component" && phase === "identity" && !replaced) { writeFileSync(componentPath, "xbc"); replaced = true; }
-      if (test.change === "post-read-actor" && phase === "identity" && !replaced) { writeFileSync(actorPath, "xbc"); replaced = true; }
+      if (test.change === "post-read-component" && phase === "identity" && !replaced) {
+        writeFileSync(componentPath, "xbc");
+        replaced = true;
+      }
+      if (test.change === "post-read-actor" && phase === "identity" && !replaced) {
+        writeFileSync(actorPath, "xbc");
+        replaced = true;
+      }
     };
-    if (test.accepted) { trustedBootstrapVerifyGeneration(stage, bundle, caseReceipts, check); assert.equal(identityChecks, 1); }
-    else assert.throws(() => trustedBootstrapVerifyGeneration(stage, bundle, caseReceipts, check), /generation|build input/);
+    if (test.accepted) {
+      trustedBootstrapVerifyGeneration(stage, bundle, caseReceipts, check);
+      assert.equal(identityChecks, 1);
+    } else assert.throws(() => trustedBootstrapVerifyGeneration(stage, bundle, caseReceipts, check), /generation|build input/);
   }
   console.log(`trusted-generation-stage: AJV=1 WebCrypto=1 cases=${fixture.cases.length} evidence=${evidence}`);
 }
 
 /** ⏳️ Owns interrupt and progress observation for a bounded catalog build. */
 function trustedBootstrapBuildControl(deadlineMs: number): { control: FreshBuildControlV1; close(): void } {
+  const diagnosticsRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   let interrupted = false;
-  const interrupt = (): void => { interrupted = true; };
+  const interrupt = (): void => {
+    interrupted = true;
+  };
   process.on("SIGINT", interrupt);
   process.on("SIGTERM", interrupt);
   const started = Date.now();
   return {
-    control: {
+    control: Object.freeze({
+      ...(diagnosticsRoot ? { diagnosticsRoot } : {}),
       cancelled: () => interrupted,
       remainingMs: () => Math.max(0, deadlineMs - (Date.now() - started)),
-      checkpoint(stage, completed, total) { console.log(`trusted-stdio-gis-bootstrap ${stage}: ${completed}/${total}`); },
+      checkpoint(stage, completed, total) {
+        console.log(`trusted-stdio-gis-bootstrap ${stage}: ${completed}/${total}`);
+      },
+    }),
+    close() {
+      process.off("SIGINT", interrupt);
+      process.off("SIGTERM", interrupt);
     },
-    close() { process.off("SIGINT", interrupt); process.off("SIGTERM", interrupt); },
   };
 }
 
@@ -5095,7 +7057,9 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
   mkdirSync(stageRoot, { mode: 0o700 });
   const buildControl = trustedBootstrapBuildControl(3_600_000);
   const { control } = buildControl;
-  const checkBuild = () => { if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog build cancelled"); };
+  const checkBuild = () => {
+    if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog build cancelled");
+  };
   try {
     const { codecs, gisVersion } = captureTrustedBootstrapCodecsV1(repoRoot, () => {
       if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted codec capture cancelled");
@@ -5114,17 +7078,33 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
       mkdirSync(stage, { recursive: true, mode: 0o700 });
       let derivedActor: ClosedBrowserActorArtifactV1 | undefined;
       try {
-        const { receipt, derived: componentSha256 } = await produceFreshComponentV1(repoRoot, request, target, stage, control, lease => lease.consume(async component => {
-          if (request.pluginId === "gis") derivedActor = await buildClosedBrowserActorArtifactV1(component, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
-          return createHash("sha256").update(component).digest("hex");
-        }));
+        const { receipt, derived: componentSha256 } = await produceFreshComponentV1(repoRoot, request, target, stage, control, (lease) =>
+          lease.consume(async (component) => {
+            if (request.pluginId === "gis")
+              derivedActor = await buildClosedBrowserActorArtifactV1(component, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
+            return createHash("sha256").update(component).digest("hex");
+          }),
+        );
         if (componentSha256 !== receipt.component.sha256 || (derivedActor && derivedActor.componentSha256 !== componentSha256)) throw new Error(`fresh ${request.pluginId} derivation differs from its verified component`);
         if (receipt.pluginId !== request.pluginId || receipt.packageId !== request.componentPackageId) throw new Error(`fresh ${request.pluginId} receipt identity changed after production`);
-        const actor = trustedBootstrapBrowserActorV1(derivedActor ? {
-          kind: "closed-browser-actor", schema: derivedActor.schema, codegenPolicy: derivedActor.codegenPolicy, sha256: derivedActor.sha256,
-          sourceComponentSha256: componentSha256, sourceDescriptorByteSha256: receipt.descriptor.sha256, policySha256: derivedActor.policySha256,
-          importInterfaces: derivedActor.importInterfaces, byteLength: derivedActor.byteLength, path: "packages/gis/browser/closed-actor.mjs",
-        } : { kind: "none" }, { componentSha256, descriptorByteSha256: receipt.descriptor.sha256 }, request.pluginId === "gis" ? "wasm" : "react");
+        const actor = trustedBootstrapBrowserActorV1(
+          derivedActor
+            ? {
+                kind: "closed-browser-actor",
+                schema: derivedActor.schema,
+                codegenPolicy: derivedActor.codegenPolicy,
+                sha256: derivedActor.sha256,
+                sourceComponentSha256: componentSha256,
+                sourceDescriptorByteSha256: receipt.descriptor.sha256,
+                policySha256: derivedActor.policySha256,
+                importInterfaces: derivedActor.importInterfaces,
+                byteLength: derivedActor.byteLength,
+                path: "packages/gis/browser/closed-actor.mjs",
+              }
+            : { kind: "none" },
+          { componentSha256, descriptorByteSha256: receipt.descriptor.sha256 },
+          request.pluginId === "gis" ? "wasm" : "react",
+        );
         if (derivedActor) {
           mkdirSync(join(stage, "browser"), { mode: 0o700 });
           trustedBootstrapWriteNew(join(stage, "browser", "closed-actor.mjs"), derivedActor.bytes, checkBuild);
@@ -5132,7 +7112,9 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
         }
         browserActors.set(request.pluginId, actor);
         receipts.set(request.pluginId, receipt);
-      } finally { derivedActor?.bytes.fill(0); }
+      } finally {
+        derivedActor?.bytes.fill(0);
+      }
     }
     const stdio = receipts.get("stdio")!;
     const gis = receipts.get("gis")!;
@@ -5158,8 +7140,30 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
       grant: { read: true, write: true, observe: true },
     };
     const packageSummary = [
-      { pluginId: "gis", packageId: "semio:gis", version: gis.version, role: "plugin", componentSha256: gis.component.sha256, componentBlake3: gis.component.blake3, descriptorSha256: gis.descriptor.sha256, browserActor: browserActors.get("gis")!, codecCount: 2, targetCount: 1 },
-      { pluginId: "stdio", packageId: "semio:stdio", version: stdio.version, role: "plugin", componentSha256: stdio.component.sha256, componentBlake3: stdio.component.blake3, descriptorSha256: stdio.descriptor.sha256, browserActor: browserActors.get("stdio")!, codecCount: 26, targetCount: 0 },
+      {
+        pluginId: "gis",
+        packageId: "semio:gis",
+        version: gis.version,
+        role: "plugin",
+        componentSha256: gis.component.sha256,
+        componentBlake3: gis.component.blake3,
+        descriptorSha256: gis.descriptor.sha256,
+        browserActor: browserActors.get("gis")!,
+        codecCount: 2,
+        targetCount: 1,
+      },
+      {
+        pluginId: "stdio",
+        packageId: "semio:stdio",
+        version: stdio.version,
+        role: "plugin",
+        componentSha256: stdio.component.sha256,
+        componentBlake3: stdio.component.blake3,
+        descriptorSha256: stdio.descriptor.sha256,
+        browserActor: browserActors.get("stdio")!,
+        codecCount: 26,
+        targetCount: 0,
+      },
     ];
     const profileSummary = { id: "local-stdio-gis-open-v1", selectedClosure, packages: packageSummary, openTarget: { pluginId: "gis", ...target } };
     const selectedClosureSha256 = createHash("sha256").update(trustedBootstrapClosureEncoding(profileSummary)).digest("hex");
@@ -5199,7 +7203,12 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
       control.checkpoint("verify-generation", 8, 8);
     };
     if (existsSync(generationRoot)) {
-      trustedBootstrapVerifyGeneration(generationRoot, bundleBytes, new Map([...receipts].map(([plugin, receipt]) => [plugin, { component: receipt.component, descriptor: receipt.descriptor, browserActor: browserActors.get(plugin)! }])), checkGeneration);
+      trustedBootstrapVerifyGeneration(
+        generationRoot,
+        bundleBytes,
+        new Map([...receipts].map(([plugin, receipt]) => [plugin, { component: receipt.component, descriptor: receipt.descriptor, browserActor: browserActors.get(plugin)! }])),
+        checkGeneration,
+      );
       rmSync(stageRoot, { recursive: true, force: true });
     } else {
       trustedBootstrapVerifyGeneration(stageRoot, bundleBytes, new Map([...receipts].map(([plugin, receipt]) => [plugin, { component: receipt.component, descriptor: receipt.descriptor, browserActor: browserActors.get(plugin)! }])), checkGeneration);
@@ -5229,9 +7238,79 @@ function trustedBootstrapReadCurrentBundle(current: TrustedBootstrapMaterializat
   try {
     if (createHash("sha256").update(bytes).digest("hex") !== current.bundleSha256) throw new Error("trusted rotation source bundle differs from its retained digest");
     const bundle = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-    if (bundle.schemaVersion !== 2 || bundle.profiles?.length !== 1 || bundle.packages?.length !== 2 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId) throw new Error("trusted rotation source differs from the exact retained profile generation");
+    if (bundle.schemaVersion !== 2 || bundle.profiles?.length !== 1 || bundle.packages?.length !== 2 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId)
+      throw new Error("trusted rotation source differs from the exact retained profile generation");
     return bundle;
-  } finally { bytes.fill(0); }
+  } finally {
+    bytes.fill(0);
+  }
+}
+
+/** 🧳️ Copies one already verified immutable selection below an isolated candidate's own data root. */
+function stageTrustedBootstrapCandidateCurrent(candidateDataRoot: string, current: TrustedBootstrapMaterializationV1, check: () => void): void {
+  const bundleBytes = trustedBootstrapReadRegular(current.bundlePath, 4 * 1024 * 1024, "trusted candidate source bundle", check);
+  const stageRoot = join(candidateDataRoot, "trusted-catalog", `staging-${randomBytes(16).toString("hex")}`);
+  try {
+    if (createHash("sha256").update(bundleBytes).digest("hex") !== current.bundleSha256) throw new Error("trusted candidate source bundle differs from its retained digest");
+    const bundle = trustedBootstrapReadCurrentBundle(current, check);
+    const packages = new Map<string, any>(bundle.packages.map((record: any) => [record.pluginId, record]));
+    if (packages.size !== 2 || !packages.has("gis") || !packages.has("stdio")) throw new Error("trusted candidate source is not the exact stdio+GIS closure");
+    const receipts = new Map<string, TrustedBootstrapGenerationReceiptV1>();
+    for (const plugin of ["gis", "stdio"] as const) {
+      const record = packages.get(plugin)!;
+      if (record.packageId !== `semio:${plugin}` || record.component?.path !== `packages/${plugin}/component.wasm` || record.descriptor?.path !== `packages/${plugin}/descriptor.semio`)
+        throw new Error(`trusted candidate ${plugin} path identity differs`);
+      receipts.set(plugin, { component: { byteLength: record.component.byteLength, sha256: record.component.sha256 }, descriptor: { byteLength: record.descriptor.byteLength, sha256: record.descriptor.sha256 }, browserActor: record.browserActor });
+    }
+    const sourceRoot = dirname(current.bundlePath);
+    trustedBootstrapVerifyGeneration(sourceRoot, bundleBytes, receipts, check);
+    const trustedRoot = join(candidateDataRoot, "trusted-catalog");
+    const generationsRoot = join(trustedRoot, "generations");
+    mkdirSync(generationsRoot, { recursive: true, mode: 0o700 });
+    for (const directory of [candidateDataRoot, trustedRoot, generationsRoot]) {
+      const info = lstatSync(directory);
+      if (info.isSymbolicLink() || !info.isDirectory()) throw new Error("trusted candidate owner root traverses a link or non-directory");
+      if (process.platform !== "win32") chmodSync(directory, 0o700);
+    }
+    const generationRoot = join(generationsRoot, current.generationId);
+    if (existsSync(generationRoot)) {
+      trustedBootstrapVerifyGeneration(generationRoot, bundleBytes, receipts, check);
+    } else {
+      mkdirSync(join(stageRoot, "packages", "gis", "browser"), { recursive: true, mode: 0o700 });
+      mkdirSync(join(stageRoot, "packages", "stdio"), { recursive: true, mode: 0o700 });
+      trustedBootstrapWriteNew(join(stageRoot, "trusted-catalog.json"), bundleBytes, check);
+      const files = [
+        { relative: "packages/gis/component.wasm", maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES },
+        { relative: "packages/gis/descriptor.semio", maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES },
+        { relative: "packages/gis/browser/closed-actor.mjs", maximum: DOCUMENT_BROWSER_ACTOR_MAX_BYTES },
+        { relative: "packages/stdio/component.wasm", maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES },
+        { relative: "packages/stdio/descriptor.semio", maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES },
+      ];
+      for (const file of files) {
+        const bytes = trustedBootstrapReadRegular(join(sourceRoot, file.relative), file.maximum, `trusted candidate ${file.relative}`, check);
+        try {
+          trustedBootstrapWriteNew(join(stageRoot, file.relative), bytes, check);
+        } finally {
+          bytes.fill(0);
+        }
+      }
+      trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "gis", "browser"));
+      trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "gis"));
+      trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "stdio"));
+      trustedBootstrapFsyncDirectory(join(stageRoot, "packages"));
+      trustedBootstrapFsyncDirectory(stageRoot);
+      trustedBootstrapVerifyGeneration(stageRoot, bundleBytes, receipts, check);
+      renameSync(stageRoot, generationRoot);
+      trustedBootstrapFsyncDirectory(generationsRoot);
+    }
+    publishTrustedBootstrapCurrent(candidateDataRoot, current);
+    const staged = trustedBootstrapCurrent(candidateDataRoot);
+    if (!staged || staged.profileId !== current.profileId || staged.generationId !== current.generationId || staged.bundleSha256 !== current.bundleSha256 || staged.bundlePath !== join(generationRoot, "trusted-catalog.json"))
+      throw new Error("trusted candidate current pointer differs from its isolated generation");
+  } finally {
+    bundleBytes.fill(0);
+    rmSync(stageRoot, { recursive: true, force: true });
+  }
 }
 
 /** 🧪️ Independent WebCrypto receipt oracle exercises the production rotation capture boundary. */
@@ -5251,12 +7330,16 @@ async function proveTrustedRotationSourceFixture(fixture: Record<string, any>): 
     if (law.change === "wrong-generation") receipt.generationId = "42".repeat(32);
     if (law.change === "wrong-profile") receipt.profileId = "foreign";
     if (law.change === "replaced-bundle") writeFileSync(path, JSON.stringify({ ...bundle, packages: [{ changed: true }, {}] }));
-    let checks = 0, accepted = false;
+    let checks = 0,
+      accepted = false;
     try {
       trustedBootstrapReadCurrentBundle(receipt, () => {
         checks++;
         if (law.change === "cancel-before-read") throw new Error("cancelled");
-        if (law.change === "leaf-replaced-during-read" && checks === 2) { renameSync(path, `${path}.old`); writeFileSync(path, bytes, { flag: "wx" }); }
+        if (law.change === "leaf-replaced-during-read" && checks === 2) {
+          renameSync(path, `${path}.old`);
+          writeFileSync(path, bytes, { flag: "wx" });
+        }
       });
       accepted = true;
     } catch {}
@@ -5264,14 +7347,23 @@ async function proveTrustedRotationSourceFixture(fixture: Record<string, any>): 
   }
   for (const law of fixture.rotation.writeCases) {
     const path = join(evidence, `${law.id}.mjs`);
-    const bytes = Buffer.alloc(law.byteLength, 42), previous = Buffer.from("previous owner");
+    const bytes = Buffer.alloc(law.byteLength, 42),
+      previous = Buffer.from("previous owner");
     if (law.existing) writeFileSync(path, previous, { flag: "wx" });
-    let checks = 0, accepted = false;
-    try { trustedBootstrapWriteNew(path, bytes, () => { checks++; if (checks === law.cancelCheck) throw new Error("cancelled"); }); accepted = true; } catch {}
+    let checks = 0,
+      accepted = false;
+    try {
+      trustedBootstrapWriteNew(path, bytes, () => {
+        checks++;
+        if (checks === law.cancelCheck) throw new Error("cancelled");
+      });
+      accepted = true;
+    } catch {}
     assert.equal(accepted, law.accepted, law.id);
     assert.equal(existsSync(path), law.retained !== "absent", `${law.id} retained owner`);
     if (law.retained !== "absent") {
-      const retained = readFileSync(path), expected = law.retained === "old" ? previous : bytes;
+      const retained = readFileSync(path),
+        expected = law.retained === "old" ? previous : bytes;
       assert.equal(createHash("sha256").update(retained).digest("hex"), Buffer.from(await crypto.subtle.digest("SHA-256", expected)).toString("hex"), `${law.id} exact bytes`);
     }
   }
@@ -5306,43 +7398,77 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
       let descriptor = trustedBootstrapReadRegular(join(sourceRoot, "descriptor.semio"), 4 * 1024 * 1024, `${plugin} rotation descriptor`, checkGeneration);
       let actorBytes: Uint8Array | undefined;
       try {
-      if (component.byteLength !== record.component.byteLength || createHash("sha256").update(component).digest("hex") !== record.component.sha256 || descriptor.byteLength !== record.descriptor.byteLength || createHash("sha256").update(descriptor).digest("hex") !== record.descriptor.sha256) throw new Error(`trusted rotation ${plugin} source differs from its retained receipt`);
-      const actor = trustedBootstrapBrowserActorV1(record.browserActor, { componentSha256: record.component.sha256, descriptorByteSha256: record.descriptor.sha256 }, plugin === "gis" ? "wasm" : "react");
-      record.browserActor = actor;
-      if (actor.kind === "closed-browser-actor") {
-        if (actor.path !== "packages/gis/browser/closed-actor.mjs") throw new Error("rotation actor path differs from fixed GIS closure");
-        actorBytes = readStableBuildFile(join(sourceRoot, "browser", "closed-actor.mjs"), actor.byteLength, { remaining: actor.byteLength }, checkGeneration);
-        if (actorBytes.byteLength !== actor.byteLength || createHash("sha256").update(actorBytes).digest("hex") !== actor.sha256) throw new Error("rotation actor differs from its verified receipt");
-        mkdirSync(join(destinationRoot, "browser"), { mode: 0o700 });
-        trustedBootstrapWriteNew(join(destinationRoot, "browser", "closed-actor.mjs"), actorBytes, checkGeneration);
-        trustedBootstrapFsyncDirectory(join(destinationRoot, "browser"));
-      }
-      if (plugin === "stdio") {
-        const value = decodePackValue(descriptor) as unknown as Record<string, any>;
-        if (value.packageId !== record.packageId || value.manifest?.pluginId !== plugin || value.manifest?.version !== record.version || value.role !== record.role || value.execution !== "isolated" || typeof value.hashes?.coreWasmSha256 !== "string") throw new Error("trusted rotation Stdio descriptor identity changed");
-        value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`;
-        value.hashes.descriptorSha256 = "";
-        value.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(value)).digest("hex");
-        const updatedDescriptor = Buffer.from(encodePackValue(value));
+        if (
+          component.byteLength !== record.component.byteLength ||
+          createHash("sha256").update(component).digest("hex") !== record.component.sha256 ||
+          descriptor.byteLength !== record.descriptor.byteLength ||
+          createHash("sha256").update(descriptor).digest("hex") !== record.descriptor.sha256
+        )
+          throw new Error(`trusted rotation ${plugin} source differs from its retained receipt`);
+        const actor = trustedBootstrapBrowserActorV1(record.browserActor, { componentSha256: record.component.sha256, descriptorByteSha256: record.descriptor.sha256 }, plugin === "gis" ? "wasm" : "react");
+        record.browserActor = actor;
+        if (actor.kind === "closed-browser-actor") {
+          if (actor.path !== "packages/gis/browser/closed-actor.mjs") throw new Error("rotation actor path differs from fixed GIS closure");
+          actorBytes = readStableBuildFile(join(sourceRoot, "browser", "closed-actor.mjs"), actor.byteLength, { remaining: actor.byteLength }, checkGeneration);
+          if (actorBytes.byteLength !== actor.byteLength || createHash("sha256").update(actorBytes).digest("hex") !== actor.sha256) throw new Error("rotation actor differs from its verified receipt");
+          mkdirSync(join(destinationRoot, "browser"), { mode: 0o700 });
+          trustedBootstrapWriteNew(join(destinationRoot, "browser", "closed-actor.mjs"), actorBytes, checkGeneration);
+          trustedBootstrapFsyncDirectory(join(destinationRoot, "browser"));
+        }
+        if (plugin === "stdio") {
+          const value = decodePackValue(descriptor) as unknown as Record<string, any>;
+          if (
+            value.packageId !== record.packageId ||
+            value.manifest?.pluginId !== plugin ||
+            value.manifest?.version !== record.version ||
+            value.role !== record.role ||
+            value.execution !== "isolated" ||
+            typeof value.hashes?.coreWasmSha256 !== "string"
+          )
+            throw new Error("trusted rotation Stdio descriptor identity changed");
+          value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`;
+          value.hashes.descriptorSha256 = "";
+          value.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(value)).digest("hex");
+          const updatedDescriptor = Buffer.from(encodePackValue(value));
+          descriptor.fill(0);
+          descriptor = updatedDescriptor;
+          const json = Buffer.from(JSON.stringify(packValueToExactJson(value as PackValue)), "utf8");
+          try {
+            verifyFreshCatalogPackageV1(json, descriptor, {
+              pluginId: plugin,
+              packageId: record.packageId,
+              version: record.version,
+              role: "plugin",
+              execution: "isolated",
+              wasmSha256: record.component.sha256,
+              coreWasmSha256: value.hashes.coreWasmSha256,
+            });
+          } finally {
+            json.fill(0);
+          }
+          record.descriptor.byteLength = descriptor.byteLength;
+          record.descriptor.sha256 = createHash("sha256").update(descriptor).digest("hex");
+        }
+        trustedBootstrapWriteNew(join(destinationRoot, "component.wasm"), component, checkGeneration);
+        trustedBootstrapWriteNew(join(destinationRoot, "descriptor.semio"), descriptor, checkGeneration);
+        trustedBootstrapFsyncDirectory(destinationRoot);
+      } finally {
+        component.fill(0);
         descriptor.fill(0);
-        descriptor = updatedDescriptor;
-        const json = Buffer.from(JSON.stringify(packValueToExactJson(value as PackValue)), "utf8");
-        try {
-          verifyFreshCatalogPackageV1(json, descriptor, { pluginId: plugin, packageId: record.packageId, version: record.version, role: "plugin", execution: "isolated", wasmSha256: record.component.sha256, coreWasmSha256: value.hashes.coreWasmSha256 });
-        } finally { json.fill(0); }
-        record.descriptor.byteLength = descriptor.byteLength;
-        record.descriptor.sha256 = createHash("sha256").update(descriptor).digest("hex");
+        actorBytes?.fill(0);
       }
-      trustedBootstrapWriteNew(join(destinationRoot, "component.wasm"), component, checkGeneration);
-      trustedBootstrapWriteNew(join(destinationRoot, "descriptor.semio"), descriptor, checkGeneration);
-      trustedBootstrapFsyncDirectory(destinationRoot);
-      } finally { component.fill(0); descriptor.fill(0); actorBytes?.fill(0); }
     }
     const packageSummary = bundle.packages.map((record: any) => ({
-      pluginId: record.pluginId, packageId: record.packageId, version: record.version, role: record.role,
-      componentSha256: record.component.sha256, componentBlake3: record.component.blake3, descriptorSha256: record.descriptor.sha256,
+      pluginId: record.pluginId,
+      packageId: record.packageId,
+      version: record.version,
+      role: record.role,
+      componentSha256: record.component.sha256,
+      componentBlake3: record.component.blake3,
+      descriptorSha256: record.descriptor.sha256,
       browserActor: record.browserActor,
-      codecCount: record.nativeCodecs.length, targetCount: record.openTargets.length,
+      codecCount: record.nativeCodecs.length,
+      targetCount: record.openTargets.length,
     }));
     const profileSummary = { id: profile.id, selectedClosure: profile.selectedClosure, packages: packageSummary, openTarget: { pluginId: profile.openTarget.package.pluginId, ...profile.openTarget.target } };
     const generationId = createHash("sha256").update(trustedBootstrapProfileEncoding(profileSummary, codecs)).digest("hex");
@@ -5373,8 +7499,19 @@ function trustedBootstrapCurrent(dataRoot: string): TrustedBootstrapMaterializat
   if (!existsSync(pointerPath)) return undefined;
   const bytes = Buffer.from(trustedBootstrapReadRegular(pointerPath, 64 * 1024, "trusted catalog current pointer", () => {}));
   let pointer: any;
-  try { pointer = JSON.parse(bytes.toString("utf8")); } catch { throw new Error("trusted catalog current pointer does not decode"); }
-  if (JSON.stringify(Object.keys(pointer).sort()) !== JSON.stringify(["bundleSha256", "generationId", "profileId"]) || pointer.profileId !== "local-stdio-gis-open-v1" || !/^[0-9a-f]{64}$/u.test(pointer.generationId) || !/^[0-9a-f]{64}$/u.test(pointer.bundleSha256) || !bytes.equals(Buffer.from(`${JSON.stringify(pointer)}\n`, "utf8"))) throw new Error("trusted catalog current pointer is not exact canonical metadata");
+  try {
+    pointer = JSON.parse(bytes.toString("utf8"));
+  } catch {
+    throw new Error("trusted catalog current pointer does not decode");
+  }
+  if (
+    JSON.stringify(Object.keys(pointer).sort()) !== JSON.stringify(["bundleSha256", "generationId", "profileId"]) ||
+    pointer.profileId !== "local-stdio-gis-open-v1" ||
+    !/^[0-9a-f]{64}$/u.test(pointer.generationId) ||
+    !/^[0-9a-f]{64}$/u.test(pointer.bundleSha256) ||
+    !bytes.equals(Buffer.from(`${JSON.stringify(pointer)}\n`, "utf8"))
+  )
+    throw new Error("trusted catalog current pointer is not exact canonical metadata");
   const bundlePath = join(trustedRoot, "generations", pointer.generationId, "trusted-catalog.json");
   const receipt = Object.freeze({ profileId: pointer.profileId, generationId: pointer.generationId, bundleSha256: pointer.bundleSha256, bundlePath });
   trustedBootstrapReadCurrentBundle(receipt, () => {});
@@ -5389,7 +7526,9 @@ function publishTrustedBootstrapCurrent(dataRoot: string, receipt: TrustedBootst
     trustedBootstrapWriteNew(temporary, pointer, () => {});
     renameSync(temporary, join(trustedRoot, "current.json"));
     trustedBootstrapFsyncDirectory(trustedRoot);
-  } finally { rmSync(temporary, { force: true }); }
+  } finally {
+    rmSync(temporary, { force: true });
+  }
 }
 
 async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: TrustedBootstrapMaterializationV1, envelope: Record<string, any>): Promise<Record<string, any>> {
@@ -5400,28 +7539,50 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   if (!profile || !selected || !target) throw new Error("trusted stdio+GIS candidate bundle lost its exact GIS target");
   const headers = { authorization: `Bearer ${envelope.capability}`, "content-type": "application/json" };
   const created = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "Trusted GIS Bootstrap Probe", spaceKind: "studio", visibility: "private" });
-  const createdBody = created.status === 202 ? JSON.parse(created.text) as Record<string, any> : undefined;
+  const createdBody = created.status === 202 ? (JSON.parse(created.text) as Record<string, any>) : undefined;
   const spaceId = createdBody?.events?.find((candidate: any) => candidate?.body?.kind === "space.created")?.body?.spaceId;
   if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("trusted stdio+GIS candidate could not create its private probe space");
   const documentId = `trusted-gis-map-${randomBytes(8).toString("hex")}`;
   const descriptor = {
-    spaceId, documentId, artifactKind: target.artifactKind, artifactSchema: target.artifactSchema,
+    spaceId,
+    documentId,
+    artifactKind: target.artifactKind,
+    artifactSchema: target.artifactSchema,
     owner: { pluginId: selected.pluginId, packageId: selected.packageId, version: selected.version, packageHash: selected.component.sha256 },
-    packSchemaHash: target.packSchemaHash, bootstrapVersion: 1,
-    bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 }, bootstrapSnapshotHash: "11".repeat(32),
+    packSchemaHash: target.packSchemaHash,
+    bootstrapVersion: 1,
+    bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 },
+    bootstrapSnapshotHash: "11".repeat(32),
   };
   const announced = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "announce-document", descriptor });
   if (announced.status !== 202) throw new Error(`trusted stdio+GIS candidate could not announce its GIS Map probe: ${announced.status}`);
   const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/open-plan`, {
-    method: "POST", headers, signal: AbortSignal.timeout(2_000),
+    method: "POST",
+    headers,
+    signal: AbortSignal.timeout(2_000),
     body: JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId }, requestedSurfaceId: target.surfaceId, clientInstanceId: "trusted-bootstrap-candidate" }),
   });
   const plan = parseDocumentOpenPlanV1(await response.json().catch(() => undefined));
-  if (!response.ok || plan.scope.spaceId !== spaceId || plan.scope.documentId !== documentId || plan.catalog.generationId !== receipt.generationId
-    || JSON.stringify(plan.package) !== JSON.stringify({ pluginId: selected.pluginId, packageId: selected.packageId, version: selected.version, componentSha256: selected.component.sha256, componentBlake3: selected.component.blake3, descriptorByteSha256: selected.descriptor.sha256 })
-    || JSON.stringify(plan.artifact) !== JSON.stringify({ kind: target.artifactKind, schema: target.artifactSchema, packSchemaHash: target.packSchemaHash })
-    || JSON.stringify(plan.parentDialect) !== JSON.stringify(target.parentDialect) || JSON.stringify(plan.surface) !== JSON.stringify({ surfaceId: target.surfaceId, appId: target.appId, windowKindId: target.windowKindId, role: target.role, rendererTarget: target.rendererTarget })
-    || JSON.stringify(plan.grant) !== JSON.stringify(target.grant)) throw new Error("trusted stdio+GIS candidate issued a substituted GIS Map plan");
+  if (
+    !response.ok ||
+    plan.scope.spaceId !== spaceId ||
+    plan.scope.documentId !== documentId ||
+    plan.catalog.generationId !== receipt.generationId ||
+    JSON.stringify(plan.package) !==
+      JSON.stringify({
+        pluginId: selected.pluginId,
+        packageId: selected.packageId,
+        version: selected.version,
+        componentSha256: selected.component.sha256,
+        componentBlake3: selected.component.blake3,
+        descriptorByteSha256: selected.descriptor.sha256,
+      }) ||
+    JSON.stringify(plan.artifact) !== JSON.stringify({ kind: target.artifactKind, schema: target.artifactSchema, packSchemaHash: target.packSchemaHash }) ||
+    JSON.stringify(plan.parentDialect) !== JSON.stringify(target.parentDialect) ||
+    JSON.stringify(plan.surface) !== JSON.stringify({ surfaceId: target.surfaceId, appId: target.appId, windowKindId: target.windowKindId, role: target.role, rendererTarget: target.rendererTarget }) ||
+    JSON.stringify(plan.grant) !== JSON.stringify(target.grant)
+  )
+    throw new Error("trusted stdio+GIS candidate issued a substituted GIS Map plan");
   return plan;
 }
 
@@ -5433,15 +7594,19 @@ async function proveTrustedStdioGisStalePlanRejected(run: LocalHubRun, stalePlan
       signal: AbortSignal.timeout(2_000),
       body: JSON.stringify({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: stalePlan.receipt }),
     });
-    const body = await response.json().catch(() => undefined) as Record<string, any> | undefined;
+    const body = (await response.json().catch(() => undefined)) as Record<string, any> | undefined;
     if (response.status !== 401 || JSON.stringify(body) !== JSON.stringify({ schema: "semio.hub.document-open-plan-error/v1", code: "denied" })) throw new Error("prior-generation authenticated plan was not terminally denied before fresh issuance");
-  } finally { stalePlan.receipt = ""; }
+  } finally {
+    stalePlan.receipt = "";
+  }
 }
 
 /** 🟢️ Publishes current metadata only after one isolated candidate loads the immutable generation. */
 async function validateAndPublishTrustedStdioGisCandidate(repoRoot: string, hubRoot: string, dataRoot: string, receipt: TrustedBootstrapMaterializationV1, binaryPath?: string, stalePlan?: Record<string, any>): Promise<Record<string, any>> {
   const profile: LocalProfile = { profileId: "trusted-bootstrap-probe", subject: "trusted-bootstrap-subject", displayName: "Trusted Bootstrap Probe", allowedClientClasses: ["native"] };
-  const candidate = await startLocalHub(repoRoot, hubRoot, [profile], { capture: true, dataDir: join(dataRoot, "candidate-data"), trustedCatalog: receipt, binaryPath });
+  const candidateDataRoot = join(dataRoot, "candidate-data");
+  stageTrustedBootstrapCandidateCurrent(candidateDataRoot, receipt, () => {});
+  const candidate = await startLocalHub(repoRoot, hubRoot, [profile], { capture: true, dataDir: candidateDataRoot, binaryPath });
   let envelope: Record<string, any> | undefined;
   try {
     const readiness = await waitForReadiness(candidate);
@@ -5467,18 +7632,30 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
   const source = JSON.parse(readFileSync(join(root, fixture.source), "utf8"));
   const limits = fixture.limits;
   const variable = (value: number | bigint): Buffer => {
-    let remaining = BigInt(value); const bytes: number[] = [];
-    do { const byte = Number(remaining & 127n); remaining >>= 7n; bytes.push(byte | (remaining ? 128 : 0)); } while (remaining);
+    let remaining = BigInt(value);
+    const bytes: number[] = [];
+    do {
+      const byte = Number(remaining & 127n);
+      remaining >>= 7n;
+      bytes.push(byte | (remaining ? 128 : 0));
+    } while (remaining);
     return Buffer.from(bytes);
   };
   const encode = (command: any): Buffer => {
     const parts: Buffer[] = [];
-    const field = (value: Buffer): void => { parts.push(variable(value.length), value); };
+    const field = (value: Buffer): void => {
+      parts.push(variable(value.length), value);
+    };
     const text = (value: string): void => field(Buffer.from(value, "utf8"));
-    text(command.mutationId); text(command.documentId); text(command.actor);
-    parts.push(variable(command.dependencies.length)); command.dependencies.forEach(text);
-    text(command.diff.schema); field(Buffer.from(command.diff.payloadHex, "hex"));
-    text(command.inverse.schema); field(Buffer.from(command.inverse.payloadHex, "hex"));
+    text(command.mutationId);
+    text(command.documentId);
+    text(command.actor);
+    parts.push(variable(command.dependencies.length));
+    command.dependencies.forEach(text);
+    text(command.diff.schema);
+    field(Buffer.from(command.diff.payloadHex, "hex"));
+    text(command.inverse.schema);
+    field(Buffer.from(command.inverse.payloadHex, "hex"));
     parts.push(variable(command.timestamp.actor), variable(command.timestamp.physicalMs), variable(command.timestamp.logical));
     return Buffer.concat(parts);
   };
@@ -5486,7 +7663,8 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
     if (!bytes.length || bytes.length > limits.commandBytes) throw new Error("bounds");
     let position = 0;
     const integer = (): number => {
-      const start = position; let value = 0n;
+      const start = position;
+      let value = 0n;
       for (let shift = 0n; shift <= 63n; shift += 7n) {
         if (position === bytes.length) throw new Error("truncated");
         const byte = bytes[position++];
@@ -5502,7 +7680,9 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
     const field = (maximum: number): Buffer => {
       const length = integer();
       if (length > maximum || length > bytes.length - position) throw new Error("bounds");
-      const value = bytes.subarray(position, position + length); position += length; return value;
+      const value = bytes.subarray(position, position + length);
+      position += length;
+      return value;
     };
     const text = (): string => {
       const value = new TextDecoder("utf-8", { fatal: true }).decode(field(limits.textBytes));
@@ -5513,7 +7693,9 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
     const count = integer();
     if (count > limits.dependencyCount) throw new Error("bounds");
     for (let index = 0; index < count; index++) {
-      const value = text(); if (command.dependencies.includes(value)) throw new Error("duplicate"); command.dependencies.push(value);
+      const value = text();
+      if (command.dependencies.includes(value)) throw new Error("duplicate");
+      command.dependencies.push(value);
     }
     command.diff = { schema: text(), payloadHex: field(limits.payloadBytes).toString("hex") };
     command.inverse = { schema: text(), payloadHex: field(limits.payloadBytes).toString("hex") };
@@ -5528,33 +7710,71 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
   for (const vector of fixture.vectors) {
     const command = structuredClone(source.command);
     switch (vector.change) {
-      case "text-max-plus-one": command.actor = "a".repeat(limits.textBytes + 1); break;
-      case "control-text": command.actor += "\u0001"; break;
-      case "empty-schema": command.diff.schema = ""; break;
-      case "dependency-max-plus-one": command.dependencies = Array.from({ length: limits.dependencyCount + 1 }, (_, index) => index.toString(16).padStart(32, "0")); break;
-      case "duplicate-dependency": command.dependencies = ["e".repeat(32), "e".repeat(32)]; break;
-      case "diff-max-plus-one": command.diff.payloadHex = "00".repeat(limits.payloadBytes + 1); break;
-      case "inverse-max-plus-one": command.inverse.payloadHex = "00".repeat(limits.payloadBytes + 1); break;
-      case "hlc-actor-max-plus-one": command.timestamp.actor = BigInt(limits.integerMaximum) + 1n; break;
-      case "hlc-time-max-plus-one": command.timestamp.physicalMs = BigInt(limits.integerMaximum) + 1n; break;
-      case "hlc-logical-max-plus-one": command.timestamp.logical = BigInt(limits.integerMaximum) + 1n; break;
-      case "different-actor": command.actor = command.actor.replace("a", "e"); break;
-      case "different-scope": command.documentId = command.documentId.replace("c", "e"); break;
-      case "different-mutation": command.mutationId = "e".repeat(32); break;
+      case "text-max-plus-one":
+        command.actor = "a".repeat(limits.textBytes + 1);
+        break;
+      case "control-text":
+        command.actor += "\u0001";
+        break;
+      case "empty-schema":
+        command.diff.schema = "";
+        break;
+      case "dependency-max-plus-one":
+        command.dependencies = Array.from({ length: limits.dependencyCount + 1 }, (_, index) => index.toString(16).padStart(32, "0"));
+        break;
+      case "duplicate-dependency":
+        command.dependencies = ["e".repeat(32), "e".repeat(32)];
+        break;
+      case "diff-max-plus-one":
+        command.diff.payloadHex = "00".repeat(limits.payloadBytes + 1);
+        break;
+      case "inverse-max-plus-one":
+        command.inverse.payloadHex = "00".repeat(limits.payloadBytes + 1);
+        break;
+      case "hlc-actor-max-plus-one":
+        command.timestamp.actor = BigInt(limits.integerMaximum) + 1n;
+        break;
+      case "hlc-time-max-plus-one":
+        command.timestamp.physicalMs = BigInt(limits.integerMaximum) + 1n;
+        break;
+      case "hlc-logical-max-plus-one":
+        command.timestamp.logical = BigInt(limits.integerMaximum) + 1n;
+        break;
+      case "different-actor":
+        command.actor = command.actor.replace("a", "e");
+        break;
+      case "different-scope":
+        command.documentId = command.documentId.replace("c", "e");
+        break;
+      case "different-mutation":
+        command.mutationId = "e".repeat(32);
+        break;
     }
     let bytes = encode(command);
     switch (vector.change) {
-      case "trailing": bytes = Buffer.concat([bytes, Buffer.from([0])]); break;
-      case "truncated": bytes = bytes.subarray(0, -1); break;
-      case "oversize": bytes = Buffer.alloc(limits.commandBytes + 1); break;
-      case "overlong-varint": bytes = Buffer.concat([Buffer.from([bytes[0] | 128, 0]), bytes.subarray(1)]); break;
-      case "overflow-varint": bytes = Buffer.concat([Buffer.alloc(9, 255), Buffer.from([2]), bytes.subarray(1)]); break;
-      case "invalid-utf8": bytes[1] = 255; break;
+      case "trailing":
+        bytes = Buffer.concat([bytes, Buffer.from([0])]);
+        break;
+      case "truncated":
+        bytes = bytes.subarray(0, -1);
+        break;
+      case "oversize":
+        bytes = Buffer.alloc(limits.commandBytes + 1);
+        break;
+      case "overlong-varint":
+        bytes = Buffer.concat([Buffer.from([bytes[0] | 128, 0]), bytes.subarray(1)]);
+        break;
+      case "overflow-varint":
+        bytes = Buffer.concat([Buffer.alloc(9, 255), Buffer.from([2]), bytes.subarray(1)]);
+        break;
+      case "invalid-utf8":
+        bytes[1] = 255;
+        break;
     }
     let outcome = "rejected";
     try {
       const value = decode(bytes);
-      outcome = ["mutationId", "documentId", "actor"].every(key => value[key] === source.command[key]) ? "canonical" : "identity-denied";
+      outcome = ["mutationId", "documentId", "actor"].every((key) => value[key] === source.command[key]) ? "canonical" : "identity-denied";
     } catch {}
     if (outcome !== vector.expected) throw new Error(`inference command boundary mismatch: ${vector.name}`);
   }
@@ -5574,7 +7794,7 @@ async function proveMemoryBackendBackingFixture(repoRoot: string): Promise<void>
     { ...fixture, retry: { ...fixture.retry, timerDelayMs: 0 } },
     { ...fixture, sequentialTasks: 65 },
   ];
-  if (hostile.some(value => validate(value))) throw new Error("memory backing schema accepted altered bounds");
+  if (hostile.some((value) => validate(value))) throw new Error("memory backing schema accepted altered bounds");
   const inline = 128;
   const lengths = fixture.tables.map((row: { slots: number }, index: number) => row.slots * (index + 1) * 8);
   const required = BigInt(inline) + lengths.reduce((sum: bigint, length: number) => sum + BigInt(length), 0n);
@@ -5599,19 +7819,25 @@ async function proveMemoryBackendBackingFixture(repoRoot: string): Promise<void>
     pendingTasks.delete(index + 1);
     if (pendingTasks.size !== 0 || heldResult[0] !== 0) throw new Error("sequential task retirement changed a retained result or leaked task admission");
   }
-  let queueOccupied = true, retryAttempts = 0, terminal = false;
+  let queueOccupied = true,
+    retryAttempts = 0,
+    terminal = false;
   const retry = async (): Promise<void> => {
     while (!terminal && retryAttempts < fixture.retry.maximumAttempts) {
       retryAttempts++;
-      await new Promise<void>(resolve => setTimeout(resolve, fixture.retry.timerDelayMs));
+      await new Promise<void>((resolve) => setTimeout(resolve, fixture.retry.timerDelayMs));
       terminal = !queueOccupied;
     }
   };
   const pendingRetry = retry();
-  queueMicrotask(() => { queueOccupied = false; });
+  queueMicrotask(() => {
+    queueOccupied = false;
+  });
   await pendingRetry;
   if (terminal !== fixture.retry.terminalAfterQueueRelease || retryAttempts !== 1) throw new Error("memory backing retry did not reach terminal after queue release");
-  console.log(`memory-backing-oracle: tables=${fixture.tables.length} admission=${fixture.admission.length} hostile=${hostile.length} timer-retry=1 sequential=${fixture.sequentialTasks}; runtime ABI sizes and worker wake are checked by the Rust owner laws`);
+  console.log(
+    `memory-backing-oracle: tables=${fixture.tables.length} admission=${fixture.admission.length} hostile=${hostile.length} timer-retry=1 sequential=${fixture.sequentialTasks}; runtime ABI sizes and worker wake are checked by the Rust owner laws`,
+  );
 }
 
 async function proveNativeDeficitFixture(repoRoot: string): Promise<void> {
@@ -5644,17 +7870,30 @@ class GisInferenceLedgerCheckScript extends BundleScript {
       "gis_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication",
     ];
     const receipts = await runExactCargoLaws({
-      cwd: this.root, groups: [
+      cwd: this.root,
+      groups: [
         { package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn"] },
-        { package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--features", "sqlite"], laws: ["db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return", "db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingress"] },
+        {
+          package: "semio-framework-os-kernel-db",
+          target: { kind: "lib", name: "db" },
+          cargoArgs: ["--features", "sqlite"],
+          laws: ["db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return", "db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingress"],
+        },
         { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--features", "sqlite"], laws: suffixes },
       ],
-      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 60_000,
-      progress(event) { console.log(`gis-inference-ledger ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: buildBudgetMs(),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 60_000,
+      progress(event) {
+        console.log(`gis-inference-ledger ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
     });
     for (const receipt of receipts) console.log(`gis-inference-ledger-receipt: ${JSON.stringify(receipt)}`);
     runCmd("cargo", ["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], { cwd: this.root, budgetMs: 3_600_000 });
-    console.log(`gis-inference-ledger-check: scheduler=2 memory-backing=1 parked-retry=1 sqlite=4 wal=5 catalog-projection=1 canonical-command=1 trusted-catalog=2 approval-request=1 live-author=1 gis-provider-selection=1 exact=${suffixes.length + 4}; no route/GIS-approval acceptance`);
+    console.log(
+      `gis-inference-ledger-check: scheduler=2 memory-backing=1 parked-retry=1 sqlite=4 wal=5 catalog-projection=1 canonical-command=1 trusted-catalog=2 approval-request=1 live-author=1 gis-provider-selection=1 exact=${suffixes.length + 4}; no route/GIS-approval acceptance`,
+    );
   }
 }
 
@@ -5671,7 +7910,9 @@ class GisMapFrozenBindingCheckScript extends BundleScript {
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
         lawBudgetMs: 60_000,
-        progress(event) { console.log(`gis-map-frozen-binding ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`gis-map-frozen-binding ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`gis-map-frozen-binding-receipt: ${JSON.stringify(receipt)}`);
     }
@@ -5710,7 +7951,9 @@ class GisMapProposalCheckScript extends BundleScript {
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
         lawBudgetMs: 120_000,
-        progress(event) { console.log(`gis-map-proposal ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`gis-map-proposal ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`gis-map-proposal-receipt: ${JSON.stringify(receipt)}`);
       console.log(`gis-map-proposal-check: neutral hostile=${hostile} exact-native=${laws.length}; no external model provider, no WGPU rendering`);
@@ -5729,7 +7972,8 @@ class GisMapProposalCheckScript extends BundleScript {
         "  BLOCKED ON: (a) a materialized trusted profile — `os-hub:trusted-stdio-gis-bundle-check --native` has never completed;",
         "  (b) a real committer — approval is fail-closed `approval.commit-unavailable` while no typed composition transaction exists,",
         "  so B would observe nothing and the law would assert a vacuous truth. It is deliberately not run rather than run vacuously.",
-      ]) console.log(line);
+      ])
+        console.log(line);
     }
     if (mode === "--source") console.log(`gis-map-proposal-check: neutral source oracle passed with hostile=${hostile}; native laws and the two-user process journey remain unclaimed. No external model provider, no WGPU rendering.`);
   }
@@ -5743,7 +7987,9 @@ class NativeDocumentOpenCheckScript extends BundleScript {
     runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--skip-nx-cache", "--", "--scale"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runNativeDocumentAdmissionLaws(this.repoRoot);
     await proveNativeSocketGrantActor(this.repoRoot);
-    console.log("native-document-open-check: independent D1 oracle, exact scope/package/surface laws, one-use plan receipt exchange, tag7 Session gate, actor stamping, reconnect reissue, cross-space isolation, cancellation, origin denial, and redaction passed");
+    console.log(
+      "native-document-open-check: independent D1 oracle, exact scope/package/surface laws, one-use plan receipt exchange, tag7 Session gate, actor stamping, reconnect reissue, cross-space isolation, cancellation, origin denial, and redaction passed",
+    );
   }
 }
 
@@ -5766,22 +8012,22 @@ function runNativeDocumentAdmissionLaws(repoRoot: string): void {
       .filter((line) => line.endsWith(": test"))
       .map((line) => line.slice(0, -": test".length))
       .filter((name) => name.endsWith(suffix));
-    if (listed.status !== 0 || matches.length !== 1)
-      throw new Error(`native document admission gate expected exactly one ${suffix}, selected ${matches.length}; status=${listed.status}; diagnostic=${listed.stderr.trim().slice(-4_000) || "<none>"}`);
+    if (listed.status !== 0 || matches.length !== 1) throw new Error(`native document admission gate expected exactly one ${suffix}, selected ${matches.length}; status=${listed.status}; diagnostic=${listed.stderr.trim().slice(-4_000) || "<none>"}`);
     runCargo([...target, matches[0]!, "--", "--exact", "--test-threads=1"], repoRoot, env);
   }
-  const mcpSuffix = "mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority";
+  const mcpSuffixes = ["mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority", "authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope"];
   const mcpTarget = ["test", "-p", "semio-framework-os-mcp", "--lib"];
-  const listed = runProbe("cargo", [...mcpTarget, mcpSuffix, "--", "--list"], { cwd: repoRoot, env, ...orchestratorBudgetOpts() });
-  const matches = listed.stdout
-    .split("\n")
-    .filter((line) => line.endsWith(": test"))
-    .map((line) => line.slice(0, -": test".length))
-    .filter((name) => name.endsWith(mcpSuffix));
-  if (listed.status !== 0 || matches.length !== 1)
-    throw new Error(`MCP document admission gate expected exactly one ${mcpSuffix}, selected ${matches.length}; status=${listed.status}; diagnostic=${listed.stderr.trim().slice(-4_000) || "<none>"}`);
-  runCargo([...mcpTarget, matches[0]!, "--", "--exact", "--test-threads=1"], repoRoot, env);
-  console.log(`native-document-admission-laws: nativeExact=${suffixes.length} mcpExact=1 passed`);
+  for (const mcpSuffix of mcpSuffixes) {
+    const listed = runProbe("cargo", [...mcpTarget, mcpSuffix, "--", "--list"], { cwd: repoRoot, env, ...orchestratorBudgetOpts() });
+    const matches = listed.stdout
+      .split("\n")
+      .filter((line) => line.endsWith(": test"))
+      .map((line) => line.slice(0, -": test".length))
+      .filter((name) => name.endsWith(mcpSuffix));
+    if (listed.status !== 0 || matches.length !== 1) throw new Error(`MCP document admission gate expected exactly one ${mcpSuffix}, selected ${matches.length}; status=${listed.status}; diagnostic=${listed.stderr.trim().slice(-4_000) || "<none>"}`);
+    runCargo([...mcpTarget, matches[0]!, "--", "--exact", "--test-threads=1"], repoRoot, env);
+  }
+  console.log(`native-document-admission-laws: nativeExact=${suffixes.length} mcpExact=${mcpSuffixes.length} passed`);
 }
 
 /** 🔗️ `runCargo`'s `env` arg replaces `process.env` wholesale (see `runCmdInternal`'s
@@ -5819,7 +8065,6 @@ class DevScript extends BundleScript {
       port: Number(process.env[OS_HUB_PORT_ENV] ?? OS_HUB_PORT),
       dataDir: dataRoot,
       adminSubjects: secureAdmin ? ["semio.local.bootstrap/v1:local-administrator-01"] : undefined,
-      trustedCatalog,
     });
     let relay: LocalBrowserRelay | undefined;
     let adminRelay: LocalAdminRelay | undefined;
@@ -5911,7 +8156,9 @@ class SecureLocalSmokeScript extends BundleScript {
     runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
     await runSecureLocalSmoke(this.repoRoot, this.root);
     await proveNativeSocketGrantActor(this.repoRoot);
-    console.log("native-mcp-socket-grant-check: neutral D1 oracle, exact native laws, direct children, early fd3 seals, byte-clean MCP stdio, strict open-plan receipt exchange, v1 grant/tag7, exact package/surface authority, actor stamping, forced reconnect, and fresh plan/grant reissue passed");
+    console.log(
+      "native-mcp-socket-grant-check: neutral D1 oracle, exact native laws, direct children, early fd3 seals, byte-clean MCP stdio, strict open-plan receipt exchange, v1 grant/tag7, exact package/surface authority, actor stamping, forced reconnect, and fresh plan/grant reissue passed",
+    );
   }
 }
 
@@ -5931,7 +8178,25 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     const producerStart = describeSource.indexOf("function freshStage(");
     const producerEnd = describeSource.indexOf("\n/** @emoji 🛂️ Shared implementation", producerStart);
     const producer = describeSource.slice(producerStart, producerEnd);
-    if (producerStart < 0 || producerEnd < 0 || !producer.includes("CARGO_INCREMENTAL: \"0\"") || !producer.includes("RUSTC_WRAPPER: \"\"") || !producer.includes("pluginWasmArtifactPath(") || !producer.includes("verifyFreshCatalogPackageV1(") || !producer.includes("readStableBuildFile(cargoComponent") || !producer.includes("freshStage(snapshot.descriptorBytes") || !producer.includes("snapshot?.descriptorBytes.fill(0)") || !producer.includes("blake3Hex(componentBytes)") || !producer.includes("if (!complete) rmSync(destination") || producer.indexOf("closeSync(output)") > producer.indexOf("if (!complete) rmSync(destination") || producer.includes("freshCopy(") || producer.includes("atomicDescriptorPair") || producer.includes("plugin-registry:generate") || producer.includes("ownerRoot")) throw new Error("fresh component producer is not isolated, descriptor-verified, bounded, close-before-cleanup, or side-effect free");
+    if (
+      producerStart < 0 ||
+      producerEnd < 0 ||
+      !producer.includes('CARGO_INCREMENTAL: "0"') ||
+      !producer.includes('RUSTC_WRAPPER: ""') ||
+      !producer.includes("pluginWasmArtifactPath(") ||
+      !producer.includes("verifyFreshCatalogPackageV1(") ||
+      !producer.includes("readStableBuildFile(cargoComponent") ||
+      !producer.includes("freshStage(snapshot.descriptorBytes") ||
+      !producer.includes("snapshot?.descriptorBytes.fill(0)") ||
+      !producer.includes("blake3Hex(componentBytes)") ||
+      !producer.includes("if (!complete) rmSync(destination") ||
+      producer.indexOf("closeSync(output)") > producer.indexOf("if (!complete) rmSync(destination") ||
+      producer.includes("freshCopy(") ||
+      producer.includes("atomicDescriptorPair") ||
+      producer.includes("plugin-registry:generate") ||
+      producer.includes("ownerRoot")
+    )
+      throw new Error("fresh component producer is not isolated, descriptor-verified, bounded, close-before-cleanup, or side-effect free");
     const catalogSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
     const providerSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
     const runtimeSource = readFileSync(resolve(this.repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8").split("\nmod tests {")[0]!;
@@ -5939,14 +8204,26 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     const runtimeCompact = runtimeSource.replace(/\s+/g, "");
     const receiptResolution = runtimeCompact.indexOf(".authority_for_authenticated_exchange(&intent.plan_receipt");
     const targetResolution = runtimeCompact.indexOf("catalog.resolve_document_open(&authority.descriptor", receiptResolution);
-    if (!catalogSource.includes("bundle.schema_version != 2") || !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") || !catalogSource.includes("selected profile must resolve exactly one document-open target") || !providerSource.includes("NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29") || !providerSource.includes("receipt.package_version != version") || !registrySource.includes("CATALOG_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024") || runtimeSource.split("catalog.generation_id() != authority.catalog.generation_id").length - 1 !== 2 || receiptResolution < 0 || targetResolution < receiptResolution) throw new Error("trusted stdio+GIS runtime/source boundary is incomplete");
+    if (
+      !catalogSource.includes("bundle.schema_version != 2") ||
+      !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") ||
+      !catalogSource.includes("selected profile must resolve exactly one document-open target") ||
+      !providerSource.includes("NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29") ||
+      !providerSource.includes("receipt.package_version != version") ||
+      !registrySource.includes("CATALOG_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024") ||
+      runtimeSource.split("catalog.generation_id() != authority.catalog.generation_id").length - 1 !== 2 ||
+      receiptResolution < 0 ||
+      targetResolution < receiptResolution
+    )
+      throw new Error("trusted stdio+GIS runtime/source boundary is incomplete");
     const scriptSource = readFileSync(import.meta.path, "utf8");
     const body = (start: string, end: string): string => {
-      const first = scriptSource.indexOf(start), last = scriptSource.indexOf(end, first);
+      const first = scriptSource.indexOf(start),
+        last = scriptSource.indexOf(end, first);
       if (first < 0 || last < 0) throw new Error(`trusted stdio+GIS source boundary is missing ${start}`);
       return scriptSource.slice(first, last);
     };
-    const materializer = body("\nasync function materializeTrustedStdioGisBundle", "\nfunction trustedBootstrapCurrent");
+    const materializer = body("\nasync function materializeTrustedStdioGisBundle", "\nfunction trustedBootstrapReadRegular");
     const writer = body("\nfunction trustedBootstrapWriteNew", "\nfunction trustedBootstrapFsyncDirectory");
     const publisher = body("\nfunction publishTrustedBootstrapCurrent", "\n/** 🟢️ Publishes current metadata");
     const stalePlan = body("\nasync function proveTrustedStdioGisStalePlanRejected", "\n/** 🟢️ Publishes current metadata");
@@ -5955,7 +8232,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     const bootstrap = body("\nclass TrustedStdioGisBootstrapScript", "\nclass AdminBackendCheckScript");
     const dev = body("\nclass DevScript", "\nclass TrustedStdioGisBundleCheckScript");
     const nativeGate = body("\nclass TrustedStdioGisBundleCheckScript", "\nclass TrustedStdioGisBootstrapScript");
-    const processGate = nativeGate.slice(nativeGate.lastIndexOf("if (segments[0] === \"--process\") {"));
+    const processGate = nativeGate.slice(nativeGate.lastIndexOf('if (segments[0] === "--process") {'));
     const ordered = (source: string, earlier: string, later: string): boolean => source.indexOf(earlier) >= 0 && source.indexOf(earlier) < source.indexOf(later);
     const missingFence = [
       ["materializer publication", !materializer.includes("publishTrustedBootstrapCurrent")],
@@ -5967,17 +8244,27 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       ["candidate readiness", ordered(candidate, "await waitForReadiness(candidate)", "const plan = await proveTrustedStdioGisCandidatePlan(candidate, receipt, envelope)")],
       ["candidate publication", ordered(candidate, "const plan = await proveTrustedStdioGisCandidatePlan(candidate, receipt, envelope)", "publishTrustedBootstrapCurrent(dataRoot, receipt)")],
       ["candidate stale plan", ordered(candidate, "if (stalePlan) await proveTrustedStdioGisStalePlanRejected", "const plan = await proveTrustedStdioGisCandidatePlan")],
-      ["stale receipt cleanup", stalePlan.includes("finally { stalePlan.receipt = \"\"; }")],
+      ["stale receipt cleanup", /finally\s*\{\s*stalePlan\.receipt\s*=\s*"";\s*\}/u.test(stalePlan)],
       ["rotation descriptor", rotation.includes("verifyFreshCatalogPackageV1(") && rotation.includes("trustedBootstrapProfileEncoding(")],
-      ["server-owned rotation", rotation.includes("value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString(\"hex\")}`")],
+      ["server-owned rotation", rotation.includes('value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`')],
       ["rotation publication", ordered(rotation, "renameSync(stageRoot, generationRoot)", "trustedBootstrapFsyncDirectory(generationsRoot)")],
       ["bootstrap candidate", ordered(bootstrap, "materializeTrustedStdioGisBundle", "validateAndPublishTrustedStdioGisCandidate")],
       ["development candidate", ordered(dev, "await materializeTrustedStdioGisBundle", "await validateAndPublishTrustedStdioGisCandidate")],
       ["development launch", ordered(dev, "await validateAndPublishTrustedStdioGisCandidate", "const run = await startLocalHub")],
-      ["native target", nativeGate.includes("CARGO_TARGET_DIR: hubTarget") && nativeGate.includes("join(hubTarget, \"debug\"") && candidate.includes("dataDir: join(dataRoot, \"candidate-data\")")],
+      [
+        "native target",
+        nativeGate.includes("CARGO_TARGET_DIR: hubTarget") &&
+          nativeGate.includes('join(hubTarget, "debug"') &&
+          candidate.includes("stageTrustedBootstrapCandidateCurrent(candidateDataRoot, receipt") &&
+          candidate.includes("dataDir: candidateDataRoot"),
+      ],
       ["process mode", processGate.length > 0],
-      ["failed candidate", ordered(processGate, "const retained = trustedBootstrapCurrent(dataRoot)", "profileId: \"missing-profile\"")],
-      ["restart candidate", ordered(processGate, "profileId: \"missing-profile\"", "const rotated = await materializeTrustedStdioGisRotation") && ordered(processGate, "const rotated = await materializeTrustedStdioGisRotation", "const freshPlan = await validateAndPublishTrustedStdioGisCandidate")],
+      ["failed candidate", ordered(processGate, "const retained = trustedBootstrapCurrent(dataRoot)", 'profileId: "missing-profile"')],
+      [
+        "restart candidate",
+        ordered(processGate, 'profileId: "missing-profile"', "const rotated = await materializeTrustedStdioGisRotation") &&
+          ordered(processGate, "const rotated = await materializeTrustedStdioGisRotation", "const freshPlan = await validateAndPublishTrustedStdioGisCandidate"),
+      ],
     ].find(([, present]) => !present)?.[0];
     if (missingFence) throw new Error(`trusted stdio+GIS source fence is incomplete: ${missingFence}`);
     if (segments[0] === "--native" || segments[0] === "--process") {
@@ -5985,12 +8272,40 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       const ticketsRoot = resolve(this.repoRoot, ".🧬semio", "🦑️repo", "🎫️tickets");
       const artifactPath = artifactRoot ? resolve(artifactRoot) : "";
       const ticketRelative = artifactPath ? relative(ticketsRoot, artifactPath) : "";
-      if (!artifactRoot || !isAbsolute(artifactRoot) || ticketRelative === "" || ticketRelative.startsWith("..") || isAbsolute(ticketRelative)) throw new Error("trusted stdio+GIS native gate requires an absolute ticket-owned SEMIO_TEST_ARTIFACT_DIR");
+      if (!artifactRoot || !isAbsolute(artifactRoot) || ticketRelative === "" || ticketRelative.startsWith("..") || isAbsolute(ticketRelative))
+        throw new Error("trusted stdio+GIS native gate requires an absolute ticket-owned SEMIO_TEST_ARTIFACT_DIR");
       mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
       const hubTarget = join(artifactPath, "hub-target");
       mkdirSync(hubTarget, { recursive: true, mode: 0o700 });
       const hubEnv = { ...process.env, CARGO_TARGET_DIR: hubTarget, CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", SCCACHE_DISABLE: "1" };
-      runCargo(["--config", 'build.rustc-wrapper=""', "build", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root, hubEnv);
+      const hubBuildRoot = mkdtempSync(join(artifactPath, "hub-build-"));
+      const hubBuildControl = trustedBootstrapBuildControl(buildBudgetMs());
+      console.log("trusted-native-hub build:start artifacts=" + hubBuildRoot);
+      try {
+        const result = await runExactCargoLawProcess("cargo", ["--config", 'build.rustc-wrapper=""', "build", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "--message-format=json"], {
+          cwd: this.root,
+          env: { ...hubEnv, CARGO_TERM_COLOR: "never" },
+          budgetMs: buildBudgetMs(),
+          maxOutputBytes: 64 * 1024 * 1024,
+          stdoutPath: join(hubBuildRoot, "stdout.jsonl"),
+          stderrPath: join(hubBuildRoot, "stderr.txt"),
+          cancelled: hubBuildControl.control.cancelled,
+        });
+        trustedBootstrapWriteNew(join(hubBuildRoot, "outcome.json"), Buffer.from(JSON.stringify({ status: result.status, signal: result.signal, reason: result.reason })), () => {});
+        const errors = result.stdout.split("\n").flatMap((line) => {
+          try {
+            const event = JSON.parse(line);
+            return event.reason === "compiler-message" && event.message?.level === "error" ? [String(event.message.rendered ?? event.message.message)] : [];
+          } catch {
+            return [];
+          }
+        });
+        for (const error of errors) console.error(error);
+        if (result.status !== 0 || result.signal) throw new Error("trusted native Hub build failed: " + JSON.stringify({ status: result.status, signal: result.signal, reason: result.reason, artifacts: hubBuildRoot, errors: errors.length }));
+        console.log("trusted-native-hub build:complete artifacts=" + hubBuildRoot);
+      } finally {
+        hubBuildControl.close();
+      }
       const dataRoot = join(resolve(artifactRoot), "server-owned-data");
       const receipt = await materializeTrustedStdioGisBundle(this.repoRoot, dataRoot);
       const binary = join(hubTarget, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
@@ -5999,11 +8314,21 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
         const retained = trustedBootstrapCurrent(dataRoot);
         if (!retained) throw new Error("trusted stdio+GIS process gate has no retained current generation");
         let rejected = false;
-        try { await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, { ...receipt, profileId: "missing-profile" }, binary); } catch { rejected = true; }
+        try {
+          await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, { ...receipt, profileId: "missing-profile" }, binary);
+        } catch {
+          rejected = true;
+        }
         if (!rejected || JSON.stringify(trustedBootstrapCurrent(dataRoot)) !== JSON.stringify(retained)) throw new Error("failed trusted stdio+GIS candidate changed the retained current generation");
         const rotated = await materializeTrustedStdioGisRotation(this.repoRoot, dataRoot, retained);
         const freshPlan = await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, rotated, binary, initialPlan);
-        if (JSON.stringify(trustedBootstrapCurrent(dataRoot)) !== JSON.stringify(rotated) || initialPlan.catalog.generationId !== retained.generationId || freshPlan.catalog.generationId !== rotated.generationId || retained.generationId === rotated.generationId) throw new Error("trusted stdio+GIS process rotation did not retain exact distinct plan generations");
+        if (
+          JSON.stringify(trustedBootstrapCurrent(dataRoot)) !== JSON.stringify(rotated) ||
+          initialPlan.catalog.generationId !== retained.generationId ||
+          freshPlan.catalog.generationId !== rotated.generationId ||
+          retained.generationId === rotated.generationId
+        )
+          throw new Error("trusted stdio+GIS process rotation did not retain exact distinct plan generations");
         console.log("trusted-stdio-gis-bundle-process-check: failed candidate preserved current; a real next-generation candidate denied the old authenticated plan before issuing the fresh exact GIS Map plan");
       }
       console.log(`trusted-stdio-gis-bundle-native-receipt: ${JSON.stringify(receipt)}`);
@@ -6062,10 +8387,7 @@ class AdminBackendCheckScript extends BundleScript {
 class AdminLiveJourneyCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixture = await adminLiveJourneyFixture(this.repoRoot);
-    const laws = [
-      "local_bootstrap::tests::local_bootstrap_idle_listener_survives_until_admission_and_admitted_frame_is_deadline_bounded",
-      "directory::sqlite::tests::projection_rebuild_preserves_live_credential_invite_and_session_bindings",
-    ];
+    const laws = ["local_bootstrap::tests::local_bootstrap_idle_listener_survives_until_admission_and_admitted_frame_is_deadline_bounded", "directory::sqlite::tests::projection_rebuild_preserves_live_credential_invite_and_session_bindings"];
     for (const law of laws) {
       const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", law, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
       const matches = listed.stdout.split("\n").filter((line) => line === `${law}: test`);
@@ -6151,19 +8473,25 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`directory event page route fixture: ${JSON.stringify(validate.errors)}`);
-  const u32be = (value: number): Buffer => { const bytes = Buffer.alloc(4); bytes.writeUInt32BE(value); return bytes; };
-  const u64be = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
-  const i64be = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigInt64BE(BigInt(value)); return bytes; };
+  const u32be = (value: number): Buffer => {
+    const bytes = Buffer.alloc(4);
+    bytes.writeUInt32BE(value);
+    return bytes;
+  };
+  const u64be = (value: number): Buffer => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeBigUInt64BE(BigInt(value));
+    return bytes;
+  };
+  const i64be = (value: number): Buffer => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeBigInt64BE(BigInt(value));
+    return bytes;
+  };
   const sessionId = Buffer.from(fixture.session.sessionId, "utf8");
   const userId = Buffer.from(fixture.session.userId, "utf8");
   const binding = createHash("sha256")
-    .update(Buffer.concat([
-      Buffer.from("semio/hub/directory-event-page/session-binding/v1\0"),
-      u32be(sessionId.length), sessionId,
-      u32be(userId.length), userId,
-      u64be(fixture.session.authorizationGeneration),
-      i64be(fixture.session.expiresAt),
-    ]))
+    .update(Buffer.concat([Buffer.from("semio/hub/directory-event-page/session-binding/v1\0"), u32be(sessionId.length), sessionId, u32be(userId.length), userId, u64be(fixture.session.authorizationGeneration), i64be(fixture.session.expiresAt)]))
     .digest("hex");
   if (binding !== fixture.session.bindingSha256) throw new Error("directory event page session binding is not byte-exact");
   const makeEvent = (row: { seq: number; visible: boolean; labelBytes: number }) => ({
@@ -6216,22 +8544,30 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
       if (Buffer.byteLength(JSON.stringify(exact), "utf8") !== fixture.limits.eventBytes) throw new Error("exact event boundary fixture drifted");
       if (Buffer.byteLength(JSON.stringify(plusOne), "utf8") !== fixture.limits.eventBytes + 1) throw new Error("event max+1 fixture drifted");
       if (build(vector.after, [exact]).events.length !== 1) throw new Error("exact event boundary was not admitted");
-      try { build(vector.after, [plusOne]); throw new Error("event max+1 admitted"); } catch (error) { if ((error as Error).message !== "directory event append rejected") throw error; }
+      try {
+        build(vector.after, [plusOne]);
+        throw new Error("event max+1 admitted");
+      } catch (error) {
+        if ((error as Error).message !== "directory event append rejected") throw error;
+      }
       continue;
     }
-    const rows = vector.name === "128-hidden"
-      ? Array.from({ length: fixture.limits.rawRows }, (_, index) => makeEvent({ seq: vector.after + index + 1, visible: false, labelBytes: 8 }))
-      : vector.raw.map(makeEvent);
+    const rows = vector.name === "128-hidden" ? Array.from({ length: fixture.limits.rawRows }, (_, index) => makeEvent({ seq: vector.after + index + 1, visible: false, labelBytes: 8 })) : vector.raw.map(makeEvent);
     const page = build(vector.after, rows);
-    if (page.throughSeqInclusive !== vector.expected.through || page.hasMore !== vector.expected.hasMore || JSON.stringify(page.events.map(event => event.seq)) !== JSON.stringify(vector.expected.visibleSeqs)) {
+    if (page.throughSeqInclusive !== vector.expected.through || page.hasMore !== vector.expected.hasMore || JSON.stringify(page.events.map((event) => event.seq)) !== JSON.stringify(vector.expected.visibleSeqs)) {
       throw new Error(`directory event page vector differs for ${vector.name}`);
     }
-    if (page.events.some(event => JSON.stringify(event).includes("hidden-identity"))) throw new Error("hidden raw identity leaked into a page");
-    const receipt = createHash("sha256").update(JSON.stringify({ ...page, receiptSha256: undefined }, (_key, value) => value)).digest("hex");
+    if (page.events.some((event) => JSON.stringify(event).includes("hidden-identity"))) throw new Error("hidden raw identity leaked into a page");
+    const receipt = createHash("sha256")
+      .update(JSON.stringify({ ...page, receiptSha256: undefined }, (_key, value) => value))
+      .digest("hex");
     if (receipt !== page.receiptSha256 || Buffer.byteLength(JSON.stringify(page), "utf8") > fixture.limits.pageBytes) throw new Error(`directory event page receipt/size differs for ${vector.name}`);
     if (vector.expected.nextVisibleSeqs.length > 0) {
-      const next = build(page.throughSeqInclusive, rows.filter(row => row.seq > page.throughSeqInclusive));
-      if (JSON.stringify(next.events.map(event => event.seq)) !== JSON.stringify(vector.expected.nextVisibleSeqs)) throw new Error("directory event page continuation skipped a visible row");
+      const next = build(
+        page.throughSeqInclusive,
+        rows.filter((row) => row.seq > page.throughSeqInclusive),
+      );
+      if (JSON.stringify(next.events.map((event) => event.seq)) !== JSON.stringify(vector.expected.nextVisibleSeqs)) throw new Error("directory event page continuation skipped a visible row");
     }
   }
   const parseAfter = (query: string): number | null => {
@@ -6245,15 +8581,30 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
     const admitted = parseAfter(query.query) !== null;
     const status = !admitted ? 400 : query.bearer === "valid" ? 200 : query.bearer === "backend-failure" ? 500 : 401;
     const reads = admitted && ["valid", "rotated", "backend-failure"].includes(query.bearer) ? 1 : 0;
-    if (status !== query.status || reads !== query.reads || ((status === 200 ? 1 : 0) !== query.bodyBytes)) throw new Error(`directory event page query result differs for ${query.query}`);
+    if (status !== query.status || reads !== query.reads || (status === 200 ? 1 : 0) !== query.bodyBytes) throw new Error(`directory event page query result differs for ${query.query}`);
   }
   const hostilePage = seal(0, 0, false, []).page;
-  if (createHash("sha256").update(JSON.stringify({ ...hostilePage, receiptSha256: undefined })).digest("hex") === "b".repeat(64)) throw new Error("receipt substitution was not rejected");
+  if (
+    createHash("sha256")
+      .update(JSON.stringify({ ...hostilePage, receiptSha256: undefined }))
+      .digest("hex") === "b".repeat(64)
+  )
+    throw new Error("receipt substitution was not rejected");
   const alternateSession = Buffer.from("session-route-0", "utf8");
   const alternateUser = Buffer.from("1user-route-01", "utf8");
   if (Buffer.concat([sessionId, userId]).compare(Buffer.concat([alternateSession, alternateUser])) !== 0) throw new Error("binding ambiguity fixture drifted");
   const alternateBinding = createHash("sha256")
-    .update(Buffer.concat([Buffer.from("semio/hub/directory-event-page/session-binding/v1\0"), u32be(alternateSession.length), alternateSession, u32be(alternateUser.length), alternateUser, u64be(fixture.session.authorizationGeneration), i64be(fixture.session.expiresAt)]))
+    .update(
+      Buffer.concat([
+        Buffer.from("semio/hub/directory-event-page/session-binding/v1\0"),
+        u32be(alternateSession.length),
+        alternateSession,
+        u32be(alternateUser.length),
+        alternateUser,
+        u64be(fixture.session.authorizationGeneration),
+        i64be(fixture.session.expiresAt),
+      ]),
+    )
     .digest("hex");
   if (alternateBinding === binding) throw new Error("length-prefixed session binding aliased concatenated identities");
   const unknownFixture = { ...fixture, unknown: true };
@@ -6264,46 +8615,70 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
   const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
   const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
   const sourceClosed = (contract: string, route: string, sq: string, pg: string, neo: string): boolean => {
+    const admissionStart = route.indexOf("fn directory_event_page_request_admission");
+    const admissionEnd = route.indexOf("\n}\n", admissionStart);
+    const admission = admissionStart >= 0 && admissionEnd > admissionStart ? route.slice(admissionStart, admissionEnd) : "";
     const read = route.indexOf(".events_since(after, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS)");
     const revalidate = route.indexOf("revalidate_directory_event_page_caller(state, caller, binding)", read);
     const sqliteValidate = sq.indexOf("validate_directory_event_page_event(&persisted)", sq.indexOf("fn persist_event_with_identity"));
-    const postgresValidates = [...pg.matchAll(/validate_directory_event_page_event\(&(?:persisted|full)\)/g)].map(match => match.index ?? -1);
-    const neoValidates = [...neo.matchAll(/validate_directory_event_page_event\(&(?:persisted|full)\)/g)].map(match => match.index ?? -1);
-    return contract.includes("pub fn validate_directory_event_page_event")
-      && contract.includes("validate_directory_event_page_event(event).is_err()")
-      && route.includes("fn directory_event_page_request_admission")
-      && route.includes("semio/hub/directory-event-page/session-binding/v1\\0")
-      && route.includes("query.contains('&') || query.contains('%') || query.contains('+')")
-      && route.includes("value.len() > 1 && value.starts_with('0')")
-      && read >= 0 && revalidate > read
-      && route.includes("stopped_for_bytes || raw_len == DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS")
-      && route.includes("struct DirectoryEventPageHttpRequest")
-      && route.includes("if !self.response_owned")
-      && route.includes("control.checkpoint()?")
-      && route.includes("let visible = directory_event_page_event_visible(state, &event, &caller).await?")
-      && route.includes("get_role(space_id, &caller.user_id).await.map_err(directory_error_status)?")
-      && route.includes("tokio::time::timeout(std::time::Duration::from_millis(DIRECTORY_EVENT_PAGE_DEADLINE_MS)")
-      && route.includes(".route(\"/directory/event-page/v1\", get(get_directory_event_page_v1))")
-      && sqliteValidate >= 0 && sqliteValidate > sq.indexOf("INSERT INTO hub_directory_event", sq.indexOf("fn persist_event_with_identity"))
-      && postgresValidates.length === 3 && neoValidates.length === 3
-      && postgresValidates.every(index => pg.indexOf("INSERT INTO hub_directory_event", index) > index)
-      && neoValidates.every(index => neo.indexOf("CREATE (e:DirectoryEvent", index) > index);
+    const postgresValidates = [...pg.matchAll(/validate_directory_event_page_event\(&(?:persisted|full)\)/g)].map((match) => match.index ?? -1);
+    const neoValidates = [...neo.matchAll(/validate_directory_event_page_event\(&(?:persisted|full)\)/g)].map((match) => match.index ?? -1);
+    return (
+      contract.includes("pub fn validate_directory_event_page_event") &&
+      contract.includes("validate_directory_event_page_event(event).is_err()") &&
+      route.includes("fn directory_event_page_request_admission") &&
+      route.includes("semio/hub/directory-event-page/session-binding/v1\\0") &&
+      admission.includes("query.contains('&') || query.contains('%') || query.contains('+')") &&
+      route.includes("value.len() > 1 && value.starts_with('0')") &&
+      read >= 0 &&
+      revalidate > read &&
+      route.includes("stopped_for_bytes || raw_len == DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS") &&
+      route.includes("struct DirectoryEventPageHttpRequest") &&
+      route.includes("if !self.response_owned") &&
+      route.includes("control.checkpoint()?") &&
+      route.includes("let visible = directory_event_page_event_visible(state, &event, &caller).await?") &&
+      route.includes("get_role(space_id, &caller.user_id).await.map_err(directory_error_status)?") &&
+      route.includes("tokio::time::timeout(std::time::Duration::from_millis(DIRECTORY_EVENT_PAGE_DEADLINE_MS)") &&
+      route.includes('.route("/directory/event-page/v1", get(get_directory_event_page_v1))') &&
+      sqliteValidate >= 0 &&
+      sqliteValidate > sq.indexOf("INSERT INTO hub_directory_event", sq.indexOf("fn persist_event_with_identity")) &&
+      postgresValidates.length === 3 &&
+      neoValidates.length === 3 &&
+      postgresValidates.every((index) => pg.indexOf("INSERT INTO hub_directory_event", index) > index) &&
+      neoValidates.every((index) => neo.indexOf("CREATE (e:DirectoryEvent", index) > index)
+    );
   };
   if (!sourceClosed(shared, hub, sqlite, postgres, neo4j)) throw new Error("directory event page route/storage source boundary is incomplete");
   const sourceHostiles: readonly [string, string, string, string, string][] = [
     [shared.replace("pub fn validate_directory_event_page_event", "fn validate_directory_event_page_event"), hub, sqlite, postgres, neo4j],
     [shared, hub.replace(".events_since(after, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS)", ".events_since(after, DIRECTORY_EVENT_READ_MAX)"), sqlite, postgres, neo4j],
     [shared, hub.replace("revalidate_directory_event_page_caller(state, caller, binding)", "Ok(caller.clone())"), sqlite, postgres, neo4j],
-    [shared, hub.replace("query.contains('&') || query.contains('%') || query.contains('+')", "false"), sqlite, postgres, neo4j],
+    [
+      shared,
+      hub.replace(
+        "fn directory_event_page_request_admission(uri: &axum::http::Uri) -> Result<u64, StatusCode> {\n    let query = uri.query().ok_or(StatusCode::BAD_REQUEST)?;\n    if query.contains('&') || query.contains('%') || query.contains('+')",
+        "fn directory_event_page_request_admission(uri: &axum::http::Uri) -> Result<u64, StatusCode> {\n    let query = uri.query().ok_or(StatusCode::BAD_REQUEST)?;\n    if false",
+      ),
+      sqlite,
+      postgres,
+      neo4j,
+    ],
     [shared, hub.replaceAll("control.checkpoint()?;", ""), sqlite, postgres, neo4j],
     [shared, hub, sqlite.replace("validate_directory_event_page_event(&persisted)", "Ok(())"), postgres, neo4j],
     [shared, hub, sqlite, postgres.replace("validate_directory_event_page_event(&full)", "Ok(())"), neo4j],
     [shared, hub, sqlite, postgres, neo4j.replace("validate_directory_event_page_event(&full)", "Ok(())")],
     [shared, hub.replace("let visible = directory_event_page_event_visible(state, &event, &caller).await?", "let visible = event_visible(state, &event, Some(&caller)).await"), sqlite, postgres, neo4j],
   ];
-  sourceHostiles.forEach((candidate, index) => { if (sourceClosed(...candidate)) throw new Error(`directory event page source oracle admitted removed fence ${index}`); });
+  sourceHostiles.forEach((candidate, index) => {
+    if (sourceClosed(...candidate)) throw new Error(`directory event page source oracle admitted removed fence ${index}`);
+  });
   const runner = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📜️script.ts"), "utf8");
   const processBody = (source: string): string => {
+    const start = source.lastIndexOf("async function proveDirectoryEventPageV1Process");
+    const end = source.indexOf("\n/**", start);
+    return start >= 0 && end > start ? source.slice(start, end) : "";
+  };
+  const liveBody = (source: string): string => {
     const start = source.lastIndexOf("type LiveDirectoryEventPageV1 = {");
     const end = source.indexOf("\nclass DirectoryEventPageV1CheckScript", start);
     return start >= 0 && end > start ? source.slice(start, end) : "";
@@ -6315,13 +8690,16 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
   };
   const processClosed = (source: string): boolean => {
     const body = processBody(source);
+    const live = liveBody(source);
     const command = source.slice(source.indexOf("class DirectoryEventPageV1CheckScript"));
-    return body.match(/dataDir: dataRoot/g)?.length === 2
-      && body.includes("second = await startLocalHub")
-      && body.includes("page.receiptSha256 !== receipt")
-      && body.includes("stale.status !== 401")
-      && body.includes("saturated.events.length !== 0")
-      && command.includes("await proveDirectoryEventPageV1Process(this.repoRoot, this.root)");
+    return (
+      body.match(/dataDir: dataRoot/g)?.length === 2 &&
+      body.includes("second = await startLocalHub") &&
+      live.includes("page.receiptSha256 !== receipt") &&
+      body.includes("stale.status !== 401") &&
+      body.includes("saturated.events.length !== 0") &&
+      command.includes("await proveDirectoryEventPageV1Process(this.repoRoot, this.root)")
+    );
   };
   const processHostiles = [
     withoutProcessFence(runner, "dataDir: dataRoot", "dataDir: undefined"),
@@ -6330,9 +8708,13 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
     withoutProcessFence(runner, "second = await startLocalHub", "second = await Promise.reject"),
   ];
   if (!processClosed(runner)) throw new Error("directory event page real-process boundary is incomplete");
-  processHostiles.forEach((candidate, index) => { if (processClosed(candidate)) throw new Error(`directory event page process oracle admitted removed fence ${index}`); });
+  processHostiles.forEach((candidate, index) => {
+    if (processClosed(candidate)) throw new Error(`directory event page process oracle admitted removed fence ${index}`);
+  });
   const checks = fixture.vectors.length + fixture.queryCases.length + fixture.hostiles.length + sourceHostiles.length + processHostiles.length + 2;
-  console.log(`directory-event-page-v1-oracle: AJV=1 vectors=${fixture.vectors.length} queries=${fixture.queryCases.length} hostiles=${fixture.hostiles.length} source-hostiles=${sourceHostiles.length} process-hostiles=${processHostiles.length} sha256=1`);
+  console.log(
+    `directory-event-page-v1-oracle: AJV=1 vectors=${fixture.vectors.length} queries=${fixture.queryCases.length} hostiles=${fixture.hostiles.length} source-hostiles=${sourceHostiles.length} process-hostiles=${processHostiles.length} sha256=1`,
+  );
   return checks;
 }
 
@@ -6350,16 +8732,24 @@ type LiveDirectoryEventPageV1 = {
 function liveDirectoryEventPageBinding(envelope: Record<string, any>, user: Record<string, any>): string {
   const session = Buffer.from(String(envelope.sessionId), "utf8");
   const userId = Buffer.from(String(user.userId), "utf8");
-  const u32 = (value: number): Buffer => { const bytes = Buffer.alloc(4); bytes.writeUInt32BE(value); return bytes; };
-  const u64 = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
-  const i64 = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigInt64BE(BigInt(value)); return bytes; };
-  return createHash("sha256").update(Buffer.concat([
-    Buffer.from("semio/hub/directory-event-page/session-binding/v1\0"),
-    u32(session.length), session,
-    u32(userId.length), userId,
-    u64(user.authorizationGeneration),
-    i64(user.expiresAt),
-  ])).digest("hex");
+  const u32 = (value: number): Buffer => {
+    const bytes = Buffer.alloc(4);
+    bytes.writeUInt32BE(value);
+    return bytes;
+  };
+  const u64 = (value: number): Buffer => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeBigUInt64BE(BigInt(value));
+    return bytes;
+  };
+  const i64 = (value: number): Buffer => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeBigInt64BE(BigInt(value));
+    return bytes;
+  };
+  return createHash("sha256")
+    .update(Buffer.concat([Buffer.from("semio/hub/directory-event-page/session-binding/v1\0"), u32(session.length), session, u32(userId.length), userId, u64(user.authorizationGeneration), i64(user.expiresAt)]))
+    .digest("hex");
 }
 
 async function liveDirectoryEventPageUser(run: LocalHubRun, envelope: Record<string, any>): Promise<Record<string, any>> {
@@ -6367,8 +8757,17 @@ async function liveDirectoryEventPageUser(run: LocalHubRun, envelope: Record<str
     headers: { authorization: `Bearer ${envelope.capability}` },
     signal: AbortSignal.timeout(2_000),
   });
-  const user = await response.json().catch(() => undefined) as Record<string, any> | undefined;
-  if (!response.ok || !user || typeof user.userId !== "string" || user.userId.length === 0 || typeof user.displayName !== "string" || user.displayName.length === 0 || user.expiresAt !== envelope.expiresAt || user.authorizationGeneration !== envelope.authorizationGeneration) {
+  const user = (await response.json().catch(() => undefined)) as Record<string, any> | undefined;
+  if (
+    !response.ok ||
+    !user ||
+    typeof user.userId !== "string" ||
+    user.userId.length === 0 ||
+    typeof user.displayName !== "string" ||
+    user.displayName.length === 0 ||
+    user.expiresAt !== envelope.expiresAt ||
+    user.authorizationGeneration !== envelope.authorizationGeneration
+  ) {
     throw new Error("directory event page process session identity did not match its inherited envelope");
   }
   return user;
@@ -6397,7 +8796,13 @@ async function fetchLiveDirectoryEventPage(run: LocalHubRun, envelope: Record<st
     events: page.events,
   };
   const receipt = createHash("sha256").update(JSON.stringify(unsigned)).digest("hex");
-  if (page.schema !== "semio.directory.event-page.v1" || page.afterSeqExclusive !== after || page.authorizationGeneration !== user.authorizationGeneration || page.sessionBindingSha256 !== liveDirectoryEventPageBinding(envelope, user) || page.receiptSha256 !== receipt) {
+  if (
+    page.schema !== "semio.directory.event-page.v1" ||
+    page.afterSeqExclusive !== after ||
+    page.authorizationGeneration !== user.authorizationGeneration ||
+    page.sessionBindingSha256 !== liveDirectoryEventPageBinding(envelope, user) ||
+    page.receiptSha256 !== receipt
+  ) {
     throw new Error("directory event page process receipt/session binding did not verify independently");
   }
   return page;
@@ -6423,7 +8828,7 @@ async function postLiveDirectoryCommand(run: LocalHubRun, capability: string, re
 async function submitLiveDirectoryCommand(run: LocalHubRun, envelope: Record<string, any>, command: Record<string, unknown>): Promise<readonly Record<string, any>[]> {
   const requestId = liveDirectoryCommandRequestId();
   const { status, text } = await postLiveDirectoryCommand(run, envelope.capability, requestId, command);
-  const receipt = status === 202 ? JSON.parse(text) as Record<string, any> : undefined;
+  const receipt = status === 202 ? (JSON.parse(text) as Record<string, any>) : undefined;
   if (!receipt || receipt.schema !== "semio.directory.command-receipt.v1" || receipt.requestId !== requestId || receipt.outcome !== "accepted" || !Array.isArray(receipt.events) || receipt.events.length === 0) {
     throw new Error(`directory process command failed: ${status}`);
   }
@@ -6442,15 +8847,17 @@ type DirectoryHomeBrowserProcessFixture = {
   readonly spaceGuest: { readonly target: "wasm32-wasip2"; readonly package: "semio-s-plugin-space"; readonly nativeFeature: "os-host-full"; readonly forbiddenPackages: readonly ["ring", "cc", "tokio"] };
   readonly profiles: Readonly<Record<"a" | "b", { readonly profileId: string; readonly subject: string; readonly displayName: string }>>;
   readonly home: { readonly pluginId: "space"; readonly appId: "s.space.home@1/*#editor"; readonly actionId: "applyDirectoryEventPage"; readonly moduleDirectory: "🪐️space" };
-  readonly pages: Readonly<Record<string, { readonly epoch: number; readonly binding: string; readonly generation: number; readonly after: number; readonly through: number; readonly hasMore: boolean; readonly receipt: string; readonly eventIds: readonly string[] }>>;
+  readonly pages: Readonly<
+    Record<string, { readonly epoch: number; readonly binding: string; readonly generation: number; readonly after: number; readonly through: number; readonly hasMore: boolean; readonly receipt: string; readonly eventIds: readonly string[] }>
+  >;
   readonly traces: readonly { readonly name: string; readonly steps: readonly Record<string, any>[]; readonly expected: Record<string, any> }[];
   readonly hostile: readonly { readonly name: string; readonly mutation: string }[];
 };
 
 function directoryHomeBrowserProcessModel(fixture: DirectoryHomeBrowserProcessFixture): number {
   type State = { epoch: number; frontier: number; phase: "fetching" | "awaiting-ack" | "live" | "closed"; pending?: DirectoryHomeBrowserProcessFixture["pages"][string]; applied: string[]; dials: number[]; retries: number[]; denials: number };
-  const exactPage = (left: DirectoryHomeBrowserProcessFixture["pages"][string] | undefined, right: DirectoryHomeBrowserProcessFixture["pages"][string]): boolean => !!left
-    && left.epoch === right.epoch && left.binding === right.binding && left.generation === right.generation && left.after === right.after && left.through === right.through && left.receipt === right.receipt;
+  const exactPage = (left: DirectoryHomeBrowserProcessFixture["pages"][string] | undefined, right: DirectoryHomeBrowserProcessFixture["pages"][string]): boolean =>
+    !!left && left.epoch === right.epoch && left.binding === right.binding && left.generation === right.generation && left.after === right.after && left.through === right.through && left.receipt === right.receipt;
   const step = (state: State, operation: Record<string, any>): void => {
     if (operation.kind === "rebootstrap") {
       state.epoch = operation.epoch;
@@ -6573,27 +8980,32 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
     const opened = ownerSource.indexOf('kind: "directory-bootstrap-open"');
     const receipt = ownerSource.indexOf("parseDirectoryProjectionReceiptV1(response.output)");
     const ack = ownerSource.indexOf('kind: "directory-bootstrap-ack"');
-    return workerSource.includes("class DirectoryEventPageBootstrapV1")
-      && workerSource.includes("streamAcknowledged(since")
-      && acknowledge >= 0 && openLive > acknowledge
-      && workerSource.includes("if (directoryBootstrap !== owner || owner.abort.signal.aborted) return")
-      && workerSource.includes("owner.machine.wake(rebootstrap)")
-      && ownerSource.includes("await owner.plugin.handleAction")
-      && identity >= 0 && opened > identity
-      && ownerSource.includes("invocationTerminal(response)")
-      && ownerSource.includes("if (owner.ownsInstance)")
-      && ownerSource.includes("await beforeAcknowledge?.(owner)")
-      && receipt >= 0 && ack > receipt
-      && ownerSource.includes("owner.abort.signal.aborted")
-      && ownerSource.includes('kind: "directory-bootstrap-reject"')
-      && shellSource.includes("openDirectoryHomeOwnerV1")
-      && shellSource.includes("instance: { instanceId: visibleSession.instanceId, viewState: visibleSession.viewState }")
-      && shellSource.includes("identity: { userId: identity.userId, displayName: identity.displayName }")
-      && shellSource.includes("directoryHomeOpeningRef.current.catch")
-      && shellSource.includes("await refreshDirectoryHomeRef.current(active)")
-      && shellSource.includes("applyDirectoryEventPageBootstrapV1")
-      && shellSource.includes("closeDirectoryHomeOwnerV1")
-      && !shellSource.includes('kind: "directory-open", baseUrl: resolved.hubBaseUrl');
+    return (
+      workerSource.includes("class DirectoryEventPageBootstrapV1") &&
+      workerSource.includes("streamAcknowledged(since") &&
+      acknowledge >= 0 &&
+      openLive > acknowledge &&
+      workerSource.includes("if (directoryBootstrap !== owner || owner.abort.signal.aborted) return") &&
+      workerSource.includes("owner.machine.wake(rebootstrap)") &&
+      ownerSource.includes("await owner.plugin.handleAction") &&
+      identity >= 0 &&
+      opened > identity &&
+      ownerSource.includes("invocationTerminal(response)") &&
+      ownerSource.includes("if (owner.ownsInstance)") &&
+      ownerSource.includes("await beforeAcknowledge?.(owner)") &&
+      receipt >= 0 &&
+      ack > receipt &&
+      ownerSource.includes("owner.abort.signal.aborted") &&
+      ownerSource.includes('kind: "directory-bootstrap-reject"') &&
+      shellSource.includes("openDirectoryHomeOwnerV1") &&
+      shellSource.includes("instance: { instanceId: visibleSession.instanceId, viewState: visibleSession.viewState }") &&
+      shellSource.includes("identity: { userId: identity.userId, displayName: identity.displayName }") &&
+      shellSource.includes("directoryHomeOpeningRef.current.catch") &&
+      shellSource.includes("await refreshDirectoryHomeRef.current(active)") &&
+      shellSource.includes("applyDirectoryEventPageBootstrapV1") &&
+      shellSource.includes("closeDirectoryHomeOwnerV1") &&
+      !shellSource.includes('kind: "directory-open", baseUrl: resolved.hubBaseUrl')
+    );
   };
   if (!sourceClosed(worker, owner, shell)) throw new Error("directory Home browser process source lost ACK-owned frontier/cancellation wiring");
   const hostiles = [
@@ -6604,7 +9016,9 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
     [worker, owner.replace('directoryActionInvocation(owner, "setClient"', 'directoryActionInvocation(owner, "applyDirectoryEventPage"'), shell],
     [worker, owner, shell.replace("instance: { instanceId: visibleSession.instanceId, viewState: visibleSession.viewState }", "instance: undefined")],
   ];
-  hostiles.forEach((candidate, index) => { if (sourceClosed(candidate[0]!, candidate[1]!, candidate[2]!)) throw new Error(`directory Home browser process source oracle admitted removed fence ${index}`); });
+  hostiles.forEach((candidate, index) => {
+    if (sourceClosed(candidate[0]!, candidate[1]!, candidate[2]!)) throw new Error(`directory Home browser process source oracle admitted removed fence ${index}`);
+  });
   console.log(`directory-home-browser-process-oracle: ajv=1 model=${modelChecks} source=5 hostile-source=${hostiles.length} guest-graph=${fixture.spaceGuest.forbiddenPackages.length} native-feature=1 passed`);
   return fixture;
 }
@@ -6642,55 +9056,123 @@ async function proveDirectoryHomeBrowserControllerRuntime(repoRoot: string, fixt
     const moduleUrl = "/controller.js";
     const deadline = new Promise<never>((_, reject) => {
       const fail = () => reject(new Error("directory Home browser controller deadline exceeded"));
-      if (abort.aborted) fail(); else abort.addEventListener("abort", fail, { once: true });
+      if (abort.aborted) fail();
+      else abort.addEventListener("abort", fail, { once: true });
     });
     const result = await Promise.race([
-      page.evaluate(async ({ moduleUrl, home, sourcePage }) => {
-        const api = await import(moduleUrl);
-        const records: string[] = [];
-        const receipt = { schema: "semio.space.home.directory-projection-receipt.v1", sessionBindingSha256: sourcePage.binding, authorizationGeneration: sourcePage.generation, throughSeqInclusive: sourcePage.through, receiptSha256: sourcePage.receipt };
-        const terminal = (output: unknown) => ({ output, mutations: [], inverseGroup: { invocationId: "browser", mutations: [], inverseMutations: [] } });
-        let release: (() => void) | undefined;
-        const delayed = new Promise<void>((resolve) => { release = resolve; });
-        const plugin = {
-          pluginId: home.pluginId,
-          createApp: async () => { records.push("create"); return 41; },
-          destroyApp: async () => { records.push("destroy"); },
-          handleAction: async (_instanceId: number, invocation: string) => {
-            const parsed = JSON.parse(invocation);
-            if (parsed.address.actionId === "setClient") {
-              records.push(`identity:${parsed.arguments.clientId}:${parsed.arguments.clientName}`);
-              return terminal(null);
-            }
-            records.push("page");
-            return terminal(receipt);
-          },
-        };
-        const app = { id: home.appId, controllerId: home.appId, modes: [{ id: "explore" }], defaultModeId: "explore", windowKinds: [{ id: "main", actions: [{ id: home.actionId }, { id: "setClient" }] }] };
-        const posts: any[] = [];
-        const owner = await api.openDirectoryHomeOwnerV1({ plugin, app, identity: { userId: "user-a", displayName: "Directory Browser A" }, instance: { instanceId: 41, viewState: { activeModeId: "explore" } }, baseUrl: "http://127.0.0.1:6070", bootstrapEpoch: 1, locale: "en", terminology: "native", beforeBootstrap: async () => { records.push("refresh-open"); }, post: (message: any) => posts.push(message) });
-        const page = { kind: "directory-event-page", bootstrapEpoch: 1, canonicalJson: JSON.stringify({ schema: "semio.directory.event-page.v1", events: sourcePage.eventIds }), sessionBindingSha256: sourcePage.binding, authorizationGeneration: sourcePage.generation, afterSeqExclusive: sourcePage.after, throughSeqInclusive: sourcePage.through, hasMore: sourcePage.hasMore, receiptSha256: sourcePage.receipt };
-        const applied = await api.applyDirectoryEventPageBootstrapV1(owner, page, (message: any) => posts.push(message), async () => { records.push("refresh-ack"); });
-        await api.closeDirectoryHomeOwnerV1(owner, (message: any) => posts.push(message));
-        const latePosts: any[] = [];
-        const latePlugin = { ...plugin, handleAction: async (_instanceId: number, invocation: string) => {
-          const parsed = JSON.parse(invocation);
-          if (parsed.address.actionId === "setClient") return terminal(null);
-          await delayed;
-          return terminal(receipt);
-        } };
-        const lateOwner = await api.openDirectoryHomeOwnerV1({ plugin: latePlugin, app, identity: { userId: "user-b", displayName: "Directory Browser B" }, instance: { instanceId: 42, viewState: { activeModeId: "explore" } }, baseUrl: "http://127.0.0.1:6070", bootstrapEpoch: 2, locale: "de", terminology: "native", post: (message: any) => latePosts.push(message) });
-        const late = api.applyDirectoryEventPageBootstrapV1(lateOwner, { ...page, bootstrapEpoch: 2 }, (message: any) => latePosts.push(message));
-        await api.closeDirectoryHomeOwnerV1(lateOwner, (message: any) => latePosts.push(message));
-        release!();
-        const cancelled = await late;
-        return { records, posts, applied, latePosts, cancelled };
-      }, { moduleUrl, home: fixture.home, sourcePage: fixture.pages.initial! }),
+      page.evaluate(
+        async ({ moduleUrl, home, sourcePage }) => {
+          const api = await import(moduleUrl);
+          const records: string[] = [];
+          const receipt = {
+            schema: "semio.space.home.directory-projection-receipt.v1",
+            sessionBindingSha256: sourcePage.binding,
+            authorizationGeneration: sourcePage.generation,
+            throughSeqInclusive: sourcePage.through,
+            receiptSha256: sourcePage.receipt,
+          };
+          const terminal = (output: unknown) => ({ output, mutations: [], inverseGroup: { invocationId: "browser", mutations: [], inverseMutations: [] } });
+          let release: (() => void) | undefined;
+          const delayed = new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          const plugin = {
+            pluginId: home.pluginId,
+            createApp: async () => {
+              records.push("create");
+              return 41;
+            },
+            destroyApp: async () => {
+              records.push("destroy");
+            },
+            handleAction: async (_instanceId: number, invocation: string) => {
+              const parsed = JSON.parse(invocation);
+              if (parsed.address.actionId === "setClient") {
+                records.push(`identity:${parsed.arguments.clientId}:${parsed.arguments.clientName}`);
+                return terminal(null);
+              }
+              records.push("page");
+              return terminal(receipt);
+            },
+          };
+          const app = { id: home.appId, controllerId: home.appId, modes: [{ id: "explore" }], defaultModeId: "explore", windowKinds: [{ id: "main", actions: [{ id: home.actionId }, { id: "setClient" }] }] };
+          const posts: any[] = [];
+          const owner = await api.openDirectoryHomeOwnerV1({
+            plugin,
+            app,
+            identity: { userId: "user-a", displayName: "Directory Browser A" },
+            instance: { instanceId: 41, viewState: { activeModeId: "explore" } },
+            baseUrl: "http://127.0.0.1:6070",
+            bootstrapEpoch: 1,
+            locale: "en",
+            terminology: "native",
+            beforeBootstrap: async () => {
+              records.push("refresh-open");
+            },
+            post: (message: any) => posts.push(message),
+          });
+          const page = {
+            kind: "directory-event-page",
+            bootstrapEpoch: 1,
+            canonicalJson: JSON.stringify({ schema: "semio.directory.event-page.v1", events: sourcePage.eventIds }),
+            sessionBindingSha256: sourcePage.binding,
+            authorizationGeneration: sourcePage.generation,
+            afterSeqExclusive: sourcePage.after,
+            throughSeqInclusive: sourcePage.through,
+            hasMore: sourcePage.hasMore,
+            receiptSha256: sourcePage.receipt,
+          };
+          const applied = await api.applyDirectoryEventPageBootstrapV1(
+            owner,
+            page,
+            (message: any) => posts.push(message),
+            async () => {
+              records.push("refresh-ack");
+            },
+          );
+          await api.closeDirectoryHomeOwnerV1(owner, (message: any) => posts.push(message));
+          const latePosts: any[] = [];
+          const latePlugin = {
+            ...plugin,
+            handleAction: async (_instanceId: number, invocation: string) => {
+              const parsed = JSON.parse(invocation);
+              if (parsed.address.actionId === "setClient") return terminal(null);
+              await delayed;
+              return terminal(receipt);
+            },
+          };
+          const lateOwner = await api.openDirectoryHomeOwnerV1({
+            plugin: latePlugin,
+            app,
+            identity: { userId: "user-b", displayName: "Directory Browser B" },
+            instance: { instanceId: 42, viewState: { activeModeId: "explore" } },
+            baseUrl: "http://127.0.0.1:6070",
+            bootstrapEpoch: 2,
+            locale: "de",
+            terminology: "native",
+            post: (message: any) => latePosts.push(message),
+          });
+          const late = api.applyDirectoryEventPageBootstrapV1(lateOwner, { ...page, bootstrapEpoch: 2 }, (message: any) => latePosts.push(message));
+          await api.closeDirectoryHomeOwnerV1(lateOwner, (message: any) => latePosts.push(message));
+          release!();
+          const cancelled = await late;
+          return { records, posts, applied, latePosts, cancelled };
+        },
+        { moduleUrl, home: fixture.home, sourcePage: fixture.pages.initial! },
+      ),
       deadline,
     ]);
     const ack = result.posts.find((message: Record<string, any>) => message.kind === "directory-bootstrap-ack");
-    if (JSON.stringify(result.records) !== JSON.stringify(["identity:user-a:Directory Browser A", "refresh-open", "page", "refresh-ack"]) || !ack || ack.receiptSha256 !== fixture.pages.initial!.receipt || ack.throughSeqInclusive !== fixture.pages.initial!.through || result.applied.state.kind !== "idle") throw new Error(`directory Home browser controller positive journey differed: ${JSON.stringify(result)}`);
-    if (result.latePosts.some((message: Record<string, any>) => message.kind === "directory-bootstrap-ack") || result.cancelled.state.code !== "directory-bootstrap.cancelled") throw new Error("directory Home browser controller accepted a late terminal after close");
+    if (
+      JSON.stringify(result.records) !== JSON.stringify(["identity:user-a:Directory Browser A", "refresh-open", "page", "refresh-ack"]) ||
+      !ack ||
+      ack.receiptSha256 !== fixture.pages.initial!.receipt ||
+      ack.throughSeqInclusive !== fixture.pages.initial!.through ||
+      result.applied.state.kind !== "idle"
+    )
+      throw new Error(`directory Home browser controller positive journey differed: ${JSON.stringify(result)}`);
+    if (result.latePosts.some((message: Record<string, any>) => message.kind === "directory-bootstrap-ack") || result.cancelled.state.code !== "directory-bootstrap.cancelled")
+      throw new Error("directory Home browser controller accepted a late terminal after close");
     console.log("directory-home-browser-runtime: Chromium actual same-visible-instance Hub identity, pre-open/pre-ACK refresh, ACK and late-cancel laws passed");
   } catch (error) {
     const diagnostics = browserDiagnostics.slice(-16).join("\n");
@@ -6734,7 +9216,7 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
     bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx")),
   ]);
   const pluginRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules");
-  const mime = (path: string): string => path.endsWith(".wasm") ? "application/wasm" : path.endsWith(".json") ? "application/json; charset=utf-8" : "text/javascript; charset=utf-8";
+  const mime = (path: string): string => (path.endsWith(".wasm") ? "application/wasm" : path.endsWith(".json") ? "application/json; charset=utf-8" : "text/javascript; charset=utf-8");
   const physicalPluginPath = (urlPath: string): string | undefined => {
     const prefix = "/🔌️plugin-modules/";
     const shardPrefix = "/plugin-modules/_shard/";
@@ -6771,44 +9253,70 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
     const abort = AbortSignal.timeout(fixture.limits.journeyMs);
     const deadline = new Promise<never>((_, reject) => {
       const fail = () => reject(new Error("directory Home real browser process deadline exceeded"));
-      if (abort.aborted) fail(); else abort.addEventListener("abort", fail, { once: true });
+      if (abort.aborted) fail();
+      else abort.addEventListener("abort", fail, { once: true });
     });
     const result = await Promise.race([
-      page.evaluate(async ({ home, source }) => {
-        const controller = await import("/controller.js");
-        const runtime = await import("/plugin-runtime.js");
-        runtime.setPluginRuntimeActor(`user:${source.userId}#directory-home-process`);
-        const plugin = await runtime.loadPluginModule(home.pluginId, `/🔌️plugin-modules/${home.moduleDirectory}/🌉️bridge.js`, AbortSignal.timeout(10_000));
-        const app = plugin.manifest.apps.find((candidate: any) => candidate.id === home.appId);
-        if (!app) throw new Error("directory Home real browser app unavailable after discovery");
-        const posts: any[] = [];
-        let owner: any;
-        try {
-          owner = await controller.openDirectoryHomeOwnerV1({ plugin, app, identity: { userId: source.userId, displayName: source.displayName }, baseUrl: source.baseUrl, bootstrapEpoch: 1, locale: "en", terminology: "native", post: (message: any) => posts.push(message) });
-          const canonicalJson = JSON.stringify(source.page);
-          const applied = await controller.applyDirectoryEventPageBootstrapV1(owner, {
-            kind: "directory-event-page",
-            bootstrapEpoch: 1,
-            canonicalJson,
-            sessionBindingSha256: source.page.sessionBindingSha256,
-            authorizationGeneration: source.page.authorizationGeneration,
-            afterSeqExclusive: source.page.afterSeqExclusive,
-            throughSeqInclusive: source.page.throughSeqInclusive,
-            hasMore: source.page.hasMore,
-            receiptSha256: source.page.receiptSha256,
-          }, (message: any) => posts.push(message));
-          return { pluginId: plugin.manifest.pluginId, appId: app.id, action: app.windowKinds.some((window: any) => window.actions?.some((action: any) => action.id === home.actionId)), posts, applied };
-        } finally {
-          if (owner) await controller.closeDirectoryHomeOwnerV1(owner, (message: any) => posts.push(message));
-          plugin.dispose();
-        }
-      }, { home: fixture.home, source }),
+      page.evaluate(
+        async ({ home, source }) => {
+          const controller = await import("/controller.js");
+          const runtime = await import("/plugin-runtime.js");
+          runtime.setPluginRuntimeActor(`user:${source.userId}#directory-home-process`);
+          const plugin = await runtime.loadPluginModule(home.pluginId, `/🔌️plugin-modules/${home.moduleDirectory}/🌉️bridge.js`, AbortSignal.timeout(10_000));
+          const app = plugin.manifest.apps.find((candidate: any) => candidate.id === home.appId);
+          if (!app) throw new Error("directory Home real browser app unavailable after discovery");
+          const posts: any[] = [];
+          let owner: any;
+          try {
+            owner = await controller.openDirectoryHomeOwnerV1({
+              plugin,
+              app,
+              identity: { userId: source.userId, displayName: source.displayName },
+              baseUrl: source.baseUrl,
+              bootstrapEpoch: 1,
+              locale: "en",
+              terminology: "native",
+              post: (message: any) => posts.push(message),
+            });
+            const canonicalJson = JSON.stringify(source.page);
+            const applied = await controller.applyDirectoryEventPageBootstrapV1(
+              owner,
+              {
+                kind: "directory-event-page",
+                bootstrapEpoch: 1,
+                canonicalJson,
+                sessionBindingSha256: source.page.sessionBindingSha256,
+                authorizationGeneration: source.page.authorizationGeneration,
+                afterSeqExclusive: source.page.afterSeqExclusive,
+                throughSeqInclusive: source.page.throughSeqInclusive,
+                hasMore: source.page.hasMore,
+                receiptSha256: source.page.receiptSha256,
+              },
+              (message: any) => posts.push(message),
+            );
+            return { pluginId: plugin.manifest.pluginId, appId: app.id, action: app.windowKinds.some((window: any) => window.actions?.some((action: any) => action.id === home.actionId)), posts, applied };
+          } finally {
+            if (owner) await controller.closeDirectoryHomeOwnerV1(owner, (message: any) => posts.push(message));
+            plugin.dispose();
+          }
+        },
+        { home: fixture.home, source },
+      ),
       deadline,
     ]);
     const ack = result.posts.find((message: Record<string, any>) => message.kind === "directory-bootstrap-ack");
     const expected = source.page;
-    if (result.pluginId !== fixture.home.pluginId || result.appId !== fixture.home.appId || !result.action || result.applied.state.kind !== "idle" || !ack
-      || ack.sessionBindingSha256 !== expected.sessionBindingSha256 || ack.authorizationGeneration !== expected.authorizationGeneration || ack.throughSeqInclusive !== expected.throughSeqInclusive || ack.receiptSha256 !== expected.receiptSha256) {
+    if (
+      result.pluginId !== fixture.home.pluginId ||
+      result.appId !== fixture.home.appId ||
+      !result.action ||
+      result.applied.state.kind !== "idle" ||
+      !ack ||
+      ack.sessionBindingSha256 !== expected.sessionBindingSha256 ||
+      ack.authorizationGeneration !== expected.authorizationGeneration ||
+      ack.throughSeqInclusive !== expected.throughSeqInclusive ||
+      ack.receiptSha256 !== expected.receiptSha256
+    ) {
       throw new Error(`directory Home real browser terminal differed: ${JSON.stringify(result)}`);
     }
     console.log(`directory-home-browser-process-runtime: real-hub-page=1 static-dev-space-wasm=1 verified-activation=0 Chromium=1 through=${expected.throughSeqInclusive} receipt=${expected.receiptSha256}`);
@@ -6872,10 +9380,7 @@ function scopedPresenceBrowserCases(fixture: BrowserDocumentOpenFixture): readon
       socketPath: `${root}/socket/v1?surface=${encodeURIComponent(surfaceId)}`,
     };
   };
-  return [
-    make("a", fixture.expected.scopeIsolation.left.spaceId, "surface.gis.editor", "3"),
-    make("b", fixture.expected.scopeIsolation.right.spaceId, "surface.gis.viewer", "4"),
-  ];
+  return [make("a", fixture.expected.scopeIsolation.left.spaceId, "surface.gis.editor", "3"), make("b", fixture.expected.scopeIsolation.right.spaceId, "surface.gis.viewer", "4")];
 }
 
 /** 👥️ Runs the real browser Worker behind a mounted React Shell probe for interactive Chromium acceptance. */
@@ -7010,32 +9515,35 @@ async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void
       configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"),
       server: { host: "127.0.0.1", port: uiPort, strictPort: true },
       clearScreen: false,
-      plugins: [{
-        name: "semio-scoped-presence-browser-runtime",
-        configureServer(server) {
-          server.middlewares.use(async (request, response, next) => {
-            if (request.url === "/__scoped-presence/config") {
-              response.setHeader("content-type", "application/json; charset=utf-8");
-              response.end(JSON.stringify(await refreshBrowserConfig()));
-              return;
-            }
-            if (request.url === "/__scoped-presence/effects") {
-              response.setHeader("content-type", "application/json; charset=utf-8");
-              response.end(JSON.stringify(effects));
-              return;
-            }
-            if (request.url === "/__scoped-presence") {
-              response.setHeader("content-type", "text/html; charset=utf-8");
-              response.end(html);
-              return;
-            }
-            next();
-          });
+      plugins: [
+        {
+          name: "semio-scoped-presence-browser-runtime",
+          configureServer(server) {
+            server.middlewares.use(async (request, response, next) => {
+              if (request.url === "/__scoped-presence/config") {
+                response.setHeader("content-type", "application/json; charset=utf-8");
+                response.end(JSON.stringify(await refreshBrowserConfig()));
+                return;
+              }
+              if (request.url === "/__scoped-presence/effects") {
+                response.setHeader("content-type", "application/json; charset=utf-8");
+                response.end(JSON.stringify(effects));
+                return;
+              }
+              if (request.url === "/__scoped-presence") {
+                response.setHeader("content-type", "text/html; charset=utf-8");
+                response.end(html);
+                return;
+              }
+              next();
+            });
+          },
         },
-      }],
+      ],
     });
     await vite.listen();
-    if (await vite.transformRequest(`/@fs${componentPath}`) === null || await vite.transformRequest(`/@fs${workerPath}`) === null || await vite.transformRequest(`/@fs${shellEntryPath}`) === null) throw new Error("scoped presence browser or production shell module did not transform");
+    if ((await vite.transformRequest(`/@fs${componentPath}`)) === null || (await vite.transformRequest(`/@fs${workerPath}`)) === null || (await vite.transformRequest(`/@fs${shellEntryPath}`)) === null)
+      throw new Error("scoped presence browser or production shell module did not transform");
     console.log(`scoped-presence-browser-serve: url=${uiOrigin}/__scoped-presence effects=${uiOrigin}/__scoped-presence/effects shell=${uiOrigin}/`);
     await new Promise<void>((resolveStop) => {
       const stop = (): void => resolveStop();
@@ -7085,7 +9593,9 @@ async function proveDirectoryEventPageV1Process(repoRoot: string, root: string):
     { profileId: "event-page-b", subject: "event-page-process-b", displayName: "Event Page B", allowedClientClasses: ["native"] },
   ];
   const deadline = Date.now() + 90_000;
-  const checkpoint = (): void => { if (Date.now() >= deadline) throw new Error("directory event page process deadline exceeded"); };
+  const checkpoint = (): void => {
+    if (Date.now() >= deadline) throw new Error("directory event page process deadline exceeded");
+  };
   let first: LocalHubRun | undefined;
   let second: LocalHubRun | undefined;
   let envelopeA: Record<string, any> | undefined;
@@ -7110,7 +9620,9 @@ async function proveDirectoryEventPageV1Process(repoRoot: string, root: string):
       ...(await submitLiveDirectoryCommand(first, envelopeB, { kind: "rename-space", spaceId: spaceB, name: "Hidden B 1" })),
       ...(await submitLiveDirectoryCommand(first, envelopeA, { kind: "rename-space", spaceId: spaceA, name: "Visible A 2" })),
       ...(await submitLiveDirectoryCommand(first, envelopeB, { kind: "rename-space", spaceId: spaceB, name: "Hidden B 2" })),
-    ].filter((event) => event.spaceId === spaceA).map((event) => event.seq);
+    ]
+      .filter((event) => event.spaceId === spaceA)
+      .map((event) => event.seq);
     const holes = await fetchLiveDirectoryEventPage(first, envelopeA, userA, baseline);
     const holeSource = JSON.stringify(holes);
     if (JSON.stringify(holes.events.map((event) => event.seq)) !== JSON.stringify(visibleSeqs) || holeSource.includes(spaceB) || holeSource.includes(userB.userId) || holeSource.includes("Hidden B")) {
@@ -7154,7 +9666,15 @@ async function proveDirectoryEventPageV1Process(repoRoot: string, root: string):
     const restartedUser = await liveDirectoryEventPageUser(second, restartedA);
     const persisted = await fetchLiveDirectoryEventPage(second, restartedA, restartedUser, firstLarge);
     const persistedSource = JSON.stringify(persisted);
-    if (persisted.events[0]?.seq !== secondLarge || persisted.throughSeqInclusive <= secondLarge || !persisted.hasMore || persisted.sessionBindingSha256 === priorBinding || persistedSource.includes(spaceB) || persistedSource.includes(userB.userId) || persistedSource.includes("Hidden B saturated")) {
+    if (
+      persisted.events[0]?.seq !== secondLarge ||
+      persisted.throughSeqInclusive <= secondLarge ||
+      !persisted.hasMore ||
+      persisted.sessionBindingSha256 === priorBinding ||
+      persistedSource.includes(spaceB) ||
+      persistedSource.includes(userB.userId) ||
+      persistedSource.includes("Hidden B saturated")
+    ) {
       throw new Error("directory event page process restart lost durable visible/raw frontier or retained a stale session binding");
     }
     console.log("directory-event-page-v1-process: real SQLite two-user holes, prefix, stale bearer, and restart receipt passed");
@@ -7222,14 +9742,14 @@ async function proveDirectoryCommandReceiptV1Process(repoRoot: string, root: str
     const inviteCommand = { kind: "create-invite", spaceId, role: "spectator", ttlSecs: 3600 };
     const requestId = liveDirectoryCommandRequestId();
     const first = await postLiveDirectoryCommand(run, author.capability, requestId, inviteCommand);
-    const firstReceipt = first.status === 202 ? JSON.parse(first.text) as Record<string, any> : undefined;
+    const firstReceipt = first.status === 202 ? (JSON.parse(first.text) as Record<string, any>) : undefined;
     const token = firstReceipt?.result?.inviteToken;
     if (!firstReceipt || firstReceipt.outcome !== "accepted" || firstReceipt.requestId !== requestId || typeof token !== "string" || token.length === 0) {
       throw new Error(`directory command receipt process first invite did not carry exactly one capability: ${first.status}`);
     }
 
     const retry = await postLiveDirectoryCommand(run, author.capability, requestId, inviteCommand);
-    const retryReceipt = retry.status === 202 ? JSON.parse(retry.text) as Record<string, any> : undefined;
+    const retryReceipt = retry.status === 202 ? (JSON.parse(retry.text) as Record<string, any>) : undefined;
     if (!retryReceipt || retryReceipt.outcome !== "secret-undeliverable" || retryReceipt.result?.kind !== "none" || retry.text.includes(token) || (retryReceipt.events ?? []).length !== 0) {
       throw new Error(`directory command receipt process same-id resolution was not redacted: ${retry.status}`);
     }
@@ -7245,7 +9765,13 @@ async function proveDirectoryCommandReceiptV1Process(repoRoot: string, root: str
     const forbidden = await postLiveDirectoryCommand(run, spectator.capability, liveDirectoryCommandRequestId(), inviteCommand);
     if (forbidden.status !== 403 || forbidden.text.includes(token) || forbidden.text.includes(spaceId)) throw new Error(`directory command receipt process spectator denial was not generic: ${forbidden.status}`);
 
-    const oversize = await postLiveDirectoryCommand(run, author.capability, liveDirectoryCommandRequestId(), inviteCommand, JSON.stringify({ schema: "semio.directory.command-request.v1", requestId: liveDirectoryCommandRequestId(), command: { kind: "rename-space", spaceId, name: "x".repeat(9 * 1024) } }));
+    const oversize = await postLiveDirectoryCommand(
+      run,
+      author.capability,
+      liveDirectoryCommandRequestId(),
+      inviteCommand,
+      JSON.stringify({ schema: "semio.directory.command-request.v1", requestId: liveDirectoryCommandRequestId(), command: { kind: "rename-space", spaceId, name: "x".repeat(9 * 1024) } }),
+    );
     if (oversize.status !== 413 && oversize.status !== 400) throw new Error(`directory command receipt process did not bound an oversize request: ${oversize.status}`);
 
     await fetch(`http://127.0.0.1:${run.port}/auth/sessions/me`, { method: "DELETE", headers: { authorization: `Bearer ${author.capability}` }, signal: AbortSignal.timeout(5_000) });
@@ -7267,7 +9793,15 @@ type DirectoryCommandReceiptFixture = {
   readonly schema: "semio.hub.directory-command-receipt/v1";
   readonly limits: { readonly requestBytes: 8192; readonly receiptBytes: 65536; readonly maxEvents: 4; readonly inviteTokenBytes: 256; readonly requestIdLen: 32 };
   readonly requests: readonly { readonly name: string; readonly requestId: string; readonly command: DirectoryCommand; readonly canonical: string; readonly canonicalBytes: number; readonly commandSha256: string }[];
-  readonly receipts: readonly { readonly name: string; readonly requestName: string; readonly outcome: DirectoryCommandOutcomeV1; readonly canonical: string; readonly canonicalBytes: number; readonly receiptSha256: string; readonly receipt: DirectoryCommandReceiptV1 }[];
+  readonly receipts: readonly {
+    readonly name: string;
+    readonly requestName: string;
+    readonly outcome: DirectoryCommandOutcomeV1;
+    readonly canonical: string;
+    readonly canonicalBytes: number;
+    readonly receiptSha256: string;
+    readonly receipt: DirectoryCommandReceiptV1;
+  }[];
   readonly rejectedRequests: readonly { readonly name: string; readonly source: string; readonly code: "invalid" | "too-large" }[];
   readonly rejectedReceipts: readonly { readonly name: string; readonly requestName: string; readonly source: string; readonly code: "invalid" | "too-large" }[];
   readonly transport: {
@@ -7299,7 +9833,8 @@ async function proveDirectoryCommandReceiptV1(repoRoot: string): Promise<number>
   const parsedRequests = new Map<string, DirectoryCommandRequestV1>();
   for (const request of fixture.requests) {
     const canonical = JSON.stringify({ schema: "semio.directory.command-request.v1", requestId: request.requestId, command: request.command });
-    if (canonical !== request.canonical || bytes(canonical) !== request.canonicalBytes || request.canonicalBytes > fixture.limits.requestBytes) throw new Error(`directory command request '${request.name}' is not canonical within the request ceiling`);
+    if (canonical !== request.canonical || bytes(canonical) !== request.canonicalBytes || request.canonicalBytes > fixture.limits.requestBytes)
+      throw new Error(`directory command request '${request.name}' is not canonical within the request ceiling`);
     if (digest(JSON.stringify(request.command)) !== request.commandSha256) throw new Error(`directory command request '${request.name}' digest is not byte-exact`);
     const parsed = parseDirectoryCommandRequestV1(request.canonical);
     if (directoryCommandRequestJson(parsed) !== request.canonical || (await directoryCommandSha256(parsed.command)) !== request.commandSha256) throw new Error(`directory command request '${request.name}' does not round-trip`);
@@ -7318,7 +9853,8 @@ async function proveDirectoryCommandReceiptV1(repoRoot: string): Promise<number>
     if (!request) throw new Error(`directory command receipt '${receipt.name}' names no request vector`);
     const { receiptSha256, ...unsigned } = receipt.receipt;
     if (digest(JSON.stringify(unsigned)) !== receipt.receiptSha256 || receiptSha256 !== receipt.receiptSha256) throw new Error(`directory command receipt '${receipt.name}' digest is not byte-exact`);
-    if (JSON.stringify(receipt.receipt) !== receipt.canonical || bytes(receipt.canonical) !== receipt.canonicalBytes || receipt.canonicalBytes > fixture.limits.receiptBytes) throw new Error(`directory command receipt '${receipt.name}' is not canonical within the receipt ceiling`);
+    if (JSON.stringify(receipt.receipt) !== receipt.canonical || bytes(receipt.canonical) !== receipt.canonicalBytes || receipt.canonicalBytes > fixture.limits.receiptBytes)
+      throw new Error(`directory command receipt '${receipt.name}' is not canonical within the receipt ceiling`);
     if (receipt.receipt.events.length > fixture.limits.maxEvents) throw new Error(`directory command receipt '${receipt.name}' exceeds the durable event ceiling`);
     let previous = 0;
     for (const event of receipt.receipt.events) {
@@ -7331,7 +9867,8 @@ async function proveDirectoryCommandReceiptV1(repoRoot: string): Promise<number>
       inviteTokens.add(receipt.receipt.result.inviteToken);
     }
     const parsed = await parseDirectoryCommandReceiptV1(receipt.canonical, request);
-    if (parsed.receiptSha256 !== receipt.receiptSha256 || parsed.commandSha256 !== fixture.requests.find((entry) => entry.name === receipt.requestName)?.commandSha256) throw new Error(`directory command receipt '${receipt.name}' does not round-trip`);
+    if (parsed.receiptSha256 !== receipt.receiptSha256 || parsed.commandSha256 !== fixture.requests.find((entry) => entry.name === receipt.requestName)?.commandSha256)
+      throw new Error(`directory command receipt '${receipt.name}' does not round-trip`);
     checks += 6;
   }
   if (inviteTokens.size === 0) throw new Error("directory command fixture proves no live invite delivery");
@@ -7404,7 +9941,9 @@ class DirectoryCommandReceiptCheckScript extends BundleScript {
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
         lawBudgetMs: 120_000,
-        progress(event) { console.log(`directory-command-receipt-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`directory-command-receipt-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`directory-command-receipt-${phase}-receipt: ${JSON.stringify(receipt)}`);
       if (phase === "process") {
@@ -7413,6 +9952,136 @@ class DirectoryCommandReceiptCheckScript extends BundleScript {
       }
     }
     console.log(`directory-command-receipt-check: checks=${checks} phase=${phase}`);
+  }
+}
+
+async function proveCheckpointPublicationCommandV1(repoRoot: string): Promise<number> {
+  const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📣️checkpoint-publication-command-v1");
+  const source = readFileSync(join(fixtureRoot, "🔣️.json"), "utf8").trimEnd();
+  const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  const fixture = JSON.parse(source) as Record<string, unknown>;
+  const semanticOracle = (value: unknown, canonical: string): boolean => {
+    if (!validate(value) || JSON.stringify(value) !== canonical || Buffer.byteLength(canonical, "utf8") > 8 * 1024 || value === null || typeof value !== "object" || Array.isArray(value)) return false;
+    const command = value as {
+      expectedDocumentFrontier: { headSeq: number; commitSeq: number };
+      pack: { byteLength: number };
+      spr: { byteLength: number };
+    };
+    return command.expectedDocumentFrontier.commitSeq <= command.expectedDocumentFrontier.headSeq && command.pack.byteLength + command.spr.byteLength <= CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES;
+  };
+  const ownAccepts = (candidate: string): boolean => {
+    try {
+      parseCheckpointPublicationCommandV1(candidate);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  if (!semanticOracle(fixture, source) || !ownAccepts(source)) throw new Error("checkpoint publication neutral fixture was rejected");
+
+  const active = structuredClone(fixture) as Record<string, unknown>;
+  active.expectedCurrent = { state: "active", checkpointId: "5".repeat(64), baselineFrontier: structuredClone(active.baselineFrontier) };
+  const activeSource = JSON.stringify(active);
+  if (!semanticOracle(active, activeSource) || !ownAccepts(activeSource)) throw new Error("checkpoint publication active expectation was rejected");
+
+  const mutate = (change: (candidate: Record<string, any>) => void): string => {
+    const candidate = structuredClone(fixture) as Record<string, any>;
+    change(candidate);
+    return JSON.stringify(candidate);
+  };
+  const rejected = [
+    mutate((candidate) => delete candidate.expectedCurrent),
+    mutate((candidate) => (candidate.expectedCurrent.checkpointId = "5".repeat(64))),
+    mutate((candidate) => (candidate.expectedCurrent = { state: "active", checkpointId: "5".repeat(64) })),
+    mutate((candidate) => (candidate.spaceId = "caller-owned-scope")),
+    mutate((candidate) => (candidate.backend = "filesystem")),
+    mutate((candidate) => (candidate.pack.storageKey = "/private/caller-path")),
+    mutate((candidate) => (candidate.pack.sha256 = "A".repeat(64))),
+    mutate((candidate) => (candidate.pack.sha256 = "0".repeat(64))),
+    mutate((candidate) => (candidate.expectedDocumentFrontier.commitSeq = candidate.expectedDocumentFrontier.headSeq + 1)),
+    mutate((candidate) => (candidate.expectedDocumentFrontier.epoch = Number.MAX_SAFE_INTEGER + 1)),
+    mutate((candidate) => {
+      candidate.pack.byteLength = CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES;
+      candidate.spr.byteLength = 1;
+    }),
+    `${source}\n`,
+  ];
+  for (const candidate of rejected) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(candidate);
+    } catch {
+      parsed = null;
+    }
+    if (semanticOracle(parsed, candidate) || ownAccepts(candidate)) throw new Error(`checkpoint publication hostile accepted: ${candidate.slice(0, 96)}`);
+  }
+
+  const bytes = new TextEncoder().encode(source);
+  const nodeDigest = createHash("sha256").update(bytes).digest("hex");
+  const webDigest = Buffer.from(await webcrypto.subtle.digest("SHA-256", bytes)).toString("hex");
+  if (nodeDigest !== webDigest) throw new Error("checkpoint publication independent SHA-256 oracles disagree");
+
+  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const actor = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"), "utf8");
+  const engine = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs"), "utf8");
+  const directory = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🦀️.rs"), "utf8");
+  const runner = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+  for (const [name, body, markers] of [
+    [
+      "hub",
+      hub,
+      ["/spaces/{space_id}/documents/{document_id}/checkpoint-publications", "SocketBindingKeyV1::DocumentWrite", "checkpoint_publication_snapshot", "FencedCheckpointPublisherV1", "materialize_checkpoint", "claim_or_read_checkpoint_publication"],
+    ],
+    ["actor", actor, ["CheckpointPublicationSnapshot", "head_edit_id", "ArtifactMessage::CheckpointPublicationSnapshot"]],
+    ["engine", engine, ["pub struct CheckpointPublicationSnapshot", "authority_generation", "checkpoint_publication_snapshot"]],
+    ["directory", directory, ["NewCheckpointPublicationClaimV1", "complete_checkpoint_publication", "checkpoint_id"]],
+    ["process", runner, ["checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog", "commitCheckpointPublicationProcessMutation", "proveCheckpointPublicationMcpProcess", "resources/list", "resources/read"]],
+  ] as const) {
+    for (const marker of markers) if (!body.includes(marker)) throw new Error(`checkpoint publication ${name} boundary is missing ${marker}`);
+  }
+  console.log(`checkpoint-publication-command-oracle: valid=2 rejected=${rejected.length} ajv=1 typescript=1 sha256=2 actor-snapshot=1 final-writer-fence=1 durable-idempotency=1 process-route=1`);
+  return rejected.length + 10;
+}
+
+class CheckpointPublicationCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const phase = segments[0] ?? "source";
+    if (segments.length > 1 || !["source", "native", "process"].includes(phase)) throw new Error("checkpoint-publication-check accepts source, native, or process");
+    const checks = await proveCheckpointPublicationCommandV1(this.repoRoot);
+    if (phase === "native" || phase === "process") {
+      const laws = ["tests::checkpoint_publication_route_is_author_owned_actor_fenced_idempotent_and_cancellation_safe", "tests::checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before_publication"];
+      if (phase === "process") laws.push("tests::checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog");
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
+        groups: [
+          {
+            package: "semio-hub",
+            target: { kind: "bin", name: "os-hub" },
+            cargoArgs: ["--no-default-features", "--features", phase === "process" ? "sqlite,test-support" : "sqlite,native-artifact-execution"],
+            laws,
+          },
+        ],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 180_000,
+        progress(event) {
+          console.log(`checkpoint-publication-${phase} ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
+      });
+      for (const receipt of receipts) console.log(`checkpoint-publication-${phase}-receipt: ${JSON.stringify(receipt)}`);
+    }
+    if (phase === "process") {
+      const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
+      runCargo(["build", "--manifest-path", "Cargo.toml", "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,native-artifact-execution"], this.repoRoot, nativeEnv);
+      runCmd("bun", ["./📜️script.ts", "nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
+      await proveCheckpointPublicationMcpProcess(this.repoRoot, this.root);
+      console.log("checkpoint-publication-process: real GIS Pack/SPR -> authenticated public Hub publication -> credential-FD MCP scoped resource passed; no GIS actor execution, inference, rendering, or commit claim");
+    }
+    console.log(`checkpoint-publication-check: checks=${checks} phase=${phase}`);
   }
 }
 
@@ -7434,22 +10103,28 @@ class DirectoryEventPageV1CheckScript extends BundleScript {
         ...exactCargoStageEnvironments(),
         groups: [
           { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--all-features"], laws },
-          ...(phase === "native" ? [{
-            package: "semio-hub",
-            target: { kind: "lib" as const, name: "semio_hub" },
-            cargoArgs: ["--all-features"],
-            laws: [
-              "directory::sqlite::tests::directory_event_page_v1_append_admission_is_transactional_sqlite",
-              "directory::postgres::tests::directory_event_page_v1_append_admission_is_transactional_postgres",
-              "directory::neo4j::tests::directory_event_page_v1_append_admission_is_transactional_neo4j",
-            ],
-          }] : []),
+          ...(phase === "native"
+            ? [
+                {
+                  package: "semio-hub",
+                  target: { kind: "lib" as const, name: "semio_hub" },
+                  cargoArgs: ["--all-features"],
+                  laws: [
+                    "directory::sqlite::tests::directory_event_page_v1_append_admission_is_transactional_sqlite",
+                    "directory::postgres::tests::directory_event_page_v1_append_admission_is_transactional_postgres",
+                    "directory::neo4j::tests::directory_event_page_v1_append_admission_is_transactional_neo4j",
+                  ],
+                },
+              ]
+            : []),
         ],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
         lawBudgetMs: 120_000,
-        progress(event) { console.log(`directory-event-page-v1-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`directory-event-page-v1-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`directory-event-page-v1-${phase}-receipt: ${JSON.stringify(receipt)}`);
       if (phase === "process") {
@@ -7462,7 +10137,6 @@ class DirectoryEventPageV1CheckScript extends BundleScript {
   }
 }
 
-
 /** 🧯️ Structural fence: the worker's one terminal transition must erase EVERY retained
  * administration field — the page bytes, the receipt, and the invite capability — before it settles
  * a phase. Written against the extracted function body rather than a contiguous literal so a sibling
@@ -7472,10 +10146,12 @@ function directoryAdministrationTerminateErases(browser: string): boolean {
   if (start < 0) return false;
   const body = browser.slice(start, browser.indexOf("\n}", start));
   const erased = ["canonicalJson", "receiptSha256", "outcome", "inviteToken", "requestId"];
-  return erased.every((field) => body.includes(`operation.${field} = null;`))
-    && body.includes("operation.phase = phase;")
-    && body.includes("operation.abort.abort(")
-    && body.indexOf("operation.phase = phase;") > body.indexOf("operation.inviteToken = null;");
+  return (
+    erased.every((field) => body.includes(`operation.${field} = null;`)) &&
+    body.includes("operation.phase = phase;") &&
+    body.includes("operation.abort.abort(") &&
+    body.indexOf("operation.phase = phase;") > body.indexOf("operation.inviteToken = null;")
+  );
 }
 
 /** 🏛️ Replays the bounded space-administration page contract without using the Rust implementation. */
@@ -7486,7 +10162,11 @@ type DirectorySpaceAdministrationFixture = {
   readonly space: Record<string, unknown>;
   readonly members: readonly { readonly userId: string; readonly email: string; readonly displayName: string; readonly role: string; readonly owner: boolean }[];
   readonly invites: readonly { readonly inviteId: string; readonly role: string; readonly createdAtMs: number; readonly expiresAtMs: number; readonly revoked: boolean; readonly accepted: boolean }[];
-  readonly vectors: readonly { readonly name: string; readonly access: "author" | "member" | "public"; readonly expected: { readonly hasMembers: boolean; readonly hasInvites: boolean; readonly hasCapabilities: boolean; readonly memberRows: number; readonly inviteRows: number } }[];
+  readonly vectors: readonly {
+    readonly name: string;
+    readonly access: "author" | "member" | "public";
+    readonly expected: { readonly hasMembers: boolean; readonly hasInvites: boolean; readonly hasCapabilities: boolean; readonly memberRows: number; readonly inviteRows: number };
+  }[];
   readonly cursorCases: readonly { readonly query: string; readonly status: number; readonly reads: number }[];
   readonly hostiles: readonly string[];
 };
@@ -7498,39 +10178,79 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`space administration fixture: ${JSON.stringify(validate.errors)}`);
-  const u32be = (value: number): Buffer => { const bytes = Buffer.alloc(4); bytes.writeUInt32BE(value); return bytes; };
-  const u64be = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
-  const i64be = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigInt64BE(BigInt(value)); return bytes; };
+  const u32be = (value: number): Buffer => {
+    const bytes = Buffer.alloc(4);
+    bytes.writeUInt32BE(value);
+    return bytes;
+  };
+  const u64be = (value: number): Buffer => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeBigUInt64BE(BigInt(value));
+    return bytes;
+  };
+  const i64be = (value: number): Buffer => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeBigInt64BE(BigInt(value));
+    return bytes;
+  };
   const sessionId = Buffer.from(fixture.session.sessionId, "utf8");
   const userId = Buffer.from(fixture.session.userId, "utf8");
   const spaceId = Buffer.from(fixture.session.spaceId, "utf8");
   const binding = createHash("sha256")
-    .update(Buffer.concat([
-      Buffer.from("semio/hub/directory-space-administration/session-binding/v1\0"),
-      u32be(sessionId.length), sessionId,
-      u32be(userId.length), userId,
-      u64be(fixture.session.authorizationGeneration),
-      i64be(fixture.session.expiresAt),
-      u32be(spaceId.length), spaceId,
-    ]))
+    .update(
+      Buffer.concat([
+        Buffer.from("semio/hub/directory-space-administration/session-binding/v1\0"),
+        u32be(sessionId.length),
+        sessionId,
+        u32be(userId.length),
+        userId,
+        u64be(fixture.session.authorizationGeneration),
+        i64be(fixture.session.expiresAt),
+        u32be(spaceId.length),
+        spaceId,
+      ]),
+    )
     .digest("hex");
   if (binding !== fixture.session.bindingSha256) throw new Error("space administration session binding is not byte-exact");
   const alternateSession = Buffer.from("session-admin-0", "utf8");
   const alternateUser = Buffer.from("1user-admin-01", "utf8");
   if (Buffer.concat([sessionId, userId]).compare(Buffer.concat([alternateSession, alternateUser])) !== 0) throw new Error("binding ambiguity fixture drifted");
   const alternateBinding = createHash("sha256")
-    .update(Buffer.concat([Buffer.from("semio/hub/directory-space-administration/session-binding/v1\0"), u32be(alternateSession.length), alternateSession, u32be(alternateUser.length), alternateUser, u64be(fixture.session.authorizationGeneration), i64be(fixture.session.expiresAt), u32be(spaceId.length), spaceId]))
+    .update(
+      Buffer.concat([
+        Buffer.from("semio/hub/directory-space-administration/session-binding/v1\0"),
+        u32be(alternateSession.length),
+        alternateSession,
+        u32be(alternateUser.length),
+        alternateUser,
+        u64be(fixture.session.authorizationGeneration),
+        i64be(fixture.session.expiresAt),
+        u32be(spaceId.length),
+        spaceId,
+      ]),
+    )
     .digest("hex");
   if (alternateBinding === binding) throw new Error("length-prefixed session binding aliased concatenated identities");
 
   const capabilities = { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true };
-  const memberRow = (index: number) => (index < fixture.members.length ? fixture.members[index]! : { userId: `user-${String(index).padStart(4, "0")}`, email: `u${index}@example.invalid`, displayName: `U${index}`, role: "spectator" as const, owner: false });
-  const inviteRow = (index: number) => (index < fixture.invites.length ? fixture.invites[index]! : { inviteId: `invite-${String(1000 - index).padStart(4, "0")}`, role: "spectator" as const, createdAtMs: 1000 - index, expiresAtMs: 900000, revoked: false, accepted: false });
+  const memberRow = (index: number) =>
+    index < fixture.members.length ? fixture.members[index]! : { userId: `user-${String(index).padStart(4, "0")}`, email: `u${index}@example.invalid`, displayName: `U${index}`, role: "spectator" as const, owner: false };
+  const inviteRow = (index: number) =>
+    index < fixture.invites.length ? fixture.invites[index]! : { inviteId: `invite-${String(1000 - index).padStart(4, "0")}`, role: "spectator" as const, createdAtMs: 1000 - index, expiresAtMs: 900000, revoked: false, accepted: false };
   const memberRows = (count: number) => Array.from({ length: count }, (_, index) => memberRow(index)).sort((left, right) => (left.userId < right.userId ? -1 : left.userId > right.userId ? 1 : 0));
-  const inviteRows = (count: number) => Array.from({ length: count }, (_, index) => inviteRow(index)).sort((left, right) => (right.createdAtMs - left.createdAtMs) || (left.inviteId < right.inviteId ? 1 : -1));
+  const inviteRows = (count: number) => Array.from({ length: count }, (_, index) => inviteRow(index)).sort((left, right) => right.createdAtMs - left.createdAtMs || (left.inviteId < right.inviteId ? 1 : -1));
 
   const seal = (access: "author" | "member" | "public", members: number, invites: number): { canonical: string; page: Record<string, unknown> } => {
-    const publicSpace = { id: fixture.space.id, name: fixture.space.name, kind: fixture.space.kind, visibility: fixture.space.visibility, memberCount: fixture.space.memberCount, documentCount: fixture.space.documentCount, createdAtMs: fixture.space.createdAtMs, updatedAtMs: fixture.space.updatedAtMs };
+    const publicSpace = {
+      id: fixture.space.id,
+      name: fixture.space.name,
+      kind: fixture.space.kind,
+      visibility: fixture.space.visibility,
+      memberCount: fixture.space.memberCount,
+      documentCount: fixture.space.documentCount,
+      createdAtMs: fixture.space.createdAtMs,
+      updatedAtMs: fixture.space.updatedAtMs,
+    };
     const memberSpace = { ...fixture.space, role: access === "author" ? "author" : "spectator" };
     const base = {
       access,
@@ -7540,11 +10260,12 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
       spaceId: fixture.session.spaceId,
       space: access === "public" ? publicSpace : memberSpace,
     };
-    const unsigned = access === "public"
-      ? { ...base, documents: { rows: [] } }
-      : access === "member"
-        ? { ...base, members: { rows: memberRows(members) }, documents: { rows: [] } }
-        : { ...base, members: { rows: memberRows(members) }, documents: { rows: [] }, invites: { rows: inviteRows(invites) }, capabilities };
+    const unsigned =
+      access === "public"
+        ? { ...base, documents: { rows: [] } }
+        : access === "member"
+          ? { ...base, members: { rows: memberRows(members) }, documents: { rows: [] } }
+          : { ...base, members: { rows: memberRows(members) }, documents: { rows: [] }, invites: { rows: inviteRows(invites) }, capabilities };
     const receiptSha256 = createHash("sha256").update(JSON.stringify(unsigned)).digest("hex");
     const page = { ...unsigned, receiptSha256 } as Record<string, unknown>;
     return { canonical: JSON.stringify(page), page };
@@ -7552,7 +10273,7 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
 
   for (const vector of fixture.vectors) {
     const { canonical, page } = seal(vector.access, vector.expected.memberRows, vector.expected.inviteRows);
-    if (("members" in page) !== vector.expected.hasMembers || ("invites" in page) !== vector.expected.hasInvites || ("capabilities" in page) !== vector.expected.hasCapabilities) {
+    if ("members" in page !== vector.expected.hasMembers || "invites" in page !== vector.expected.hasInvites || "capabilities" in page !== vector.expected.hasCapabilities) {
       throw new Error(`space administration shape differs for ${vector.name}`);
     }
     const rows = (page.members as { rows: unknown[] } | undefined)?.rows.length ?? 0;
@@ -7565,7 +10286,7 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
     for (const secret of ["selector", "secretDigest", "inviteToken", "passwordHash", "ssoSubject", "ssoProvider", "sessionId"]) {
       if (canonical.includes(secret)) throw new Error(`space administration page leaked ${secret} in ${vector.name}`);
     }
-    if (vector.access !== "author" && (canonical.includes("\"invites\"") || canonical.includes("\"capabilities\""))) throw new Error(`non-author page carried an author-only window in ${vector.name}`);
+    if (vector.access !== "author" && (canonical.includes('"invites"') || canonical.includes('"capabilities"'))) throw new Error(`non-author page carried an author-only window in ${vector.name}`);
   }
 
   const author = seal("author", 2, 2);
@@ -7584,7 +10305,11 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
   const canonicalRejects = (candidate: string): boolean => {
     if (Buffer.byteLength(candidate, "utf8") > fixture.limits.pageBytes) return true;
     let parsed: Record<string, unknown>;
-    try { parsed = JSON.parse(candidate) as Record<string, unknown>; } catch { return true; }
+    try {
+      parsed = JSON.parse(candidate) as Record<string, unknown>;
+    } catch {
+      return true;
+    }
     if (JSON.stringify(parsed) !== candidate) return true;
     if (parsed.spaceId !== (parsed.space as { id?: unknown } | undefined)?.id) return true;
     if (!memberOrder(candidate) || !inviteOrder(candidate)) return true;
@@ -7595,15 +10320,24 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
   };
   const hostile = (name: string): string => {
     switch (name) {
-      case "receipt-substituted": return author.canonical.replace(/"receiptSha256":"[0-9a-f]{64}"/u, `"receiptSha256":"${"b".repeat(64)}"`);
-      case "trailing-whitespace": return `${author.canonical} `;
-      case "unknown-field": return author.canonical.replace('{"access":"author"', '{"actor":"user:secret","access":"author"');
-      case "space-mismatch": return author.canonical.replace('"spaceId":"space-admin-01"', '"spaceId":"space-admin-02"');
-      case "member-order-reversed": return JSON.stringify({ ...JSON.parse(author.canonical), members: { rows: [...memberRows(2)].reverse() } });
-      case "invite-order-reversed": return JSON.stringify({ ...JSON.parse(author.canonical), invites: { rows: [...inviteRows(2)].reverse() } });
-      case "window-row-max-plus-one": return JSON.stringify({ ...JSON.parse(author.canonical), members: { rows: memberRows(fixture.limits.windowRows + 1) } });
-      case "page-byte-max-plus-one": return JSON.stringify({ ...JSON.parse(author.canonical), space: { ...(JSON.parse(author.canonical) as { space: Record<string, unknown> }).space, name: "x".repeat(fixture.limits.pageBytes) } });
-      default: return JSON.stringify({ ...JSON.parse(author.canonical), invites: { rows: [{ ...inviteRows(1)[0], secretDigest: "ff".repeat(32) }] } });
+      case "receipt-substituted":
+        return author.canonical.replace(/"receiptSha256":"[0-9a-f]{64}"/u, `"receiptSha256":"${"b".repeat(64)}"`);
+      case "trailing-whitespace":
+        return `${author.canonical} `;
+      case "unknown-field":
+        return author.canonical.replace('{"access":"author"', '{"actor":"user:secret","access":"author"');
+      case "space-mismatch":
+        return author.canonical.replace('"spaceId":"space-admin-01"', '"spaceId":"space-admin-02"');
+      case "member-order-reversed":
+        return JSON.stringify({ ...JSON.parse(author.canonical), members: { rows: [...memberRows(2)].reverse() } });
+      case "invite-order-reversed":
+        return JSON.stringify({ ...JSON.parse(author.canonical), invites: { rows: [...inviteRows(2)].reverse() } });
+      case "window-row-max-plus-one":
+        return JSON.stringify({ ...JSON.parse(author.canonical), members: { rows: memberRows(fixture.limits.windowRows + 1) } });
+      case "page-byte-max-plus-one":
+        return JSON.stringify({ ...JSON.parse(author.canonical), space: { ...(JSON.parse(author.canonical) as { space: Record<string, unknown> }).space, name: "x".repeat(fixture.limits.pageBytes) } });
+      default:
+        return JSON.stringify({ ...JSON.parse(author.canonical), invites: { rows: [{ ...inviteRows(1)[0], secretDigest: "ff".repeat(32) }] } });
     }
   };
   for (const name of fixture.hostiles) {
@@ -7651,7 +10385,8 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
   }
   const memberShaped = JSON.parse(seal("member", 1, 0).canonical) as Record<string, unknown>;
   if (validatePage({ ...memberShaped, invites: { rows: [] } })) throw new Error("component schema admitted an invite window on a member page");
-  if (validatePage({ ...memberShaped, capabilities: { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true } })) throw new Error("component schema admitted capability flags on a member page");
+  if (validatePage({ ...memberShaped, capabilities: { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true } }))
+    throw new Error("component schema admitted capability flags on a member page");
 
   const contract = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
   const typescript = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts"), "utf8");
@@ -7664,45 +10399,52 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
   const sourceClosed = (rust: string, ts: string, route: string, sq: string, pg: string, neo: string, browser: string, home: string): boolean => {
     const read = route.indexOf("list_space_administration_members_page(space_id, member_after.as_deref(), SPACE_ADMINISTRATION_PAGE_FETCH_MAX)");
     const revalidate = route.indexOf("revalidate_space_administration_caller(state, caller.as_ref(), space_id, binding, &space, access)", read);
-    return rust.includes("pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS: usize = 64")
-      && rust.includes("pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES: usize = 48 * 1024")
-      && rust.includes("pub enum DirectorySpaceAdministrationPageV1")
-      && !rust.includes("pub enum DirectorySpaceDetailV1")
-      && ts.includes("export async function parseDirectorySpaceAdministrationPageV1")
-      && ts.includes("space-administration-page.noncanonical")
-      && route.includes("fn space_administration_request_admission")
-      && route.includes("semio/hub/directory-space-administration/session-binding/v1\\0")
-      && route.includes("name != \"cursor\" || value.is_empty() || value.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES")
-      && read >= 0 && revalidate > read
-      && route.includes("StatusCode::FORBIDDEN")
-      && !route.includes("DirectorySpaceDetailV1")
-      && sq.includes("SELECT u.id, u.email, u.display_name, m.role")
-      && !sq.includes("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite WHERE space_id = ?1 AND")
-      && pg.includes("async fn list_space_administration_members_page")
-      && pg.includes("async fn list_space_administration_invites_page")
-      && neo.includes("async fn list_space_administration_members_page")
-      && neo.includes("async fn list_space_administration_invites_page")
-      && browser.includes("function terminateDirectoryAdministration")
-      && browser.includes("const DIRECTORY_ADMINISTRATION_CAPACITY = 1")
-      && directoryAdministrationTerminateErases(browser)
-      && browser.includes("revokeDirectoryAdministrationForScope(scope.spaceId);")
-      && home.includes("row.role == Some(crate::DirectorySpaceRole::Author)");
+    return (
+      rust.includes("pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS: usize = 64") &&
+      rust.includes("pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES: usize = 48 * 1024") &&
+      rust.includes("pub enum DirectorySpaceAdministrationPageV1") &&
+      !rust.includes("pub enum DirectorySpaceDetailV1") &&
+      ts.includes("export async function parseDirectorySpaceAdministrationPageV1") &&
+      ts.includes("space-administration-page.noncanonical") &&
+      route.includes("fn space_administration_request_admission") &&
+      route.includes("semio/hub/directory-space-administration/session-binding/v1\\0") &&
+      route.includes('name != "cursor" || value.is_empty() || value.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES') &&
+      read >= 0 &&
+      revalidate > read &&
+      route.includes("StatusCode::FORBIDDEN") &&
+      !route.includes("DirectorySpaceDetailV1") &&
+      sq.includes("SELECT u.id, u.email, u.display_name, m.role") &&
+      !sq.includes("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite WHERE space_id = ?1 AND") &&
+      pg.includes("async fn list_space_administration_members_page") &&
+      pg.includes("async fn list_space_administration_invites_page") &&
+      neo.includes("async fn list_space_administration_members_page") &&
+      neo.includes("async fn list_space_administration_invites_page") &&
+      browser.includes("function terminateDirectoryAdministration") &&
+      browser.includes("const DIRECTORY_ADMINISTRATION_CAPACITY = 1") &&
+      directoryAdministrationTerminateErases(browser) &&
+      browser.includes("revokeDirectoryAdministrationForScope(scope.spaceId);") &&
+      home.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
+    );
   };
   if (!sourceClosed(contract, typescript, hub, sqlite, postgres, neo4j, worker, space)) throw new Error("space administration source boundary is incomplete");
   const sourceHostiles: readonly [string, string, string, string, string, string, string, string][] = [
     [contract.replace("pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS: usize = 64", "pub const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS: usize = 4096"), typescript, hub, sqlite, postgres, neo4j, worker, space],
     [contract, typescript.replace("export async function parseDirectorySpaceAdministrationPageV1", "async function parseDirectorySpaceAdministrationPageV1"), hub, sqlite, postgres, neo4j, worker, space],
     [contract, typescript, hub.replace("revalidate_space_administration_caller(state, caller.as_ref(), space_id, binding, &space, access)", "Ok(access)"), sqlite, postgres, neo4j, worker, space],
-    [contract, typescript, hub.replace("name != \"cursor\" || value.is_empty() || value.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES", "false"), sqlite, postgres, neo4j, worker, space],
+    [contract, typescript, hub.replace('name != "cursor" || value.is_empty() || value.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES', "false"), sqlite, postgres, neo4j, worker, space],
     [contract, typescript, hub, sqlite, postgres.replace("async fn list_space_administration_invites_page", "async fn unused_invites_page"), neo4j, worker, space],
     [contract, typescript, hub, sqlite, postgres, neo4j.replace("async fn list_space_administration_members_page", "async fn unused_members_page"), worker, space],
     [contract, typescript, hub, sqlite, postgres, neo4j, worker.replace("  operation.inviteToken = null;\n", ""), space],
     [contract, typescript, hub, sqlite, postgres, neo4j, worker.replace("revokeDirectoryAdministrationForScope(scope.spaceId);", ""), space],
     [contract, typescript, hub, sqlite, postgres, neo4j, worker, space.replace("row.role == Some(crate::DirectorySpaceRole::Author)", "true")],
   ];
-  sourceHostiles.forEach((candidate, index) => { if (sourceClosed(...candidate)) throw new Error(`space administration source oracle admitted removed fence ${index}`); });
+  sourceHostiles.forEach((candidate, index) => {
+    if (sourceClosed(...candidate)) throw new Error(`space administration source oracle admitted removed fence ${index}`);
+  });
   const checks = fixture.vectors.length * 2 + fixture.cursorCases.length + fixture.hostiles.length + sourceHostiles.length + 7;
-  console.log(`space-administration-oracle: AJV=2 vectors=${fixture.vectors.length} cursors=${fixture.cursorCases.length} hostiles=${fixture.hostiles.length} source-hostiles=${sourceHostiles.length} component-schema=${fixture.vectors.length + 5} sha256=1 binding=1`);
+  console.log(
+    `space-administration-oracle: AJV=2 vectors=${fixture.vectors.length} cursors=${fixture.cursorCases.length} hostiles=${fixture.hostiles.length} source-hostiles=${sourceHostiles.length} component-schema=${fixture.vectors.length + 5} sha256=1 binding=1`,
+  );
   return checks;
 }
 
@@ -7732,7 +10474,9 @@ class SpaceAdministrationCheckScript extends BundleScript {
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
         lawBudgetMs: 120_000,
-        progress(event) { console.log(`space-administration-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`space-administration-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`space-administration-${phase}-receipt: ${JSON.stringify(receipt)}`);
     }
@@ -7752,11 +10496,15 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
     const slots = new Map<string, Slot>();
     const outcomes: string[] = [];
     let fanoutCount = 0;
-    const roster = (scope: string) => [...slots.entries()]
-      .filter(([key, slot]) => key.startsWith(`${scope}\0`) && slot.peerTag !== null)
-      .map(([key, slot]) => ({ actor: key.slice(scope.length + 1), bytes: slot.peerBytes }))
-      .sort((left, right) => left.actor.localeCompare(right.actor));
-    const publish = () => { fanoutCount += 1; outcomes.push("published"); };
+    const roster = (scope: string) =>
+      [...slots.entries()]
+        .filter(([key, slot]) => key.startsWith(`${scope}\0`) && slot.peerTag !== null)
+        .map(([key, slot]) => ({ actor: key.slice(scope.length + 1), bytes: slot.peerBytes }))
+        .sort((left, right) => left.actor.localeCompare(right.actor));
+    const publish = () => {
+      fanoutCount += 1;
+      outcomes.push("published");
+    };
     for (const operation of vector.operations) {
       if (operation.kind === "restart") {
         slots.clear();
@@ -7775,7 +10523,8 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
       const current = slots.get(key);
       if (operation.kind === "install") {
         slots.set(key, { liveId: operation.liveId, deadline: operation.nowMs + fixture.limits.ttlMs, peerTag: null, peerBytes: 0 });
-        if (current?.peerTag !== null && current !== undefined) publish(); else outcomes.push("no-change");
+        if (current?.peerTag !== null && current !== undefined) publish();
+        else outcomes.push("no-change");
         continue;
       }
       if (!current || current.liveId !== operation.liveId) {
@@ -7794,7 +10543,8 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
         current.deadline = operation.nowMs + fixture.limits.ttlMs;
         current.peerTag = operation.peerTag;
         current.peerBytes = operation.peerBytes;
-        if (changed) publish(); else outcomes.push("no-change");
+        if (changed) publish();
+        else outcomes.push("no-change");
       } else if (operation.kind === "tick") {
         if (current.peerTag !== null && operation.nowMs >= current.deadline) {
           current.peerTag = null;
@@ -7803,12 +10553,13 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
         } else outcomes.push("no-change");
       } else {
         slots.delete(key);
-        if (current.peerTag !== null) publish(); else outcomes.push("no-change");
+        if (current.peerTag !== null) publish();
+        else outcomes.push("no-change");
       }
     }
-    const final = vector.expected.final.map(expected => {
+    const final = vector.expected.final.map((expected) => {
       const rows = roster(expected.scope);
-      return { scope: expected.scope, count: rows.length, bytes: rows.reduce((sum, row) => sum + row.bytes, 0), actors: expected.actors.length === 0 && rows.length > 0 ? [] : rows.map(row => row.actor) };
+      return { scope: expected.scope, count: rows.length, bytes: rows.reduce((sum, row) => sum + row.bytes, 0), actors: expected.actors.length === 0 && rows.length > 0 ? [] : rows.map((row) => row.actor) };
     });
     const actual = { outcomes, fanoutCount, final, durableWrites: 0 };
     const expected = { outcomes: vector.expected.outcomes, fanoutCount: vector.expected.fanoutCount, final: vector.expected.final, durableWrites: vector.expected.durableWrites };
@@ -7817,32 +10568,35 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
   const schemaHostiles: unknown[] = [
     { ...fixture, unknown: true },
     { ...fixture, limits: { ...fixture.limits, ttlMs: 14999 } },
-    { ...fixture, vectors: fixture.vectors.map((vector, index) => index === 0 ? { ...vector, operations: [{ ...vector.operations[0], clientDeadlineMs: 1 }] } : vector) },
-    { ...fixture, vectors: fixture.vectors.map((vector, index) => index === 0 ? { ...vector, expected: { ...vector.expected, directoryRecipients: ["outsider"] } } : vector) },
+    { ...fixture, vectors: fixture.vectors.map((vector, index) => (index === 0 ? { ...vector, operations: [{ ...vector.operations[0], clientDeadlineMs: 1 }] } : vector)) },
+    { ...fixture, vectors: fixture.vectors.map((vector, index) => (index === 0 ? { ...vector, expected: { ...vector.expected, directoryRecipients: ["outsider"] } } : vector)) },
   ];
-  if (schemaHostiles.some(candidate => validate(candidate))) throw new Error("presence lease schema admitted client authority or an unbounded projection");
+  if (schemaHostiles.some((candidate) => validate(candidate))) throw new Error("presence lease schema admitted client authority or an unbounded projection");
   const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
   const sourceClosed = (source: string): boolean => {
     const publish = source.indexOf("self.fanout_for(key).send(ServerFrame::Presence");
     const directory = source.indexOf("self.directory_service.publish(DirectoryStreamMessage::Presence", publish);
-    return source.includes("const PRESENCE_LEASE_TTL_MS: u64 = 15_000")
-      && source.includes("socket_live_id: String")
-      && source.includes("expires_at: tokio::time::Instant")
-      && source.includes("presence_publication_gate: Arc<tokio::sync::Mutex<()>>")
-      && source.includes("slot.socket_live_id == socket_live_id")
-      && source.includes("remove_if(&map_key, |slot| slot.socket_live_id == socket_live_id)")
-      && source.includes("rows.sort_by(|left, right| left.0.cmp(&right.0))")
-      && source.includes("peer.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES")
-      && source.includes("visible >= PRESENCE_ROSTER_MAXIMUM_ITEMS")
-      && source.includes("next > PRESENCE_ROSTER_MAXIMUM_BYTES")
-      && source.includes("now >= slot.expires_at")
-      && source.includes("state.install_presence_slot(")
-      && source.includes("state.refresh_presence(")
-      && source.includes("state.expire_presence_for_live(")
-      && source.includes("state.close_presence_for_live(")
-      && publish >= 0 && directory > publish
-      && !source.includes("PresenceSession")
-      && !source.includes("connected_at_ms + PRESENCE_LEASE_TTL_MS");
+    return (
+      source.includes("const PRESENCE_LEASE_TTL_MS: u64 = 15_000") &&
+      source.includes("socket_live_id: String") &&
+      source.includes("expires_at: tokio::time::Instant") &&
+      source.includes("presence_publication_gate: Arc<tokio::sync::Mutex<()>>") &&
+      source.includes("slot.socket_live_id == socket_live_id") &&
+      source.includes("remove_if(&map_key, |slot| slot.socket_live_id == socket_live_id)") &&
+      source.includes("rows.sort_by(|left, right| left.0.cmp(&right.0))") &&
+      source.includes("peer.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES") &&
+      source.includes("visible >= PRESENCE_ROSTER_MAXIMUM_ITEMS") &&
+      source.includes("next > PRESENCE_ROSTER_MAXIMUM_BYTES") &&
+      source.includes("now >= slot.expires_at") &&
+      source.includes("state.install_presence_slot(") &&
+      source.includes("state.refresh_presence(") &&
+      source.includes("state.expire_presence_for_live(") &&
+      source.includes("state.close_presence_for_live(") &&
+      publish >= 0 &&
+      directory > publish &&
+      !source.includes("PresenceSession") &&
+      !source.includes("connected_at_ms + PRESENCE_LEASE_TTL_MS")
+    );
   };
   if (!sourceClosed(hub)) throw new Error("presence lease production ownership/publication fence is incomplete");
   const sourceHostiles = [
@@ -7852,10 +10606,13 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
     hub.replace("rows.sort_by(|left, right| left.0.cmp(&right.0));", ""),
     hub.replace("visible >= PRESENCE_ROSTER_MAXIMUM_ITEMS", "false"),
   ];
-  sourceHostiles.forEach((source, index) => { if (sourceClosed(source)) throw new Error(`presence lease source oracle admitted removed fence ${index}`); });
+  sourceHostiles.forEach((source, index) => {
+    if (sourceClosed(source)) throw new Error(`presence lease source oracle admitted removed fence ${index}`);
+  });
   const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
   const helpers = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx"), "utf8");
-  if (!helpers.includes("PRESENCE_HEARTBEAT_INTERVAL_MS = 5000") || !shell.includes("window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS)") || !shell.includes("window.clearInterval(timer)")) throw new Error("browser presence schedule is not a bounded five-second lifecycle");
+  if (!helpers.includes("PRESENCE_HEARTBEAT_INTERVAL_MS = 5000") || !shell.includes("window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS)") || !shell.includes("window.clearInterval(timer)"))
+    throw new Error("browser presence schedule is not a bounded five-second lifecycle");
   const checks = fixture.vectors.length + schemaHostiles.length + sourceHostiles.length + 1;
   console.log(`presence-lease-oracle: AJV=1 vectors=${fixture.vectors.length} schema-hostiles=${schemaHostiles.length} source-hostiles=${sourceHostiles.length} browser-schedule=1`);
   return checks;
@@ -7873,22 +10630,34 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     if (!Number.isSafeInteger(value) || value < 0) throw new Error("neutral oracle integer outside the exact safe range");
     return Array.from(leb.encodeUInt64(value));
   };
-  const text = (value: string): number[] => { const bytes = Buffer.from(value); return [...integer(bytes.length), ...bytes]; };
-  const float = (value: number): number[] => { const bytes = Buffer.alloc(8); bytes.writeDoubleLE(value); return Array.from(bytes); };
+  const text = (value: string): number[] => {
+    const bytes = Buffer.from(value);
+    return [...integer(bytes.length), ...bytes];
+  };
+  const float = (value: number): number[] => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeDoubleLE(value);
+    return Array.from(bytes);
+  };
   const independentEncode = (peer: ArtifactPresencePeer): Buffer => {
     const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui];
-    const flags = fields.reduce<number>((mask, value, index) => value === undefined ? mask : mask | (1 << index), 0);
+    const flags = fields.reduce<number>((mask, value, index) => (value === undefined ? mask : mask | (1 << index)), 0);
     const out = [...text(peer.actor), ...integer(flags), ...integer(peer.connectedAtMs)];
     for (const [index, value] of fields.entries()) {
       if (value === undefined) continue;
       if ([0, 2, 3, 4, 7].includes(index)) out.push(...text(value as string));
-      else if (index === 1) { const bytes = value as readonly number[]; out.push(...integer(bytes.length), ...bytes); }
-      else if (index === 5) {
+      else if (index === 1) {
+        const bytes = value as readonly number[];
+        out.push(...integer(bytes.length), ...bytes);
+      } else if (index === 5) {
         const interaction = peer.interaction!;
         out.push(...text(interaction.app_id), ...integer(interaction.domains.length));
         for (const domain of interaction.domains) {
           out.push(...text(domain.domain), ...text(domain.granularity));
-          for (const ids of [domain.selected, domain.hovered]) { out.push(...integer(ids.length)); for (const id of ids) out.push(...text(id)); }
+          for (const ids of [domain.selected, domain.hovered]) {
+            out.push(...integer(ids.length));
+            for (const id of ids) out.push(...text(id));
+          }
         }
       } else if (index === 6) out.push(value as number);
       else if (index === 8) {
@@ -7897,12 +10666,16 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
           out.push(...text(view.windowId), ...text(view.space));
           const kind = view.kind;
           const values = kind.kind === "canvas" ? [0, kind.x, kind.y, kind.zoom] : kind.kind === "orbit" ? [1, ...kind.position, ...kind.target, ...kind.up, kind.fov] : [2, kind.lng, kind.lat, kind.zoom, kind.bearing, kind.pitch];
-          out.push(values[0]!); for (const number of values.slice(1)) out.push(...float(number));
+          out.push(values[0]!);
+          for (const number of values.slice(1)) out.push(...float(number));
           out.push(...float(view.size[0]), ...float(view.size[1]), view.pointer ? 1 : 0);
           if (view.pointer) for (const number of view.pointer) out.push(...float(number));
         }
       } else if (index === 9) {
-        for (const path of [peer.ui!.hoveredPath, peer.ui!.focusedPath, peer.ui!.pressedPath]) { out.push(path === undefined ? 0 : 1); if (path !== undefined) out.push(...text(path)); }
+        for (const path of [peer.ui!.hoveredPath, peer.ui!.focusedPath, peer.ui!.pressedPath]) {
+          out.push(path === undefined ? 0 : 1);
+          if (path !== undefined) out.push(...text(path));
+        }
       }
     }
     return Buffer.from(out);
@@ -7915,14 +10688,25 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
       if (!independentEncode(input).equals(raw)) throw new Error("raw canonical oracle mismatch");
       const admitted = vector.admission;
       const output: ArtifactPresencePeer = {
-        actor: admitted.actor, connectedAtMs: admitted.connectedAtMs, label: admitted.label ?? undefined, userId: admitted.userId ?? undefined,
-        role: admitted.role ?? undefined, color: admitted.color, surface: admitted.surface ?? undefined,
-        presencePack: input.presencePack, dragGhostJson: input.dragGhostJson, interaction: input.interaction, views: input.views, ui: input.ui,
+        actor: admitted.actor,
+        connectedAtMs: admitted.connectedAtMs,
+        label: admitted.label ?? undefined,
+        userId: admitted.userId ?? undefined,
+        role: admitted.role ?? undefined,
+        color: admitted.color,
+        surface: admitted.surface ?? undefined,
+        presencePack: input.presencePack,
+        dragGhostJson: input.dragGhostJson,
+        interaction: input.interaction,
+        views: input.views,
+        ui: input.ui,
       };
       normalized = independentEncode(output);
       if (!normalized.equals(Buffer.from(encodePresencePeer(output)))) throw new Error("output canonical oracle mismatch");
       decodePresencePeer(normalized, [0]);
-    } catch { normalized = undefined; }
+    } catch {
+      normalized = undefined;
+    }
     if ((normalized !== undefined) !== vector.expected.accepted || (normalized?.toString("hex") ?? null) !== vector.expected.normalizedPeerHex) throw new Error(`presence normalization vector failed: ${vector.name}`);
   }
   console.log(`presence-normalization-independent-oracle: AJV=1 LEB128=1 exact-vectors=${fixture.vectors.length}`);
@@ -7930,7 +10714,14 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
   const start = hub.indexOf("async fn refresh_document_presence(");
   const end = hub.indexOf("async fn refresh_presence(", start);
   const ingress = hub.slice(start, end);
-  if (start < 0 || !ingress.includes("protocol::decode_presence_peer(&peer).await") || !ingress.includes("protocol::PresencePeer {") || !ingress.includes("protocol::encode_presence_peer(&normalized).await") || !ingress.includes("self.refresh_presence(")) throw new Error("Hub lacks canonical admitted presence reconstruction");
+  if (
+    start < 0 ||
+    !ingress.includes("protocol::decode_presence_peer(&peer).await") ||
+    !ingress.includes("protocol::PresencePeer {") ||
+    !ingress.includes("protocol::encode_presence_peer(&normalized).await") ||
+    !ingress.includes("self.refresh_presence(")
+  )
+    throw new Error("Hub lacks canonical admitted presence reconstruction");
   for (const field of ["connected_at_ms: slot.connected_at_ms", "label: slot.label.clone()", "user_id: slot.user_id.clone()", "role: slot.role.clone()", "color: Some(slot.color)", "surface: slot.document_surface.clone()"])
     if (!ingress.includes(field)) throw new Error(`Hub presence authority missing: ${field}`);
   if (!hub.includes("state.refresh_document_presence(") || !hub.includes("socket_grant.document_plan.as_ref().map(|plan| plan.surface.surface_id.clone())")) throw new Error("presence ingress must use the admitted plan surface");
@@ -7944,17 +10735,30 @@ class PresenceNormalizationCheckScript extends BundleScript {
     const checks = await provePresenceNormalizationFixture(this.repoRoot);
     if (phase === "native") {
       const receipts = await runExactCargoLaws({
-        cwd: this.root, ...exactCargoStageEnvironments(),
-        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: [
-          "presence_normalization_matches_neutral_authority_and_no_effect_rejections",
-          "presence_normalization_socket_overwrites_identity_and_rejects_without_refresh",
-          "presence_lease_reconnect_rejects_old_live_refresh_and_close",
-          "presence_lease_expires_server_clocked_visibility_without_socket_close",
-          "presence_lease_enforces_shared_roster_bounds_and_actor_order",
-          "presence_lease_restart_is_empty_and_directory_presence_is_member_only",
-        ] }],
-        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 60_000,
-        progress(event) { console.log(`presence-normalization-native ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        cwd: this.root,
+        ...exactCargoStageEnvironments(),
+        groups: [
+          {
+            package: "semio-hub",
+            target: { kind: "bin", name: "os-hub" },
+            cargoArgs: ["--no-default-features", "--features", "sqlite"],
+            laws: [
+              "presence_normalization_matches_neutral_authority_and_no_effect_rejections",
+              "presence_normalization_socket_overwrites_identity_and_rejects_without_refresh",
+              "presence_lease_reconnect_rejects_old_live_refresh_and_close",
+              "presence_lease_expires_server_clocked_visibility_without_socket_close",
+              "presence_lease_enforces_shared_roster_bounds_and_actor_order",
+              "presence_lease_restart_is_empty_and_directory_presence_is_member_only",
+            ],
+          },
+        ],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 60_000,
+        progress(event) {
+          console.log(`presence-normalization-native ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`presence-normalization-native-receipt: ${JSON.stringify(receipt)}`);
     }
@@ -7981,10 +10785,16 @@ class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
     if (hub.match(/const STUDIO: &str = "([^"]+)";/)?.[1] !== fixture.scope.spaceId) throw new Error("recovery fixture differs from seeded test space");
     if (phase === "native") {
       const receipts = await runExactCargoLaws({
-        cwd: this.repoRoot, ...exactCargoStageEnvironments(),
+        cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: [law] }],
-        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 120_000,
-        progress(event) { console.log(`admin-presence-target-recovery-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 120_000,
+        progress(event) {
+          console.log(`admin-presence-target-recovery-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`admin-presence-target-recovery-native-receipt: ${JSON.stringify(receipt)}`);
     }
@@ -8005,12 +10815,8 @@ class PresenceLeaseCheckScript extends BundleScript {
         "presence_lease_restart_is_empty_and_directory_presence_is_member_only",
       ];
       const hubGroup = { package: "semio-hub", target: { kind: "bin" as const, name: "os-hub" }, cargoArgs: ["--all-features"], laws: hubLaws };
-      const groups = phase === "native"
-        ? [
-            { package: "semio-framework-os-kernel", target: { kind: "lib" as const, name: "semio_framework_os_kernel" }, laws: ["presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner"] },
-            hubGroup,
-          ]
-        : [hubGroup];
+      const groups =
+        phase === "native" ? [{ package: "semio-framework-os-kernel", target: { kind: "lib" as const, name: "semio_framework_os_kernel" }, laws: ["presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner"] }, hubGroup] : [hubGroup];
       const receipts = await runExactCargoLaws({
         cwd: phase === "native" ? this.repoRoot : this.root,
         ...exactCargoStageEnvironments(),
@@ -8019,7 +10825,9 @@ class PresenceLeaseCheckScript extends BundleScript {
         buildBudgetMs: buildBudgetMs(),
         listBudgetMs: 60_000,
         lawBudgetMs: 60_000,
-        progress(event) { console.log(`presence-lease-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`presence-lease-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`presence-lease-${phase}-receipt: ${JSON.stringify(receipt)}`);
     }
@@ -8155,31 +10963,41 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
     const sqliteClaim = body(sq, "async fn redeem_invite_atomic(");
     const postgresClaim = body(pg, "async fn redeem_invite_atomic(");
     const neoClaim = body(neo, "async fn redeem_invite_atomic(");
-    return shared.includes("pub accepted_event_id: Option<String>")
-      && shared.includes("InviteRedemptionCommit::AlreadyCommitted")
-      && ordered(service, ["let mut clock = self.write.lock().await", "let hlc = clock.tick()", "self.dir.redeem_invite_atomic", "InviteRedemptionCommit::NewlyCommitted"])
-      && service.includes("InviteRedemptionCommit::AlreadyCommitted { event } => Ok(vec![event])")
-      && !service.slice(service.indexOf("InviteRedemptionCommit::AlreadyCommitted")).includes("publish_persisted_locked")
-      && sq.includes("CHECK ((accepted_at IS NULL) = (accepted_event_id IS NULL))")
-      && sqliteClaim.includes("TransactionBehavior::Immediate")
-      && ordered(sqliteClaim.slice(sqliteClaim.indexOf("SET accepted_at = ?2")), ["SET accepted_at = ?2, accepted_event_id = ?3", "persist_event_with_identity", "self.project(&tx", "tx.commit()"])
-      && pg.includes("CHECK ((accepted_at IS NULL) = (accepted_event_id IS NULL))")
-      && postgresClaim.includes("WHERE singleton FOR UPDATE")
-      && postgresClaim.includes("WHERE selector = $1 FOR UPDATE")
-      && ordered(postgresClaim.slice(postgresClaim.indexOf("SET accepted_at = $2")), ["SET accepted_at = $2, accepted_event_id = $3", "INSERT INTO hub_directory_event", "self.project(&mut tx", "tx.commit()"])
-      && pg.includes("CREATE TEMP TABLE hub_rebuild_space_invite ON COMMIT DROP")
-      && pg.includes("accepted_at, accepted_event_id FROM hub_rebuild_space_invite")
-      && neoClaim.includes("SET c.claimNonce")
-      && neoClaim.includes("SET i.claimNonce")
-      && ordered(neoClaim.slice(neoClaim.indexOf("SET i.acceptedAt = $accepted_at")), ["SET i.acceptedAt = $accepted_at, i.acceptedEventId = $event_id", "CREATE (e:DirectoryEvent", "self.project(&mut txn", "txn.commit()"])
-      && [sq, pg, neo].every((source) => source.includes("DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. }"))
-      && [sq, pg, neo].every((source) => source.includes("accepted_at") && source.includes("accepted_event_id"));
+    return (
+      shared.includes("pub accepted_event_id: Option<String>") &&
+      shared.includes("InviteRedemptionCommit::AlreadyCommitted") &&
+      ordered(service, ["let mut clock = self.write.lock().await", "let hlc = clock.tick()", "self.dir.redeem_invite_atomic", "InviteRedemptionCommit::NewlyCommitted"]) &&
+      service.includes("InviteRedemptionCommit::AlreadyCommitted { event } => Ok(vec![event])") &&
+      !service.slice(service.indexOf("InviteRedemptionCommit::AlreadyCommitted")).includes("publish_persisted_locked") &&
+      sq.includes("CHECK ((accepted_at IS NULL) = (accepted_event_id IS NULL))") &&
+      sqliteClaim.includes("TransactionBehavior::Immediate") &&
+      ordered(sqliteClaim.slice(sqliteClaim.indexOf("SET accepted_at = ?2")), ["SET accepted_at = ?2, accepted_event_id = ?3", "persist_event_with_identity", "self.project(&tx", "tx.commit()"]) &&
+      pg.includes("CHECK ((accepted_at IS NULL) = (accepted_event_id IS NULL))") &&
+      postgresClaim.includes("WHERE singleton FOR UPDATE") &&
+      postgresClaim.includes("WHERE selector = $1 FOR UPDATE") &&
+      ordered(postgresClaim.slice(postgresClaim.indexOf("SET accepted_at = $2")), ["SET accepted_at = $2, accepted_event_id = $3", "INSERT INTO hub_directory_event", "self.project(&mut tx", "tx.commit()"]) &&
+      pg.includes("CREATE TEMP TABLE hub_rebuild_space_invite ON COMMIT DROP") &&
+      pg.includes("accepted_at, accepted_event_id FROM hub_rebuild_space_invite") &&
+      neoClaim.includes("SET c.claimNonce") &&
+      neoClaim.includes("SET i.claimNonce") &&
+      ordered(neoClaim.slice(neoClaim.indexOf("SET i.acceptedAt = $accepted_at")), ["SET i.acceptedAt = $accepted_at, i.acceptedEventId = $event_id", "CREATE (e:DirectoryEvent", "self.project(&mut txn", "txn.commit()"]) &&
+      [sq, pg, neo].every((source) => source.includes("DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. }")) &&
+      [sq, pg, neo].every((source) => source.includes("accepted_at") && source.includes("accepted_event_id"))
+    );
   };
   if (!sourceClosed(directory, sqlite, postgres, neo4j)) throw new Error("invite redemption production transaction fence is incomplete");
   const sourceHostiles = [
     [directory.replace("pub accepted_event_id: Option<String>", ""), sqlite, postgres, neo4j],
     [directory.replace("InviteRedemptionCommit::AlreadyCommitted { event } => Ok(vec![event])", "InviteRedemptionCommit::AlreadyCommitted { event } => Ok(self.publish_persisted_locked(&clock, vec![event]))"), sqlite, postgres, neo4j],
-    [directory, sqlite.replace("transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;\n        let accepted_at_ms", "transaction_with_behavior(rusqlite::TransactionBehavior::Deferred).map_err(backend)?;\n        let accepted_at_ms"), postgres, neo4j],
+    [
+      directory,
+      sqlite.replace(
+        "transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;\n        let accepted_at_ms",
+        "transaction_with_behavior(rusqlite::TransactionBehavior::Deferred).map_err(backend)?;\n        let accepted_at_ms",
+      ),
+      postgres,
+      neo4j,
+    ],
     [directory, sqlite, postgres.replaceAll("FOR UPDATE", ""), neo4j],
     [directory, sqlite, postgres.replace("CREATE TEMP TABLE hub_rebuild_space_invite ON COMMIT DROP", ""), neo4j],
     [directory, sqlite, postgres, neo4j.replaceAll("claimNonce", "claimRead")],
@@ -8196,19 +11014,33 @@ class InviteRedemptionTransactionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && !["--native", "--postgres", "--neo4j"].includes(segments[0]!))) throw new Error("invite-redemption-transaction-check accepts only --native, --postgres, or --neo4j");
     const checks = await proveInviteRedemptionTransaction(this.repoRoot);
-    const lawGroups = segments[0] === "--postgres"
-      ? [{ package: "semio-hub", target: { kind: "lib" as const }, cargoArgs: ["--features", "postgres"], laws: ["directory::postgres::tests::invite_redemption_claim_matches_neutral_contract"] }]
-      : segments[0] === "--neo4j"
-        ? [{ package: "semio-hub", target: { kind: "lib" as const }, cargoArgs: ["--features", "neo4j"], laws: ["directory::neo4j::tests::invite_redemption_claim_matches_neutral_contract"] }]
-        : segments[0] === "--native"
-          ? [{ package: "semio-hub", target: { kind: "lib" as const }, cargoArgs: ["--features", "sqlite"], laws: [
-              "directory::tests::invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild",
-              "directory::tests::invite_redemption_projection_failure_rolls_back_claim_event_and_membership",
-              "directory::tests::invite_redemption_commit_and_publication_precede_the_next_directory_command",
-            ] }]
-          : [];
+    const lawGroups =
+      segments[0] === "--postgres"
+        ? [{ package: "semio-hub", target: { kind: "lib" as const }, cargoArgs: ["--features", "postgres"], laws: ["directory::postgres::tests::invite_redemption_claim_matches_neutral_contract"] }]
+        : segments[0] === "--neo4j"
+          ? [{ package: "semio-hub", target: { kind: "lib" as const }, cargoArgs: ["--features", "neo4j"], laws: ["directory::neo4j::tests::invite_redemption_claim_matches_neutral_contract"] }]
+          : segments[0] === "--native"
+            ? [
+                {
+                  package: "semio-hub",
+                  target: { kind: "lib" as const },
+                  cargoArgs: ["--features", "sqlite"],
+                  laws: [
+                    "directory::tests::invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild",
+                    "directory::tests::invite_redemption_projection_failure_rolls_back_claim_event_and_membership",
+                    "directory::tests::invite_redemption_commit_and_publication_precede_the_next_directory_command",
+                  ],
+                },
+              ]
+            : [];
     if (lawGroups.length > 0) {
-      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: lawGroups, progress(event) { console.log(`invite-redemption-transaction ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot,
+        groups: lawGroups,
+        progress(event) {
+          console.log(`invite-redemption-transaction ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
+      });
       console.log(`invite-redemption-transaction-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log(`invite-redemption-transaction-check: checks=${checks} mode=${segments[0] ?? "source"}`);
@@ -8223,12 +11055,16 @@ class DirectoryOrderedPublicationCheckScript extends BundleScript {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
-        groups: [{
-          package: "semio-hub",
-          target: { kind: "lib" },
-          laws: ["directory::tests::directory_append_and_live_broadcast_share_one_writer_guard_and_projection_order"],
-        }],
-        progress(event) { console.log(`directory-ordered-publication ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        groups: [
+          {
+            package: "semio-hub",
+            target: { kind: "lib" },
+            laws: ["directory::tests::directory_append_and_live_broadcast_share_one_writer_guard_and_projection_order"],
+          },
+        ],
+        progress(event) {
+          console.log(`directory-ordered-publication ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       console.log(`directory-ordered-publication-native-receipts: ${JSON.stringify(receipts)}`);
     }
@@ -8242,7 +11078,9 @@ class DirectoryOrderedPublicationCheckScript extends BundleScript {
 type DirectorySpaceJourneyFixture = {
   readonly schema: "semio.hub.directory-space-journey/v1";
   readonly limits: { readonly journeyMs: number; readonly stepMs: number; readonly responseBytes: 65536; readonly commandRequestBytes: 8192; readonly administrationPageBytes: 49152; readonly socketWaitMs: number };
-  readonly bindings: Readonly<Record<"eventPageDomain" | "administrationDomain" | "domainTerminator" | "commandRequestSchema" | "commandReceiptSchema" | "eventPageSchema" | "administrationPageSchema" | "socketProtocol" | "socketHelloSchema", string>>;
+  readonly bindings: Readonly<
+    Record<"eventPageDomain" | "administrationDomain" | "domainTerminator" | "commandRequestSchema" | "commandReceiptSchema" | "eventPageSchema" | "administrationPageSchema" | "socketProtocol" | "socketHelloSchema", string>
+  >;
   readonly profiles: Readonly<Record<"a" | "b", { readonly profileId: string; readonly subject: string; readonly displayName: string }>>;
   readonly space: { readonly name: string; readonly spaceKind: "atelier" | "studio" | "archive"; readonly visibility: "private" | "public"; readonly renamedName: string; readonly privateBName: string };
   readonly document: {
@@ -8255,7 +11093,14 @@ type DirectorySpaceJourneyFixture = {
     readonly bootstrapFrontier: { readonly headSeq: number; readonly commitSeq: number; readonly epoch: number };
     readonly bootstrapSnapshotHash: string;
   };
-  readonly steps: readonly { readonly id: string; readonly actor: "a" | "b" | "both"; readonly route: string; readonly method: "GET" | "POST" | "DELETE"; readonly expect: Record<string, any>; readonly labels: { readonly en: string; readonly de: string } }[];
+  readonly steps: readonly {
+    readonly id: string;
+    readonly actor: "a" | "b" | "both";
+    readonly route: string;
+    readonly method: "GET" | "POST" | "DELETE";
+    readonly expect: Record<string, any>;
+    readonly labels: { readonly en: string; readonly de: string };
+  }[];
   readonly skips: readonly { readonly id: string; readonly reason: string; readonly admissibleStatuses: readonly number[]; readonly labels: { readonly en: string; readonly de: string } }[];
   readonly privacy: { readonly forbiddenTraceSubstrings: readonly string[]; readonly forbiddenPageSubstrings: readonly string[] };
   readonly routes: readonly string[];
@@ -8299,9 +11144,21 @@ function spaceJourneySkip(fixture: DirectorySpaceJourneyFixture, id: string): Di
 /** 🔐️ Independently rebuilds the administration page's domain-separated session binding from the
  * fixture's declared domain, so the hub's digest is never its own witness. */
 function spaceJourneyAdministrationBinding(domain: string, sessionId: string, userId: string, generation: number, expiresAt: number, spaceId: string): string {
-  const u32 = (value: number): Buffer => { const bytes = Buffer.alloc(4); bytes.writeUInt32BE(value); return bytes; };
-  const u64 = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
-  const i64 = (value: number): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigInt64BE(BigInt(value)); return bytes; };
+  const u32 = (value: number): Buffer => {
+    const bytes = Buffer.alloc(4);
+    bytes.writeUInt32BE(value);
+    return bytes;
+  };
+  const u64 = (value: number): Buffer => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeBigUInt64BE(BigInt(value));
+    return bytes;
+  };
+  const i64 = (value: number): Buffer => {
+    const bytes = Buffer.alloc(8);
+    bytes.writeBigInt64BE(BigInt(value));
+    return bytes;
+  };
   const session = Buffer.from(sessionId, "utf8");
   const user = Buffer.from(userId, "utf8");
   const space = Buffer.from(spaceId, "utf8");
@@ -8427,7 +11284,10 @@ async function proveDirectorySpaceJourneyV1(repoRoot: string): Promise<Readonly<
     ["DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES: usize = 48 * 1024", fixture.limits.administrationPageBytes],
   ];
   for (const [declaration, expected] of constants) {
-    const literal = declaration.split(" = ")[1]!.split(" * ").reduce((product, part) => product * Number(part), 1);
+    const literal = declaration
+      .split(" = ")[1]!
+      .split(" * ")
+      .reduce((product, part) => product * Number(part), 1);
     if (!schemaTwin.includes(declaration) || literal !== expected) throw new Error(`space journey limit ${expected} is not the shared Rust constant '${declaration}'`);
     checks += 1;
   }
@@ -8519,11 +11379,27 @@ async function openLiveDirectorySocket(run: LocalHubRun, capability: string, gra
       live.messages.push({ kind: "undecodable" });
     }
   });
-  socket.addEventListener("close", (event: any) => { live.closeCode = event.code; });
+  socket.addEventListener("close", (event: any) => {
+    live.closeCode = event.code;
+  });
   await new Promise<void>((resolveOpen, rejectOpen) => {
     const timer = setTimeout(() => rejectOpen(new Error(`space journey socket '${socketUrl}' did not open`)), fixture.limits.socketWaitMs);
-    socket.addEventListener("open", () => { clearTimeout(timer); resolveOpen(); }, { once: true });
-    socket.addEventListener("error", () => { clearTimeout(timer); rejectOpen(new Error(`space journey socket '${socketUrl}' failed to dial`)); }, { once: true });
+    socket.addEventListener(
+      "open",
+      () => {
+        clearTimeout(timer);
+        resolveOpen();
+      },
+      { once: true },
+    );
+    socket.addEventListener(
+      "error",
+      () => {
+        clearTimeout(timer);
+        rejectOpen(new Error(`space journey socket '${socketUrl}' failed to dial`));
+      },
+      { once: true },
+    );
   });
   socket.send(spaceJourneySocketHelloFrame(fixture.bindings.socketHelloSchema));
   return live;
@@ -8572,8 +11448,12 @@ async function verifyLiveSpaceJourneyReceipt(text: string, status: number, reque
   if (JSON.stringify(keys) !== JSON.stringify(["schema", "requestId", "commandSha256", "outcome", "events", "result", "receiptSha256"])) throw new Error("space journey receipt key order is not canonical");
   const unsigned: Record<string, any> = {};
   for (const key of keys) if (key !== "receiptSha256") unsigned[key] = receipt[key];
-  const digest = createHash("sha256").update(Buffer.from(JSON.stringify(unsigned), "utf8")).digest("hex");
-  const commandDigest = createHash("sha256").update(Buffer.from(JSON.stringify(command), "utf8")).digest("hex");
+  const digest = createHash("sha256")
+    .update(Buffer.from(JSON.stringify(unsigned), "utf8"))
+    .digest("hex");
+  const commandDigest = createHash("sha256")
+    .update(Buffer.from(JSON.stringify(command), "utf8"))
+    .digest("hex");
   if (receipt.receiptSha256 !== digest || receipt.commandSha256 !== commandDigest || receipt.requestId !== requestId) throw new Error("space journey receipt digests did not verify independently");
   if (receipt.outcome !== expect.outcome || receipt.events.length !== expect.events || receipt.result?.kind !== expect.result) {
     throw new Error(`space journey receipt outcome differed: ${receipt.outcome}/${receipt.events.length}/${receipt.result?.kind}`);
@@ -8610,7 +11490,9 @@ async function fetchLiveSpaceAdministrationPage(
   if (keys[0] !== "access" || keys[keys.length - 1] !== "receiptSha256" || page.schema !== fixture.bindings.administrationPageSchema) throw new Error("space journey administration page shape is not canonical");
   const unsigned: Record<string, any> = {};
   for (const key of keys) if (key !== "receiptSha256") unsigned[key] = page[key];
-  const digest = createHash("sha256").update(Buffer.from(JSON.stringify(unsigned), "utf8")).digest("hex");
+  const digest = createHash("sha256")
+    .update(Buffer.from(JSON.stringify(unsigned), "utf8"))
+    .digest("hex");
   const binding = spaceJourneyAdministrationBinding(fixture.bindings.administrationDomain, String(envelope.sessionId), String(user.userId), Number(user.authorizationGeneration), Number(user.expiresAt), spaceId);
   if (page.receiptSha256 !== digest || page.sessionBindingSha256 !== binding || page.authorizationGeneration !== user.authorizationGeneration || page.spaceId !== spaceId) {
     throw new Error("space journey administration receipt or session binding did not verify independently");
@@ -8638,7 +11520,9 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
   ];
   const started = Date.now();
   const deadline = started + fixture.limits.journeyMs;
-  const checkpoint = (): void => { if (Date.now() >= deadline) throw new Error("space journey deadline exceeded"); };
+  const checkpoint = (): void => {
+    if (Date.now() >= deadline) throw new Error("space journey deadline exceeded");
+  };
   const trace: SpaceJourneyTraceEntry[] = [];
   const step = (id: string, at: number, outcome: string, detail: Record<string, unknown>): void => {
     const declared = spaceJourneyStep(fixture, id);
@@ -8711,7 +11595,17 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
     step("member-reads-administration-page", at, "member", { status: memberPage.status, bytes: Buffer.byteLength(memberPage.source, "utf8"), memberRows: memberPage.page.members.rows.length, omitsInvites: true, omitsCapabilities: true });
 
     await submit(first, envelopeA, "author-promotes-b", { kind: "upsert-member", spaceId, email: userB.email, role: "author" });
-    const descriptor = { spaceId, documentId: fixture.document.documentId, artifactKind: fixture.document.artifactKind, artifactSchema: fixture.document.artifactSchema, owner: fixture.document.owner, packSchemaHash: fixture.document.packSchemaHash, bootstrapVersion: fixture.document.bootstrapVersion, bootstrapFrontier: fixture.document.bootstrapFrontier, bootstrapSnapshotHash: fixture.document.bootstrapSnapshotHash };
+    const descriptor = {
+      spaceId,
+      documentId: fixture.document.documentId,
+      artifactKind: fixture.document.artifactKind,
+      artifactSchema: fixture.document.artifactSchema,
+      owner: fixture.document.owner,
+      packSchemaHash: fixture.document.packSchemaHash,
+      bootstrapVersion: fixture.document.bootstrapVersion,
+      bootstrapFrontier: fixture.document.bootstrapFrontier,
+      bootstrapSnapshotHash: fixture.document.bootstrapSnapshotHash,
+    };
     await submit(first, envelopeA, "announce-document", { kind: "announce-document", descriptor });
     const privateB = await submit(first, envelopeB, "b-creates-private-space", { kind: "create-space", name: fixture.space.privateBName, spaceKind: fixture.space.spaceKind, visibility: "private" });
     const spaceB = createdLiveDirectorySpace(privateB.events);
@@ -8776,7 +11670,11 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
     at = Date.now();
     if (!(await waitForLiveDirectorySocket(scopedB, () => scopedB!.closeCode !== undefined, fixture.limits.socketWaitMs))) throw new Error("space journey scoped socket stayed live after the membership was removed");
     if (scopedB.closeCode !== spaceJourneyStep(fixture, "scoped-socket-revoked").expect.code) throw new Error(`space journey scoped socket closed with ${scopedB.closeCode}`);
-    step("scoped-socket-revoked", at, String(scopedB.closeCode), { code: scopedB.closeCode, globalSocketCloseCode: socketB.closeCode ?? "open", note: "membership revocation is terminal for the scope-bound socket; the global session socket is bound to the session, not the membership" });
+    step("scoped-socket-revoked", at, String(scopedB.closeCode), {
+      code: scopedB.closeCode,
+      globalSocketCloseCode: socketB.closeCode ?? "open",
+      note: "membership revocation is terminal for the scope-bound socket; the global session socket is bound to the session, not the membership",
+    });
 
     at = Date.now();
     const removedRead = await fetchLiveSpaceAdministrationPage(first, envelopeB, userB, spaceId, fixture);
@@ -8904,6 +11802,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("directory-event-page-v1-check", DirectoryEventPageV1CheckScript)
   .register("space-administration-check", SpaceAdministrationCheckScript)
   .register("directory-command-receipt-check", DirectoryCommandReceiptCheckScript)
+  .register("checkpoint-publication-check", CheckpointPublicationCheckScript)
   .register("space-journey-check", SpaceJourneyCheckScript)
   .register("directory-home-browser-process-check", DirectoryHomeBrowserProcessCheckScript)
   .register("scoped-presence-browser-serve", ScopedPresenceBrowserServeScript)
@@ -8912,8 +11811,12 @@ const router = new ScriptRouter(import.meta.dir)
   .register("native-openable-catalog-provider-check", NativeOpenableCatalogProviderCheckScript)
   .register("native-catalog-selection-check", NativeCatalogSelectionCheckScript)
   .register("document-browser-actor-identity-check", DocumentBrowserActorIdentityCheckScript)
+  .register("trusted-catalog-opened-root-check", TrustedCatalogOpenedRootCheckScript)
   .register("open-plan-check", OpenPlanCheckScript)
   .register("open-plan-server-check", OpenPlanServerCheckScript)
+  .register("browser-actor-child-worker-containment-check", BrowserActorChildWorkerContainmentCheckScript)
+  .register("browser-actor-gis-describe-check", BrowserActorGisDescribeCheckScript)
+  .register("browser-actor-document-reservation-check", BrowserActorDocumentReservationCheckScript)
   .register("browser-document-open-check", BrowserDocumentOpenCheckScript)
   .register("execution-target-lease-check", ExecutionTargetLeaseCheckScript)
   .register("execution-target-lease-browser-check", ExecutionTargetLeaseBrowserCheckScript)

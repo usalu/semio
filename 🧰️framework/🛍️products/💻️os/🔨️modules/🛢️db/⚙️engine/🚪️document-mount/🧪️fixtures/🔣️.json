@@ -74,6 +74,11 @@
       "name": "join-never-waits-behind-active-owner-poll",
       "steps": [{ "action": "install", "generation": "11" }, { "action": "owner-poll-active", "generation": "11" }, { "action": "join", "generation": "11" }, { "action": "request-drive", "generation": "11" }, { "action": "owner-poll-release", "generation": "11" }, { "action": "emit-complete", "generation": "11" }, { "action": "ready", "generation": "11" }],
       "expected": { "owners": 1, "actors": 1, "events": 1, "waitersReleased": 2, "terminalBeforeFanout": true }
+    },
+    {
+      "name": "engine-close-fault-retains-runner-until-explicit-maintenance-retry",
+      "steps": [{ "action": "install", "generation": "12" }, { "action": "close-fault", "generation": "12" }, { "action": "explicit-retirement-retry", "generation": "12" }, { "action": "close-terminal", "generation": "12" }],
+      "expected": { "owners": 1, "actors": 0, "events": 0, "waitersReleased": 1, "terminalBeforeFanout": true }
     }
   ]
 }

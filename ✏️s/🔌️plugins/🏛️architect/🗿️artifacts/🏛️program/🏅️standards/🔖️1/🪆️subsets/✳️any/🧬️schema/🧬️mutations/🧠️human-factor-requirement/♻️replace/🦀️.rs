@@ -19,16 +19,16 @@ pub struct ReplaceHumanFactorRequirement {
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceHumanFactorRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "human-factor-requirement", kind: "replace-human-factor-requirement", record: "ReplacedHumanFactorRequirement" };
-    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace human factor requirement \"{}\"", self.human_factor_requirement.header.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.human_factor_requirement.header.id.0.clone()]
     }
 }

@@ -1,6 +1,7 @@
 {
   "schema": "semio.browser-actor-import/v1",
   "streamClose": { "phase": "closed", "activeInvocations": 0, "cancellations": 1, "result": "rejected", "locked": false },
+  "guestStreamDrop": { "phase": "closed", "activeInvocations": 0, "cancellations": 1, "result": "fulfilled", "locked": false },
   "lateStreamFault": { "code": "browser.host.stream-failed", "message": "fixture late stream fault" },
   "failedStreamRetirement": { "code": "browser.host.stream-failed", "message": "browser host: invalid stream chunk", "cancelMessage": "fixture stream cancellation failed" },
   "identity": {
@@ -39,8 +40,8 @@
     },
     "emittedAsyncBindings": [
       { "trampoline": "19", "fnName": "wasi:io/poll@0.2.9#block" },
-      { "trampoline": "32", "fnName": "wasi:io/poll@0.2.9#poll" },
-      { "trampoline": "35", "fnName": "wasi:io/streams@0.2.9#blockingFlush" }
+      { "trampoline": "33", "fnName": "wasi:io/poll@0.2.9#poll" },
+      { "trampoline": "36", "fnName": "wasi:io/streams@0.2.9#blockingFlush" }
     ],
     "unsupportedImport": "wasi:filesystem/types@0.2.0",
     "productionHostAsyncAbiQualified": true

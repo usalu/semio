@@ -45,10 +45,10 @@ pub struct LayoutConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for LayoutConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -56,7 +56,7 @@ impl store::ArtifactDsl for LayoutConfig {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -65,12 +65,12 @@ impl store::ArtifactDsl for LayoutConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for LayoutConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -78,7 +78,7 @@ impl store::ArtifactPack for LayoutConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -128,7 +128,7 @@ pub enum LayoutConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for LayoutConfigMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -139,7 +139,7 @@ impl protocol::OpText for LayoutConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -149,7 +149,7 @@ impl protocol::OpText for LayoutConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for LayoutConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -162,7 +162,7 @@ impl protocol::OpBinary for LayoutConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -184,7 +184,7 @@ impl protocol::OpBinary for LayoutConfigMutation {
 impl Mutation<LayoutConfig> for LayoutConfigMutation {
     type Diff = LayoutConfig;
 
-    async fn diff(&self, base: &LayoutConfig) -> protocol::MutationOutcome<LayoutConfig> {
+    fn diff(&self, base: &LayoutConfig) -> protocol::MutationOutcome<LayoutConfig> {
         let mut next = base.clone();
         match self {
             LayoutConfigMutation::SetActivePage { page_id } => next.active_page_id = page_id.clone(),
@@ -197,7 +197,7 @@ impl Mutation<LayoutConfig> for LayoutConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    async fn inverse(&self, base: &LayoutConfig) -> Vec<Self> {
+    fn inverse(&self, base: &LayoutConfig) -> Vec<Self> {
         match self {
             LayoutConfigMutation::SetActivePage { .. } => vec![LayoutConfigMutation::SetActivePage { page_id: base.active_page_id.clone() }],
             LayoutConfigMutation::SetDropPreview { .. } => vec![LayoutConfigMutation::SetDropPreview { preview: base.drop_preview.clone() }],
@@ -239,7 +239,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    async fn sample_config() -> LayoutConfig {
+    fn sample_config() -> LayoutConfig {
         LayoutConfig {
             active_page_id: "page-2".into(),
             drop_preview: LayoutDropPreviewState { kind: "rect".into(), x: 1.0, y: 2.0 },
@@ -250,7 +250,7 @@ mod tests {
         }
     }
 
-    async fn config_round_trip(base: &LayoutConfig, operation: &LayoutConfigMutation) -> LayoutConfig {
+    fn config_round_trip(base: &LayoutConfig, operation: &LayoutConfigMutation) -> LayoutConfig {
         let forward = operation.diff(base).diff().clone();
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();

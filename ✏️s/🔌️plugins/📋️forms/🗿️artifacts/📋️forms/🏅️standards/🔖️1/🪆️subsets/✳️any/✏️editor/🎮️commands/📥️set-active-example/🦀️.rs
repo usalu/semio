@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `FormMutation` vocabulary (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `CreateStep`/
 /// `DeleteStep`/`ChangeFormTitle`, reading through `forms_steps` now that `FormsSnapshot` no longer
 /// carries a bare `steps` field) so it still records a true inverse.
-async fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
+fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
     use crate::artifacts::forms::mutations::{change_form_title, create_step, delete_step};
     let mut operations: Vec<FormMutation> = forms_steps(current).iter().map(|step| FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: step.id.clone() })).collect();
     if next.title != current.title {
@@ -36,7 +36,7 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-pub async fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let next = match payload.example_id.as_str() {
         "" => Some(empty_forms_snapshot()),
         "building-component" => forms_dsl::parse_playbook_example_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),

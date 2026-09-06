@@ -22,23 +22,23 @@ pub struct CreateBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_block(block: crate::artifacts::note::NoteBlockNode, parent_id: Option<String>, index: Option<usize>) -> NoteMutation {
+pub fn create_block(block: crate::artifacts::note::NoteBlockNode, parent_id: Option<String>, index: Option<usize>) -> NoteMutation {
     NoteMutation::CreateBlock(CreateBlock { block: Box::new(block), parent_id, index })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for CreateBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create block \"{}\"", crate::artifacts::note::schema::block_id(&self.block))
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![crate::artifacts::note::schema::block_id(&self.block).to_string()]
     }
 }

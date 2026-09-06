@@ -12,7 +12,7 @@ const SEQUENCE_PLAY_SURFACE_COMPILED: &str = "sequence.play.compiled-dag";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SEQUENCE_PLAY_WINDOW_COMPILED.into(),
         label: LocalizedLabel::native("DSL", "DSL"),
@@ -33,7 +33,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(fixture: &SequenceSnapshot) -> UiNode {
+pub fn render(fixture: &SequenceSnapshot) -> UiNode {
     let host = host_from_snapshot(fixture);
     build_text_editor_scene(SEQUENCE_PLAY_SURFACE_COMPILED, SEQUENCE_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }

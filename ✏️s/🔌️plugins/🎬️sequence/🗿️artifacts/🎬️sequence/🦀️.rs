@@ -48,11 +48,11 @@ pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 pub struct StepParams(pub Dictionary);
 
 impl StepParams {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self(Dictionary::new())
     }
 
-    pub async fn insert(self, key: impl Into<String>, value: Value) -> Self {
+    pub fn insert(self, key: impl Into<String>, value: Value) -> Self {
         Self(self.0.insert(key, value))
     }
 }
@@ -65,13 +65,13 @@ impl std::ops::Deref for StepParams {
 }
 
 impl dsl::DslField for StepParams {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(dsl::os_pack::json::to_json_string(&self.0))
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(text) => dsl::os_pack::json::from_json_str(text).map(Self).map_err(|err| err.to_string()),
             other => Err(format!("expected Text, found {other:?}")),
@@ -157,13 +157,13 @@ pub struct SequenceEdge {
 
 //#region 🔖️Collections
 impl protocol::Identified<String> for SequenceStep {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
 
 impl protocol::Identified<String> for SequenceEdge {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
@@ -292,7 +292,7 @@ pub fn diff_replace_content(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) 
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::sequence::create_sequence_app`'s `🔖️Manifest` region. Lifted verbatim out of the
 /// old `.artifact_kind(...)` builder call.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.sequence".into(),
         name: "Sequence".into(),
@@ -346,7 +346,7 @@ mod tests {
 }
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.sequence.sequence")?)
         .capability(
@@ -400,7 +400,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// `ArtifactCapability` rows above (kept per debt D1, deleted repo-wide only in W6); wiring them
 /// into this field too is real follow-up work, not required for the tree to register or for any
 /// law to hold (mirrors the stdio pilot's own documented deviation, `📓️w2-p-report.md`).
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![crate::artifacts::sequence::standards::v1::standard()] }

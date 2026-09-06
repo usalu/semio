@@ -298,7 +298,7 @@ fn new_bulk_session(values_json: ChunkedSource, operation: &semio_framework_plug
     }
 }
 
-pub async fn handle(payload: &SetTryValues, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(payload: &SetTryValues, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let operation = doc.operation()?;
     let input_count = payload.input_count.unwrap_or(1);
     if input_count > 1 && payload.input_id.is_none() {
@@ -320,7 +320,7 @@ pub async fn handle(payload: &SetTryValues, doc: &ArtifactView<'_, FormsSnapshot
 }
 
 /// ⏱️ Advances one bulk JSON scan, one 4 KiB value stage, one collision check, or the atomic root swap.
-pub(crate) async fn advance_if_bulk(payload: &SetTryValueStep, config: &FormsConfig) -> Option<Result<Emit<FormMutation, FormsConfigMutation>, Fault>> {
+pub(crate) fn advance_if_bulk(payload: &SetTryValueStep, config: &FormsConfig) -> Option<Result<Emit<FormMutation, FormsConfigMutation>, Fault>> {
     if payload.target_index != u64::MAX {
         return None;
     }

@@ -49,6 +49,10 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     ]);
     assert.deepEqual(memoryFixture.writerTable, { slots: fixture.capacity, separateBox: true });
     assert.deepEqual(memoryFixture.controllerCredit, { items: 1, controls: 1, bytesFormula: "wake-plus-two-usize" });
+    assert.equal(memoryFixture.retainedPageResults, 44);
+    assert.equal(memoryFixture.sameSlotReuseBeforeOldResultClose, true);
+    assert.equal(memoryFixture.taskSlotReleasedWhileResultRetained, true);
+    assert.equal(memoryFixture.droppedResultRetirement, "mounted-io-maintenance");
     const directoryOwner = join(owner, "..", "🧪️fixtures", "📁️directory-durability");
     const directoryFixture = JSON.parse(readFileSync(join(directoryOwner, "🔣️.json"), "utf8"));
     const validateDirectory = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directoryOwner, "🧬️.schema.json"), "utf8")));
@@ -194,6 +198,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
         "wal_writer_mounted_controller_coalesced_fault_does_not_strand_healthy_release",
         "wal_writer_mounted_controller_outer_panic_faults_waiters_once_and_stops",
         "db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return",
+        "db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exact_credit",
         "fs_storage_canonical_alias_writer_fences_all_six_mutations",
         "sqlite_wal_writer_real_database_alias_and_crash_are_exclusive",
         "fs_wal_directory_barriers_match_neutral_order_and_duplicate_create_is_atomic",
@@ -374,6 +379,7 @@ class WalCommittedCompactionCheckScript extends BundleScript {
       writerAuthority: "retained-artifact-wal",
       activeSegmentAuthority: "artifact-wal",
       leaseBefore: ["snapshot-floor", "wal-horizon", "wal-delete"],
+      indexBudgetContinuation: "same-owned-future-cooperative-yield",
       payloadReclamation: "deferred-global-reference-authority",
       queuedSubmitDuring: "pending",
       queuedSubmitAfter: "accepted",
@@ -386,6 +392,8 @@ class WalCommittedCompactionCheckScript extends BundleScript {
     const liveCut = source.slice(source.indexOf("pub async fn retained_compaction_with_wal"), source.indexOf("async fn retained_compaction_under_lease"));
     assert(liveCut.indexOf("CompactionLease::acquire") < liveCut.indexOf("SnapshotFloor"));
     assert(!liveCut.includes("acquire_writer"));
+    const underLeaseCut = source.slice(source.indexOf("async fn retained_compaction_under_lease"), source.indexOf("async fn retained_compaction_snapshot"));
+    assert(!underLeaseCut.includes("loop {\n            let deadline") && underLeaseCut.includes("handle.compact(&mut control).await"));
     const walSource = readFileSync(join(owner, "..", "📝️wal", "🦀️.rs"), "utf8");
     assert(walSource.includes("delete_compacted_sealed_segment"));
     const artifactSource = readFileSync(join(owner, "..", "🗿️artifact", "🦀️.rs"), "utf8");
@@ -560,6 +568,9 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
         } else if (step.action === "resume-cleanup") {
           assert.equal(generation, activeGeneration, row.name);
           assert(!terminalCleanup, row.name);
+        } else if (step.action === "explicit-retirement-retry") {
+          assert.equal(generation, activeGeneration, row.name);
+          assert(!terminalCleanup, row.name);
         } else if (step.action === "close-terminal") {
           assert.equal(generation, activeGeneration, row.name);
           terminalCleanup = true;
@@ -674,6 +685,8 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     const catalogDriveStart = source.indexOf("fn drive_one(self: Arc<Self>, generation: u64)", source.indexOf("//#region 🔖️CreateDocumentCatalogCas"));
     const catalogDrive = source.slice(catalogDriveStart, source.indexOf("fn drive_claimed(self: &Arc<Self>, generation: u64)", catalogDriveStart));
     assert(!catalogDrive.includes("release_success()"));
+    const catalogTerminal = source.slice(source.indexOf("pub struct DatabaseCreateCatalogTerminalHandle"), source.indexOf("pub fn take_database_create_catalog_terminal"));
+    assert(catalogTerminal.includes("drive_explicit_close_one()"), "explicit catalog terminal cleanup must make one bounded turn without a wall-clock callback");
     const helloStart = source.indexOf("pub fn hello_retained(");
     const hello = source.slice(helloStart, source.indexOf("pub async fn hello(", helloStart));
     assert(hello.includes("DatabaseSyncHelloFuture::try_submit_with_use") && !hello.includes("DatabaseSyncHelloFuture::try_submit("));
@@ -682,6 +695,9 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     const artifact = readFileSync(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"), "utf8");
     for (const marker of ["enum ArtifactRunnerDriver", "RunnableIdle", "Queued", "PollingWake", "Parked", "ClosingReady", "ClosingPollingWake", "ClosingParked", "Terminal", "fn park_terminal_job", "struct ArtifactRunnerClosePoll", "struct ArtifactRunnerPoll", "struct ArtifactRunnerRetirementReservation", "WorkerMaintenanceStep::Retire", "impl Drop for ArtifactAuthority", "pub fn close(mut self) -> Result<(), Self>", "pub fn resume(mut self) -> Result<(), Self>"]) {
       assert(artifact.includes(marker), `missing artifact terminal-authority marker: ${marker}`);
+    }
+    for (const marker of ["close_error", "WorkerMaintenanceStep::Fault", "artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry"]) {
+      assert(artifact.includes(marker), `missing retained artifact close-fault marker: ${marker}`);
     }
     const artifactSchedule = artifact.slice(artifact.indexOf("fn schedule(self: &Arc<Self>)"), artifact.indexOf("fn submit_exact(self: &Arc<Self>"));
     assert(artifactSchedule.includes("compare_exchange") && artifactSchedule.includes("ArtifactRunnerDriver::RunnableIdle as u8") && artifactSchedule.includes("ArtifactRunnerDriver::Queued as u8"));
@@ -721,6 +737,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
         "db_artifact::tests::artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close",
         "db_artifact::tests::artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner",
         "db_artifact::tests::artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry",
+        "db_artifact::tests::artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry",
         "db_artifact::tests::artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity",
       ] }],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
@@ -750,7 +767,7 @@ class DurableOwnedGroupDecisionCheckScript extends BundleScript {
           "durable_group::tests::durable_owned_group_decision_rejects_forged_identity_commitment_and_capacity",
           "durable_group::tests::durable_decision_rejects_deflate_expansion_before_document_body_allocation",
           "durable_group::tests::durable_store_owned_three_member_bind_and_base_recovery_retain_exact_private_owners",
-          "durable_group::tests::durable_committed_record_recovers_all_three_stores_without_reappending_journal",
+          "durable_group::tests::durable_store_private_committed_record_recovers_all_three_stores_without_reappending_journal",
           "durable_group::tests::durable_json_carriers_preserve_numeric_kinds_and_reject_control_and_resource_excess",
           "durable_group::tests::durable_store_group_journal_commit_flips_one_shared_root_then_adopts_exactly_once",
           "durable_group::tests::durable_store_group_cancellation_waits_for_trusted_absence_then_restores_all_old_roots",
@@ -786,6 +803,20 @@ class DurableGroupJournalCheckScript extends BundleScript {
       const expected = row.transaction === "aborted" || events === 0 ? "ignored" : row.replayDocument === "foreign" || events !== 1 || row.recordKinds.length !== 1 ? "rejected" : "witness";
       assert.equal(row.expected, expected);
     }
+    assert.deepEqual(fixture.committedRecovery.authority, {
+      consumer: "db-wal-witness",
+      recordEscape: false,
+      receiptSource: "derived",
+      cancelAfterCommit: false,
+      errorSurface: "retaining-fault",
+      terminalHandoff: "stores-and-ack-once",
+    });
+    assert.equal(new Set(fixture.committedRecovery.cases.map((row: any) => row.id)).size, fixture.committedRecovery.cases.length);
+    for (const row of fixture.committedRecovery.cases) {
+      const expected = row.frontier === "base" ? ["complete", 3] : row.frontier === "post" ? ["already-applied", 0] : ["fault", 0];
+      assert.deepEqual([row.expected, row.mutations], expected);
+      assert.equal(row.returnedStoreOwners, 3);
+    }
     const storeOwner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group");
     const storeFixture = JSON.parse(readFileSync(join(storeOwner, "🧪️fixtures/🔣️.json"), "utf8"));
     assert.equal(createHash("sha256").update(storeFixture.expected.unsignedJson).digest("hex"), fixture.record.decisionSha256);
@@ -814,7 +845,14 @@ class DurableGroupJournalCheckScript extends BundleScript {
     assert(append.indexOf("preflight_submit") < append.indexOf("self.wal.submit"));
     assert(append.includes("ArtifactDurableGroupJournalAppendV1::Absent") && append.includes("ArtifactDurableGroupJournalAppendV1::Rejected"));
     const witness = artifactSource.slice(artifactSource.indexOf("struct ArtifactCommittedDurableGroupDecisionV1"), artifactSource.indexOf("//#endregion 🔖️Receipt"));
+    const lowerRecovery = storeSource.slice(storeSource.indexOf("impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryHostV1"), storeSource.indexOf("impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryHostV1"));
     assert(witness.includes("WalCommittedTransaction") && witness.includes("record_count != 1") && witness.includes("transaction.finish()?"));
+    for (const marker of ["ArtifactCommittedDurableGroupRecoveryV1", "ArtifactCommittedDurableGroupRecoveryStateV1::Admitting", "ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault", "into_store_owned_recovery", "restore_untrusted_committed_record", "acknowledge_restoration(&receipt)", "take_terminal", "take_rejected_terminal"]) assert(witness.includes(marker), `missing committed Store recovery marker ${marker}`);
+    assert(!witness.includes("pub fn begin_store_owned_recovery"));
+    assert(!witness.includes("fn into_record(") && !witness.includes("fn record(&self)"), "a committed WAL witness has no raw record escape");
+    assert(!witness.includes("fn cancel("), "committed Store recovery remains non-cancellable after WAL visibility");
+    assert(lowerRecovery.includes("pub fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> DurableOwnedMapRecoveryAdvanceV1") && lowerRecovery.includes("DurableOwnedMapRecoveryAdvanceV1::Fault(error)"), "lower Store recovery faults must retain their exact host instead of exposing Result/? owner loss");
+    assert(lowerRecovery.includes("pub fn capture_snapshot(&self) -> Option<"), "lower Store recovery observation must not expose a Result/? owner-loss path");
     const sink = artifactSource.slice(artifactSource.indexOf("struct ArtifactDurableGroupJournalSinkV1"), artifactSource.indexOf("type ArtifactBuildFuture"));
     assert(sink.includes("NotSubmitted") && sink.includes("Awaiting") && sink.includes("Failed") && sink.includes("Committed") && sink.includes("terminal_is_empty"));
     assert(!sink.includes("block_on"));
@@ -823,11 +861,12 @@ class DurableGroupJournalCheckScript extends BundleScript {
     const laws = [
       "db_artifact::tests::document_authority_durable_group_journal_commits_one_exact_fsync_event",
       "db_artifact::tests::committed_durable_group_decision_accepts_only_one_exact_event_transaction",
+      "db_artifact::tests::committed_durable_group_recovery_consumes_wal_witness_and_returns_exact_three_stores_on_pre_mutation_rejection",
       "db_artifact::tests::document_authority_durable_group_journal_cancellation_before_handoff_is_absent",
       "db_artifact::tests::document_authority_durable_group_journal_rejects_hash_before_mailbox",
     ];
     for (const law of laws) assert(artifactSource.includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
-    console.log(`durable-group-journal-independent-oracle: AJV=1 cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`);
+    console.log(`durable-group-journal-independent-oracle: AJV=1 cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,

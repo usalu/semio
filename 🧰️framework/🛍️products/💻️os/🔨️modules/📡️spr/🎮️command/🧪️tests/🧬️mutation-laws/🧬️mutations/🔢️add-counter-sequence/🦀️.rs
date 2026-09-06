@@ -9,21 +9,28 @@ use serde::{Deserialize, Serialize};
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-counter-sequence")]
 #[composite(snapshot = Counter, op = CounterMutation)]
-pub struct AddCounterSequence { pub deltas: Vec<i64> }
+pub struct AddCounterSequence {
+    pub deltas: Vec<i64>,
+}
 
 impl CompositeMutationKind<Counter, CounterMutation> for AddCounterSequence {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter-sequence", record: "AddedCounterSequence" };
     fn plan(&self, _base: &Counter, planner: &mut Planner<Counter, CounterMutation>) -> Result<(), PlanError> {
-        for delta in &self.deltas { planner.call(CounterMutation::AddCounter(AddCounter { delta: *delta }))?; }
+        for delta in &self.deltas {
+            planner.call(CounterMutation::AddCounter(AddCounter { delta: *delta }))?;
+        }
         Ok(())
     }
-    fn label(&self) -> String { "Add counter sequence".into() }
+    fn label(&self) -> String {
+        "Add counter sequence".into()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn direct_counter_leaf_contract() { super::super::super::assert_counter_leaf_descriptor::<AddCounterSequence>(include_str!("🔣️.json")); }
-    
+    fn direct_counter_leaf_contract() {
+        super::super::super::assert_counter_leaf_descriptor::<AddCounterSequence>(include_str!("🔣️.json"));
+    }
 }

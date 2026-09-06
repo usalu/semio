@@ -14,7 +14,7 @@ const WIRES_PLAY_SURFACE_ID: &str = "reasoning.wires.composite";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::wires::create_wires_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WIRES_PLAY_WINDOW_CANVAS.into(),
         label: LocalizedLabel::native("Canvas", "Leinwand"),
@@ -40,7 +40,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🔗️ Turns `wires_fixture.relationships` into board-edge-shaped scene layers, synthesizing a
 /// degenerate edge for any relationship whose board edge is missing.
-async fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
+fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
     let mut layers = Vec::new();
     for relationship in wires_relationships(wires) {
         let edge_id = relationship.get("edgeId").and_then(|value| value.as_str()).unwrap_or("");
@@ -63,7 +63,7 @@ async fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Val
     layers
 }
 
-pub async fn render(board: &DslValue, wires: &DslValue) -> UiNode {
+pub fn render(board: &DslValue, wires: &DslValue) -> UiNode {
     let (camera_x, camera_y, zoom) = fixture_camera(board);
     let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(board).iter().map(dsl_to_json));

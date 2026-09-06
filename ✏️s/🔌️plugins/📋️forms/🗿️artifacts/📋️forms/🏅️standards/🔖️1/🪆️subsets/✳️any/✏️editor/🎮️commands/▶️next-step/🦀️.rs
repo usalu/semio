@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "next-step")]
 pub struct NextStep {}
 
-pub async fn handle(_payload: &NextStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+pub fn handle(_payload: &NextStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let spec = doc.snapshot;
     let config = cfg.snapshot;
     let index = config.current_step_index as usize;

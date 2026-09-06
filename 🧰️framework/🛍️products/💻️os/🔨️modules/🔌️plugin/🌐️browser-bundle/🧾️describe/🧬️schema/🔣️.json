@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/os/browser-actor-describe-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "descriptor",
+    "hashKeys",
+    "cases",
+    "localTransport"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.os.browser-actor-describe/v1"
+    },
+    "descriptor": {
+      "const": {
+        "descriptorVersion": 1,
+        "packageId": "semio:gis",
+        "execution": "isolated",
+        "manifest": {
+          "pluginId": "gis",
+          "version": "1.0.0",
+          "apps": [
+            {
+              "id": "s.gis.gismap@1/*#editor",
+              "windowKinds": [
+                {
+                  "id": "gis2d-main"
+                }
+              ]
+            }
+          ]
+        },
+        "hashes": {
+          "wasmSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "coreWasmSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "descriptorSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      }
+    },
+    "hashKeys": {
+      "const": [
+        "wasmSha256",
+        "coreWasmSha256",
+        "descriptorSha256"
+      ]
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "normalized",
+          "accepted": true
+        },
+        {
+          "name": "raw-staged",
+          "accepted": false
+        },
+        {
+          "name": "hash-not-empty",
+          "accepted": false
+        },
+        {
+          "name": "plugin-change",
+          "accepted": false
+        },
+        {
+          "name": "trailing-byte",
+          "accepted": false
+        },
+        {
+          "name": "extra-field",
+          "accepted": false
+        },
+        {
+          "name": "capacity-over",
+          "accepted": false
+        },
+        {
+          "name": "staged-trailing-byte",
+          "accepted": false
+        },
+        {
+          "name": "staged-bad-hash",
+          "accepted": false
+        }
+      ]
+    },
+    "localTransport": {
+      "const": {
+        "stallMs": 250,
+        "bodyMs": 10000
+      }
+    }
+  }
+}

@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-counter-four-times")]
 #[composite(snapshot = Counter, op = CounterMutation)]
-pub struct AddCounterFourTimes { pub delta: i64 }
+pub struct AddCounterFourTimes {
+    pub delta: i64,
+}
 
 impl CompositeMutationKind<Counter, CounterMutation> for AddCounterFourTimes {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter-four-times", record: "AddedCounterFourTimes" };
@@ -18,13 +20,23 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterFourTimes {
         let mid = *planner.base();
         AddCounterTwice { delta: self.delta }.plan(&mid, planner)
     }
-    fn label(&self) -> String { format!("Add {} four times", self.delta) }
+    fn label(&self) -> String {
+        format!("Add {} four times", self.delta)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn direct_counter_leaf_contract() { super::super::super::assert_counter_leaf_descriptor::<AddCounterFourTimes>(include_str!("🔣️.json")); }
-    #[test] fn plan_nests_two_twice_plans() { let base = 0; let mut planner = Planner::new(&base); AddCounterFourTimes { delta: 2 }.plan(&base, &mut planner).unwrap(); assert_eq!(planner.steps().len(), 4); }
+    fn direct_counter_leaf_contract() {
+        super::super::super::assert_counter_leaf_descriptor::<AddCounterFourTimes>(include_str!("🔣️.json"));
+    }
+    #[test]
+    fn plan_nests_two_twice_plans() {
+        let base = 0;
+        let mut planner = Planner::new(&base);
+        AddCounterFourTimes { delta: 2 }.plan(&base, &mut planner).unwrap();
+        assert_eq!(planner.steps().len(), 4);
+    }
 }

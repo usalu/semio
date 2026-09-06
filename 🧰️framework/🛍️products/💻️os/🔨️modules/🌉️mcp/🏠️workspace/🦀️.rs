@@ -36,7 +36,7 @@ use std::sync::{Arc, Mutex};
 #[path = "🔗️remote/🦀️.rs"]
 pub mod remote;
 
-use remote::{descriptor_resource_uri, parse_descriptor_resource_uri, AuthorizedDescriptorSnapshot, HubRemoteBinding};
+use remote::{checkpoint_resource_uri, descriptor_resource_uri, parse_checkpoint_resource_uri, parse_descriptor_resource_uri, AuthorizedCatalogSnapshot, AuthorizedDescriptorSnapshot, HubRemoteBinding};
 #[cfg(not(target_arch = "wasm32"))]
 use remote::NativeHubBindingDriver;
 
@@ -1253,12 +1253,15 @@ impl HeadlessWorkspace {
         Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog))
     }
 
-    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
+    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>) -> Result<Self, GatewayError> {
         remote::validate_hub_origin(&base_url, &space_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
             let (binding, driver, grant_source) = NativeHubBindingDriver::connect(credential.clone(), &base_url, &space_id)?;
+            let descriptors = binding.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))?.selections.iter().map(|selection| selection.descriptor.clone()).collect();
+            let catalog = Arc::new(crate::catalog_from_descriptors(descriptors)?);
             let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog);
+            workspace.repo_root = None;
             workspace.artifact_host.set_local_hub_credential(credential);
             workspace.artifact_host.set_hub_socket_grant_source(grant_source);
             workspace.hub_binding = Some(binding);
@@ -1267,13 +1270,52 @@ impl HeadlessWorkspace {
         }
         #[cfg(target_arch = "wasm32")]
         {
-            let _ = (base_url, space_id, credential, principal, scopes, catalog);
+            let _ = (base_url, space_id, credential, principal, scopes);
             Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "native hub directory transport is unavailable on wasm32").retryable())
         }
     }
 
     pub fn origin(&self) -> &WorkspaceOrigin {
         &self.origin
+    }
+
+    /// 🔐 The live Hub-selected package roster. Folder workspaces have no Hub authority and callers
+    /// must use installed discovery there instead.
+    pub fn verified_hub_catalog_selections(&self) -> Result<Arc<AuthorizedCatalogSnapshot>, GatewayError> {
+        match &self.origin {
+            WorkspaceOrigin::Hub { .. } => self
+                .hub_binding
+                .as_ref()
+                .ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "authenticated Hub catalog binding is unavailable").retryable())?
+                .ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX)),
+            WorkspaceOrigin::Folder { .. } => Err(GatewayError::new(GatewayErrorCode::InputInvalid, "folder workspaces do not have a Hub-selected catalog")),
+        }
+    }
+
+    /// 📚 Package descriptors used for capability and inference discovery. Hub mode reads only the
+    /// authenticated retained snapshot; folder mode may use the installed registry.
+    pub fn discovery_descriptors(&self) -> Result<Vec<semio_framework::PackageDescriptor>, GatewayError> {
+        match &self.origin {
+            WorkspaceOrigin::Hub { .. } => Ok(self.verified_hub_catalog_selections()?.selections.iter().map(|selection| selection.descriptor.clone()).collect()),
+            WorkspaceOrigin::Folder { .. } => {
+                let repo_root = find_repo_root()?;
+                let registry = load_plugin_registry(&repo_root)?;
+                let mut descriptors = Vec::new();
+                for plugin_id in self.catalog_plugin_ids() {
+                    descriptors.push(load_package_descriptor(&find_plugin_entry(&registry, &plugin_id)?.owner_root)?);
+                }
+                Ok(descriptors)
+            }
+        }
+    }
+
+    /// 🗂️ Recompiles a discovery catalog from the current authoritative descriptor set. Revoked or
+    /// refreshing Hub authority returns unavailable and never consults a local registry.
+    pub fn discovery_catalog(&self) -> Result<Arc<Catalog>, GatewayError> {
+        match &self.origin {
+            WorkspaceOrigin::Hub { .. } => Ok(Arc::new(crate::catalog_from_descriptors(self.discovery_descriptors()?)?)),
+            WorkspaceOrigin::Folder { .. } => Ok(self.catalog.clone()),
+        }
     }
 
     pub fn authenticated_probe_document_is_known(&self, artifact_id: &str) -> Result<bool, GatewayError> {
@@ -1646,7 +1688,8 @@ impl GatewayBackend for HeadlessWorkspace {
                             serde_json::json!({
                                 "scope": { "spaceId": document.scope.space_id, "documentId": document.scope.document_id },
                                 "descriptorDigestV1": document.descriptor_digest_v1,
-                                "descriptorResource": descriptor_resource_uri(&document.scope)
+                                "descriptorResource": descriptor_resource_uri(&document.scope),
+                                "checkpointResource": checkpoint_resource_uri(&document.scope)
                             })
                         })
                         .collect();
@@ -1667,6 +1710,27 @@ impl GatewayBackend for HeadlessWorkspace {
                 "view": directory_json_value(&document.view)?
             });
             return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
+        }
+        if let Some(scope) = parse_checkpoint_resource_uri(uri) {
+            let snapshot = self.hub_snapshot()?;
+            if scope.space_id != snapshot.space.id {
+                return Err(GatewayError::new(GatewayErrorCode::NotFound, "checkpoint scope is outside the authenticated workspace"));
+            }
+            if !snapshot.documents.contains_key(&scope) {
+                return Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such checkpoint scope: {uri}")));
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let binding = self.hub_binding.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub descriptor binding is unbound").retryable())?;
+                let driver = self.hub_driver.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub binding actor is not running").retryable())?;
+                let cancel = semio_framework_async::CancelToken::root_now();
+                let text = driver.read_canonical_checkpoint(binding.as_ref(), &scope, &cancel).map_err(remote::pair_mount_error_to_gateway)?;
+                return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(text), blob: None }]);
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "native hub checkpoint transport is unavailable on wasm32").retryable());
+            }
         }
         if let Some(rest) = uri.strip_prefix("semio://artifact/") {
             let (artifact_id, suffix) = match rest.split_once('/') {
@@ -1719,6 +1783,14 @@ impl GatewayBackend for HeadlessWorkspace {
                         description: Some("Authenticated descriptor metadata; artifact bytes remain unavailable until P4-B".to_string()),
                         mime_type: Some("application/json".to_string()),
                         size: None,
+                    });
+                    resources.push(Resource {
+                        uri: checkpoint_resource_uri(&document.scope),
+                        name: format!("{} checkpoint", document.scope.document_id),
+                        title: Some(document.view.descriptor.artifact_kind.clone()),
+                        description: Some("Authenticated frozen canonical checkpoint pair".to_string()),
+                        mime_type: Some("application/json".to_string()),
+                        size: Some(remote::CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES as u64),
                     });
                 }
             }
@@ -1852,6 +1924,10 @@ fn base64_encode(bytes: &[u8]) -> String {
 //#region 🧪️Tests
 //#region 💡️Inference
 use semio_framework_os_kernel::os_directory::DocumentScope;
+fn is_gis_map_descriptor(artifact_kind: &str, artifact_schema: &str) -> bool {
+    artifact_schema == crate::inference::GIS_MAP_INFERENCE_DOCUMENT_SCHEMA && artifact_kind == crate::inference::GIS_MAP_INFERENCE_ARTIFACT_KIND
+}
+
 /// 💡️ The authenticated hub GIS Map inference facade. Every method here is a thin, typed pass to
 /// the hub's own four routes: this process holds no inference authority of its own, mints no job
 /// state, and never applies anything to a document. A `--folder` workspace answers a retryable
@@ -1877,7 +1953,7 @@ impl HeadlessWorkspace {
     /// 📄️ Resolves one document id in the bound space and states plainly when it is not a GIS Map.
     fn gis_map_inference_scope(&self, document_id: &str) -> Result<DocumentScope, GatewayError> {
         let (scope, document) = self.hub_inference_binding()?.inference_document(document_id, i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
-        if document.view.descriptor.artifact_schema != crate::inference::GIS_MAP_INFERENCE_DOCUMENT_SCHEMA && document.view.descriptor.artifact_kind != crate::inference::GIS_MAP_INFERENCE_ARTIFACT_KIND {
+        if !is_gis_map_descriptor(&document.view.descriptor.artifact_kind, &document.view.descriptor.artifact_schema) {
             return Err(GatewayError::new(
                 GatewayErrorCode::PreconditionFailed,
                 format!("document `{document_id}` is `{}`/`{}`, not the GIS Map kind this inference service is bound to", document.view.descriptor.artifact_kind, document.view.descriptor.artifact_schema),
@@ -2012,6 +2088,20 @@ mod quick {
         assert!(!std::fs::read_to_string(std::path::Path::new(file!())).expect("probe source").contains("probe_document_socket_surface"));
     }
 
+    #[test]
+    fn gis_map_inference_selector_requires_the_exact_kind_and_schema_pair() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
+        let selector = &fixture["selector"];
+        assert!(is_gis_map_descriptor(selector["artifactKind"].as_str().unwrap(), selector["artifactSchema"].as_str().unwrap()));
+        for hostile in selector["hostile"].as_array().unwrap() {
+            assert!(
+                !is_gis_map_descriptor(hostile["artifactKind"].as_str().unwrap(), hostile["artifactSchema"].as_str().unwrap()),
+                "partial GIS identity {} must fail closed",
+                hostile["name"].as_str().unwrap()
+            );
+        }
+    }
+
     fn empty_catalog() -> Arc<Catalog> {
         Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
     }
@@ -2041,6 +2131,20 @@ mod quick {
         };
         let binding = Arc::new(HubRemoteBinding::new("https://hub.invalid", "space-a").unwrap());
         binding.install_snapshot_for_test(snapshot);
+        let repo_root = find_repo_root().expect("repo root");
+        let corpus: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(repo_root.join("🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus"),
+        )
+        .expect("execution-target corpus json");
+        let lease: semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 =
+            semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
+        let descriptor = load_package_descriptor(&repo_root.join("✏️s/🔌️plugins/🌍️gis")).expect("installed GIS descriptor test input");
+        binding.install_catalog_for_test(vec![remote::AuthorizedPackageSelection {
+            scope: lease.scope.clone(),
+            descriptor_digest_v1: lease.descriptor_digest_v1.clone(),
+            lease,
+            descriptor,
+        }]);
         let mut workspace = HeadlessWorkspace::new(
             WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string() },
             "forged-local-principal".to_string(),
@@ -2056,7 +2160,15 @@ mod quick {
         let workspace = authenticated_hub_workspace_fixture();
         let resources = workspace.list_resources().unwrap();
         let uris: Vec<_> = resources.iter().map(|resource| resource.uri.as_str()).collect();
-        assert_eq!(uris, vec!["semio://workspace", "semio://workspace/artifacts", "semio://workspace/scopes/space-a/shared-doc/descriptor"]);
+        assert_eq!(
+            uris,
+            vec![
+                "semio://workspace",
+                "semio://workspace/artifacts",
+                "semio://workspace/scopes/space-a/shared-doc/descriptor",
+                "semio://workspace/scopes/space-a/shared-doc/checkpoint",
+            ]
+        );
         let workspace_body = workspace.read_resource("semio://workspace").unwrap()[0].text.clone().unwrap();
         assert!(workspace_body.contains("user-a"));
         assert!(!workspace_body.contains("forged-local-principal"));
@@ -2064,6 +2176,10 @@ mod quick {
         let descriptor_body = workspace.read_resource("semio://workspace/scopes/space-a/shared-doc/descriptor").unwrap()[0].text.clone().unwrap();
         assert!(descriptor_body.contains("\"spaceId\":\"space-a\""));
         assert!(descriptor_body.contains("\"documentId\":\"shared-doc\""));
+        let artifacts_body = workspace.read_resource("semio://workspace/artifacts").unwrap()[0].text.clone().unwrap();
+        assert!(artifacts_body.contains("\"checkpointResource\":\"semio://workspace/scopes/space-a/shared-doc/checkpoint\""));
+        let checkpoint_error = workspace.read_resource("semio://workspace/scopes/space-b/shared-doc/checkpoint").unwrap_err();
+        assert_eq!(checkpoint_error.code, GatewayErrorCode::NotFound);
         for uri in ["semio://artifact/shared-doc", "semio://artifact/shared-doc/schema", "semio://artifact/shared-doc/validation"] {
             let error = workspace.read_resource(uri).unwrap_err();
             assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
@@ -2073,6 +2189,47 @@ mod quick {
         let error = workspace.list_resources().unwrap_err();
         assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
         assert!(error.retryable);
+    }
+
+    #[test]
+    fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallback() {
+        let workspace = Arc::new(authenticated_hub_workspace_fixture());
+        let descriptors = workspace.discovery_descriptors().expect("ready selected descriptors");
+        assert_eq!(descriptors.len(), 1);
+        assert_eq!(descriptors[0].manifest.plugin_id, "gis");
+        let roster = crate::inference::declared_inferences_for_workspace(&workspace).expect("selected inference roster");
+        assert_eq!(roster.len(), 1);
+        assert_eq!(roster[0].owner, "gis");
+        let principal = AgentPrincipal::from_scope_names("agent:hub-test", "hub test", &[], None);
+        let server = crate::build_server_with_workspace(
+            principal,
+            Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())),
+            workspace.clone(),
+            Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())),
+            None,
+        );
+        let listed = server.tools.list();
+        let inference_list = listed.iter().find(|tool| tool.name == "inference_list").expect("inference_list tool");
+        let selected = inference_list.meta.as_ref().expect("ready tools/list selection metadata");
+        assert_eq!(selected["semio"]["hubSelectedPackages"][0]["package"]["pluginId"], "gis");
+        assert_ne!(selected["semio"]["hubSelectedPackages"][0]["package"]["componentSha256"], "");
+        let inference_result = server.tools.call("inference_list", serde_json::json!({})).expect("inference_list registered");
+        assert!(!inference_result.is_error);
+        assert_eq!(inference_result.structured_content.as_ref().expect("inference roster")["declared"][0]["owner"], "gis");
+        workspace.hub_binding.as_ref().unwrap().invalidate_stream();
+        let descriptor_error = workspace.discovery_descriptors().expect_err("refreshing authority must remove selected descriptors");
+        assert_eq!(descriptor_error.code, GatewayErrorCode::PluginUnavailable);
+        assert!(descriptor_error.retryable);
+        let inference_error = crate::inference::declared_inferences_for_workspace(&workspace).expect_err("inference discovery must not fall back to installed GIS");
+        assert_eq!(inference_error.code, GatewayErrorCode::PluginUnavailable);
+        assert!(inference_error.retryable);
+        let revoked_inference_list = server.tools.list().into_iter().find(|tool| tool.name == "inference_list").expect("revoked inference_list tool");
+        assert!(revoked_inference_list.meta.is_none(), "refreshing tools/list must expose no stale or installed package identity");
+        let revoked_result = server.tools.call("inference_list", serde_json::json!({})).expect("revoked inference_list registered");
+        assert!(revoked_result.is_error);
+        let error = revoked_result.structured_content.expect("revoked discovery error");
+        assert_eq!(error["code"], "PLUGIN_UNAVAILABLE");
+        assert_eq!(error["retryable"], true);
     }
 
     #[cfg(not(target_arch = "wasm32"))]

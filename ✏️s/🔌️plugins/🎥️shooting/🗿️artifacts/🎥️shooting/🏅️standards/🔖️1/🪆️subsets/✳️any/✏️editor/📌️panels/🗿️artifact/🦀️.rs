@@ -10,7 +10,7 @@ pub const SHOOTING_PLAY_BODY_DOCUMENT: &str = "shooting.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -38,7 +38,7 @@ fn asset_select_action(asset_id: &str) -> semio_framework_plugin::UiAssemblyResu
     crate::editor::shooting::shooting_action("interactionSelect", Some(args))
 }
 
-pub async fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut shot_items = semio_framework_plugin::UiFixedList::default();
     for shot in &snapshot.shots {
         let ids = crate::editor::shooting::ui_value_list([crate::editor::shooting::ui_value_text(&shot.id)?])?;

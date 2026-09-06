@@ -16,30 +16,30 @@ use protocol::{Identified, Patchable};
 /// `None` (a pre-existing representation limit of this macro, unchanged from `vcs::Patchable`'s
 /// same `Option<T>`-typed patch fields).
 trait PatchRow<T: Clone> {
-    async fn apply_row(&mut self, patch: &Option<T>);
-    async fn diff_row(&self, other: &Self, out: &mut Option<T>);
+    fn apply_row(&mut self, patch: &Option<T>);
+    fn diff_row(&self, other: &Self, out: &mut Option<T>);
 }
 
 impl<T: Clone> PatchRow<T> for T {
-    async fn apply_row(&mut self, patch: &Option<T>) {
+    fn apply_row(&mut self, patch: &Option<T>) {
         if let Some(value) = patch {
             *self = value.clone();
         }
     }
 
-    async fn diff_row(&self, other: &Self, out: &mut Option<T>) {
+    fn diff_row(&self, other: &Self, out: &mut Option<T>) {
         *out = Some(other.clone());
     }
 }
 
 impl<T: Clone> PatchRow<T> for Option<T> {
-    async fn apply_row(&mut self, patch: &Option<T>) {
+    fn apply_row(&mut self, patch: &Option<T>) {
         if let Some(value) = patch {
             *self = Some(value.clone());
         }
     }
 
-    async fn diff_row(&self, other: &Self, out: &mut Option<T>) {
+    fn diff_row(&self, other: &Self, out: &mut Option<T>) {
         *out = other.clone();
     }
 }
@@ -47,7 +47,7 @@ impl<T: Clone> PatchRow<T> for Option<T> {
 macro_rules! impl_identified_header {
     ($ty:ty) => {
         impl Identified<EntityId> for $ty {
-            async fn id(&self) -> &EntityId {
+            fn id(&self) -> &EntityId {
                 &self.header.id
             }
         }
@@ -57,11 +57,11 @@ macro_rules! impl_identified_header {
 macro_rules! impl_patchable {
     ($entity:ty, $patch:ty, { $( [ $($path:ident).+ ] => $f:ident ),+ $(,)? }) => {
         impl Patchable<$patch> for $entity {
-            async fn apply_patch(&mut self, patch: &$patch) {
+            fn apply_patch(&mut self, patch: &$patch) {
                 $( PatchRow::apply_row(&mut self$(.$path)+, &patch.$f); )+
             }
 
-            async fn diff_patch(&self, other: &Self) -> Option<$patch> {
+            fn diff_patch(&self, other: &Self) -> Option<$patch> {
                 let mut patch = <$patch>::default();
                 $( PatchRow::diff_row(&self$(.$path)+, &other$(.$path)+, &mut patch.$f); )+
                 Some(patch)
@@ -587,7 +587,7 @@ pub struct ProgramMetaPatch {
 }
 
 impl Patchable<ProgramMetaPatch> for ProgramMeta {
-    async fn apply_patch(&mut self, patch: &ProgramMetaPatch) {
+    fn apply_patch(&mut self, patch: &ProgramMetaPatch) {
         PatchRow::apply_row(&mut self.schema, &patch.schema);
         PatchRow::apply_row(&mut self.document_id, &patch.document_id);
         PatchRow::apply_row(&mut self.title, &patch.title);
@@ -605,7 +605,7 @@ impl Patchable<ProgramMetaPatch> for ProgramMeta {
         PatchRow::apply_row(&mut self.timestamps, &patch.timestamps);
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<ProgramMetaPatch> {
+    fn diff_patch(&self, other: &Self) -> Option<ProgramMetaPatch> {
         let mut patch = ProgramMetaPatch::default();
         PatchRow::diff_row(&self.schema, &other.schema, &mut patch.schema);
         PatchRow::diff_row(&self.document_id, &other.document_id, &mut patch.document_id);
@@ -697,7 +697,7 @@ pub struct ProjectDefinitionPatch {
 }
 
 impl Identified<EntityId> for ProjectDefinition {
-    async fn id(&self) -> &EntityId {
+    fn id(&self) -> &EntityId {
         &self.id
     }
 }
@@ -7588,7 +7588,7 @@ pub struct GovernancePatch {
 }
 
 impl Identified<EntityId> for Governance {
-    async fn id(&self) -> &EntityId {
+    fn id(&self) -> &EntityId {
         &self.id
     }
 }

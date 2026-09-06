@@ -23,7 +23,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
 /// shape.
-pub async fn plugin() -> Result<Plugin<SequenceApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<SequenceApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<SequenceApps>::builder("sequence")
         .label("Sequence")
         .version("0.1.0")

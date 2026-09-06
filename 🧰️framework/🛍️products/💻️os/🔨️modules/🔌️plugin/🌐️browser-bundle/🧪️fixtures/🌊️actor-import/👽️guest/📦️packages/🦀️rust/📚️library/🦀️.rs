@@ -25,6 +25,12 @@ impl ActorImportProbeGuest for Component {
         Ok(bytes)
     }
 
+    async fn blob_drop(hash: String) -> Result<(), Vec<u8>> {
+        let stream = host_async::blob_read(hash).await?;
+        drop(stream);
+        Ok(())
+    }
+
     async fn timer_roundtrip(delay_ms: u32) -> u32 {
         std::thread::sleep(std::time::Duration::from_millis(u64::from(delay_ms)));
         delay_ms

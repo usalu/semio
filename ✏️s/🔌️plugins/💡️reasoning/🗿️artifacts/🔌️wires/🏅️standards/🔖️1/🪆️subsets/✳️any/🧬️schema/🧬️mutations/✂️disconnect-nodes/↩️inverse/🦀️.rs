@@ -7,7 +7,7 @@ use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::DisconnectNodes, base: &WiresSnapshot) -> Vec<WiresMutation> {
+pub fn inverse(payload: &super::DisconnectNodes, base: &WiresSnapshot) -> Vec<WiresMutation> {
     find_board_edge(base, &payload.edge_id)
         .map(|edge| {
             let relationship = find_relationship(base, &payload.edge_id).cloned().unwrap_or(DslValue::Null);

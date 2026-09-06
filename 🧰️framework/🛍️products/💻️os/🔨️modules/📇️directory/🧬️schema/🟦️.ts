@@ -1,3 +1,11 @@
+import {
+  type DocumentOpenBrowserActorV1,
+  type DocumentExecutionTargetBrowserActorV1,
+  parseDocumentOpenBrowserActorV1,
+  parseDocumentExecutionTargetBrowserActorV1,
+  documentBrowserActorLeaseFromPlanV1,
+  sameDocumentBrowserActorV1,
+} from "./🌐️browser-actor/🟦️.ts";
 /** 📇️ Directory event log wire contract (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-
  * STUDIOS, contract C1) — TypeScript twin of `🦀️.rs`. Pure data, no fold logic (see the
  * module root `../🟦️.ts`'s `DirectoryReadModel`/`fold`).
@@ -7,7 +15,14 @@
  * same-named payload field would collide on the wire. Flagged as a `sharedFileRequest` in lane
  * 0-A's report. */
 
-export { DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, documentBrowserActorLeaseFromPlanV1, parseDocumentExecutionTargetBrowserActorV1, parseDocumentOpenBrowserActorV1, sameDocumentBrowserActorV1 } from "./🌐️browser-actor/🟦️.ts";
+export {
+  DOCUMENT_BROWSER_ACTOR_INTERFACES,
+  DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
+  documentBrowserActorLeaseFromPlanV1,
+  parseDocumentExecutionTargetBrowserActorV1,
+  parseDocumentOpenBrowserActorV1,
+  sameDocumentBrowserActorV1,
+} from "./🌐️browser-actor/🟦️.ts";
 export type { DocumentBrowserActorSourceV1, DocumentClosedBrowserActorV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1 } from "./🌐️browser-actor/🟦️.ts";
 
 //#region 🔖️Vocabulary
@@ -228,8 +243,15 @@ function directoryEventPageNestedShapes(body: Record<string, unknown>): void {
 function directoryEventPageEvent(value: unknown): DirectoryEvent {
   const event = directoryEventPageObject(value, ["seq", "id", "hlc", "actor", "body", "recordedAtMs"], ["spaceId", "userId"]);
   directoryEventPageInteger(event.seq, true);
-  if (typeof event.id !== "string" || typeof event.recordedAtMs !== "number" || !Number.isSafeInteger(event.recordedAtMs) || (event.spaceId !== undefined && typeof event.spaceId !== "string") || (event.userId !== undefined && typeof event.userId !== "string")) throw new Error("directory-event-page.invalid-event");
-  directoryEventPageInteger((directoryEventPageObject(event.hlc, ["physicalMs", "logical"])).logical);
+  if (
+    typeof event.id !== "string" ||
+    typeof event.recordedAtMs !== "number" ||
+    !Number.isSafeInteger(event.recordedAtMs) ||
+    (event.spaceId !== undefined && typeof event.spaceId !== "string") ||
+    (event.userId !== undefined && typeof event.userId !== "string")
+  )
+    throw new Error("directory-event-page.invalid-event");
+  directoryEventPageInteger(directoryEventPageObject(event.hlc, ["physicalMs", "logical"]).logical);
   const physicalMs = (event.hlc as Record<string, unknown>).physicalMs;
   if (typeof physicalMs !== "number" || !Number.isSafeInteger(physicalMs)) throw new Error("directory-event-page.invalid-time");
   const actor = directoryEventPageObject(event.actor, ["kind", "id"]);
@@ -265,9 +287,12 @@ function directoryEventPageEvent(value: unknown): DirectoryEvent {
     "invite.redeemed": ["spaceId", "userId", "inviteId"],
   };
   if ((textFields[body.kind as string] ?? []).some((field) => typeof body[field] !== "string")) throw new Error("directory-event-page.invalid-event-text");
-  if ((body.kind === "space.created" && body.spaceKind !== "atelier" && body.spaceKind !== "studio" && body.spaceKind !== "archive")
-    || ((body.kind === "space.created" || body.kind === "space.visibility-changed") && body.visibility !== "private" && body.visibility !== "public")
-    || ((body.kind === "member.upserted" || body.kind === "invite.redeemed") && body.role !== "author" && body.role !== "spectator")) throw new Error("directory-event-page.invalid-event-vocabulary");
+  if (
+    (body.kind === "space.created" && body.spaceKind !== "atelier" && body.spaceKind !== "studio" && body.spaceKind !== "archive") ||
+    ((body.kind === "space.created" || body.kind === "space.visibility-changed") && body.visibility !== "private" && body.visibility !== "public") ||
+    ((body.kind === "member.upserted" || body.kind === "invite.redeemed") && body.role !== "author" && body.role !== "spectator")
+  )
+    throw new Error("directory-event-page.invalid-event-vocabulary");
   directoryEventPageNestedShapes(body);
   if (directoryEventPageHasControl(event)) throw new Error("directory-event-page.control-character");
   if (new TextEncoder().encode(JSON.stringify(event)).length > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES) throw new Error("directory-event-page.event-too-large");
@@ -305,7 +330,7 @@ export async function parseDirectoryEventPageV1(source: string): Promise<Directo
   };
   if (JSON.stringify(page) !== source) throw new Error("directory-event-page.noncanonical");
   const { receiptSha256, ...unsigned } = page;
-  if (await directoryEventPageSha256(JSON.stringify(unsigned)) !== receiptSha256) throw new Error("directory-event-page.receipt-mismatch");
+  if ((await directoryEventPageSha256(JSON.stringify(unsigned))) !== receiptSha256) throw new Error("directory-event-page.receipt-mismatch");
   return page;
 }
 //#endregion 🔖️Event
@@ -323,6 +348,122 @@ export type DirectoryCommand =
   | { kind: "revoke-invite"; spaceId: string; inviteId: string }
   | { kind: "announce-document"; descriptor: DocumentDescriptor };
 //#endregion 🔖️Command
+
+//#region 📣️CheckpointPublicationCommand
+export const CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES = 8 * 1024;
+export const CHECKPOINT_PUBLICATION_DEADLINE_MS = 30_000;
+export const CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES = 1024 * 1024;
+
+export interface CheckpointPublicationFrontierV1 {
+  documentId: string;
+  headEditOrdinal: number;
+  headEditId: string;
+  lastCommitSeq: number;
+  chainSha256: string;
+}
+
+export type CheckpointPublicationCurrentV1 = { state: "none" } | { state: "active"; checkpointId: string; baselineFrontier: CheckpointPublicationFrontierV1 };
+
+export interface CheckpointPublicationBlobV1 {
+  sha256: string;
+  byteLength: number;
+}
+
+export interface CheckpointPublicationCommandV1 {
+  schema: "semio.hub.checkpoint-publication-command/v1";
+  correlationId: string;
+  descriptorDigestV1: string;
+  expectedDocumentFrontier: DocumentFrontier;
+  expectedCurrent: CheckpointPublicationCurrentV1;
+  baselineFrontier: CheckpointPublicationFrontierV1;
+  pack: CheckpointPublicationBlobV1;
+  spr: CheckpointPublicationBlobV1;
+}
+
+export interface CheckpointPublicationReceiptV1 {
+  schema: "semio.hub.checkpoint-publication-receipt/v1";
+  correlationId: string;
+  checkpoint: PublishedArtifactCheckpoint;
+}
+
+function checkpointPublicationHex(value: unknown, name: string): string {
+  if (typeof value !== "string" || value.length !== 64 || /^0+$/u.test(value) || !/^[0-9a-f]+$/u.test(value)) throw new Error(`checkpoint-publication.invalid-${name}`);
+  return value;
+}
+
+function checkpointPublicationFrontier(value: unknown): CheckpointPublicationFrontierV1 {
+  const frontier = directoryEventPageObject(value, ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"]);
+  if (
+    typeof frontier.documentId !== "string" ||
+    frontier.documentId.length === 0 ||
+    new TextEncoder().encode(frontier.documentId).length > DOCUMENT_OPEN_ID_MAX_BYTES ||
+    typeof frontier.headEditId !== "string" ||
+    frontier.headEditId.length === 0 ||
+    new TextEncoder().encode(frontier.headEditId).length > DOCUMENT_OPEN_ID_MAX_BYTES ||
+    /\p{Cc}/u.test(frontier.documentId) ||
+    /\p{Cc}/u.test(frontier.headEditId)
+  )
+    throw new Error("checkpoint-publication.invalid-frontier");
+  return {
+    documentId: frontier.documentId,
+    headEditOrdinal: directoryEventPageInteger(frontier.headEditOrdinal, true),
+    headEditId: frontier.headEditId,
+    lastCommitSeq: directoryEventPageInteger(frontier.lastCommitSeq, true),
+    chainSha256: checkpointPublicationHex(frontier.chainSha256, "chain"),
+  };
+}
+
+function checkpointPublicationBlob(value: unknown, name: string): CheckpointPublicationBlobV1 {
+  const blob = directoryEventPageObject(value, ["sha256", "byteLength"]);
+  return { sha256: checkpointPublicationHex(blob.sha256, `${name}-hash`), byteLength: directoryEventPageInteger(blob.byteLength, true) };
+}
+
+/** 📥️ Parses one exact canonical checkpoint command without accepting route-owned scope fields. */
+export function parseCheckpointPublicationCommandV1(source: string): CheckpointPublicationCommandV1 {
+  if (new TextEncoder().encode(source).length > CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES) throw new Error("checkpoint-publication.request-too-large");
+  const object = directoryEventPageObject(JSON.parse(source), ["schema", "correlationId", "descriptorDigestV1", "expectedDocumentFrontier", "expectedCurrent", "baselineFrontier", "pack", "spr"]);
+  if (object.schema !== "semio.hub.checkpoint-publication-command/v1") throw new Error("checkpoint-publication.invalid-envelope");
+  const expectedDocumentFrontier = directoryEventPageObject(object.expectedDocumentFrontier, ["headSeq", "commitSeq", "epoch"]);
+  const headSeq = directoryEventPageInteger(expectedDocumentFrontier.headSeq, false);
+  const commitSeq = directoryEventPageInteger(expectedDocumentFrontier.commitSeq, false);
+  const epoch = directoryEventPageInteger(expectedDocumentFrontier.epoch, false);
+  if (commitSeq > headSeq) throw new Error("checkpoint-publication.invalid-document-frontier");
+  const expectedCurrentObject = directoryEventPageObject(object.expectedCurrent, ["state"], ["checkpointId", "baselineFrontier"]);
+  const expectedCurrent: CheckpointPublicationCurrentV1 =
+    expectedCurrentObject.state === "none"
+      ? (() => {
+          if (Object.keys(expectedCurrentObject).length !== 1) throw new Error("checkpoint-publication.invalid-current");
+          return { state: "none" };
+        })()
+      : expectedCurrentObject.state === "active"
+        ? (() => {
+            const active = directoryEventPageObject(object.expectedCurrent, ["state", "checkpointId", "baselineFrontier"]);
+            return {
+              state: "active",
+              checkpointId: checkpointPublicationHex(active.checkpointId, "checkpoint"),
+              baselineFrontier: checkpointPublicationFrontier(active.baselineFrontier),
+            };
+          })()
+        : (() => {
+            throw new Error("checkpoint-publication.invalid-current");
+          })();
+  const pack = checkpointPublicationBlob(object.pack, "pack");
+  const spr = checkpointPublicationBlob(object.spr, "spr");
+  if (pack.byteLength + spr.byteLength > CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES) throw new Error("checkpoint-publication.pair-too-large");
+  const command: CheckpointPublicationCommandV1 = {
+    schema: object.schema,
+    correlationId: directoryCommandRequestId(object.correlationId),
+    descriptorDigestV1: checkpointPublicationHex(object.descriptorDigestV1, "descriptor"),
+    expectedDocumentFrontier: { headSeq, commitSeq, epoch },
+    expectedCurrent,
+    baselineFrontier: checkpointPublicationFrontier(object.baselineFrontier),
+    pack,
+    spr,
+  };
+  if (JSON.stringify(command) !== source) throw new Error("checkpoint-publication.noncanonical");
+  return command;
+}
+//#endregion 📣️CheckpointPublicationCommand
 
 //#region 🔖️CommandReceipt
 export const DIRECTORY_COMMAND_REQUEST_MAX_BYTES = 8 * 1024;
@@ -357,18 +498,7 @@ export interface DirectoryCommandReceiptV1 {
 }
 
 /** 🚫️ Closed transport denial classes; the first six are the only codes the hub puts on the wire. */
-export type DirectoryCommandErrorCodeV1 =
-  | "unauthorized"
-  | "forbidden"
-  | "stale-session"
-  | "request-conflict"
-  | "invalid"
-  | "overloaded"
-  | "too-large"
-  | "capacity"
-  | "closed"
-  | "cancelled"
-  | "transport";
+export type DirectoryCommandErrorCodeV1 = "unauthorized" | "forbidden" | "stale-session" | "request-conflict" | "invalid" | "overloaded" | "too-large" | "capacity" | "closed" | "cancelled" | "transport";
 
 const DIRECTORY_COMMAND_TRANSIENT_CODES: readonly DirectoryCommandErrorCodeV1[] = ["overloaded", "transport"];
 
@@ -471,10 +601,13 @@ export async function sealDirectoryCommandReceiptV1(requestId: string, commandSh
 export async function parseDirectoryCommandReceiptV1(source: string, request: DirectoryCommandRequestV1): Promise<DirectoryCommandReceiptV1> {
   if (new TextEncoder().encode(source).length > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES) throw new Error("directory-command.receipt-too-large");
   const object = directoryEventPageObject(JSON.parse(source), ["schema", "requestId", "commandSha256", "outcome", "events", "result", "receiptSha256"]);
-  if (object.schema !== "semio.directory.command-receipt.v1"
-    || (object.outcome !== "accepted" && object.outcome !== "previously-accepted" && object.outcome !== "secret-undeliverable")
-    || !Array.isArray(object.events)
-    || object.events.length > DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS) throw new Error("directory-command.invalid-envelope");
+  if (
+    object.schema !== "semio.directory.command-receipt.v1" ||
+    (object.outcome !== "accepted" && object.outcome !== "previously-accepted" && object.outcome !== "secret-undeliverable") ||
+    !Array.isArray(object.events) ||
+    object.events.length > DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS
+  )
+    throw new Error("directory-command.invalid-envelope");
   const events = object.events.map(directoryEventPageEvent);
   let previous = 0;
   for (const event of events) {
@@ -491,10 +624,10 @@ export async function parseDirectoryCommandReceiptV1(source: string, request: Di
     receiptSha256: directoryEventPageHash(object.receiptSha256, false),
   };
   if (receipt.outcome !== "accepted" && (receipt.result.kind !== "none" || receipt.events.length > 0)) throw new Error("directory-command.redaction-violated");
-  if (receipt.requestId !== request.requestId || receipt.commandSha256 !== await directoryCommandSha256(request.command)) throw new Error("directory-command.request-mismatch");
+  if (receipt.requestId !== request.requestId || receipt.commandSha256 !== (await directoryCommandSha256(request.command))) throw new Error("directory-command.request-mismatch");
   if (JSON.stringify(receipt) !== source) throw new Error("directory-command.noncanonical");
   const { receiptSha256, ...unsigned } = receipt;
-  if (await directoryEventPageSha256(JSON.stringify(unsigned)) !== receiptSha256) throw new Error("directory-command.receipt-mismatch");
+  if ((await directoryEventPageSha256(JSON.stringify(unsigned))) !== receiptSha256) throw new Error("directory-command.receipt-mismatch");
   return receipt;
 }
 //#endregion 🔖️CommandReceipt
@@ -646,10 +779,7 @@ export interface PublicDocumentCatalogEntryV1 {
   packSchemaHash: string;
 }
 
-export type DirectorySpaceListEntryV1 =
-  | { access: "public"; space: PublicSpaceViewV1 }
-  | { access: "member"; space: MemberSpaceViewV1 }
-  | { access: "author"; space: MemberSpaceViewV1 };
+export type DirectorySpaceListEntryV1 = { access: "public"; space: PublicSpaceViewV1 } | { access: "member"; space: MemberSpaceViewV1 } | { access: "author"; space: MemberSpaceViewV1 };
 
 export const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS = 64;
 export const DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES = 48 * 1024;
@@ -822,10 +952,14 @@ export async function parseDirectorySpaceAdministrationPageV1(source: string): P
   const parsed = JSON.parse(source);
   const access = (parsed as Record<string, unknown> | null)?.access;
   const common = ["access", "schema", "sessionBindingSha256", "authorizationGeneration", "spaceId", "space"];
-  const shape = access === "public" ? [...common, "documents", "receiptSha256"]
-    : access === "member" ? [...common, "members", "documents", "receiptSha256"]
-    : access === "author" ? [...common, "members", "documents", "invites", "capabilities", "receiptSha256"]
-    : undefined;
+  const shape =
+    access === "public"
+      ? [...common, "documents", "receiptSha256"]
+      : access === "member"
+        ? [...common, "members", "documents", "receiptSha256"]
+        : access === "author"
+          ? [...common, "members", "documents", "invites", "capabilities", "receiptSha256"]
+          : undefined;
   if (shape === undefined) throw new Error("space-administration-page.invalid-access");
   const object = administrationObject(parsed, shape);
   if (object.schema !== DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA) throw new Error("space-administration-page.invalid-schema");
@@ -862,12 +996,14 @@ export async function parseDirectorySpaceAdministrationPageV1(source: string): P
   }
   const capabilities = access === "author" ? administrationCapabilities(object.capabilities) : undefined;
   const base = { access, schema: object.schema, sessionBindingSha256, authorizationGeneration, spaceId, space: object.space };
-  const page = (access === "public" ? { ...base, documents, receiptSha256 }
-    : access === "member" ? { ...base, members, documents, receiptSha256 }
-    : { ...base, members, documents, invites, capabilities, receiptSha256 }) as unknown as DirectorySpaceAdministrationPageV1;
+  const page = (access === "public"
+    ? { ...base, documents, receiptSha256 }
+    : access === "member"
+      ? { ...base, members, documents, receiptSha256 }
+      : { ...base, members, documents, invites, capabilities, receiptSha256 }) as unknown as DirectorySpaceAdministrationPageV1;
   if (JSON.stringify(page) !== source) throw new Error("space-administration-page.noncanonical");
   const { receiptSha256: _receipt, ...unsigned } = page as Record<string, unknown> & { receiptSha256: string };
-  if (await administrationSha256(JSON.stringify(unsigned)) !== receiptSha256) throw new Error("space-administration-page.receipt-mismatch");
+  if ((await administrationSha256(JSON.stringify(unsigned))) !== receiptSha256) throw new Error("space-administration-page.receipt-mismatch");
   return page;
 }
 
@@ -1011,6 +1147,7 @@ export interface DocumentOpenPlanV1 {
   artifact: DocumentOpenArtifactV1;
   parentDialect: DocumentOpenParentDialectV1;
   surface: DocumentOpenSurfaceV1;
+  browserActor: DocumentOpenBrowserActorV1;
   grant: DocumentOpenGrantV1;
   checkpoint?: DocumentOpenCheckpointV1;
   revalidation: DocumentOpenRevalidationV1;
@@ -1066,7 +1203,8 @@ function parseDocumentOpenScope(value: unknown): DocumentScope {
 function parseDocumentOpenFrontier(value: unknown, documentId: string): ArtifactFrontier {
   const object = documentOpenObject(value, ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"]);
   const chainHash = object.chainHash;
-  if (!Array.isArray(chainHash) || chainHash.length !== 32 || chainHash.every((byte) => byte === 0) || chainHash.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error("document-open.invalid-frontier-hash");
+  if (!Array.isArray(chainHash) || chainHash.length !== 32 || chainHash.every((byte) => byte === 0) || chainHash.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255))
+    throw new Error("document-open.invalid-frontier-hash");
   const frontier = {
     documentId: documentOpenText(object.documentId),
     headEditOrdinal: documentOpenInteger(object.headEditOrdinal),
@@ -1097,7 +1235,7 @@ export function parseDocumentPlanSocketGrantIntentV1(value: unknown): DocumentPl
 }
 
 export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): DocumentOpenPlanV1 {
-  const object = documentOpenObject(value, ["schema", "version", "receipt", "expiresAtUnixMs", "scope", "descriptorDigestV1", "catalog", "package", "artifact", "parentDialect", "surface", "grant", "revalidation"], ["checkpoint"]);
+  const object = documentOpenObject(value, ["schema", "version", "receipt", "expiresAtUnixMs", "scope", "descriptorDigestV1", "catalog", "package", "artifact", "parentDialect", "surface", "browserActor", "grant", "revalidation"], ["checkpoint"]);
   if (object.schema !== "semio.hub.document-open-plan/v1" || object.version !== 1) throw new Error("document-open.invalid-version");
   const scope = parseDocumentOpenScope(object.scope);
   const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
@@ -1109,9 +1247,11 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
   const grant = documentOpenObject(object.grant, ["read", "write", "observe"]);
   const revalidation = documentOpenObject(object.revalidation, ["directoryRevision", "membershipGeneration"], ["sessionGeneration", "shareGeneration"]);
   const expiresAtUnixMs = documentOpenInteger(object.expiresAtUnixMs, true);
-  if (expiresAtUnixMs <= nowMs || expiresAtUnixMs - nowMs > DOCUMENT_OPEN_PLAN_MAX_TTL_MS || (revalidation.sessionGeneration === undefined) === (revalidation.shareGeneration === undefined)) throw new Error("document-open.expired-or-ambiguous-binding");
+  if (expiresAtUnixMs <= nowMs || expiresAtUnixMs - nowMs > DOCUMENT_OPEN_PLAN_MAX_TTL_MS || (revalidation.sessionGeneration === undefined) === (revalidation.shareGeneration === undefined))
+    throw new Error("document-open.expired-or-ambiguous-binding");
   if (grant.read !== true || grant.observe !== true || typeof grant.write !== "boolean") throw new Error("document-open.invalid-grant");
-  if ((surface.role !== "viewer" && surface.role !== "editor") || (surface.rendererTarget !== "react" && surface.rendererTarget !== "wgpu" && surface.rendererTarget !== "wasm") || grant.write !== (surface.role === "editor")) throw new Error("document-open.invalid-surface");
+  if ((surface.role !== "viewer" && surface.role !== "editor") || (surface.rendererTarget !== "react" && surface.rendererTarget !== "wgpu" && surface.rendererTarget !== "wasm") || grant.write !== (surface.role === "editor"))
+    throw new Error("document-open.invalid-surface");
   const parsedParentDialect = {
     artifactKind: documentOpenText(parentDialect.artifactKind),
     standard: documentOpenText(parentDialect.standard),
@@ -1145,15 +1285,18 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
       role: surface.role,
       rendererTarget: surface.rendererTarget,
     },
+    browserActor: parseDocumentOpenBrowserActorV1(object.browserActor, { componentSha256: documentOpenHash(packageValue.componentSha256), descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256) }, surface.rendererTarget),
     grant: { read: true, write: grant.write, observe: true },
-    ...(checkpoint ? {
-      checkpoint: {
-        checkpointId: documentOpenHash(checkpoint.checkpointId),
-        descriptorDigestV1,
-        baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope.documentId),
-        aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
-      },
-    } : {}),
+    ...(checkpoint
+      ? {
+          checkpoint: {
+            checkpointId: documentOpenHash(checkpoint.checkpointId),
+            descriptorDigestV1,
+            baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope.documentId),
+            aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
+          },
+        }
+      : {}),
     revalidation: {
       directoryRevision: documentOpenInteger(revalidation.directoryRevision, true),
       membershipGeneration: documentOpenInteger(revalidation.membershipGeneration, true),
@@ -1197,6 +1340,7 @@ export interface DocumentExecutionTargetLeaseFieldsV1 {
   package: DocumentOpenPackageV1;
   component: DocumentExecutionTargetComponentV1;
   descriptor: DocumentExecutionTargetDescriptorV1;
+  browserActor: DocumentExecutionTargetBrowserActorV1;
   artifact: DocumentOpenArtifactV1;
   parentDialect: DocumentOpenParentDialectV1;
   surface: DocumentOpenSurfaceV1;
@@ -1215,7 +1359,7 @@ function documentExecutionTargetByteLength(value: unknown, maxBytes: number): nu
  * must share the artifact kind, the grant must follow the surface role, and an optional checkpoint
  * must carry the same descriptor digest. */
 export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): DocumentExecutionTargetLeaseFieldsV1 {
-  const object = documentOpenObject(value, ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "artifact", "parentDialect", "surface", "grant", "revalidation"], ["checkpoint"]);
+  const object = documentOpenObject(value, ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "browserActor", "artifact", "parentDialect", "surface", "grant", "revalidation"], ["checkpoint"]);
   if (object.schema !== "semio.os.document-execution-target-lease/v1" || object.version !== 1) throw new Error("document-execution-target-lease.invalid-version");
   const scope = parseDocumentOpenScope(object.scope);
   const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
@@ -1230,7 +1374,8 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
   const revalidation = documentOpenObject(object.revalidation, ["directoryRevision", "membershipGeneration"], ["sessionGeneration", "shareGeneration"]);
   if ((revalidation.sessionGeneration === undefined) === (revalidation.shareGeneration === undefined)) throw new Error("document-execution-target-lease.ambiguous-binding");
   if (grant.read !== true || grant.observe !== true || typeof grant.write !== "boolean") throw new Error("document-execution-target-lease.invalid-grant");
-  if ((surface.role !== "viewer" && surface.role !== "editor") || (surface.rendererTarget !== "react" && surface.rendererTarget !== "wgpu" && surface.rendererTarget !== "wasm") || grant.write !== (surface.role === "editor")) throw new Error("document-execution-target-lease.invalid-surface");
+  if ((surface.role !== "viewer" && surface.role !== "editor") || (surface.rendererTarget !== "react" && surface.rendererTarget !== "wgpu" && surface.rendererTarget !== "wasm") || grant.write !== (surface.role === "editor"))
+    throw new Error("document-execution-target-lease.invalid-surface");
   const parsedParentDialect = {
     artifactKind: documentOpenText(parentDialect.artifactKind),
     standard: documentOpenText(parentDialect.standard),
@@ -1254,7 +1399,8 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
     sha256: documentOpenHash(descriptor.sha256),
     byteLength: documentExecutionTargetByteLength(descriptor.byteLength, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES),
   };
-  if (parsedComponent.sha256 !== parsedPackage.componentSha256 || parsedComponent.blake3 !== parsedPackage.componentBlake3 || parsedDescriptor.sha256 !== parsedPackage.descriptorByteSha256) throw new Error("document-execution-target-lease.unbound-bytes");
+  if (parsedComponent.sha256 !== parsedPackage.componentSha256 || parsedComponent.blake3 !== parsedPackage.componentBlake3 || parsedDescriptor.sha256 !== parsedPackage.descriptorByteSha256)
+    throw new Error("document-execution-target-lease.unbound-bytes");
   const checkpoint = object.checkpoint === undefined ? undefined : documentOpenObject(object.checkpoint, ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"]);
   if (checkpoint && checkpoint.descriptorDigestV1 !== descriptorDigestV1) throw new Error("document-execution-target-lease.stale-checkpoint");
   return {
@@ -1266,6 +1412,7 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
     package: parsedPackage,
     component: parsedComponent,
     descriptor: parsedDescriptor,
+    browserActor: parseDocumentExecutionTargetBrowserActorV1(object.browserActor, parsedPackage, surface.rendererTarget),
     artifact: { kind: documentOpenText(artifact.kind), schema: documentOpenText(artifact.schema), packSchemaHash: documentOpenHash(artifact.packSchemaHash) },
     parentDialect: parsedParentDialect,
     surface: {
@@ -1276,14 +1423,16 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
       rendererTarget: surface.rendererTarget,
     },
     grant: { read: true, write: grant.write, observe: true },
-    ...(checkpoint ? {
-      checkpoint: {
-        checkpointId: documentOpenHash(checkpoint.checkpointId),
-        descriptorDigestV1,
-        baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope.documentId),
-        aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
-      },
-    } : {}),
+    ...(checkpoint
+      ? {
+          checkpoint: {
+            checkpointId: documentOpenHash(checkpoint.checkpointId),
+            descriptorDigestV1,
+            baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope.documentId),
+            aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
+          },
+        }
+      : {}),
     revalidation: {
       directoryRevision: documentOpenInteger(revalidation.directoryRevision, true),
       membershipGeneration: documentOpenInteger(revalidation.membershipGeneration, true),
@@ -1296,7 +1445,7 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
 /** 🧾️ Projects one already-validated plan into receipt-free lease fields. The plan constrains every
  * identity but no byte length, so both lengths come from the installation being compared and are
  * independently enforced against the exact streamed bytes before a lease is ever minted. */
-export function leaseFieldsFromPlanV1(plan: DocumentOpenPlanV1, byteLengths: { readonly component: number; readonly descriptor: number }): DocumentExecutionTargetLeaseFieldsV1 {
+export function leaseFieldsFromPlanV1(plan: DocumentOpenPlanV1, byteLengths: { readonly component: number; readonly descriptor: number; readonly browserActor?: number }): DocumentExecutionTargetLeaseFieldsV1 {
   return parseDocumentExecutionTargetLeaseFieldsV1({
     schema: "semio.os.document-execution-target-lease/v1",
     version: 1,
@@ -1306,6 +1455,7 @@ export function leaseFieldsFromPlanV1(plan: DocumentOpenPlanV1, byteLengths: { r
     package: plan.package,
     component: { sha256: plan.package.componentSha256, blake3: plan.package.componentBlake3, byteLength: byteLengths.component },
     descriptor: { sha256: plan.package.descriptorByteSha256, byteLength: byteLengths.descriptor },
+    browserActor: documentBrowserActorLeaseFromPlanV1(plan.browserActor, plan.package, plan.surface.rendererTarget, byteLengths.browserActor),
     artifact: plan.artifact,
     parentDialect: plan.parentDialect,
     surface: plan.surface,
@@ -1318,53 +1468,57 @@ export function leaseFieldsFromPlanV1(plan: DocumentOpenPlanV1, byteLengths: { r
 /** ⚖️ The one shared full-field lease relation. Every transport compares every field through it; a
  * browser or native subset comparison is never permitted. */
 export function sameLeaseFieldsV1(left: DocumentExecutionTargetLeaseFieldsV1, right: DocumentExecutionTargetLeaseFieldsV1): boolean {
-  const sameCheckpoint = left.checkpoint === undefined || right.checkpoint === undefined
-    ? left.checkpoint === right.checkpoint
-    : left.checkpoint.checkpointId === right.checkpoint.checkpointId
-      && left.checkpoint.descriptorDigestV1 === right.checkpoint.descriptorDigestV1
-      && left.checkpoint.aggregateSha256 === right.checkpoint.aggregateSha256
-      && left.checkpoint.baselineFrontier.documentId === right.checkpoint.baselineFrontier.documentId
-      && left.checkpoint.baselineFrontier.headEditOrdinal === right.checkpoint.baselineFrontier.headEditOrdinal
-      && left.checkpoint.baselineFrontier.headEditId === right.checkpoint.baselineFrontier.headEditId
-      && left.checkpoint.baselineFrontier.lastCommitSeq === right.checkpoint.baselineFrontier.lastCommitSeq
-      && left.checkpoint.baselineFrontier.chainHash.length === right.checkpoint.baselineFrontier.chainHash.length
-      && left.checkpoint.baselineFrontier.chainHash.every((byte, index) => byte === right.checkpoint!.baselineFrontier.chainHash[index]);
-  return left.schema === right.schema
-    && left.version === right.version
-    && left.scope.spaceId === right.scope.spaceId
-    && left.scope.documentId === right.scope.documentId
-    && left.descriptorDigestV1 === right.descriptorDigestV1
-    && left.catalog.generationId === right.catalog.generationId
-    && left.package.pluginId === right.package.pluginId
-    && left.package.packageId === right.package.packageId
-    && left.package.version === right.package.version
-    && left.package.componentSha256 === right.package.componentSha256
-    && left.package.componentBlake3 === right.package.componentBlake3
-    && left.package.descriptorByteSha256 === right.package.descriptorByteSha256
-    && left.component.sha256 === right.component.sha256
-    && left.component.blake3 === right.component.blake3
-    && left.component.byteLength === right.component.byteLength
-    && left.descriptor.sha256 === right.descriptor.sha256
-    && left.descriptor.byteLength === right.descriptor.byteLength
-    && left.artifact.kind === right.artifact.kind
-    && left.artifact.schema === right.artifact.schema
-    && left.artifact.packSchemaHash === right.artifact.packSchemaHash
-    && left.parentDialect.artifactKind === right.parentDialect.artifactKind
-    && left.parentDialect.standard === right.parentDialect.standard
-    && left.parentDialect.subset === right.parentDialect.subset
-    && left.surface.surfaceId === right.surface.surfaceId
-    && left.surface.appId === right.surface.appId
-    && left.surface.windowKindId === right.surface.windowKindId
-    && left.surface.role === right.surface.role
-    && left.surface.rendererTarget === right.surface.rendererTarget
-    && left.grant.read === right.grant.read
-    && left.grant.write === right.grant.write
-    && left.grant.observe === right.grant.observe
-    && sameCheckpoint
-    && left.revalidation.directoryRevision === right.revalidation.directoryRevision
-    && left.revalidation.membershipGeneration === right.revalidation.membershipGeneration
-    && left.revalidation.sessionGeneration === right.revalidation.sessionGeneration
-    && left.revalidation.shareGeneration === right.revalidation.shareGeneration;
+  const sameCheckpoint =
+    left.checkpoint === undefined || right.checkpoint === undefined
+      ? left.checkpoint === right.checkpoint
+      : left.checkpoint.checkpointId === right.checkpoint.checkpointId &&
+        left.checkpoint.descriptorDigestV1 === right.checkpoint.descriptorDigestV1 &&
+        left.checkpoint.aggregateSha256 === right.checkpoint.aggregateSha256 &&
+        left.checkpoint.baselineFrontier.documentId === right.checkpoint.baselineFrontier.documentId &&
+        left.checkpoint.baselineFrontier.headEditOrdinal === right.checkpoint.baselineFrontier.headEditOrdinal &&
+        left.checkpoint.baselineFrontier.headEditId === right.checkpoint.baselineFrontier.headEditId &&
+        left.checkpoint.baselineFrontier.lastCommitSeq === right.checkpoint.baselineFrontier.lastCommitSeq &&
+        left.checkpoint.baselineFrontier.chainHash.length === right.checkpoint.baselineFrontier.chainHash.length &&
+        left.checkpoint.baselineFrontier.chainHash.every((byte, index) => byte === right.checkpoint!.baselineFrontier.chainHash[index]);
+  return (
+    left.schema === right.schema &&
+    left.version === right.version &&
+    left.scope.spaceId === right.scope.spaceId &&
+    left.scope.documentId === right.scope.documentId &&
+    left.descriptorDigestV1 === right.descriptorDigestV1 &&
+    left.catalog.generationId === right.catalog.generationId &&
+    left.package.pluginId === right.package.pluginId &&
+    left.package.packageId === right.package.packageId &&
+    left.package.version === right.package.version &&
+    left.package.componentSha256 === right.package.componentSha256 &&
+    left.package.componentBlake3 === right.package.componentBlake3 &&
+    left.package.descriptorByteSha256 === right.package.descriptorByteSha256 &&
+    left.component.sha256 === right.component.sha256 &&
+    left.component.blake3 === right.component.blake3 &&
+    left.component.byteLength === right.component.byteLength &&
+    left.descriptor.sha256 === right.descriptor.sha256 &&
+    left.descriptor.byteLength === right.descriptor.byteLength &&
+    sameDocumentBrowserActorV1(left.browserActor, right.browserActor) &&
+    left.artifact.kind === right.artifact.kind &&
+    left.artifact.schema === right.artifact.schema &&
+    left.artifact.packSchemaHash === right.artifact.packSchemaHash &&
+    left.parentDialect.artifactKind === right.parentDialect.artifactKind &&
+    left.parentDialect.standard === right.parentDialect.standard &&
+    left.parentDialect.subset === right.parentDialect.subset &&
+    left.surface.surfaceId === right.surface.surfaceId &&
+    left.surface.appId === right.surface.appId &&
+    left.surface.windowKindId === right.surface.windowKindId &&
+    left.surface.role === right.surface.role &&
+    left.surface.rendererTarget === right.surface.rendererTarget &&
+    left.grant.read === right.grant.read &&
+    left.grant.write === right.grant.write &&
+    left.grant.observe === right.grant.observe &&
+    sameCheckpoint &&
+    left.revalidation.directoryRevision === right.revalidation.directoryRevision &&
+    left.revalidation.membershipGeneration === right.revalidation.membershipGeneration &&
+    left.revalidation.sessionGeneration === right.revalidation.sessionGeneration &&
+    left.revalidation.shareGeneration === right.revalidation.shareGeneration
+  );
 }
 
 /** 🌐️ Complete localized execution-target status vocabulary. No code carries an origin, URL, path,
@@ -1387,7 +1541,7 @@ export function documentExecutionTargetStatusRoleV1(code: DocumentExecutionTarge
 
 /** 📈️ Bounded install progress. It never carries bytes, paths, receipts or full digests. */
 export interface DocumentExecutionTargetProgressV1 {
-  stage: "manifest" | "component" | "descriptor" | "verify";
+  stage: "manifest" | "component" | "descriptor" | "browser-actor" | "verify";
   completedBytes: number;
   totalBytes: number;
 }
@@ -1710,8 +1864,16 @@ export function parseGisMapInferencePreviewV1(value: unknown): GisMapInferencePr
   }) as unknown as GisMapInferencePreviewV1["ring"];
   const [lonMin, latMin] = ring[0];
   const [lonMax, latMax] = ring[2];
-  if (lonMin < -180 || lonMax > 180 || latMin < -90 || latMax > 90 || lonMin > lonMax || latMin > latMax
-    || ring.some((point, index) => point[0] !== [lonMin, lonMax, lonMax, lonMin, lonMin][index] || point[1] !== [latMin, latMin, latMax, latMax, latMin][index])) throw new Error("gis-map-inference.invalid-preview");
+  if (
+    lonMin < -180 ||
+    lonMax > 180 ||
+    latMin < -90 ||
+    latMax > 90 ||
+    lonMin > lonMax ||
+    latMin > latMax ||
+    ring.some((point, index) => point[0] !== [lonMin, lonMax, lonMax, lonMin, lonMin][index] || point[1] !== [latMin, latMin, latMax, latMax, latMin][index])
+  )
+    throw new Error("gis-map-inference.invalid-preview");
   return { schema: object.schema, jobId, proposalHash, regionId: object.regionId, ring };
 }
 
@@ -1719,8 +1881,30 @@ export function parseGisMapInferencePreviewV1(value: unknown): GisMapInferencePr
 export function parseGisMapInferencePortStatusV1(value: unknown): GisMapInferencePortStatusV1 {
   const object = documentOpenObject(value, ["phase", "jobId", "cursor", "completed", "total", "proposalHash", "cancelRequested", "code"], ["preview"]);
   const phases: readonly GisMapInferencePortPhaseV1[] = ["idle", "submitting", "running", "offered", "approving", "applied", "cancelled", "stale", "failed"];
-  const codes: readonly GisMapInferencePortCodeV1[] = ["inference.unavailable", "inference.denied", "inference.not-found", "inference.invalid", "inference.bounds", "inference.conflict", "inference.capacity", "inference.expired", "inference.cancelled", "approval.commit-unavailable", "inference.storage", "inference.transport", "inference.lease-unverified"];
-  if (!phases.includes(object.phase as GisMapInferencePortPhaseV1) || typeof object.cancelRequested !== "boolean" || object.jobId !== null && typeof object.jobId !== "string" || object.proposalHash !== null && typeof object.proposalHash !== "string" || object.preview !== undefined && (typeof object.preview !== "object" || object.preview === null) || object.code !== null && !codes.includes(object.code as GisMapInferencePortCodeV1)) throw new Error("gis-map-inference.invalid-status");
+  const codes: readonly GisMapInferencePortCodeV1[] = [
+    "inference.unavailable",
+    "inference.denied",
+    "inference.not-found",
+    "inference.invalid",
+    "inference.bounds",
+    "inference.conflict",
+    "inference.capacity",
+    "inference.expired",
+    "inference.cancelled",
+    "approval.commit-unavailable",
+    "inference.storage",
+    "inference.transport",
+    "inference.lease-unverified",
+  ];
+  if (
+    !phases.includes(object.phase as GisMapInferencePortPhaseV1) ||
+    typeof object.cancelRequested !== "boolean" ||
+    (object.jobId !== null && typeof object.jobId !== "string") ||
+    (object.proposalHash !== null && typeof object.proposalHash !== "string") ||
+    (object.preview !== undefined && (typeof object.preview !== "object" || object.preview === null)) ||
+    (object.code !== null && !codes.includes(object.code as GisMapInferencePortCodeV1))
+  )
+    throw new Error("gis-map-inference.invalid-status");
   const status: GisMapInferencePortStatusV1 = {
     phase: object.phase as GisMapInferencePortPhaseV1,
     jobId: object.jobId === null ? null : gisMapInferenceHex(object.jobId, 32),
@@ -1732,7 +1916,12 @@ export function parseGisMapInferencePortStatusV1(value: unknown): GisMapInferenc
     cancelRequested: object.cancelRequested,
     code: object.code as GisMapInferencePortCodeV1 | null,
   };
-  if (status.cursor > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR || status.completed > status.total || status.preview !== undefined && (status.phase !== "offered" && status.phase !== "approving" || status.jobId !== status.preview.jobId || status.proposalHash !== status.preview.proposalHash)) throw new Error("gis-map-inference.invalid-status");
+  if (
+    status.cursor > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR ||
+    status.completed > status.total ||
+    (status.preview !== undefined && ((status.phase !== "offered" && status.phase !== "approving") || status.jobId !== status.preview.jobId || status.proposalHash !== status.preview.proposalHash))
+  )
+    throw new Error("gis-map-inference.invalid-status");
   return status;
 }
 
@@ -1808,7 +1997,8 @@ export function parseGisMapInferenceEventPageV1(value: unknown): GisMapInference
   const proposalState = gisMapInferenceProposalState(object.proposalState);
   const proposalHash = object.proposalHash === undefined ? undefined : gisMapInferenceHex(object.proposalHash, 64);
   const preview = object.preview === undefined ? undefined : parseGisMapInferencePreviewV1(object.preview);
-  if (preview !== undefined && (state !== "succeeded" || proposalState !== "offered" || object.cancelRequested || object.stale || proposalHash === undefined || preview.jobId !== jobId || preview.proposalHash !== proposalHash)) throw new Error("gis-map-inference.invalid-preview-owner");
+  if (preview !== undefined && (state !== "succeeded" || proposalState !== "offered" || object.cancelRequested || object.stale || proposalHash === undefined || preview.jobId !== jobId || preview.proposalHash !== proposalHash))
+    throw new Error("gis-map-inference.invalid-preview-owner");
   return {
     schema: documentOpenText(object.schema),
     jobId,
@@ -1863,7 +2053,6 @@ export function gisMapInferenceCodeFromStatusV1(status: number): GisMapInference
   }
 }
 //#endregion 💡️InferencePort
-
 
 export interface ArtifactFrontier {
   documentId: string;

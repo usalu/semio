@@ -29,7 +29,7 @@ use crate::tool_from_capability;
 use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent, Tool};
 use crate::policy::{AgentPrincipal, PolicyEngine};
 use crate::workspace::remote::percent_encode;
-use crate::workspace::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry, HeadlessWorkspace, PROBE_SCHEMA};
+use crate::workspace::{HeadlessWorkspace, PROBE_SCHEMA};
 use semio_framework_async::OperationContext;
 use semio_framework_os_kernel::os_directory::DocumentScope;
 use semio_framework_os_kernel::{FromValue, ToValue};
@@ -91,17 +91,13 @@ fn declared_inferences_from_descriptor(descriptor: &semio_framework::PackageDesc
 /// registered plugins is still the same typed, retryable `PLUGIN_UNAVAILABLE`; any OTHER plugin's
 /// registry/descriptor lookup failing aborts the whole roster rather than silently dropping it.
 pub fn declared_inferences_for_workspace(workspace: &HeadlessWorkspace) -> Result<Vec<DeclaredInference>, GatewayError> {
-    let plugin_ids = workspace.catalog_plugin_ids();
-    if plugin_ids.is_empty() {
+    let descriptors = workspace.discovery_descriptors()?;
+    if descriptors.is_empty() {
         return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "no plugin-owned capability is registered in this workspace's catalog — nothing to read a declared inference roster from").retryable());
     }
-    let repo_root = find_repo_root()?;
-    let registry = load_plugin_registry(&repo_root)?;
     let mut roster = Vec::new();
-    for plugin_id in plugin_ids {
-        let entry = find_plugin_entry(&registry, &plugin_id)?;
-        let descriptor = load_package_descriptor(&entry.owner_root)?;
-        roster.extend(declared_inferences_from_descriptor(&descriptor));
+    for descriptor in &descriptors {
+        roster.extend(declared_inferences_from_descriptor(descriptor));
     }
     Ok(roster)
 }

@@ -8,7 +8,7 @@ pub const ARCHITECT_MODE_REPORT: &str = "report";
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: ARCHITECT_MODE_REPORT.into(), label: LocalizedLabel::native("Report", "Bericht"), icon_id: "bar-chart-3".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 //#endregion 🔖️Definition

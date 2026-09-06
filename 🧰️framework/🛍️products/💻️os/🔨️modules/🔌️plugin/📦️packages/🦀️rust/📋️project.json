@@ -3,12 +3,62 @@
   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
   "projectType": "library",
-  "tags": ["lang:rust", "role:framework", "family:os-plugin"],
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-plugin"
+  ],
   "targets": {
-    "artifact-admission-check": {"executor": "nx:run-commands", "cache": false, "options": {"command": "bun ./📜️script.ts artifact-admission-check", "cwd": "{projectRoot}", "forwardAllArgs": true}},
-    "check": {"executor": "nx:run-commands", "options": {"command": "bun 📜️script.ts check", "cwd": "{projectRoot}", "forwardAllArgs": true}},
-    "retained-child-close-check": {"executor": "nx:run-commands", "cache": false, "options": {"command": "bun ./📜️script.ts test --retained-child-close-exact", "cwd": "{projectRoot}"}},
-    "test": {"executor": "nx:run-commands", "options": {"command": "bun 📜️script.ts test", "cwd": "{projectRoot}", "forwardAllArgs": true}},
-    "test-codec-send-source": {"executor": "nx:run-commands", "cache": false, "options": {"command": "bun ./📜️script.ts test-codec-send-source", "cwd": "{projectRoot}", "forwardAllArgs": true}}
+    "artifact-admission-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-admission-check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "guest-lifecycle-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts guest-lifecycle-check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "retained-child-close-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test --retained-child-close-exact",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-codec-send-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-codec-send-source",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    }
   }
 }

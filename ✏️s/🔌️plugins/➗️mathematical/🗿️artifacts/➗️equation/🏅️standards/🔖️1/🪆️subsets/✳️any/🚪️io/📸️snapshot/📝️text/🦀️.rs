@@ -39,13 +39,13 @@ pub struct EquationEdgeDsl {
     wire: dsl::Wire,
 }
 
-pub async fn math_edge_to_dsl(edge: &EquationEdge, directed: bool) -> EquationEdgeDsl {
+pub fn math_edge_to_dsl(edge: &EquationEdge, directed: bool) -> EquationEdgeDsl {
     let from = dsl::WireNode { id: edge.source.clone(), kind: None, port: None };
     let to = dsl::WireNode { id: edge.target.clone(), kind: None, port: None };
     EquationEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), edge_label: dsl::WireEdgeLabel::default(), properties: dsl::DslValue::Object(Vec::new()) }) }
 }
 
-pub async fn math_edge_from_dsl(edge: EquationEdgeDsl) -> Result<EquationEdge, String> {
+pub fn math_edge_from_dsl(edge: EquationEdgeDsl) -> Result<EquationEdge, String> {
     let dsl::WireValue { from, edge: link, .. } = edge.wire.0;
     let (_directed, to) = link.ok_or_else(|| "graph edge wire literal must have a target".to_string())?;
     Ok(EquationEdge { id: edge.id, source: from.id, target: to.id })
@@ -94,7 +94,7 @@ impl EquationGraphDsl {
     }
 }
 
-pub async fn math_graph_to_dsl(graph: &EquationGraph) -> EquationGraphDsl {
+pub fn math_graph_to_dsl(graph: &EquationGraph) -> EquationGraphDsl {
     EquationGraphDsl {
         directed: graph.directed,
         nodes: graph.nodes.clone(),
@@ -104,7 +104,7 @@ pub async fn math_graph_to_dsl(graph: &EquationGraph) -> EquationGraphDsl {
     }
 }
 
-pub async fn math_graph_from_dsl(graph: EquationGraphDsl) -> Result<EquationGraph, String> {
+pub fn math_graph_from_dsl(graph: EquationGraphDsl) -> Result<EquationGraph, String> {
     Ok(EquationGraph { directed: graph.directed, nodes: graph.nodes, edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?, algorithm: graph.algorithm, algorithm_seed: graph.algorithm_seed })
 }
 
@@ -150,31 +150,31 @@ impl FromValue for EquationGraphDsl {
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`'s/`✒️writer`'s own `enc_child`/
 /// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened
 /// via `to_uri()`), never the child's own content.
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String {
+fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-async fn dec_str(s: &str) -> Result<String, String> {
+fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
-async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -187,17 +187,17 @@ async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 /// hex-encoded first-party JSON (`pack::json::to_json_string`/`from_json_str`, over `EquationExprSnapshot`'s
 /// own `ToValue`/`FromValue`), the same "real codec, minimal grammar" trade `child` handles above
 /// already make for their own opaque payload half (the `ArtifactRef` URI).
-async fn enc_equation(e: &EquationExprSnapshot) -> String {
+fn enc_equation(e: &EquationExprSnapshot) -> String {
     enc_str(&pack::json::to_json_string(e))
 }
-async fn dec_equation(s: &str) -> Result<EquationExprSnapshot, String> {
+fn dec_equation(s: &str) -> Result<EquationExprSnapshot, String> {
     pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 
-async fn print_equation_snapshot_body(s: &EquationSnapshot) -> String {
+fn print_equation_snapshot_body(s: &EquationSnapshot) -> String {
     format!("notation={}\nresults={}\ncomputed={}\nequation={}", enc_child(&s.notation), enc_child(&s.results), enc_child(&s.computed), enc_equation(&s.mathematical))
 }
-async fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> {
+fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> {
     let mut notation = None;
     let mut results = None;
     let mut computed = None;
@@ -230,17 +230,17 @@ async fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, St
 
 impl store::ArtifactDsl for EquationSnapshot {
     const EXTENSION: &'static str = "equation";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "mathematical.equation"
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_equation_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = print_equation_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -250,12 +250,12 @@ impl store::ArtifactDsl for EquationSnapshot {
 
 //#region 🔖️DslText
 /// 📖️ Parses `.equation` DSL text into a `EquationSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<EquationSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<EquationSnapshot, store::TextError> {
     <EquationSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `EquationSnapshot` back to `.equation` DSL text.
-pub async fn print_dsl(projection: &EquationSnapshot) -> String {
+pub fn print_dsl(projection: &EquationSnapshot) -> String {
     ArtifactDsl::print_dsl(projection)
 }
 //#endregion 🔖️DslText

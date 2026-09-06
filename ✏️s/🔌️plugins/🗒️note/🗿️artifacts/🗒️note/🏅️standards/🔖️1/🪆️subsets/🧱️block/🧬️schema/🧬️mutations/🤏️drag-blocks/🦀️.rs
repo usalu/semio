@@ -20,23 +20,23 @@ pub struct DragBlocks {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn drag_blocks(ids: Vec<String>, dx: f64, dy: f64) -> NoteMutation {
+pub fn drag_blocks(ids: Vec<String>, dx: f64, dy: f64) -> NoteMutation {
     NoteMutation::DragBlocks(DragBlocks { ids, dx, dy })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for DragBlocks {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "blocks", kind: "drag-blocks", record: "DraggedBlocks" };
 
-    async fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Drag {} blocks", self.ids.len())
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         self.ids.clone()
     }
 }
