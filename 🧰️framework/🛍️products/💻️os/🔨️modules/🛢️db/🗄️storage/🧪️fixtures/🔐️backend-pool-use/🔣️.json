@@ -5,6 +5,10 @@
     { "name": "task-derives-registered-pool", "registeredUses": 1, "expected": "registered-pool" },
     { "name": "dropped-facade-retains-use", "registeredUses": 1, "expected": "deferred-close" },
     { "name": "compaction-acquires-before-admission", "registeredUses": 2, "expected": "retained-rejection" },
-    { "name": "forged-kind-rejected-before-page-admission", "registeredUses": 1, "expected": "stale-generation" }
+    { "name": "forged-kind-rejected-before-page-admission", "registeredUses": 1, "expected": "stale-generation" },
+    { "name": "rollback-reserved-before-owner-transfer", "registeredUses": 0, "expected": "retained-rejection" },
+    { "name": "all-retirement-tiers-full-return-exact-executor", "registeredUses": 0, "expected": "exact-owner" },
+    { "name": "committed-rollback-retains-use-until-terminal", "registeredUses": 1, "expected": "deferred-close" },
+    { "name": "prepared-post-transfer-refusal-returns-close-owner", "registeredUses": 1, "expected": "retained-rejection" }
   ]
 }

@@ -42,6 +42,8 @@ pub mod air_exchange;
 pub mod air_system;
 #[path = "../../🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/🦀️.rs"]
 pub mod airflow_network;
+#[path = "../../🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/🦀️.rs"]
+pub mod bestest;
 #[path = "../../🔨️modules/⚡️simulation/⚙️engine/📅️calendar/🦀️.rs"]
 pub mod calendar;
 #[path = "../../🔨️modules/⚡️simulation/⚙️engine/🌀️coils/🦀️.rs"]
@@ -260,21 +262,276 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                                 pub mod text;
                                 #[path = "."]
-                                pub mod replace_model {
-                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🦀️.rs"]
+                                pub mod rename_model {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
-                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🔺️diff/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/↩️inverse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/📝️text/🦀️.rs"]
-                                    pub mod text;
-                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🧪️tests/🏛️degrades-an-empty-model-payload-to-a-no-op/🦀️.rs"]
-                                    mod tests_degrades_an_empty_model_payload_to_a_no_op;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/✅️renames-the-model/🦀️.rs"]
+                                    mod tests_renames_the_model;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/⛔️refuses-a-blank-name/🦀️.rs"]
+                                    mod tests_refuses_a_blank_name;
+                                }
+                                #[path = "."]
+                                pub mod change_model_version {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/✅️bumps-the-version/🦀️.rs"]
+                                    mod tests_bumps_the_version;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/⛔️refuses-a-blank-version/🦀️.rs"]
+                                    mod tests_refuses_a_blank_version;
+                                }
+                                #[path = "."]
+                                pub mod update_site {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/✅️relocates-to-denver/🦀️.rs"]
+                                    mod tests_relocates_to_denver;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/⛔️refuses-a-bad-latitude/🦀️.rs"]
+                                    mod tests_refuses_a_bad_latitude;
+                                }
+                                #[path = "."]
+                                pub mod update_ground_temperature {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/✅️sets-denver-ground/🦀️.rs"]
+                                    mod tests_sets_denver_ground;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/⛔️refuses-a-short-year/🦀️.rs"]
+                                    mod tests_refuses_a_short_year;
+                                }
+                                #[path = "."]
+                                pub mod update_run_period {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/✅️shortens-to-january/🦀️.rs"]
+                                    mod tests_shortens_to_january;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/⛔️refuses-month-13/🦀️.rs"]
+                                    mod tests_refuses_month_13;
+                                }
+                                #[path = "."]
+                                pub mod replace_airflow_network {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/✅️attaches-a-network/🦀️.rs"]
+                                    mod tests_attaches_a_network;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/⛔️refuses-unpaired-nodes/🦀️.rs"]
+                                    mod tests_refuses_unpaired_nodes;
+                                }
+                                #[path = "."]
+                                pub mod add_output_variable {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/✅️adds-zone-air-temp/🦀️.rs"]
+                                    mod tests_adds_zone_air_temp;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/⛔️refuses-a-duplicate/🦀️.rs"]
+                                    mod tests_refuses_a_duplicate;
+                                }
+                                #[path = "."]
+                                pub mod remove_output_variable {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/✅️drops-zone-air-temp/🦀️.rs"]
+                                    mod tests_drops_zone_air_temp;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                                    mod tests_refuses_an_absent_one;
+                                }
+                                #[path = "."]
+                                pub mod bind_weather_file {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/✅️binds-hannover-epw/🦀️.rs"]
+                                    mod tests_binds_hannover_epw;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/⛔️refuses-a-bad-uri/🦀️.rs"]
+                                    mod tests_refuses_a_bad_uri;
+                                }
+                                #[path = "."]
+                                pub mod unbind_weather_file {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/✅️unbinds-the-weather/🦀️.rs"]
+                                    mod tests_unbinds_the_weather;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/⛔️refuses-when-unbound/🦀️.rs"]
+                                    mod tests_refuses_when_unbound;
+                                }
+                                #[path = "."]
+                                pub mod connect_referenced_model {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/✅️connects-the-geometry/🦀️.rs"]
+                                    mod tests_connects_the_geometry;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/⛔️refuses-a-bad-uri/🦀️.rs"]
+                                    mod tests_refuses_a_bad_uri;
+                                }
+                                #[path = "."]
+                                pub mod disconnect_referenced_model {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/✅️disconnects-the-geometry/🦀️.rs"]
+                                    mod tests_disconnects_the_geometry;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/⛔️refuses-when-absent/🦀️.rs"]
+                                    mod tests_refuses_when_absent;
+                                }
+                                #[path = "."]
+                                pub mod rename_zone {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/✅️renames-zone-one/🦀️.rs"]
+                                    mod tests_renames_zone_one;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                                    mod tests_refuses_a_missing_zone;
+                                }
+                                #[path = "."]
+                                pub mod change_zone_volume {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/✅️resizes-zone-one/🦀️.rs"]
+                                    mod tests_resizes_zone_one;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/⛔️refuses-zero-volume/🦀️.rs"]
+                                    mod tests_refuses_zero_volume;
+                                }
+                                #[path = "."]
+                                pub mod change_zone_multiplier {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/✅️stacks-four-storeys/🦀️.rs"]
+                                    mod tests_stacks_four_storeys;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/⛔️refuses-zero-instances/🦀️.rs"]
+                                    mod tests_refuses_zero_instances;
+                                }
+                                #[path = "."]
+                                pub mod change_zone_conditioned {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/✅️frees-the-zone/🦀️.rs"]
+                                    mod tests_frees_the_zone;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                                    mod tests_refuses_a_missing_zone;
+                                }
+                                #[path = "."]
+                                pub mod change_zone_floor_area_participation {
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/✅️excludes-the-zone/🦀️.rs"]
+                                    mod tests_excludes_the_zone;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                                    mod tests_refuses_a_missing_zone;
                                 }
                             }
                         }
@@ -503,6 +760,132 @@ pub mod artifacts {
                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
                 mod tests;
             }
+            #[path = "."]
+            pub mod bestest_600 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_600ff {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600FF/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600FF/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_610 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-610/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-610/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_620 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-620/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-620/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_630 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-630/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-630/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_640 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-640/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-640/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_650 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-650/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-650/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_900 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-900/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-900/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_900ff {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-900FF/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-900FF/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_910 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-910/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-910/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_920 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-920/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-920/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_930 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-930/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-930/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_940 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-940/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-940/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+            #[path = "."]
+            pub mod bestest_950 {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-950/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-950/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
         }
     }
 }
@@ -591,6 +974,20 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::EnergyApps);
 #[path = "."]
 pub mod examples {
     pub use crate::artifacts::model::examples::demo as art_model_demo;
+    pub use crate::artifacts::model::examples::bestest_600 as art_model_bestest_600;
+    pub use crate::artifacts::model::examples::bestest_600ff as art_model_bestest_600ff;
+    pub use crate::artifacts::model::examples::bestest_610 as art_model_bestest_610;
+    pub use crate::artifacts::model::examples::bestest_620 as art_model_bestest_620;
+    pub use crate::artifacts::model::examples::bestest_630 as art_model_bestest_630;
+    pub use crate::artifacts::model::examples::bestest_640 as art_model_bestest_640;
+    pub use crate::artifacts::model::examples::bestest_650 as art_model_bestest_650;
+    pub use crate::artifacts::model::examples::bestest_900 as art_model_bestest_900;
+    pub use crate::artifacts::model::examples::bestest_900ff as art_model_bestest_900ff;
+    pub use crate::artifacts::model::examples::bestest_910 as art_model_bestest_910;
+    pub use crate::artifacts::model::examples::bestest_920 as art_model_bestest_920;
+    pub use crate::artifacts::model::examples::bestest_930 as art_model_bestest_930;
+    pub use crate::artifacts::model::examples::bestest_940 as art_model_bestest_940;
+    pub use crate::artifacts::model::examples::bestest_950 as art_model_bestest_950;
 }
 //#endregion 📚️Examples
 

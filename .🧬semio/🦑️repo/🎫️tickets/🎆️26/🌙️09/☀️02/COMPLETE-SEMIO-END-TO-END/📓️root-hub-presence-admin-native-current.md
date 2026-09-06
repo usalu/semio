@@ -1,5 +1,11 @@
 # Hub Presence and Administrator Recovery: Current Native Evidence
 
+Current accepted mount boundary: session61554 is GREEN17, exact evidence `🗑️generated/exact-cargo-laws-gfGodw/00`, executable SHA256 `fc3caa3df81b904c9cabdc6d6da02baff4997b2c7d5c9bbf85cb0fb6a6fa9157`. All registered laws were listed and executed exactly once, including ownership before first storage probe, release before terminal ACK, retained hard refusal, terminal-authority latch, wake-gated close and returned external pending-close cursor. This supersedes the older mount reds at this exact boundary, not the broader backend/inference/Hub journey.
+
+Writer29219/tnTE0b advanced to native execution: first9 laws passed, law10 `wal_writer_mounted_controller_fences_at_signal_and_wakes_outside_registry_without_tasks` failed at storage8353. WG identified its old eager-release assumption and changed the law to require Conflict before the first release poll, Closed after explicit first-poll signaling, and continuation for the originally pinned operation. Production dormant-release behavior was preserved. The writer36 retry remains separate acceptance work.
+
+Latest September6 continuation: mount94265/oanQof fails its first law with post-ACK Busy1; WG moves the artifact handoff use release before terminal ACK. Mount46637/bw5a5F then passes the first eleven laws and law12 fails a mandatory ordinary fixture submission on transient Contended; its probe now uses retained timer admission. Writer55699/q7gnQt stops on an in-flight typed registration change, and65318/WIlYF3 stops on prepared rollback helper imports/visibility before any native law. WG has repaired those exact module boundaries; writer29219 is active on the root-exclusive cache. Registered writer scope is now36 laws and mount scope17, including exact external pending-close cursor retention. Source AJV6/backend-pool-use8 is green, but no new complete native scope is accepted yet. Existing Hub presence/admin results below are not superseded by these build attempts.
+
 Session55262 is terminal with a mixed result. It ran the registered headless SQLite targets sequentially on the root-owned warm target.
 
 - Presence normalization/reconnect/expiry/roster/restart: GREEN6 in `🗑️generated/exact-cargo-laws-kOFmLK/00`, executable SHA-256 `a30f3ccc0252d28767998617829ea3eb90635ff48d518f6acaa441a799626dbd`. This is actual Hub binary/socket execution, including authenticated identity overwrite and no-refresh rejections, stale-lease reconnect rejection, server-clocked expiry, roster bounds and restart-empty/member-only presence.
@@ -38,8 +44,39 @@ The backend registry/use and atomic pool-affinity migration is source GREEN with
 
 ## September6 Continuation
 
+Latest journal qualification is64870 GREEN3, `exact-cargo-laws-ZJRrWu/00`,
+executable SHA256
+`0349c09335867ba4d64bb04258c7483bdafc674a302616822c6877a789bd64a5`.
+It proves exact Fsync decision Event plus a separate committed ordinary command
+produce two physical replay transactions and one opaque decision witness,
+pre-handoff cancellation is absent, and hash rejection precedes mailbox handoff.
+The retained shutdown helper now drives its exact terminal cursor. This is not
+three-Store recovery or approval/publication. The immediately preceding29484/
+LxSP1R build RED was the borrowed Arc consumed by run_turn, now cloned explicitly.
+
+New source boundary after the earlier GREEN17 mount: typed storage-open failures
+retain incoming/registered backend cleanup; external terminal `resume` returns
+its exact cursor on refusal; a preadmitted authority retirement registry owns
+bare-authority Drop. The registered mount suite is now19, native-pending.
+
+Writer98692/Be9XY4 reaches the cross-key wake law's old eager-release expectation.
+6243/eBCsE9 passes its first11 laws and finds that the first release poll already
+returns the intended retained missing-controller rejection, not Pending. WG now
+captures that exact returned rejection at first poll before checking B's wake.
+
+Journal93700/bUcnaf's added control transaction was buffered Memory durability;
+explicit Fsync preserves the intended two physical transactions/one witness.
+54176/7gwJw6 then exposes a test shutdown helper that never drove the retained
+terminal job.63610/6indWO stops at compile during typed constructor/retirement
+edits (FS import and authority literal), both since repaired by the owner lane.
+These are executed REDs, not new journal or composed-admin acceptance.
+
 The preceding logical turn made substantive source/runtime progress; this is continued implementation, not external waiting or a blocked goal. After an interrupted turn,82097 was no longer attached, but its retainedRIqL0s receipt proves compilation/discovery and the first eight laws passed, then law9 failed at engine13074: the temporary unlock fault did not park the retained mount owner. BinarySHA256 is `f0a58d83f9579b4d05e9e8ac20056efd349a9100c6cfbf6b312c2bc5576d642e`. No terminal was inferred from absence of its process.
 
 The first repair separates ordinary new/join callers' wake-only requests from controlled shutdown cleanup-resume requests, consuming resume only for parked work. Root53820/uv5IaM still reproduces the same law9 failure after eight passes. That is not mount14 acceptance; execution and Terra audit are tracing the remaining deferred release/wake behavior without weakening the assertion. Current coherent DB/storage source is independently dispatched through writer35 while mount diagnosis continues. The older shutdown3 receipt remains scoped to its earlier bytes.
 
 The Store three-edit audit was read fully. Its new verified projection is read-only canonical decoding, not committed transaction authority or a live three-Store seal. Hub approval remains unavailable until a DB-owned committed single-Event witness and live `recover_store_owned` publication/recovery complete; event bytes, a caller receipt, or the parent edit alone cannot authorize partial Map application. See `📓️terra-store-three-edit-wal-witness-current-audit.md`.
+
+The concrete writer28565/yDnbws failure is premature release activation before an `ArtifactWalOpenRejected` reaches its caller. The corrected writer release is dormant until first cleanup poll; Drop still signals nonblocking cleanup. Mount15475/Z35ppx then exposes a retained pool use from an obsolete strong queued ArtifactRunner job. Normal queued jobs now carry weak ownership; hard-refusal terminal Jobs retain the exact runner strongly. The close callback is invoked outside its mutex. Terra's follow-up identifies a remaining terminal-authority race between retry/wake and taking the terminal job; WG owns its latch correction and the separate registration rollback reservation P0.
+
+Mount26475/GaiJEI advances through the earlier ownership laws, then rejects a coalescing fixture's one-shot pool submission. That fixture now submits the same ordinary gate-release job through the real pool's retained scheduled retry for transient contention, not inline execution or a sleep. Mount97224/0Rcb2U proves the first eleven exact laws, including parked cleanup, shared-pool coalescing and racing controlled resume. Law12 fails because its early-shutdown expectation is still `Busy { retained_uses: 1 }` while the central backend guard now yields2. This expectation must be reconciled with the exact lifecycle ledger; no mount14 pass is inferred. The root cache is idle after this terminal result, pending coherent owner-lane source.

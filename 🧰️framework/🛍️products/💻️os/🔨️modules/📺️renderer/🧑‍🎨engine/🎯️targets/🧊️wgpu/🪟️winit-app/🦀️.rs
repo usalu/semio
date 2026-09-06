@@ -26,7 +26,7 @@ use crate::AppInteractionState;
 use crate::RuntimeMailbox;
 use std::sync::Arc;
 use ui_host::{should_request_redraw, RedrawOutcome, WindowDelegate, WindowMetrics};
-use ui_render::{CursorRequest, DispatchEvent, EventModifiers, InvalidationReason, PhysicalSize, PointerButton, PointerInfo};
+use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PhysicalSize, PointerButton, PointerInfo};
 #[cfg(target_arch = "wasm32")]
 use ui_render::{PointerId, PointerKind};
 use winit::application::ApplicationHandler;

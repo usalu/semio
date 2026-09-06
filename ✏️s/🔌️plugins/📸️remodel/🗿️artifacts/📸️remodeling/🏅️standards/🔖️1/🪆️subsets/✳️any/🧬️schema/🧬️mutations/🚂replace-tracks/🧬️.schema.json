@@ -10,13 +10,13 @@
     "tracks": {
       "type": "array",
       "items": {
-        "title": "MotionTrackSummary",
         "type": "object",
+        "title": "MotionTrackSummary",
         "additionalProperties": false,
         "required": [
-          "class",
           "id",
           "length",
+          "class",
           "meanSpeedMS"
         ],
         "properties": {
@@ -25,17 +25,20 @@
           },
           "length": {
             "type": "integer",
+            "format": "uint32",
             "minimum": 0
           },
           "class": {
             "type": "string",
+            "title": "TrackClass",
             "enum": [
               "static",
               "moving"
             ]
           },
           "meanSpeedMS": {
-            "type": "number"
+            "type": "number",
+            "format": "float"
           }
         }
       }

@@ -19,5 +19,14 @@ export interface EnergyModelSetZoneCell {
   value: string;
 }
 
+/** 📊️ The window's authored verbs beside the generic `set-cell` kit action — the typed twin of
+ * `🦀️.rs`'s `zone_actions()`. A zone that is still referenced by a space, surface or thermostat is
+ * refused with `mutation.target-in-use` rather than cascaded. */
+export const ENERGY_MODEL_ZONE_ACTIONS = [
+  { id: "create-zone", label: { en: "Create zone", de: "Zone anlegen" } },
+  { id: "rename-zone", label: { en: "Rename zone", de: "Zone umbenennen" } },
+  { id: "delete-zone", label: { en: "Delete zone", de: "Zone löschen" } },
+] as const;
+
 export const ENERGY_MODEL_ZONES_WINDOW_KIND_ID = "framework.window.table" as const;
 export const ENERGY_MODEL_ZONES_BODY_KEY = "framework.window.table" as const;

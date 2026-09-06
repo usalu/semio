@@ -138,10 +138,14 @@ pub(crate) fn wal_read_canonical_varint(mut next: impl FnMut() -> Result<u8, DbE
     let mut value = 0u64;
     for shift in (0..70).step_by(7) {
         let byte = next()?;
-        if shift == 63 && byte > 1 { return Err(DbError::Corrupt("wal retained varint exceeds u64".to_string())); }
+        if shift == 63 && byte > 1 {
+            return Err(DbError::Corrupt("wal retained varint exceeds u64".to_string()));
+        }
         value |= u64::from(byte & 0x7f) << shift;
         if byte & 0x80 == 0 {
-            if shift != 0 && byte == 0 { return Err(DbError::Corrupt("wal retained varint is noncanonical".to_string())); }
+            if shift != 0 && byte == 0 {
+                return Err(DbError::Corrupt("wal retained varint is noncanonical".to_string()));
+            }
             return Ok(value);
         }
     }
@@ -347,7 +351,9 @@ impl<'bytes> WalBytesCursor<'bytes> {
     pub fn varint(&mut self, control: &mut WalCursorControl) -> Result<u64, DbError> {
         let start = self.offset;
         let result = wal_read_canonical_varint(|| self.byte(control));
-        if result.is_err() { self.offset = start; }
+        if result.is_err() {
+            self.offset = start;
+        }
         result
     }
 
@@ -921,7 +927,9 @@ impl SharedBuf {
             let mut written = 0;
             while written < read {
                 let count = output.write_fragment(&fragment[written..read])?;
-                if count == 0 { return Err(DbError::LimitExceeded("WAL retained suffix writer")); }
+                if count == 0 {
+                    return Err(DbError::LimitExceeded("WAL retained suffix writer"));
+                }
                 written += count;
                 semio_framework_async::yield_once().await;
             }
@@ -1022,21 +1030,36 @@ pub(crate) trait WalImmutableByteSource: Sync {
 }
 
 impl<S: WalImmutableByteSource + ?Sized> WalImmutableByteSource for &S {
-    fn byte_len(&self) -> usize { (**self).byte_len() }
-    fn fragment_at(&self, offset: usize, limit: usize) -> Result<&[u8], DbError> { (**self).fragment_at(offset, limit) }
+    fn byte_len(&self) -> usize {
+        (**self).byte_len()
+    }
+    fn fragment_at(&self, offset: usize, limit: usize) -> Result<&[u8], DbError> {
+        (**self).fragment_at(offset, limit)
+    }
 }
 
 impl WalImmutableByteSource for db_storage::DbIoPages {
-    fn byte_len(&self) -> usize { self.len() }
+    fn byte_len(&self) -> usize {
+        self.len()
+    }
 
     fn fragment_at(&self, offset: usize, limit: usize) -> Result<&[u8], DbError> {
-        if offset >= limit || limit > self.len() { return Err(DbError::Corrupt("wal immutable source range".to_string())); }
+        if offset >= limit || limit > self.len() {
+            return Err(DbError::Corrupt("wal immutable source range".to_string()));
+        }
         let first = self.page(0).ok_or_else(|| DbError::Corrupt("wal immutable source lost first page".to_string()))?.len();
-        let (page, local) = if offset < first { (0, offset) } else { let rest = offset - first; (1 + rest / db_storage::DB_IO_PAGE_BYTES, rest % db_storage::DB_IO_PAGE_BYTES) };
+        let (page, local) = if offset < first {
+            (0, offset)
+        } else {
+            let rest = offset - first;
+            (1 + rest / db_storage::DB_IO_PAGE_BYTES, rest % db_storage::DB_IO_PAGE_BYTES)
+        };
         let bytes = self.page(u8::try_from(page).map_err(|_| DbError::LimitExceeded("wal immutable source page"))?).ok_or_else(|| DbError::Corrupt("wal immutable source lost page".to_string()))?;
         let remaining = bytes.len().checked_sub(local).ok_or_else(|| DbError::Corrupt("wal immutable source offset".to_string()))?;
         let count = remaining.min(limit - offset);
-        if count == 0 { return Err(DbError::Corrupt("wal immutable source empty fragment".to_string())); }
+        if count == 0 {
+            return Err(DbError::Corrupt("wal immutable source empty fragment".to_string()));
+        }
         Ok(&bytes[local..local + count])
     }
 }
@@ -1068,7 +1091,9 @@ impl<'pages> WalPageReader<'pages> {
     fn varint(&mut self) -> Result<u64, DbError> {
         let start = self.position;
         let result = wal_read_canonical_varint(|| self.byte());
-        if result.is_err() { self.position = start; }
+        if result.is_err() {
+            self.position = start;
+        }
         result
     }
 
@@ -1107,7 +1132,6 @@ impl<'pages> WalPageReader<'pages> {
         text.close_step();
         Ok(output)
     }
-
 }
 
 fn wal_crc_range(pages: &db_storage::DbIoPages, start: usize, len: usize, control: &mut WalCursorControl) -> Result<u32, DbError> {
@@ -1210,7 +1234,9 @@ impl WalRetainedRecordDecoder {
                 if self.frame.kind == WAL_INDEX_CKPT {
                     let count = reader.varint()?;
                     check_len(count, 4_096, "wal retained checkpoint")?;
-                    if reader.position.checked_add(count as usize * 8) != Some(reader.limit) { return Err(DbError::Corrupt("wal checkpoint payload length differs".to_string())); }
+                    if reader.position.checked_add(count as usize * 8) != Some(reader.limit) {
+                        return Err(DbError::Corrupt("wal checkpoint payload length differs".to_string()));
+                    }
                     self.run_ids = Some(db_storage::DbIoU64List::new());
                     self.state = WalRetainedDecodeState::Index { position: reader.position, remaining: count as usize };
                     return Ok(None);
@@ -1221,18 +1247,26 @@ impl WalRetainedRecordDecoder {
                         0 => {
                             let len = reader.varint()?;
                             check_len(len, MAX_FIELD_BYTES, "wal retained payload")?;
-                            if reader.position.checked_add(len as usize) != Some(reader.limit) { return Err(DbError::Corrupt("wal inline payload length differs".to_string())); }
+                            if reader.position.checked_add(len as usize) != Some(reader.limit) {
+                                return Err(DbError::Corrupt("wal inline payload length differs".to_string()));
+                            }
                             true
                         }
                         1 => false,
                         _ => return Err(DbError::Corrupt("wal payload tag".to_string())),
                     }
-                } else { false };
+                } else {
+                    false
+                };
                 if opaque || inline {
                     self.state = WalRetainedDecodeState::Bytes { position: reader.position, end: reader.limit };
                     match db_storage::DbIoPageWriter::try_reserve_for_operation(pages.operation(), (reader.limit - reader.position).div_ceil(db_storage::DB_IO_PAGE_BYTES)) {
                         Ok(writer) => self.writer = Some(writer),
-                        Err(rejected) => { let (error, writer) = rejected.into_parts(); self.writer = writer; return Err(error); }
+                        Err(rejected) => {
+                            let (error, writer) = rejected.into_parts();
+                            self.writer = writer;
+                            return Err(error);
+                        }
                     }
                     return Ok(None);
                 }
@@ -1247,7 +1281,9 @@ impl WalRetainedRecordDecoder {
                     let reader = WalPageReader::new(pages, *position, *end)?;
                     let fragment = reader.fragment()?;
                     let written = writer.write_fragment(fragment)?;
-                    if written == 0 { return Err(DbError::LimitExceeded("wal retained decoder made no progress")); }
+                    if written == 0 {
+                        return Err(DbError::LimitExceeded("wal retained decoder made no progress"));
+                    }
                     *position += written;
                     return Ok(None);
                 }
@@ -1256,9 +1292,14 @@ impl WalRetainedRecordDecoder {
                 self.state = WalRetainedDecodeState::Done;
                 let bytes = WalBytes { pages };
                 Ok(Some(match self.frame.kind {
-                    WAL_COMMAND => WalRecord::Command(bytes), WAL_PAYLOAD => WalRecord::Payload(WalPayloadRef::Inline(bytes)),
-                    WAL_DIFF => WalRecord::Diff(bytes), WAL_INVERSE => WalRecord::Inverse(bytes), WAL_EVENT => WalRecord::Event(bytes),
-                    WAL_OUTBOX => WalRecord::Outbox(bytes), WAL_MIGRATION => WalRecord::Migration(bytes), _ => unreachable!(),
+                    WAL_COMMAND => WalRecord::Command(bytes),
+                    WAL_PAYLOAD => WalRecord::Payload(WalPayloadRef::Inline(bytes)),
+                    WAL_DIFF => WalRecord::Diff(bytes),
+                    WAL_INVERSE => WalRecord::Inverse(bytes),
+                    WAL_EVENT => WalRecord::Event(bytes),
+                    WAL_OUTBOX => WalRecord::Outbox(bytes),
+                    WAL_MIGRATION => WalRecord::Migration(bytes),
+                    _ => unreachable!(),
                 }))
             }
             WalRetainedDecodeState::Index { position, remaining } => {
@@ -1279,9 +1320,17 @@ impl WalRetainedRecordDecoder {
     }
 
     fn close_owner_step(&mut self) -> Result<bool, DbError> {
-        if let Some(writer) = self.writer.as_mut() { if writer.close_step()?.is_some() { return Ok(true); } }
+        if let Some(writer) = self.writer.as_mut() {
+            if writer.close_step()?.is_some() {
+                return Ok(true);
+            }
+        }
         self.writer = None;
-        if let Some(run_ids) = self.run_ids.as_mut() { if run_ids.close_step() { return Ok(true); } }
+        if let Some(run_ids) = self.run_ids.as_mut() {
+            if run_ids.close_step() {
+                return Ok(true);
+            }
+        }
         self.run_ids = None;
         self.state = WalRetainedDecodeState::Done;
         Ok(false)
@@ -1292,44 +1341,48 @@ impl WalRetainedRecordDecoder {
     }
 }
 
-enum WalVerifiedFrameStep { Frame(WalRecordFrame), PhysicalCommit, Done }
+enum WalVerifiedFrameStep {
+    Frame(WalRecordFrame),
+    PhysicalCommit,
+    Done,
+}
 
 /// 🧷️ Reads one span only after `WalSegmentChain` verified these exact immutable pages in full.
 fn wal_next_verified_page_frame(pages: &dyn WalImmutableByteSource, offset: &mut usize, trusted_len: usize, control: &mut WalCursorControl) -> Result<WalVerifiedFrameStep, DbError> {
-        control.grant()?;
-        if *offset == trusted_len {
-            return Ok(WalVerifiedFrameStep::Done);
-        }
-        let frame_start = *offset;
-        let mut reader = WalPageReader::new(pages, frame_start, trusted_len)?;
-        let body_len = reader.varint()?;
-        check_len(body_len, protocol::ProtocolLimits::default().max_frame_len, "wal retained frame")?;
-        let body_start = reader.position;
-        let body_end = body_start.checked_add(body_len as usize).ok_or(DbError::LimitExceeded("wal frame body"))?;
-        let frame_end = body_end.checked_add(8).ok_or(DbError::LimitExceeded("wal frame trailer"))?;
-        if body_len < 2 || frame_end > trusted_len {
-            return Err(DbError::Corrupt("wal frame exceeds trusted segment".to_string()));
-        }
-        let kind = reader.byte()?;
-        let flags = reader.byte()?;
-        if flags != protocol::wire::FRAME_FLAG_CRITICAL {
-            return Err(DbError::Corrupt("db_wal requires exact critical frame flags".to_string()));
-        }
-        let payload_start = reader.position;
-        let mut trailer = WalPageReader::new(pages, body_end, frame_end)?;
-        let _verified_crc = trailer.array::<4>()?;
-        let back_len = u32::from_le_bytes(trailer.array()?) as usize;
-        if back_len != frame_end - frame_start {
-            return Err(DbError::Corrupt("wal frame retained back length mismatch".to_string()));
-        }
-        if is_wal_record_kind(kind) {
-            return Ok(WalVerifiedFrameStep::Frame(WalRecordFrame { kind, payload_start, payload_end: body_end, frame_end }));
-        }
-        if kind != protocol::wire::REC_COMMIT {
-            return Err(DbError::Corrupt(format!("unexpected non-wal, non-commit frame kind {kind:#x} in a db_wal segment")));
-        }
-        *offset = frame_end;
-        Ok(WalVerifiedFrameStep::PhysicalCommit)
+    control.grant()?;
+    if *offset == trusted_len {
+        return Ok(WalVerifiedFrameStep::Done);
+    }
+    let frame_start = *offset;
+    let mut reader = WalPageReader::new(pages, frame_start, trusted_len)?;
+    let body_len = reader.varint()?;
+    check_len(body_len, protocol::ProtocolLimits::default().max_frame_len, "wal retained frame")?;
+    let body_start = reader.position;
+    let body_end = body_start.checked_add(body_len as usize).ok_or(DbError::LimitExceeded("wal frame body"))?;
+    let frame_end = body_end.checked_add(8).ok_or(DbError::LimitExceeded("wal frame trailer"))?;
+    if body_len < 2 || frame_end > trusted_len {
+        return Err(DbError::Corrupt("wal frame exceeds trusted segment".to_string()));
+    }
+    let kind = reader.byte()?;
+    let flags = reader.byte()?;
+    if flags != protocol::wire::FRAME_FLAG_CRITICAL {
+        return Err(DbError::Corrupt("db_wal requires exact critical frame flags".to_string()));
+    }
+    let payload_start = reader.position;
+    let mut trailer = WalPageReader::new(pages, body_end, frame_end)?;
+    let _verified_crc = trailer.array::<4>()?;
+    let back_len = u32::from_le_bytes(trailer.array()?) as usize;
+    if back_len != frame_end - frame_start {
+        return Err(DbError::Corrupt("wal frame retained back length mismatch".to_string()));
+    }
+    if is_wal_record_kind(kind) {
+        return Ok(WalVerifiedFrameStep::Frame(WalRecordFrame { kind, payload_start, payload_end: body_end, frame_end }));
+    }
+    if kind != protocol::wire::REC_COMMIT {
+        return Err(DbError::Corrupt(format!("unexpected non-wal, non-commit frame kind {kind:#x} in a db_wal segment")));
+    }
+    *offset = frame_end;
+    Ok(WalVerifiedFrameStep::PhysicalCommit)
 }
 
 pub(crate) struct WalTransactionGate {
@@ -1358,18 +1411,26 @@ impl WalTransactionGate {
     }
 
     fn push(&mut self, pages: &dyn WalImmutableByteSource, frame: WalRecordFrame) -> Result<bool, DbError> {
-        if self.ready.is_some() { return Err(DbError::Corrupt("wal committed transaction remains borrowed".to_string())); }
+        if self.ready.is_some() {
+            return Err(DbError::Corrupt("wal committed transaction remains borrowed".to_string()));
+        }
         if frame.kind == WAL_SEGMENT_HEADER {
-            if self.header_seen || self.transaction_id.is_some() { return Err(DbError::Corrupt("wal logical segment header repeated".to_string())); }
+            if self.header_seen || self.transaction_id.is_some() {
+                return Err(DbError::Corrupt("wal logical segment header repeated".to_string()));
+            }
             self.header_seen = true;
             return Ok(false);
         }
-        if !self.header_seen { return Err(DbError::Corrupt("wal logical segment header missing".to_string())); }
+        if !self.header_seen {
+            return Err(DbError::Corrupt("wal logical segment header missing".to_string()));
+        }
         let mut reader = WalPageReader::new(pages, frame.payload_start, frame.payload_end)?;
         match frame.kind {
             WAL_TX_BEGIN => {
                 let tx_id = u64::from_le_bytes(reader.array()?);
-                if reader.position != reader.limit || self.transaction_id.is_some() || tx_id < self.next_tx_id || (self.transaction_seen && tx_id != self.next_tx_id) { return Err(DbError::Corrupt("wal transaction begin is nested or out of sequence".to_string())); }
+                if reader.position != reader.limit || self.transaction_id.is_some() || tx_id < self.next_tx_id || (self.transaction_seen && tx_id != self.next_tx_id) {
+                    return Err(DbError::Corrupt("wal transaction begin is nested or out of sequence".to_string()));
+                }
                 self.next_tx_id = tx_id.checked_add(1).ok_or(DbError::LimitExceeded("wal transaction sequence"))?;
                 self.transaction_id = Some(tx_id);
                 self.transaction_seen = true;
@@ -1382,10 +1443,18 @@ impl WalTransactionGate {
                     return Err(DbError::Corrupt("wal logical terminal id or count differs".to_string()));
                 }
                 self.transaction_id = None;
-                if count.is_some() { self.ready = Some(tx_id); Ok(true) } else { self.clear_frames(); Ok(false) }
+                if count.is_some() {
+                    self.ready = Some(tx_id);
+                    Ok(true)
+                } else {
+                    self.clear_frames();
+                    Ok(false)
+                }
             }
             WAL_COMMAND..=WAL_MIGRATION => {
-                if self.transaction_id.is_none() { return Err(DbError::Corrupt("wal body outside a transaction".to_string())); }
+                if self.transaction_id.is_none() {
+                    return Err(DbError::Corrupt("wal body outside a transaction".to_string()));
+                }
                 let slot = self.frames.get_mut(self.frames_len as usize).ok_or(DbError::LimitExceeded("wal transaction records"))?;
                 *slot = Some(frame);
                 self.frames_len += 1;
@@ -1402,8 +1471,12 @@ impl WalTransactionGate {
     }
 
     fn finish_segment(&self, writable_highest: bool) -> Result<Option<u64>, DbError> {
-        if !self.header_seen || self.ready.is_some() { return Err(DbError::Corrupt("wal logical segment is not drained".to_string())); }
-        if self.transaction_id.is_some() && !writable_highest { return Err(DbError::Corrupt("wal logical transaction crosses a sealed boundary".to_string())); }
+        if !self.header_seen || self.ready.is_some() {
+            return Err(DbError::Corrupt("wal logical segment is not drained".to_string()));
+        }
+        if self.transaction_id.is_some() && !writable_highest {
+            return Err(DbError::Corrupt("wal logical transaction crosses a sealed boundary".to_string()));
+        }
         Ok(self.transaction_id)
     }
 
@@ -1452,7 +1525,11 @@ struct WalSegmentChain {
 }
 
 #[derive(Clone, Copy)]
-pub(crate) enum WalPriorChainTip { Genesis, RetainedBoundary, Verified([u8; 32]) }
+pub(crate) enum WalPriorChainTip {
+    Genesis,
+    RetainedBoundary,
+    Verified([u8; 32]),
+}
 
 impl WalSegmentChain {
     fn new(pages: &dyn WalImmutableByteSource, segment: u64, previous_tip: WalPriorChainTip) -> Result<Self, DbError> {
@@ -1471,18 +1548,30 @@ impl WalSegmentChain {
             return Err(DbError::Corrupt("wal segment header is missing or repeated".to_string()));
         }
         let mut reader = WalPageReader::new(pages, frame.body + 2, frame.end)?;
-        if reader.varint()? != document.0.len() as u64 { return Err(DbError::Corrupt("wal segment document differs".to_string())); }
-        for byte in document.0.as_bytes() {
-            if reader.byte()? != *byte { return Err(DbError::Corrupt("wal segment document differs".to_string())); }
+        if reader.varint()? != document.0.len() as u64 {
+            return Err(DbError::Corrupt("wal segment document differs".to_string()));
         }
-        if u64::from_le_bytes(reader.array()?) != self.segment { return Err(DbError::Corrupt("wal segment index differs".to_string())); }
-        let previous = match reader.byte()? { 0 => None, 1 => Some(reader.array::<32>()?), _ => return Err(DbError::Corrupt("wal previous tip marker differs".to_string())) };
+        for byte in document.0.as_bytes() {
+            if reader.byte()? != *byte {
+                return Err(DbError::Corrupt("wal segment document differs".to_string()));
+            }
+        }
+        if u64::from_le_bytes(reader.array()?) != self.segment {
+            return Err(DbError::Corrupt("wal segment index differs".to_string()));
+        }
+        let previous = match reader.byte()? {
+            0 => None,
+            1 => Some(reader.array::<32>()?),
+            _ => return Err(DbError::Corrupt("wal previous tip marker differs".to_string())),
+        };
         let matches = match self.previous_tip {
             WalPriorChainTip::Genesis => previous.is_none(),
             WalPriorChainTip::RetainedBoundary => previous.is_some(),
             WalPriorChainTip::Verified(tip) => previous == Some(tip),
         };
-        if !matches || reader.position != frame.end { return Err(DbError::Corrupt("wal previous committed chain tip differs".to_string())); }
+        if !matches || reader.position != frame.end {
+            return Err(DbError::Corrupt("wal previous committed chain tip differs".to_string()));
+        }
         self.header_seen = true;
         Ok(())
     }
@@ -1491,8 +1580,7 @@ impl WalSegmentChain {
         control.grant()?;
         if self.frame.is_none() {
             if self.offset == trusted_len {
-                if !self.header_seen || self.tip.is_none() || self.record_count != 0 || self.records_len != 0
-                    || self.last_commit_offset.checked_add(protocol::format::COMMIT_FRAME_LEN) != Some(trusted_len as u64) {
+                if !self.header_seen || self.tip.is_none() || self.record_count != 0 || self.records_len != 0 || self.last_commit_offset.checked_add(protocol::format::COMMIT_FRAME_LEN) != Some(trusted_len as u64) {
                     return Err(DbError::Corrupt("wal segment ends outside a verified commit".to_string()));
                 }
                 return Ok(true);
@@ -1503,23 +1591,33 @@ impl WalSegmentChain {
             let body = reader.position;
             let end = body.checked_add(usize::try_from(length).map_err(|_| DbError::LimitExceeded("wal chain frame length"))?).ok_or(DbError::LimitExceeded("wal chain frame end"))?;
             let next = end.checked_add(8).ok_or(DbError::LimitExceeded("wal chain trailer"))?;
-            if length < 2 || next > trusted_len { return Err(DbError::Corrupt("wal chain frame exceeds committed bytes".to_string())); }
+            if length < 2 || next > trusted_len {
+                return Err(DbError::Corrupt("wal chain frame exceeds committed bytes".to_string()));
+            }
             let kind = reader.byte()?;
             let flags = reader.byte()?;
-            if flags != protocol::wire::FRAME_FLAG_CRITICAL { return Err(DbError::Corrupt("wal chain frame flags differ".to_string())); }
+            if flags != protocol::wire::FRAME_FLAG_CRITICAL {
+                return Err(DbError::Corrupt("wal chain frame flags differ".to_string()));
+            }
             self.frame = Some(WalChainFrame { start: self.offset, body, end, next, position: self.offset, kind, digest: semio_framework_hash::Hasher::new(), crc: protocol::codec::Crc32cCursor::new() });
         }
         let frame = self.frame.as_mut().ok_or_else(|| DbError::Internal("wal chain frame disappeared".to_string()))?;
         let fragment = pages.fragment_at(frame.position, frame.next)?;
         let count = fragment.len().min(db_storage::DB_IO_PAGE_BYTES);
-        if count == 0 { return Err(DbError::Corrupt("wal chain made no byte progress".to_string())); }
+        if count == 0 {
+            return Err(DbError::Corrupt("wal chain made no byte progress".to_string()));
+        }
         let bytes = &fragment[..count];
         frame.digest.update(bytes);
         let crc_start = frame.position.max(frame.body);
         let crc_end = (frame.position + count).min(frame.end);
-        if crc_start < crc_end { frame.crc.update_page(&bytes[crc_start - frame.position..crc_end - frame.position]); }
+        if crc_start < crc_end {
+            frame.crc.update_page(&bytes[crc_start - frame.position..crc_end - frame.position]);
+        }
         frame.position += count;
-        if frame.position != frame.next { return Ok(false); }
+        if frame.position != frame.next {
+            return Ok(false);
+        }
         let frame = self.frame.take().ok_or_else(|| DbError::Internal("wal chain frame disappeared".to_string()))?;
         let mut trailer = WalPageReader::new(pages, frame.end, frame.next)?;
         if u32::from_le_bytes(trailer.array()?) != frame.crc.finish() || u32::from_le_bytes(trailer.array()?) as usize != frame.next - frame.start {
@@ -1531,18 +1629,29 @@ impl WalSegmentChain {
             }
             let payload = WalPageReader::new(pages, frame.body + 2, frame.end)?.array::<{ protocol::format::COMMIT_PAYLOAD_LEN }>()?;
             let commit = protocol::format::parse_commit_payload(&payload).map_err(protocol_err)?;
-            if commit.commit_seq != self.next_commit || commit.prev_commit_offset != self.last_commit_offset || commit.record_count != self.record_count
-                || commit.records_len != self.records_len || payload[28..32] != [0; 4] || commit.chain_hash != *self.pending.finalize().as_bytes() {
+            if commit.commit_seq != self.next_commit
+                || commit.prev_commit_offset != self.last_commit_offset
+                || commit.record_count != self.record_count
+                || commit.records_len != self.records_len
+                || payload[28..32] != [0; 4]
+                || commit.chain_hash != *self.pending.finalize().as_bytes()
+            {
                 return Err(DbError::Corrupt("wal committed hash chain differs".to_string()));
             }
             self.tip = Some(commit.chain_hash);
-            self.pending = semio_framework_hash::Hasher::new(); self.pending.update(&commit.chain_hash);
-            self.record_count = 0; self.records_len = 0;
+            self.pending = semio_framework_hash::Hasher::new();
+            self.pending.update(&commit.chain_hash);
+            self.record_count = 0;
+            self.records_len = 0;
             self.last_commit_offset = frame.start as u64;
             self.next_commit = self.next_commit.checked_add(1).ok_or(DbError::LimitExceeded("wal commit sequence"))?;
         } else {
-            if !is_wal_record_kind(frame.kind) { return Err(DbError::Corrupt("wal chain contains an unknown record".to_string())); }
-            if !self.header_seen || frame.kind == WAL_SEGMENT_HEADER { self.check_segment_header(pages, &frame, document)?; }
+            if !is_wal_record_kind(frame.kind) {
+                return Err(DbError::Corrupt("wal chain contains an unknown record".to_string()));
+            }
+            if !self.header_seen || frame.kind == WAL_SEGMENT_HEADER {
+                self.check_segment_header(pages, &frame, document)?;
+            }
             self.pending.update(frame.digest.finalize().as_bytes());
             self.record_count = self.record_count.checked_add(1).ok_or(DbError::LimitExceeded("wal commit record count"))?;
             self.records_len = self.records_len.checked_add((frame.next - frame.start) as u64).ok_or(DbError::LimitExceeded("wal commit record bytes"))?;
@@ -1552,7 +1661,11 @@ impl WalSegmentChain {
     }
 }
 
-pub(crate) enum WalAuthenticatedStep { Yield, Committed, Done }
+pub(crate) enum WalAuthenticatedStep {
+    Yield,
+    Committed,
+    Done,
+}
 
 /// 🔐️ Owns the one immutable source shared by physical authentication and logical admission.
 pub(crate) struct WalAuthenticatedSource<S> {
@@ -1571,11 +1684,15 @@ impl<S: WalImmutableByteSource> WalAuthenticatedSource<S> {
         Self { source, gate, chain: None, segment, previous, offset: protocol::format::HEADER_SIZE, verified: false, done: false }
     }
 
-    pub(crate) fn source(&self) -> &S { &self.source }
+    pub(crate) fn source(&self) -> &S {
+        &self.source
+    }
 
     pub(crate) fn verify_step(&mut self, document: &ArtifactId, control: &mut WalCursorControl) -> Result<bool, DbError> {
         control.check()?;
-        if self.verified { return Ok(true); }
+        if self.verified {
+            return Ok(true);
+        }
         if self.chain.is_none() {
             control.grant()?;
             self.chain = Some(WalSegmentChain::new(&self.source, self.segment, self.previous)?);
@@ -1587,9 +1704,15 @@ impl<S: WalImmutableByteSource> WalAuthenticatedSource<S> {
 
     pub(crate) fn next_step(&mut self, control: &mut WalCursorControl) -> Result<WalAuthenticatedStep, DbError> {
         control.check()?;
-        if !self.verified { return Err(DbError::Corrupt("wal source has not completed authentication".to_string())); }
-        if self.done { return Ok(WalAuthenticatedStep::Done); }
-        if self.gate.ready.is_some() { return Err(DbError::Corrupt("wal authenticated transaction remains unfinished".to_string())); }
+        if !self.verified {
+            return Err(DbError::Corrupt("wal source has not completed authentication".to_string()));
+        }
+        if self.done {
+            return Ok(WalAuthenticatedStep::Done);
+        }
+        if self.gate.ready.is_some() {
+            return Err(DbError::Corrupt("wal authenticated transaction remains unfinished".to_string()));
+        }
         match wal_next_verified_page_frame(&self.source, &mut self.offset, self.source.byte_len(), control)? {
             WalVerifiedFrameStep::Frame(frame) => {
                 let committed = self.gate.push(&self.source, frame)?;
@@ -1605,9 +1728,13 @@ impl<S: WalImmutableByteSource> WalAuthenticatedSource<S> {
         }
     }
 
-    pub(crate) fn committed_frame(&self, index: usize) -> Option<WalRecordFrame> { self.gate.committed_frame(index) }
+    pub(crate) fn committed_frame(&self, index: usize) -> Option<WalRecordFrame> {
+        self.gate.committed_frame(index)
+    }
 
-    pub(crate) fn finish_transaction(&mut self) -> Result<(), DbError> { self.gate.release() }
+    pub(crate) fn finish_transaction(&mut self) -> Result<(), DbError> {
+        self.gate.release()
+    }
 
     pub(crate) fn finish(self) -> Result<(S, WalTransactionGate, [u8; 32]), Self> {
         match (self.done, self.chain.as_ref().and_then(|chain| chain.tip)) {
@@ -1617,7 +1744,9 @@ impl<S: WalImmutableByteSource> WalAuthenticatedSource<S> {
     }
 
     /// 🛑️ Destroys verification and transaction continuation, returning only raw ownership for retirement.
-    pub(crate) fn abort_into_source(self) -> S { self.source }
+    pub(crate) fn abort_into_source(self) -> S {
+        self.source
+    }
 }
 
 /// @emoji 🔁️ Decodes every `WAL_*` record across a document's ENTIRE WAL (every sealed segment in
@@ -1657,7 +1786,22 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
 
     pub async fn open(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<Self, DbError> {
         let segments = storage.list_segments(document).await?;
-        Ok(Self { storage, document: document.clone(), segments, segment: 0, pages: None, offset: protocol::format::HEADER_SIZE, trusted_len: 0, validation: None, decoder: None, previous_tip: None, genesis_required: false, failed: false, control, closed: false })
+        Ok(Self {
+            storage,
+            document: document.clone(),
+            segments,
+            segment: 0,
+            pages: None,
+            offset: protocol::format::HEADER_SIZE,
+            trusted_len: 0,
+            validation: None,
+            decoder: None,
+            previous_tip: None,
+            genesis_required: false,
+            failed: false,
+            control,
+            closed: false,
+        })
     }
 
     /// 🌱️ Requires the retained chain to start at genesis rather than trusting a compacted boundary.
@@ -1701,51 +1845,54 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
     }
 
     pub async fn next_step(&mut self) -> Result<WalReplayStep, DbError> {
-        if self.failed { return Err(DbError::Corrupt("wal replay remains failed until closed".to_string())); }
+        if self.failed {
+            return Err(DbError::Corrupt("wal replay remains failed until closed".to_string()));
+        }
         let result = self.next_validated_step().await;
-        let interrupted = matches!(&result, Err(DbError::LimitExceeded("wal cursor fuel")))
-            || matches!(&result, Err(DbError::Unavailable(message)) if message == "wal cursor cancelled" || message == "wal cursor deadline reached");
-        if result.is_err() && !interrupted { self.failed = true; }
+        let interrupted = matches!(&result, Err(DbError::LimitExceeded("wal cursor fuel"))) || matches!(&result, Err(DbError::Unavailable(message)) if message == "wal cursor cancelled" || message == "wal cursor deadline reached");
+        if result.is_err() && !interrupted {
+            self.failed = true;
+        }
         result
     }
 
     async fn next_validated_step(&mut self) -> Result<WalReplayStep, DbError> {
-            self.control.check()?;
-            if self.closed {
-                return Ok(WalReplayStep::Done);
+        self.control.check()?;
+        if self.closed {
+            return Ok(WalReplayStep::Done);
+        }
+        if self.pages.is_none() {
+            return Ok(if self.open_segment().await? { WalReplayStep::Yield } else { WalReplayStep::Done });
+        }
+        if let Some(validation) = self.validation.as_mut() {
+            let pages = self.pages.as_ref().ok_or_else(|| DbError::Internal("wal chain lost segment pages".to_string()))?;
+            if validation.step(pages, self.trusted_len, &self.document, &mut self.control)? {
+                self.previous_tip = validation.tip;
+                self.validation = None;
             }
-            if self.pages.is_none() {
-                return Ok(if self.open_segment().await? { WalReplayStep::Yield } else { WalReplayStep::Done });
-            }
-            if let Some(validation) = self.validation.as_mut() {
-                let pages = self.pages.as_ref().ok_or_else(|| DbError::Internal("wal chain lost segment pages".to_string()))?;
-                if validation.step(pages, self.trusted_len, &self.document, &mut self.control)? {
-                    self.previous_tip = validation.tip;
-                    self.validation = None;
-                }
+            return Ok(WalReplayStep::Yield);
+        }
+        if self.offset == self.trusted_len {
+            if self.close_segment_step().await? {
                 return Ok(WalReplayStep::Yield);
             }
-            if self.offset == self.trusted_len {
-                if self.close_segment_step().await? {
-                    return Ok(WalReplayStep::Yield);
-                }
-                self.segment += 1;
-                return Ok(WalReplayStep::Yield);
+            self.segment += 1;
+            return Ok(WalReplayStep::Yield);
+        }
+        let pages = self.pages.as_ref().ok_or_else(|| DbError::Internal("wal replay lost segment pages".to_string()))?;
+        if self.decoder.is_none() {
+            if let WalVerifiedFrameStep::Frame(frame) = wal_next_verified_page_frame(pages, &mut self.offset, self.trusted_len, &mut self.control)? {
+                self.decoder = Some(WalRetainedRecordDecoder::new(frame));
             }
-            let pages = self.pages.as_ref().ok_or_else(|| DbError::Internal("wal replay lost segment pages".to_string()))?;
-            if self.decoder.is_none() {
-                if let WalVerifiedFrameStep::Frame(frame) = wal_next_verified_page_frame(pages, &mut self.offset, self.trusted_len, &mut self.control)? {
-                    self.decoder = Some(WalRetainedRecordDecoder::new(frame));
-                }
-                return Ok(WalReplayStep::Yield);
-            }
-            let decoder = self.decoder.as_mut().ok_or_else(|| DbError::Internal("wal replay lost retained decoder".to_string()))?;
-            if let Some(record) = decoder.step(pages, &mut self.control)? {
-                self.offset = decoder.frame.frame_end;
-                self.decoder = None;
-                return Ok(WalReplayStep::Record(record));
-            }
-            Ok(WalReplayStep::Yield)
+            return Ok(WalReplayStep::Yield);
+        }
+        let decoder = self.decoder.as_mut().ok_or_else(|| DbError::Internal("wal replay lost retained decoder".to_string()))?;
+        if let Some(record) = decoder.step(pages, &mut self.control)? {
+            self.offset = decoder.frame.frame_end;
+            self.decoder = None;
+            return Ok(WalReplayStep::Record(record));
+        }
+        Ok(WalReplayStep::Yield)
     }
 
     #[cfg(test)]
@@ -1760,7 +1907,11 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
     }
 
     pub fn close_owner_step(&mut self) -> Result<bool, DbError> {
-        if let Some(decoder) = self.decoder.as_mut() { if decoder.close_owner_step()? { return Ok(true); } }
+        if let Some(decoder) = self.decoder.as_mut() {
+            if decoder.close_owner_step()? {
+                return Ok(true);
+            }
+        }
         self.decoder = None;
         if let Some(pages) = self.pages.as_mut() {
             if pages.close_step()?.is_some() {
@@ -1825,7 +1976,9 @@ pub enum WalCommittedRecordStep<'record> {
 
 impl<'storage, S: db_storage::WalStorage> WalCommittedCursor<'storage, S> {
     /// 🗂️ Lists retained segments, including header-only segments; admission completes during replay.
-    pub fn segment_indices(&self) -> &[u64] { self.raw.segments.as_slice() }
+    pub fn segment_indices(&self) -> &[u64] {
+        self.raw.segments.as_slice()
+    }
 
     pub async fn open(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<Self, DbError> {
         Ok(Self { raw: WalReplayCursor::open(storage, document, control).await?, gate: WalTransactionGate::new(), record: None, record_index: 0 })
@@ -1837,9 +1990,15 @@ impl<'storage, S: db_storage::WalStorage> WalCommittedCursor<'storage, S> {
 
     async fn prepare_transaction_step(&mut self) -> Result<Option<bool>, DbError> {
         self.raw.control.check()?;
-        if self.raw.closed { return Ok(None); }
-        if self.gate.ready.is_some() { return Err(DbError::Corrupt("wal committed transaction was not finished".to_string())); }
-        if self.raw.pages.is_none() { return Ok(self.raw.open_segment().await?.then_some(false)); }
+        if self.raw.closed {
+            return Ok(None);
+        }
+        if self.gate.ready.is_some() {
+            return Err(DbError::Corrupt("wal committed transaction was not finished".to_string()));
+        }
+        if self.raw.pages.is_none() {
+            return Ok(self.raw.open_segment().await?.then_some(false));
+        }
         if let Some(validation) = self.raw.validation.as_mut() {
             let pages = self.raw.pages.as_ref().ok_or_else(|| DbError::Internal("wal committed replay lost validation pages".to_string()))?;
             if validation.step(pages, self.raw.trusted_len, &self.raw.document, &mut self.raw.control)? {
@@ -1850,7 +2009,9 @@ impl<'storage, S: db_storage::WalStorage> WalCommittedCursor<'storage, S> {
         }
         if self.raw.offset == self.raw.trusted_len {
             self.gate.finish_segment(false)?;
-            if self.raw.close_segment_step().await? { return Ok(Some(false)); }
+            if self.raw.close_segment_step().await? {
+                return Ok(Some(false));
+            }
             self.gate.advance_segment()?;
             self.raw.segment += 1;
             return Ok(Some(false));
@@ -1863,22 +2024,32 @@ impl<'storage, S: db_storage::WalStorage> WalCommittedCursor<'storage, S> {
     }
 
     pub async fn next_transaction_step(&mut self) -> Result<WalCommittedStep<'_, 'storage, S>, DbError> {
-        if self.raw.failed { return Err(DbError::Corrupt("wal committed replay remains failed until closed".to_string())); }
+        if self.raw.failed {
+            return Err(DbError::Corrupt("wal committed replay remains failed until closed".to_string()));
+        }
         match self.prepare_transaction_step().await {
             Ok(Some(true)) => Ok(WalCommittedStep::Transaction(WalCommittedTransaction { cursor: self, finished: false })),
             Ok(Some(false)) => Ok(WalCommittedStep::Yield),
             Ok(None) => Ok(WalCommittedStep::Done),
             Err(error) => {
-                if !wal_cursor_interrupted(&error) { self.raw.failed = true; }
+                if !wal_cursor_interrupted(&error) {
+                    self.raw.failed = true;
+                }
                 Err(error)
             }
         }
     }
 
     pub fn close_owner_step(&mut self) -> Result<bool, DbError> {
-        if let Some(record) = self.record.as_mut() { if record.close_step()? { return Ok(true); } }
+        if let Some(record) = self.record.as_mut() {
+            if record.close_step()? {
+                return Ok(true);
+            }
+        }
         self.record = None;
-        if self.raw.close_owner_step()? { return Ok(true); }
+        if self.raw.close_owner_step()? {
+            return Ok(true);
+        }
         self.gate.clear_frames();
         self.gate.ready = None;
         self.gate.transaction_id = None;
@@ -1892,23 +2063,34 @@ impl<'storage, S: db_storage::WalStorage> WalCommittedCursor<'storage, S> {
 }
 
 fn wal_cursor_interrupted(error: &DbError) -> bool {
-    matches!(error, DbError::LimitExceeded("wal cursor fuel"))
-        || matches!(error, DbError::Unavailable(message) if message == "wal cursor cancelled" || message == "wal cursor deadline reached")
+    matches!(error, DbError::LimitExceeded("wal cursor fuel")) || matches!(error, DbError::Unavailable(message) if message == "wal cursor cancelled" || message == "wal cursor deadline reached")
 }
 
 impl<'cursor, 'storage, S: db_storage::WalStorage> WalCommittedTransaction<'cursor, 'storage, S> {
-    pub fn transaction_id(&self) -> u64 { self.cursor.gate.ready.expect("committed transaction owns its ready gate") }
+    pub fn transaction_id(&self) -> u64 {
+        self.cursor.gate.ready.expect("committed transaction owns its ready gate")
+    }
 
-    pub fn segment_index(&self) -> u64 { self.cursor.raw.segments.as_slice()[self.cursor.raw.segment] }
+    pub fn segment_index(&self) -> u64 {
+        self.cursor.raw.segments.as_slice()[self.cursor.raw.segment]
+    }
 
-    pub fn record_count(&self) -> usize { self.cursor.gate.frames_len as usize }
+    pub fn record_count(&self) -> usize {
+        self.cursor.gate.frames_len as usize
+    }
 
-    pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> { self.cursor.replenish(deadline, fuel) }
+    pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
+        self.cursor.replenish(deadline, fuel)
+    }
 
     fn decode_record_step(&mut self) -> Result<bool, DbError> {
-        if self.cursor.record.is_some() { return Err(DbError::Corrupt("wal committed body must be closed before advancing".to_string())); }
+        if self.cursor.record.is_some() {
+            return Err(DbError::Corrupt("wal committed body must be closed before advancing".to_string()));
+        }
         let frame = self.cursor.gate.frames[self.cursor.record_index].ok_or_else(|| DbError::Internal("wal committed replay lost body span".to_string()))?;
-        if self.cursor.raw.decoder.is_none() { self.cursor.raw.decoder = Some(WalRetainedRecordDecoder::new(frame)); }
+        if self.cursor.raw.decoder.is_none() {
+            self.cursor.raw.decoder = Some(WalRetainedRecordDecoder::new(frame));
+        }
         let pages = self.cursor.raw.pages.as_ref().ok_or_else(|| DbError::Internal("wal committed replay lost body source".to_string()))?;
         let decoder = self.cursor.raw.decoder.as_mut().ok_or_else(|| DbError::Internal("wal committed replay lost body decoder".to_string()))?;
         if let Some(record) = decoder.step(pages, &mut self.cursor.raw.control)? {
@@ -1920,13 +2102,19 @@ impl<'cursor, 'storage, S: db_storage::WalStorage> WalCommittedTransaction<'curs
     }
 
     pub fn next_record_step(&mut self) -> Result<WalCommittedRecordStep<'_>, DbError> {
-        if self.cursor.raw.failed { return Err(DbError::Corrupt("wal committed replay remains failed until closed".to_string())); }
-        if self.cursor.record_index == self.record_count() { return Ok(WalCommittedRecordStep::Done); }
+        if self.cursor.raw.failed {
+            return Err(DbError::Corrupt("wal committed replay remains failed until closed".to_string()));
+        }
+        if self.cursor.record_index == self.record_count() {
+            return Ok(WalCommittedRecordStep::Done);
+        }
         match self.decode_record_step() {
             Ok(true) => Ok(WalCommittedRecordStep::Record(self.cursor.record.as_ref().expect("decoded body remains cursor-owned"))),
             Ok(false) => Ok(WalCommittedRecordStep::Yield),
             Err(error) => {
-                if !wal_cursor_interrupted(&error) { self.cursor.raw.failed = true; }
+                if !wal_cursor_interrupted(&error) {
+                    self.cursor.raw.failed = true;
+                }
                 Err(error)
             }
         }
@@ -1934,7 +2122,9 @@ impl<'cursor, 'storage, S: db_storage::WalStorage> WalCommittedTransaction<'curs
 
     pub fn close_record_step(&mut self) -> Result<bool, DbError> {
         let record = self.cursor.record.as_mut().ok_or_else(|| DbError::Corrupt("wal committed body is not borrowed".to_string()))?;
-        if record.close_step()? { return Ok(true); }
+        if record.close_step()? {
+            return Ok(true);
+        }
         self.cursor.record = None;
         self.cursor.record_index += 1;
         Ok(false)
@@ -1952,7 +2142,11 @@ impl<'cursor, 'storage, S: db_storage::WalStorage> WalCommittedTransaction<'curs
 }
 
 impl<S: db_storage::WalStorage> Drop for WalCommittedTransaction<'_, '_, S> {
-    fn drop(&mut self) { if !self.finished { self.cursor.raw.failed = true; } }
+    fn drop(&mut self) {
+        if !self.finished {
+            self.cursor.raw.failed = true;
+        }
+    }
 }
 
 pub async fn replay_committed_document<'storage, S: db_storage::WalStorage>(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<WalCommittedCursor<'storage, S>, DbError> {
@@ -1971,11 +2165,15 @@ async fn scan_retained_pages(pages: &db_storage::DbIoPages, control: &mut WalCur
     for fragment in pages.fragments() {
         control.grant()?;
         let mut fuel = fragment.len();
-        if scan.push(fragment, &mut fuel).map_err(map_error)? != fragment.len() { return Err(DbError::Corrupt("wal retained scan made partial page progress".to_string())); }
+        if scan.push(fragment, &mut fuel).map_err(map_error)? != fragment.len() {
+            return Err(DbError::Corrupt("wal retained scan made partial page progress".to_string()));
+        }
         semio_framework_async::yield_once().await;
     }
     let header = protocol::format::read_header(&WalPageSource(pages)).await.map_err(protocol_err)?;
-    if header.optional_flags != 0 { return Err(DbError::Corrupt("wal optional header flags differ".to_string())); }
+    if header.optional_flags != 0 {
+        return Err(DbError::Corrupt("wal optional header flags differ".to_string()));
+    }
     scan.finish().map_err(map_error)
 }
 
@@ -1985,26 +2183,46 @@ struct WalValidatedPrefix {
     incomplete_active_tx: Option<u64>,
 }
 
-async fn validate_wal_prefix(pages: &db_storage::DbIoPages, span: &protocol::format::retained::VerifiedSprSpan, index: u64, prior: WalPriorChainTip, document: &ArtifactId, gate: &mut WalTransactionGate, writable_highest: bool, control: &mut WalCursorControl) -> Result<WalValidatedPrefix, DbError> {
+async fn validate_wal_prefix(
+    pages: &db_storage::DbIoPages,
+    span: &protocol::format::retained::VerifiedSprSpan,
+    index: u64,
+    prior: WalPriorChainTip,
+    document: &ArtifactId,
+    gate: &mut WalTransactionGate,
+    writable_highest: bool,
+    control: &mut WalCursorControl,
+) -> Result<WalValidatedPrefix, DbError> {
     let end = usize::try_from(span.end()).map_err(|_| DbError::LimitExceeded("wal verified end"))?;
     let mut chain = WalSegmentChain::new(pages, index, prior)?;
-    while !chain.step(pages, end, document, control)? { semio_framework_async::yield_once().await; }
-    if chain.tip != Some(*span.chain()) { return Err(DbError::Corrupt("wal verifiers disagree on committed chain".to_string())); }
+    while !chain.step(pages, end, document, control)? {
+        semio_framework_async::yield_once().await;
+    }
+    if chain.tip != Some(*span.chain()) {
+        return Err(DbError::Corrupt("wal verifiers disagree on committed chain".to_string()));
+    }
     let mut offset = protocol::format::HEADER_SIZE;
     let mut records = 0u64;
     loop {
         let frame = match wal_next_verified_page_frame(pages, &mut offset, end, control)? {
             WalVerifiedFrameStep::Frame(frame) => frame,
-            WalVerifiedFrameStep::PhysicalCommit => { semio_framework_async::yield_once().await; continue; }
+            WalVerifiedFrameStep::PhysicalCommit => {
+                semio_framework_async::yield_once().await;
+                continue;
+            }
             WalVerifiedFrameStep::Done => break,
         };
-        if gate.push(pages, frame)? { gate.release()?; }
+        if gate.push(pages, frame)? {
+            gate.release()?;
+        }
         offset = frame.frame_end;
         records = records.checked_add(1).ok_or(DbError::LimitExceeded("wal recovered records"))?;
         semio_framework_async::yield_once().await;
     }
     let incomplete_active_tx = gate.finish_segment(writable_highest)?;
-    if incomplete_active_tx.is_none() { gate.advance_segment()?; }
+    if incomplete_active_tx.is_none() {
+        gate.advance_segment()?;
+    }
     Ok(WalValidatedPrefix { records, next_tx_id: gate.next_tx_id, incomplete_active_tx })
 }
 
@@ -2013,24 +2231,33 @@ async fn copy_verified_prefix(pages: &db_storage::DbIoPages, end: u64, control: 
     let result = async {
         let mut remaining = usize::try_from(end).map_err(|_| DbError::LimitExceeded("wal prefix end"))?;
         for fragment in pages.fragments() {
-            if remaining == 0 { break; }
+            if remaining == 0 {
+                break;
+            }
             control.grant()?;
             let count = remaining.min(fragment.len());
             let mut written = 0;
             while written < count {
                 let progress = lock(&buf.0).write_fragment(&fragment[written..count])?;
-                if progress == 0 { return Err(DbError::LimitExceeded("wal retained prefix writer")); }
+                if progress == 0 {
+                    return Err(DbError::LimitExceeded("wal retained prefix writer"));
+                }
                 written += progress;
                 semio_framework_async::yield_once().await;
             }
             remaining -= count;
             semio_framework_async::yield_once().await;
         }
-        if remaining != 0 { return Err(DbError::Corrupt("wal verified prefix ended early".to_string())); }
+        if remaining != 0 {
+            return Err(DbError::Corrupt("wal verified prefix ended early".to_string()));
+        }
         Ok(())
-    }.await;
+    }
+    .await;
     if let Err(error) = result {
-        while lock(&buf.0).close_step()?.is_some() { semio_framework_async::yield_once().await; }
+        while lock(&buf.0).close_step()?.is_some() {
+            semio_framework_async::yield_once().await;
+        }
         return Err(error);
     }
     Ok(buf)
@@ -2070,7 +2297,11 @@ impl SegmentWriter {
     }
 
     fn ensure_open(&self) -> Result<(), DbError> {
-        if self.writer.is_some() && self.buf.is_some() { Ok(()) } else { Err(DbError::Closed) }
+        if self.writer.is_some() && self.buf.is_some() {
+            Ok(())
+        } else {
+            Err(DbError::Closed)
+        }
     }
 
     fn poison(&mut self) {
@@ -2079,7 +2310,9 @@ impl SegmentWriter {
 
     async fn retire_poisoned(&mut self) -> Result<(), DbError> {
         self.poison();
-        while self.close_step()? { semio_framework_async::yield_once().await; }
+        while self.close_step()? {
+            semio_framework_async::yield_once().await;
+        }
         Ok(())
     }
 
@@ -2089,19 +2322,32 @@ impl SegmentWriter {
             Ok(writer) => writer,
             Err(error) => {
                 let mut buf = buf;
-                while buf.close_step()? { semio_framework_async::yield_once().await; }
+                while buf.close_step()? {
+                    semio_framework_async::yield_once().await;
+                }
                 return Err(error);
             }
         };
         Ok(Self { document, index, buf: Some(buf), writer: Some(writer), flushed_len, pending_records: 0, oldest_pending_at_ms: None })
     }
 
-    async fn initialize_existing_empty(storage: &impl db_storage::WalStorage, permit: &db_storage::WalWriterPermit, document: ArtifactId, index: u64, prev_chain_hash: Option<[u8; 32]>, partial: &db_storage::DbIoPages, now_ms: u64, control: &mut WalCursorControl) -> Result<Self, DbError> {
+    async fn initialize_existing_empty(
+        storage: &impl db_storage::WalStorage,
+        permit: &db_storage::WalWriterPermit,
+        document: ArtifactId,
+        index: u64,
+        prev_chain_hash: Option<[u8; 32]>,
+        partial: &db_storage::DbIoPages,
+        now_ms: u64,
+        control: &mut WalCursorControl,
+    ) -> Result<Self, DbError> {
         let mut buf = SharedBuf::try_new()?;
         let writer = match protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(protocol_err) {
             Ok(writer) => writer,
             Err(error) => {
-                while buf.close_step()? { semio_framework_async::yield_once().await; }
+                while buf.close_step()? {
+                    semio_framework_async::yield_once().await;
+                }
                 return Err(error);
             }
         };
@@ -2111,7 +2357,9 @@ impl SegmentWriter {
             segment.buf()?.read_exact(0, &mut expected).await?;
             let mut actual = WalPageReader::new(partial, 0, partial.len())?;
             for byte in &expected[..partial.len()] {
-                if actual.byte()? != *byte { return Err(DbError::Corrupt("wal partial header differs from its exact profile".to_string())); }
+                if actual.byte()? != *byte {
+                    return Err(DbError::Corrupt("wal partial header differs from its exact profile".to_string()));
+                }
             }
             control.grant()?;
             if !partial.is_empty() {
@@ -2121,7 +2369,8 @@ impl SegmentWriter {
             segment.append_record(&WalRecord::SegmentHeader { document: document.clone(), segment_index: index, prev_chain_hash }, now_ms).await?;
             segment.commit_and_flush(storage, permit, DurabilityClass::Fsync).await?;
             Ok(())
-        }.await;
+        }
+        .await;
         if let Err(error) = result {
             segment.retire_poisoned().await?;
             return Err(error);
@@ -2138,7 +2387,9 @@ impl SegmentWriter {
         let writer = match protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(protocol_err) {
             Ok(writer) => writer,
             Err(error) => {
-                while buf.close_step()? { semio_framework_async::yield_once().await; }
+                while buf.close_step()? {
+                    semio_framework_async::yield_once().await;
+                }
                 return Err(error);
             }
         };
@@ -2147,10 +2398,13 @@ impl SegmentWriter {
             segment.append_record(&WalRecord::SegmentHeader { document, segment_index: index, prev_chain_hash }, now_ms).await?;
             segment.commit_and_flush(storage, permit, DurabilityClass::Fsync).await?;
             Ok(())
-        }.await;
+        }
+        .await;
         if let Err(error) = result {
             segment.poison();
-            while segment.close_step()? { semio_framework_async::yield_once().await; }
+            while segment.close_step()? {
+                semio_framework_async::yield_once().await;
+            }
             return Err(error);
         }
         Ok(segment)
@@ -2195,7 +2449,8 @@ impl SegmentWriter {
         };
         let flush = async {
             let expected_len = self.buf()?.len();
-            let suffix_len = usize::try_from(expected_len.checked_sub(self.flushed_len).ok_or_else(|| DbError::Corrupt("WAL flushed length exceeds its retained writer".to_string()))?).map_err(|_| DbError::LimitExceeded("WAL retained suffix length"))?;
+            let suffix_len =
+                usize::try_from(expected_len.checked_sub(self.flushed_len).ok_or_else(|| DbError::Corrupt("WAL flushed length exceeds its retained writer".to_string()))?).map_err(|_| DbError::LimitExceeded("WAL retained suffix length"))?;
             let pages = self.buf()?.copy_range(self.flushed_len as usize, suffix_len).await?;
             let new_len = storage.append(permit, self.index, pages).await?;
             if new_len != expected_len {
@@ -2204,7 +2459,8 @@ impl SegmentWriter {
             self.flushed_len = new_len;
             storage.sync(permit, self.index, class).await?;
             Ok(())
-        }.await;
+        }
+        .await;
         match flush {
             Ok(()) => {
                 self.pending_records = 0;
@@ -2317,19 +2573,19 @@ pub struct ArtifactWalAcquiredRejected {
 }
 
 impl ArtifactWalAcquiredRejected {
-    fn new(cause: DbError, writer: db_storage::WalWriterPermit) -> Self { Self { cause, writer } }
+    fn new(cause: DbError, writer: db_storage::WalWriterPermit) -> Self {
+        Self { cause, writer }
+    }
 
-    pub fn error(&self) -> &DbError { &self.cause }
+    pub fn error(&self) -> &DbError {
+        &self.cause
+    }
 
-    pub fn into_parts(self) -> (DbError, db_storage::WalWriterPermit) { (self.cause, self.writer) }
+    pub fn into_parts(self) -> (DbError, db_storage::WalWriterPermit) {
+        (self.cause, self.writer)
+    }
 
-    pub async fn retry_open(
-        self,
-        storage: &impl db_storage::WalStorage,
-        policy: GroupCommitPolicy,
-        now_ms: u64,
-        control: &mut WalCursorControl,
-    ) -> Result<(ArtifactWal, WalRecoveryReport), ArtifactWalAcquiredRejected> {
+    pub async fn retry_open(self, storage: &impl db_storage::WalStorage, policy: GroupCommitPolicy, now_ms: u64, control: &mut WalCursorControl) -> Result<(ArtifactWal, WalRecoveryReport), ArtifactWalAcquiredRejected> {
         ArtifactWal::open_acquired(storage, self.writer, policy, now_ms, control).await
     }
 
@@ -2352,9 +2608,13 @@ pub enum ArtifactWalOpenRejected {
 }
 
 impl ArtifactWalOpenRejected {
-    fn before_acquire(cause: DbError) -> Self { Self::BeforeAcquire { cause } }
+    fn before_acquire(cause: DbError) -> Self {
+        Self::BeforeAcquire { cause }
+    }
 
-    fn retained(cause: DbError, release: db_storage::WalWriterRelease) -> Self { Self::Retained { cause, release_error: None, release } }
+    fn retained(cause: DbError, release: db_storage::WalWriterRelease) -> Self {
+        Self::Retained { cause, release_error: None, release }
+    }
 
     pub fn error(&self) -> &DbError {
         match self {
@@ -2369,7 +2629,9 @@ impl ArtifactWalOpenRejected {
         }
     }
 
-    pub fn has_release_owner(&self) -> bool { matches!(self, Self::Retained { .. }) }
+    pub fn has_release_owner(&self) -> bool {
+        matches!(self, Self::Retained { .. })
+    }
 
     pub fn into_parts(self) -> (DbError, Option<db_storage::WalWriterRelease>) {
         match self {
@@ -2397,12 +2659,7 @@ impl ArtifactWalOpenRejected {
 
 impl std::fmt::Debug for ArtifactWalOpenRejected {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter
-            .debug_struct("ArtifactWalOpenRejected")
-            .field("cause", self.error())
-            .field("release_error", &self.release_error())
-            .field("has_release_owner", &self.has_release_owner())
-            .finish()
+        formatter.debug_struct("ArtifactWalOpenRejected").field("cause", self.error()).field("release_error", &self.release_error()).field("has_release_owner", &self.has_release_owner()).finish()
     }
 }
 
@@ -2445,13 +2702,18 @@ impl ArtifactWal {
             if indices.is_empty() {
                 control.grant()?;
                 let active = SegmentWriter::begin(storage, permit, document.clone(), 0, None, now_ms).await?;
-                return Ok((Self { document: document.clone(), writer: writer.take(), release: None, release_retry: false, policy, max_segment_bytes: DEFAULT_MAX_SEGMENT_BYTES, next_segment_index: 1, active, next_tx_id: 1 }, WalRecoveryReport::default()));
+                return Ok((
+                    Self { document: document.clone(), writer: writer.take(), release: None, release_retry: false, policy, max_segment_bytes: DEFAULT_MAX_SEGMENT_BYTES, next_segment_index: 1, active, next_tx_id: 1 },
+                    WalRecoveryReport::default(),
+                ));
             }
             let first = indices.as_slice()[0];
             let last = *indices.last().ok_or_else(|| DbError::Internal("wal segment list lost its highest index".to_string()))?;
             let mut next_segment_index = last.checked_add(1).ok_or(DbError::LimitExceeded("wal segment sequence"))?;
             for (ordinal, index) in indices.as_slice().iter().enumerate() {
-                if first.checked_add(ordinal as u64) != Some(*index) { return Err(DbError::Corrupt("wal retained segment sequence is not dense".to_string())); }
+                if first.checked_add(ordinal as u64) != Some(*index) {
+                    return Err(DbError::Corrupt("wal retained segment sequence is not dense".to_string()));
+                }
             }
             let mut prior = if first == 0 { WalPriorChainTip::Genesis } else { WalPriorChainTip::RetainedBoundary };
             let mut report = WalRecoveryReport { segments_seen: indices.len() as u64, ..WalRecoveryReport::default() };
@@ -2462,32 +2724,47 @@ impl ArtifactWal {
                 control.grant()?;
                 let state = storage.segment_state(&document, index).await?;
                 let writable = index == last && state == db_storage::WalSegmentState::Active;
-                if index != last && state != db_storage::WalSegmentState::Sealed { return Err(DbError::Corrupt("wal has an active segment before its highest index".to_string())); }
-                if index == last && !writable { next_segment_index = next_segment_index.checked_add(1).ok_or(DbError::LimitExceeded("wal successor sequence"))?; }
+                if index != last && state != db_storage::WalSegmentState::Sealed {
+                    return Err(DbError::Corrupt("wal has an active segment before its highest index".to_string()));
+                }
+                if index == last && !writable {
+                    next_segment_index = next_segment_index.checked_add(1).ok_or(DbError::LimitExceeded("wal successor sequence"))?;
+                }
                 control.grant()?;
                 let len = storage.segment_len(&document, index).await?;
                 control.grant()?;
                 let mut pages = storage.read(&document, index, pack::ByteRange { offset: 0, len }).await?;
                 let outcome = async {
-                    if pages.len() as u64 != len { return Err(DbError::Corrupt("wal retained read length differs".to_string())); }
+                    if pages.len() as u64 != len {
+                        return Err(DbError::Corrupt("wal retained read length differs".to_string()));
+                    }
                     if len < protocol::format::HEADER_SIZE as u64 {
-                        if !writable { return Err(DbError::Corrupt("sealed wal segment has no committed header".to_string())); }
+                        if !writable {
+                            return Err(DbError::Corrupt("sealed wal segment has no committed header".to_string()));
+                        }
                         let predecessor = exact_prior_tip(prior)?;
                         let segment = SegmentWriter::initialize_existing_empty(storage, permit, document.clone(), index, predecessor, &pages, now_ms, control).await?;
                         return Ok((Some(segment), None, 0, 1, len, None));
                     }
                     let span = scan_retained_pages(&pages, control).await?;
-                    if !writable && (span.tail() != 0 || span.sequence() == 0) { return Err(DbError::Corrupt("sealed wal segment has uncommitted bytes".to_string())); }
+                    if !writable && (span.tail() != 0 || span.sequence() == 0) {
+                        return Err(DbError::Corrupt("sealed wal segment has uncommitted bytes".to_string()));
+                    }
                     let genesis = span.sequence() == 0;
                     let predecessor = if genesis { exact_prior_tip(prior)? } else { None };
-                    let validated = if genesis { WalValidatedPrefix { records: 0, next_tx_id: logical.next_tx_id, incomplete_active_tx: None } } else { validate_wal_prefix(&pages, &span, index, prior, &document, &mut logical, writable, control).await? };
+                    let validated =
+                        if genesis { WalValidatedPrefix { records: 0, next_tx_id: logical.next_tx_id, incomplete_active_tx: None } } else { validate_wal_prefix(&pages, &span, index, prior, &document, &mut logical, writable, control).await? };
                     let tip = *span.chain();
                     let tail = span.tail();
                     let end = span.end();
-                    if !writable { return Ok((None, Some(tip), validated.records, validated.next_tx_id, 0, None)); }
+                    if !writable {
+                        return Ok((None, Some(tip), validated.records, validated.next_tx_id, 0, None));
+                    }
                     if validated.incomplete_active_tx.is_some() {
                         let repaired_end = end.checked_add(wal_frame_bytes(8)?).and_then(|bytes| bytes.checked_add(protocol::format::COMMIT_FRAME_LEN));
-                        if repaired_end.is_none_or(|bytes| bytes > db_storage::DB_IO_MAX_READ_BYTES) { return Err(DbError::LimitExceeded("wal recovery abort exceeds retained segment budget")); }
+                        if repaired_end.is_none_or(|bytes| bytes > db_storage::DB_IO_MAX_READ_BYTES) {
+                            return Err(DbError::LimitExceeded("wal recovery abort exceeds retained segment budget"));
+                        }
                     }
                     let buf = copy_verified_prefix(&pages, end, control).await?;
                     let mut segment = SegmentWriter::resume_existing_verified(document.clone(), index, buf, span).await?;
@@ -2506,7 +2783,8 @@ impl ArtifactWal {
                             segment.commit_and_flush(storage, permit, DurabilityClass::Fsync).await?;
                         }
                         segment.tip_chain_hash().await
-                    }.await;
+                    }
+                    .await;
                     let tip = match repair {
                         Ok(tip) => tip,
                         Err(error) => {
@@ -2515,15 +2793,22 @@ impl ArtifactWal {
                         }
                     };
                     Ok((Some(segment), Some(tip), validated.records, validated.next_tx_id, tail, validated.incomplete_active_tx))
-                }.await;
-                while pages.close_step()?.is_some() { semio_framework_async::yield_once().await; }
+                }
+                .await;
+                while pages.close_step()?.is_some() {
+                    semio_framework_async::yield_once().await;
+                }
                 let (segment, tip, records, next_tx, tail, recovered_abort) = outcome?;
                 report.records_replayed = report.records_replayed.checked_add(records).ok_or(DbError::LimitExceeded("wal recovered records"))?;
                 report.torn_tail_bytes = tail;
                 report.recovered_abort_tx_id = recovered_abort;
                 next_tx_id = next_tx_id.max(next_tx);
-                if let Some(tip) = tip { prior = WalPriorChainTip::Verified(tip); }
-                if let Some(segment) = segment { active = Some(segment); }
+                if let Some(tip) = tip {
+                    prior = WalPriorChainTip::Verified(tip);
+                }
+                if let Some(segment) = segment {
+                    active = Some(segment);
+                }
             }
             let active = match active {
                 Some(active) => active,
@@ -2534,8 +2819,11 @@ impl ArtifactWal {
                 }
             };
             Ok((Self { document: document.clone(), writer: writer.take(), release: None, release_retry: false, policy, max_segment_bytes: DEFAULT_MAX_SEGMENT_BYTES, next_segment_index, active, next_tx_id }, report))
-        }.await;
-        while indices.close_step() { semio_framework_async::yield_once().await; }
+        }
+        .await;
+        while indices.close_step() {
+            semio_framework_async::yield_once().await;
+        }
         match (result, writer) {
             (Err(error), Some(writer)) => Err(ArtifactWalAcquiredRejected::new(error, writer)),
             (Ok(value), _) => Ok(value),
@@ -2633,7 +2921,9 @@ impl ArtifactWal {
         self.active.poison();
         sealed?;
         let new_index = self.next_segment_index;
-        while self.active.close_step()? { semio_framework_async::yield_once().await; }
+        while self.active.close_step()? {
+            semio_framework_async::yield_once().await;
+        }
         let active = SegmentWriter::begin(storage, self.writer.as_ref().ok_or(DbError::Closed)?, self.document.clone(), new_index, Some(chain_hash), now_ms).await?;
         self.active = active;
         self.next_segment_index = following_index;
@@ -2641,7 +2931,9 @@ impl ArtifactWal {
     }
 
     pub fn close_step(&mut self) -> Result<bool, DbError> {
-        if self.active.close_step()? { return Ok(true); }
+        if self.active.close_step()? {
+            return Ok(true);
+        }
         if let Some(writer) = self.writer.take() {
             self.release = Some(writer.release());
             return Ok(true);
@@ -2653,7 +2945,10 @@ impl ArtifactWal {
         let Some(release) = self.release.as_mut() else { return Ok(false) };
         match std::future::Future::poll(std::pin::Pin::new(release), &mut std::task::Context::from_waker(std::task::Waker::noop())) {
             std::task::Poll::Pending => Ok(true),
-            std::task::Poll::Ready(Ok(())) => { self.release = None; Ok(true) }
+            std::task::Poll::Ready(Ok(())) => {
+                self.release = None;
+                Ok(true)
+            }
             std::task::Poll::Ready(Err(failure)) => {
                 let (error, release) = failure.into_parts();
                 self.release = Some(release);
@@ -2664,7 +2959,9 @@ impl ArtifactWal {
     }
 
     pub async fn close(&mut self) -> Result<(), DbError> {
-        while self.close_step()? { semio_framework_async::yield_once().await; }
+        while self.close_step()? {
+            semio_framework_async::yield_once().await;
+        }
         Ok(())
     }
 
@@ -2800,6 +3097,21 @@ pub(crate) mod tests {
         storage
     }
 
+    pub(crate) async fn aborted_event_fixture_storage(document: &ArtifactId, event: &[u8]) -> MemoryStorage {
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let permit = storage.acquire_writer(document).await.unwrap();
+        let mut writer = SegmentWriter::begin(&storage, &permit, document.clone(), 0, None, 0).await.unwrap();
+        let mut records = [WalRecord::TxBegin { tx_id: 1 }, WalRecord::Event(retained(event).await), WalRecord::TxAbort { tx_id: 1 }];
+        for record in &mut records {
+            writer.append_record(record, 0).await.unwrap();
+            while record.close_step().unwrap() {}
+        }
+        writer.commit_and_flush(&storage, &permit, DurabilityClass::Fsync).await.unwrap();
+        while writer.close_step().unwrap() {}
+        permit.release().await.unwrap();
+        storage
+    }
+
     async fn write_committed_fixture(storage: &impl WalStorage, row: &serde_json::Value, document: &ArtifactId) {
         let writer_permit = storage.acquire_writer(document).await.unwrap();
         let mut previous = None;
@@ -2826,7 +3138,9 @@ pub(crate) mod tests {
             }
             previous = Some(writer.tip_chain_hash().await.unwrap());
             while writer.close_step().unwrap() {}
-            if segment["state"] == "sealed" { storage.seal(&writer_permit, index as u64).await.unwrap(); }
+            if segment["state"] == "sealed" {
+                storage.seal(&writer_permit, index as u64).await.unwrap();
+            }
         }
         writer_permit.release().await.unwrap();
     }
@@ -2837,10 +3151,15 @@ pub(crate) mod tests {
             match cursor.next_transaction_step().await.unwrap() {
                 WalCommittedStep::Yield => {}
                 WalCommittedStep::Done => break false,
-                WalCommittedStep::Transaction(transaction) => { drop(transaction); break true; }
+                WalCommittedStep::Transaction(transaction) => {
+                    drop(transaction);
+                    break true;
+                }
             }
         };
-        while cursor.close_owner_step().unwrap() { semio_framework_async::yield_once().await; }
+        while cursor.close_owner_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         assert!(cursor.terminal_is_empty());
         assert!(!found, "recovery made an incomplete transaction visible");
     }
@@ -2853,12 +3172,17 @@ pub(crate) mod tests {
             let document = ArtifactId::from("abort-recovery");
             let storage = committed_fixture_storage(row, &document).await;
             let mut before = Vec::new();
-            for index in 0..row["segments"].as_array().unwrap().len() { before.push((segment_bytes(&storage, &document, index as u64).await, storage.segment_state(&document, index as u64).await.unwrap())); }
+            for index in 0..row["segments"].as_array().unwrap().len() {
+                before.push((segment_bytes(&storage, &document, index as u64).await, storage.segment_state(&document, index as u64).await.unwrap()));
+            }
             let opened = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 1).await;
             if row["expected"]["accepted"] == false {
                 let rejected = match opened {
                     Err(rejected) => matches!(rejected_open_error(rejected).await, DbError::Corrupt(_)),
-                    Ok((mut wal, _)) => { wal.close().await.unwrap(); false },
+                    Ok((mut wal, _)) => {
+                        wal.close().await.unwrap();
+                        false
+                    }
                 };
                 assert!(rejected, "{name}");
                 for (index, (bytes, state)) in before.iter().enumerate() {
@@ -2946,52 +3270,68 @@ pub(crate) mod tests {
         let faults: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🛑️fail-stop/🔣️.json")).unwrap();
         for case in faults["cases"].as_array().unwrap().iter().filter(|case| case["fault"] != "successorAppendError") {
             for (tail, fail_tail_sync) in [(false, false), (true, false), (true, true)] {
-            if fail_tail_sync && case["fault"] != "syncError" { continue; }
-            let document = ArtifactId::from("abort-fault");
-            let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(committed_fixture_storage(row, &document).await));
-            let storage = crate::db_testkit::FaultStorage::new(inner.clone()).await;
-            let baseline = segment_bytes(&storage, &document, 0).await;
-            if tail {
-                let writer = storage.acquire_writer(&document).await.unwrap();
-                storage.append(&writer, 0, pages(b"uncommitted-tail")).await.unwrap();
-                writer.release().await.unwrap();
-            }
-            let append_boundary = storage.append_calls().await + 1;
-            let sync_boundary = storage.sync_calls().await + if tail && !fail_tail_sync { 2 } else { 1 };
-            let mut script = crate::db_testkit::FaultScript::default();
-            match case["fault"].as_str().unwrap() {
-                "shortAppend" => script.torn_write_at = Some((append_boundary, case["keepBytes"].as_u64().unwrap())),
-                "appendError" => script.fail_nth_write = Some(append_boundary),
-                "syncError" => script.fail_nth_sync = Some(sync_boundary),
-                _ => unreachable!(),
-            }
-            storage.set_script(script).await;
-            let error = match ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 1).await {
-                Err(rejected) => rejected_open_error(rejected).await,
-                Ok((mut wal, _)) => { wal.close().await.unwrap(); panic!("abort recovery ignored injected fault"); }
-            };
-            match case["expectedError"].as_str().unwrap() { "Corrupt" => assert!(matches!(error, DbError::Corrupt(_))), "Io" => assert!(matches!(error, DbError::Io(_))), _ => unreachable!() }
-            let failed = segment_bytes(&storage, &document, 0).await;
-            let suffix = if fail_tail_sync { "absent" } else { case["expectedPhysicalSuffix"].as_str().unwrap() };
-            match suffix {
-                "absent" => assert_eq!(failed, baseline),
-                "torn" => { assert!(failed.starts_with(&baseline)); assert_eq!(failed.len(), baseline.len() + case["keepBytes"].as_u64().unwrap() as usize); }
-                "complete" => assert!(failed.len() > baseline.len() && failed.starts_with(&baseline)),
-                _ => unreachable!(),
-            }
-            let facet = inner.wal().await;
-            let (mut wal, report) = ArtifactWal::open(&facet, document.clone(), GroupCommitPolicy::default(), 2).await.unwrap();
-            let repaired = segment_bytes(&facet, &document, 0).await;
-            if suffix == "complete" { assert_eq!(repaired, failed); assert_eq!(report.recovered_abort_tx_id, None); }
-            else { assert_eq!(report.recovered_abort_tx_id, Some(7)); }
-            assert_no_committed_transaction(&facet, &document).await;
-            assert_eq!(replay_summaries(&facet, &document).await.iter().filter(|record| **record == ReplaySummary::Abort(7)).count(), 1);
-            wal.close().await.unwrap();
-            let (mut wal, report) = ArtifactWal::open(&facet, document.clone(), GroupCommitPolicy::default(), 3).await.unwrap();
-            assert_eq!(report.recovered_abort_tx_id, None);
-            assert_eq!(segment_bytes(&facet, &document, 0).await, repaired);
-            wal.close().await.unwrap();
-            eprintln!("[DEBUG] WAL abort fault retired owners and reopened idempotently: {}, tail={tail}, fail_tail_sync={fail_tail_sync}", case["name"]);
+                if fail_tail_sync && case["fault"] != "syncError" {
+                    continue;
+                }
+                let document = ArtifactId::from("abort-fault");
+                let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(committed_fixture_storage(row, &document).await));
+                let storage = crate::db_testkit::FaultStorage::new(inner.clone()).await;
+                let baseline = segment_bytes(&storage, &document, 0).await;
+                if tail {
+                    let writer = storage.acquire_writer(&document).await.unwrap();
+                    storage.append(&writer, 0, pages(b"uncommitted-tail")).await.unwrap();
+                    writer.release().await.unwrap();
+                }
+                let append_boundary = storage.append_calls().await + 1;
+                let sync_boundary = storage.sync_calls().await + if tail && !fail_tail_sync { 2 } else { 1 };
+                let mut script = crate::db_testkit::FaultScript::default();
+                match case["fault"].as_str().unwrap() {
+                    "shortAppend" => script.torn_write_at = Some((append_boundary, case["keepBytes"].as_u64().unwrap())),
+                    "appendError" => script.fail_nth_write = Some(append_boundary),
+                    "syncError" => script.fail_nth_sync = Some(sync_boundary),
+                    _ => unreachable!(),
+                }
+                storage.set_script(script).await;
+                let error = match ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 1).await {
+                    Err(rejected) => rejected_open_error(rejected).await,
+                    Ok((mut wal, _)) => {
+                        wal.close().await.unwrap();
+                        panic!("abort recovery ignored injected fault");
+                    }
+                };
+                match case["expectedError"].as_str().unwrap() {
+                    "Corrupt" => assert!(matches!(error, DbError::Corrupt(_))),
+                    "Io" => assert!(matches!(error, DbError::Io(_))),
+                    _ => unreachable!(),
+                }
+                let failed = segment_bytes(&storage, &document, 0).await;
+                let suffix = if fail_tail_sync { "absent" } else { case["expectedPhysicalSuffix"].as_str().unwrap() };
+                match suffix {
+                    "absent" => assert_eq!(failed, baseline),
+                    "torn" => {
+                        assert!(failed.starts_with(&baseline));
+                        assert_eq!(failed.len(), baseline.len() + case["keepBytes"].as_u64().unwrap() as usize);
+                    }
+                    "complete" => assert!(failed.len() > baseline.len() && failed.starts_with(&baseline)),
+                    _ => unreachable!(),
+                }
+                let facet = inner.wal().await;
+                let (mut wal, report) = ArtifactWal::open(&facet, document.clone(), GroupCommitPolicy::default(), 2).await.unwrap();
+                let repaired = segment_bytes(&facet, &document, 0).await;
+                if suffix == "complete" {
+                    assert_eq!(repaired, failed);
+                    assert_eq!(report.recovered_abort_tx_id, None);
+                } else {
+                    assert_eq!(report.recovered_abort_tx_id, Some(7));
+                }
+                assert_no_committed_transaction(&facet, &document).await;
+                assert_eq!(replay_summaries(&facet, &document).await.iter().filter(|record| **record == ReplaySummary::Abort(7)).count(), 1);
+                wal.close().await.unwrap();
+                let (mut wal, report) = ArtifactWal::open(&facet, document.clone(), GroupCommitPolicy::default(), 3).await.unwrap();
+                assert_eq!(report.recovered_abort_tx_id, None);
+                assert_eq!(segment_bytes(&facet, &document, 0).await, repaired);
+                wal.close().await.unwrap();
+                eprintln!("[DEBUG] WAL abort fault retired owners and reopened idempotently: {}, tail={tail}, fail_tail_sync={fail_tail_sync}", case["name"]);
             }
         }
     }
@@ -3004,27 +3344,47 @@ pub(crate) mod tests {
     }
 
     impl WalStorage for AbortCancellationStorage<'_> {
-        async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_storage::WalWriterPermit, DbError> { self.inner.acquire_writer(document).await }
-        async fn create_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> { self.inner.create_segment(writer, index).await }
+        async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_storage::WalWriterPermit, DbError> {
+            self.inner.acquire_writer(document).await
+        }
+        async fn create_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+            self.inner.create_segment(writer, index).await
+        }
         async fn append(&self, writer: &db_storage::WalWriterPermit, index: u64, bytes: db_storage::DbIoPages) -> Result<u64, DbError> {
             self.cancelled.store(true, std::sync::atomic::Ordering::Release);
             self.inner.append(writer, index, bytes).await
         }
         async fn sync(&self, writer: &db_storage::WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
             let result = self.inner.sync(writer, index, class).await;
-            if self.cancelled.load(std::sync::atomic::Ordering::Acquire) && class == DurabilityClass::Fsync && result.is_ok() { self.synced.fetch_add(1, std::sync::atomic::Ordering::AcqRel); }
+            if self.cancelled.load(std::sync::atomic::Ordering::Acquire) && class == DurabilityClass::Fsync && result.is_ok() {
+                self.synced.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            }
             result
         }
-        async fn seal(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> { self.inner.seal(writer, index).await }
-        async fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<db_storage::DbIoPages, DbError> { self.inner.read(document, index, range).await }
-        async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> { self.inner.segment_len(document, index).await }
-        async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<db_storage::WalSegmentState, DbError> { self.inner.segment_state(document, index).await }
-        async fn list_segments(&self, document: &ArtifactId) -> Result<db_storage::DbIoU64List, DbError> { self.inner.list_segments(document).await }
+        async fn seal(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+            self.inner.seal(writer, index).await
+        }
+        async fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<db_storage::DbIoPages, DbError> {
+            self.inner.read(document, index, range).await
+        }
+        async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
+            self.inner.segment_len(document, index).await
+        }
+        async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<db_storage::WalSegmentState, DbError> {
+            self.inner.segment_state(document, index).await
+        }
+        async fn list_segments(&self, document: &ArtifactId) -> Result<db_storage::DbIoU64List, DbError> {
+            self.inner.list_segments(document).await
+        }
         async fn truncate_tail(&self, writer: &db_storage::WalWriterPermit, index: u64, len: u64) -> Result<(), DbError> {
-            if self.cancel_on_truncate { self.cancelled.store(true, std::sync::atomic::Ordering::Release); }
+            if self.cancel_on_truncate {
+                self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            }
             self.inner.truncate_tail(writer, index, len).await
         }
-        async fn delete_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> { self.inner.delete_segment(writer, index).await }
+        async fn delete_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+            self.inner.delete_segment(writer, index).await
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3043,32 +3403,35 @@ pub(crate) mod tests {
             let mut control = WalCursorControl::new(cancelled, deadline, if mode == "fuel" { 1 } else { 1_000_000 }).unwrap();
             let rejected = match ArtifactWal::open_with_control(&storage, document.clone(), GroupCommitPolicy::default(), 1, &mut control).await {
                 Err(rejected) => matches!(rejected_open_error(rejected).await, DbError::Unavailable(_) | DbError::LimitExceeded("wal cursor fuel")),
-                Ok((mut wal, _)) => { wal.close().await.unwrap(); false },
+                Ok((mut wal, _)) => {
+                    wal.close().await.unwrap();
+                    false
+                }
             };
             assert!(rejected, "{mode}");
             assert_eq!(segment_bytes(&storage, &document, 0).await, before);
         }
         for cancel_on_truncate in [false, true] {
-        let storage = committed_fixture_storage(row, &document).await;
-        let writer = storage.acquire_writer(&document).await.unwrap();
-        storage.append(&writer, 0, pages(b"uncommitted-tail")).await.unwrap();
-        writer.release().await.unwrap();
-        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let boundary = AbortCancellationStorage { inner: &storage, cancelled: cancelled.clone(), cancel_on_truncate, synced: std::sync::atomic::AtomicUsize::new(0) };
-        let mut control = WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-        let (mut wal, report) = ArtifactWal::open_with_control(&boundary, document.clone(), GroupCommitPolicy::default(), 2, &mut control).await.unwrap();
-        assert!(cancelled.load(std::sync::atomic::Ordering::Acquire));
-        assert_eq!(boundary.synced.load(std::sync::atomic::Ordering::Acquire), if cancel_on_truncate { 2 } else { 1 });
-        assert_eq!(report.recovered_abort_tx_id, Some(7));
-        assert_eq!(report.torn_tail_bytes, b"uncommitted-tail".len() as u64);
-        let repaired = segment_bytes(&storage, &document, 0).await;
-        wal.close().await.unwrap();
-        let (mut reopened, report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 3).await.unwrap();
-        assert_eq!(report.recovered_abort_tx_id, None);
-        assert_eq!(segment_bytes(&storage, &document, 0).await, repaired);
-        reopened.close().await.unwrap();
-        assert_no_committed_transaction(&storage, &document).await;
-        eprintln!("[DEBUG] WAL abort recovery rejected pre-boundary cancellation without writes and completed admitted Fsync, cancel_on_truncate={cancel_on_truncate}");
+            let storage = committed_fixture_storage(row, &document).await;
+            let writer = storage.acquire_writer(&document).await.unwrap();
+            storage.append(&writer, 0, pages(b"uncommitted-tail")).await.unwrap();
+            writer.release().await.unwrap();
+            let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let boundary = AbortCancellationStorage { inner: &storage, cancelled: cancelled.clone(), cancel_on_truncate, synced: std::sync::atomic::AtomicUsize::new(0) };
+            let mut control = WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
+            let (mut wal, report) = ArtifactWal::open_with_control(&boundary, document.clone(), GroupCommitPolicy::default(), 2, &mut control).await.unwrap();
+            assert!(cancelled.load(std::sync::atomic::Ordering::Acquire));
+            assert_eq!(boundary.synced.load(std::sync::atomic::Ordering::Acquire), if cancel_on_truncate { 2 } else { 1 });
+            assert_eq!(report.recovered_abort_tx_id, Some(7));
+            assert_eq!(report.torn_tail_bytes, b"uncommitted-tail".len() as u64);
+            let repaired = segment_bytes(&storage, &document, 0).await;
+            wal.close().await.unwrap();
+            let (mut reopened, report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 3).await.unwrap();
+            assert_eq!(report.recovered_abort_tx_id, None);
+            assert_eq!(segment_bytes(&storage, &document, 0).await, repaired);
+            reopened.close().await.unwrap();
+            assert_no_committed_transaction(&storage, &document).await;
+            eprintln!("[DEBUG] WAL abort recovery rejected pre-boundary cancellation without writes and completed admitted Fsync, cancel_on_truncate={cancel_on_truncate}");
         }
     }
 
@@ -3113,7 +3476,10 @@ pub(crate) mod tests {
             } else {
                 let rejected = match result {
                     Err(rejected) => matches!(rejected_open_error(rejected).await, DbError::LimitExceeded("wal recovery abort exceeds retained segment budget")),
-                    Ok((mut wal, _)) => { wal.close().await.unwrap(); false },
+                    Ok((mut wal, _)) => {
+                        wal.close().await.unwrap();
+                        false
+                    }
                 };
                 assert!(rejected);
                 assert_eq!(segment_bytes(&storage, &document, 0).await, before);
@@ -3124,7 +3490,13 @@ pub(crate) mod tests {
     }
 
     fn committed_fixture_kind(kind: u8) -> &'static str {
-        match kind { WAL_COMMAND => "command", WAL_FRONTIER => "frontier", WAL_SNAPSHOT_PUB => "snapshot", WAL_PAYLOAD => "cas", _ => panic!("unexpected fixture body kind") }
+        match kind {
+            WAL_COMMAND => "command",
+            WAL_FRONTIER => "frontier",
+            WAL_SNAPSHOT_PUB => "snapshot",
+            WAL_PAYLOAD => "cas",
+            _ => panic!("unexpected fixture body kind"),
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3159,12 +3531,20 @@ pub(crate) mod tests {
                         offset = frame.frame_end;
                     }
                     recovery_abort = gate.finish_segment(segment["state"] == "active" && index + 1 == row["segments"].as_array().unwrap().len())?;
-                    if index + 1 != row["segments"].as_array().unwrap().len() { gate.advance_segment()?; }
+                    if index + 1 != row["segments"].as_array().unwrap().len() {
+                        gate.advance_segment()?;
+                    }
                     Ok(())
-                }.await;
+                }
+                .await;
                 while source.close_step().unwrap().is_some() {}
                 if let Err(error) = result {
-                    failure = Some(match error { DbError::LimitExceeded("wal transaction records") => "capacity", DbError::LimitExceeded("wal transaction sequence") => "sequence", DbError::Corrupt(_) => "corrupt", other => panic!("unexpected fixture error: {other:?}") });
+                    failure = Some(match error {
+                        DbError::LimitExceeded("wal transaction records") => "capacity",
+                        DbError::LimitExceeded("wal transaction sequence") => "sequence",
+                        DbError::Corrupt(_) => "corrupt",
+                        other => panic!("unexpected fixture error: {other:?}"),
+                    });
                     break;
                 }
             }
@@ -3184,7 +3564,9 @@ pub(crate) mod tests {
                             let mut kinds = Vec::new();
                             loop {
                                 match transaction.next_record_step().unwrap() {
-                                    WalCommittedRecordStep::Record(record) => { kinds.push(committed_fixture_kind(record.retained_shape().0)); }
+                                    WalCommittedRecordStep::Record(record) => {
+                                        kinds.push(committed_fixture_kind(record.retained_shape().0));
+                                    }
                                     WalCommittedRecordStep::Yield => continue,
                                     WalCommittedRecordStep::Done => break,
                                 }
@@ -3206,11 +3588,18 @@ pub(crate) mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn wal_immutable_source_fragmentation_matches_neutral_transactions() {
-        struct Fragments<'a> { bytes: &'a [u8], chunk: usize }
+        struct Fragments<'a> {
+            bytes: &'a [u8],
+            chunk: usize,
+        }
         impl WalImmutableByteSource for Fragments<'_> {
-            fn byte_len(&self) -> usize { self.bytes.len() }
+            fn byte_len(&self) -> usize {
+                self.bytes.len()
+            }
             fn fragment_at(&self, offset: usize, limit: usize) -> Result<&[u8], DbError> {
-                if offset >= limit || limit > self.bytes.len() { return Err(DbError::Corrupt("fixture immutable range".to_string())); }
+                if offset >= limit || limit > self.bytes.len() {
+                    return Err(DbError::Corrupt("fixture immutable range".to_string()));
+                }
                 Ok(&self.bytes[offset..limit.min((offset / self.chunk + 1) * self.chunk)])
             }
         }
@@ -3230,17 +3619,27 @@ pub(crate) mod tests {
                         padded.extend_from_slice(&bytes);
                         padded.extend_from_slice(&[0xda; 19]);
                         let mut writer = db_storage::DbIoPageWriter::try_reserve(padded.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).unwrap();
-                        for fragment in padded.chunks(db_storage::DB_IO_PAGE_BYTES) { assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len()); }
+                        for fragment in padded.chunks(db_storage::DB_IO_PAGE_BYTES) {
+                            assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
+                        }
                         let pages = writer.finish().unwrap();
                         let pages = pages.try_range(4_093).unwrap_or_else(|_| panic!("fixture range must retain its exact WAL"));
                         Some(pages.try_prefix(bytes.len()).unwrap_or_else(|_| panic!("fixture prefix must exclude trailing padding")))
-                    } else { None };
-                    let source: &dyn WalImmutableByteSource = match ranged.as_ref() { Some(pages) => pages, None => &fragments };
+                    } else {
+                        None
+                    };
+                    let source: &dyn WalImmutableByteSource = match ranged.as_ref() {
+                        Some(pages) => pages,
+                        None => &fragments,
+                    };
                     assert_eq!(source.byte_len(), bytes.len());
                     assert!(source.fragment_at(bytes.len(), bytes.len()).is_err());
                     assert!(source.fragment_at(0, bytes.len() + 1).is_err());
                     let owner = WalAuthenticatedSource::new(source, gate, index as u64, previous);
-                    let mut owner = match owner.finish() { Err(owner) => owner, Ok(_) => panic!("unverified source must retain its ownership") };
+                    let mut owner = match owner.finish() {
+                        Err(owner) => owner,
+                        Ok(_) => panic!("unverified source must retain its ownership"),
+                    };
                     let mut opportunity = control();
                     assert!(matches!(owner.next_step(&mut opportunity), Err(DbError::Corrupt(_))));
                     let mut turns = 0;
@@ -3248,7 +3647,9 @@ pub(crate) mod tests {
                         turns += 1;
                         assert!(turns <= bytes.len() + 2);
                         opportunity.replenish(std::time::Instant::now() + std::time::Duration::from_secs(30), 1).unwrap();
-                        if owner.verify_step(&document, &mut opportunity).unwrap() { break; }
+                        if owner.verify_step(&document, &mut opportunity).unwrap() {
+                            break;
+                        }
                     }
                     loop {
                         opportunity.replenish(std::time::Instant::now() + std::time::Duration::from_secs(30), 1).unwrap();
@@ -3256,7 +3657,9 @@ pub(crate) mod tests {
                             WalAuthenticatedStep::Committed => {
                                 let mut kinds = Vec::new();
                                 for body in 0..64 {
-                                    let Some(frame) = owner.committed_frame(body) else { break; };
+                                    let Some(frame) = owner.committed_frame(body) else {
+                                        break;
+                                    };
                                     kinds.push(committed_fixture_kind(frame.kind));
                                 }
                                 output.push(serde_json::json!({ "id": owner.gate.ready.unwrap().to_string(), "kinds": kinds }));
@@ -3271,7 +3674,9 @@ pub(crate) mod tests {
                     gate = next_gate;
                     previous = WalPriorChainTip::Verified(tip);
                     if let Some(pages) = ranged.as_mut() {
-                        while !pages.terminal_is_empty() { pages.close_step().unwrap(); }
+                        while !pages.terminal_is_empty() {
+                            pages.close_step().unwrap();
+                        }
                         assert!(pages.terminal_is_empty());
                     }
                 }
@@ -3387,10 +3792,14 @@ pub(crate) mod tests {
             let mut decoder = WalRetainedRecordDecoder::new(WalRecordFrame { kind: WAL_COMMAND, payload_start: 0, payload_end: expected.len(), frame_end: expected.len() });
             let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
             let mut opportunity = WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 128).unwrap();
-            for _ in 0..cut { assert!(decoder.step(&source, &mut opportunity).unwrap().is_none()); }
+            for _ in 0..cut {
+                assert!(decoder.step(&source, &mut opportunity).unwrap().is_none());
+            }
             cancelled.store(true, std::sync::atomic::Ordering::Release);
             assert!(matches!(decoder.step(&source, &mut opportunity), Err(DbError::Unavailable(message)) if message == "wal cursor cancelled"));
-            while decoder.close_owner_step().unwrap() { assert!(cancelled.load(std::sync::atomic::Ordering::Acquire)); }
+            while decoder.close_owner_step().unwrap() {
+                assert!(cancelled.load(std::sync::atomic::Ordering::Acquire));
+            }
             assert!(decoder.terminal_is_empty());
             assert_eq!(source.len(), expected.len());
         }
@@ -3446,33 +3855,35 @@ pub(crate) mod tests {
         let document = ArtifactId::from("committed-drop");
         let storage = committed_fixture_storage(row, &document).await;
         for decoded in [false, true] {
-        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let opportunity = WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
-        let mut cursor = replay_committed_document(&storage, &document, opportunity).await.unwrap();
-        loop {
-            match cursor.next_transaction_step().await.unwrap() {
-                WalCommittedStep::Transaction(mut transaction) => {
-                    assert!(matches!(transaction.next_record_step().unwrap(), WalCommittedRecordStep::Yield));
-                    if decoded {
-                        loop {
-                            match transaction.next_record_step().unwrap() {
-                                WalCommittedRecordStep::Record(WalRecord::Command(_)) => break,
-                                WalCommittedRecordStep::Yield => {}
-                                _ => panic!("unfinished-record fixture lost its first command"),
+            let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let opportunity = WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+            let mut cursor = replay_committed_document(&storage, &document, opportunity).await.unwrap();
+            loop {
+                match cursor.next_transaction_step().await.unwrap() {
+                    WalCommittedStep::Transaction(mut transaction) => {
+                        assert!(matches!(transaction.next_record_step().unwrap(), WalCommittedRecordStep::Yield));
+                        if decoded {
+                            loop {
+                                match transaction.next_record_step().unwrap() {
+                                    WalCommittedRecordStep::Record(WalRecord::Command(_)) => break,
+                                    WalCommittedRecordStep::Yield => {}
+                                    _ => panic!("unfinished-record fixture lost its first command"),
+                                }
                             }
                         }
+                        drop(transaction);
+                        break;
                     }
-                    drop(transaction);
-                    break;
+                    WalCommittedStep::Yield => {}
+                    WalCommittedStep::Done => panic!("committed transaction was skipped"),
                 }
-                WalCommittedStep::Yield => {}
-                WalCommittedStep::Done => panic!("committed transaction was skipped"),
             }
-        }
-        assert!(matches!(cursor.next_transaction_step().await, Err(DbError::Corrupt(_))));
-        cancelled.store(true, std::sync::atomic::Ordering::Release);
-        while cursor.close_owner_step().unwrap() { assert!(cancelled.load(std::sync::atomic::Ordering::Acquire)); }
-        assert!(cursor.terminal_is_empty());
+            assert!(matches!(cursor.next_transaction_step().await, Err(DbError::Corrupt(_))));
+            cancelled.store(true, std::sync::atomic::Ordering::Release);
+            while cursor.close_owner_step().unwrap() {
+                assert!(cancelled.load(std::sync::atomic::Ordering::Acquire));
+            }
+            assert!(cursor.terminal_is_empty());
         }
     }
 
@@ -3480,7 +3891,9 @@ pub(crate) mod tests {
         let mut batch = WalRecordBatch::new();
         assert!(batch.push(WalRecord::Command(retained(&vec![b'a'; length]).await)).is_ok());
         let result = wal.submit(storage, &batch, durability, 0).await;
-        while batch.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while batch.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         result
     }
 
@@ -3505,12 +3918,16 @@ pub(crate) mod tests {
         for (index, length) in case["lengths"].as_array().unwrap().iter().enumerate() {
             assert_eq!(storage.segment_len(&document, index as u64).await.unwrap(), length.as_u64().unwrap());
         }
-        while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         let (mut reopened, _) = ArtifactWal::open(storage, document.clone(), policy, 1).await.unwrap();
         assert_eq!(reopened.next_tx_id, 4);
         assert_eq!(segment_bytes(storage, &document, 0).await, before);
         assert_eq!(replay_summaries(storage, &document).await.iter().filter(|record| matches!(record, ReplaySummary::Command(_))).count(), 3);
-        while reopened.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while reopened.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3534,9 +3951,13 @@ pub(crate) mod tests {
         let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
         capacity_submission(&storage, &mut wal, fixture["exactPayloadBytes"].as_u64().unwrap() as usize, DurabilityClass::Fsync).await.unwrap();
         assert_eq!(storage.segment_len(&document, 0).await.unwrap(), fixture["maxSegmentBytes"].as_u64().unwrap());
-        while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         let (mut wal, _) = ArtifactWal::open(&storage, document, GroupCommitPolicy::default(), 0).await.unwrap();
-        while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         println!("[DEBUG] WAL capacity: Memory and filesystem Fsync/grouped submissions rotate before overflow, reject one-over without effects and reopen the exact maximum");
     }
 
@@ -3563,10 +3984,16 @@ pub(crate) mod tests {
             let mut actual = vec![0; length];
             prefix.read_exact(0, &mut actual).await.unwrap();
             assert_eq!(actual, input[offset..offset + length]);
-            while lock(&prefix.0).close_step().unwrap().is_some() { semio_framework_async::yield_once().await; }
-            while copied.close_step().unwrap().is_some() { semio_framework_async::yield_once().await; }
+            while lock(&prefix.0).close_step().unwrap().is_some() {
+                semio_framework_async::yield_once().await;
+            }
+            while copied.close_step().unwrap().is_some() {
+                semio_framework_async::yield_once().await;
+            }
         }
-        while lock(&source.0).close_step().unwrap().is_some() { semio_framework_async::yield_once().await; }
+        while lock(&source.0).close_step().unwrap().is_some() {
+            semio_framework_async::yield_once().await;
+        }
         let document = doc(fixture["document"].as_str().unwrap()).await;
         let seed = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let mut seeded = recovery_seed(&seed, &document).await;
@@ -3581,7 +4008,9 @@ pub(crate) mod tests {
             let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
             let writer = storage.acquire_writer(&document).await.unwrap();
             storage.create_segment(&writer, 0).await.unwrap();
-            if cut != 0 { storage.append(&writer, 0, pages(&full[..cut])).await.unwrap(); }
+            if cut != 0 {
+                storage.append(&writer, 0, pages(&full[..cut])).await.unwrap();
+            }
             writer.release().await.unwrap();
             let (mut wal, report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 9).await.unwrap_or_else(|error| panic!("cut {cut}: {error:?}"));
             assert_eq!(report.torn_tail_bytes, (cut - trusted) as u64, "cut {cut}");
@@ -3621,7 +4050,9 @@ pub(crate) mod tests {
                 if matches!(name, "successor-empty" | "successor-partial" | "successor-header" | "compacted-clean" | "compacted-empty" | "compacted-header" | "earlier-active" | "wrong-chain") {
                     wal.rotate(&storage, 3).await.unwrap();
                 }
-                if name == "compacted-clean" { submit_one(&storage, &mut wal, WalRecord::Command(retained(b"c").await), DurabilityClass::Fsync, 4).await; }
+                if name == "compacted-clean" {
+                    submit_one(&storage, &mut wal, WalRecord::Command(retained(b"c").await), DurabilityClass::Fsync, 4).await;
+                }
                 if name == "exhausted-tx" {
                     wal.active.append_record(&WalRecord::TxBegin { tx_id: u64::MAX }, 4).await.unwrap();
                     wal.active.append_record(&WalRecord::TxCommit { tx_id: u64::MAX, record_count: 0 }, 4).await.unwrap();
@@ -3641,8 +4072,13 @@ pub(crate) mod tests {
                     }
                     "earlier-active" | "corrupt-crc" | "partial-header-mismatch" => {
                         let mut bytes = segment_bytes(&storage, &document, 0).await;
-                        if name == "corrupt-crc" { bytes[100] ^= 1; }
-                        if name == "partial-header-mismatch" { bytes.truncate(15); bytes[0] ^= 1; }
+                        if name == "corrupt-crc" {
+                            bytes[100] ^= 1;
+                        }
+                        if name == "partial-header-mismatch" {
+                            bytes.truncate(15);
+                            bytes[0] ^= 1;
+                        }
                         storage.delete_segment(&writer, 0).await.unwrap();
                         storage.create_segment(&writer, 0).await.unwrap();
                         storage.append(&writer, 0, pages(&bytes)).await.unwrap();
@@ -3670,12 +4106,16 @@ pub(crate) mod tests {
                     }
                     _ => {}
                 }
-                if name.starts_with("compacted-") { storage.delete_segment(&writer, 0).await.unwrap(); }
+                if name.starts_with("compacted-") {
+                    storage.delete_segment(&writer, 0).await.unwrap();
+                }
                 writer.release().await.unwrap();
             }
             let mut indices = storage.list_segments(&document).await.unwrap();
             let mut before = Vec::new();
-            for &index in indices.as_slice() { before.push((index, segment_bytes(&storage, &document, index).await, storage.segment_state(&document, index).await.unwrap())); }
+            for &index in indices.as_slice() {
+                before.push((index, segment_bytes(&storage, &document, index).await, storage.segment_state(&document, index).await.unwrap()));
+            }
             while indices.close_step() {}
             let result = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 5).await;
             assert_eq!(result.is_ok(), accepted, "{name}: {:?}", result.as_ref().err());
@@ -3687,7 +4127,13 @@ pub(crate) mod tests {
             }
             match result {
                 Ok((mut wal, _)) => {
-                    let expected_tx = if name == "missing" { 1 } else if name == "compacted-clean" { 4 } else { 3 };
+                    let expected_tx = if name == "missing" {
+                        1
+                    } else if name == "compacted-clean" {
+                        4
+                    } else {
+                        3
+                    };
                     assert_eq!(wal.next_tx_id, expected_tx, "{name}");
                     let receipt = submit_one(&storage, &mut wal, WalRecord::Command(retained(b"z").await), DurabilityClass::Fsync, 6).await;
                     assert_eq!(receipt.tx_id, expected_tx);
@@ -4083,8 +4529,12 @@ mod retained_tests {
         let len = storage.segment_len(document, 0).await.unwrap();
         let mut pages = storage.read(document, 0, pack::ByteRange { offset: 0, len }).await.unwrap();
         let mut bytes = Vec::with_capacity(len as usize);
-        for fragment in pages.fragments() { bytes.extend_from_slice(fragment); }
-        while pages.close_step().unwrap().is_some() { semio_framework_async::yield_once().await; }
+        for fragment in pages.fragments() {
+            bytes.extend_from_slice(fragment);
+        }
+        while pages.close_step().unwrap().is_some() {
+            semio_framework_async::yield_once().await;
+        }
         bytes
     }
 
@@ -4139,7 +4589,9 @@ mod retained_tests {
             }
             suffix => panic!("unknown WAL fail-stop fixture suffix {suffix}"),
         }
-        while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         assert!(wal.terminal_is_empty());
 
         let inner_wal = inner.wal().await;
@@ -4152,7 +4604,9 @@ mod retained_tests {
             assert_eq!(recovered, baseline, "reopen must retain exactly the last complete prefix");
             assert_eq!(report.torn_tail_bytes, after_failure.len() as u64 - baseline.len() as u64);
         }
-        while reopened.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while reopened.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         assert!(reopened.terminal_is_empty());
     }
 
@@ -4223,7 +4677,11 @@ mod retained_tests {
                     seen += 1;
                     while record.close_step().unwrap() {}
                 }
-                WalReplayStep::Yield => { if seen != 0 { boundary_yields += 1; } },
+                WalReplayStep::Yield => {
+                    if seen != 0 {
+                        boundary_yields += 1;
+                    }
+                }
                 WalReplayStep::Done => panic!("retained replay closed without resumable segment retirement"),
             }
         }
@@ -4264,12 +4722,16 @@ mod retained_tests {
         let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document = ArtifactId::from("retained-artifact-wal-close-budget");
         let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
-        while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         assert!(wal.terminal_is_empty());
 
         for turn in 0..18 {
             let (mut wal, _) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), turn as u64 + 1).await.unwrap();
-            while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            while wal.close_step().unwrap() {
+                semio_framework_async::yield_once().await;
+            }
             assert!(wal.terminal_is_empty());
         }
 
@@ -4280,7 +4742,9 @@ mod retained_tests {
         assert!(batch.push(WalRecord::Command(command)).is_ok());
         assert!(wal.submit(&storage, &batch, DurabilityClass::Fsync, 101).await.unwrap().committed);
         while batch.close_step().unwrap() {}
-        while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         assert!(wal.terminal_is_empty());
     }
 
@@ -4299,7 +4763,9 @@ mod retained_tests {
         assert!(matches!(wal.close_step(), Err(DbError::InvalidArgument(message)) if message.contains("force_flush")));
         assert!(!wal.terminal_is_empty());
         assert!(wal.force_flush(&storage).await.unwrap());
-        while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         assert!(wal.terminal_is_empty());
 
         let empty = WalRecordBatch::new();
@@ -4344,7 +4810,9 @@ mod retained_tests {
         assert!(matches!(wal.force_flush(&storage).await, Err(DbError::Closed)));
         assert!(matches!(wal.rotate(&storage, 2).await, Err(DbError::Closed)));
         assert_eq!(storage.append_calls().await, append_calls);
-        while wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         assert!(wal.terminal_is_empty());
 
         let inner_wal = inner.wal().await;
@@ -4355,12 +4823,18 @@ mod retained_tests {
         let mut replay = replay_document(&inner_wal, &document, control).await.unwrap();
         let mut commands = 0;
         while let Some(mut record) = replay.next().await.unwrap() {
-            if matches!(&record, WalRecord::Command(_)) { commands += 1; }
-            while record.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            if matches!(&record, WalRecord::Command(_)) {
+                commands += 1;
+            }
+            while record.close_step().unwrap() {
+                semio_framework_async::yield_once().await;
+            }
         }
         assert_eq!(commands, 1, "reopen must expose the pre-seal transaction exactly once");
         while replay.close_step().await.unwrap() {}
-        while reopened.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while reopened.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         assert!(reopened.terminal_is_empty());
     }
 }

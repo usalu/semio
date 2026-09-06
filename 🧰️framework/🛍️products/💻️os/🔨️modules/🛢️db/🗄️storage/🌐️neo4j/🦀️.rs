@@ -41,9 +41,10 @@
 use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
-    close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, db_io_write_observed_bytes_range, register_db_io_backend, retire_db_io_backend,
-    submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter,
-    DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
+    close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, db_io_write_observed_bytes_range, register_db_io_backend,
+    register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation,
+    DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo,
+    LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
 };
 
 macro_rules! with_admitted_artifact {
@@ -693,9 +694,8 @@ impl IndexStorage for Neo4jDbIoExecutor {
         check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "index_storage::write_run")?;
         let run_id_param = u64_to_i64(run_id, "index run id")?;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
-        let result = self
-            .run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", prepared.as_static_driver_slice().to_vec()).param("len", u64_to_i64(bytes.len() as u64, "index run length")?))
-            .await;
+        let result =
+            self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", prepared.as_static_driver_slice().to_vec()).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)).await;
         db_io_close_platform(prepared).await?;
         result
     }
@@ -868,7 +868,9 @@ impl Neo4jDbIoExecutor {
                 self.bootstrap_schema().await?;
                 Ok(DbIoResult::Unit)
             }
-            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => Err(DbError::Unavailable("remote WAL mutation requires a mounted session-scoped writer fence".to_string())),
+            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => {
+                Err(DbError::Unavailable("remote WAL mutation requires a mounted session-scoped writer fence".to_string()))
+            }
             DbIoTask::WalRead { document, index, range, output, .. } => Ok(DbIoResult::Pages(self.wal_read_into(document.as_str(), *index, *range, output).await?)),
             DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, self.segment_len(artifact, *index))?)),
             DbIoTask::WalState { document, index, .. } => Ok(DbIoResult::WalSegmentState(with_admitted_artifact!(operation, document, artifact, self.segment_state(artifact, *index))?)),
@@ -983,25 +985,26 @@ pub struct Neo4jStorage {
 }
 
 impl Neo4jStorage {
-    pub async fn connect(worker_pool: Arc<WorkerPool>, uri: &str, user: &str, password: &str) -> Result<Self, DbError> {
+    pub async fn connect(worker_pool: Arc<WorkerPool>, uri: &str, user: &str, password: &str) -> Result<Self, DbStorageOpenRejected> {
         let uri_owner = DbIoText::try_from_str(uri)?;
         let config = neo4rs::ConfigBuilder::default().uri(uri).user(user).password(password).build().map_err(map_neo4rs_error)?;
         Self::connect_owned(worker_pool, uri_owner, config).await
     }
 
-    pub async fn connect_to_database(worker_pool: Arc<WorkerPool>, uri: &str, user: &str, password: &str, database: &str) -> Result<Self, DbError> {
+    pub async fn connect_to_database(worker_pool: Arc<WorkerPool>, uri: &str, user: &str, password: &str, database: &str) -> Result<Self, DbStorageOpenRejected> {
         let uri_owner = DbIoText::try_from_str(uri)?;
         let config = neo4rs::ConfigBuilder::default().uri(uri).user(user).password(password).db(database).build().map_err(map_neo4rs_error)?;
         Self::connect_owned(worker_pool, uri_owner, config).await
     }
 
-    async fn connect_owned(worker_pool: Arc<WorkerPool>, uri: DbIoText, config: neo4rs::Config) -> Result<Self, DbError> {
+    async fn connect_owned(worker_pool: Arc<WorkerPool>, uri: DbIoText, config: neo4rs::Config) -> Result<Self, DbStorageOpenRejected> {
+        let rollback = DbIoBackendRollbackReservation::try_reserve()?;
+        let pool_use = worker_pool.acquire_use().map_err(|error| DbError::Unavailable(format!("Neo4j DB I/O backend WorkerPool use rejected: {error:?}")))?;
         let executor = Box::new(Neo4jDbIoExecutor::new(config, uri.clone()));
-        let control = register_db_io_backend(DbIoBackendKind::Neo4j, executor, worker_pool.clone())?;
+        let control = register_db_io_backend_prepared_with_use(DbIoBackendKind::Neo4j, executor, worker_pool.clone(), pool_use, rollback)?;
         let storage = Self { control, worker_pool, closed: std::sync::atomic::AtomicBool::new(false) };
         if let Err(error) = storage.execute(DbIoTask::BackendOpen { backend: control, path: uri }).await {
-            let _ = storage.execute(DbIoTask::BackendClose { backend: control }).await;
-            return Err(error);
+            return Err(DbStorageOpenRejected::registered(error, control));
         }
         Ok(storage)
     }

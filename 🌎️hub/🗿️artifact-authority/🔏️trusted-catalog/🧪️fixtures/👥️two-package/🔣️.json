@@ -60,6 +60,15 @@
           "byteLength": 1,
           "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
         },
+        "browserActor": {
+          "kind": "closed-browser-actor", "schema": "semio.os.closed-browser-actor.v1", "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1",
+          "path": "browser/closed-actor.mjs", "byteLength": 3,
+          "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+          "sourceComponentSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+          "sourceDescriptorByteSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "policySha256": "4141414141414141414141414141414141414141414141414141414141414141",
+          "importInterfaces": ["semio:framework/host-async@1.0.0", "semio:framework/pure@1.0.0"]
+        },
         "nativeCodecs": [
           {
             "artifactKind": "s.fixture.document",
@@ -112,6 +121,7 @@
           "sha256": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986"
         },
         "nativeCodecs": [],
+        "browserActor": { "kind": "none" },
         "openTargets": []
       }
     ]

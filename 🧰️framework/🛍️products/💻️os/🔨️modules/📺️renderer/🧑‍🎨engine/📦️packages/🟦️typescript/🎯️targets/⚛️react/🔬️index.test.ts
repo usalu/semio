@@ -1815,6 +1815,32 @@ describe("framework plugin runtime", () => {
       expect(result.surface?.nodes.get(0)?.children).toEqual([]);
     });
 
+    it("projects lossless pack integer carriers onto exact node ids, children and revisions", async () => {
+      const { encodePackValue, packUInt } = await import("@semio-tech/framework-os");
+      const ops = decodeWirePatchOps([
+        {
+          tag: "upsert",
+          val: {
+            node: Array.from(
+              encodePackValue({ id: packUInt(1n), key: "leaf-1", component: leaf(1, "a").component, layout: leaf(1, "a").layout, style: {}, activity: "idle", accessibility: {}, children: [packUInt(3n)] }),
+            ),
+          },
+        },
+        { tag: "upsert", val: { node: Array.from(encodePackValue({ id: packUInt(3n), key: "leaf-3", component: leaf(3, "b").component, layout: leaf(3, "b").layout, style: {}, activity: "idle", accessibility: {} })) } },
+        { tag: "set-children", val: { node: 1n, children: [3n] } },
+        { tag: "set-root", val: 1n },
+      ]);
+      expect(ops.map((op) => op.type)).toEqual(["upsert", "upsert", "setChildren", "setRoot"]);
+      expect(ops[0]).toMatchObject({ type: "upsert", id: 1, children: [3] });
+      expect(ops[1]).toMatchObject({ type: "upsert", id: 3 });
+      expect(ops[3]).toEqual({ type: "setRoot", id: 1 });
+      const result = applyUiPatchToRetained(null, { surface: "s", revision: 1n, baseRevision: 0n, ops });
+      expect(result.desynced).toBe(false);
+      expect(result.surface?.nodes.get(1)?.children).toEqual([3]);
+      expect(result.surface?.nodes.get(3)?.component).toEqual({ type: "text", value: "b", emphasize: null, dataAttributes: null });
+      expect(() => decodeWirePatchOps([{ tag: "upsert", val: { node: Array.from(encodePackValue({ id: packUInt(2n ** 60n), key: "huge" })) } }])).toThrow(/upsert\.node\.id/u);
+    });
+
     it("applies incremental semantic field updates with a matching base revision", () => {
       const first = applyUiPatchToRetained(null, { surface: "s", revision: 1, baseRevision: 0, ops: [{ type: "upsert", ...leaf(0, "a") }, { type: "setRoot", id: 0 }] });
       const result = applyUiPatchToRetained(first.surface, { surface: "s", revision: 2, baseRevision: 1, ops: [{ type: "setComponent", id: 0, component: { type: "text", value: "b", emphasize: null, dataAttributes: null } }] });

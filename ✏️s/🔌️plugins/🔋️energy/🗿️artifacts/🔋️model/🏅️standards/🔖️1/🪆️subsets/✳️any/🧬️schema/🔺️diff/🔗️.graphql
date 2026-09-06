@@ -6,8 +6,15 @@ type EnergyModelDiff {
   model: JSON
   structure: JSON
   zones: JSON
-  referencedModel: JSON
+  referencedModel: EnergyLinkSlotDelta
+  weatherLink: EnergyLinkSlotDelta
   resultsJson: String
+}
+
+# 🔗️ A link slot delta; an absent field means the slot did not change at all.
+type EnergyLinkSlotDelta {
+  kind: String!
+  link: JSON
 }
 
 type EnergyModelArtifact {
@@ -16,5 +23,6 @@ type EnergyModelArtifact {
   structure: JSON!
   zones: JSON!
   referencedModel: JSON
+  weatherLink: JSON
   resultsJson: String!
 }

@@ -42,6 +42,10 @@ class WalWriterAuthorityCheckScript extends BundleScript {
       "dropped-facade-retains-use",
       "compaction-acquires-before-admission",
       "forged-kind-rejected-before-page-admission",
+      "rollback-reserved-before-owner-transfer",
+      "all-retirement-tiers-full-return-exact-executor",
+      "committed-rollback-retains-use-until-terminal",
+      "prepared-post-transfer-refusal-returns-close-owner",
     ]);
     assert.deepEqual(memoryFixture.writerTable, { slots: fixture.capacity, separateBox: true });
     assert.deepEqual(memoryFixture.controllerCredit, { items: 1, controls: 1, bytesFormula: "wake-plus-two-usize" });
@@ -57,6 +61,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     assert.equal(openFixture.acquisition[1].owner, openOwnerState);
     openOwnerState = "exact-writer-release";
     assert.equal(openFixture.acquisition[2].owner, openOwnerState);
+    assert.equal(openFixture.acquisition[2].releaseActivation, "first-explicit-close-poll");
     const exactRelease = Symbol("exact-writer-release");
     let retainedRelease: symbol | undefined = exactRelease;
     for (const [index, close] of openFixture.explicitClose.entries()) {
@@ -154,15 +159,19 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     console.log(`wal-writer-authority-independent-oracle: AJV=6 exact-u64=1 cases=${fixture.cases.length} mutations=${fixture.mutations.length} remote=${remoteFixture.cases.length} writer-slots=${memoryFixture.writerTable.slots} retained-result=1 directory-barriers=4 wal-open-owner=1 backend-pool-use=${poolUseFixture.cases.length}`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     for (const marker of ["struct WalWriterPermit", "struct WalWriterTable", "struct WalFileWriterGuard", "try_lock()", "checked_add(1)", "active_operation", "fn release_step"]) assert(source.includes(marker), `missing writer capability primitive: ${marker}`);
+    const explicitRelease = source.slice(source.indexOf("pub fn release(mut self)"), source.indexOf("fn request_release(&self)"));
+    assert(!explicitRelease.includes("self.request_release()"), "explicit retained release must stay dormant until its first poll");
     const storageSource = readFileSync(join(owner, "..", "🦀️.rs"), "utf8");
     for (const marker of ["WalWriterTable<WalFileWriterGuard>", "fn writer_sidecar", "DbIoTask::WalWriterAcquire", "fn pin_writer_operation", "finish_operation_if_pinned", ".semio-wal-writer"]) assert(storageSource.includes(marker), `missing filesystem writer integration: ${marker}`);
-    for (const marker of ["pool_use: Option<Arc<WorkerPoolUse>>", "fn db_io_backend_admit_operation", "Result<Arc<WorkerPool>, DbError>", "pub fn submit_db_io_task(task: DbIoTask)", "db_io_backend_control(owner.kind, slot, generation) != control"]) assert(storageSource.includes(marker), `missing backend-owned WorkerPool use boundary: ${marker}`);
+    for (const marker of ["pool_use: Option<Arc<WorkerPoolUse>>", "fn db_io_backend_admit_operation", "Result<Arc<WorkerPool>, DbError>", "pub fn submit_db_io_task(task: DbIoTask)", "db_io_backend_control(owner.kind, slot, generation) != control", "struct DbIoBackendRollbackReservation", "struct DbIoBackendRegistrationRejected", "pub enum DbStorageOpenRejected", "pub async fn retry_close(self) -> Result<DbError, Self>", "register_db_io_backend_prepared_with_use", "Result<DbIoBackendControl, DbIoBackendRegistrationRejected>", "reserved: bool"]) assert(storageSource.includes(marker), `missing backend-owned WorkerPool use boundary: ${marker}`);
     assert(!storageSource.includes("pub fn submit_db_io_task(pool:"), "DB I/O tasks must derive the exact registered backend pool");
+    const registrationSource = storageSource.slice(storageSource.indexOf("pub fn register_db_io_backend("), storageSource.indexOf("fn db_io_writer_release_lane_step"));
+    assert(!registrationSource.includes("let _ = db_io_park_lost_owner"), "backend registration must not discard a saturated retirement owner");
     for (const marker of ["MemoryDbIoExecutor::backing_bytes()", "checked_add(writer::release::controller_credit())"]) assert(storageSource.includes(marker), `missing memory writer backing integration: ${marker}`);
     const sqliteSource = readFileSync(join(owner, "..", "🪶️sqlite", "🦀️.rs"), "utf8");
     for (const marker of ["WalWriterTable<SqliteWalWriterGuard>", "canonical_database", "fn physical_writer_sidecar", "DbIoTask::WalWriterAcquire", "fn pin_writer_operation", "finish_operation_if_pinned", ".semio-wal-writer"]) assert(sqliteSource.includes(marker), `missing SQLite writer integration: ${marker}`);
     const releaseSource = readFileSync(join(owner, "🔔️release/🦀️.rs"), "utf8");
-    for (const marker of ["struct WalWriterSignalCell", "deferred_fault_waiter", "defer_fault_notifications", "suspend_controller_for_refusal", "deferred_wake_pending_for_test"]) assert(releaseSource.includes(marker), `missing bounded deferred refusal primitive: ${marker}`);
+    for (const marker of ["struct WalWriterSignalCell", "requested: bool", "fn request_release(&mut self)", "impl Drop for WalWriterRelease", "deferred_fault_waiter", "defer_fault_notifications", "suspend_controller_for_refusal", "deferred_wake_pending_for_test"]) assert(releaseSource.includes(marker), `missing bounded deferred refusal primitive: ${marker}`);
     assert.equal((storageSource.match(/writer::release::notify_faults/g) ?? []).length, 0, "public DB handback paths must not invoke writer wakers directly");
     assert(storageSource.includes("wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch"), "missing mounted stale-controller refusal law");
     if (segments[0] !== "--native") return;
@@ -200,6 +209,8 @@ class WalWriterAuthorityCheckScript extends BundleScript {
         "artifact_engine_create_rejection_propagates_exact_wal_release_owner",
         "database_document_mount_failure_terminalizes_authority_builder_wal_owner_before_fanout",
         "db_io_registered_backend_use_blocks_pool_shutdown_until_terminal_close",
+        "db_io_backend_registration_saturation_returns_exact_executor_before_pool_use",
+        "db_io_prepared_registration_failure_returns_exact_close_owner_after_submission_refusal",
         "db_io_task_uses_registered_backend_pool_not_caller_pool",
         "db_io_backend_drop_retains_pool_until_deferred_close_terminal",
         "db_io_forged_backend_kind_is_rejected_before_task_page_admission",
@@ -655,8 +666,26 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     assert(mountOwner.includes("DatabaseDocumentMountDriver::Idle") && mountOwner.includes("DatabaseDocumentMountDriver::Queued") && mountOwner.includes("DatabaseDocumentMountDriver::Polling") && mountOwner.includes("DatabaseDocumentMountDriver::NonRunnable"));
     assert(mountOwner.includes("resume_requested") && mountOwner.includes("wake_requested"));
     assert(mountOwner.includes("Arc::downgrade(self)") && !mountOwner.includes("let owner = self.clone();\n        self.submit_exact"));
+    const databaseOpen = source.slice(source.indexOf("async fn open_with("), source.indexOf("fn document_engine_config("));
+    assert.equal(databaseOpen.match(/acquire_use\(\)/g)?.length, 1);
+    for (const marker of ["DatabaseCapabilityOpenFuture::try_prepare_with_use", "DatabaseCatalogReadFuture::try_prepare_with_use", "DatabaseCatalogBootstrapFuture::try_prepare_with_use"]) assert(databaseOpen.includes(marker), `database open minted an untracked pool use instead of retaining ${marker}`);
+    const catalogPublication = source.slice(source.indexOf("async fn publish_mount_catalog("), source.indexOf("async fn run_open_document_mount("));
+    assert(catalogPublication.includes("DatabaseCreateCatalogFuture::try_prepare_with_use(pool, pool_use"));
+    const catalogDriveStart = source.indexOf("fn drive_one(self: Arc<Self>, generation: u64)", source.indexOf("//#region 🔖️CreateDocumentCatalogCas"));
+    const catalogDrive = source.slice(catalogDriveStart, source.indexOf("fn drive_claimed(self: &Arc<Self>, generation: u64)", catalogDriveStart));
+    assert(!catalogDrive.includes("release_success()"));
+    const helloStart = source.indexOf("pub fn hello_retained(");
+    const hello = source.slice(helloStart, source.indexOf("pub async fn hello(", helloStart));
+    assert(hello.includes("DatabaseSyncHelloFuture::try_submit_with_use") && !hello.includes("DatabaseSyncHelloFuture::try_submit("));
     const requestDrive = mountOwner.slice(mountOwner.indexOf("fn request_drive(self: &Arc<Self>"), mountOwner.indexOf("fn resume_parked("));
     assert(!requestDrive.includes("self.work.try_lock()") && !requestDrive.includes("self.work.lock()"));
+    const artifact = readFileSync(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"), "utf8");
+    for (const marker of ["enum ArtifactRunnerDriver", "RunnableIdle", "Queued", "PollingWake", "Parked", "ClosingReady", "ClosingPollingWake", "ClosingParked", "Terminal", "fn park_terminal_job", "struct ArtifactRunnerClosePoll", "struct ArtifactRunnerPoll", "struct ArtifactRunnerRetirementReservation", "WorkerMaintenanceStep::Retire", "impl Drop for ArtifactAuthority", "pub fn close(mut self) -> Result<(), Self>", "pub fn resume(mut self) -> Result<(), Self>"]) {
+      assert(artifact.includes(marker), `missing artifact terminal-authority marker: ${marker}`);
+    }
+    const artifactSchedule = artifact.slice(artifact.indexOf("fn schedule(self: &Arc<Self>)"), artifact.indexOf("fn submit_exact(self: &Arc<Self>"));
+    assert(artifactSchedule.includes("compare_exchange") && artifactSchedule.includes("ArtifactRunnerDriver::RunnableIdle as u8") && artifactSchedule.includes("ArtifactRunnerDriver::Queued as u8"));
+    assert(!artifactSchedule.includes("scheduled.compare_exchange"));
     const graph = readFileSync(join(owner, "..", "..", "🕸️version-graph", "🦀️.rs"), "utf8");
     assert(graph.includes("fn emit(&self, event: EmitEvent) -> impl Future<Output = ()> + Send;"));
     const hub = readFileSync(join(this.repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
@@ -685,6 +714,14 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
         "db_engine::tests::database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack",
         "db_engine::tests::database_worker_pool_use_is_admitted_before_the_first_storage_probe",
         "db_engine::tests::database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer",
+        "db_engine::tests::database_create_catalog_resolved_drop_retains_use_until_terminal_drain",
+        "db_artifact::tests::artifact_runner_terminal_authority_latch_preserves_external_job_and_one_resume",
+        "db_artifact::tests::artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn",
+        "db_artifact::tests::artifact_runner_terminal_close_returns_exact_cursor_until_retained_wake",
+        "db_artifact::tests::artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close",
+        "db_artifact::tests::artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner",
+        "db_artifact::tests::artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry",
+        "db_artifact::tests::artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity",
       ] }],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
       buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
@@ -713,6 +750,7 @@ class DurableOwnedGroupDecisionCheckScript extends BundleScript {
           "durable_group::tests::durable_owned_group_decision_rejects_forged_identity_commitment_and_capacity",
           "durable_group::tests::durable_decision_rejects_deflate_expansion_before_document_body_allocation",
           "durable_group::tests::durable_store_owned_three_member_bind_and_base_recovery_retain_exact_private_owners",
+          "durable_group::tests::durable_committed_record_recovers_all_three_stores_without_reappending_journal",
           "durable_group::tests::durable_json_carriers_preserve_numeric_kinds_and_reject_control_and_resource_excess",
           "durable_group::tests::durable_store_group_journal_commit_flips_one_shared_root_then_adopts_exactly_once",
           "durable_group::tests::durable_store_group_cancellation_waits_for_trusted_absence_then_restores_all_old_roots",
@@ -743,6 +781,11 @@ class DurableGroupJournalCheckScript extends BundleScript {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureOwner, "🧬️.schema.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
+    for (const row of fixture.committedDecisionWitnessCases) {
+      const events = row.recordKinds.filter((kind: string) => kind === "event").length;
+      const expected = row.transaction === "aborted" || events === 0 ? "ignored" : row.replayDocument === "foreign" || events !== 1 || row.recordKinds.length !== 1 ? "rejected" : "witness";
+      assert.equal(row.expected, expected);
+    }
     const storeOwner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group");
     const storeFixture = JSON.parse(readFileSync(join(storeOwner, "🧪️fixtures/🔣️.json"), "utf8"));
     assert.equal(createHash("sha256").update(storeFixture.expected.unsignedJson).digest("hex"), fixture.record.decisionSha256);
@@ -770,6 +813,8 @@ class DurableGroupJournalCheckScript extends BundleScript {
     assert(append.includes("WalRecord::Event") && append.includes("DurabilityClass::Fsync"));
     assert(append.indexOf("preflight_submit") < append.indexOf("self.wal.submit"));
     assert(append.includes("ArtifactDurableGroupJournalAppendV1::Absent") && append.includes("ArtifactDurableGroupJournalAppendV1::Rejected"));
+    const witness = artifactSource.slice(artifactSource.indexOf("struct ArtifactCommittedDurableGroupDecisionV1"), artifactSource.indexOf("//#endregion 🔖️Receipt"));
+    assert(witness.includes("WalCommittedTransaction") && witness.includes("record_count != 1") && witness.includes("transaction.finish()?"));
     const sink = artifactSource.slice(artifactSource.indexOf("struct ArtifactDurableGroupJournalSinkV1"), artifactSource.indexOf("type ArtifactBuildFuture"));
     assert(sink.includes("NotSubmitted") && sink.includes("Awaiting") && sink.includes("Failed") && sink.includes("Committed") && sink.includes("terminal_is_empty"));
     assert(!sink.includes("block_on"));
@@ -777,11 +822,12 @@ class DurableGroupJournalCheckScript extends BundleScript {
     assert(engineSource.includes("pub fn durable_group_journal_sink(&self, now_ms: u64)"));
     const laws = [
       "db_artifact::tests::document_authority_durable_group_journal_commits_one_exact_fsync_event",
+      "db_artifact::tests::committed_durable_group_decision_accepts_only_one_exact_event_transaction",
       "db_artifact::tests::document_authority_durable_group_journal_cancellation_before_handoff_is_absent",
       "db_artifact::tests::document_authority_durable_group_journal_rejects_hash_before_mailbox",
     ];
     for (const law of laws) assert(artifactSource.includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
-    console.log(`durable-group-journal-independent-oracle: AJV=1 cases=${fixture.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`);
+    console.log(`durable-group-journal-independent-oracle: AJV=1 cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,

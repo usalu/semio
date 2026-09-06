@@ -10,9 +10,7 @@ use crate::artifacts::space::SPACE_INDEX_DIALECT;
 use crate::viewer::space_index::modes::view;
 use crate::viewer::space_index::modes::view::windows::main;
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::{
-    built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer,
-};
+use semio_framework_plugin::{built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -105,7 +103,8 @@ mod tests {
         let snapshot = SSpaceSnapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let json = pack::to_json_string(&<SpaceIndexViewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default() }));
+        let tree = <SpaceIndexViewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default() }).expect("unknown Space viewer body tree");
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("unknown Space viewer body projection");
         assert!(json.contains("Unknown body"));
     }
 }

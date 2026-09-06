@@ -25,11 +25,11 @@ pub mod derived_composition {
         type Snapshot = EnergyModelSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_CSV, DEP_JSON, DEP_TXT, DEP_XLSX, DEP_ZIP]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -37,7 +37,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let native_sources = [native];
-                    let analysis = EnergyModelAnalyzer::analyze(&native_sources).await;
+                    let analysis = EnergyModelAnalyzer::analyze(&native_sources);
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
@@ -47,7 +47,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes).await {
+                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -56,7 +56,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).await {
+                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -65,7 +65,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes).await {
+                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -74,7 +74,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::xlsx::v_ecma_376::any::deserialize_bytes(&bytes).await {
+                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::xlsx::v_ecma_376::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -83,7 +83,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::zip::v2_0::any::deserialize_bytes(&bytes).await {
+                    if let Ok(snapshot) = crate::artifacts::model::io::import::deserializers::artifacts::zip::v2_0::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -121,13 +121,13 @@ pub mod io_registry {
     const MODEL_DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId("*") };
     const MODEL_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::model::EnergyModelSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::model::EnergyModelSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == MODEL_DIALECT) {
             let builder = match &source.payload {
-                IoPayload::Text(t) => EnergyModelAnyBuilder::from_text(t).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => EnergyModelAnyBuilder::from_binary(b).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Text(t) => EnergyModelAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Binary(b) => EnergyModelAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
             };
-            return builder.build().await.map_err(|diagnostics| ComposeError { message: "EnergyModelComposer export: build() failed".into(), diagnostics });
+            return builder.build().map_err(|diagnostics| ComposeError { message: "EnergyModelComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == MODEL_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
@@ -137,7 +137,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),
                 IoPayload::Binary(b) => b.clone(),
             };
-            return crate::artifacts::model::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::artifacts::model::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "EnergyModelComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -145,32 +145,32 @@ pub mod io_registry {
     const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     fn compose_export_zip(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::artifacts::model::io::export::serializers::artifacts::zip::v2_0::any::serialize_bytes(&snapshot).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::model::io::export::serializers::artifacts::zip::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
     const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
     fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::artifacts::model::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::model::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_CSV_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
     const EXPORT_XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     fn compose_export_xlsx(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::artifacts::model::io::export::serializers::artifacts::xlsx::v_ecma_376::any::serialize_bytes(&snapshot).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::model::io::export::serializers::artifacts::xlsx::v_ecma_376::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_XLSX_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::artifacts::model::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::model::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }

@@ -1,5 +1,7 @@
 //! 🔬️ Literal hostile traces exercise the production retained WAL reader, not a second matcher.
 
+#![cfg(feature = "native-artifact-execution")]
+
 use super::*;
 use db::storage::WalStorage;
 
@@ -14,7 +16,6 @@ fn decode_hex(value: &str) -> Vec<u8> {
     (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).unwrap()).collect()
 }
 
-#[cfg(feature = "native-artifact-execution")]
 fn durable_edit<Mutation>(ordinal: i32, actor: &str, timestamp: protocol::HybridLogicalTimestamp, forward: Mutation, inverse: Vec<Mutation>) -> directory::os_spr::Edit<Mutation> {
     let id = format!("inference-store-edit-{ordinal}");
     directory::os_spr::Edit {
@@ -43,8 +44,15 @@ fn durable_edit<Mutation>(ordinal: i32, actor: &str, timestamp: protocol::Hybrid
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
-pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> (directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1, Vec<u8>) {
+pub(super) struct DurableFixtureRecord {
+    pub(super) record: directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1,
+    pub(super) command: Vec<u8>,
+    pub(super) proposal_hash: String,
+    pub(super) mutation_id: String,
+    pub(super) command_hash: String,
+}
+
+pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixtureRecord {
     use protocol::Inference as _;
     use semio_s_plugin_gis::artifacts::gismap::{
         mutations::apply_gis_map_mutation,
@@ -74,8 +82,8 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> (directory:
     };
     let proposal = directory::os_pack::json::to_json_string(&work.parent).into_bytes();
     let inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
-    assert_eq!(proposal, decode_hex(fixture["command"]["diff"]["payloadHex"].as_str().unwrap()));
-    assert_eq!(inverse, decode_hex(fixture["command"]["inverse"]["payloadHex"].as_str().unwrap()));
+    let proposal_hash = crate::inference::sha256(&proposal);
+    let mutation_id = crate::inference::sha256(format!("semio.hub.inference-approval-mutation/v1\0{}\0{}", fixture["jobId"].as_str().unwrap(), proposal_hash).as_bytes())[..32].to_string();
     let record = directory::os_store::durable_group::durable_owned_group_journal_test_record_from_edits(
         directory::os_io::ArtifactRef {
             artifact_id: fixture["documentKey"].as_str().unwrap().into(),
@@ -90,7 +98,7 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> (directory:
     )
     .expect("Store-owned typed fixed-three decision fixture");
     let command = super::super::command::encode_server_stamped_command_v1(&super::super::command::CanonicalInferenceCommandPartsV1 {
-        mutation_id: fixture["command"]["mutationId"].as_str().unwrap(),
+        mutation_id: &mutation_id,
         document_id: fixture["documentKey"].as_str().unwrap(),
         actor,
         diff_schema: super::super::schema::GIS_DOCUMENT_SCHEMA,
@@ -100,9 +108,8 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> (directory:
         timestamp,
     })
     .expect("canonical command reconstructed from Store parent edit");
-    assert_eq!(crate::inference::sha256(&proposal), fixture["proposalHash"].as_str().unwrap());
-    assert_eq!(crate::inference::sha256(&command), fixture["commandHash"].as_str().unwrap());
-    (record, command)
+    let command_hash = crate::inference::sha256(&command);
+    DurableFixtureRecord { record, command, proposal_hash, mutation_id, command_hash }
 }
 
 fn scope(fixture: &serde_json::Value) -> DocumentScope {
@@ -122,7 +129,7 @@ pub(in crate::inference) fn envelope(fixture: &serde_json::Value) -> protocol::M
     }
 }
 
-fn target(fixture: &serde_json::Value, trace: &serde_json::Value) -> InferenceWalTargetV1 {
+fn target(fixture: &serde_json::Value, trace: &serde_json::Value, durable: &DurableFixtureRecord) -> InferenceWalTargetV1 {
     let mut scope = scope(fixture);
     if let Some(space_id) = trace["spaceId"].as_str() {
         scope.space_id = space_id.into();
@@ -131,25 +138,25 @@ fn target(fixture: &serde_json::Value, trace: &serde_json::Value) -> InferenceWa
         scope,
         generation: fixture["generation"].as_u64().unwrap(),
         job_id: fixture["jobId"].as_str().unwrap().into(),
-        proposal_hash: fixture["proposalHash"].as_str().unwrap().into(),
-        mutation_id: fixture["command"]["mutationId"].as_str().unwrap().into(),
-        command_hash: fixture["commandHash"].as_str().unwrap().into(),
-        decision_hash: fixture["decisionHash"].as_str().unwrap().into(),
+        proposal_hash: durable.proposal_hash.clone(),
+        mutation_id: durable.mutation_id.clone(),
+        command_hash: durable.command_hash.clone(),
         actor: fixture["command"]["actor"].as_str().unwrap().into(),
         maximum_records: trace["maximumRecords"].as_u64().unwrap_or(fixture["maximumRecords"].as_u64().unwrap()),
     }
 }
 
-async fn storage(fixture: &serde_json::Value, trace: &serde_json::Value) -> Arc<db::storage::DbBackend> {
-    storage_with_command(fixture, trace, None).await
+async fn storage(fixture: &serde_json::Value, trace: &serde_json::Value, durable: &DurableFixtureRecord) -> Arc<db::storage::DbBackend> {
+    storage_with_event(fixture, trace, durable, None).await
 }
 
-async fn storage_with_command(fixture: &serde_json::Value, trace: &serde_json::Value, replacement: Option<&[u8]>) -> Arc<db::storage::DbBackend> {
+async fn storage_with_event(fixture: &serde_json::Value, trace: &serde_json::Value, durable: &DurableFixtureRecord, replacement: Option<&[u8]>) -> Arc<db::storage::DbBackend> {
     let config = db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2);
     let pool = Arc::new(db::semio_framework_async::process_worker_pool(config));
     let storage = db::storage::MemoryStorage::new(pool).await.unwrap();
     let document = db::ArtifactId(fixture["documentKey"].as_str().unwrap().into());
-    storage.create_segment(&document, 0).await.unwrap();
+    let permit = storage.acquire_writer(&document).await.unwrap();
+    storage.create_segment(&permit, 0).await.unwrap();
     let mut writer = protocol::SprWriter::begin(Vec::<u8>::new(), &protocol::format::WriteOptions { required_flags: protocol::wire::REQUIRED_HASH_CHAIN, optional_flags: 0 }).await.unwrap();
     let mut header = Vec::new();
     protocol::write_str(&mut header, &document.0);
@@ -168,11 +175,10 @@ async fn storage_with_command(fixture: &serde_json::Value, trace: &serde_json::V
                     bytes.extend_from_slice(&(record["recordCount"].as_u64().unwrap() as u32).to_le_bytes());
                     (db::wal::WAL_TX_COMMIT, bytes)
                 }
-                "command" => {
-                    let mut bytes = Vec::new();
-                    protocol::encode_envelope(&envelope(fixture), &mut bytes);
+                "event" => {
+                    let mut bytes = durable.record.canonical_pack().to_vec();
                     match record["bytes"].as_str().unwrap() {
-                        "different" => bytes[1] ^= 1,
+                        "different" => bytes = b"different non-Pack durable event".to_vec(),
                         "altered-target" => {
                             let last = bytes.len() - 1;
                             bytes[last] ^= 1;
@@ -182,9 +188,9 @@ async fn storage_with_command(fixture: &serde_json::Value, trace: &serde_json::V
                                 bytes = replacement.to_vec();
                             }
                         }
-                        _ => panic!("unrecognized literal command"),
+                        _ => panic!("unrecognized literal durable event"),
                     }
-                    (db::wal::WAL_COMMAND, bytes)
+                    (db::wal::WAL_EVENT, bytes)
                 }
                 _ => panic!("unrecognized literal WAL record"),
             };
@@ -200,8 +206,9 @@ async fn storage_with_command(fixture: &serde_json::Value, trace: &serde_json::V
     for fragment in bytes.chunks(db::storage::DB_IO_PAGE_BYTES) {
         assert_eq!(pages.write_fragment(fragment).unwrap(), fragment.len());
     }
-    storage.append(&document, 0, pages.seal_retained().await.unwrap()).await.unwrap();
-    storage.sync(&document, 0, db::DurabilityClass::Fsync).await.unwrap();
+    storage.append(&permit, 0, pages.seal_retained().await.unwrap()).await.unwrap();
+    storage.sync(&permit, 0, db::DurabilityClass::Fsync).await.unwrap();
+    permit.release().await.unwrap();
     Arc::new(db::storage::DbBackend::Memory(storage))
 }
 

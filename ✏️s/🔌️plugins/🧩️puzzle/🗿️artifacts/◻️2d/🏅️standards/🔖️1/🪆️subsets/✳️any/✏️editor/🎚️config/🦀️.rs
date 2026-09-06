@@ -239,8 +239,9 @@ pub struct Puzzle2dConfig {
     /// now the app itself persists it (see `🎮️commands/🧰️set-active-utility`, the only writer).
     #[value(default)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
-    /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale` (read via the deleted
-    /// `semio_framework_plugin::is_de_locale(&ViewModel)`; see `🦀️terminology.rs`'s `is_de_locale`).
+    /// 🗣️ BCP-47 locale tag, resolved exclusively through `terminology::puzzle2d_config_locale`'s
+    /// explicit `en`/`en-US`/`de`/`de-DE` table — any other tag resolves to no locale at all, so the UI
+    /// fails closed rather than defaulting to a language.
     #[value(default = "default_locale")]
     pub locale: String,
     /// 🗣️ B1: terminology id ("native" default, or "reuse") — was host-pushed `view_state.terminology`.

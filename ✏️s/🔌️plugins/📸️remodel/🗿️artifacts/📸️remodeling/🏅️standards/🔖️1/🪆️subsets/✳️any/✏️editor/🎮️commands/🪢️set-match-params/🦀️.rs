@@ -18,7 +18,7 @@ pub struct SetMatchParams {
     pub loop_closure: bool,
 }
 
-pub async fn handle(payload: &SetMatchParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetMatchParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_match_params(MatchParams {
         matcher: if payload.matcher == "kd-tree" { MatcherKind::KdTree } else { MatcherKind::BruteForce },
         ratio_test: payload.ratio_test,

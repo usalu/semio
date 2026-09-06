@@ -3,109 +3,46 @@
   "title": "ReplaceGeoProducts",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "geo"
+  ],
   "properties": {
     "geo": {
-      "title": "GeoProducts",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "dsm",
-        "dtm"
-      ],
-      "properties": {
-        "dsm": {
-          "title": "Raster",
+      "anyOf": [
+        {
           "type": "object",
+          "title": "GeoProducts",
           "additionalProperties": false,
           "required": [
-            "cellSize",
-            "height",
-            "origin",
-            "valid",
-            "values",
-            "width"
+            "dsmAssetId",
+            "dtmAssetId",
+            "orthoAssetId"
           ],
           "properties": {
-            "width": {
-              "type": "integer",
-              "minimum": 0
+            "dsmAssetId": {
+              "type": [
+                "string",
+                "null"
+              ]
             },
-            "height": {
-              "type": "integer",
-              "minimum": 0
+            "dtmAssetId": {
+              "type": [
+                "string",
+                "null"
+              ]
             },
-            "cellSize": {
-              "type": "number"
-            },
-            "origin": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 2,
-              "maxItems": 2
-            },
-            "values": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              }
-            },
-            "valid": {
-              "type": "array",
-              "items": {
-                "type": "boolean"
-              }
+            "orthoAssetId": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         },
-        "dtm": {
-          "title": "Raster",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "cellSize",
-            "height",
-            "origin",
-            "valid",
-            "values",
-            "width"
-          ],
-          "properties": {
-            "width": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "height": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "cellSize": {
-              "type": "number"
-            },
-            "origin": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 2,
-              "maxItems": 2
-            },
-            "values": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              }
-            },
-            "valid": {
-              "type": "array",
-              "items": {
-                "type": "boolean"
-              }
-            }
-          }
+        {
+          "type": "null"
         }
-      }
+      ]
     }
   }
 }

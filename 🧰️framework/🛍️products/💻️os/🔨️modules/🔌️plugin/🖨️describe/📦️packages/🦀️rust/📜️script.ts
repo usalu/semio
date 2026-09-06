@@ -9,9 +9,9 @@
  */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, readdirSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
+import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, readdirSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, parseExtensionCargoManifest, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, parseExtensionCargoManifest, readStableBuildFile, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { verifyDescriptorPairBytesV1, verifyFreshCatalogPackageV1 } from "../../../📇️registry/📜️script.ts";
 
 const CRATE_NAME = "semio-framework-plugin-describe";
@@ -44,6 +44,15 @@ export type FreshBuildControlV1 = Readonly<{
   cancelled(): boolean;
   remainingMs(): number;
   checkpoint(stage: string, completed: number, total: number): void;
+}>;
+
+export type FreshComponentLeaseV1 = Readonly<{
+  consume<T>(derive: (component: Uint8Array) => Promise<T>): Promise<T>;
+}>;
+
+export type FreshComponentProducedV1<T> = Readonly<{
+  receipt: FreshComponentReceiptV1;
+  derived: T;
 }>;
 
 class BuildScript extends BundleScript {
@@ -276,45 +285,137 @@ function freshRoot(path: string, label: string): string {
   return realpathSync(exact);
 }
 
-function freshFile(path: string, maximum: number, label: string): number {
-  const info = lstatSync(path);
-  if (info.isSymbolicLink() || !info.isFile() || info.size === 0 || info.size > maximum) throw new Error(`${label} is empty, non-regular, or exceeds ${maximum} bytes`);
-  return info.size;
-}
-
-function freshCopy(source: string, destination: string, maximum: number, control: FreshBuildControlV1, stage: string, completed: number, total: number): { byteLength: number; sha256: string } {
-  const size = freshFile(source, maximum, stage);
-  const input = openSync(source, "r");
+function freshStage(bytes: Uint8Array, destination: string, control: FreshBuildControlV1, stage: string, completed: number, total: number): { byteLength: number; sha256: string } {
+  freshCheckpoint(control, stage, completed, total);
   const output = openSync(destination, "wx", 0o600);
-  const chunk = Buffer.allocUnsafe(FRESH_IO_CHUNK_BYTES);
   const hash = createHash("sha256");
   let copied = 0;
   let complete = false;
   try {
-    while (copied < size) {
+    while (copied < bytes.byteLength) {
       freshCheckpoint(control, stage, completed, total);
-      const count = readSync(input, chunk, 0, Math.min(chunk.byteLength, size - copied), copied);
-      if (count === 0) throw new Error(`${stage} changed during bounded copy`);
+      const chunk = bytes.subarray(copied, Math.min(copied + FRESH_IO_CHUNK_BYTES, bytes.byteLength));
       let written = 0;
-      while (written < count) written += writeSync(output, chunk, written, count - written);
-      hash.update(chunk.subarray(0, count));
-      copied += count;
+      while (written < chunk.byteLength) {
+        const count = writeSync(output, chunk, written, chunk.byteLength - written);
+        if (!count) throw new Error(`${stage} could not advance snapshot write`);
+        written += count;
+      }
+      hash.update(chunk);
+      copied += chunk.byteLength;
     }
-    if (statSync(source).size !== size) throw new Error(`${stage} changed during bounded copy`);
     fsyncSync(output);
     freshCheckpoint(control, stage, completed + 1, total);
     complete = true;
     return { byteLength: copied, sha256: hash.digest("hex") };
   } finally {
-    chunk.fill(0);
     closeSync(output);
-    closeSync(input);
     if (!complete) rmSync(destination, { force: true });
   }
 }
 
-/** 🧬️ Builds one component in a caller-owned fresh target and stages only verified immutable loader inputs. */
-export async function produceFreshComponentV1(repoRoot: string, request: FreshComponentRequestV1, freshTargetRoot: string, packageStageRoot: string, control: FreshBuildControlV1): Promise<FreshComponentReceiptV1> {
+/** 🪪️ Verifies descriptor outputs against the raw snapshot retained before extraction. */
+async function captureFreshComponentInputs(repoRoot: string, request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId">, componentBytes: Uint8Array, coreBytes: Uint8Array, paths: { descriptorPack: string; descriptorJson: string }, control: FreshBuildControlV1) {
+  const admission = { remaining: 2 * FRESH_DESCRIPTOR_MAX_BYTES };
+  const check = () => freshCheckpoint(control, "verify", 5, 8);
+  let descriptorJsonBytes: Uint8Array | undefined, descriptorBytes: Uint8Array | undefined;
+  let complete = false;
+  try {
+    descriptorJsonBytes = readStableBuildFile(paths.descriptorJson, FRESH_DESCRIPTOR_MAX_BYTES, admission, check);
+    descriptorBytes = readStableBuildFile(paths.descriptorPack, FRESH_DESCRIPTOR_MAX_BYTES, admission, check);
+    const projected = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(descriptorJsonBytes)) as Record<string, any>;
+    const componentSha256 = createHash("sha256").update(componentBytes).digest("hex");
+    const coreSha256 = createHash("sha256").update(coreBytes).digest("hex");
+    if (projected.packageId !== request.componentPackageId || projected.manifest?.pluginId !== request.pluginId || typeof projected.manifest?.version !== "string" || projected.manifest.version.length === 0 || projected.role !== "plugin") throw new Error("fresh descriptor identity differs from the exact component request");
+    verifyFreshCatalogPackageV1(descriptorJsonBytes, descriptorBytes, { pluginId: request.pluginId, packageId: request.componentPackageId, version: projected.manifest.version, role: "plugin", execution: "isolated", wasmSha256: componentSha256, coreWasmSha256: coreSha256 });
+    const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
+    check();
+    const result = { componentBytes, descriptorBytes, componentSha256, componentBlake3: blake3Hex(componentBytes), descriptorSha256: createHash("sha256").update(descriptorBytes).digest("hex"), coreSha256, version: projected.manifest.version as string };
+    complete = true;
+    return result;
+  } finally {
+    descriptorJsonBytes?.fill(0);
+    if (!complete) descriptorBytes?.fill(0);
+  }
+}
+
+/** 🫴️ Loans a private bounded copy once and drains its consumer before retiring the capability. */
+async function withFreshComponentLease<T>(component: Uint8Array, control: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>): Promise<T> {
+  let open = true, used = false, pending: Promise<unknown> | undefined;
+  const lease: FreshComponentLeaseV1 = Object.freeze({
+    consume<R>(consumer: (bytes: Uint8Array) => Promise<R>): Promise<R> {
+      if (!open) return Promise.reject(new Error("fresh component lease expired"));
+      if (used) return Promise.reject(new Error("fresh component lease already consumed"));
+      used = true;
+      const operation = (async () => {
+        freshCheckpoint(control, "derive", 7, 8);
+        const loan = new Uint8Array(component.byteLength);
+        try {
+          for (let offset = 0; offset < component.byteLength; offset += FRESH_IO_CHUNK_BYTES) {
+            freshCheckpoint(control, "derive-copy", offset, component.byteLength);
+            loan.set(component.subarray(offset, Math.min(offset + FRESH_IO_CHUNK_BYTES, component.byteLength)), offset);
+          }
+          freshCheckpoint(control, "derive", 7, 8);
+          const result = await consumer(loan);
+          freshCheckpoint(control, "derive", 8, 8);
+          return result;
+        } finally {
+          loan.fill(0);
+        }
+      })();
+      pending = operation;
+      void operation.catch(() => {});
+      return operation;
+    },
+  });
+  try {
+    freshCheckpoint(control, "derive", 7, 8);
+    const result = await derive(lease);
+    open = false;
+    if (!used) throw new Error("fresh component lease was not consumed");
+    await pending;
+    freshCheckpoint(control, "derive", 8, 8);
+    return result;
+  } finally {
+    open = false;
+    await pending?.catch(() => {});
+  }
+}
+
+/** 🧊️ Stages verified inputs, settles their required derivation and retires every source owner. */
+async function stageFreshComponentInputs<T>(request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId">, snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>>, stageRoot: string, witExports: readonly string[], control: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>): Promise<FreshComponentProducedV1<T>> {
+  const ownedFiles: string[] = [];
+  try {
+    const componentPath = join(stageRoot, "component.wasm"), descriptorPath = join(stageRoot, "descriptor.semio");
+    const stagedComponent = freshStage(snapshot.componentBytes, componentPath, control, "stage-component", 5, 8);
+    ownedFiles.push(componentPath);
+    const stagedDescriptor = freshStage(snapshot.descriptorBytes, descriptorPath, control, "stage-descriptor", 6, 8);
+    ownedFiles.push(descriptorPath);
+    if (stagedComponent.sha256 !== snapshot.componentSha256 || stagedDescriptor.sha256 !== snapshot.descriptorSha256) throw new Error("fresh staged bytes differ from the verified snapshot");
+    const receipt: FreshComponentReceiptV1 = Object.freeze({
+      pluginId: request.pluginId,
+      packageId: request.componentPackageId,
+      version: snapshot.version,
+      component: Object.freeze({ relativePath: "component.wasm", ...stagedComponent, blake3: snapshot.componentBlake3 }),
+      descriptor: Object.freeze({ relativePath: "descriptor.semio", ...stagedDescriptor }),
+      coreSha256: snapshot.coreSha256,
+      witExports: Object.freeze([...witExports]),
+    });
+    const derived = await withFreshComponentLease(snapshot.componentBytes, control, derive);
+    freshCheckpoint(control, "complete", 8, 8);
+    return Object.freeze({ receipt, derived });
+  } catch (error) {
+    for (const path of ownedFiles) rmSync(path, { force: true });
+    throw error;
+  } finally {
+    snapshot.componentBytes.fill(0);
+    snapshot.descriptorBytes.fill(0);
+  }
+}
+
+/** 🧬️ Builds and stages verified inputs, requiring derivation before its private raw owner retires. */
+export async function produceFreshComponentV1<T>(repoRoot: string, request: FreshComponentRequestV1, freshTargetRoot: string, packageStageRoot: string, control: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>): Promise<FreshComponentProducedV1<T>> {
+  if (typeof derive !== "function") throw new Error("fresh component derivation callback is required");
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.pluginId) || !/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.componentPackageId) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.cargoPackage) || !/^[a-z0-9_]+\.wasm$/u.test(request.outputName)) throw new Error("fresh component request identity is not canonical");
   const targetRoot = freshRoot(freshTargetRoot, "fresh component target root");
   const stageRoot = freshRoot(packageStageRoot, "fresh component stage root");
@@ -323,22 +424,28 @@ export async function produceFreshComponentV1(repoRoot: string, request: FreshCo
   mkdirSync(workRoot, { mode: 0o700 });
   const env = devToolingEnv({ CARGO_TARGET_DIR: targetRoot, CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", SCCACHE_DISABLE: "1" });
   const total = 8;
+  let componentBytes: Uint8Array | undefined, coreBytes: Uint8Array | undefined, snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>> | undefined;
   try {
     const cargo = request.rootCdylib
       ? ["--config", 'build.rustc-wrapper=""', "rustc", "-p", request.cargoPackage, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", request.componentProfile]
       : ["--config", 'build.rustc-wrapper=""', "build", "-p", request.cargoPackage, "--target", "wasm32-wasip2", "--profile", request.componentProfile];
     await freshRun("cargo", cargo, repoRoot, env, control, "build", 0, total);
-    const component = pluginWasmArtifactPath(repoRoot, request.cargoPackage, request.componentProfile, targetRoot);
-    if (component !== join(targetRoot, "wasm32-wasip2", request.componentProfile, request.outputName)) throw new Error("fresh component output identity differs from the shared Cargo artifact path");
-    freshFile(component, FRESH_COMPONENT_MAX_BYTES, "fresh component");
+    const cargoComponent = pluginWasmArtifactPath(repoRoot, request.cargoPackage, request.componentProfile, targetRoot);
+    if (cargoComponent !== join(targetRoot, "wasm32-wasip2", request.componentProfile, request.outputName)) throw new Error("fresh component output identity differs from the shared Cargo artifact path");
+    componentBytes = readStableBuildFile(cargoComponent, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot", 1, total));
+    if (!componentBytes.byteLength) throw new Error("fresh component is empty");
+    const component = join(workRoot, "component.wasm");
+    freshStage(componentBytes, component, control, "snapshot", 1, total);
     const jco = resolveWorkspaceBin("@bytecodealliance/jco", repoRoot);
     if (!jco) throw new Error("missing @bytecodealliance/jco workspace binary; run bun install");
     const extractRoot = join(workRoot, "extract");
     mkdirSync(extractRoot, { mode: 0o700 });
     const baseName = request.outputName.slice(0, -".wasm".length);
     await freshRun("node", [jco, "transpile", component, "-o", extractRoot, "--name", baseName, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], repoRoot, env, control, "extract-core", 1, total);
-    const core = join(extractRoot, `${baseName}.core.wasm`);
-    freshFile(core, FRESH_COMPONENT_MAX_BYTES, "fresh core module");
+    coreBytes = readStableBuildFile(join(extractRoot, `${baseName}.core.wasm`), FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot-core", 2, total));
+    if (!coreBytes.byteLength) throw new Error("fresh core module is empty");
+    const core = join(workRoot, "core.wasm");
+    freshStage(coreBytes, core, control, "snapshot-core", 2, total);
     const witPath = join(workRoot, "component.wit");
     await freshRun("node", [jco, "wit", component, "--output", witPath], repoRoot, env, control, "inspect-wit", 2, total);
     const wit = readFileSync(witPath, "utf8");
@@ -352,40 +459,12 @@ export async function produceFreshComponentV1(repoRoot: string, request: FreshCo
     await freshRun(emitter, ["describe", component, "--core", core, "--out", descriptorRoot], repoRoot, env, control, "emit-descriptor", 4, total);
     const descriptorPack = join(descriptorRoot, DESCRIPTOR_PACK_FILENAME);
     const descriptorJson = join(descriptorRoot, DESCRIPTOR_JSON_FILENAME);
-    freshFile(descriptorPack, FRESH_DESCRIPTOR_MAX_BYTES, "fresh descriptor pack");
-    freshFile(descriptorJson, FRESH_DESCRIPTOR_MAX_BYTES, "fresh descriptor JSON");
-    const descriptorJsonBytes = readFileSync(descriptorJson);
-    const descriptorPackBytes = readFileSync(descriptorPack);
-    const projected = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(descriptorJsonBytes)) as Record<string, any>;
-    const componentSha256 = createHash("sha256").update(readFileSync(component)).digest("hex");
-    const coreSha256 = createHash("sha256").update(readFileSync(core)).digest("hex");
-    if (projected.packageId !== request.componentPackageId || projected.manifest?.pluginId !== request.pluginId || typeof projected.manifest?.version !== "string" || projected.manifest.version.length === 0 || projected.role !== "plugin") throw new Error("fresh descriptor identity differs from the exact component request");
-    try {
-      verifyFreshCatalogPackageV1(descriptorJsonBytes, descriptorPackBytes, { pluginId: request.pluginId, packageId: request.componentPackageId, version: projected.manifest.version, role: "plugin", execution: "isolated", wasmSha256: componentSha256, coreWasmSha256: coreSha256 });
-    } finally {
-      descriptorJsonBytes.fill(0);
-      descriptorPackBytes.fill(0);
-    }
-    const stagedComponent = freshCopy(component, join(stageRoot, "component.wasm"), FRESH_COMPONENT_MAX_BYTES, control, "stage-component", 5, total);
-    const stagedDescriptor = freshCopy(descriptorPack, join(stageRoot, "descriptor.semio"), FRESH_DESCRIPTOR_MAX_BYTES, control, "stage-descriptor", 6, total);
-    if (stagedComponent.sha256 !== componentSha256) throw new Error("fresh component changed between descriptor verification and staging");
-    freshCheckpoint(control, "hash", 7, total);
-    const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
-    const componentBlake3 = blake3Hex(readFileSync(join(stageRoot, "component.wasm")));
-    freshCheckpoint(control, "complete", total, total);
-    return {
-      pluginId: request.pluginId,
-      packageId: request.componentPackageId,
-      version: projected.manifest.version,
-      component: { relativePath: "component.wasm", ...stagedComponent, blake3: componentBlake3 },
-      descriptor: { relativePath: "descriptor.semio", ...stagedDescriptor },
-      coreSha256,
-      witExports,
-    };
-  } catch (error) {
-    for (const name of ["component.wasm", "descriptor.semio"]) rmSync(join(stageRoot, name), { force: true });
-    throw error;
+    snapshot = await captureFreshComponentInputs(repoRoot, request, componentBytes, coreBytes, { descriptorPack, descriptorJson }, control);
+    return await stageFreshComponentInputs(request, snapshot, stageRoot, witExports, control, derive);
   } finally {
+    componentBytes?.fill(0);
+    coreBytes?.fill(0);
+    snapshot?.descriptorBytes.fill(0);
     rmSync(workRoot, { recursive: true, force: true });
   }
 }
@@ -425,6 +504,136 @@ export function describePluginComponent(repoRoot: string, packageName: string, o
 export function describeExtensionComponent(repoRoot: string, rsDir: string, control: DescriptorEmissionControlV1 = {}): number {
   const manifest = parseExtensionCargoManifest(join(resolve(rsDir), "Cargo.toml"), repoRoot);
   return describePluginComponent(repoRoot, manifest.packageName, resolve(rsDir, "..", ".."), false, control);
+}
+
+/** 🧪️ Qualifies retained verified inputs and staging independently of Cargo or descriptor execution. */
+export async function testFreshComponentStagingV1(repoRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const { encodePackValue } = await import("../../../../../🟦️.ts");
+  const fixtureRoot = resolve(import.meta.dir, "../../🧪️fixtures/🧊️fresh-staging");
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  assert(artifactRoot?.includes("🗑️generated"));
+  mkdirSync(artifactRoot, { recursive: true });
+  const evidence = mkdtempSync(join(artifactRoot, "fresh-component-staging-"));
+  const component = Buffer.from(fixture.componentHex, "hex"), core = Buffer.from(fixture.coreHex, "hex");
+  const descriptor = {
+    descriptorVersion: 1, packageId: "semio:gis", role: "plugin",
+    manifest: { pluginId: "gis", label: "GIS", version: "0.1.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [], dependencies: [], contributions: [] },
+    activationEvents: [], capabilityRequests: [], extensionPoints: [], execution: "isolated", quotas: {}, contributions: {}, assets: [],
+    hashes: { wasmSha256: fixture.componentSha256, coreWasmSha256: createHash("sha256").update(core).digest("hex"), descriptorSha256: "" },
+  };
+  descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor)).digest("hex");
+  const descriptorBytes = encodePackValue(descriptor);
+  const paths = { component: join(evidence, "component.wasm"), core: join(evidence, "core.wasm"), descriptorPack: join(evidence, "descriptor.semio"), descriptorJson: join(evidence, "descriptor.json") };
+  for (const [key, bytes] of [["component", component], ["core", core], ["descriptorPack", descriptorBytes], ["descriptorJson", Buffer.from(JSON.stringify(descriptor))]] as const) writeFileSync(paths[key], bytes);
+  const control: FreshBuildControlV1 = { cancelled: () => false, remainingMs: () => 60_000, checkpoint() {} };
+  const capturedComponent = readStableBuildFile(paths.component, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => {});
+  const capturedCore = readStableBuildFile(paths.core, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => {});
+  writeFileSync(paths.core, "replaced-core");
+  const snapshot = await captureFreshComponentInputs(repoRoot, { pluginId: "gis", componentPackageId: "semio:gis" }, capturedComponent, capturedCore, paths, control);
+  assert.equal(snapshot.coreSha256, descriptor.hashes.coreWasmSha256);
+  assert.equal(snapshot.componentSha256, fixture.componentSha256);
+  assert.equal(snapshot.componentBlake3, fixture.componentBlake3);
+  assert.equal(snapshot.componentSha256, Buffer.from(await crypto.subtle.digest("SHA-256", component)).toString("hex"));
+  assert.deepEqual(Buffer.from(snapshot.descriptorBytes), Buffer.from(descriptorBytes));
+  for (const path of Object.values(paths)) { renameSync(path, path + ".retained"); writeFileSync(path, "replaced-source"); }
+  const destination = join(evidence, "staged.semio");
+  const staged = freshStage(snapshot.descriptorBytes, destination, control, "stage-descriptor", 6, 8);
+  assert.equal(staged.sha256, Buffer.from(await crypto.subtle.digest("SHA-256", descriptorBytes)).toString("hex"));
+  assert.deepEqual(readFileSync(destination), Buffer.from(descriptorBytes));
+  renameSync(destination, destination + ".retained");
+  writeFileSync(destination, "replaced-stage");
+  assert.deepEqual(Buffer.from(snapshot.descriptorBytes), Buffer.from(descriptorBytes));
+  assert.equal(createHash("sha256").update(snapshot.componentBytes).digest("hex"), fixture.componentSha256);
+  const cancelled = join(evidence, "cancelled.semio");
+  let checkpoints = 0;
+  assert.throws(() => freshStage(snapshot.descriptorBytes, cancelled, { ...control, cancelled: () => checkpoints >= 2, checkpoint() { checkpoints++; } }, "stage-descriptor", 6, 8), /cancelled/);
+  assert.equal(checkpoints, 2);
+  assert.equal(existsSync(cancelled), false);
+  writeFileSync(paths.component, component);
+  writeFileSync(paths.core, core);
+  writeFileSync(paths.descriptorPack, descriptorBytes);
+  writeFileSync(paths.descriptorJson, JSON.stringify({ ...descriptor, packageId: "semio:foreign" }));
+  await assert.rejects(captureFreshComponentInputs(repoRoot, { pluginId: "gis", componentPackageId: "semio:gis" }, capturedComponent, capturedCore, paths, control), /identity/);
+  const cloneSnapshot = () => ({ ...snapshot, componentBytes: Uint8Array.from(component), descriptorBytes: Uint8Array.from(descriptorBytes) });
+  const handoff = async <T>(name: string, input: ReturnType<typeof cloneSnapshot>, buildControl: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>) => {
+    const stage = join(evidence, name);
+    mkdirSync(stage);
+    return await stageFreshComponentInputs({ pluginId: "gis", componentPackageId: "semio:gis" }, input, stage, ["checkpoint", "describe", "jobs", "reactor"], buildControl, derive);
+  };
+  let retainedLease: FreshComponentLeaseV1 | undefined, retainedLoan: Uint8Array | undefined;
+  const source = cloneSnapshot();
+  const produced = await handoff("loan-success", source, control, async lease => {
+    retainedLease = lease;
+    assert.deepEqual(Object.keys(lease), ["consume"]);
+    assert(Object.isFrozen(lease));
+    const digest = await lease.consume(async bytes => {
+      retainedLoan = bytes;
+      assert.notEqual(bytes.buffer, source.componentBytes.buffer);
+      const sha256 = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+      bytes.fill(9);
+      assert.deepEqual(Buffer.from(source.componentBytes), component);
+      return sha256;
+    });
+    await assert.rejects(lease.consume(async () => "second"), /already consumed/);
+    return digest;
+  });
+  assert.equal(produced.derived, produced.receipt.component.sha256);
+  assert.equal(produced.receipt.component.sha256, fixture.componentSha256);
+  assert.deepEqual(readFileSync(join(evidence, "loan-success/component.wasm")), component);
+  assert.deepEqual(Object.keys(produced.receipt).sort(), ["component", "coreSha256", "descriptor", "packageId", "pluginId", "version", "witExports"]);
+  assert(retainedLoan!.every(byte => byte === 0));
+  assert(source.componentBytes.every(byte => byte === 0));
+  assert(source.descriptorBytes.every(byte => byte === 0));
+  await assert.rejects(retainedLease!.consume(async () => "late"), /expired/);
+  const rejectedSource = cloneSnapshot();
+  let rejectedLoan: Uint8Array | undefined;
+  await assert.rejects(handoff("loan-rejected", rejectedSource, control, lease => lease.consume(async bytes => { rejectedLoan = bytes; throw new Error("derive sentinel"); })), /^Error: derive sentinel$/);
+  assert(rejectedLoan!.every(byte => byte === 0));
+  assert(rejectedSource.componentBytes.every(byte => byte === 0));
+  assert(rejectedSource.descriptorBytes.every(byte => byte === 0));
+  assert.deepEqual(readdirSync(join(evidence, "loan-rejected")), []);
+  for (const when of ["before-consume", "after-consume"] as const) {
+    let stop = false, invoked = false;
+    const cancelledSource = cloneSnapshot();
+    await assert.rejects(handoff(`loan-cancel-${when}`, cancelledSource, { ...control, cancelled: () => stop }, async lease => {
+      if (when === "before-consume") stop = true;
+      return await lease.consume(async () => { invoked = true; stop = true; return "must not publish"; });
+    }), /cancelled/);
+    assert.equal(invoked, when === "after-consume");
+    assert(cancelledSource.componentBytes.every(byte => byte === 0));
+    assert(cancelledSource.descriptorBytes.every(byte => byte === 0));
+    assert.deepEqual(readdirSync(join(evidence, `loan-cancel-${when}`)), []);
+  }
+  for (const failure of [false, true]) {
+    const unawaitedSource = cloneSnapshot();
+    let release!: () => void, entered!: () => void, settled = false, loan: Uint8Array | undefined;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const running = new Promise<void>(resolve => { entered = resolve; });
+    const operation = handoff(`loan-unawaited-${failure}`, unawaitedSource, control, async lease => {
+      void lease.consume(async bytes => { loan = bytes; entered(); await gate; if (failure) throw new Error("unawaited sentinel"); return "done"; });
+      return "callback finished";
+    });
+    void operation.then(() => { settled = true; }, () => { settled = true; });
+    await running;
+    await Promise.resolve();
+    assert.equal(settled, false);
+    assert.deepEqual(Buffer.from(loan!), component);
+    release();
+    if (failure) await assert.rejects(operation, /^Error: unawaited sentinel$/);
+    else assert.equal((await operation).derived, "callback finished");
+    assert(loan!.every(byte => byte === 0));
+    assert(unawaitedSource.componentBytes.every(byte => byte === 0));
+    if (failure) assert.deepEqual(readdirSync(join(evidence, `loan-unawaited-${failure}`)), []);
+  }
+  snapshot.componentBytes.fill(0);
+  capturedCore.fill(0);
+  snapshot.descriptorBytes.fill(0);
+  console.log(`fresh-component-staging: AJV=1 WebCrypto=1 Pack=1 BLAKE3=1 laws=${fixture.laws.length} evidence=${evidence}`);
 }
 
 if (import.meta.main) {

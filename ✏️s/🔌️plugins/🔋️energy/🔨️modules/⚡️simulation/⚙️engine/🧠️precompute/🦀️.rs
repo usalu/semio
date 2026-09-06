@@ -47,6 +47,12 @@ pub struct FenestrationPrecompute {
     pub tilt_deg: f64,
     pub azimuth_deg: f64,
     pub normal: [f64; 3],
+    pub height_m: f64,
+    pub width_m: f64,
+    pub overhang_depth_m: f64,
+    pub overhang_offset_m: f64,
+    pub fin_depth_m: f64,
+    pub fin_offset_m: f64,
 }
 // #endregion 🔖️FenestrationPrecompute
 
@@ -97,9 +103,9 @@ impl PrecomputedModel {
         self.surfaces.get(&surface_id).map_or(0.0, |s| beam_incidence_cosine(s.normal, sun_alt_deg, sun_az_deg))
     }
 
-    /// ☀️ Solar position for site at day/hour.
-    pub(crate) fn solar_at(&self, model: &Model, day_of_year: u16, hour: f64) -> (f64, f64) {
-        let pos = solar_position(model.site.latitude_deg, model.site.longitude_deg, day_of_year, hour);
+    /// ☀️ Solar position for site at day-of-year and LOCAL STANDARD hour-of-day.
+    pub(crate) fn solar_at(&self, model: &Model, day_of_year: u16, hour_local: f64) -> (f64, f64) {
+        let pos = solar_position(model.site.latitude_deg, model.site.longitude_deg, model.site.time_zone_hours, day_of_year, hour_local);
         (pos.altitude_deg, pos.azimuth_deg)
     }
 
@@ -374,9 +380,21 @@ impl PrecomputeBuilder {
                                 tilt_deg: orient.tilt_deg,
                                 azimuth_deg: orient.azimuth_deg,
                                 normal,
+                                height_m: fenestration.height_m.max(1e-6),
+                                width_m: fenestration.area_m2 / fenestration.height_m.max(1e-6),
+                                overhang_depth_m: fenestration.overhang_depth_m,
+                                overhang_offset_m: fenestration.overhang_offset_m,
+                                fin_depth_m: fenestration.fin_depth_m,
+                                fin_offset_m: fenestration.fin_offset_m,
                             },
                         );
                         self.output.fenestration_order.push(fenestration.id);
+                        // 🪟️ The host surface conducts through its NET opaque area: a window is not
+                        // a hole in the wall's thermal area unless it is subtracted, and the window
+                        // itself already contributes its own `u_value_w_m2k · area_m2` term.
+                        if let Some(host) = self.output.surfaces.get_mut(&fenestration.surface_id) {
+                            host.area_m2 = (host.area_m2 - fenestration.area_m2).max(0.0);
+                        }
                     }
                     self.cursor += 1;
                 } else {
@@ -457,8 +475,14 @@ impl PrecomputeBuilder {
                 if let Some(material) = material_id.and_then(|id| self.output.material_indices.get(&id)).and_then(|index| model.materials.get(*index)) {
                     work.resistance_m2k_w += material.thickness_m / material.conductivity_w_m_k;
                     work.capacitance_j_m2k += material.density_kg_m3 * material.specific_heat_j_kg_k * material.thickness_m;
-                    work.solar_absorptance = material.solar_absorptance;
-                    work.emissivity = material.thermal_absorptance;
+                    // 🧱️ Layer order is OUTSIDE-first, the same convention EnergyPlus's
+                    // `Construction` object uses, so the exterior optical properties come from
+                    // layer 0 alone — every layer used to overwrite them, leaving the INNERMOST
+                    // layer deciding how much sun an exterior wall absorbs.
+                    if work.cursor == 0 {
+                        work.solar_absorptance = material.solar_absorptance;
+                        work.emissivity = material.thermal_absorptance;
+                    }
                     work.cursor += 1;
                 } else {
                     work.stage = SurfacePrecomputeStage::Publish;
@@ -577,7 +601,7 @@ mod tests {
     #[test]
     fn fenestration_precompute_derives_from_host_surface() {
         let mut model = crate::sim::test_model_single_zone();
-        model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });
+        model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, height_m: 1.0, sill_height_m: 0.8, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0, overhang_depth_m: 0.0, overhang_offset_m: 0.0, fin_depth_m: 0.0, fin_offset_m: 0.0 });
         let pre = PrecomputedModel::build(&model, 60, 60);
         let fen = pre.fenestrations.get(&EntityId(40)).unwrap();
         assert_eq!(fen.surface_id, EntityId(30));

@@ -45,7 +45,7 @@ mod tests {
     async fn empty_name_opens_the_dialog_instead_of_relaying() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
-        let doc = view(&history, &doc_snapshot);
+        let doc = view(&history, &doc_snapshot).await;
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = handle(&CreateSpace { name: String::new(), kind: "atelier".into(), visibility: "private".into() }, &doc, &cfg).expect("handle");
@@ -56,7 +56,7 @@ mod tests {
     async fn valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_args() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
-        let doc = view(&history, &doc_snapshot);
+        let doc = view(&history, &doc_snapshot).await;
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = handle(&CreateSpace { name: "Atelier".into(), kind: "atelier".into(), visibility: "private".into() }, &doc, &cfg).expect("handle");
@@ -79,7 +79,7 @@ mod tests {
     async fn blank_kind_and_visibility_default_to_atelier_and_private() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
-        let doc = view(&history, &doc_snapshot);
+        let doc = view(&history, &doc_snapshot).await;
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = handle(&CreateSpace { name: "Studio".into(), kind: String::new(), visibility: String::new() }, &doc, &cfg).expect("handle");

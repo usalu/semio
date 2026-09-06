@@ -1,11 +1,9 @@
 //! 🏗️ Typed building energy model entities, validation, and cross-references.
 
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-#[cfg(test)]
 use crate::error::{Diagnostics, Error, Severity};
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
-#[cfg(test)]
 use std::collections::HashSet;
 
 // #region 🔖️Ids
@@ -29,6 +27,21 @@ impl FromValue for EntityId {
 impl EntityId {
     pub fn new(id: u32) -> Self {
         Self(id)
+    }
+}
+
+/// 🔗️ `EntityId` as a mutation-payload field — a bare unsigned number on every surface, so an
+/// `id`-addressed mutation leaf can carry it directly instead of flattening it to `u32` by hand.
+/// Hand-written for the same tuple-struct reason as the `ToValue` pair above.
+impl dsl::DslField for EntityId {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::UInt
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::UInt(u64::from(self.0))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        <u32 as dsl::DslField>::from_value(value).map(EntityId)
     }
 }
 // #endregion 🔖️Ids
@@ -307,7 +320,15 @@ pub enum OutsideBoundary {
     Interzone(EntityId),
 }
 
-/// 🪟️ Fenestration (window, skylight, door).
+/// 🪟️ Fenestration (window, skylight, door) with its attached solar shading projections.
+///
+/// `height_m`/`sill_height_m` and the four shading fields are the window-attached analogue of
+/// EnergyPlus `Shading:Overhang:Projection` and `Shading:Fin:Projection` — a horizontal projection
+/// above the head and two vertical projections beside the jambs, both measured from the glazing
+/// plane. They are zero for an unshaded window, which is why every existing model keeps its
+/// behaviour. Free-standing site obstructions stay [`ShadingSurface`]'s job.
+///
+/// See ANSI/ASHRAE 140 §5.2 cases 610/630/910/930, whose overhang and fins are exactly this shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Fenestration {
     pub id: EntityId,
@@ -317,8 +338,14 @@ pub struct Fenestration {
     pub shgc: f64,
     pub vlt: f64,
     pub area_m2: f64,
+    pub height_m: f64,
+    pub sill_height_m: f64,
     pub frame_conductance_w_k: f64,
     pub divider_conductance_w_k: f64,
+    pub overhang_depth_m: f64,
+    pub overhang_offset_m: f64,
+    pub fin_depth_m: f64,
+    pub fin_offset_m: f64,
 }
 // #endregion 🔖️Surface
 
@@ -360,6 +387,20 @@ impl ToValue for ScheduleId {
 impl FromValue for ScheduleId {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         u32::from_value(value).map(ScheduleId)
+    }
+}
+
+/// 🔗️ `ScheduleId` as a mutation-payload field — the schedule-reference slots every thermostat,
+/// humidistat, gain and setpoint-manager mutation addresses. Hand-written, same reason as above.
+impl dsl::DslField for ScheduleId {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::UInt
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::UInt(u64::from(self.0))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        <u32 as dsl::DslField>::from_value(value).map(ScheduleId)
     }
 }
 // #endregion 🔖️Schedule
@@ -468,7 +509,7 @@ pub struct ZoneEquipmentAssignment {
 }
 
 /// 🏠️ Zone equipment catalog reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum ZoneEquipmentType {
     Baseboard,
     Radiant,
@@ -504,7 +545,7 @@ pub struct PlantLoopConfig {
 }
 
 /// 🏭️ Plant loop fluid type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum PlantLoopType {
     Heating,
     Cooling,
@@ -671,7 +712,7 @@ pub struct OutputVariableSpec {
 }
 
 /// 📊️ Output reporting frequency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum OutputReportFrequency {
     Timestep,
     Hourly,
@@ -690,7 +731,7 @@ pub struct SizingObject {
 }
 
 /// 📐️ Sizing type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum SizingType {
     Heating,
     Cooling,
@@ -698,7 +739,7 @@ pub enum SizingType {
 }
 
 /// 📐️ Design day type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum DesignDayType {
     Heating,
     Cooling,
@@ -722,7 +763,7 @@ pub struct RoomAirModelAssignment {
 }
 
 /// 🌡️ Room air model type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum RoomAirModelType {
     WellMixed,
     OneNodeDisplacement,
@@ -746,13 +787,21 @@ impl Default for GroundTemperatureConfig {
 // #endregion 🔖️Hvac
 
 // #region 🔖️Infiltration
-/// 💨️ Zone infiltration specification.
+/// 💨️ Zone infiltration specification — a full [`crate::air_exchange::InfiltrationMethod`]
+/// selection plus every parameter each method needs, so the kernel maps this entity onto
+/// [`crate::air_exchange::InfiltrationSpec`] one-to-one instead of pinning one method and
+/// smuggling the flow through a coefficient field.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Infiltration {
     pub id: EntityId,
     pub zone_id: EntityId,
     pub schedule_id: ScheduleId,
+    pub method: crate::air_exchange::InfiltrationMethod,
+    pub design_flow_ach: f64,
     pub flow_per_exterior_area_m3_s_m2: f64,
+    pub effective_leakage_area_m2: f64,
+    pub discharge_coefficient: f64,
+    pub stack_height_m: f64,
     pub constant_term_coefficient: f64,
     pub temperature_term_coefficient: f64,
     pub velocity_term_coefficient: f64,
@@ -761,7 +810,10 @@ pub struct Infiltration {
 // #endregion 🔖️Infiltration
 
 // #region 🔖️Model
-/// 🏢️ Complete building energy model (single native representation).
+/// 🏢️ Complete building energy model (single native representation). `run_period` and `schedules`
+/// are persisted model data, not per-run session state: every `ScheduleId` reference in this
+/// document resolves inside `schedules`, and [`crate::kernel::SimulationConfig`] reads both out of
+/// the model at run time (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Model {
     pub name: String,
@@ -804,12 +856,16 @@ pub struct Model {
     pub daylight_zones: Vec<DaylightZoneConfig>,
     pub room_air_models: Vec<RoomAirModelAssignment>,
     pub ground_temperature: GroundTemperatureConfig,
+    pub run_period: crate::calendar::RunPeriod,
+    pub schedules: crate::schedule::ScheduleSet,
 }
 
 impl Model {
-    /// ✅️ Validate model topology, references, and SI ranges.
-    #[cfg(test)]
-    pub(crate) fn validate(&self) -> Result<(), Diagnostics> {
+    /// ✅️ Validate model topology, references, and SI ranges — a pure, allocation-only pre-flight
+    /// check every caller (not only this crate's own tests) can run before handing a model to
+    /// [`crate::sim::Engine::run`], which performs its own incremental, cursor-owned validation
+    /// pass but only reports it as a job fault rather than as addressable diagnostics.
+    pub fn validate(&self) -> Result<(), Diagnostics> {
         let mut diag = Diagnostics::default();
         let zone_ids: HashSet<_> = self.zones.iter().map(|z| z.id).collect();
         let surface_ids: HashSet<_> = self.surfaces.iter().map(|s| s.id).collect();
@@ -923,6 +979,57 @@ impl Model {
         for pair in &self.adjacency_pairs {
             if !surface_ids.contains(&pair.surface_a_id) || !surface_ids.contains(&pair.surface_b_id) {
                 diag.push(Error::severe("adjacency pair references unknown surface"));
+            }
+        }
+
+        let schedule_ids: HashSet<_> = self
+            .schedules
+            .constants
+            .iter()
+            .map(|s| s.id)
+            .chain(self.schedules.daily.iter().map(|s| s.id))
+            .chain(self.schedules.weekly.iter().map(|s| s.id))
+            .chain(self.schedules.annual.iter().map(|s| s.id))
+            .chain(self.schedules.time_series.iter().map(|s| s.id))
+            .collect();
+        let mut require_schedule = |id: ScheduleId, owner: &str| {
+            if !schedule_ids.contains(&id) {
+                diag.push(Error::severe(format!("{owner} references schedule {} which the model does not define", id.0)));
+            }
+        };
+        for person in &self.people {
+            require_schedule(person.schedule_id, "people gain");
+            require_schedule(person.activity_schedule_id, "people activity");
+        }
+        for light in &self.lighting {
+            require_schedule(light.schedule_id, "lighting gain");
+        }
+        for equipment in &self.equipment {
+            require_schedule(equipment.schedule_id, "equipment gain");
+        }
+        for infiltration in &self.infiltrations {
+            require_schedule(infiltration.schedule_id, "infiltration");
+        }
+        for ventilation in &self.mechanical_ventilations {
+            require_schedule(ventilation.schedule_id, "mechanical ventilation");
+        }
+        for thermostat in &self.thermostats {
+            require_schedule(thermostat.heating_setpoint_schedule_id, "thermostat heating setpoint");
+            require_schedule(thermostat.cooling_setpoint_schedule_id, "thermostat cooling setpoint");
+        }
+
+        for fen in &self.fenestrations {
+            if fen.area_m2 <= 0.0 {
+                diag.push(Error::severe(format!("fenestration {} has non-positive area", fen.name)));
+            }
+            if fen.height_m <= 0.0 {
+                diag.push(Error::severe(format!("fenestration {} has non-positive height", fen.name)));
+            }
+            if fen.u_value_w_m2k <= 0.0 {
+                diag.push(Error::severe(format!("fenestration {} has non-positive U-value", fen.name)));
+            }
+            if !(0.0..=1.0).contains(&fen.shgc) {
+                diag.push(Error::severe(format!("fenestration {} has an SHGC outside 0..1", fen.name)));
             }
         }
 
@@ -1046,7 +1153,7 @@ mod tests {
     #[test]
     fn fenestration_unknown_surface_fails() {
         let mut m = valid_model();
-        m.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(999), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });
+        m.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(999), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, height_m: 1.0, sill_height_m: 0.8, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0, overhang_depth_m: 0.0, overhang_offset_m: 0.0, fin_depth_m: 0.0, fin_offset_m: 0.0 });
         assert!(m.validate().is_err());
     }
 

@@ -13,6 +13,6 @@ pub struct SetLayerVisibility {
     pub visible: bool,
 }
 
-pub async fn handle(payload: &SetLayerVisibility, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetLayerVisibility, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::config(vec![RemodelingConfigMutation::SetLayerVisibility { layer: payload.layer.clone(), visible: payload.visible }]))
 }

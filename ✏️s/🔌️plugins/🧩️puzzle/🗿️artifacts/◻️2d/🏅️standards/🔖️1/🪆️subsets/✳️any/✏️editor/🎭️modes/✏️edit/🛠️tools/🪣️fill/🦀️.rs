@@ -101,7 +101,7 @@ mod tests {
     /// 🛠️ Fill's count slider is a tool measure keyed by the fill tool id, not a window utility-options group.
     #[test]
     fn fill_count_slider_is_a_tool_measure() {
-        let labels = puzzle2d_labels(&Puzzle2dConfig::default());
+        let labels = puzzle2d_labels(&Puzzle2dConfig::default()).expect("default puzzle2d locale and terminology axes are explicit");
         let host = puzzle_board_host();
         let fill_runtime = Puzzle2dPlayRuntime { fill_count: 3, ..Puzzle2dPlayRuntime::default() };
         let fill_scene = scene(default_empty_fixture(), fill_runtime, overview::utilities::select::UTILITY_ID);
@@ -120,7 +120,7 @@ mod tests {
         running_config.fill_job_accepted_count = 4;
         running_config.fill_job_generation = 12;
         running_config.fill_job_lifecycle = Puzzle2dFillLifecycle::Running;
-        let running_labels = puzzle2d_labels(&running_config);
+        let running_labels = puzzle2d_labels(&running_config).expect("de-DE + native are explicit puzzle2d axes");
         let running_scene = scene(default_empty_fixture(), running_config, overview::utilities::select::UTILITY_ID);
         let running_measure = measures(&running_scene, running_labels);
         let WindowMeasure::Group { children, .. } = running_measure else { panic!("fill group") };
@@ -131,7 +131,7 @@ mod tests {
         fault_config.locale = "de-DE".into();
         fault_config.fill_job_lifecycle = Puzzle2dFillLifecycle::Faulted;
         fault_config.fill_job_fault_code = Puzzle2dFillText::try_from_str("puzzle2d-fill-hostile");
-        let fault_labels = puzzle2d_labels(&fault_config);
+        let fault_labels = puzzle2d_labels(&fault_config).expect("de-DE + native are explicit puzzle2d axes");
         let fault_scene = scene(default_empty_fixture(), fault_config, overview::utilities::select::UTILITY_ID);
         let fault_measure = measures(&fault_scene, fault_labels);
         let WindowMeasure::Group { children, .. } = fault_measure else { panic!("fill group") };

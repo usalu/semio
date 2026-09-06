@@ -219,7 +219,15 @@ async fn usage(message: &str) -> i32 {
 // clause 1: a binary entry point IS its own executor), so every `FsStorage` call in this file
 // stays plain sync and crosses the boundary here, once, via `db_actor::block_on`.
 fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage, db::db_ids::DbError> {
-    db::actor::block_on(db::storage::FsStorage::open(cli_worker_pool(), root))
+    match db::actor::block_on(db::storage::FsStorage::open(cli_worker_pool(), root)) {
+        Ok(storage) => Ok(storage),
+        Err(mut rejected) => loop {
+            match db::actor::block_on(rejected.retry_close()) {
+                Ok(cause) => return Err(cause),
+                Err(retained) => rejected = retained,
+            }
+        },
+    }
 }
 
 /// 🧵️ The CLI process's one headless worker pool, shared by every database authority the
@@ -232,7 +240,15 @@ fn cli_worker_pool() -> std::sync::Arc<db::semio_framework_async::WorkerPool> {
 
 /// 🗄️ Opens a database and injects the CLI process worker pool before any authority can spawn.
 async fn open_database(root: &Path, profile: db::Profile) -> Result<db::Database, db::db_ids::DbError> {
-    db::Database::open_at(cli_worker_pool(), root, profile).await
+    match db::Database::open_at(cli_worker_pool(), root, profile).await {
+        Ok(database) => Ok(database),
+        Err(mut rejected) => loop {
+            match rejected.retry_close().await {
+                Ok(cause) => return Err(cause),
+                Err(retained) => rejected = retained,
+            }
+        },
+    }
 }
 //#endregion 🔖️AsyncBridge
 
@@ -502,7 +518,10 @@ enum MountedWalReplayCommandOwner<'storage> {
 
 impl MountedWalReplayCommandOwner<'_> {
     fn close_owner_step(&mut self) -> Result<bool, db::DbError> {
-        match self { Self::Raw(owner) => owner.close_owner_step(), Self::Committed(owner) => owner.close_owner_step() }
+        match self {
+            Self::Raw(owner) => owner.close_owner_step(),
+            Self::Committed(owner) => owner.close_owner_step(),
+        }
     }
 }
 
@@ -856,21 +875,30 @@ async fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids
         loop {
             let mut transaction = match records.next_transaction_step().await? {
                 db::wal::WalCommittedStep::Transaction(transaction) => transaction,
-                db::wal::WalCommittedStep::Yield => { db::semio_framework_async::yield_once().await; continue; }
+                db::wal::WalCommittedStep::Yield => {
+                    db::semio_framework_async::yield_once().await;
+                    continue;
+                }
                 db::wal::WalCommittedStep::Done => break,
             };
             loop {
                 match transaction.next_record_step()? {
                     db::wal::WalCommittedRecordStep::Record(_) => record_count += 1,
-                    db::wal::WalCommittedRecordStep::Yield => { db::semio_framework_async::yield_once().await; continue; }
+                    db::wal::WalCommittedRecordStep::Yield => {
+                        db::semio_framework_async::yield_once().await;
+                        continue;
+                    }
                     db::wal::WalCommittedRecordStep::Done => break,
                 }
-                while transaction.close_record_step()? { db::semio_framework_async::yield_once().await; }
+                while transaction.close_record_step()? {
+                    db::semio_framework_async::yield_once().await;
+                }
             }
             transaction.finish()?;
         }
         Ok::<(), db::DbError>(())
-    }.await;
+    }
+    .await;
     let closed = MountedWalReplayCommandClose::committed(records).await;
     replay?;
     closed?;
@@ -1327,7 +1355,8 @@ async fn cmd_migrate(rest: &[String]) -> i32 {
         };
         wal.force_flush(&storage).await.map_err(|err| ("flush", err))?;
         Ok(receipt)
-    }.await;
+    }
+    .await;
     let wal_close = wal.close().await;
     match (outcome, wal_close) {
         (Ok(receipt), Ok(())) => {

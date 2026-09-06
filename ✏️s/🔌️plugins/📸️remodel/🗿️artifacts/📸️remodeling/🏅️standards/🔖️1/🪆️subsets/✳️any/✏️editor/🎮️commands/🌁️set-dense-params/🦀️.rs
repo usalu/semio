@@ -17,7 +17,7 @@ pub struct SetDenseParams {
     pub max_points: u32,
 }
 
-pub async fn handle(payload: &SetDenseParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetDenseParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_dense_params(DenseParams {
         resolution: match payload.resolution.as_str() {
             "low" => DenseResolution::Low,

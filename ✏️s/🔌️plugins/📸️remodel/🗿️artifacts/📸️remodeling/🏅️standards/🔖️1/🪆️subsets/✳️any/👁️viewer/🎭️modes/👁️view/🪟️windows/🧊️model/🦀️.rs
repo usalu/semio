@@ -15,16 +15,17 @@
 //! reason) is the honest fit here, not `MeshWindowKit`.
 
 use crate::artifacts::remodeling::{PackedF32, RemodelingSnapshot};
-use semio_framework_plugin::{build_world_3d_scene, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
+use semio_framework_plugin::{world3d_camera_json, world3d_scene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, WorldSunConfig};
+// 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
+// (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
+// different types, so both are imported explicitly.
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "remodeling-view-model";
 pub const BODY_KEY: &str = "remodeling.view.model";
 const SURFACE_ID: &str = "remodeling.view.scene3d/model";
-/// 👁️ Read-only counterpart of the editor's `REMODELING_PLAY_APP_ID` controller id — kept distinct so a
-/// viewer session's world-3d controller can never be mistaken for an editor session's.
-const REMODELING_VIEW_CONTROLLER_ID: &str = "remodeling-view";
 /// 👁️ Matches the editor's `REMODELING_MESH_ID` literal — duplicated on purpose rather than imported
 /// through the sibling editor module, which `policyViewerPurityBreaches` forbids outright.
 const REMODELING_VIEW_MESH_ID: &str = "remodeling-result";
@@ -37,7 +38,7 @@ const REMODELING_VIEW_CAMERA_FOV: f64 = 45.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Model", "Modell"),
@@ -61,16 +62,29 @@ pub async fn definition() -> WindowKindDefinition {
 /// 👁️ Read-only twin of the sibling editor's `world_meshes_json` — reads the composed
 /// `s.stdio.semio/v1/mesh` CHILD's real geometry through the same production bounded resolver. An
 /// unavailable durable handle renders no mesh entity, matching the editor's behavior.
-async fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
+fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
     let Some(mesh) = crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
         return "[]".into();
     };
-    serde_json::to_string(&vec![json!({ "id": REMODELING_VIEW_MESH_ID, "data": mesh })]).unwrap_or_else(|_| "[]".into())
+    serde_json::to_string(&vec![json!({ "id": REMODELING_VIEW_MESH_ID, "data": mesh_data_json(&mesh) })]).unwrap_or_else(|_| "[]".into())
+}
+
+/// 👁️ Read-only twin of the sibling editor's `mesh_data_json` — duplicated on purpose rather than
+/// imported through the editor module, which `policyViewerPurityBreaches` forbids outright.
+/// `semio_framework::MeshData` derives `Serialize` only under `cfg(test)`, so the buffers are named.
+fn mesh_data_json(mesh: &semio_framework::MeshData) -> Value {
+    json!({
+        "positions": mesh.positions,
+        "normals": mesh.normals,
+        "colors": mesh.colors,
+        "indices": mesh.indices,
+        "uvs": mesh.uvs,
+    })
 }
 
 /// 👁️ Unconditionally visible mesh instance — a viewer has no persisted per-session layer toggles, so
 /// unlike the editor's `world_instances_json` this never gates on a `layers.mesh` flag.
-async fn world_instances_json() -> String {
+fn world_instances_json() -> String {
     serde_json::to_string(&vec![json!({
         "id": REMODELING_VIEW_MESH_ID,
         "meshId": REMODELING_VIEW_MESH_ID,
@@ -87,7 +101,7 @@ async fn world_instances_json() -> String {
 /// behind a config toggle is unconditionally shown here (a viewer keeps no layer-visibility state),
 /// pure document content otherwise: sparse/dense clouds, recovered camera poses, ground control
 /// points.
-async fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
+fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
     let mut layers: Vec<Value> = Vec::new();
     if let Some(sparse) = &scene.results.sparse {
         if !sparse.points.is_empty() {
@@ -138,10 +152,10 @@ async fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
     }
 }
 
-/// 👁️ Pure `RemodelingSnapshot -> UiNode` read: hardcoded default camera/sun, no selection overlay,
+/// 👁️ Pure `RemodelingSnapshot -> BuiltNode` read: hardcoded default camera/sun, no selection overlay,
 /// every point layer unconditionally visible, mesh content real whenever the working-scene cache is
 /// warm.
-pub async fn render(scene: &RemodelingSnapshot) -> UiNode {
+pub fn render(scene: &RemodelingSnapshot) -> UiAssemblyResult<BuiltNode> {
     let mut world_scene = world3d_scene(
         world3d_camera_json(REMODELING_VIEW_CAMERA_POSITION, REMODELING_VIEW_CAMERA_TARGET, REMODELING_VIEW_CAMERA_FOV),
         world_meshes_json(scene),
@@ -150,7 +164,7 @@ pub async fn render(scene: &RemodelingSnapshot) -> UiNode {
         &WorldSunConfig::default(),
     );
     world_scene.points_json = world_points_json(scene);
-    build_world_3d_scene(SURFACE_ID, REMODELING_VIEW_CONTROLLER_ID, world_scene)
+    semio_framework_plugin::scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &world_scene)
 }
 //#endregion 🔖️Render
 
@@ -169,7 +183,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let scene = crate::artifacts::remodeling::default_remodeling_scene();
-        let _node = render(&scene);
+        let _node = render(&scene).await;
     }
 
     #[semio_framework_async_macros::async_test]

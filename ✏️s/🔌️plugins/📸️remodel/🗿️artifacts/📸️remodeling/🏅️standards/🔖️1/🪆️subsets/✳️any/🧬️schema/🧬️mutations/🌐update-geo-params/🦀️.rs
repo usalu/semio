@@ -1,11 +1,11 @@
 //! ⚙️ Remodeling mutation — `UpdateGeoParams`: full-record replace of `ReconstructionParams.geo` (always
 //! set wholesale from the palette form's flat field list — genuinely inseparable).
 
-use crate::artifacts::remodeling::{GeoParams, RemodelingSnapshot};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{GeoParams, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ⚙️ `update-geo-params` payload — full FINAL-state `GeoParams`.

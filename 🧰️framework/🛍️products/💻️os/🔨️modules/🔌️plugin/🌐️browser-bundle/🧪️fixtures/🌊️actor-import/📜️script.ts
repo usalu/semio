@@ -117,7 +117,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, closeFacto
     await assert.rejects(closeActorBundle(indirectSuspension, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
     await assert.rejects(closeActorBundle(source, cores, { importInterfaces: [...importInterfaces, fixture.identity.unsupportedImport] }), /unsupported import interface/);
     actorModulePath = join(evidence, "actor-import.closed.js");
-    const { bytes, ...receipt } = await buildClosedBrowserActorArtifactV1(component, { repoRoot, evidenceRoot: evidence });
+    const { bytes, ...receipt } = await buildClosedBrowserActorArtifactV1(component, {});
     const digest = async (value: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", value)).toString("hex");
     assert.equal(receipt.codegenPolicy, fixture.identity.artifactPolicy);
     assert.equal(receipt.componentSha256, await digest(component));

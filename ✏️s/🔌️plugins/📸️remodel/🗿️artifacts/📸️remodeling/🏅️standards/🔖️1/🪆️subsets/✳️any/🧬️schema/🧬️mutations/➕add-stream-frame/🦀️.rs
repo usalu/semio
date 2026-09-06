@@ -2,11 +2,11 @@
 //! sets its `kind` (image import handlers append to a stream that already exists; creating a brand
 //! new stream instead goes through `create-stream`).
 
-use crate::artifacts::remodeling::{FrameRef, MediaKind, RemodelingSnapshot};
 use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{FrameRef, MediaKind, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ➕ `add-stream-frame` payload.

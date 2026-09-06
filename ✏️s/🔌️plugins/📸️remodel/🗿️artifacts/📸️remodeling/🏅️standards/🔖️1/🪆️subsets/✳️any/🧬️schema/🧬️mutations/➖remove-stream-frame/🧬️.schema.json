@@ -13,6 +13,7 @@
     },
     "frameIndex": {
       "type": "integer",
+      "format": "uint32",
       "minimum": 0
     }
   }

@@ -9,7 +9,7 @@
 use crate::artifacts::raster::RasterSnapshot;
 use crate::viewer::raster::modes::view::windows::composite;
 use semio_framework_plugin::app::{ImageWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const RASTER_VIEW_WINDOW_NAVIGATOR: &str = "raster-view-navigator";
@@ -44,7 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Same real composited pixels the Composite window shows — a navigator/minimap is a scaled-down
 /// view of the same content, not different content; the host renderer handles the scale-down
 /// presentation, not this pure snapshot read.
-pub fn render(document: &RasterSnapshot) -> UiNode {
+pub fn render(document: &RasterSnapshot) -> UiAssemblyResult<BuiltNode> {
     ImageWindowKit::render(&composite::composited_image_view(document))
 }
 //#endregion 🔖️Render
@@ -65,7 +65,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::raster::schema::empty_raster_document();
-        let _node = render(&document);
+        let _node = render(&document).expect("bounded fixture");
     }
 }
 //#endregion 🧪️Tests

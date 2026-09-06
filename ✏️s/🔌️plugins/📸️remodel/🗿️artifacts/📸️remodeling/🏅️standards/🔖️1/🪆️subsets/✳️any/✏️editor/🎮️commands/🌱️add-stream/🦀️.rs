@@ -16,7 +16,7 @@ pub struct AddStream {
     pub camera_id: String,
 }
 
-pub async fn handle(payload: &AddStream, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &AddStream, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     let kind = if payload.kind == "video" { MediaKind::Video } else { MediaKind::ImageSequence };
     let camera_id = if payload.camera_id.is_empty() { None } else { Some(payload.camera_id.clone()) };
     let id = next_remodeling_id("stream");

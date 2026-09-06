@@ -3,7 +3,7 @@
 
 use crate::artifacts::remodeling::RemodelingSnapshot;
 use crate::editor::remodeling::terminology::RemodelingLabels;
-use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
+use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const REMODELING_PANEL_CALIBRATION_ID: &str = "remodeling.calibration";
@@ -11,7 +11,7 @@ pub const REMODELING_PLAY_BODY_CALIBRATION: &str = "remodeling.play.calibration"
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(REMODELING_PANEL_CALIBRATION_ID.into()),
         label: LocalizedLabel::native("Calibration", "Kalibrierung"),
@@ -23,16 +23,19 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiNode {
-    let mut lines = vec![ui_text(Label::data(format!("{}: {} - {}: {}", labels.cameras_calibrated.as_str(), scene.calibration.cameras.len(), labels.rig_extrinsics.as_str(), scene.calibration.rig.len())))];
+pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemblyResult<BuiltNode> {
+    let mut cameras: Vec<UiAssemblyResult<BuiltNode>> =
+        vec![tree_item("remodeling-calibration.summary", format!("{}: {} - {}: {}", labels.cameras_calibrated.as_str(), scene.calibration.cameras.len(), labels.rig_extrinsics.as_str(), scene.calibration.rig.len()))];
     for camera in &scene.calibration.cameras {
-        lines.push(ui_text(Label::data(format!("{} ({}): fx {:.1} fy {:.1}", camera.label, camera.model, camera.fx, camera.fy))));
+        cameras.push(tree_item(format!("remodeling-calibration.camera.{}", camera.id), format!("{} ({}): fx {:.1} fy {:.1}", camera.label, camera.model, camera.fx, camera.fy)));
     }
-    lines.push(ui_text(Label::data(format!("{}: {}", labels.gcps.as_str(), scene.gcps.len()))));
+    let mut gcps: Vec<UiAssemblyResult<BuiltNode>> = vec![tree_item("remodeling-calibration.gcp-count", format!("{}: {}", labels.gcps.as_str(), scene.gcps.len()))];
     for gcp in &scene.gcps {
-        lines.push(ui_text(Label::data(format!("{} [{:.2}, {:.2}, {:.2}] ({} obs)", gcp.name, gcp.world_position[0], gcp.world_position[1], gcp.world_position[2], gcp.observations.len()))));
+        gcps.push(tree_item(format!("remodeling-calibration.gcp.{}", gcp.id), format!("{} [{:.2}, {:.2}, {:.2}] ({} obs)", gcp.name, gcp.world_position[0], gcp.world_position[1], gcp.world_position[2], gcp.observations.len())));
     }
-    ui_stack_vertical(lines)
+    let cameras = crate::editor::remodeling::ui_node_list(cameras)?;
+    let gcps = crate::editor::remodeling::ui_node_list(gcps)?;
+    PanelTreeBuilder::new("remodeling-calibration")?.section("remodeling-calibration.cameras", Some(crate::editor::remodeling::ui_label(labels.panel_calibration.as_str())?), true, cameras)?.section("remodeling-calibration.gcps", Some(crate::editor::remodeling::ui_label(labels.gcps.as_str())?), true, gcps)?.build()
 }
 //#endregion 🔖️Render
 
@@ -46,9 +49,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_calibration_panel_lists_added_ground_control_points() {
-        let mut app = app();
-        dispatch(&mut app, RemodelingCommand::AddGcp(AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }));
-        assert!(render_body(&mut app, REMODELING_PLAY_BODY_CALIBRATION).contains("Corner"));
+        let mut app = app().await;
+        dispatch(&mut app, RemodelingCommand::AddGcp(AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 })).await;
+        assert!(render_body(&mut app, REMODELING_PLAY_BODY_CALIBRATION).await.contains("Corner"));
     }
 }
 //#endregion 🧪️Tests

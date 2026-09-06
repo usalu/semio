@@ -15,6 +15,20 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 }
 //#endregion 🗃️Apps
 
+//#region 📚️Examples
+/// 📚️ The example fixtures the react shell's switcher offers (`activePluginManifest.examples`, fed by
+/// `NavbarExampleSelect/🟦️.tsx`, which stays hidden while the list is empty). Exactly ONE row: the
+/// `📚️examples/🎬️demo` Semio-logo carrier, the canonical raster demo and the document
+/// `RasterPlayApp::initial_snapshot` boots on. `✏️editor/📚️examples/🎬️demo-session` is deliberately
+/// NOT here — it is a `.cmd.semio` command replay, not a document carrier, and `setActiveExample`'s
+/// only vocabulary is "load a registered example document". `🧩️puzzle` sets the same precedent: it
+/// mounts and tests its three `demo-session` leaves but registers only the artifact-level fixtures in
+/// its subsets' `examples()`; `🧱️block` ships no editor-level session example at all.
+fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    vec![crate::examples::art_raster_demo::source()]
+}
+//#endregion 📚️Examples
+
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the old `.setup(engine::register)`
 /// escape hatch; `.setup()` itself is gone (W1c) — `RasterPlayApp::app_schema()` now answers the one
@@ -27,13 +41,18 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// (`crate::artifacts::raster::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no cross-plugin extension attachment, the SDK default holds), and it asks the broker for
 /// document write access because `RasterPlayApp` persists edits back to the open document.
+///
+/// 📚️ `.editor(…)` became `.editor_with_examples(…)` (ticket 26/09/05/RASTER-PLUGIN-END-TO-END, W2):
+/// the SDK-gap note in `create_raster_app`'s own doc — "`.editor::<E>(def)` discards `App.examples`,
+/// there is no place left for the old `.example(...)` calls" — was answered by this builder twin,
+/// already in production use on `🌀️procedural`'s two editors. `examples()` above is what it stamps.
 pub fn plugin() -> Result<Plugin<RasterApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<RasterApps>::builder("raster")
         .label("Raster")
         .version("0.1.0")
         .package_id("semio:raster")
         .artifact(crate::artifacts::raster::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::raster::RasterPlayApp>(crate::editor::raster::create_raster_app())
+        .editor_with_examples::<crate::editor::raster::RasterPlayApp>(crate::editor::raster::create_raster_app(), examples())
         .editor_mutation_roster::<crate::editor::raster::RasterPlayApp>()
         .viewer::<crate::viewer::raster::RasterViewer>(crate::viewer::raster::create_raster_viewer())
         .viewer_mutation_roster::<crate::viewer::raster::RasterViewer>()

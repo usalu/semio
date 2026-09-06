@@ -1,22 +1,28 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/mutations/connect-handles.json",
   "title": "ConnectHandles",
+  "description": "The `connect-handles` mutation record — internally tagged `\"mutation\": \"connectHandles\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "gap",
+    "mutation",
     "id",
-    "rise",
-    "rotation",
-    "shift",
     "source",
     "target",
-    "tilt",
+    "gap",
+    "shift",
+    "rise",
+    "rotation",
     "turn",
+    "tilt",
     "x",
     "y"
   ],
   "properties": {
+    "mutation": {
+      "const": "connectHandles"
+    },
     "id": {
       "type": "string"
     },
@@ -27,7 +33,10 @@
       "type": "string"
     },
     "edgeKind": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "gap": {
       "type": "number"
@@ -54,10 +63,16 @@
       "type": "number"
     },
     "sourceTip": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "targetTip": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     }
   }
 }

@@ -89,7 +89,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
   {
     id: "puzzle/2d",
     titlePrefix: "🧩️puzzle🩻️2d",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻️2d")],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d")],
   },
   {
     id: "puzzle/3d",
@@ -100,6 +100,16 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     id: "puzzle/5d",
     titlePrefix: "🧩️puzzle🕐️5d",
     sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d")],
+  },
+  {
+    // 📸️ Hand-curated rather than a package-catalog opt-in (`GENERATED_SCOPES`): the remodel plugin's
+    // `📦️packages/🦀️rust/Cargo.toml` is owned by the remodel crate's own worker stream, so the scope is
+    // registered here instead of via `[package.metadata.semio.storybook]` the way `block`/`cad`/`animate`
+    // declare theirs — 🎫️ 26/09/06/REMODEL-PLUGIN-END-TO-END. Move it to the manifest opt-in once that
+    // manifest is free to edit; nothing else here depends on which of the two lists it comes from.
+    id: "remodel",
+    titlePrefix: "📸️remodel",
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/📸️remodel")],
   },
   {
     id: "framework",

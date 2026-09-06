@@ -70,9 +70,8 @@ macro_rules! impl_uint_codec {
             impl FromValue for $ty {
                 fn from_value(value: DslValue) -> Result<Self, ValueError> {
                     match value {
-                        DslValue::Number(Number::UInt(n)) => Ok(n as $ty),
-                        DslValue::Number(Number::Int(n)) => Ok(n as $ty),
-                        DslValue::Number(Number::Float(n)) => Ok(n as $ty),
+                        DslValue::Number(number) => number.as_u64().and_then(|n| <$ty>::try_from(n).ok())
+                            .ok_or_else(|| ValueError::new(format!("expected an exact {} integer, found {number:?}", stringify!($ty)))),
                         other => Err(ValueError::new(format!("expected a number, found {other:?}"))),
                     }
                 }
@@ -95,9 +94,8 @@ macro_rules! impl_int_codec {
             impl FromValue for $ty {
                 fn from_value(value: DslValue) -> Result<Self, ValueError> {
                     match value {
-                        DslValue::Number(Number::Int(n)) => Ok(n as $ty),
-                        DslValue::Number(Number::UInt(n)) => Ok(n as $ty),
-                        DslValue::Number(Number::Float(n)) => Ok(n as $ty),
+                        DslValue::Number(number) => number.as_i64().and_then(|n| <$ty>::try_from(n).ok())
+                            .ok_or_else(|| ValueError::new(format!("expected an exact {} integer, found {number:?}", stringify!($ty)))),
                         other => Err(ValueError::new(format!("expected a number, found {other:?}"))),
                     }
                 }
@@ -419,6 +417,35 @@ impl DslValue {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn integer_from_value_matches_serde_without_coercion() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("neutral exact integer corpus");
+        macro_rules! check {
+            ($($ty:ty),+ $(,)?) => { $(
+                for row in fixture["raw"].as_array().unwrap() {
+                    let raw = row.as_str().unwrap();
+                    let value: serde_json::Value = serde_json::from_str(raw).expect("valid JSON scalar");
+                    let expected = raw.parse::<i128>().is_ok_and(|number| number >= <$ty>::MIN as i128 && number <= <$ty>::MAX as i128);
+                    let reference = serde_json::from_str::<$ty>(raw);
+                    assert_eq!(reference.is_ok(), expected, "oracle {} {raw}", stringify!($ty));
+                    let ours = <$ty>::from_value(DslValue::from(&value));
+                    assert_eq!(ours.is_ok(), expected, "production {} {raw}", stringify!($ty));
+                    if let (Ok(ours), Ok(reference)) = (ours, reference) {
+                        assert_eq!(ours, reference, "exact {} {raw}", stringify!($ty));
+                        assert_eq!(<$ty>::from_value(ours.to_value()), Ok(reference));
+                        assert_eq!(serde_json::to_string(&ours).unwrap(), serde_json::to_string(&reference).unwrap());
+                    }
+                }
+                for number in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 0.0, -0.0, 1.0] {
+                    assert!(<$ty>::from_value(DslValue::float(number)).is_err(), "noninteger variant {} {number}", stringify!($ty));
+                }
+                assert_eq!(<$ty>::from_value(DslValue::int(1)), Ok(1));
+                assert_eq!(<$ty>::from_value(DslValue::uint(1)), Ok(1));
+            )+ };
+        }
+        check!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+    }
 
     #[test]
     fn scalars_round_trip() {

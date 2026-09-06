@@ -7,7 +7,7 @@
 
 use crate::artifacts::raster::RasterSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit, WindowKit};
-use semio_framework_plugin::UiNode;
+use semio_framework_plugin::{BuiltNode, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const RASTER_VIEW_WINDOW_COMPOSITE: &str = ImageWindowKit::KIND_ID;
@@ -28,12 +28,12 @@ pub fn definition() -> semio_framework_plugin::WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `RasterSnapshot -> UiNode` read: composites the real layer stack to a canonical PNG through
+/// 👁️ Pure `RasterSnapshot -> BuiltNode` read: composites the real layer stack to a canonical PNG through
 /// the same artifact-level `🚪️io` bridge the editor's `raster_composite_media` uses
 /// (`raster_document_json_to_svg` → `rasterize_svg_to_png_base64` → `canonicalize_png_bytes`), then
 /// hands the pixels to `ImageWindowKit::render` — never a bespoke renderer, never a call through the
 /// sibling editor module.
-pub fn render(document: &RasterSnapshot) -> UiNode {
+pub fn render(document: &RasterSnapshot) -> UiAssemblyResult<BuiltNode> {
     ImageWindowKit::render(&composited_image_view(document))
 }
 
@@ -71,7 +71,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::raster::schema::empty_raster_document();
-        let _node = render(&document);
+        let _node = render(&document).expect("bounded fixture");
     }
 }
 //#endregion 🧪️Tests

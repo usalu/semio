@@ -20,7 +20,7 @@ pub struct BindSpaceFile {
 /// to a real file/catalog location is the natural persist moment.
 #[cfg(not(target_arch = "wasm32"))]
 fn bind_studio_file(space_id: &str, file_path: &str) -> Result<(), VcsError> {
-    use semio_framework_os::{document_backbone_ref, encode_backbone_payload, OS_SPACE_BACKBONE_URI_PREFIX};
+    use semio_framework_os::{document_backbone_ref, encode_backbone_payload, OsBackbonePort as _, OS_SPACE_BACKBONE_URI_PREFIX};
     let uri = format!("file://{file_path}");
     let port = semio_framework_os::open_file_space_backbone(file_path)?;
     // 🌉️ `register_studio_port`/`resolve_studio_document`/`catalog_port`/`draft_backbone_port`/
@@ -29,7 +29,7 @@ fn bind_studio_file(space_id: &str, file_path: &str) -> Result<(), VcsError> {
     // `🏗️create-studio`'s own seam.
     semio_framework_plugin::resolve_ready(crate::register_studio_port(space_id, port.clone()));
     let mut document = semio_framework_plugin::resolve_ready(crate::resolve_studio_document(space_id)).ok_or_else(|| VcsError::Backbone(format!("unknown space {space_id}")))?;
-    document.backbone = Some(document_backbone_ref(&uri));
+    document.backbone = Some(semio_framework_plugin::resolve_ready(document_backbone_ref(&uri)));
     port.write(&uri, &encode_backbone_payload(&document)?)?;
     let catalog_uri = format!("{OS_SPACE_BACKBONE_URI_PREFIX}{space_id}");
     semio_framework_plugin::resolve_ready(crate::sync_os_space_document_helper(&document, &catalog_uri, &semio_framework_plugin::resolve_ready(crate::catalog_port())))?;

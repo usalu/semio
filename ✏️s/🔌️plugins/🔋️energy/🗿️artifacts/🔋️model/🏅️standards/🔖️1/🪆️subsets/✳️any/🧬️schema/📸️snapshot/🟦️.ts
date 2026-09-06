@@ -11,4 +11,6 @@ export interface EnergyModelSnapshot {
   zones: { childId: string; target: string };
   /** @state artifact @link model */
   referencedModel?: unknown;
+  /** @state artifact @link weather */
+  weatherLink?: unknown;
 }

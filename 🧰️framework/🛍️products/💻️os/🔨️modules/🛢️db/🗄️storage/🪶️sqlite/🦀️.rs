@@ -5,11 +5,12 @@
 mod sqlite_storage {
     use crate::db_durability::{DurabilityClass, EpochFence};
     use crate::db_ids::{check_len, ArtifactId, DbError};
-    use crate::db_storage::{
-        close_db_io_backend, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected,
-        DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbIoWriterReleaseStep, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, WalWriterPermit, DB_IO_PAGE_BYTES,
-    };
     use crate::db_storage::writer::{WalFileWriterGuard, WalWriterGuard, WalWriterTable};
+    use crate::db_storage::{
+        close_db_io_backend, register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoExecutionStep,
+        DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbIoWriterReleaseStep, DbStorageOpenRejected, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage,
+        SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, WalWriterPermit, DB_IO_PAGE_BYTES,
+    };
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
     use semio_framework_async::WorkerPool;
@@ -228,7 +229,9 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
     //#region 🔖️Executor
     impl DbIoTaskExecutor for SqliteDbIoExecutor {
-        fn supports_writer_authority(&self) -> bool { true }
+        fn supports_writer_authority(&self) -> bool {
+            true
+        }
 
         fn bind_writer_control(&mut self, control: DbIoBackendControl) -> Result<(), DbError> {
             let mut owner = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -241,13 +244,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
         fn pin_writer_operation(&self, operation: u64, task: &DbIoTask) -> Result<(), DbError> {
             let Some((key, backend, document)) = task.writer_stamp() else { return Ok(()) };
-            self.writers
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .as_deref_mut()
-                .ok_or(DbError::Closed)?
-                .pin_operation(key, backend, document, operation)
-                .map(|_| ())
+            self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().ok_or(DbError::Closed)?.pin_operation(key, backend, document, operation).map(|_| ())
         }
 
         fn finish_writer_operation(&self, operation: u64, task: &DbIoTask) -> Result<(), DbError> {
@@ -623,8 +620,12 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             {
                 let mut owner = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                 if let Some(table) = owner.as_deref_mut() {
-                    if table.close_step()? { return Ok(false); }
-                    if !table.terminal_is_empty() { return Err(DbError::Internal("SQLite WAL writer table returned a false terminal witness".to_string())); }
+                    if table.close_step()? {
+                        return Ok(false);
+                    }
+                    if !table.terminal_is_empty() {
+                        return Err(DbError::Internal("SQLite WAL writer table returned a false terminal witness".to_string()));
+                    }
                     owner.take();
                     return Ok(false);
                 }
@@ -716,22 +717,23 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     }
 
     impl SqliteStorage {
-        async fn open_owned(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbError> {
+        async fn open_owned(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbStorageOpenRejected> {
+            let rollback = DbIoBackendRollbackReservation::try_reserve()?;
+            let pool_use = pool.acquire_use().map_err(|error| DbError::Unavailable(format!("SQLite DB I/O backend WorkerPool use rejected: {error:?}")))?;
             let executor = Box::new(SqliteDbIoExecutor::new(path.clone(), in_memory));
-            let control = register_db_io_backend(DbIoBackendKind::Sqlite, executor, pool.clone())?;
+            let control = register_db_io_backend_prepared_with_use(DbIoBackendKind::Sqlite, executor, pool.clone(), pool_use, rollback)?;
             if let Err(error) = execute(DbIoTask::BackendOpen { backend: control, path }).await {
-                let _ = execute(DbIoTask::BackendClose { backend: control }).await;
-                return Err(error);
+                return Err(DbStorageOpenRejected::registered(error, control));
             }
             Ok(Self { control, pool, closed: std::sync::atomic::AtomicBool::new(false) })
         }
 
-        pub async fn open(pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<Self, DbError> {
+        pub async fn open(pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<Self, DbStorageOpenRejected> {
             let path = path.to_str().ok_or_else(|| DbError::InvalidArgument("SQLite path is not UTF-8".to_string()))?;
             Self::open_owned(pool, DbIoText::try_from_str(path)?, false).await
         }
 
-        pub async fn open_in_memory(pool: Arc<WorkerPool>) -> Result<Self, DbError> {
+        pub async fn open_in_memory(pool: Arc<WorkerPool>) -> Result<Self, DbStorageOpenRejected> {
             Self::open_owned(pool, DbIoText::try_from_str(":memory:")?, true).await
         }
 

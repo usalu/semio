@@ -1,13 +1,13 @@
 /** 🌐️ Build-time closure and isolation laws for browser component factories. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { closeSync, fstatSync, lstatSync, mkdtempSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
-import { exactExecutableFingerprint, runExactCargoLawProcess } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { exactExecutableFingerprint, readStableBuildFile, runExactCargoLawProcess } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 
 export type BrowserComponentCore = Readonly<{ name: string; bytes: Uint8Array }>;
@@ -43,29 +43,6 @@ function parseBrowserActorCodegenManifest(value: unknown): BrowserActorCodegenMa
   const files = strings(record.files, 65, name => name === "browser-actor.js" || /^browser-actor\.core\d*\.wasm$/.test(name));
   if (files.length < 2 || files.filter(name => name === "browser-actor.js").length !== 1) return denied();
   return Object.freeze({ version: "1.27.0", runtime: "bun@1.3.14", importInterfaces, files });
-}
-
-/** 🧾️ Reads one stable regular file through its retained descriptor and a shared byte admission. */
-function readBrowserBuildFile(path: string, maximum: number, admission: { remaining: number }, check: () => void): Buffer {
-  check();
-  const info = lstatSync(path);
-  if (!info.isFile() || info.isSymbolicLink() || info.size > maximum) throw new Error("browser actor artifact: generated file bound");
-  const file = openSync(path, "r");
-  try {
-    const before = fstatSync(file);
-    const same = (left: typeof info, right: typeof info) => left.isFile() && !left.isSymbolicLink() && left.dev === right.dev && left.ino === right.ino && left.size === right.size && left.mtimeMs === right.mtimeMs && left.ctimeMs === right.ctimeMs;
-    if (!same(before, info) || before.size > maximum || before.size > admission.remaining) throw new Error("browser actor artifact: generated file changed or exceeds aggregate bound");
-    admission.remaining -= before.size;
-    const bytes = Buffer.alloc(before.size);
-    for (let offset = 0; offset < bytes.byteLength;) {
-      check();
-      const count = readSync(file, bytes, offset, Math.min(64 * 1024, bytes.byteLength - offset), offset);
-      if (!count) throw new Error("browser actor artifact: generated file shortened");
-      offset += count;
-    }
-    if (!same(fstatSync(file), before) || !same(lstatSync(path), before)) throw new Error("browser actor artifact: generated file changed while reading");
-    return bytes;
-  } finally { closeSync(file); }
 }
 
 /** 🧊️ Replaces the compiler's exact two file loaders with captured core bytes and rejects residual module IO. */
@@ -130,7 +107,7 @@ function captureBrowserActorRuntime(root: string, check: () => void): BrowserAct
   const admission = { remaining: 1024 * 1024 };
   return new Map(["host", "wasi"].map(name => {
     const logicalPath = `🌐️${name}/🟦️.ts`;
-    const bytes = readBrowserBuildFile(join(root, logicalPath), 512 * 1024, admission, check);
+    const bytes = readStableBuildFile(join(root, logicalPath), 512 * 1024, admission, check);
     return [name, Object.freeze({ bytes, row: Object.freeze({ logicalPath: "browser/" + logicalPath, sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength }) })];
   }));
 }
@@ -152,10 +129,10 @@ function sealBrowserCodegenPolicy<T>(input: T): Readonly<{ record: T; canonical:
 /** 🧭️ Captures the fixed build-host policy inputs independently of caller roots and scratch evidence. */
 function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot, check: () => void) {
   const admission = { remaining: browserActorMaximumBytes };
-  const read = (path: string) => readBrowserBuildFile(path, 16 * 1024 * 1024, admission, check);
+  const read = (path: string) => readStableBuildFile(path, 16 * 1024 * 1024, admission, check);
   const hash = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
   const lockBytes = read(join(browserActorRepoRoot, "bun.lock"));
-  const lock = ts.parseConfigFileTextToJson("bun.lock", lockBytes.toString("utf8"));
+  const lock = ts.parseConfigFileTextToJson("bun.lock", new TextDecoder("utf-8", { fatal: true }).decode(lockBytes));
   if (lock.error || !lock.config?.packages) throw new Error("browser actor artifact: invalid toolchain lock");
   const locked = (name: string, version: string) => {
     const row = lock.config.packages[name];
@@ -168,13 +145,13 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
     { name: "@bytecodealliance/preview2-shim", version: "0.20.1", path: dirname(dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/preview2-shim/io"))))) },
   ];
   const packages = packageRoots.map(({ name, version, path }) => {
-    const bytes = read(join(path, "package.json")), manifest = JSON.parse(bytes.toString("utf8"));
+    const bytes = read(join(path, "package.json")), manifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
     if (manifest.name !== name || manifest.version !== version) throw new Error("browser actor artifact: unqualified tool manifest");
     return Object.freeze({ name, version, manifestSha256: hash(bytes), lockSha256: locked(name, version) });
   });
   const parserPath = fileURLToPath(import.meta.resolve("typescript"));
   const parserBytes = read(parserPath), parserManifestBytes = read(join(dirname(parserPath), "../package.json"));
-  const parserManifest = JSON.parse(parserManifestBytes.toString("utf8"));
+  const parserManifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(parserManifestBytes));
   if (parserManifest.name !== "typescript" || parserManifest.version !== "5.9.3" || ts.version !== "5.9.3") throw new Error("browser actor artifact: unqualified parser");
   const parser = { name: "typescript", version: "5.9.3", manifestSha256: hash(parserManifestBytes), lockRowSha256: locked("typescript", "5.9.3"), entry: { logicalPath: "typescript/lib/typescript.js", sha256: hash(parserBytes), byteLength: parserBytes.byteLength } };
   const paths = [
@@ -197,7 +174,7 @@ async function captureBrowserCodegenSources(entrypoint: string, roots: readonly 
   check();
   const admittedRoots = roots.map(root => ({ ...root, path: realpathSync(root.path) }));
   const buildCwd = process.cwd();
-  const snapshots = new Map<string, Readonly<{ bytes: Buffer; row: BrowserCodegenSourceDigest }>>();
+  const snapshots = new Map<string, Readonly<{ bytes: Uint8Array; row: BrowserCodegenSourceDigest }>>();
   const admission = { remaining: 8 * 1024 * 1024 };
   const result = await Bun.build({ entrypoints: [entrypoint], root: admittedRoots[0].path, target: "browser", format: "esm", splitting: false, minify: false, write: false, metafile: true, external: ["node:fs/promises"], plugins: [{ name: "semio-browser-codegen-snapshot", setup(build) {
     build.onLoad({ filter: /.*/, namespace: "file" }, args => {
@@ -209,7 +186,7 @@ async function captureBrowserCodegenSources(entrypoint: string, roots: readonly 
       let snapshot = snapshots.get(path);
       if (!snapshot) {
         if (snapshots.size >= 128) throw new Error("browser actor artifact: compiler source count");
-        const bytes = readBrowserBuildFile(path, 8 * 1024 * 1024, admission, check);
+        const bytes = readStableBuildFile(path, 8 * 1024 * 1024, admission, check);
         const row = Object.freeze({ logicalPath: root.name + "/" + relative(root.path, path).split(sep).join("/"), sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength });
         snapshot = Object.freeze({ bytes, row });
         snapshots.set(path, snapshot);
@@ -232,8 +209,8 @@ async function buildBrowserCodegenModule(evidence: string, check: () => void): P
   const entrypoint = fileURLToPath(import.meta.resolve("@bytecodealliance/jco/component"));
   const vendor = fileURLToPath(import.meta.resolve("@bytecodealliance/jco-transpile/component"));
   const shim = dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/preview2-shim/io"))));
-  const packageBytes = readBrowserBuildFile(join(dirname(entrypoint), "../package.json"), 64 * 1024, { remaining: 64 * 1024 }, check);
-  if (JSON.parse(packageBytes.toString("utf8")).version !== "1.27.0") throw new Error("browser actor artifact: unqualified JCO version");
+  const packageBytes = readStableBuildFile(join(dirname(entrypoint), "../package.json"), 64 * 1024, { remaining: 64 * 1024 }, check);
+  if (JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(packageBytes)).version !== "1.27.0") throw new Error("browser actor artifact: unqualified JCO version");
   const { source, inputs } = await captureBrowserCodegenSources(entrypoint, [
     { name: "@bytecodealliance/jco/dist", path: dirname(entrypoint) },
     { name: "@bytecodealliance/jco-transpile/vendor", path: dirname(vendor) },
@@ -242,7 +219,7 @@ async function buildBrowserCodegenModule(evidence: string, check: () => void): P
   writeFileSync(join(evidence, "compiler-sources.json"), JSON.stringify(inputs), { mode: 0o600 });
   if (Buffer.byteLength(source) > 8 * 1024 * 1024) throw new Error("browser actor artifact: compiler closure bound");
   const admission = { remaining: browserActorMaximumBytes - Buffer.byteLength(source) };
-  const cores = ["js-component-bindgen-component.core.wasm", "js-component-bindgen-component.core2.wasm"].map(name => ({ name, bytes: readBrowserBuildFile(join(dirname(vendor), name), browserActorMaximumBytes, admission, check) }));
+  const cores = ["js-component-bindgen-component.core.wasm", "js-component-bindgen-component.core2.wasm"].map(name => ({ name, bytes: readStableBuildFile(join(dirname(vendor), name), browserActorMaximumBytes, admission, check) }));
   const closed = closeBrowserCodegenModule(source, cores);
   const path = join(evidence, "compiler.mjs");
   writeFileSync(path, closed, { mode: 0o600 });
@@ -304,7 +281,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
       assert.equal(globalThis.Bun?.version, "1.3.14", "browser actor artifact: unqualified codegen runtime");
       assert(["NODE_OPTIONS", "NODE_PATH", "BUN_OPTIONS", "BUN_PRELOAD", "PATH"].every(name => process.env[name] === undefined), "browser actor artifact: ambient codegen environment");
       const [componentPath, outputRoot, importsJson, asyncJson, maximum, compilerPath, compilerHash, compilerLength, componentHash, componentLength] = process.argv.slice(1);
-      const readCaptured = ${readBrowserBuildFile.toString()};
+      const readCaptured = ${readStableBuildFile.toString()};
       const capture = (path, hash, length) => {
         const bytes = readCaptured(path, Number(maximum), { remaining: Number(maximum) }, () => {});
         assert.equal(bytes.byteLength, Number(length), "browser actor artifact: captured input identity");
@@ -341,7 +318,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     const manifest = parseBrowserActorCodegenManifest(JSON.parse(generated.stdout));
     control.progress?.("codegen", snapshot.byteLength, snapshot.byteLength);
     const admission = { remaining: browserActorMaximumBytes };
-    const read = (name: string, maximum: number): Buffer => readBrowserBuildFile(join(evidence, name), maximum, admission, check);
+    const read = (name: string, maximum: number): Uint8Array => readStableBuildFile(join(evidence, name), maximum, admission, check);
     const source = new TextDecoder("utf-8", { fatal: true }).decode(read("browser-actor.js", 8 * 1024 * 1024));
     const cores = manifest.files.filter(name => name.endsWith(".wasm")).map(name => ({ name, bytes: read(name, browserActorMaximumBytes) }));
     const output = await closedBrowserActorBundleFromRuntime(source, cores, { importInterfaces: manifest.importInterfaces, cancelled: control.cancelled, progress: (completed, total) => control.progress?.("closure", completed, total) }, actorRuntime);
@@ -1023,7 +1000,7 @@ async function testClosedBrowserActorBundle(repoRoot: string): Promise<void> {
       }
       return false;
     },
-  }, replacementRoot), /generated file changed while reading/);
+  }, replacementRoot), /build input: file changed while reading/);
   assert.equal(replaced, true);
   for (const name of ["compiler.mjs", "component.wasm"]) {
     const replacementRoot = join(evidence, name + "-replacement");

@@ -104,8 +104,9 @@ impl ArtifactViewer for HomeViewer {
                 let directory = cfg.snapshot.directory().map_err(|_| PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
                 main::render(&directory, &cfg.snapshot.locale, &cfg.snapshot.client_id)?
             }
-            _ => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?,
+            _ => {
+                semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?
+            }
         };
         Ok(ComponentTree { root })
     }
@@ -125,7 +126,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn create_home_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_home_viewer();
+        let def = create_home_viewer().await;
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, HOME_DIALECT.into());
     }
@@ -142,7 +143,8 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = HomeConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let _node = <HomeViewer as ArtifactViewer>::render(main::S_HOME_VIEW_BODY, &doc, &cfg);
+        let tree = <HomeViewer as ArtifactViewer>::render(main::S_HOME_VIEW_BODY, &doc, &cfg).expect("Home viewer main tree");
+        let _ = semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("Home viewer main projection");
     }
 
     #[semio_framework_async_macros::async_test]

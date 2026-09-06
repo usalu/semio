@@ -1,18 +1,449 @@
 {
   "$id": "https://semio.tech/schema/s/energy/model/mutation.json",
   "title": "EnergyModelMutation",
+  "description": "One handcrafted semantic mutation kind per $defs entry - the tagged union EnergyModelMutation dispatches on.",
   "oneOf": [
-    { "$ref": "#/$defs/ReplaceModel" }
+    {
+      "$ref": "#/$defs/RenameModel"
+    },
+    {
+      "$ref": "#/$defs/ChangeModelVersion"
+    },
+    {
+      "$ref": "#/$defs/UpdateSite"
+    },
+    {
+      "$ref": "#/$defs/UpdateGroundTemperature"
+    },
+    {
+      "$ref": "#/$defs/UpdateRunPeriod"
+    },
+    {
+      "$ref": "#/$defs/ReplaceAirflowNetwork"
+    },
+    {
+      "$ref": "#/$defs/AddOutputVariable"
+    },
+    {
+      "$ref": "#/$defs/RemoveOutputVariable"
+    },
+    {
+      "$ref": "#/$defs/BindWeatherFile"
+    },
+    {
+      "$ref": "#/$defs/UnbindWeatherFile"
+    },
+    {
+      "$ref": "#/$defs/ConnectReferencedModel"
+    },
+    {
+      "$ref": "#/$defs/DisconnectReferencedModel"
+    },
+    {
+      "$ref": "#/$defs/RenameZone"
+    },
+    {
+      "$ref": "#/$defs/ChangeZoneVolume"
+    },
+    {
+      "$ref": "#/$defs/ChangeZoneMultiplier"
+    },
+    {
+      "$ref": "#/$defs/ChangeZoneConditioned"
+    },
+    {
+      "$ref": "#/$defs/ChangeZoneFloorAreaParticipation"
+    }
   ],
   "$defs": {
-    "ReplaceModel": {
-      "title": "ReplaceModel",
+    "RenameModel": {
+      "title": "RenameModel",
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "newModelJson"],
+      "required": [
+        "mutation",
+        "newName"
+      ],
       "properties": {
-        "mutation": { "const": "replace-model" },
-        "newModelJson": { "type": "string" }
+        "mutation": {
+          "const": "rename-model"
+        },
+        "newName": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeModelVersion": {
+      "title": "ChangeModelVersion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "newVersion"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-model-version"
+        },
+        "newVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "UpdateSite": {
+      "title": "UpdateSite",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "latitudeDeg",
+        "longitudeDeg",
+        "elevationM",
+        "timeZoneHours",
+        "northAxisDeg"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-site"
+        },
+        "latitudeDeg": {
+          "type": "number"
+        },
+        "longitudeDeg": {
+          "type": "number"
+        },
+        "elevationM": {
+          "type": "number"
+        },
+        "timeZoneHours": {
+          "type": "number"
+        },
+        "northAxisDeg": {
+          "type": "number"
+        }
+      }
+    },
+    "UpdateGroundTemperature": {
+      "title": "UpdateGroundTemperature",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "buildingSurfaceC",
+        "shallowC",
+        "deepC"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-ground-temperature"
+        },
+        "buildingSurfaceC": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "shallowC": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "deepC": {
+          "type": "number"
+        }
+      }
+    },
+    "UpdateRunPeriod": {
+      "title": "UpdateRunPeriod",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "startMonth",
+        "startDay",
+        "endMonth",
+        "endDay",
+        "year"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "update-run-period"
+        },
+        "startMonth": {
+          "type": "integer"
+        },
+        "startDay": {
+          "type": "integer"
+        },
+        "endMonth": {
+          "type": "integer"
+        },
+        "endDay": {
+          "type": "integer"
+        },
+        "year": {
+          "type": "integer"
+        }
+      }
+    },
+    "ReplaceAirflowNetwork": {
+      "title": "ReplaceAirflowNetwork",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "present",
+        "zoneIds",
+        "nodeIds",
+        "outdoorNodeId",
+        "linkIds"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-airflow-network"
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "zoneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "nodeIds": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "outdoorNodeId": {
+          "type": "integer"
+        },
+        "linkIds": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "AddOutputVariable": {
+      "title": "AddOutputVariable",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "name",
+        "key",
+        "reportingFrequency"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "add-output-variable"
+        },
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "reportingFrequency": {
+          "enum": [
+            "Timestep",
+            "Hourly",
+            "Daily",
+            "Monthly",
+            "RunPeriod"
+          ]
+        }
+      }
+    },
+    "RemoveOutputVariable": {
+      "title": "RemoveOutputVariable",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "name",
+        "key"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-output-variable"
+        },
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "BindWeatherFile": {
+      "title": "BindWeatherFile",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "targetUri"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "bind-weather-file"
+        },
+        "targetUri": {
+          "type": "string"
+        }
+      }
+    },
+    "UnbindWeatherFile": {
+      "title": "UnbindWeatherFile",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "unbind-weather-file"
+        }
+      }
+    },
+    "ConnectReferencedModel": {
+      "title": "ConnectReferencedModel",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "targetUri"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "connect-referenced-model"
+        },
+        "targetUri": {
+          "type": "string"
+        }
+      }
+    },
+    "DisconnectReferencedModel": {
+      "title": "DisconnectReferencedModel",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "disconnect-referenced-model"
+        }
+      }
+    },
+    "RenameZone": {
+      "title": "RenameZone",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "newName"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "rename-zone"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "newName": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeZoneVolume": {
+      "title": "ChangeZoneVolume",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "newVolumeM3"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-zone-volume"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "newVolumeM3": {
+          "type": "number"
+        }
+      }
+    },
+    "ChangeZoneMultiplier": {
+      "title": "ChangeZoneMultiplier",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "newMultiplier"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-zone-multiplier"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "newMultiplier": {
+          "type": "integer"
+        }
+      }
+    },
+    "ChangeZoneConditioned": {
+      "title": "ChangeZoneConditioned",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "newConditioned"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-zone-conditioned"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "newConditioned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ChangeZoneFloorAreaParticipation": {
+      "title": "ChangeZoneFloorAreaParticipation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "newPartOfTotalFloorArea"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "change-zone-floor-area-participation"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "newPartOfTotalFloorArea": {
+          "type": "boolean"
+        }
       }
     }
   }

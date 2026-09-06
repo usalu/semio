@@ -8,37 +8,41 @@
   ],
   "properties": {
     "params": {
-      "title": "MatchParams",
       "type": "object",
+      "title": "MatchParams",
       "additionalProperties": false,
       "required": [
-        "crossCheck",
-        "loopClosure",
         "matcher",
-        "maxPairsPerFrame",
         "ratioTest",
-        "sequentialWindow"
+        "crossCheck",
+        "sequentialWindow",
+        "maxPairsPerFrame",
+        "loopClosure"
       ],
       "properties": {
         "matcher": {
           "type": "string",
+          "title": "MatcherKind",
           "enum": [
             "brute-force",
             "kd-tree"
           ]
         },
         "ratioTest": {
-          "type": "number"
+          "type": "number",
+          "format": "float"
         },
         "crossCheck": {
           "type": "boolean"
         },
         "sequentialWindow": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "maxPairsPerFrame": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "loopClosure": {

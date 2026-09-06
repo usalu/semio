@@ -6,5 +6,6 @@ type EnergyModelArtifact {
   structure: JSON!
   zones: JSON!
   referencedModel: JSON
+  weatherLink: JSON
   resultsJson: String!
 }

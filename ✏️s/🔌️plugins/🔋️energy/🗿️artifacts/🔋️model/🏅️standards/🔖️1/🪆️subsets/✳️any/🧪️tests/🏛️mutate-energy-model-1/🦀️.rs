@@ -1,50 +1,46 @@
-//! 🔋️ `s.energy.model` exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
-//! REFACTOR. Recorded no-oracle decision `energy-model-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`, which also records why
-//! EnergyPlus and OpenStudio were surveyed and DECLINED, and why the `energyplus` weather reader
-//! registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is deliberately not reused here).
+//! 🔋️ `s.energy.model` exhaustive mutation case — Rust adapter. Every declared kind carries two
+//! committed specification vectors, one that really moves the document and one that is really
+//! refused, so `UNOBSERVABLE` is empty: the weak single-no-op evidence this case used to record
+//! disappeared together with the `replace-model` whole-document swap it was about (ticket
+//! 26/09/06/ENERGY-PLUGIN-END-TO-END; whole-model load is now `store::ArtifactStore::reset`).
 //!
-//! This artifact persists no content model of its own: its substantive body is two composed CHILD
-//! HANDLES — `structure` at `s.stdio.semio.value`, `zones` at `s.stdio.semio.table` — regenerated
-//! TOGETHER from one `crate::model::Model`, so its single kind is a paired-child overwrite keyed by a
-//! serialized model string and its inverse re-serializes the model read back out of BASE.
-//!
-//! ⚠️ The evidence here is WEAK and is left visible rather than tuned away. The only committed
-//! specification vector carries `newModelJson` of `{}`, which the leaf documents as honest degradation
-//! to `Model::default()`, over a before-snapshot that already holds the default model — so it is a
-//! no-op vector and `replace-model` is listed in `UNOBSERVABLE` below WITH that reason. What this case
-//! asserts about `replace-model` today is the declared degradation path (empty diff, one
-//! `mutation.no-op` warning, untouched document), which is real; what it does not assert is that
-//! `replace-model` can replace a model.
-//!
-//! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves an
-//! oracle implementation from the feature's `@oracle-` tag and this feature has none — so every law this
-//! case claims is asserted inside the SUBJECT handlers, through the shared law module
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs` that the stdio subsets use. The oracle handlers
-//! below still answer with the committed vector read literally, so the reference side exists the moment a
-//! second producer ever does. The subject half is gated behind the generated host's `sut` feature so the
+//! **Where the assertions live.** The oracle role is the Python second implementation beside this
+//! file, reached through the feature's `@oracle-` tag; the subject role is this repository's own
+//! `energy_model_mutation_report_json`. Each asserts the forward and inverse laws in role, through
+//! the shared law module `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️.rs`, before the two are compared
+//! byte for byte. The subject half is gated behind the generated host's `sut` feature so an
 //! oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
-/// imported, because the oracle-only build must not link the subject crate. The contract's
-/// mutation-coverage gate keeps this list honest against the catalog, and that file's own
-/// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
+/// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` —
+/// duplicated, not imported, because the oracle-only build must not link the subject crate. That
+/// file's own `direct_owner_descriptors_and_catalog_correspond` keeps the list honest against both
+/// the enum and the catalog.
 const KINDS: &[&str] = &[
-    "replace-model",
+    "rename-model",
+    "change-model-version",
+    "update-site",
+    "update-ground-temperature",
+    "update-run-period",
+    "replace-airflow-network",
+    "add-output-variable",
+    "remove-output-variable",
+    "bind-weather-file",
+    "unbind-weather-file",
+    "connect-referenced-model",
+    "disconnect-referenced-model",
+    "rename-zone",
+    "change-zone-volume",
+    "change-zone-multiplier",
+    "change-zone-conditioned",
+    "change-zone-floor-area-participation",
 ];
 
-/// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
-/// [`law::mutation_is_observable`] must not demand one of them.
-/// `replace-model` — the subset's ONLY committed vector is a documented no-op (`newModelJson` of `{}`
-/// degrades to `Model::default()`, which the before-snapshot already holds), so no forward effect exists to
-/// observe. A second vector built from a real, non-default `Model` is the fix; inventing one here would have
-/// manufactured a green.
-const UNOBSERVABLE: &[&str] = &[
-    "replace-model",
-];
+/// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect. Empty: every kind
+/// owns a vector that moves the document.
+const UNOBSERVABLE: &[&str] = &[];
 
 /// 🗣️ The real committed document this artifact ships as its own example.
 #[cfg(feature = "sut")]
@@ -52,10 +48,11 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
-/// 🧫️ One kind's committed `(before, mutation, after, diff, outcome)` specification vector, read
-/// literally via `include_str!`. This IS the independently handcrafted evidence the no-oracle decision
-/// rests on — never recomputed here, never restated as a Rust literal.
+/// 🧫️ One committed `(before, mutation, after, diff, outcome)` specification vector, read literally
+/// via `include_str!` — never recomputed here, never restated as a Rust literal.
 struct Vector {
+    id: &'static str,
+    kind: &'static str,
     before: &'static str,
     mutation: &'static str,
     after: &'static str,
@@ -63,17 +60,317 @@ struct Vector {
     outcome: &'static str,
 }
 
-fn vector(kind: &str) -> Vector {
-    match kind {
-        "replace-model" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🧪️tests/🏛️degrades-an-empty-model-payload-to-a-no-op/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🧪️tests/🏛️degrades-an-empty-model-payload-to-a-no-op/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🧪️tests/🏛️degrades-an-empty-model-payload-to-a-no-op/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🧪️tests/🏛️degrades-an-empty-model-payload-to-a-no-op/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🧪️tests/🏛️degrades-an-empty-model-payload-to-a-no-op/🎯️outcome/🔣️.json"),
+const VECTORS: &[Vector] = &[
+        Vector {
+            id: "rename-model-renames-the-model",
+            kind: "rename-model",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/✅️renames-the-model/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/✅️renames-the-model/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/✅️renames-the-model/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/✅️renames-the-model/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/✅️renames-the-model/🎯️outcome/🔣️.json"),
         },
-        other => panic!("mutate-energy-model-1: no committed specification vector is registered for kind {other:?}"),
-    }
+        Vector {
+            id: "rename-model-refuses-a-blank-name",
+            kind: "rename-model",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/⛔️refuses-a-blank-name/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/⛔️refuses-a-blank-name/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/⛔️refuses-a-blank-name/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/⛔️refuses-a-blank-name/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/⛔️refuses-a-blank-name/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-model-version-bumps-the-version",
+            kind: "change-model-version",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/✅️bumps-the-version/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/✅️bumps-the-version/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/✅️bumps-the-version/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/✅️bumps-the-version/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/✅️bumps-the-version/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-model-version-refuses-a-blank-version",
+            kind: "change-model-version",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/⛔️refuses-a-blank-version/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/⛔️refuses-a-blank-version/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/⛔️refuses-a-blank-version/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/⛔️refuses-a-blank-version/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/⛔️refuses-a-blank-version/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "update-site-relocates-to-denver",
+            kind: "update-site",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/✅️relocates-to-denver/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/✅️relocates-to-denver/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/✅️relocates-to-denver/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/✅️relocates-to-denver/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/✅️relocates-to-denver/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "update-site-refuses-a-bad-latitude",
+            kind: "update-site",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/⛔️refuses-a-bad-latitude/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/⛔️refuses-a-bad-latitude/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/⛔️refuses-a-bad-latitude/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/⛔️refuses-a-bad-latitude/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️update-site/🧪️tests/⛔️refuses-a-bad-latitude/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "update-ground-temperature-sets-denver-ground",
+            kind: "update-ground-temperature",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/✅️sets-denver-ground/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/✅️sets-denver-ground/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/✅️sets-denver-ground/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/✅️sets-denver-ground/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/✅️sets-denver-ground/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "update-ground-temperature-refuses-a-short-year",
+            kind: "update-ground-temperature",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/⛔️refuses-a-short-year/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/⛔️refuses-a-short-year/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/⛔️refuses-a-short-year/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/⛔️refuses-a-short-year/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/⛔️refuses-a-short-year/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "update-run-period-shortens-to-january",
+            kind: "update-run-period",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/✅️shortens-to-january/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/✅️shortens-to-january/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/✅️shortens-to-january/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/✅️shortens-to-january/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/✅️shortens-to-january/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "update-run-period-refuses-month-13",
+            kind: "update-run-period",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/⛔️refuses-month-13/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/⛔️refuses-month-13/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/⛔️refuses-month-13/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/⛔️refuses-month-13/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/⛔️refuses-month-13/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "replace-airflow-network-attaches-a-network",
+            kind: "replace-airflow-network",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/✅️attaches-a-network/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/✅️attaches-a-network/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/✅️attaches-a-network/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/✅️attaches-a-network/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/✅️attaches-a-network/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "replace-airflow-network-refuses-unpaired-nodes",
+            kind: "replace-airflow-network",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/⛔️refuses-unpaired-nodes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/⛔️refuses-unpaired-nodes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/⛔️refuses-unpaired-nodes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/⛔️refuses-unpaired-nodes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/⛔️refuses-unpaired-nodes/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "add-output-variable-adds-zone-air-temp",
+            kind: "add-output-variable",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/✅️adds-zone-air-temp/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/✅️adds-zone-air-temp/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/✅️adds-zone-air-temp/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/✅️adds-zone-air-temp/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/✅️adds-zone-air-temp/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "add-output-variable-refuses-a-duplicate",
+            kind: "add-output-variable",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/⛔️refuses-a-duplicate/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/⛔️refuses-a-duplicate/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/⛔️refuses-a-duplicate/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/⛔️refuses-a-duplicate/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/⛔️refuses-a-duplicate/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "remove-output-variable-drops-zone-air-temp",
+            kind: "remove-output-variable",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/✅️drops-zone-air-temp/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/✅️drops-zone-air-temp/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/✅️drops-zone-air-temp/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/✅️drops-zone-air-temp/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/✅️drops-zone-air-temp/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "remove-output-variable-refuses-an-absent-one",
+            kind: "remove-output-variable",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/⛔️refuses-an-absent-one/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/⛔️refuses-an-absent-one/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/⛔️refuses-an-absent-one/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/⛔️refuses-an-absent-one/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/⛔️refuses-an-absent-one/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "bind-weather-file-binds-hannover-epw",
+            kind: "bind-weather-file",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/✅️binds-hannover-epw/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/✅️binds-hannover-epw/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/✅️binds-hannover-epw/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/✅️binds-hannover-epw/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/✅️binds-hannover-epw/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "bind-weather-file-refuses-a-bad-uri",
+            kind: "bind-weather-file",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/⛔️refuses-a-bad-uri/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/⛔️refuses-a-bad-uri/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/⛔️refuses-a-bad-uri/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/⛔️refuses-a-bad-uri/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/⛔️refuses-a-bad-uri/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "unbind-weather-file-unbinds-the-weather",
+            kind: "unbind-weather-file",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/✅️unbinds-the-weather/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/✅️unbinds-the-weather/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/✅️unbinds-the-weather/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/✅️unbinds-the-weather/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/✅️unbinds-the-weather/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "unbind-weather-file-refuses-when-unbound",
+            kind: "unbind-weather-file",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/⛔️refuses-when-unbound/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/⛔️refuses-when-unbound/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/⛔️refuses-when-unbound/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/⛔️refuses-when-unbound/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/⛔️refuses-when-unbound/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "connect-referenced-model-connects-the-geometry",
+            kind: "connect-referenced-model",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/✅️connects-the-geometry/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/✅️connects-the-geometry/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/✅️connects-the-geometry/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/✅️connects-the-geometry/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/✅️connects-the-geometry/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "connect-referenced-model-refuses-a-bad-uri",
+            kind: "connect-referenced-model",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/⛔️refuses-a-bad-uri/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/⛔️refuses-a-bad-uri/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/⛔️refuses-a-bad-uri/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/⛔️refuses-a-bad-uri/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/⛔️refuses-a-bad-uri/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "disconnect-referenced-model-disconnects-the-geometry",
+            kind: "disconnect-referenced-model",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/✅️disconnects-the-geometry/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/✅️disconnects-the-geometry/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/✅️disconnects-the-geometry/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/✅️disconnects-the-geometry/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/✅️disconnects-the-geometry/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "disconnect-referenced-model-refuses-when-absent",
+            kind: "disconnect-referenced-model",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/⛔️refuses-when-absent/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/⛔️refuses-when-absent/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/⛔️refuses-when-absent/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/⛔️refuses-when-absent/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/⛔️refuses-when-absent/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "rename-zone-renames-zone-one",
+            kind: "rename-zone",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/✅️renames-zone-one/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/✅️renames-zone-one/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/✅️renames-zone-one/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/✅️renames-zone-one/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/✅️renames-zone-one/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "rename-zone-refuses-a-missing-zone",
+            kind: "rename-zone",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/⛔️refuses-a-missing-zone/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/⛔️refuses-a-missing-zone/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/⛔️refuses-a-missing-zone/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/⛔️refuses-a-missing-zone/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/⛔️refuses-a-missing-zone/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-zone-volume-resizes-zone-one",
+            kind: "change-zone-volume",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/✅️resizes-zone-one/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/✅️resizes-zone-one/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/✅️resizes-zone-one/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/✅️resizes-zone-one/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/✅️resizes-zone-one/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-zone-volume-refuses-zero-volume",
+            kind: "change-zone-volume",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/⛔️refuses-zero-volume/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/⛔️refuses-zero-volume/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/⛔️refuses-zero-volume/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/⛔️refuses-zero-volume/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/⛔️refuses-zero-volume/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-zone-multiplier-stacks-four-storeys",
+            kind: "change-zone-multiplier",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/✅️stacks-four-storeys/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/✅️stacks-four-storeys/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/✅️stacks-four-storeys/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/✅️stacks-four-storeys/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/✅️stacks-four-storeys/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-zone-multiplier-refuses-zero-instances",
+            kind: "change-zone-multiplier",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/⛔️refuses-zero-instances/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/⛔️refuses-zero-instances/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/⛔️refuses-zero-instances/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/⛔️refuses-zero-instances/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/⛔️refuses-zero-instances/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-zone-conditioned-frees-the-zone",
+            kind: "change-zone-conditioned",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/✅️frees-the-zone/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/✅️frees-the-zone/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/✅️frees-the-zone/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/✅️frees-the-zone/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/✅️frees-the-zone/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-zone-conditioned-refuses-a-missing-zone",
+            kind: "change-zone-conditioned",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/⛔️refuses-a-missing-zone/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/⛔️refuses-a-missing-zone/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/⛔️refuses-a-missing-zone/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/⛔️refuses-a-missing-zone/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/⛔️refuses-a-missing-zone/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-zone-floor-area-participation-excludes-the-zone",
+            kind: "change-zone-floor-area-participation",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/✅️excludes-the-zone/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/✅️excludes-the-zone/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/✅️excludes-the-zone/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/✅️excludes-the-zone/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/✅️excludes-the-zone/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-zone-floor-area-participation-refuses-a-missing-zone",
+            kind: "change-zone-floor-area-participation",
+            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/⛔️refuses-a-missing-zone/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/⛔️refuses-a-missing-zone/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/⛔️refuses-a-missing-zone/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/⛔️refuses-a-missing-zone/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/⛔️refuses-a-missing-zone/🎯️outcome/🔣️.json"),
+        },
+];
+
+fn vector(id: &str) -> &'static Vector {
+    VECTORS.iter().find(|vector| vector.id == id).unwrap_or_else(|| panic!("mutate-energy-model-1: no committed specification vector is registered for {id:?}"))
 }
 
 /// 🔎️ Parses one embedded fixture file into the framework's own dependency-free `Json`.
@@ -84,18 +381,17 @@ fn canonical(text: &str) -> Json {
 
 //#region 🔖️Oracle
 /// 🔮️ The forward reference answer: the committed after-snapshot, read literally.
-fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+fn mutate_oracle_for(id: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |_ctx: &Context| {
-        let after = vector(kind).after;
+        let after = vector(id).after;
         Ok(Outcome::with_raw(after.as_bytes().to_vec(), canonical(after)))
     }
 }
 
-/// 🔮️ The inverse reference answer: the committed before-snapshot — undoing a mutation must land back
-/// exactly where the specification vector started.
-fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+/// 🔮️ The inverse reference answer: the committed before-snapshot.
+fn inverse_oracle_for(id: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |_ctx: &Context| {
-        let before = vector(kind).before;
+        let before = vector(id).before;
         Ok(Outcome::with_raw(before.as_bytes().to_vec(), canonical(before)))
     }
 }
@@ -106,20 +402,15 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 mod subject {
     use super::{canonical, vector, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
     use semio_s_plugin_energy::artifacts::model::standards::v1::subsets::any::schema::mutations::energy_model_mutation_report_json;
     use semio_s_plugin_energy::artifacts::model::standards::v1::subsets::any::schema::snapshot::energy_model_identity_report_json;
+    use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️Report
-    /// 📋️ One member of the production bridge's report, named in the error when it is absent — never
-    /// defaulted, because a silently missing member would turn every comparison below into a comparison
-    /// of two empty values.
     fn member<'a>(report: &'a Json, key: &str) -> Result<&'a Json, String> {
         report.get(key).ok_or_else(|| format!("the report carries no {key:?} member"))
     }
 
-    /// 📋️ An array member of the report, rejecting a present-but-wrong-shaped value rather than
-    /// treating it as empty.
     fn members(report: &Json, key: &str) -> Result<Vec<Json>, String> {
         match member(report, key)? {
             Json::Array(items) => Ok(items.clone()),
@@ -127,7 +418,6 @@ mod subject {
         }
     }
 
-    /// 📋️ A string member of the report, rejecting a present-but-wrong-shaped value.
     fn text(report: &Json, key: &str) -> Result<String, String> {
         match member(report, key)? {
             Json::String(value) => Ok(value.clone()),
@@ -135,8 +425,6 @@ mod subject {
         }
     }
 
-    /// 📋️ A string array read as owned `String`s — an address list, either declared by a committed
-    /// outcome or reported by a diagnostic.
     fn strings(value: &Json, key: &str) -> Vec<String> {
         value
             .array(key)
@@ -148,9 +436,6 @@ mod subject {
             .collect()
     }
 
-    /// 🚦️ Normalizes a declared severity word. The committed outcome vectors are not consistent — some
-    /// write `warn` where the serialized `Severity` writes `warning` — so the level is normalized before
-    /// comparison while the `code`, which is a frozen closed-set identifier, is compared verbatim.
     fn level_of(word: &str) -> String {
         if word == "warn" {
             "warning".to_string()
@@ -159,93 +444,86 @@ mod subject {
         }
     }
 
-    /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` vector declares.
-    /// A `rejected` vector declares one fault code and the offending address; an `applied` vector
-    /// declares an ordered (possibly empty) message list and forbids anything at error level or worse.
-    fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
+    /// 🎯️ Checks the produced diagnostics against the ones the committed `🎯️outcome` declares.
+    fn declared_outcome_holds(id: &str, produced: &[Json], outcome: &Json) -> Result<(), String> {
         let codes: Vec<String> = produced.iter().map(|message| message.str("code")).collect();
         let levels: Vec<String> = produced.iter().map(|message| level_of(&message.str("level"))).collect();
         if outcome.str("status") == "rejected" {
             let expected = outcome.str("code");
             if codes != vec![expected.clone()] {
-                return Err(format!("mutate-{kind}: the vector declares a rejection with code {expected:?}, the implementation raised {codes:?}"));
+                return Err(format!("mutate-{id}: the vector declares a rejection with code {expected:?}, the implementation raised {codes:?}"));
             }
             if !levels.iter().any(|level| level == "error" || level == "fatal") {
-                return Err(format!("mutate-{kind}: the vector declares a rejection, but the implementation raised it at {levels:?} — a rejection is at least an error"));
+                return Err(format!("mutate-{id}: the vector declares a rejection, but the implementation raised it at {levels:?}"));
             }
             let path = strings(outcome, "path");
             let target = strings(&produced[0], "target");
             if !path.is_empty() && target != path {
-                return Err(format!("mutate-{kind}: the vector declares the offending address {path:?}, the implementation reported {target:?}"));
+                return Err(format!("mutate-{id}: the vector declares the offending address {path:?}, the implementation reported {target:?}"));
             }
             return Ok(());
         }
         let expected: Vec<String> = outcome.array("messages").iter().map(|message| message.str("code")).collect();
         if codes != expected {
-            return Err(format!("mutate-{kind}: the vector declares the diagnostics {expected:?}, the implementation raised {codes:?}"));
+            return Err(format!("mutate-{id}: the vector declares the diagnostics {expected:?}, the implementation raised {codes:?}"));
         }
         match levels.iter().find(|level| level.as_str() == "error" || level.as_str() == "fatal") {
-            Some(level) => Err(format!("mutate-{kind}: the vector declares an applied outcome, but the implementation raised a {level}")),
+            Some(level) => Err(format!("mutate-{id}: the vector declares an applied outcome, but the implementation raised a {level}")),
             None => Ok(()),
         }
     }
     //#endregion 🔖️Report
 
     //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to its committed before-snapshot and asserts THREE things the vector commits
-    /// to: the resulting document is the committed after-snapshot, the produced delta is the committed
-    /// `🔺️diff` (which pins WHICH fields the mutation was allowed to touch, not merely where it ended
-    /// up), and the diagnostics are the ones the committed `🎯️outcome` declares. A kind the vector shows
-    /// moving is additionally held to the observability law, so a mutation that quietly did nothing
-    /// cannot pass by agreeing with an unchanged document.
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// 🎯️ Applies the vector and asserts the resulting document, the produced delta and the declared
+    /// diagnostics all match what the vector commits to.
+    pub fn mutate(id: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
-            let committed = vector(kind);
-            let report = parse_json(&energy_model_mutation_report_json(committed.before, committed.mutation, committed.after).map_err(|error| format!("mutate-{kind}: the committed vector did not reach this subset's own codec: {error}"))?)?;
+            let committed = vector(id);
+            let report = parse_json(&energy_model_mutation_report_json(committed.before, committed.mutation, committed.after).map_err(|error| format!("mutate-{id}: the committed vector did not reach this subset's own codec: {error}"))?)?;
             let applied = member(&report, "snapshot")?;
             let expected = member(&report, "expectedSnapshot")?;
             if let Some(first) = law::divergence(applied, expected) {
-                return Err(format!("mutate-{kind}: the applied document is not the committed after-snapshot — {first}"));
+                return Err(format!("mutate-{id}: the applied document is not the committed after-snapshot — {first}"));
             }
             if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(committed.diff)) {
-                return Err(format!("mutate-{kind}: the produced delta is not the committed 🔺️diff — {first}"));
+                return Err(format!("mutate-{id}: the produced delta is not the committed 🔺️diff — {first}"));
             }
-            declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
-            law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
+            declared_outcome_holds(id, &members(&report, "messages")?, &canonical(committed.outcome))?;
+            if canonical(committed.outcome).str("status") != "rejected" {
+                law::mutation_is_observable(committed.kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
+            }
             Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
         }
     }
 
-    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must restore
-    /// the committed before-snapshot exactly. Asserted in role through `law::inverse_restores`, so a
-    /// divergence is reported by JSON path rather than as a bare inequality, and an inverse step that
-    /// was itself rejected fails here rather than silently leaving the document where it was.
-    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// ↩️ The metamorphic inverse law: applying the vector and then its OWN computed inverse must
+    /// restore the committed before-snapshot exactly.
+    pub fn inverse(id: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
-            let committed = vector(kind);
-            let report = parse_json(&energy_model_mutation_report_json(committed.before, committed.mutation, committed.after).map_err(|error| format!("inverse-{kind}: the committed vector did not reach this subset's own codec: {error}"))?)?;
-            let faults: Vec<String> = members(&report, "inverseMessages")?.iter().filter(|message| { let level = message.str("level"); level == "error" || level == "fatal" }).map(|message| message.str("code")).collect();
+            let committed = vector(id);
+            let report = parse_json(&energy_model_mutation_report_json(committed.before, committed.mutation, committed.after).map_err(|error| format!("inverse-{id}: the committed vector did not reach this subset's own codec: {error}"))?)?;
+            let faults: Vec<String> = members(&report, "inverseMessages")?
+                .iter()
+                .filter(|message| {
+                    let level = message.str("level");
+                    level == "error" || level == "fatal"
+                })
+                .map(|message| message.str("code"))
+                .collect();
             if !faults.is_empty() {
-                return Err(format!("inverse-{kind}: an inverse step was rejected with {faults:?}, so the document never got the chance to return"));
+                return Err(format!("inverse-{id}: an inverse step was rejected with {faults:?}, so the document never got the chance to return"));
             }
             let restored = member(&report, "inverseSnapshot")?;
-            law::inverse_restores(kind, restored, member(&report, "base")?)?;
+            law::inverse_restores(committed.kind, restored, member(&report, "base")?)?;
             Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored.clone()))
         }
     }
 
-    /// 🔁️ The real committed document through this subset's own two codecs. The semantic half is
-    /// `law::round_trip_preserves`: parsing, printing back and parsing again must not move the
-    /// projection. The byte half is `law::carrier_is_exact` rather than the wave's usual
-    /// no-pass-through tripwire, and deliberately so — `store::ArtifactDsl`'s own documented LAW is that
-    /// canonical `print_dsl` output is a `parse_dsl` fixpoint, so the correct answer for a second
-    /// printing IS byte identity and anything else is the defect. Neither printing is compared against
-    /// the committed file, which the same law explicitly allows to normalize on the way in. The pack
-    /// decoding is a separate binary codec, so agreeing on one snapshot cannot be reached by carrying
-    /// text bytes across.
+    /// 🔁️ The real committed document through this subset's own two codecs.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
-        let report = parse_json(&energy_model_identity_report_json(&text).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
+        let text_bytes = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
+        let report = parse_json(&energy_model_identity_report_json(&text_bytes).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
         let parsed = member(&report, "parsed")?;
         law::round_trip_preserves(member(&report, "reparsed")?, parsed)?;
         law::carrier_is_exact(text(&report, "canonicalTextAgain")?.as_bytes(), text(&report, "canonicalText")?.as_bytes())?;
@@ -259,17 +537,17 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario id,
-/// so the loop mirrors the feature's `Examples` tables exactly; `identity-round-trip` is subject-only
-/// because turning the committed example's DSL bytes into a document needs this subset's own codec,
-/// which the oracle-only build must not link.
+/// 🧭️ Registration is by FULL expanded scenario id, so this loop mirrors the feature's `Examples`
+/// tables exactly; `identity-round-trip` is subject-only because turning the committed example's DSL
+/// bytes into a document needs this subset's own codec.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
+    debug_assert!(KINDS.iter().all(|kind| VECTORS.iter().any(|vector| vector.kind == *kind)));
+    for vector in VECTORS {
+        built = built.oracle(&format!("mutate-{}", vector.id), mutate_oracle_for(vector.id)).oracle(&format!("inverse-{}", vector.id), inverse_oracle_for(vector.id));
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{}", vector.id), subject::mutate(vector.id)).subject(&format!("inverse-{}", vector.id), subject::inverse(vector.id));
         }
     }
     #[cfg(feature = "sut")]

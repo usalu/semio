@@ -17,6 +17,6 @@ pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<CsvSnapshot, store::T
     })
 }
 
-pub async fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store::TextError> {
     Ok(<CsvSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }

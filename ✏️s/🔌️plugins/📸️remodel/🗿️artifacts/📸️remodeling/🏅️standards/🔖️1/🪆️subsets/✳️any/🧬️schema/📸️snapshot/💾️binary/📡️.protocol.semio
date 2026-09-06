@@ -2,15 +2,24 @@ dialect protocol
 protocol remodeling.snapshot
 version 1
 schema remodeling.remodeling.snapshot
-start frame
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
+start segments
+framing magic 0x8953504B0D0A1A0A
+header fixed 24
+field version_major u16
+field version_minor u16
+field required_flags u32
+field optional_flags u32
 field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+field reserved fixed 8
+
+repeat segments {
+tag u8
+trailer u32
+until 0
+arm 3 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+arm 4 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+arm 1 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+arm 0 { flags u8 seg_len varint raw_len varint if flags eq 3 payload Array(u8, Field(seg_len)) }
+}
+
+footer fixed 84

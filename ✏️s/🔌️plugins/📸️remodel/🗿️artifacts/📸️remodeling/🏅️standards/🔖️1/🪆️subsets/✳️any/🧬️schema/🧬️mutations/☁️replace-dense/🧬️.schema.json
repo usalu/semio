@@ -3,28 +3,58 @@
   "title": "ReplaceDense",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "dense"
+  ],
   "properties": {
     "dense": {
-      "title": "DenseCloud",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "positions"
-      ],
-      "properties": {
-        "positions": {
-          "type": "string"
+      "anyOf": [
+        {
+          "type": "object",
+          "title": "DenseCloud",
+          "additionalProperties": false,
+          "required": [
+            "positions",
+            "colors",
+            "confidence",
+            "classification"
+          ],
+          "properties": {
+            "positions": {
+              "type": "string",
+              "format": "base64",
+              "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)"
+            },
+            "colors": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "base64",
+              "description": "base64 of raw u8 lanes (semio_s_plugin_remodel PackedU8)"
+            },
+            "confidence": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "base64",
+              "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)"
+            },
+            "classification": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "base64",
+              "description": "base64 of raw u8 lanes (semio_s_plugin_remodel PackedU8)"
+            }
+          }
         },
-        "colors": {
-          "type": "string"
-        },
-        "confidence": {
-          "type": "string"
-        },
-        "classification": {
-          "type": "string"
+        {
+          "type": "null"
         }
-      }
+      ]
     }
   }
 }

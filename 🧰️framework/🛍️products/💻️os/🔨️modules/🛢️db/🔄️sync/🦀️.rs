@@ -1831,10 +1831,10 @@ impl DatabaseSyncHelloFuture {
         origin: protocol::ActorId,
         snapshot_chunk_bytes: usize,
     ) -> Result<Self, DatabaseSyncHelloRejected> {
-        let owners = DatabaseSyncHelloOwners { storage: Some(storage), document, hello_frontier, session_id, origin, snapshot_chunk_bytes };
         let pool_use = match pool.acquire_use() {
             Ok(pool_use) => pool_use,
             Err(error) => {
+                let owners = DatabaseSyncHelloOwners { storage: Some(storage), document, hello_frontier, session_id, origin, snapshot_chunk_bytes };
                 return Err(DatabaseSyncHelloRejected::new(
                     pool,
                     DbError::Unavailable(format!("database sync-hello WorkerPool use rejected: {error:?}")),
@@ -1842,6 +1842,20 @@ impl DatabaseSyncHelloFuture {
                 ))
             }
         };
+        Self::try_submit_with_use(pool, pool_use, storage, document, hello_frontier, session_id, origin, snapshot_chunk_bytes)
+    }
+
+    pub(crate) fn try_submit_with_use(
+        pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+        pool_use: std::sync::Arc<semio_framework_async::WorkerPoolUse>,
+        storage: std::sync::Arc<db_storage::DbBackend>,
+        document: ArtifactId,
+        hello_frontier: Option<protocol::RuntimeFrontierSummary>,
+        session_id: String,
+        origin: protocol::ActorId,
+        snapshot_chunk_bytes: usize,
+    ) -> Result<Self, DatabaseSyncHelloRejected> {
+        let owners = DatabaseSyncHelloOwners { storage: Some(storage), document, hello_frontier, session_id, origin, snapshot_chunk_bytes };
         let (input_items, input_bytes) = match database_sync_hello_input_credit(&owners) {
             Ok(credit) => credit,
             Err(error) => return Err(DatabaseSyncHelloRejected::new(pool, error, owners)),

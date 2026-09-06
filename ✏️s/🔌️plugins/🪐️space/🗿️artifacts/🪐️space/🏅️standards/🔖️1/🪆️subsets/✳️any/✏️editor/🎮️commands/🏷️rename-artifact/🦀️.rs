@@ -27,9 +27,9 @@ mod tests {
     async fn rename_artifact_updates_the_name() {
         let mut app = testkit::new_app().await;
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
-            .expect("create artifact");
+            .await.expect("create artifact");
         let id = app.snapshot().unwrap().artifacts[0].id.clone();
-        app.dispatch_typed(SpaceIndexCommand::RenameArtifact(RenameArtifact { id: id.clone(), new_name: "Renamed".into() }), &semio_framework_plugin::testkit::meta("local")).expect("rename artifact");
+        app.dispatch_typed(SpaceIndexCommand::RenameArtifact(RenameArtifact { id: id.clone(), new_name: "Renamed".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("rename artifact");
         let snapshot = app.snapshot().expect("projection");
         assert_eq!(snapshot.artifacts.iter().find(|row| row.id == id).map(|row| row.name.clone()), Some("Renamed".into()));
     }

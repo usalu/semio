@@ -1,0 +1,4 @@
+{
+  bounds={ boundingBox={ max=[ 1 1 1 ] min=[ -1 -1 -1 ] } faceCount=12 vertexCount=8 }
+  relativeCameraPoses={ cam-1={ rotationAngleRad=0 translationDelta=[ 0 0 0 ] } cam-2={ rotationAngleRad=0.0314 translationDelta=[ 0.1 0 0 ] } }
+}

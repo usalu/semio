@@ -1,4 +1,42 @@
-module Stdio_json_snapshot;
-type Document = unit {
-    payload: bytes &eod;
+module Remodeling_snapshot;
+
+# 📦️ The .spk document container `RemodelingSnapshot::encode_pack_with` writes inside the SEMIO
+# envelope (os_pack::encode_document). Segment order: symbols(3), document(4)+, manifest(1), end(0).
+
+public type Document = unit {
+    magic:    bytes &size=8;
+    header:   Header;
+    segments: Segment[] &until($$.kind == 0);
+    footer:   Footer;
+};
+
+type Header = unit {
+    version_major:  uint16;
+    version_minor:  uint16;
+    required_flags: uint32;
+    optional_flags: uint32;
+    header_crc32:   uint32;
+    reserved:       bytes &size=8;
+};
+
+type Segment = unit {
+    kind:       uint8;
+    flags:      uint8;
+    stored_len: uint64 &convert=$$;
+    raw_len:    uint64 if (self.flags & 1 != 0);
+    payload:    bytes &size=self.stored_len;
+    crc32:      uint32;
+};
+
+type Footer = unit {
+    magic:              bytes &size=8;
+    version_major:      uint16;
+    version_minor:      uint16;
+    required_flags:     uint32;
+    manifest_offset:    uint64;
+    manifest_len:       uint64;
+    file_len:           uint64;
+    content_hash:       bytes &size=32;
+    prev_footer_offset: uint64;
+    footer_crc32:       uint32;
 };

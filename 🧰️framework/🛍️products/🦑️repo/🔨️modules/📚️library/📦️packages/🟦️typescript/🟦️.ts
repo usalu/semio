@@ -26,6 +26,29 @@ export const HUB_DATA_DIR_NAME = "🌐hub";
 export const SPACE_DATA_DIR_NAME = "🔗space";
 export const MAP_CACHE_DIR_NAME = "🗺️map";
 
+/** 🧊️ Captures one stable regular file through its retained descriptor and a shared byte admission. */
+export function readStableBuildFile(path: string, maximum: number, admission: { remaining: number }, check: () => void): Uint8Array {
+  check();
+  const info = lstatSync(path);
+  if (!info.isFile() || info.isSymbolicLink() || info.size > maximum) throw new Error("build input: file bound");
+  const file = openSync(path, "r");
+  try {
+    const before = fstatSync(file);
+    const same = (left: typeof info, right: typeof info) => left.isFile() && !left.isSymbolicLink() && left.dev === right.dev && left.ino === right.ino && left.size === right.size && left.mtimeMs === right.mtimeMs && left.ctimeMs === right.ctimeMs;
+    if (!same(before, info) || before.size > maximum || before.size > admission.remaining) throw new Error("build input: file changed or exceeds aggregate bound");
+    admission.remaining -= before.size;
+    const bytes = Buffer.alloc(before.size);
+    for (let offset = 0; offset < bytes.byteLength;) {
+      check();
+      const count = readSync(file, bytes, offset, Math.min(64 * 1024, bytes.byteLength - offset), offset);
+      if (!count) throw new Error("build input: file shortened");
+      offset += count;
+    }
+    if (!same(fstatSync(file), before) || !same(lstatSync(path), before)) throw new Error("build input: file changed while reading");
+    return bytes;
+  } finally { closeSync(file); }
+}
+
 /** 🧬️Workspace-local semio root (`.🧬semio/`). */
 export function getSemioRoot(repoRoot: string): string {
   return join(repoRoot, SEMIO_ROOT_DIR);
@@ -1130,12 +1153,16 @@ function activeTestLevel(): TestLevel {
 
 /**
  * 🎚️Resolves the test level from `segments[0]` (if it names a level) or `SEMIO_TEST_LEVEL`, else `fundamental`.
- * Sets `process.env.SEMIO_TEST_LEVEL` so every child process spawned afterwards (vitest, cargo, go, pytest,
- * dotnet) inherits it without explicit plumbing. Returns the remaining segments.
+ * `minimum` is the floor a suite declares when its own fixed cost (independent oracles, generated-bundle
+ * renders, taxonomy loads) already exceeds a lower level's budget, so the suite is levelled honestly
+ * instead of being killed at every invocation. Sets `process.env.SEMIO_TEST_LEVEL` so every child process
+ * spawned afterwards (vitest, cargo, go, pytest, dotnet) inherits it without explicit plumbing.
+ * Returns the remaining segments.
  */
-export function resolveTestLevel(segments: string[]): { level: TestLevel; rest: string[] } {
+export function resolveTestLevel(segments: string[], minimum: TestLevel = "fundamental"): { level: TestLevel; rest: string[] } {
   const [first, ...restIfLevel] = segments;
-  const level = isTestLevel(first) ? first : activeTestLevel();
+  const requested = isTestLevel(first) ? first : activeTestLevel();
+  const level = testLevelRank(requested) >= testLevelRank(minimum) ? requested : minimum;
   process.env.SEMIO_TEST_LEVEL = level;
   if (level === "exhaustive" && process.env.SEMIO_COVERAGE === undefined) process.env.SEMIO_COVERAGE = "1";
   return { level, rest: isTestLevel(first) ? restIfLevel : segments };

@@ -94,6 +94,18 @@ pub enum RasterPresenceMutation {
 impl Mutation<RasterPresence> for RasterPresenceMutation {
     type Diff = RasterPresence;
 
+    /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum) — presence is ephemeral shared
+    /// state, so the `owner` path is registry metadata only.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
     fn diff(&self, _base: &RasterPresence) -> protocol::MutationOutcome<RasterPresence> {
         match self {
             Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),

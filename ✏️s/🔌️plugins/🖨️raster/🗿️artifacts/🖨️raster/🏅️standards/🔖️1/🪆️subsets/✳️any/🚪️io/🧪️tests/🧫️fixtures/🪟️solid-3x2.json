@@ -1,0 +1,8 @@
+{
+  "schema": "semio.raster.io.bmp-parity.v1",
+  "note": "A 3x2 solid rgba(200,100,50,255) composite. Asserted from BOTH languages: bun `🚪️io/🧪️tests/🟦️.ts` and Rust `🚪️io/🦀️.rs::bmp_export_matches_the_typescript_parity_fixture`.",
+  "width": 3,
+  "height": 2,
+  "rgba8": [200, 100, 50, 255, 200, 100, 50, 255, 200, 100, 50, 255, 200, 100, 50, 255, 200, 100, 50, 255, 200, 100, 50, 255],
+  "bmpHex": "424d4e0000000000000036000000280000000300000002000000010018000000000018000000000000000000000000000000000000003264c83264c83264c80000003264c83264c83264c8000000"
+}

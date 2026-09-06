@@ -15,11 +15,16 @@ this same carrier.
 
 * ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the five members of
   `Puzzle2dSnapshot`.
-* the twenty-six committed payloads themselves, for the verbs and their argument lists — NOT
-  ``…/🧬️schema/🧬️mutations/🔣️.json``, which despite its title `Puzzle2dMutation` is a copy of
-  the SNAPSHOT schema (`{schema, camera, nodes, edges, meta}`) and declares no mutation at all. That
-  file is the pre-migration whole-snapshot-shaped generic schema `s.architect.program`'s own mutation
-  schema records itself as superseding; here it was never replaced.
+* the twenty-six committed payloads themselves, for the verbs and their argument lists. At the time
+  this reference was written ``…/🧬️schema/🧬️mutations/🔣️.json`` could not supply them: despite its
+  title `Puzzle2dMutation` it was a byte copy of the SNAPSHOT schema
+  (`{schema, camera, nodes, edges, meta}`) and declared no mutation at all — the pre-migration
+  whole-snapshot-shaped generic schema `s.architect.program`'s own mutation schema records itself as
+  superseding, never replaced here. It has since been replaced: that file is now a real `oneOf` of the
+  twenty-six branches, internally tagged on `mutation` with the camelCase variant name, and each
+  ``🧬️mutations/<kind>/🧬️.schema.json`` leaf carries that same branch as its own per-mutation record.
+  Both were written from the Rust types, and every payload this reference reads validates against
+  them — so the argument lists below are now confirmed by a schema, not only by the payloads.
 * rules 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — the
   id-keyed collections, `connect`/`disconnect` for the edge collection and for the compatibility
@@ -30,11 +35,17 @@ this same carrier.
   deleting a node severs every edge attached to any of ITS handles; that `replace-node-geometry`
   rebuilds shape and extent from its four arguments and drops every member whose argument is `null`;
   and that a member equal to its default is OMITTED from the carrier rather than written.
+* the real-world vectors this ticket added on top of them, which decide three things the original
+  twenty-six left open: `replace-node-handle` REPLACES the addressed handle (an unconnected tambour
+  door of the shipped Nakagin tower, re-kinded, really moves the document);
+  `replace-kind-catalogs` with a NULL argument is accepted and REMOVES the member; and a verb whose
+  target the board does not hold REFUSES rather than doing nothing quietly.
 
 **No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
 only.
 
-**One kind this implementation REFUSES, by clause rather than by absence.** See `UNDERDETERMINED`.
+**Nothing is refused any more.** The two clauses this file used to argue — `replace-node-handle` and
+`inverse-replace-kind-catalogs` — are both settled by committed vectors now; see `REFUSALS`.
 """
 
 # region 🔖️Imports
@@ -79,17 +90,17 @@ COMPATIBILITY_FIELDS = ("source", "target", "bidirectional", "important", "speci
 """🤝 The members of one kind-compatibility record, in the order `connect-kind-compatibility` names
 them."""
 
-UNDERDETERMINED = {"replace-node-handle"}
-"""🚧️ `replace-node-handle` is the one kind this implementation refuses to state. Its single committed
-vector supplies a genuinely different handle — `handle-1` moves from `handle-kind-a` to
-`handle-kind-c` — and yet its committed outcome declares `mutation.no-op` and its after-snapshot is
-byte-identical to its before-snapshot. At least three different rules produce exactly that outcome and
-no committed document distinguishes them: the verb may be unimplemented; it may refuse a handle an
-edge is attached to, which `handle-1` is; or it may refuse a handle kind the `kindCompatibility`
-relation does not admit, which `handle-kind-c` is. `📓️derivation-rules.md` rule 2 says
-`replace-<singular>-<member>` REPLACES the addressed record, so a second implementation written from
-the specification would move the document — and this implementation declines to pick one of the three
-rules and call it agreement. ONE more committed vector, on an UNCONNECTED handle, decides it."""
+REFUSALS = {}
+"""🚧️ Empty, and the emptiness is the finding. This file used to refuse `replace-node-handle`,
+because its only vector supplied a genuinely different handle and yet declared `mutation.no-op` — a
+reading equally consistent with an unimplemented verb, with a refusal of an edge-attached handle, and
+with a refusal of a kind the `kindCompatibility` relation does not admit. It also refused
+`inverse-replace-kind-catalogs`, because the only vector INSTALLED a catalogue and nothing said
+whether the verb accepts a null argument. `🔌️rekinds-an-unconnected-tambour-door` and
+`🗑️clears-the-installed-handle-catalog` decide both: `replace-<singular>-<member>` replaces the
+addressed record, exactly as `📓️derivation-rules.md` rule 2 states, and a null catalogue argument is
+accepted and removes the member. The subject half agreed only after its diff builder was repaired —
+its no-op guard ran BEFORE the replacement loop, so the verb could never move anything."""
 
 KINDS = (
     "create-node",
@@ -129,6 +140,64 @@ def tag_of(kind):
 
 
 TAGS = {kind: tag_of(kind) for kind in KINDS}
+
+SPEC_VECTORS = (
+    "create-node-alpha",
+    "create-node-refused",
+    "delete-node-alpha",
+    "delete-node-refused",
+    "move-node-alpha",
+    "move-node-refused",
+    "replace-node-geometry-alpha",
+    "replace-node-geometry-refused",
+    "change-node-kind-alpha",
+    "change-node-kind-refused",
+    "edit-node-text-alpha",
+    "edit-node-text-refused",
+    "change-node-icon-alpha",
+    "change-node-icon-refused",
+    "scale-node-alpha",
+    "scale-node-refused",
+    "change-node-visible-alpha",
+    "change-node-visible-refused",
+    "change-node-locked-alpha",
+    "change-node-locked-refused",
+    "change-node-root-alpha",
+    "change-node-root-refused",
+    "change-node-anchor-alpha",
+    "change-node-anchor-refused",
+    "add-node-handle-alpha",
+    "add-node-handle-refused",
+    "remove-node-handle-alpha",
+    "remove-node-handle-refused",
+    "replace-node-handle-refused",
+    "connect-handles-alpha",
+    "connect-handles-duplicate",
+    "disconnect-handles-alpha",
+    "disconnect-handles-refused",
+    "replace-edge-geometry-alpha",
+    "replace-edge-geometry-refused",
+    "change-edge-kind-alpha",
+    "change-edge-kind-refused",
+    "change-edge-tips-alpha",
+    "change-edge-tips-refused",
+    "change-edge-visible-alpha",
+    "change-edge-visible-refused",
+    "change-edge-locked-alpha",
+    "change-edge-locked-refused",
+    "change-manifest-id-alpha",
+    "connect-kind-compatibility-alpha",
+    "disconnect-kind-compatibility-alpha",
+    "disconnect-kind-compatibility-refused",
+    "replace-kind-catalogs-alpha",
+    "replace-kind-catalogs-cleared",
+)
+"""🧾️ The row ids of the case's third Examples table — every committed vector the two exhaustive
+tables do not carry. A `mutate-<kind>` scenario id is a claim about that KIND, so a second row per
+kind needs an identity of its own: `<kind>-alpha` is one of the synthetic two-node-board vectors kept
+from before this corpus was rebuilt on the shipped examples, `<kind>-refused` a refusal committing the
+contract-D6 `🔺️diff/🚫️.absent` sentinel, and `<kind>-duplicate`/`<kind>-cleared` the two
+warning-level branches."""
 # endregion 🔖️Vocabulary
 
 
@@ -145,8 +214,8 @@ def validate(document, where):
     node_ids = []
     for node in document["nodes"]:
         node_ids.append(node["id"])
-        if node.get("shape") not in ("circle", "rectangle"):
-            raise AssertionError("%s: node %r must declare a circle or a rectangle, found %r" % (where, node["id"], node.get("shape")))
+        if node.get("shape") not in (None, "circle", "rectangle"):
+            raise AssertionError("%s: a node declaring a shape must declare a circle or a rectangle, found %r on %r" % (where, node.get("shape"), node["id"]))
         for member, default in DEFAULTS.items():
             if member in node and node[member] == default:
                 raise AssertionError("%s: node %r writes %s at its default %r, which a committed snapshot omits" % (where, node["id"], member, default))
@@ -185,8 +254,9 @@ def edge_at(document, identity, kind, where):
 
 
 def written(record, member, value):
-    """🫥 Writes a member, or REMOVES it when the value is the one a committed snapshot omits."""
-    if member in DEFAULTS and value == DEFAULTS[member]:
+    """🫥 Writes a member, or REMOVES it when the value is the one a committed snapshot omits — a null
+    argument and a value equal to the member's default are the two ways to say the same thing."""
+    if value is None or (member in DEFAULTS and value == DEFAULTS[member]):
         record.pop(member, None)
     else:
         record[member] = value
@@ -202,10 +272,10 @@ def attached_to(document, handle_ids):
 # region 🔖️Verbs
 def apply_mutation(document, kind, payload):
     """🦠️ Applies one kind, answering the new document and the diagnostic codes it raised."""
-    if kind in UNDERDETERMINED:
-        raise AssertionError("mutate-%s: %s" % (kind, UNDERDETERMINED_REASON))
     document = copy.deepcopy(document)
     if kind == "create-node":
+        if any(node["id"] == payload["node"]["id"] for node in document["nodes"]):
+            raise AssertionError("mutate-%s: the board already holds node %r, and an id-keyed entity that exists cannot be re-created" % (kind, payload["node"]["id"]))
         index = payload.get("index")
         document["nodes"].insert(len(document["nodes"]) if index is None else index, copy.deepcopy(payload["node"]))
     elif kind == "delete-node":
@@ -236,13 +306,20 @@ def apply_mutation(document, kind, payload):
             raise AssertionError("mutate-%s: node %r declares no handle %r" % (kind, payload["nodeId"], payload["handleId"]))
         node["handles"] = [handle for handle in node["handles"] if handle["id"] != payload["handleId"]]
         document["edges"] = [edge for edge in document["edges"] if edge["source"] != payload["handleId"] and edge["target"] != payload["handleId"]]
+    elif kind == "replace-node-handle":
+        node = document["nodes"][node_at(document, payload["nodeId"], kind, "mutate")]
+        if not any(handle["id"] == payload["handleId"] for handle in node["handles"]):
+            raise AssertionError("mutate-%s: node %r declares no handle %r" % (kind, payload["nodeId"], payload["handleId"]))
+        node["handles"] = [copy.deepcopy(payload["newHandle"]) if handle["id"] == payload["handleId"] else handle for handle in node["handles"]]
     elif kind == "connect-handles":
-        edge = {"id": payload["id"], "source": payload["source"], "target": payload["target"], "edgeKind": payload["edgeKind"]}
+        if any(edge["id"] == payload["id"] for edge in document["edges"]):
+            return document
+        edge = {"id": payload["id"], "source": payload["source"], "target": payload["target"]}
+        written(edge, "edgeKind", payload["edgeKind"])
         for member, _argument in EDGE_GEOMETRY:
             edge[member] = payload[member]
         for tip in EDGE_TIPS:
-            if payload.get(tip) is not None:
-                edge[tip] = payload[tip]
+            written(edge, tip, payload.get(tip))
         document["edges"].append(edge)
     elif kind == "disconnect-handles":
         document["edges"].pop(edge_at(document, payload["id"], kind, "mutate"))
@@ -261,7 +338,7 @@ def apply_mutation(document, kind, payload):
         member, argument = EDGE_FIELDS[kind]
         written(document["edges"][edge_at(document, payload["id"], kind, "mutate")], member, payload[argument])
     elif kind == "change-manifest-id":
-        document["meta"]["manifestId"] = payload["newManifestId"]
+        written(document["meta"], "manifestId", payload["newManifestId"])
     elif kind == "connect-kind-compatibility":
         document["meta"]["kindCompatibility"].append({member: payload[member] for member in COMPATIBILITY_FIELDS})
     elif kind == "disconnect-kind-compatibility":
@@ -270,20 +347,10 @@ def apply_mutation(document, kind, payload):
             raise AssertionError("mutate-%s: the relation declares no %r to %r rule" % (kind, payload["source"], payload["target"]))
         document["meta"]["kindCompatibility"] = [rule for rule in document["meta"]["kindCompatibility"] if rule not in held]
     elif kind == "replace-kind-catalogs":
-        document["meta"]["kindCatalogs"] = copy.deepcopy(payload["newCatalogs"])
+        written(document["meta"], "kindCatalogs", copy.deepcopy(payload["newCatalogs"]))
     else:
         raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
     return document
-
-
-UNDERDETERMINED_REASON = (
-    "this implementation refuses this kind rather than guessing it. Its single committed vector supplies a genuinely different handle — `handle-1` "
-    "moves from `handle-kind-a` to `handle-kind-c` — and yet the committed outcome declares `mutation.no-op` and the after-snapshot is identical to "
-    "the before-snapshot. At least three rules produce exactly that and no committed document distinguishes them: the verb is unimplemented; it "
-    "refuses a handle an edge is attached to, which `handle-1` is; or it refuses a handle kind the `kindCompatibility` relation does not admit, which "
-    "`handle-kind-c` is. `📓️derivation-rules.md` rule 2 says `replace-<singular>-<member>` replaces the addressed record, so a second implementation "
-    "written from the specification would move the document. ONE more committed vector, on an unconnected handle, decides it."
-)
 
 
 def inverse_mutation(document, kind, payload):
@@ -292,8 +359,6 @@ def inverse_mutation(document, kind, payload):
     they sever edges: the node or handle is put back first and every severed edge is reconnected after
     it, in board order. A `create`/`add` inverts to a single removal, which is exact only for a
     TRAILING record unless the verb carries an index — both of these do."""
-    if kind in UNDERDETERMINED:
-        raise AssertionError("inverse-%s: %s" % (kind, UNDERDETERMINED_REASON))
     if kind == "create-node":
         return [("delete-node", {"id": payload["node"]["id"]})]
     if kind == "delete-node":
@@ -314,6 +379,12 @@ def inverse_mutation(document, kind, payload):
         return [(kind, {"id": payload["id"], argument: node.get(member, DEFAULTS.get(member))})]
     if kind == "add-node-handle":
         return [("remove-node-handle", {"nodeId": payload["nodeId"], "handleId": payload["handle"]["id"]})]
+    if kind == "replace-node-handle":
+        node = document["nodes"][node_at(document, payload["nodeId"], kind, "inverse")]
+        held = next((handle for handle in node["handles"] if handle["id"] == payload["handleId"]), None)
+        if held is None:
+            raise AssertionError("inverse-%s: node %r declares no handle %r" % (kind, payload["nodeId"], payload["handleId"]))
+        return [(kind, {"nodeId": payload["nodeId"], "handleId": payload["handleId"], "newHandle": copy.deepcopy(held)})]
     if kind == "remove-node-handle":
         node = document["nodes"][node_at(document, payload["nodeId"], kind, "inverse")]
         at = next(index for index, handle in enumerate(node["handles"]) if handle["id"] == payload["handleId"])
@@ -342,23 +413,13 @@ def inverse_mutation(document, kind, payload):
         held = next(rule for rule in document["meta"]["kindCompatibility"] if rule["source"] == payload["source"] and rule["target"] == payload["target"])
         return [("connect-kind-compatibility", copy.deepcopy(held))]
     if kind == "replace-kind-catalogs":
-        held = document["meta"].get("kindCatalogs")
-        if held is None:
-            raise AssertionError(
-                "inverse-%s: this implementation refuses to guess this inverse. The committed vector INSTALLS a catalogue where the before-snapshot "
-                "carried none, so undoing it requires REMOVING the member — and no verb in this closed vocabulary can express that. The sibling "
-                "`mutate-puzzle-5d-1` commits the deciding evidence: its `null-catalogs-is-noop` vector shows that `replace-kind-catalogs` with a "
-                "NULL argument is accepted and is a NO-OP, not a removal. So the gap is in the vocabulary, not in this implementation, and it is "
-                "invisible to the subject half of this case, which asserts only that the committed diff and the committed snapshots agree on a "
-                "footprint and never applies an inverse at all." % kind
-            )
-        return [(kind, {"newCatalogs": copy.deepcopy(held)})]
+        return [(kind, {"newCatalogs": copy.deepcopy(document["meta"].get("kindCatalogs"))})]
     raise AssertionError("inverse-%s: this implementation declares no inverse for that kind" % kind)
 
 
 def reconnect(edge):
     """🔗 The `connect-handles` arguments that rebuild one edge exactly as it stands."""
-    payload = {"id": edge["id"], "source": edge["source"], "target": edge["target"], "edgeKind": edge["edgeKind"]}
+    payload = {"id": edge["id"], "source": edge["source"], "target": edge["target"], "edgeKind": edge.get("edgeKind")}
     for member, _argument in EDGE_GEOMETRY:
         payload[member] = edge[member]
     for tip in EDGE_TIPS:
@@ -501,6 +562,43 @@ def identity_handler(ctx):
     if reparsed != document:
         raise AssertionError("identity-round-trip: serializing and re-reading the document moved it")
     return Outcome(reparsed, raw=reserialized)
+def spec_vector_handler(ctx):
+    """🧾️ The third table's vectors, whose verdict the row itself declares. `refused` requires this
+    implementation to REFUSE — a verb whose target the board does not hold has no answer to give —
+    and requires the committed bundle to carry the contract-D6 empty `🔺️diff/🚫️.absent` sentinel
+    rather than an invented empty patch; `noop` requires it to accept and not move; `applied`
+    requires the full forward and inverse laws, exactly as the exhaustive tables do."""
+    spec = doc_json(ctx)
+    kind = spec["kind"]
+    if kind not in KINDS:
+        raise AssertionError("spec-vector: the feature's doc string states %r, which is no declared kind" % kind)
+    before = leaf(ctx, spec, "before")
+    after = leaf(ctx, spec, "after")
+    outcome = leaf(ctx, spec, "outcome")
+    payload = payload_of(leaf(ctx, spec, "mutation"), kind)
+    validate(before, "spec-vector-%s" % kind)
+    if spec["verdict"] == "refused":
+        if outcome.get("status") != "rejected" or not outcome.get("code"):
+            raise AssertionError("spec-vector-%s: a refusal vector must declare a rejected status and a machine-readable code, found %r" % (kind, outcome))
+        if not spec["diff"].endswith("🚫️.absent") or ctx.fixture_bytes(spec["diff"]):
+            raise AssertionError("spec-vector-%s: contract D6 requires an EMPTY 🔺️diff/🚫️.absent sentinel beside a refusal, never an empty patch" % kind)
+        try:
+            apply_mutation(before, kind, payload)
+        except AssertionError:
+            equals_committed(kind, before, after)
+            return outcome_of(after)
+        raise AssertionError("spec-vector-%s: this implementation accepted a vector the committed outcome declares rejected" % kind)
+    applied = apply_mutation(before, kind, payload)
+    validate(applied, "spec-vector-%s" % kind)
+    equals_committed(kind, applied, after)
+    observable(kind, before, applied, declares_no_op(outcome))
+    if spec["verdict"] == "noop":
+        return outcome_of(applied)
+    current = applied
+    for step_kind, step_payload in inverse_mutation(before, kind, payload):
+        current = apply_mutation(current, step_kind, step_payload)
+    restores(kind, current, before)
+    return outcome_of(applied)
 # endregion 🔖️Handlers
 
 
@@ -513,5 +611,7 @@ def adapter():
     for kind in KINDS:
         built = built.oracle("mutate-%s" % kind, mutate_handler(kind))
         built = built.oracle("inverse-%s" % kind, inverse_handler(kind))
+    for vector in SPEC_VECTORS:
+        built = built.oracle("spec-vector-%s" % vector, spec_vector_handler)
     return built.oracle("identity-round-trip", identity_handler)
 # endregion 🔖️Registration

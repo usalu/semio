@@ -1,5 +1,5 @@
 {
-  "artifact": "s.remodeling.remodeling",
+  "artifact": "s.remodel.remodeling",
   "standard": "1",
   "subsets": {
     "*": {
@@ -7,5 +7,5 @@
     }
   },
   "subsetPolicy": "single",
-  "subsetPolicyRationale": "`s.remodeling.remodeling@1` is this plugin's own self-contained photogrammetry remodeling document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (create-stream, delete-stream, change-stream-sync, add-stream-frame, remove-stream-frame, replace-stream-source, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
+  "subsetPolicyRationale": "`s.remodel.remodeling@1` is this plugin's own self-contained photogrammetry remodeling document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (create-stream, delete-stream, change-stream-sync, add-stream-frame, remove-stream-frame, replace-stream-source, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

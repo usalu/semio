@@ -1,11 +1,11 @@
 //! 🔁 Remodeling mutation — `ReplaceSparse`: whole-value swap of `ReconstructionResults.sparse`, a large
 //! structured sub-payload swapped wholesale by the reconstruction engine or a clear/reset command.
 
-use crate::artifacts::remodeling::{RemodelingSnapshot, SparseCloud};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{RemodelingSnapshot, SparseCloud};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔁 `replace-sparse` payload.

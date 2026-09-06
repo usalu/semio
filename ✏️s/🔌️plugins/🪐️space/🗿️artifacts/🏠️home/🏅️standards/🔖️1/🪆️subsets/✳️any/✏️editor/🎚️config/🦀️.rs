@@ -470,12 +470,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn directory_projection_round_trip_preserves_documents_and_rejects_corruption() {
-        let fixture: pack::JsonValue = pack::from_json_str(include_str!("🧪️fixtures/📇️projection-persistence-v1/🔣️.json")).expect("language-neutral projection fixture");
+        let fixture: pack::JsonValue = pack::parse_json(include_str!("🧪️fixtures/📇️projection-persistence-v1/🔣️.json")).expect("language-neutral projection fixture");
         let wire = fixture.get("wire").expect("fixture wire").to_string();
         let model = directory_from_json(&wire).expect("fixture directory projection");
         let document_ids = model.spaces.values().flat_map(|space| space.documents.iter().map(|document| document.document_id.as_str())).collect::<Vec<_>>();
         assert_eq!(document_ids, vec!["document-雪"]);
-        let encoded: pack::JsonValue = pack::from_json_str(&directory_to_json(&model)).expect("encoded projection JSON");
+        let encoded: pack::JsonValue = pack::parse_json(&directory_to_json(&model)).expect("encoded projection JSON");
         assert_eq!(encoded, fixture["wire"]);
         for malformed in fixture["malformed"].as_array().expect("malformed cases") {
             assert!(directory_from_json(malformed.as_str().expect("malformed text")).is_err());

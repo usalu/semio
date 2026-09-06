@@ -17,6 +17,7 @@
       "stage": "self-acquiring-open-failure",
       "cause": "original-open-error",
       "owner": "exact-writer-release",
+      "releaseActivation": "first-explicit-close-poll",
       "sameDocumentAcquire": "conflict"
     }
   ],

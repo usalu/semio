@@ -8,8 +8,8 @@ use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutati
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::payload_from_data_url;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use std::collections::VecDeque;
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::VecDeque;
 
 //#region 🔖️VideoImportScratch
 /// 📥️ Rolling blur-gate scratch for one in-progress `importVideoFramePayload`/`importVideoBytesPayload`
@@ -127,7 +127,7 @@ pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remod
     use crate::editor::remodeling::testkit::dispatch;
     use crate::editor::remodeling::RemodelingCommand;
     for index in 0..n {
-        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index }));
+        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index })).await;
     }
 }
 
@@ -185,7 +185,7 @@ pub struct ImportVideoFramePayload {
 /// 🎞️ Host-decoded video frame tick (Tier 1/2 `RequestMediaFrames` frame dispatch): decodes the
 /// sampled JPEG, runs it through the relative blur gate (rebuilt from persisted frames each tick —
 /// see `rebuild_video_import_scratch`), and amends it into the active stream.
-pub async fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     let Ok(image) = remodeling_image::decode_jpeg(&bytes) else { return Ok(Emit::default()) };
     let scene = doc.snapshot;
@@ -227,7 +227,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_frame_payload_creates_a_stream_and_asset() {
-        let mut app = app();
+        let mut app = app().await;
         testkit_import_checker_stream(&mut app, 3);
         let scene = app.snapshot().expect("projection");
         assert_eq!(scene.streams.len(), 1, "one importFrames batch creates exactly one stream");
@@ -239,11 +239,11 @@ mod tests {
     /// MJPEG mp4 must decode into a new video stream whose frame count matches what was muxed in.
     #[semio_framework_async_macros::async_test]
     async fn import_video_bytes_payload_extracts_frames_in_process() {
-        let mut app = app();
+        let mut app = app().await;
         // 🎯️ `IngestParams::default().frame_sample_stride == 5`; force stride 1 so all 5 synthesized
         // frames are kept (a stride-sampling test belongs to the video engine topic file, not here).
-        dispatch(&mut app, RemodelingCommand::SetIngestParams(crate::editor::remodeling::commands::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 }));
-        dispatch(&mut app, RemodelingCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: checker_video_data_url(5, 32, 32, 4), name: "clip.mp4".into() }));
+        dispatch(&mut app, RemodelingCommand::SetIngestParams(crate::editor::remodeling::commands::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 })).await;
+        dispatch(&mut app, RemodelingCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: checker_video_data_url(5, 32, 32, 4), name: "clip.mp4".into() })).await;
         let scene = app.snapshot().expect("projection");
         assert_eq!(scene.streams.len(), 1);
         assert_eq!(scene.streams[0].kind, MediaKind::Video);
@@ -255,11 +255,11 @@ mod tests {
     /// must accumulate into one stream and write `VideoSource` provenance, all under one coalesce key.
     #[semio_framework_async_macros::async_test]
     async fn import_video_frame_payload_then_done_writes_one_stream_with_video_source() {
-        let mut app = app();
+        let mut app = app().await;
         for index in 0..4u32 {
-            dispatch(&mut app, RemodelingCommand::ImportVideoFramePayload(ImportVideoFramePayload { payload: checker_data_url_jpeg(24, 24, 3), name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 }));
+            dispatch(&mut app, RemodelingCommand::ImportVideoFramePayload(ImportVideoFramePayload { payload: checker_data_url_jpeg(24, 24, 3), name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 })).await;
         }
-        dispatch(&mut app, RemodelingCommand::ImportVideoDone(import_video_done::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() }));
+        dispatch(&mut app, RemodelingCommand::ImportVideoDone(import_video_done::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() })).await;
         let scene = app.snapshot().expect("projection");
         assert_eq!(scene.streams.len(), 1);
         assert_eq!(scene.streams[0].kind, MediaKind::Video);
@@ -269,12 +269,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn add_remove_and_sync_streams_edit_the_stream_list() {
-        let mut app = app();
-        dispatch(&mut app, RemodelingCommand::AddStream(add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() }));
+        let mut app = app().await;
+        dispatch(&mut app, RemodelingCommand::AddStream(add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() })).await;
         let stream_id = app.snapshot().expect("projection").streams[0].id.clone();
-        dispatch(&mut app, RemodelingCommand::SetStreamSync(set_stream_sync::SetStreamSync { stream_id: stream_id.clone(), sync_offset_ms: 12.5 }));
+        dispatch(&mut app, RemodelingCommand::SetStreamSync(set_stream_sync::SetStreamSync { stream_id: stream_id.clone(), sync_offset_ms: 12.5 })).await;
         assert_eq!(app.snapshot().expect("projection").streams[0].sync_offset_ms, 12.5);
-        dispatch(&mut app, RemodelingCommand::RemoveStream(remove_stream::RemoveStream { stream_id }));
+        dispatch(&mut app, RemodelingCommand::RemoveStream(remove_stream::RemoveStream { stream_id })).await;
         assert!(app.snapshot().expect("projection").streams.is_empty());
     }
 }

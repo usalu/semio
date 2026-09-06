@@ -11,7 +11,7 @@ import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBro
 import browserAuthorityFixture from "./🔣️browser-entry-authority.json";
 import packageCatalogSchema from "../🧬️package-catalog.schema.json";
 import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry, renderFrameWorker } from "../📦️packages/🦀️rust/📜️script";
-import { pluginHandleForBridge, type WgpuPluginHandle } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
+import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, type WgpuPluginHandle } from "../📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts";
 
 function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle {
   return {
@@ -61,6 +61,43 @@ describe("framework renderer wgpu plugin bridge", () => {
     const bridge = pluginHandleForBridge(fakeHandle());
     const result = await bridge.render(1, "window", JSON.stringify({}));
     expect(JSON.parse(result)).toEqual({ type: "text", value: "hello" });
+  });
+});
+
+describe("framework renderer wgpu pack integer carriers", () => {
+  it("projects lossless pack integer carriers and WIT bigint revisions off the retained-window patch boundary", async () => {
+    const { encodePackValue, packUInt } = await import("@semio-tech/framework-os");
+    const node = { id: packUInt(7n), key: "leaf-7", component: { type: "text", value: "a" }, children: [packUInt(9n)] };
+    const first = reconcileRetainedWindowPatch(null, { revision: 1n as unknown as number, baseRevision: 0n as unknown as number, ops: [{ tag: "replace", val: { path: [], node: Array.from(encodePackValue(node)) } }] });
+    expect(first.desynced).toBe(false);
+    expect(first.surface).toEqual({ revision: 1, node: { id: 7, key: "leaf-7", component: { type: "text", value: "a" }, children: [9] } });
+    const second = reconcileRetainedWindowPatch(first.surface, { revision: 2n as unknown as number, baseRevision: 1n as unknown as number, ops: [{ tag: "replace", val: { path: [], node: Array.from(encodePackValue({ ...node, key: "leaf-7b" })) } }] });
+    expect(second.desynced).toBe(false);
+    expect((second.surface?.node as { key: string }).key).toBe("leaf-7b");
+  });
+
+  it("rejects a pack integer no JSON number represents exactly instead of rounding it", async () => {
+    const { encodePackValue, packUInt } = await import("@semio-tech/framework-os");
+    const ops = [{ tag: "replace", val: { path: [], node: Array.from(encodePackValue({ id: packUInt(2n ** 60n) })) } }];
+    expect(() => reconcileRetainedWindowPatch(null, { revision: 1n as unknown as number, baseRevision: 0n as unknown as number, ops })).toThrow(/\$\.id/u);
+    expect(() => reconcileRetainedWindowPatch(null, { revision: 2n ** 60n as unknown as number, baseRevision: 0n as unknown as number, ops: [] })).toThrow(/uiPatch\.revision/u);
+  });
+
+  it("projects every pack payload of an Invocation reply frame, matching an independent JSON.parse oracle", async () => {
+    const { encodePackValue, packUInt } = await import("@semio-tech/framework-os");
+    const output = { revision: packUInt(9007199254740991n), label: "done" };
+    const diagnostics = [{ severity: "info", code: packUInt(3n) }];
+    const decoded = decodeInvocationPayloads({
+      output: Array.from(encodePackValue(output)),
+      diagnostics: Array.from(encodePackValue(diagnostics)),
+      ui_scope: Array.from(encodePackValue({ surfaces: [packUInt(1n)] })),
+      history_patch: Array.from(encodePackValue({ revision: packUInt(2n) })),
+    });
+    expect(decoded.output).toEqual(JSON.parse('{"revision":9007199254740991,"label":"done"}'));
+    expect(decoded.diagnostics).toEqual(JSON.parse('[{"severity":"info","code":3}]'));
+    expect(decoded.uiScope).toEqual(JSON.parse('{"surfaces":[1]}'));
+    expect(decoded.historyPatch).toEqual(JSON.parse('{"revision":2}'));
+    expect(JSON.stringify(decoded.output)).not.toContain("kind");
   });
 });
 

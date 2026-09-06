@@ -10,7 +10,7 @@ use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
 use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{IconName, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{IconName, WindowKindDefinition};
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants
@@ -57,10 +57,7 @@ fn artifact_row_action(icon: IconName, label: &'static str, action: &'static str
 }
 
 fn row_actions(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResult<[TableRowAction; 2]> {
-    Ok([
-        artifact_row_action(IconName::FolderOpen, "Open", "openArtifact", row)?,
-        artifact_row_action(IconName::Trash2, "Delete", "requestDeleteArtifact", row)?,
-    ])
+    Ok([artifact_row_action(IconName::FolderOpen, "Open", "openArtifact", row)?, artifact_row_action(IconName::Trash2, "Delete", "requestDeleteArtifact", row)?])
 }
 
 /// 📊️ `config` supplies the live presence fold (`presence-heartbeat`/`fold-directory-events`); the ID
@@ -75,12 +72,10 @@ fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_f
         view.try_push_column(column).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.columns", "fixed table column admission failed"))?;
     }
     for row in &document.artifacts {
-        let row_id = semio_framework_plugin::UiText::try_format(format_args!("artifact:{}", row.id))
-            .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-id", "fixed table row id admission failed"))?;
+        let row_id = semio_framework_plugin::UiText::try_format(format_args!("artifact:{}", row.id)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-id", "fixed table row id admission failed"))?;
         let mut table_row = TableRow::new(row_id);
         for cell in space_index_table_row(row, &config.presence_for(&row.id).join(", ")) {
-            let cell = semio_framework_plugin::UiText::try_from_string(cell)
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cell", "fixed table cell admission failed"))?;
+            let cell = semio_framework_plugin::UiText::try_from_string(cell).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cell", "fixed table cell admission failed"))?;
             table_row.try_push_cell(cell).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
         }
         for action in row_actions(row)? {
@@ -141,9 +136,38 @@ pub fn render(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_fra
 mod tests {
     use super::*;
 
+    fn project(node: semio_framework_plugin::BuiltNode) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("Space row tree projection")
+    }
+
+    fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&semio_framework_plugin::BuiltNode) -> R) -> R {
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| inspect(&node)));
+        let mut retirement = semio_framework_ui_contract::BuiltTreeRetirement::new(node);
+        while !retirement.terminal_is_empty() {
+            let step = retirement.close_step(1, 4096).expect("Space row fixture tree remains valid");
+            if !step.progressed {
+                std::thread::yield_now();
+            }
+        }
+        match result {
+            Ok(result) => result,
+            Err(panic) => std::panic::resume_unwind(panic),
+        }
+    }
+
+    fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<&semio_framework_ui_contract::ActionBinding> {
+        node.children.iter().filter(|child| matches!(&child.component, semio_framework_ui_contract::Component::Button(_))).map(|child| child.bindings.get(0).expect("Space row button carries an action binding")).collect()
+    }
+
+    fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> String {
+        let Some(semio_framework_ui_contract::UiValue::Map(args)) = binding.args.as_ref() else { panic!("Space row action carries map args") };
+        let (_, semio_framework_ui_contract::UiValue::Text(value)) = args.iter().find(|(name, _)| name.as_str() == key).expect("Space row action arg present") else { panic!("Space row action arg is text") };
+        value.as_str().to_owned()
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_node_for_the_default_document() {
-        let _node = render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default());
+        let _ = project(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default()).expect("default Space rows"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -153,8 +177,7 @@ mod tests {
         let mut document = SSpaceSnapshot::default();
         document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
         let config = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }], ..Default::default() };
-        let node = render(&document, &config);
-        let json = pack::to_json_string(&node);
+        let json = project(render(&document, &config).expect("Space rows with presence"));
         assert!(json.contains("user:1, user:2"), "presence must reach the table cell: {json}");
     }
 
@@ -166,16 +189,15 @@ mod tests {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         let mut document = SSpaceSnapshot::default();
         document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
-        let UiNode::ComponentScene(node) = render_table(&document, &SpaceIndexConfig::default()) else { panic!("expected ComponentScene") };
-        let scene = node.table.expect("table scene");
-        let rows: Vec<pack::JsonValue> = pack::parse_json(&scene.rows_json).expect("rows_json parses").as_array().expect("rows_json parses").to_vec();
-        assert_eq!(rows[0]["id"], pack::json!("artifact:artifact-1"), "row id must carry the frozen artifact:<id> grammar: {rows:?}");
-        let buttons = rows[0]["actions"]["buttons"].as_array().expect("actions cell has buttons");
-        assert_eq!(buttons.len(), 2, "open + delete: {buttons:?}");
-        let open_button = buttons.iter().find(|button| button["action"]["action"] == "openArtifact").expect("open button present");
-        assert_eq!(open_button["action"]["args"]["id"], pack::json!("artifact-1"));
-        let delete_button = buttons.iter().find(|button| button["action"]["action"] == "requestDeleteArtifact").expect("delete button present");
-        assert_eq!(delete_button["action"]["args"]["id"], pack::json!("artifact-1"));
+        observe(render_table(&document, &SpaceIndexConfig::default()).expect("Space artifact rows"), |root| {
+            let row = root.children.iter().find(|node| node.key.as_str() == "artifact:artifact-1").expect("Space artifact row id");
+            let buttons = buttons(row);
+            assert_eq!(buttons.len(), 2, "open + delete");
+            let open_button = buttons.iter().find(|button| button.action.name.as_str() == "openArtifact").expect("open button present");
+            assert_eq!(text_arg(open_button, "id"), "artifact-1");
+            let delete_button = buttons.iter().find(|button| button.action.name.as_str() == "requestDeleteArtifact").expect("delete button present");
+            assert_eq!(text_arg(delete_button, "id"), "artifact-1");
+        });
     }
 
     /// 🆔️ Contract §C0 lane 4-F: `render(...)` must wrap the table in a real button carrying the
@@ -184,12 +206,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_wraps_the_table_with_a_real_create_artifact_button() {
         use crate::editor::space_index::SPACE_INDEX_CONTROLLER_ID;
-        let UiNode::Stack(stack) = render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default()) else { panic!("expected a Stack wrapping button + table") };
-        let button = stack.children.iter().find_map(|child| if let UiNode::Button(button) = child { Some(button) } else { None }).expect("a create-artifact button somewhere in the stack");
-        assert_eq!(button.id.as_deref(), Some("s-space-create-artifact"));
-        assert_eq!(button.action.controller_id, SPACE_INDEX_CONTROLLER_ID);
-        assert_eq!(button.action.action, "createArtifact");
-        assert!(button.action.args.is_none(), "an empty-args dispatch is what makes the handler open the dialog");
+        observe(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default()).expect("Space rows with create action"), |root| {
+            let button = root.children.iter().find(|child| child.key.as_str() == "s-space-create-artifact").expect("a create-artifact button somewhere in the stack");
+            assert!(matches!(&button.component, semio_framework_ui_contract::Component::Button(_)));
+            let binding = button.bindings.get(0).expect("create artifact button carries action");
+            assert_eq!(binding.action.scope.as_str(), SPACE_INDEX_CONTROLLER_ID);
+            assert_eq!(binding.action.name.as_str(), "createArtifact");
+            assert!(binding.args.is_none(), "an empty-args dispatch is what makes the handler open the dialog");
+        });
     }
 }
 //#endregion 🧪️Tests

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s.remodeling.remodeling.artifact;
+package semio.s.remodel.remodeling.artifact;
 
 // 🧬️ Remodeling artifact schema.
 
@@ -11,82 +11,393 @@ message RemodelingArtifact {
   // @state artifact
   repeated MediaStream streams = 3;
   // @state artifact
-  map<string, ImageAsset> assets = 4;
+  map<string, RemodelingAssetChild> assets = 4;
   // @state artifact
-  CalibrationState calibration = 5;
+  map<string, RemodelingDurableArtifact> durable_artifacts = 5;
   // @state artifact
-  ReconstructionParams params = 6;
+  CalibrationState calibration = 6;
   // @state artifact
-  repeated GroundControlPoint gcps = 7;
+  ReconstructionParams params = 7;
   // @state artifact
-  ReconstructionJob job = 8;
+  repeated GroundControlPoint gcps = 8;
   // @state artifact
-  ReconstructionResults results = 9;
+  ReconstructionJob job = 9;
+  // @state artifact
+  ReconstructionResults results = 10;
   // @state presence
-  RemodelingUiSelection selection = 10;
+  RemodelingUiSelection selection = 11;
   // @state presence
-  string active_utility_id = 11;
+  string active_utility_id = 12;
   // @state presence
-  string report_table = 12;
+  string report_table = 13;
   // @state presence
-  RemodelingUiFrameCursor frame_cursor = 13;
+  RemodelingUiFrameCursor frame_cursor = 14;
   // @state config
-  RemodelingUiCamera camera = 14;
+  RemodelingUiCamera camera = 15;
   // @state config
-  RemodelingUiLayers layers = 15;
+  RemodelingUiLayers layers = 16;
   // @state config
-  string locale = 16;
+  string locale = 17;
 }
 
-message MediaStream {
-  string _placeholder = 1;
+message ArtifactDialect {
+  string artifact_kind = 1;
+  string standard = 2;
+  string subset = 3;
 }
 
-message ImageAsset {
-  string _placeholder = 1;
+message ArtifactRef {
+  string artifact_id = 1;
+  ArtifactDialect dialect = 2;
 }
 
 message CalibrationState {
-  string _placeholder = 1;
+  repeated CameraCalibration cameras = 1;
+  repeated RigExtrinsic rig = 2;
 }
 
-message ReconstructionParams {
-  string _placeholder = 1;
+message CameraCalibration {
+  string id = 1;
+  string label = 2;
+  string model = 3;
+  double fx = 4;
+  double fy = 5;
+  double cx = 6;
+  double cy = 7;
+  double skew = 8;
+  repeated float distortion = 9;
+  optional float rms_reprojection_px = 10;
+  bool locked = 11;
+}
+
+message CameraPosePreview {
+  string camera_id = 1;
+  repeated float rotation_wxyz = 2;
+  repeated float translation = 3;
+}
+
+message CameraTrajectory {
+  repeated CameraPosePreview poses = 1;
+}
+
+message DenseCloud {
+  string positions = 1;
+  optional string colors = 2;
+  optional string confidence = 3;
+  optional string classification = 4;
+}
+
+message DenseParams {
+  DenseResolution resolution = 1;
+  uint32 window_radius_px = 2;
+  uint32 min_view_consistency = 3;
+  float confidence_threshold = 4;
+  uint32 max_points = 5;
+}
+
+enum DenseResolution {
+  DENSE_RESOLUTION_LOW = 0;
+  DENSE_RESOLUTION_MEDIUM = 1;
+  DENSE_RESOLUTION_HIGH = 2;
+}
+
+enum FeatureDetector {
+  FEATURE_DETECTOR_ORB = 0;
+  FEATURE_DETECTOR_AKAZE = 1;
+  FEATURE_DETECTOR_HARRIS = 2;
+}
+
+message FeatureParams {
+  FeatureDetector detector = 1;
+  uint32 target_count = 2;
+  uint32 octaves = 3;
+  float edge_threshold = 4;
+}
+
+message FrameRef {
+  uint32 index = 1;
+  double timestamp_ms = 2;
+  string asset_id = 3;
+}
+
+message GcpObservation {
+  string stream_id = 1;
+  uint32 frame_index = 2;
+  repeated float pixel = 3;
+}
+
+message GeoParams {
+  bool enabled = 1;
+  optional double origin_lon = 2;
+  optional double origin_lat = 3;
+  optional double origin_alt = 4;
+  float gsd_m = 5;
+  float dsm_cell_m = 6;
+  float dtm_filter_radius_m = 7;
+  uint32 ortho_max_px = 8;
+}
+
+message GeoProducts {
+  optional string dsm_asset_id = 1;
+  optional string dtm_asset_id = 2;
+  optional string ortho_asset_id = 3;
 }
 
 message GroundControlPoint {
-  string _placeholder = 1;
+  string id = 1;
+  string name = 2;
+  repeated double world_position = 3;
+  repeated GcpObservation observations = 4;
+}
+
+message IngestParams {
+  uint32 frame_sample_stride = 1;
+  uint32 max_frames = 2;
+  uint32 downscale_long_edge_px = 3;
+  float min_sharpness = 4;
+}
+
+message MatchParams {
+  MatcherKind matcher = 1;
+  float ratio_test = 2;
+  bool cross_check = 3;
+  uint32 sequential_window = 4;
+  uint32 max_pairs_per_frame = 5;
+  bool loop_closure = 6;
+}
+
+enum MatcherKind {
+  MATCHER_KIND_BRUTE_FORCE = 0;
+  MATCHER_KIND_KD_TREE = 1;
+}
+
+enum MediaKind {
+  MEDIA_KIND_IMAGE_SEQUENCE = 0;
+  MEDIA_KIND_VIDEO = 1;
+}
+
+message MediaStream {
+  string id = 1;
+  string name = 2;
+  MediaKind kind = 3;
+  optional string camera_id = 4;
+  double sync_offset_ms = 5;
+  double fps_hint = 6;
+  repeated FrameRef frames = 7;
+  optional VideoSource source = 8;
+}
+
+message MeshParams {
+  float tsdf_voxel_size_mm = 1;
+  float tsdf_truncation_mm = 2;
+  uint32 decimate_target_triangles = 3;
+  uint32 smoothing_iterations = 4;
+  bool texture_enabled = 5;
+  uint32 texture_size = 6;
+  bool guarantee_watertight = 7;
+  uint32 hole_fill_max_boundary_verts = 8;
+  bool self_intersection_check = 9;
+}
+
+enum MeshSource {
+  MESH_SOURCE_PLACEHOLDER = 0;
+  MESH_SOURCE_RECONSTRUCTED = 1;
+  MESH_SOURCE_IMPORTED = 2;
+}
+
+message MotionParams {
+  bool enabled = 1;
+  uint32 max_tracks = 2;
+  uint32 track_window_px = 3;
+  float min_track_quality = 4;
+  uint32 min_track_length_frames = 5;
+}
+
+message MotionTrackSummary {
+  string id = 1;
+  uint32 length = 2;
+  TrackClass class = 3;
+  float mean_speed_m_s = 4;
+}
+
+message QcReportSnapshot {
+  double reprojection_rms_px = 1;
+  optional double gcp_checkpoint_rmse = 2;
+  optional WatertightReportSnapshot watertight = 3;
+  float mean_track_length = 4;
+  float registered_frame_ratio = 5;
+  float dense_coverage_ratio = 6;
+  repeated string warnings = 7;
 }
 
 message ReconstructionJob {
-  string _placeholder = 1;
+  string id = 1;
+  ReconstructionStage stage = 2;
+  float progress_0_1 = 3;
+  bool cancel_requested = 4;
+  uint32 stage_cursor = 5;
+  optional double started_at_ms = 6;
+  optional string error = 7;
+  repeated CameraPosePreview camera_poses_preview = 8;
+  string sparse_point_cloud_preview = 9;
+}
+
+message ReconstructionParams {
+  IngestParams ingest = 1;
+  FeatureParams feature = 2;
+  MatchParams matching = 3;
+  SfmParams sfm = 4;
+  DenseParams dense = 5;
+  MeshParams mesh = 6;
+  MotionParams motion = 7;
+  GeoParams geo = 8;
 }
 
 message ReconstructionResults {
-  string _placeholder = 1;
+  optional SparseCloud sparse = 1;
+  optional DenseCloud dense = 2;
+  RemodelingMesh mesh = 3;
+  optional CameraTrajectory trajectory = 4;
+  repeated MotionTrackSummary tracks = 5;
+  optional GeoProducts geo = 6;
+  optional QcReportSnapshot qc = 7;
+}
+
+enum ReconstructionStage {
+  RECONSTRUCTION_STAGE_IDLE = 0;
+  RECONSTRUCTION_STAGE_INGESTING = 1;
+  RECONSTRUCTION_STAGE_CALIBRATING = 2;
+  RECONSTRUCTION_STAGE_EXTRACTING_FEATURES = 3;
+  RECONSTRUCTION_STAGE_MATCHING_FEATURES = 4;
+  RECONSTRUCTION_STAGE_ESTIMATING_POSES = 5;
+  RECONSTRUCTION_STAGE_BUNDLE_ADJUSTING = 6;
+  RECONSTRUCTION_STAGE_GEOREFERENCING = 7;
+  RECONSTRUCTION_STAGE_DENSE_STEREO = 8;
+  RECONSTRUCTION_STAGE_FUSING_VOLUME = 9;
+  RECONSTRUCTION_STAGE_EXTRACTING_SURFACE = 10;
+  RECONSTRUCTION_STAGE_CLEANING_MESH = 11;
+  RECONSTRUCTION_STAGE_TEXTURING = 12;
+  RECONSTRUCTION_STAGE_TRACKING_MOTION = 13;
+  RECONSTRUCTION_STAGE_DERIVING_GEO_PRODUCTS = 14;
+  RECONSTRUCTION_STAGE_REPORTING_QC = 15;
+  RECONSTRUCTION_STAGE_DONE = 16;
+  RECONSTRUCTION_STAGE_FAILED = 17;
+}
+
+message RemodelingAssetChild {
+  string child_id = 1;
+  ArtifactRef target = 2;
+}
+
+message RemodelingDurableArtifact {
+  string kind = 1;
+  optional string mime = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  repeated string chunks = 5;
+}
+
+message RemodelingMesh {
+  RemodelingMeshChild mesh = 1;
+  MeshSource source = 2;
+  optional string texture_asset_id = 3;
+  optional WatertightReportSnapshot watertight = 4;
+}
+
+message RemodelingMeshChild {
+  string child_id = 1;
+  ArtifactRef target = 2;
 }
 
 message RemodelingUiCamera {
-  string _placeholder = 1;
-}
-
-message RemodelingUiSelection {
-  string _placeholder = 1;
-}
-
-message RemodelingUiLayers {
-  string _placeholder = 1;
+  repeated double position = 1;
+  repeated double target = 2;
+  double fov = 3;
 }
 
 message RemodelingUiFrameCursor {
-  string _placeholder = 1;
+  optional string stream_id = 1;
+  uint32 frame_index = 2;
 }
 
-message RemodelingMediaStreamList {
-  string _placeholder = 1;
+message RemodelingUiLayers {
+  bool mesh = 1;
+  bool dense = 2;
+  bool sparse = 3;
+  bool cameras = 4;
+  bool gcps = 5;
 }
 
-message RemodelingGcpList {
-  string _placeholder = 1;
+message RemodelingUiSelection {
+  string mode = 1;
+  repeated string ids = 2;
 }
 
+message RigExtrinsic {
+  string camera_id = 1;
+  repeated float rotation_wxyz = 2;
+  repeated float translation_m = 3;
+}
+
+enum RobustLossKind {
+  ROBUST_LOSS_KIND_L2 = 0;
+  ROBUST_LOSS_KIND_HUBER = 1;
+  ROBUST_LOSS_KIND_CAUCHY = 2;
+}
+
+message SfmParams {
+  uint32 ransac_iterations = 1;
+  float ransac_threshold_px = 2;
+  uint32 min_track_length = 3;
+  uint32 ba_max_iterations = 4;
+  RobustLossKind robust_loss = 5;
+  float huber_delta_px = 6;
+}
+
+message SparseCloud {
+  string points = 1;
+  optional string colors = 2;
+}
+
+enum TrackClass {
+  TRACK_CLASS_STATIC = 0;
+  TRACK_CLASS_MOVING = 1;
+}
+
+enum VideoCodec {
+  VIDEO_CODEC_AVC = 0;
+  VIDEO_CODEC_HEVC = 1;
+  VIDEO_CODEC_VP9 = 2;
+  VIDEO_CODEC_AV1 = 3;
+  VIDEO_CODEC_MJPEG = 4;
+  VIDEO_CODEC_UNKNOWN = 5;
+}
+
+message VideoSource {
+  string name = 1;
+  string container = 2;
+  VideoCodec codec = 3;
+  double duration_ms = 4;
+  uint32 frame_count = 5;
+  uint32 width = 6;
+  uint32 height = 7;
+}
+
+message WatertightReportSnapshot {
+  uint32 vertex_count = 1;
+  uint32 triangle_count = 2;
+  uint32 boundary_edge_count = 3;
+  uint32 boundary_loop_count = 4;
+  uint32 non_manifold_edge_count = 5;
+  uint32 non_manifold_vertex_count = 6;
+  uint32 connected_components = 7;
+  bool consistently_oriented = 8;
+  int64 euler_characteristic = 9;
+  optional int64 genus = 10;
+  double signed_volume = 11;
+  optional uint32 self_intersection_pairs = 12;
+  bool closed_fallback_used = 13;
+  bool is_closed = 14;
+  bool is_two_manifold = 15;
+  bool is_watertight = 16;
+}

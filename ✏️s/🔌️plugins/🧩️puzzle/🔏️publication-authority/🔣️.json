@@ -7,10 +7,24 @@
       "source": "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "groups": [
         {
-          "status": "BatchOnlyPendingRewrite",
+          "status": "Migrated",
+          "lanes": ["HostOnly"],
+          "routes": ["lodScaleJson", "selectSameKind"]
+        },
+        {
+          "status": "Migrated",
           "lanes": ["Artifact"],
-          "routes": ["addNode", "forceLayout", "setActiveExample"],
-          "blocker": "artifact-lane completion has no app-owned retained preparation and root-retirement factory"
+          "routes": ["addNode", "forceLayout", "import-media", "redrawHandles", "reorganize"]
+        },
+        {
+          "status": "Migrated",
+          "lanes": ["Config"],
+          "routes": ["brushCancelSlot", "brushCycleCandidate", "brushFillSessionAdopt", "brushFillSessionCancel", "brushFillSessionClear", "brushFillSessionDiscard", "brushOpenSlot", "brushSetCandidateIndex", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "setBrushKindWeights", "setBrushNodeSize", "setCamera", "setGridFactor", "setGridSnapEnabled", "setLocale", "setLodModeForPane", "setSuggestionOffset", "setTerminology"]
+        },
+        {
+          "status": "Migrated",
+          "lanes": ["Artifact", "Config"],
+          "routes": ["applyBoardEvents", "brushCommitSlot", "brushFillSessionBegin", "brushFillSessionRetry", "brushFillSessionStep", "deleteSelection", "duplicateSelection", "patchInspectorNodes", "setActiveExample", "setFillCount", "setSelectionFlag"]
         }
       ]
     },

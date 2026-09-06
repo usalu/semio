@@ -1,10 +1,10 @@
 //! 🪓 Remodeling mutation — `DeleteStream`: removes an id-keyed media stream.
 
-use crate::artifacts::remodeling::RemodelingSnapshot;
 use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingGcpList, RemodelingMediaStreamList};
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🪓 `delete-stream` payload.

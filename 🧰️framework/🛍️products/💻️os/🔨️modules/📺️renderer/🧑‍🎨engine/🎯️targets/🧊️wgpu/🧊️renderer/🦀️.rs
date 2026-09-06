@@ -15236,10 +15236,11 @@ impl AppRuntime {
                 #[cfg(not(target_arch = "wasm32"))]
                 if let Some(progress) = cursor.job_progress.as_ref() {
                     let (kind, applied) = progress.visual();
+                    let theme = self.interaction.as_ref().map_or_else(ui_wgpu::wgpu::Theme::default, |state| state.theme);
                     let color = match kind {
-                        semio_framework_actor::JobProgressKind::CommitValidated => ui_wgpu::wgpu::Rgba::from_srgb8(36, 158, 91, 255),
-                        semio_framework_actor::JobProgressKind::Cancelled | semio_framework_actor::JobProgressKind::Fault => ui_wgpu::wgpu::Rgba::from_srgb8(218, 74, 74, 255),
-                        _ => ui_wgpu::wgpu::Rgba::from_srgb8(67, 132, 245, 255),
+                        semio_framework_actor::JobProgressKind::CommitValidated => theme.success,
+                        semio_framework_actor::JobProgressKind::Cancelled | semio_framework_actor::JobProgressKind::Fault => theme.error,
+                        _ => theme.progress,
                     };
                     self.overlay.push_solid_overlay([12.0, 12.0, 24.0 + applied.min(100) as f32 * 2.0, 4.0], color);
                 }

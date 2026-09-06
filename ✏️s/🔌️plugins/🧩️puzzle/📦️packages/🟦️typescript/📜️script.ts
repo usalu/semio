@@ -22,6 +22,7 @@ type PublicationOwner = { owner: "Puzzle2dPlayApp" | "Puzzle3dPlayApp" | "Puzzle
 type PublicationFixture = { schema: string; closePageBytes: number; owners: PublicationOwner[]; laws: Record<string, boolean> };
 
 const reserved5d = new Set(["copy", "cut", "paste", "import-media"]);
+const reserved2d = new Set(["import-media"]);
 
 function quotedValues(source: string): string[] {
   return [...source.matchAll(/"([^"]+)"/g)].map((match) => match[1]!);
@@ -75,19 +76,14 @@ function fixtureOracle(fixture: PublicationFixture): boolean {
 function ownerOracle(owner: PublicationOwner, source: string): boolean {
   const production = source.split("//#region 🧪️Testkit")[0]!;
   const pairs = manifestPairs(production);
-  const appGroups = owner.groups.map((group) => ({ ...group, routes: group.routes.filter((route) => owner.owner !== "Puzzle5dPlayApp" || !reserved5d.has(route)) }));
+  const appGroups = owner.groups.map((group) => ({ ...group, routes: group.routes.filter((route) => (owner.owner !== "Puzzle5dPlayApp" || !reserved5d.has(route)) && (owner.owner !== "Puzzle2dPlayApp" || !reserved2d.has(route))) }));
   const appRoutes = appGroups.flatMap((group) => group.routes);
   const migrated = appGroups.filter((group) => group.status === "Migrated").flatMap((group) => group.routes);
   const expectedPairs = new Map(appGroups.flatMap((group) => group.routes.map((route) => [route, group.status])));
   if (!exactArray([...pairs.keys()], appRoutes)) return false;
   if (!appRoutes.every((route) => pairs.get(route) === expectedPairs.get(route))) return false;
   if (!exactArray(retainedIds(production, owner.owner), migrated)) return false;
-  if (owner.owner === "Puzzle2dPlayApp") {
-    return !production.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory")
-      && !production.includes("semio_framework_plugin::bounded_first_step_tool_proofs!")
-      && !production.includes("registry.register(BoundedFirstStepCommandJobFactory");
-  }
-  const factory = owner.owner === "Puzzle5dPlayApp" ? "Puzzle5dRetainedCommandJobFactory" : "Puzzle3dRetainedCommandJobFactory";
+  const factory = `${owner.owner.slice(0, 8)}RetainedCommandJobFactory`;
   const factoryBlock = production.split(`impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ${factory}`)[1]?.split("//#endregion 🧵️RetainedCommands")[0] ?? "";
   const contracts = publicationContracts(factoryBlock);
   const proofBlock = production.split("semio_framework_plugin::bounded_first_step_tool_proofs!")[1]?.split("fn register_tool_job_factories")[0] ?? "";
@@ -100,7 +96,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
     && production.includes(owner.owner === "Puzzle5dPlayApp"
       ? `registry.register(${factory}::new(&controller_id))`
       : `registry.register(${factory}::new(&controller))`)
-    && (owner.owner === "Puzzle5dPlayApp" || owner.owner === "Puzzle3dPlayApp" || !production.includes("build_artifact_store_one_item_preparation_factory"))
+    && production.includes("fn build_artifact_store_one_item_preparation_factory()")
+    && production.includes("fn build_config_store_one_item_preparation_factory()")
     && !production.includes("build_draft_store_one_item_preparation_factory")
     && !production.includes("build_presence_store_one_item_preparation_factory")
     && !production.includes("build_transient_store_one_item_preparation_factory");
@@ -129,7 +126,34 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("fn build_artifact_store_one_item_preparation_factory()")
       && production.includes("Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))");
   }
-  if (owner.owner !== "Puzzle5dPlayApp" && production.includes("build_config_store_one_item_preparation_factory")) return false;
+  if (owner.owner === "Puzzle2dPlayApp") {
+    return production.includes("struct Puzzle2dConfigStorePreparationFactory")
+      && production.includes("impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparationFactory")
+      && production.includes("impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparation")
+      && production.includes("Some(std::sync::Arc::new(Puzzle2dConfigStorePreparationFactory))")
+      && production.includes("struct Puzzle2dArtifactStorePreparationFactory")
+      && production.includes("impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory")
+      && production.includes("impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparation")
+      && production.includes("Some(std::sync::Arc::new(Puzzle2dArtifactStorePreparationFactory))")
+      && production.includes("PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536")
+      && production.includes("request.operation != request.authority.operation()")
+      && production.includes("request.generation != request.authority.generation()")
+      && production.includes("request.base_revision != request.authority.base_revision()")
+      && production.includes("ArtifactStoreOneItemPreparationStep::Progress")
+      && production.includes("ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1")
+      && production.includes("ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2")
+      && production.includes("fn cancel(&mut self)")
+      && production.includes("fn begin_close(&mut self)")
+      && production.includes("base.return_to_registry()")
+      && production.includes("fn terminal_is_empty(&self)")
+      // 🎬️ The one dispatch pipeline `handle` and every generic retained reduce share — a second,
+      // divergent copy of the scene/host/delta body is exactly what this audit exists to refuse.
+      && production.includes("fn puzzle2d_dispatch_emit(")
+      && production.includes("Ok(puzzle2d_dispatch_emit(command, snapshot.0.clone(), config, &selection, None))")
+      && production.includes("Ok(puzzle2d_dispatch_emit(command, before, config, interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned()))")
+      && production.includes("PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024")
+      && production.includes("(addressed <= PUZZLE2D_SELECTION_BATCH_LIMIT).then_some(addressed.max(1))");
+  }
   if (owner.owner !== "Puzzle5dPlayApp") return true;
   const guard = production.indexOf('if !["copy", "cut", "paste", "import-media"].contains(&request.tool_id.as_str())');
   const decode = production.indexOf("puzzle5d_preflight_reserved_wire", guard);
@@ -203,7 +227,9 @@ class PublicationAuthorityAuditScript extends BundleScript {
     const hostileFixtures: PublicationFixture[] = [
       { ...fixture, closePageBytes: 32_768 },
       { ...fixture, owners: fixture.owners.slice(1) },
-      { ...fixture, owners: fixture.owners.map((owner, index) => index === 0 ? { ...owner, groups: [{ ...owner.groups[0]!, status: "Migrated", blocker: owner.groups[0]!.blocker }] } : owner) },
+      // 🧯️ A `Migrated` group must never carry a blocker — inject one unconditionally so this stays a
+      // real hostile mutation for an owner whose first group is already `Migrated` (and therefore has none).
+      { ...fixture, owners: fixture.owners.map((owner, index) => index === 0 ? { ...owner, groups: [{ ...owner.groups[0]!, status: "Migrated", blocker: owner.groups[0]!.blocker ?? "hostile: a Migrated group must carry no blocker" }] } : owner) },
     ];
     if (hostileFixtures.some((hostile) => Boolean(validate(hostile)) || fixtureOracle(hostile))) throw new Error("Puzzle publication fixture accepted a hostile schema/oracle mutation");
     const admitted = auditedOwners.flatMap((owner) => owner.groups.filter((group) => group.status === "Migrated").flatMap((group) => group.routes));

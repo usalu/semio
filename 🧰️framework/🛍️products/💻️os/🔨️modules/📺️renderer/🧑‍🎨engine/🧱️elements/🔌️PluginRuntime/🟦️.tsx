@@ -43,19 +43,7 @@ import {
   SemioFaultError,
   orderPluginRegistryEntries,
 } from "@semio-tech/framework";
-import {
-  AppChannelClient,
-  AppChannelRequestSequence,
-  type AppFrameValue,
-  decodeAppFrame,
-  decodeConflictsFromWire,
-  decodeFaultFromWire,
-  decodeMergeReportFromWire,
-  decodeMutationEnvelopesPack,
-  decodePackValue,
-  encodePackValue,
-  faultDisplayMessage,
-} from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
 import type { ArtifactPresencePeer } from "@semio-tech/framework-replication";
 import { type BuiltNode, type UiNodeRecord, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, emptyUiDocumentState, type UiDocumentState } from "../📃️UiDocumentStore/🟦️.tsx";
@@ -507,39 +495,39 @@ export function decodeWirePatchOps(ops: readonly WireVariant[]): readonly UiPatc
     const val = (op.val ?? {}) as Record<string, unknown>;
     switch (op.tag) {
       case "upsert":
-        decoded.push({ type: "upsert", ...normalizeWireUiNodeRecord(decodePackValue(coerceWireBytes(val.node))) });
+        decoded.push({ type: "upsert", ...normalizeWireUiNodeRecord(decodeWirePack(val.node, "upsert.node")) });
         break;
       case "set-component":
-        decoded.push({ type: "setComponent", id: wireNatural(val.node), component: decodePackValue(coerceWireBytes(val.component)) as Extract<UiPatchOp, { type: "setComponent" }>["component"] });
+        decoded.push({ type: "setComponent", id: wireNatural(val.node, "op.node"), component: decodeWirePack(val.component, "set-component.component") as Extract<UiPatchOp, { type: "setComponent" }>["component"] });
         break;
       case "set-layout":
-        decoded.push({ type: "setLayout", id: wireNatural(val.node), layout: decodePackValue(coerceWireBytes(val.layout)) as Extract<UiPatchOp, { type: "setLayout" }>["layout"] });
+        decoded.push({ type: "setLayout", id: wireNatural(val.node, "op.node"), layout: decodeWirePack(val.layout, "set-layout.layout") as Extract<UiPatchOp, { type: "setLayout" }>["layout"] });
         break;
       case "set-activity": {
-        const activity = decodePackValue(coerceWireBytes(val.activity)) as Pick<Extract<UiPatchOp, { type: "setActivity" }>, "activity" | "disabled">;
-        decoded.push({ type: "setActivity", id: wireNatural(val.node), activity: activity.activity, disabled: activity.disabled });
+        const activity = decodeWirePack(val.activity, "set-activity.activity") as Pick<Extract<UiPatchOp, { type: "setActivity" }>, "activity" | "disabled">;
+        decoded.push({ type: "setActivity", id: wireNatural(val.node, "op.node"), activity: activity.activity, disabled: activity.disabled });
         break;
       }
       case "set-children":
-        decoded.push({ type: "setChildren", id: wireNatural(val.node), children: Array.isArray(val.children) ? val.children.map(wireNatural) : [] });
+        decoded.push({ type: "setChildren", id: wireNatural(val.node, "op.node"), children: Array.isArray(val.children) ? val.children.map((child) => wireNatural(child, "set-children.children[]")) : [] });
         break;
       case "set-style":
-        decoded.push({ type: "setStyle", id: wireNatural(val.node), style: decodePackValue(coerceWireBytes(val.style)) as Extract<UiPatchOp, { type: "setStyle" }>["style"] });
+        decoded.push({ type: "setStyle", id: wireNatural(val.node, "op.node"), style: decodeWirePack(val.style, "set-style.style") as Extract<UiPatchOp, { type: "setStyle" }>["style"] });
         break;
       case "set-accessibility":
-        decoded.push({ type: "setAccessibility", id: wireNatural(val.node), accessibility: decodePackValue(coerceWireBytes(val.accessibility)) as Extract<UiPatchOp, { type: "setAccessibility" }>["accessibility"] });
+        decoded.push({ type: "setAccessibility", id: wireNatural(val.node, "op.node"), accessibility: decodeWirePack(val.accessibility, "set-accessibility.accessibility") as Extract<UiPatchOp, { type: "setAccessibility" }>["accessibility"] });
         break;
       case "set-bindings":
-        decoded.push({ type: "setBindings", id: wireNatural(val.node), bindings: decodePackValue(coerceWireBytes(val.bindings)) as Extract<UiPatchOp, { type: "setBindings" }>["bindings"] });
+        decoded.push({ type: "setBindings", id: wireNatural(val.node, "op.node"), bindings: decodeWirePack(val.bindings, "set-bindings.bindings") as Extract<UiPatchOp, { type: "setBindings" }>["bindings"] });
         break;
       case "set-menu":
-        decoded.push({ type: "setMenu", id: wireNatural(val.node), menu: decodePackValue(coerceWireBytes(val.menu)) as Extract<UiPatchOp, { type: "setMenu" }>["menu"] });
+        decoded.push({ type: "setMenu", id: wireNatural(val.node, "op.node"), menu: decodeWirePack(val.menu, "set-menu.menu") as Extract<UiPatchOp, { type: "setMenu" }>["menu"] });
         break;
       case "remove":
-        decoded.push({ type: "remove", id: wireNatural(op.val) });
+        decoded.push({ type: "remove", id: wireNatural(op.val, "remove.val") });
         break;
       case "set-root":
-        decoded.push({ type: "setRoot", id: wireNatural(op.val) });
+        decoded.push({ type: "setRoot", id: wireNatural(op.val, "set-root.val") });
         break;
       default:
         break;
@@ -548,22 +536,28 @@ export function decodeWirePatchOps(ops: readonly WireVariant[]): readonly UiPatc
   return decoded;
 }
 
-function wireNatural(raw: unknown): number {
-  const value = Number(raw ?? 0);
-  if (!Number.isSafeInteger(value) || value < 0) throw new Error(`[DEBUG] actor WIT integer is outside the JavaScript safe range: ${String(raw)}`);
-  return value;
+/** 🔢️ One natural number off the actor WIT/pack boundary — {@link packWireNatural}, the single
+ * implementation the wgpu bridge shares, applied to whatever jco handed this shell. */
+const wireNatural = packWireNatural;
+
+/** 📦️ Decodes one pack-encoded WIT byte payload and projects its lossless integer carriers onto exact
+ * JSON numbers — the only shape the UI contract twins (`UiNodeRecord`, components, layouts, styles)
+ * declare. Wraps {@link decodePackWire} with this boundary's own `list<u8>` coercion. */
+function decodeWirePack(raw: unknown, path: string): unknown {
+  return decodePackWire(coerceWireBytes(raw), path);
 }
+
 
 function normalizeWireUiNodeRecord(raw: unknown): UiNodeRecord {
   const record = raw as Partial<UiNodeRecord>;
   return {
     ...(record as UiNodeRecord),
-    id: wireNatural(record.id),
+    id: wireNatural(record.id, "record.id"),
     disabled: record.disabled ?? false,
     transition: record.transition ?? null,
     bindings: Array.isArray(record.bindings) ? record.bindings : [],
     menu: record.menu ?? null,
-    children: Array.isArray(record.children) ? record.children.map(wireNatural) : [],
+    children: Array.isArray(record.children) ? record.children.map((child) => wireNatural(child, "record.children[]")) : [],
   };
 }
 
@@ -590,8 +584,8 @@ export function applyUiPatchToRetained(
   const state = previous ?? emptyUiDocumentState(surfaceId);
   const applied = applyUiPatch(state, {
     surface: surfaceId,
-    revision: wireNatural(patch.revision),
-    baseRevision: wireNatural(patch.baseRevision),
+    revision: wireNatural(patch.revision, "patch.revision"),
+    baseRevision: wireNatural(patch.baseRevision, "patch.baseRevision"),
     ops: [...patch.ops],
   });
   return applied.ok ? { surface: applied.state, desynced: false } : { surface: previous, desynced: true };
@@ -641,7 +635,7 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
   const val = (effect.val ?? {}) as Record<string, unknown>;
   const str = (key: string): string => String(val[key] ?? "");
   const num = (key: string): number => Number(val[key] ?? 0);
-  const packField = (key: string): unknown => (val[key] !== undefined ? decodePackValue(coerceWireBytes(val[key])) : undefined);
+  const packField = (key: string): unknown => (val[key] !== undefined ? decodeWirePack(val[key], `wire.${key}`) : undefined);
   switch (effect.tag) {
     case "request-sync":
       return "requestSync";

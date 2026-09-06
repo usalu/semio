@@ -2,11 +2,11 @@
 //! calibration (the properties form always submits every intrinsics/distortion field together —
 //! the `update` verb's inseparable-facet exception, not a scalar `change`).
 
-use crate::artifacts::remodeling::{CameraCalibration, RemodelingSnapshot};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{CameraCalibration, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🛠️ `update-camera-calibration` payload — full FINAL-state `CameraCalibration` record.

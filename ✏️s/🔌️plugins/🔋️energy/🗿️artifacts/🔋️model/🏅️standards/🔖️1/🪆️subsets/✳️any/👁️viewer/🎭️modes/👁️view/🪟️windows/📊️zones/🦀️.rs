@@ -4,7 +4,7 @@
 
 use crate::artifacts::model::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `EnergyModelSnapshot -> UiNode` read: one row per `crate::model::Zone`, columns `id`/
 /// `name`/`volumeM3`/`multiplier`/`conditioned`/`partOfTotalFloorArea` — no run-output row, no
 /// command-driven cell edits (a viewer declares none).
-pub fn render(document: &EnergyModelSnapshot) -> BuiltNode {
+pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
     let model = crate::artifacts::model::energy_model(document);
     let columns = vec!["id".to_string(), "name".to_string(), "volumeM3".to_string(), "multiplier".to_string(), "conditioned".to_string(), "partOfTotalFloorArea".to_string()];
     let rows = model.zones.iter().map(|zone| vec![zone.id.0.to_string(), zone.name.clone(), format!("{}", zone.volume_m3), zone.multiplier.to_string(), zone.conditioned.to_string(), zone.part_of_total_floor_area.to_string()]).collect();
@@ -45,7 +45,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_lists_one_row_per_zone() {
         let document = EnergyModelSnapshot::default();
-        let table = render(&document);
+        let table = render(&document).expect("the table window assembles");
         assert_eq!(table.key, WINDOW_KIND_ID);
         assert!(table.children.is_empty());
     }

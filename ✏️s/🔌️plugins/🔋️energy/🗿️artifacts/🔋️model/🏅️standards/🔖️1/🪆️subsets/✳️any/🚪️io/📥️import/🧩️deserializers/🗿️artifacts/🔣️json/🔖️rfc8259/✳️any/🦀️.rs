@@ -16,7 +16,7 @@ pub fn deserialize(from: &JsonSnapshot) -> Result<EnergyModelSnapshot, store::Te
     Ok(out)
 }
 
-pub async fn deserialize_bytes(bytes: &[u8]) -> Result<EnergyModelSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<EnergyModelSnapshot, store::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     let value = parse_json_text(text)?;
     deserialize(&JsonSnapshot::from_value(value))

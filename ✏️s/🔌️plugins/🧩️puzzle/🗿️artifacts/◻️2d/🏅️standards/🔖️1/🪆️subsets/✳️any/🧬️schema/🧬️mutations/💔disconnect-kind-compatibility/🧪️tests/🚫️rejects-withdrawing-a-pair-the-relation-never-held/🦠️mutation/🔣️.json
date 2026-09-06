@@ -1,0 +1,5 @@
+{
+  "mutation": "disconnectKindCompatibility",
+  "source": "roof circular bottom",
+  "target": "core circular top"
+}

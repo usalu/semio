@@ -1,0 +1,54 @@
+{
+  "name": "@semio-tech/energy-oracle-py",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "oracle-setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts setup",
+        "forwardAllArgs": true
+      }
+    },
+    "oracle-status": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts status",
+        "forwardAllArgs": true
+      }
+    },
+    "oracle-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts run",
+        "forwardAllArgs": true
+      }
+    },
+    "oracle-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts native",
+        "forwardAllArgs": true
+      }
+    },
+    "oracle-emit": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts emit",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

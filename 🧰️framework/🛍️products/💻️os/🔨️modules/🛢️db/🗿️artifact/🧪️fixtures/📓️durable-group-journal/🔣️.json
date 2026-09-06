@@ -24,5 +24,13 @@
     { "id": "oversized-physical-transaction", "expected": "rejected", "mailboxTransfers": 1, "walTransactions": 0 },
     { "id": "append-or-sync-error", "expected": "uncertain", "mailboxTransfers": 1, "walTransactions": 1 }
   ],
+  "committedDecisionWitnessCases": [
+    { "id": "one-event", "recordKinds": ["event"], "transaction": "committed", "replayDocument": "matching", "expected": "witness" },
+    { "id": "ordinary-command", "recordKinds": ["command"], "transaction": "committed", "replayDocument": "matching", "expected": "ignored" },
+    { "id": "event-plus-command", "recordKinds": ["event", "command"], "transaction": "committed", "replayDocument": "matching", "expected": "rejected" },
+    { "id": "two-events", "recordKinds": ["event", "event"], "transaction": "committed", "replayDocument": "matching", "expected": "rejected" },
+    { "id": "foreign-document", "recordKinds": ["event"], "transaction": "committed", "replayDocument": "foreign", "expected": "rejected" },
+    { "id": "aborted-event", "recordKinds": ["event"], "transaction": "aborted", "replayDocument": "matching", "expected": "ignored" }
+  ],
   "nonClaims": ["decision-recovery", "inference-witness", "three-store-publication"]
 }

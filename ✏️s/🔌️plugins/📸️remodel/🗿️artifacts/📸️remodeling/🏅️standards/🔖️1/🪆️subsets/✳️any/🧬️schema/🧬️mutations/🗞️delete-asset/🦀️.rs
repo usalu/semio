@@ -2,11 +2,11 @@
 //! removes an asset today; this exists as `create-asset`'s inverse-only counterpart (a mutation kind
 //! is real even without its own command call site) and for collection completeness.
 
-use crate::artifacts::remodeling::{RemodelingSnapshot, remodeling_asset};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{remodeling_asset, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🗞️ `delete-asset` payload.

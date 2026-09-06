@@ -3,7 +3,6 @@
 //! (name · kind · subset · updated · updated-by · presence), create/open/delete/rename commands, the
 //! members panel, and the folded-directory/presence `Config` state that feeds them both.
 
-use semio_framework::InteractiveJobClassification;
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::artifacts::space::SPACE_INDEX_DIALECT;
@@ -15,11 +14,12 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use crate::editor::space_index::modes::edit;
 use crate::editor::space_index::modes::edit::windows::main;
 use crate::editor::space_index::panels::members as members_panel;
+use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    built_to_component_tree, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionRef, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, DialogDefinition, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, LocalizedLabel,
-    NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
+    built_to_component_tree, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionRef, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, DialogDefinition, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin,
+    LocalizedLabel, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
 };
 use store::EngineHandles;
 
@@ -63,18 +63,15 @@ fn create_artifact_kind_options() -> Vec<ActionArgOption> {
 //#region 🔖️Actions
 /// 🎯️ Every panel/dialog-adjacent action this app declares addresses itself through this factory —
 /// mirrors `draw_play_action`'s precedent (`🖍️draw`'s editor root).
-pub const SPACE_INDEX_CONTROLLER_ID: &str = "s-space-index";
+pub const SPACE_INDEX_CONTROLLER_ID: &str = "s.space.space@1/*#editor";
 
 pub fn space_index_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     ActionFactory::new(SPACE_INDEX_CONTROLLER_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -87,27 +84,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -117,9 +107,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
@@ -157,8 +145,20 @@ semio_framework_plugin::app_commands! {
 /// (`interactive-job.catalog-incomplete`), which is why an app with migrated ids and no factory is
 /// not "slow", it is unconstructable.
 const SPACE_INDEX_RETAINED_TOOL_IDS: &[&str] = &[
-    "createArtifact", "deleteArtifact", "renameArtifact", "touchArtifact", "requestDeleteArtifact", "openArtifact", "openArtifactWith",
-    "foldDirectoryEvents", "presenceHeartbeat", "inviteMember", "removeMember", "setVisibility", "copyInviteLink", "requestInviteMember",
+    "createArtifact",
+    "deleteArtifact",
+    "renameArtifact",
+    "touchArtifact",
+    "requestDeleteArtifact",
+    "openArtifact",
+    "openArtifactWith",
+    "foldDirectoryEvents",
+    "presenceHeartbeat",
+    "inviteMember",
+    "removeMember",
+    "setVisibility",
+    "copyInviteLink",
+    "requestInviteMember",
 ];
 const SPACE_INDEX_RETAINED_PAYLOAD_SCHEMA: &str = "s.space.index.tool-command.v1";
 const SPACE_INDEX_RETAINED_RAW_BYTES: usize = 128 * 1024;
@@ -518,8 +518,8 @@ pub(crate) mod testkit {
     }
 
     #[allow(dead_code)]
-    pub fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 }
 //#endregion 🧪️Testkit
@@ -568,10 +568,10 @@ mod tests {
         let definition = create_space_index_editor();
         assert_eq!(definition.dialogs.len(), 3);
         let by_id = |id: &str| definition.dialogs.iter().find(|dialog| dialog.id == id).unwrap_or_else(|| panic!("dialog {id} must be registered"));
-        assert_eq!(by_id("createArtifact").submit_action, ActionRef::new("createArtifact")?);
+        assert_eq!(by_id("createArtifact").submit_action, ActionRef::new("createArtifact"));
         assert_eq!(by_id("createArtifact").args.len(), 2);
-        assert_eq!(by_id("deleteArtifact").submit_action, ActionRef::new("deleteArtifact")?);
-        assert_eq!(by_id("inviteMember").submit_action, ActionRef::new("inviteMember")?);
+        assert_eq!(by_id("deleteArtifact").submit_action, ActionRef::new("deleteArtifact"));
+        assert_eq!(by_id("inviteMember").submit_action, ActionRef::new("inviteMember"));
         assert_eq!(by_id("inviteMember").args.len(), 2);
     }
 
@@ -590,7 +590,7 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = SpaceIndexConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let json = pack::to_json_string(&<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg));
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg).expect("unknown body diagnostic tree")).expect("unknown body projection");
         assert!(json.contains("Unknown body"));
     }
 
@@ -602,7 +602,7 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = SpaceIndexConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let json = pack::to_json_string(&<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg));
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg).expect("members panel tree")).expect("members panel projection");
         assert!(json.contains("s-space-invite"));
     }
 

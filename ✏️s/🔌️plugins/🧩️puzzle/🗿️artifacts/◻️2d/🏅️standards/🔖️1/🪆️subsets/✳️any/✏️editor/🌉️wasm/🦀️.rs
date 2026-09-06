@@ -76,7 +76,7 @@ pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, J
 pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::ArtifactDsl;
     let snapshot = Puzzle2dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
-    serde_json::to_string(&snapshot).map_err(|error| JsValue::from_str(&error.to_string()))
+    Ok(dsl::json::to_json_string(&snapshot))
 }
 
 // #region 🔖️WasmSession

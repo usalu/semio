@@ -7,14 +7,17 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
 import Ajv from "ajv";
+import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { decodeClientFrame, decodePresencePeer, encodePresencePeer, encodeServerFrame, type ArtifactPresencePeer, type WireFrontierSummary } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequest, encodePackValue, packValueToExactJson } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import type { PackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { parseDocumentOpenBrowserActorV1, documentBrowserActorLeaseFromPlanV1, type DocumentBrowserActorSourceV1, type DocumentClosedBrowserActorV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
 import { directoryCommandErrorFromStatus, directoryCommandErrorIsTransient, directoryCommandRequestJson, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, sealDirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import type { DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { produceFreshComponentV1, type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
+import { produceFreshComponentV1, testFreshComponentStagingV1, type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
+import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
 import {
   BundleScript,
@@ -30,6 +33,7 @@ import {
   buildBudgetMs,
   orchestratorBudgetOpts,
   resolveTestLevel,
+  readStableBuildFile,
 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 function exactCargoStageEnvironments() {
@@ -3467,6 +3471,43 @@ class NativeCatalogSelectionCheckScript extends BundleScript {
   }
 }
 
+class DocumentBrowserActorIdentityCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments[0] !== undefined && !["--native", "--catalog-native"].includes(segments[0]))) throw new Error("document-browser-actor-identity-check accepts only --native or --catalog-native");
+    await proveDocumentBrowserActorIdentityFixture(this.repoRoot);
+    if (segments[0] === undefined) return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: segments[0] === "--catalog-native" ? [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: [
+        "artifact_authority::trusted_catalog::browser_actor::tests::trusted_browser_actor_metadata_and_generation_match_neutral_corpus",
+        "artifact_authority::trusted_catalog::tests::trusted_browser_actor_loader_verifies_retains_and_cancels_before_publication",
+        "artifact_authority::trusted_catalog::tests::selected_execution_target_assets_are_generation_and_digest_bound",
+        "artifact_authority::trusted_catalog::tests::verified_trusted_catalog_document_open_generation_and_resolution_are_exact",
+        "artifact_authority::trusted_catalog::tests::trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
+      ] }] : [
+        { package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: [
+          "integer_from_value_matches_serde_without_coercion", "scalars_round_trip", "option_collapses_nested_none_like_naive_serde",
+          "vec_round_trips_and_reports_index_on_error", "btreemap_round_trips_in_key_order", "tuple_round_trips_as_two_element_array_like_serde_json",
+          "fixed_size_array_round_trips_and_rejects_wrong_length", "phantom_data_encodes_as_null_and_decodes_from_anything",
+          "u64_round_trips_as_uint_and_f64_round_trips_as_float", "i64_min_and_max_round_trip_exactly", "u64_max_round_trips_exactly_beyond_f64_2_pow_53",
+          "negative_zero_float_round_trips_and_stays_a_float", "whole_float_and_same_valued_integer_are_distinct_dsl_values",
+        ].map(law => `value::codec::tests::${law}`) },
+        { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
+          "os_directory::schema::tests::document_authority_json_integer_tokens_never_coerce",
+          "os_directory::schema::browser_actor::tests::document_browser_actor_v1_matches_language_neutral_fixture",
+        ] },
+      ],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 180_000,
+      progress(event) { console.log(`document-browser-actor-identity-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    console.log(`document-browser-actor-identity-native-receipts: ${JSON.stringify(receipts)}`);
+  }
+}
+
 class OpenPlanCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveDocumentOpenPlanFixture(this.repoRoot);
@@ -4470,6 +4511,11 @@ async function proveTrustedCatalogIdentityRolesFixture(repoRoot: string): Promis
 
 type TrustedBootstrapCodec = { readonly artifactKind: string; readonly artifactSchema: string; readonly packSchemaHash: string };
 
+function trustedBootstrapCodecOrder(left: TrustedBootstrapCodec, right: TrustedBootstrapCodec): number {
+  const a = JSON.stringify([left.artifactKind, left.artifactSchema, left.packSchemaHash]), b = JSON.stringify([right.artifactKind, right.artifactSchema, right.packSchemaHash]);
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 function trustedBootstrapField(value: Uint8Array | string): Buffer {
   const bytes = typeof value === "string" ? Buffer.from(value, "utf8") : Buffer.from(value);
   const length = Buffer.alloc(8);
@@ -4483,6 +4529,34 @@ function trustedBootstrapCount(value: number): Buffer {
   return bytes;
 }
 
+type TrustedBootstrapBrowserActorV1 = Readonly<{ kind: "none" }> | (DocumentClosedBrowserActorV1 & Readonly<{ path: string; byteLength: number }>);
+
+/** 📦️ Admits private location metadata while preserving the public source-bound identity. */
+function trustedBootstrapBrowserActorV1(candidate: unknown, source: DocumentBrowserActorSourceV1, renderer: string): TrustedBootstrapBrowserActorV1 {
+  const row = documentOpenNeutralObject(candidate, ["kind"], ["schema", "codegenPolicy", "sha256", "sourceComponentSha256", "sourceDescriptorByteSha256", "policySha256", "importInterfaces", "path", "byteLength"]);
+  if (row.kind === "none") return parseDocumentOpenBrowserActorV1(row, source, renderer) as Readonly<{ kind: "none" }>;
+  const { path, byteLength, ...identity } = row;
+  const plan = parseDocumentOpenBrowserActorV1(identity, source, renderer);
+  const lease = documentBrowserActorLeaseFromPlanV1(plan, source, renderer, byteLength);
+  if (lease.kind !== "closed-browser-actor" || typeof path !== "string" || Buffer.byteLength(path, "utf8") > 1024 || /[\\:\p{Cc}]/u.test(path) || path.split("/").some(part => part === "" || part === "." || part === "..")) throw new Error("trusted browser actor path or identity is invalid");
+  return Object.freeze({ ...lease, path });
+}
+
+/** 🧬️ Frames every actor field, including explicit absence, in the immutable generation. */
+function trustedBootstrapBrowserActorEncoding(candidate: unknown, source: DocumentBrowserActorSourceV1, renderer: string): Buffer {
+  const actor = trustedBootstrapBrowserActorV1(candidate, source, renderer);
+  const pieces = [trustedBootstrapField(actor.kind)];
+  if (actor.kind === "none") return Buffer.concat(pieces);
+  for (const value of [actor.schema, actor.codegenPolicy, actor.path]) pieces.push(trustedBootstrapField(value));
+  const length = Buffer.alloc(8);
+  length.writeBigUInt64BE(BigInt(actor.byteLength));
+  pieces.push(length);
+  for (const value of [actor.sha256, actor.sourceComponentSha256, actor.sourceDescriptorByteSha256, actor.policySha256]) pieces.push(trustedBootstrapField(Buffer.from(value, "hex")));
+  pieces.push(trustedBootstrapCount(actor.importInterfaces.length));
+  for (const value of actor.importInterfaces) pieces.push(trustedBootstrapField(value));
+  return Buffer.concat(pieces);
+}
+
 function trustedBootstrapProfileEncoding(profile: any, codecs: Readonly<Record<"gis" | "stdio", readonly TrustedBootstrapCodec[]>>): Buffer {
   const pieces = [Buffer.from("semio/hub/trusted-profile-generation/v1\0"), trustedBootstrapField(profile.id), trustedBootstrapCount(profile.selectedClosure.length)];
   for (const identity of profile.selectedClosure) {
@@ -4491,8 +4565,9 @@ function trustedBootstrapProfileEncoding(profile: any, codecs: Readonly<Record<"
     for (const value of [selected.pluginId, selected.packageId, selected.version, selected.role, selected.componentSha256, selected.componentBlake3, selected.descriptorSha256]) {
       pieces.push(trustedBootstrapField(/^[0-9a-f]{64}$/u.test(value) ? Buffer.from(value, "hex") : value));
     }
+    pieces.push(trustedBootstrapBrowserActorEncoding(selected.browserActor, { componentSha256: selected.componentSha256, descriptorByteSha256: selected.descriptorSha256 }, selected.pluginId === profile.openTarget.pluginId ? profile.openTarget.rendererTarget : "react"));
     pieces.push(trustedBootstrapCount(0));
-    const rows = [...codecs[selected.pluginId as "gis" | "stdio"]].sort((left, right) => JSON.stringify([left.artifactKind, left.artifactSchema, left.packSchemaHash]).localeCompare(JSON.stringify([right.artifactKind, right.artifactSchema, right.packSchemaHash])));
+    const rows = [...codecs[selected.pluginId as "gis" | "stdio"]].sort(trustedBootstrapCodecOrder);
     pieces.push(trustedBootstrapCount(rows.length));
     for (const row of rows) pieces.push(trustedBootstrapField(row.artifactKind), trustedBootstrapField(row.artifactSchema), trustedBootstrapField(Buffer.from(row.packSchemaHash, "hex")));
   }
@@ -4534,11 +4609,147 @@ function trustedBootstrapPlanGenerationOutcome(issuedGenerationId: string, obser
 }
 
 /** 🧬️ Independently validates the exact closed stdio+GIS profile and full-generation framing. */
+async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promise<void> {
+  const integerRoot = join(repoRoot, "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures");
+  const integerFixture = JSON.parse(readFileSync(join(integerRoot, "🔣️.json"), "utf8"));
+  const { default: IntegerAjv } = await import("ajv/dist/2020.js");
+  const integerShape = new IntegerAjv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(integerRoot, "🧬️.schema.json"), "utf8")));
+  if (!integerShape(integerFixture)) throw new Error(`exact integer schema: ${JSON.stringify(integerShape.errors)}`);
+  let integerAccepted = 0;
+  for (const target of integerFixture.targets) {
+    if (target.name !== `${target.signed ? "i" : "u"}${target.bits}`) throw new Error("integer target policy mismatch");
+    const limit = 1n << BigInt(target.bits - Number(target.signed));
+    const minimum = target.signed ? -limit : 0n, maximum = limit - 1n;
+    for (const raw of integerFixture.raw) {
+      JSON.parse(raw);
+      const integer = /^-?(?:0|[1-9][0-9]*)$/u.test(raw) ? BigInt(raw) : undefined;
+      if (integer !== undefined && integer >= minimum && integer <= maximum) integerAccepted++;
+    }
+  }
+  console.log(`exact-integer-value-oracle: AJV=1 targets=${integerFixture.targets.length} raw=${integerFixture.raw.length} admitted=${integerAccepted} arithmetic=BigInt; native production parity is a separate exact group`);
+  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor");
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(root, "🔣️.schema.json"), "utf8"));
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const ajv = new Ajv2020({ allErrors: true, strict: true });
+  ajv.addSchema(schema);
+  const validators = { plan: ajv.compile({ $ref: schema.$id + "#/$defs/plan" }), lease: ajv.compile({ $ref: schema.$id + "#/$defs/lease" }) };
+  const contract = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts");
+  const source = { componentSha256: fixture.componentSha256, descriptorByteSha256: fixture.descriptorByteSha256 };
+  const parsers = { plan: contract.parseDocumentOpenBrowserActorV1, lease: contract.parseDocumentExecutionTargetBrowserActorV1 };
+  for (const law of fixture.cases) {
+    const candidate = law.kind === "none" ? { kind: "none" } : { ...structuredClone(fixture.closed), ...(law.view === "lease" ? { byteLength: fixture.byteLength } : {}) };
+    Object.assign(candidate, law.set);
+    if (law.remove) delete candidate[law.remove];
+    const shape = Boolean(validators[law.view as "plan" | "lease"](candidate));
+    const oracle = shape && (candidate.kind === "none" ? ["react", "wgpu"].includes(law.renderer) : law.renderer === "wasm"
+      && candidate.sourceComponentSha256 === fixture.componentSha256 && candidate.sourceDescriptorByteSha256 === fixture.descriptorByteSha256
+      && JSON.stringify(candidate.importInterfaces) === JSON.stringify([...new Set(candidate.importInterfaces)].sort()));
+    if (shape !== law.schemaAccepted || oracle !== law.accepted) throw new Error(`browser actor independent oracle mismatch: ${law.id}`);
+    let parsed: ReturnType<typeof contract.parseDocumentOpenBrowserActorV1> | undefined;
+    try { parsed = parsers[law.view as "plan" | "lease"](candidate, source, law.renderer); } catch {}
+    if (Boolean(parsed) !== oracle) throw new Error(`browser actor production admission mismatch: ${law.id}`);
+    if (parsed) {
+      if (canonicalJson(parsed) !== canonicalJson(candidate) || !Object.isFrozen(parsed)) throw new Error(`browser actor projection mismatch: ${law.id}`);
+      if (parsed.kind === "closed-browser-actor" && (!Object.isFrozen(parsed.importInterfaces) || parsed.importInterfaces === candidate.importInterfaces)) throw new Error(`browser actor borrowed mutable interfaces: ${law.id}`);
+      if (!contract.sameDocumentBrowserActorV1(parsed, parsers[law.view as "plan" | "lease"](structuredClone(candidate), source, law.renderer))) throw new Error(`browser actor self equality mismatch: ${law.id}`);
+    }
+  }
+  const plan = contract.parseDocumentOpenBrowserActorV1(fixture.closed, source, "wasm");
+  const lease = contract.documentBrowserActorLeaseFromPlanV1(plan, source, "wasm", fixture.byteLength);
+  if (canonicalJson(lease) !== canonicalJson({ ...fixture.closed, byteLength: fixture.byteLength })) throw new Error("browser actor lease projection mismatch");
+  for (const field of Object.keys(lease)) {
+    const changed = structuredClone(lease) as Record<string, any>;
+    changed[field] = field === "importInterfaces" ? [] : field === "byteLength" ? fixture.byteLength + 1 : "different";
+    if (contract.sameDocumentBrowserActorV1(lease, changed as any)) throw new Error(`browser actor equality omitted ${field}`);
+  }
+  if (contract.sameDocumentBrowserActorV1(plan, lease)) throw new Error("browser actor equality omitted lease length presence");
+  const none = contract.parseDocumentOpenBrowserActorV1({ kind: "none" }, source, "react");
+  if (!contract.sameDocumentBrowserActorV1(none, contract.documentBrowserActorLeaseFromPlanV1(none, source, "react", undefined))) throw new Error("browser actor none projection mismatch");
+  let denied = 0;
+  for (const [actor, length] of [[none, 1], [plan, undefined], [plan, 0], [plan, 67108865]] as const) {
+    try { contract.documentBrowserActorLeaseFromPlanV1(actor, source, actor.kind === "none" ? "react" : "wasm", length); } catch { denied++; }
+  }
+  let accessorReads = 0;
+  for (const candidate of [undefined, null, [], Object.create(fixture.closed), { ...fixture.closed, get sha256() { accessorReads++; return fixture.closed.sha256; } }]) {
+    try { contract.parseDocumentOpenBrowserActorV1(candidate, source, "wasm"); } catch { denied++; }
+  }
+  if (denied !== 9 || accessorReads !== 0) throw new Error("browser actor exact data ownership mismatch");
+  for (const field of ["sourceComponentSha256", "sourceDescriptorByteSha256"]) {
+    try { contract.documentBrowserActorLeaseFromPlanV1({ ...fixture.closed, [field]: "e".repeat(64) }, source, "wasm", fixture.byteLength); } catch { denied++; }
+  }
+  try { contract.documentBrowserActorLeaseFromPlanV1(plan, source, "react", fixture.byteLength); } catch { denied++; }
+  try { contract.documentBrowserActorLeaseFromPlanV1(none, source, "wasm", undefined); } catch { denied++; }
+  if (denied !== 13) throw new Error("browser actor projection bypassed package or renderer binding");
+  console.log(`document-browser-actor-identity: AJV=2 cases=${fixture.cases.length} projection=2 equality=${Object.keys(lease).length + 1} ownership=9 projection-binding=4; metadata only, no catalog/activation claim`);
+  await proveTrustedBrowserActorCatalogFixture(repoRoot);
+}
+
+/** 🧪️ Exercises the private catalog actor against the shared public identity schema. */
+async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🌐️browser-actor/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️bundle.schema.json"), "utf8"));
+  const ajv = new Ajv2020({ strict: true, allErrors: true });
+  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
+  ajv.addSchema(schema);
+  const validate = ajv.compile({ $ref: schema.$id + "#/$defs/browserActor" });
+  const corpus = ajv.compile(JSON.parse(readFileSync(join(root, "🧪️fixtures/🌐️browser-actor/🧬️.schema.json"), "utf8")));
+  assert(corpus(fixture), JSON.stringify(corpus.errors));
+  assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
+  const source = { componentSha256: fixture.closed.sourceComponentSha256, descriptorByteSha256: fixture.closed.sourceDescriptorByteSha256 };
+  for (const law of fixture.cases) {
+    const actor = law.kind === "none" ? { kind: "none" } : structuredClone(fixture.closed);
+    Object.assign(actor, law.set);
+    if (law.remove) delete actor[law.remove];
+    const shape = Boolean(validate(actor));
+    assert.equal(shape, law.shape, `${law.id} shape`);
+    const oracle = shape && (actor.kind === "none" ? law.renderer !== "wasm" : law.renderer === "wasm"
+      && actor.sourceComponentSha256 === source.componentSha256 && actor.sourceDescriptorByteSha256 === source.descriptorByteSha256
+      && JSON.stringify(actor.importInterfaces) === JSON.stringify([...new Set(actor.importInterfaces)].sort()));
+    assert.equal(oracle, law.accepted, `${law.id} oracle`);
+    let encoded: Buffer | undefined;
+    try { encoded = trustedBootstrapBrowserActorEncoding(actor, source, law.renderer); } catch {}
+    assert.equal(Boolean(encoded), oracle, `${law.id} production`);
+  }
+  const bytes = Buffer.from(fixture.bodyHex, "hex");
+  assert.equal(bytes.byteLength, fixture.closed.byteLength);
+  assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex"), fixture.closed.sha256);
+  for (const [actor, renderer, expected] of [[fixture.closed, "wasm", fixture.encodingSha256], [{ kind: "none" }, "react", fixture.noneEncodingSha256]] as const) {
+    const encoded = trustedBootstrapBrowserActorEncoding(actor, source, renderer);
+    assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", encoded)).toString("hex"), expected);
+    assert.equal(createHash("sha256").update(encoded).digest("hex"), expected);
+  }
+  for (const law of fixture.loadCases) {
+    const body = law.bodyHex === null ? undefined : Buffer.from(law.bodyHex, "hex");
+    const oracle = body !== undefined && body.byteLength === law.byteLength && body.byteLength > 0
+      && Buffer.from(await crypto.subtle.digest("SHA-256", body)).toString("hex") === fixture.closed.sha256 && !law.cancelAfterDescriptor;
+    assert.equal(oracle, law.accepted, `${law.id} body oracle`);
+  }
+  for (const law of fixture.rawLengths) {
+    const actor = { ...fixture.closed, byteLength: JSON.parse(law.token) };
+    assert.equal(Boolean(validate(actor)), law.accepted, `raw actor length ${law.token} AJV`);
+    let accepted = false;
+    try { trustedBootstrapBrowserActorV1(actor, source, "wasm"); accepted = true; } catch {}
+    assert.equal(accepted, law.accepted, `raw actor length ${law.token} production`);
+  }
+  console.log(`trusted-browser-actor-catalog: AJV=3 cases=${fixture.cases.length} bodies=${fixture.loadCases.length} raw-lengths=${fixture.rawLengths.length} WebCrypto=1; metadata/framing oracle only, no native loader/activation claim`);
+}
+
 async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<void> {
+  await proveDocumentBrowserActorIdentityFixture(repoRoot);
+  await testFreshComponentStagingV1(repoRoot);
+  await proveTrustedGenerationStageFixture(repoRoot);
+  await proveTrustedBootstrapCodecCaptureFixture(repoRoot);
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const ajv = new Ajv2020({ strict: true, allErrors: true });
+  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
+  ajv.addSchema(JSON.parse(readFileSync(join(root, "../../🧬️schema/🔣️bundle.schema.json"), "utf8")));
+  const validate = ajv.compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
   if (!validate(fixture)) throw new Error(`invalid trusted stdio+GIS bootstrap corpus: ${JSON.stringify(validate.errors)}`);
   const stdio = JSON.parse(readFileSync(join(repoRoot, fixture.sources.stdioReceipts), "utf8"));
   const gis = JSON.parse(readFileSync(join(repoRoot, fixture.sources.gisReceipts), "utf8"));
@@ -4597,22 +4808,31 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     try { verifyFreshCatalogPackageV1(json, pack, expected); } catch { rejected = true; }
     if (!rejected) throw new Error("fresh catalog package verifier admitted a hostile JSON/pack pair");
   }
+  await proveTrustedRotationSourceFixture(fixture);
   console.log(`trusted-stdio-gis-bootstrap-oracle: packages=2 codecs=${codecs.stdio.length + codecs.gis.length} targets=1 hostile=${fixture.hostile.length} cancellation=${fixture.cancellationStages.length} descriptor-pairs=4 stale-plan=1 ajv+node+webcrypto+first-party-pack+blake3=1; no materialization or hub activation claim`);
 }
 
 type TrustedBootstrapMaterializationV1 = Readonly<{ profileId: string; generationId: string; bundleSha256: string; bundlePath: string }>;
 
-function trustedBootstrapWriteNew(path: string, bytes: Uint8Array): void {
+function trustedBootstrapWriteNew(path: string, bytes: Uint8Array, check: () => void): void {
+  check();
   const output = openSync(path, "wx", 0o600);
   let complete = false;
   try {
     let written = 0;
-    while (written < bytes.byteLength) written += writeSync(output, bytes, written, bytes.byteLength - written);
+    while (written < bytes.byteLength) {
+      check();
+      const count = writeSync(output, bytes, written, Math.min(64 * 1024, bytes.byteLength - written));
+      if (count <= 0) throw new Error("trusted staging write made no progress");
+      written += count;
+    }
+    check();
     fsyncSync(output);
+    check();
     complete = true;
   } finally {
-    closeSync(output);
-    if (!complete) rmSync(path, { force: true });
+    try { closeSync(output); } catch (error) { complete = false; throw error; }
+    finally { if (!complete) rmSync(path, { force: true }); }
   }
 }
 
@@ -4622,12 +4842,243 @@ function trustedBootstrapFsyncDirectory(path: string): void {
   try { fsyncSync(directory); } finally { closeSync(directory); }
 }
 
-function trustedBootstrapSourceCodecs(repoRoot: string): Record<"gis" | "stdio", TrustedBootstrapCodec[]> {
-  const stdio = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json"), "utf8"));
-  const gis = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"), "utf8"));
+/** 🪪️ Projects only the schema-admitted fixed native codec closure into immutable generation inputs. */
+function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly<{ gisVersion: string; codecs: Readonly<Record<"gis" | "stdio", readonly TrustedBootstrapCodec[]>> }> {
+  const fail = (): never => { throw new Error("trusted codec source is not the exact bounded native closure"); };
+  const record = (value: unknown, keys: readonly string[]): Record<string, any> => {
+    if (!value || typeof value !== "object" || Array.isArray(value) || JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...keys].sort())) return fail();
+    return value as Record<string, any>;
+  };
+  const identity = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value.length <= 256 && !/[\u0000-\u001f\u007f]/u.test(value);
+  const digest = (value: unknown): value is string => typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value);
+  const s = record(stdio, ["schema", "provider_id", "plugin_id", "package_id", "receipts"]);
+  const g = record(gis, ["schema", "pluginId", "packageId", "packageVersion", "receipts", "hostile"]);
+  if (s.schema !== "semio.stdio.native-openable-catalog-provider/v1" || s.provider_id !== "stdio/native-codecs/v1" || s.plugin_id !== "stdio" || s.package_id !== "semio:stdio" || !Array.isArray(s.receipts) || s.receipts.length !== 26) return fail();
+  const hostile = ["missing", "duplicate", "foreign-package", "wrong-version", "bare-kind", "wrong-schema", "wrong-extension", "zero-hash"];
+  if (g.schema !== "semio.gis.native-codec-receipts/v1" || g.pluginId !== "gis" || g.packageId !== "semio:gis" || g.packageVersion !== "0.1.0" || !Array.isArray(g.receipts) || g.receipts.length !== 2 || !Array.isArray(g.hostile) || JSON.stringify([...g.hostile].sort()) !== JSON.stringify(hostile.sort())) return fail();
+  const stdioRows = s.receipts.map((value: unknown) => {
+    const fields = ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "document_schema", "extension"];
+    const row = record(value, [...fields, "pack_schema_sha256", "protocol_path"]);
+    if (!fields.every(field => identity(row[field])) || !digest(row.pack_schema_sha256) || typeof row.protocol_path !== "string" || row.protocol_path.length > 1024 || !/^🗿️artifacts\/.+\/📡️\.protocol\.semio$/u.test(row.protocol_path)) return fail();
+    return Object.freeze({ artifactKind: row.artifact_kind as string, artifactSchema: row.document_schema as string, packSchemaHash: row.pack_schema_sha256 });
+  });
+  const gisRows = g.receipts.map((value: unknown) => {
+    const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "protocolPath", "protocolBytes", "protocolSha256"]);
+    const family = row.kind === "s.gis.gismap" ? { id: "gismap", schema: "map", owner: "🗺️gismap" } : row.kind === "s.gis.gisterrain" ? { id: "gisterrain", schema: "terrain", owner: "🏔️gisterrain" } : fail();
+    if (row.factoryId !== `gis.${family.id}.v1` || row.schema !== `gis.${family.schema}` || row.extension !== family.id || row.capability !== `s.gis.${family.id}.codec.document` || row.protocolPath !== `🗿️artifacts/${family.owner}/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` || !Number.isSafeInteger(row.protocolBytes) || row.protocolBytes < 1 || row.protocolBytes > 65536 || !digest(row.protocolSha256)) return fail();
+    return Object.freeze({ artifactKind: row.kind as string, artifactSchema: row.schema as string, packSchemaHash: row.protocolSha256 });
+  });
+  for (const rows of [stdioRows, gisRows]) if (new Set(rows.map((row: TrustedBootstrapCodec) => JSON.stringify([row.artifactKind, row.artifactSchema]))).size !== rows.length) return fail();
+  return Object.freeze({ gisVersion: g.packageVersion as string, codecs: Object.freeze({ stdio: Object.freeze(stdioRows.sort(trustedBootstrapCodecOrder)), gis: Object.freeze(gisRows.sort(trustedBootstrapCodecOrder)) }) });
+}
+
+/** 📸️ Captures both codec sources once before any long component build can outlive them. */
+function captureTrustedBootstrapCodecsV1(repoRoot: string, check: (stage?: string) => void): ReturnType<typeof projectTrustedBootstrapCodecsV1> {
+  const admission = { remaining: 128 * 1024 };
+  let stdio: Uint8Array | undefined, gis: Uint8Array | undefined;
+  try {
+    stdio = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json"), 64 * 1024, admission, check);
+    gis = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"), 64 * 1024, admission, check);
+    check("project-codecs");
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    return projectTrustedBootstrapCodecsV1(JSON.parse(decoder.decode(stdio)), JSON.parse(decoder.decode(gis)));
+  } catch (error) { throw new Error(`trusted codec capture: ${(error as Error).message}`); }
+  finally { stdio?.fill(0); gis?.fill(0); }
+}
+
+/** 🧪️ Compares fixed source admission with package schemas and independent generation hashes. */
+async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { writeFileSync, truncateSync } = await import("node:fs");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧊️codec-source");
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const ajv = new Ajv2020({ strict: true, allErrors: true });
+  assert(ajv.compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")))(fixture));
+  assert.equal(new Set(fixture.cases.map((row: any) => row.change)).size, fixture.cases.length);
+  const sourcePaths = {
+    stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
+    gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
+  };
+  const schemaPaths = { stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/🧬️native-codec-factories.schema.json", gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️.schema.json" };
+  const originals = { stdio: JSON.parse(readFileSync(join(repoRoot, sourcePaths.stdio), "utf8")), gis: JSON.parse(readFileSync(join(repoRoot, sourcePaths.gis), "utf8")) };
+  const schemas = { stdio: ajv.compile(JSON.parse(readFileSync(join(repoRoot, schemaPaths.stdio), "utf8"))), gis: ajv.compile(JSON.parse(readFileSync(join(repoRoot, schemaPaths.gis), "utf8"))) };
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  assert(artifactRoot?.includes("🗑️generated"));
+  mkdirSync(artifactRoot, { recursive: true });
+  const evidence = mkdtempSync(join(artifactRoot, "codec-source-"));
+  let expected: string | undefined, generation: string | undefined;
+  const profile = JSON.parse(readFileSync(join(root, "../🧬️stdio-gis-bootstrap/🔣️.json"), "utf8")).profile;
+  for (const test of fixture.cases) {
+    const input = structuredClone(originals);
+    if (test.change === "permuted") { input.stdio.receipts.reverse(); input.gis.receipts.reverse(); }
+    if (test.change === "invalid-hash") input.gis.receipts[0].protocolSha256 = "zz";
+    if (test.change === "zero-hash") input.gis.receipts[0].protocolSha256 = "00".repeat(32);
+    if (test.change === "duplicate-stdio") input.stdio.receipts[1] = structuredClone(input.stdio.receipts[0]);
+    if (test.change === "duplicate-gis") input.gis.receipts[1] = structuredClone(input.gis.receipts[0]);
+    if (test.change === "unknown-root") input.stdio.extra = true;
+    if (test.change === "unknown-row") input.gis.receipts[0].extra = true;
+    if (test.change === "foreign-package") input.stdio.package_id = "semio:foreign";
+    if (test.change === "crossed-gis-schema") input.gis.receipts[0].schema = "gis.terrain";
+    if (test.change === "foreign-version") input.gis.packageVersion = "99.0.0";
+    assert.equal(Boolean(schemas.stdio(input.stdio) && schemas.gis(input.gis)), test.schemaAccepted, test.change);
+    const testRoot = join(evidence, test.change);
+    for (const plugin of ["stdio", "gis"] as const) {
+      const path = join(testRoot, sourcePaths[plugin]);
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, JSON.stringify(input[plugin]));
+    }
+    if (test.change === "invalid-utf8") writeFileSync(join(testRoot, sourcePaths.gis), Buffer.from([0xff]));
+    if (test.change === "oversize") truncateSync(join(testRoot, sourcePaths.gis), fixture.maximumSourceBytes + 1);
+    let captured = false;
+    const check = (stage?: string) => {
+      if (test.change === "cancelled") throw new Error("codec capture cancelled");
+      if (test.change === "replaced-source" && stage === "project-codecs" && !captured) {
+        captured = true;
+        for (const plugin of ["stdio", "gis"] as const) writeFileSync(join(testRoot, sourcePaths[plugin]), "replaced source");
+      }
+    };
+    if (!test.accepted) { assert.throws(() => captureTrustedBootstrapCodecsV1(testRoot, check), /codec|build input|UTF-8|encoded data/); continue; }
+    const result = captureTrustedBootstrapCodecsV1(testRoot, check);
+    assert(Object.isFrozen(result) && Object.isFrozen(result.codecs));
+    for (const rows of Object.values(result.codecs)) { assert(Object.isFrozen(rows)); for (const row of rows) assert(Object.isFrozen(row)); }
+    const canonical = JSON.stringify(result);
+    const bytes = trustedBootstrapProfileEncoding(profile, result.codecs);
+    const digest = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), digest);
+    if (expected === undefined) { expected = canonical; generation = digest; }
+    assert.equal(canonical, expected, test.change);
+    assert.equal(digest, generation, test.change);
+    if (test.change === "replaced-source") assert(captured);
+  }
+  console.log(`trusted-codec-source: AJV=3 WebCrypto=1 cases=${fixture.cases.length} evidence=${evidence}`);
+}
+
+type TrustedBootstrapGenerationReceiptV1 = Readonly<{ component: { byteLength: number; sha256: string }; descriptor: { byteLength: number; sha256: string }; browserActor: TrustedBootstrapBrowserActorV1 }>;
+
+/** 🧱️ Revalidates every fixed generation input and its path identity immediately before publication. */
+function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, receipts: ReadonlyMap<string, TrustedBootstrapGenerationReceiptV1>, check: (phase?: string) => void): void {
+  try {
+    check();
+    if (receipts.size !== 2 || !receipts.has("gis") || !receipts.has("stdio") || !bundle.byteLength || bundle.byteLength > 4 * 1024 * 1024) throw new Error("generation input closure differs");
+    const directories = [
+      [root, ["packages", "trusted-catalog.json"]], [join(root, "packages"), ["gis", "stdio"]],
+      [join(root, "packages", "gis"), ["browser", "component.wasm", "descriptor.semio"]],
+      [join(root, "packages", "gis", "browser"), ["closed-actor.mjs"]],
+      [join(root, "packages", "stdio"), ["component.wasm", "descriptor.semio"]],
+    ] as const;
+    const identities = new Map<string, ReturnType<typeof lstatSync>>();
+    for (const [path, entries] of directories) {
+      check();
+      const info = lstatSync(path);
+      if (info.isSymbolicLink() || !info.isDirectory() || JSON.stringify(readdirSync(path).sort()) !== JSON.stringify([...entries].sort())) throw new Error("generation directory is not the exact regular closure");
+      identities.set(path, info);
+    }
+    const files = [{ path: join(root, "trusted-catalog.json"), byteLength: bundle.byteLength, sha256: createHash("sha256").update(bundle).digest("hex"), maximum: 4 * 1024 * 1024 }];
+    for (const plugin of ["gis", "stdio"]) {
+      const receipt = receipts.get(plugin)!;
+      files.push({ path: join(root, "packages", plugin, "component.wasm"), byteLength: receipt.component.byteLength, sha256: receipt.component.sha256, maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES });
+      files.push({ path: join(root, "packages", plugin, "descriptor.semio"), byteLength: receipt.descriptor.byteLength, sha256: receipt.descriptor.sha256, maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES });
+      const actor = trustedBootstrapBrowserActorV1(receipt.browserActor, { componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256 }, plugin === "gis" ? "wasm" : "react");
+      if (actor.kind === "closed-browser-actor") {
+        if (actor.path !== "packages/gis/browser/closed-actor.mjs") throw new Error("generation actor path differs from fixed GIS closure");
+        files.push({ path: join(root, "packages", "gis", "browser", "closed-actor.mjs"), byteLength: actor.byteLength, sha256: actor.sha256, maximum: 67_108_864 });
+      }
+    }
+    const admission = { remaining: files.reduce((sum, file) => sum + file.maximum, 0) };
+    for (const file of files) {
+      if (!Number.isSafeInteger(file.byteLength) || file.byteLength <= 0 || file.byteLength > file.maximum || !/^[0-9a-f]{64}$/u.test(file.sha256)) throw new Error("generation file receipt is not bounded");
+      identities.set(file.path, lstatSync(file.path));
+      const bytes = readStableBuildFile(file.path, file.maximum, admission, check);
+      try {
+        if (bytes.byteLength !== file.byteLength || createHash("sha256").update(bytes).digest("hex") !== file.sha256) throw new Error("generation bytes differ from their verified receipt");
+      } finally { bytes.fill(0); }
+    }
+    check("identity");
+    for (const [path, before] of identities) {
+      const after = lstatSync(path);
+      if (after.isSymbolicLink() || before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode || before.size !== after.size || before.mtimeMs !== after.mtimeMs || before.ctimeMs !== after.ctimeMs) throw new Error("generation path changed across the final fence");
+    }
+  } catch (error) { throw new Error(`trusted generation fence: ${(error as Error).message}`); }
+}
+
+/** 🧪️ Exercises the actual pre-publication file fence against independent digest oracles. */
+async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { symlinkSync, truncateSync, writeFileSync } = await import("node:fs");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧱️generation-stage");
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  assert(artifactRoot?.includes("🗑️generated"));
+  mkdirSync(artifactRoot, { recursive: true });
+  const evidence = mkdtempSync(join(artifactRoot, "generation-stage-"));
+  const component = Buffer.from(fixture.componentHex, "hex"), descriptor = Buffer.from(fixture.descriptorHex, "hex"), bundle = Buffer.from('{"neutral":true}\n');
+  const identity = async (bytes: Uint8Array) => ({ byteLength: bytes.byteLength, sha256: Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex") });
+  const receipts = new Map<string, TrustedBootstrapGenerationReceiptV1>(["gis", "stdio"].map(plugin => [plugin, { component: { byteLength: component.byteLength, sha256: "" }, descriptor: { byteLength: descriptor.byteLength, sha256: "" }, browserActor: { kind: "none" } }]));
+  const actorFixture = JSON.parse(readFileSync(join(root, "../🌐️browser-actor/🔣️.json"), "utf8"));
+  for (const [plugin] of receipts) {
+    const c = await identity(component), d = await identity(descriptor);
+    receipts.set(plugin, { component: c, descriptor: d, browserActor: plugin === "gis" ? { ...actorFixture.closed, path: "packages/gis/browser/closed-actor.mjs", sourceComponentSha256: c.sha256, sourceDescriptorByteSha256: d.sha256 } : { kind: "none" } });
+  }
+  for (const test of fixture.cases) {
+    const caseReceipts = structuredClone(receipts);
+    const stage = join(evidence, test.change);
+    for (const plugin of ["gis", "stdio"]) {
+      mkdirSync(join(stage, "packages", plugin), { recursive: true });
+      writeFileSync(join(stage, "packages", plugin, "component.wasm"), component);
+      writeFileSync(join(stage, "packages", plugin, "descriptor.semio"), descriptor);
+    }
+    writeFileSync(join(stage, "trusted-catalog.json"), bundle);
+    mkdirSync(join(stage, "packages/gis/browser"));
+    const actorPath = join(stage, "packages/gis/browser/closed-actor.mjs");
+    writeFileSync(actorPath, component);
+    const componentPath = join(stage, "packages/gis/component.wasm");
+    if (test.change === "component") writeFileSync(componentPath, "xbc");
+    if (test.change === "descriptor") writeFileSync(join(stage, "packages/stdio/descriptor.semio"), "xef");
+    if (test.change === "bundle") writeFileSync(join(stage, "trusted-catalog.json"), '{"neutral":false}');
+    if (test.change === "extra-file") writeFileSync(join(stage, "extra"), "extra");
+    if (test.change === "missing-file") rmSync(componentPath);
+    if (test.change === "symlink-file") { rmSync(componentPath); symlinkSync(join(stage, process.platform === "win32" ? "packages/stdio" : "packages/stdio/component.wasm"), componentPath, process.platform === "win32" ? "junction" : "file"); }
+    if (test.change === "symlink-directory") { renameSync(join(stage, "packages/gis"), join(evidence, "external-gis")); symlinkSync(join(evidence, "external-gis"), join(stage, "packages/gis"), "junction"); }
+    if (test.change === "oversize-component") truncateSync(componentPath, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES + 1);
+    if (test.change === "receipt-path") Object.assign(caseReceipts.get("gis")!.component, { path: "untrusted-receipt-cannot-select-path" });
+    if (test.change === "actor") writeFileSync(actorPath, "xbc");
+    if (test.change === "actor-source") Object.assign(caseReceipts.get("gis")!.browserActor, { sourceDescriptorByteSha256: "42".repeat(32) });
+    if (test.change === "actor-path") Object.assign(caseReceipts.get("gis")!.browserActor, { path: "packages/gis/component.wasm" });
+    if (test.change === "missing-actor") rmSync(actorPath);
+    if (test.change === "oversize-actor") truncateSync(actorPath, 67_108_865);
+    if (test.change === "actor-symlink") { rmSync(actorPath); symlinkSync(join(stage, process.platform === "win32" ? "packages/stdio" : "packages/stdio/component.wasm"), actorPath, process.platform === "win32" ? "junction" : "file"); }
+    let replaced = false, identityChecks = 0;
+    const check = (phase?: string) => {
+      if (identityChecks) throw new Error("generation checkpoint after the final identity fence began");
+      if (phase === "identity") identityChecks++;
+      if (test.change === "cancelled") throw new Error("generation stage cancelled");
+      if (test.change === "post-read-component" && phase === "identity" && !replaced) { writeFileSync(componentPath, "xbc"); replaced = true; }
+      if (test.change === "post-read-actor" && phase === "identity" && !replaced) { writeFileSync(actorPath, "xbc"); replaced = true; }
+    };
+    if (test.accepted) { trustedBootstrapVerifyGeneration(stage, bundle, caseReceipts, check); assert.equal(identityChecks, 1); }
+    else assert.throws(() => trustedBootstrapVerifyGeneration(stage, bundle, caseReceipts, check), /generation|build input/);
+  }
+  console.log(`trusted-generation-stage: AJV=1 WebCrypto=1 cases=${fixture.cases.length} evidence=${evidence}`);
+}
+
+/** ⏳️ Owns interrupt and progress observation for a bounded catalog build. */
+function trustedBootstrapBuildControl(deadlineMs: number): { control: FreshBuildControlV1; close(): void } {
+  let interrupted = false;
+  const interrupt = (): void => { interrupted = true; };
+  process.on("SIGINT", interrupt);
+  process.on("SIGTERM", interrupt);
+  const started = Date.now();
   return {
-    stdio: stdio.receipts.map((row: any) => ({ artifactKind: row.artifact_kind, artifactSchema: row.document_schema, packSchemaHash: row.pack_schema_sha256 })),
-    gis: gis.receipts.map((row: any) => ({ artifactKind: row.kind, artifactSchema: row.schema, packSchemaHash: row.protocolSha256 })),
+    control: {
+      cancelled: () => interrupted,
+      remainingMs: () => Math.max(0, deadlineMs - (Date.now() - started)),
+      checkpoint(stage, completed, total) { console.log(`trusted-stdio-gis-bootstrap ${stage}: ${completed}/${total}`); },
+    },
+    close() { process.off("SIGINT", interrupt); process.off("SIGTERM", interrupt); },
   };
 }
 
@@ -4642,35 +5093,50 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
   const stageRoot = join(trustedRoot, `staging-${nonce}`);
   mkdirSync(buildRoot, { mode: 0o700 });
   mkdirSync(stageRoot, { mode: 0o700 });
-  let interrupted = false;
-  const interrupt = (): void => { interrupted = true; };
-  process.on("SIGINT", interrupt);
-  process.on("SIGTERM", interrupt);
-  const started = Date.now();
-  const deadlineMs = 3_600_000;
-  const control: FreshBuildControlV1 = {
-    cancelled: () => interrupted,
-    remainingMs: () => Math.max(0, deadlineMs - (Date.now() - started)),
-    checkpoint(stage, completed, total) { console.log(`trusted-stdio-gis-bootstrap ${stage}: ${completed}/${total}`); },
-  };
+  const buildControl = trustedBootstrapBuildControl(3_600_000);
+  const { control } = buildControl;
+  const checkBuild = () => { if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog build cancelled"); };
   try {
+    const { codecs, gisVersion } = captureTrustedBootstrapCodecsV1(repoRoot, () => {
+      if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted codec capture cancelled");
+      control.checkpoint("capture-codecs", 0, 8);
+    });
     const requests = [
       { pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", componentProfile: "wasm-release" as const, rootCdylib: true },
       { pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", componentProfile: "wasm-release" as const, rootCdylib: true },
     ];
     const receipts = new Map<string, FreshComponentReceiptV1>();
+    const browserActors = new Map<string, TrustedBootstrapBrowserActorV1>();
     for (const request of requests) {
       const target = join(buildRoot, `${request.pluginId}-target`);
       const stage = join(stageRoot, "packages", request.pluginId);
       mkdirSync(target, { recursive: true, mode: 0o700 });
       mkdirSync(stage, { recursive: true, mode: 0o700 });
-      const receipt = await produceFreshComponentV1(repoRoot, request, target, stage, control);
-      if (receipt.pluginId !== request.pluginId || receipt.packageId !== request.componentPackageId) throw new Error(`fresh ${request.pluginId} receipt identity changed after production`);
-      receipts.set(request.pluginId, receipt);
+      let derivedActor: ClosedBrowserActorArtifactV1 | undefined;
+      try {
+        const { receipt, derived: componentSha256 } = await produceFreshComponentV1(repoRoot, request, target, stage, control, lease => lease.consume(async component => {
+          if (request.pluginId === "gis") derivedActor = await buildClosedBrowserActorArtifactV1(component, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
+          return createHash("sha256").update(component).digest("hex");
+        }));
+        if (componentSha256 !== receipt.component.sha256 || (derivedActor && derivedActor.componentSha256 !== componentSha256)) throw new Error(`fresh ${request.pluginId} derivation differs from its verified component`);
+        if (receipt.pluginId !== request.pluginId || receipt.packageId !== request.componentPackageId) throw new Error(`fresh ${request.pluginId} receipt identity changed after production`);
+        const actor = trustedBootstrapBrowserActorV1(derivedActor ? {
+          kind: "closed-browser-actor", schema: derivedActor.schema, codegenPolicy: derivedActor.codegenPolicy, sha256: derivedActor.sha256,
+          sourceComponentSha256: componentSha256, sourceDescriptorByteSha256: receipt.descriptor.sha256, policySha256: derivedActor.policySha256,
+          importInterfaces: derivedActor.importInterfaces, byteLength: derivedActor.byteLength, path: "packages/gis/browser/closed-actor.mjs",
+        } : { kind: "none" }, { componentSha256, descriptorByteSha256: receipt.descriptor.sha256 }, request.pluginId === "gis" ? "wasm" : "react");
+        if (derivedActor) {
+          mkdirSync(join(stage, "browser"), { mode: 0o700 });
+          trustedBootstrapWriteNew(join(stage, "browser", "closed-actor.mjs"), derivedActor.bytes, checkBuild);
+          trustedBootstrapFsyncDirectory(join(stage, "browser"));
+        }
+        browserActors.set(request.pluginId, actor);
+        receipts.set(request.pluginId, receipt);
+      } finally { derivedActor?.bytes.fill(0); }
     }
     const stdio = receipts.get("stdio")!;
     const gis = receipts.get("gis")!;
-    const codecs = trustedBootstrapSourceCodecs(repoRoot);
+    if (gis.version !== gisVersion) throw new Error("fresh GIS component version differs from captured native codecs");
     if (codecs.stdio.length !== 26 || codecs.gis.length !== 2) throw new Error("trusted stdio+GIS codec closure is not exact 26+2");
     const map = codecs.gis.find((codec) => codec.artifactKind === "s.gis.gismap" && codec.artifactSchema === "gis.map");
     const terrain = codecs.gis.find((codec) => codec.artifactKind === "s.gis.gisterrain" && codec.artifactSchema === "gis.terrain");
@@ -4692,8 +5158,8 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
       grant: { read: true, write: true, observe: true },
     };
     const packageSummary = [
-      { pluginId: "gis", packageId: "semio:gis", version: gis.version, role: "plugin", componentSha256: gis.component.sha256, componentBlake3: gis.component.blake3, descriptorSha256: gis.descriptor.sha256, codecCount: 2, targetCount: 1 },
-      { pluginId: "stdio", packageId: "semio:stdio", version: stdio.version, role: "plugin", componentSha256: stdio.component.sha256, componentBlake3: stdio.component.blake3, descriptorSha256: stdio.descriptor.sha256, codecCount: 26, targetCount: 0 },
+      { pluginId: "gis", packageId: "semio:gis", version: gis.version, role: "plugin", componentSha256: gis.component.sha256, componentBlake3: gis.component.blake3, descriptorSha256: gis.descriptor.sha256, browserActor: browserActors.get("gis")!, codecCount: 2, targetCount: 1 },
+      { pluginId: "stdio", packageId: "semio:stdio", version: stdio.version, role: "plugin", componentSha256: stdio.component.sha256, componentBlake3: stdio.component.blake3, descriptorSha256: stdio.descriptor.sha256, browserActor: browserActors.get("stdio")!, codecCount: 26, targetCount: 0 },
     ];
     const profileSummary = { id: "local-stdio-gis-open-v1", selectedClosure, packages: packageSummary, openTarget: { pluginId: "gis", ...target } };
     const selectedClosureSha256 = createHash("sha256").update(trustedBootstrapClosureEncoding(profileSummary)).digest("hex");
@@ -4706,6 +5172,7 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
       dependencies: [],
       component: { path: `packages/${plugin}/component.wasm`, byteLength: receipt.component.byteLength, sha256: receipt.component.sha256, blake3: receipt.component.blake3 },
       descriptor: { path: `packages/${plugin}/descriptor.semio`, byteLength: receipt.descriptor.byteLength, sha256: receipt.descriptor.sha256 },
+      browserActor: browserActors.get(plugin)!,
       nativeCodecs: codecs[plugin],
       openTargets: plugin === "gis" ? [target] : [],
     });
@@ -4717,25 +5184,25 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
     const bundleBytes = Buffer.from(`${JSON.stringify(bundle)}\n`, "utf8");
     if (bundleBytes.byteLength > 4 * 1024 * 1024) throw new Error("trusted stdio+GIS bundle exceeds 4 MiB");
     const bundlePath = join(stageRoot, "trusted-catalog.json");
-    trustedBootstrapWriteNew(bundlePath, bundleBytes);
+    trustedBootstrapWriteNew(bundlePath, bundleBytes, checkBuild);
     trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "stdio"));
     trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "gis"));
     trustedBootstrapFsyncDirectory(join(stageRoot, "packages"));
     trustedBootstrapFsyncDirectory(stageRoot);
     if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted stdio+GIS bootstrap cancelled before publication");
     const generations = join(trustedRoot, "generations");
-    mkdirSync(generations, { mode: 0o700 });
+    mkdirSync(generations, { recursive: true, mode: 0o700 });
+    if (lstatSync(generations).isSymbolicLink() || !lstatSync(generations).isDirectory()) throw new Error("trusted generations root must be a regular directory");
     const generationRoot = join(generations, generationId);
+    const checkGeneration = () => {
+      if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted stdio+GIS generation cancelled before publication");
+      control.checkpoint("verify-generation", 8, 8);
+    };
     if (existsSync(generationRoot)) {
-      const existingBundle = join(generationRoot, "trusted-catalog.json");
-      if (!lstatSync(generationRoot).isDirectory() || !existsSync(existingBundle) || !readFileSync(existingBundle).equals(bundleBytes)) throw new Error("existing trusted generation differs from the exact immutable bundle");
-      for (const [plugin, receipt] of [["gis", gis], ["stdio", stdio]] as const) {
-        const component = readFileSync(join(generationRoot, "packages", plugin, "component.wasm"));
-        const descriptor = readFileSync(join(generationRoot, "packages", plugin, "descriptor.semio"));
-        if (component.byteLength !== receipt.component.byteLength || descriptor.byteLength !== receipt.descriptor.byteLength || createHash("sha256").update(component).digest("hex") !== receipt.component.sha256 || createHash("sha256").update(descriptor).digest("hex") !== receipt.descriptor.sha256) throw new Error("existing trusted generation artifact differs from its immutable receipt");
-      }
+      trustedBootstrapVerifyGeneration(generationRoot, bundleBytes, new Map([...receipts].map(([plugin, receipt]) => [plugin, { component: receipt.component, descriptor: receipt.descriptor, browserActor: browserActors.get(plugin)! }])), checkGeneration);
       rmSync(stageRoot, { recursive: true, force: true });
     } else {
+      trustedBootstrapVerifyGeneration(stageRoot, bundleBytes, new Map([...receipts].map(([plugin, receipt]) => [plugin, { component: receipt.component, descriptor: receipt.descriptor, browserActor: browserActors.get(plugin)! }])), checkGeneration);
       renameSync(stageRoot, generationRoot);
       trustedBootstrapFsyncDirectory(generations);
     }
@@ -4745,33 +5212,88 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
     rmSync(stageRoot, { recursive: true, force: true });
     throw error;
   } finally {
-    process.off("SIGINT", interrupt);
-    process.off("SIGTERM", interrupt);
+    buildControl.close();
     rmSync(buildRoot, { recursive: true, force: true });
   }
 }
 
-function trustedBootstrapReadRegular(path: string, maximum: number, label: string): Buffer {
-  const info = lstatSync(path);
-  if (info.isSymbolicLink() || !info.isFile() || info.size === 0 || info.size > maximum) throw new Error(`${label} is not a bounded regular file`);
-  const bytes = readFileSync(path);
-  if (bytes.byteLength !== info.size) throw new Error(`${label} changed during its bounded read`);
+function trustedBootstrapReadRegular(path: string, maximum: number, label: string, check: () => void): Uint8Array {
+  const bytes = readStableBuildFile(path, maximum, { remaining: maximum }, check);
+  if (bytes.byteLength === 0) throw new Error(`${label} is empty`);
   return bytes;
+}
+
+/** 🧿️ Rebinds captured rotation bytes to the already retained current receipt before decoding. */
+function trustedBootstrapReadCurrentBundle(current: TrustedBootstrapMaterializationV1, check: () => void): Record<string, any> {
+  const bytes = trustedBootstrapReadRegular(current.bundlePath, 4 * 1024 * 1024, "trusted rotation source bundle", check);
+  try {
+    if (createHash("sha256").update(bytes).digest("hex") !== current.bundleSha256) throw new Error("trusted rotation source bundle differs from its retained digest");
+    const bundle = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    if (bundle.schemaVersion !== 2 || bundle.profiles?.length !== 1 || bundle.packages?.length !== 2 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId) throw new Error("trusted rotation source differs from the exact retained profile generation");
+    return bundle;
+  } finally { bytes.fill(0); }
+}
+
+/** 🧪️ Independent WebCrypto receipt oracle exercises the production rotation capture boundary. */
+async function proveTrustedRotationSourceFixture(fixture: Record<string, any>): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { writeFileSync } = await import("node:fs");
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  assert(artifactRoot?.includes("🗑️generated"));
+  const evidence = mkdtempSync(join(artifactRoot, "rotation-source-"));
+  for (const law of fixture.rotation.sourceCases) {
+    const path = join(evidence, `${law.change}.json`);
+    const bundle = { schemaVersion: 2, profiles: [{ id: fixture.profile.id, generationId: fixture.profile.generationId }], packages: [{}, {}] };
+    const bytes = Buffer.from(JSON.stringify(bundle));
+    const sha256 = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+    writeFileSync(path, bytes, { flag: "wx" });
+    const receipt = { profileId: fixture.profile.id, generationId: fixture.profile.generationId, bundleSha256: sha256, bundlePath: path };
+    if (law.change === "wrong-generation") receipt.generationId = "42".repeat(32);
+    if (law.change === "wrong-profile") receipt.profileId = "foreign";
+    if (law.change === "replaced-bundle") writeFileSync(path, JSON.stringify({ ...bundle, packages: [{ changed: true }, {}] }));
+    let checks = 0, accepted = false;
+    try {
+      trustedBootstrapReadCurrentBundle(receipt, () => {
+        checks++;
+        if (law.change === "cancel-before-read") throw new Error("cancelled");
+        if (law.change === "leaf-replaced-during-read" && checks === 2) { renameSync(path, `${path}.old`); writeFileSync(path, bytes, { flag: "wx" }); }
+      });
+      accepted = true;
+    } catch {}
+    assert.equal(accepted, law.accepted, law.change);
+  }
+  for (const law of fixture.rotation.writeCases) {
+    const path = join(evidence, `${law.id}.mjs`);
+    const bytes = Buffer.alloc(law.byteLength, 42), previous = Buffer.from("previous owner");
+    if (law.existing) writeFileSync(path, previous, { flag: "wx" });
+    let checks = 0, accepted = false;
+    try { trustedBootstrapWriteNew(path, bytes, () => { checks++; if (checks === law.cancelCheck) throw new Error("cancelled"); }); accepted = true; } catch {}
+    assert.equal(accepted, law.accepted, law.id);
+    assert.equal(existsSync(path), law.retained !== "absent", `${law.id} retained owner`);
+    if (law.retained !== "absent") {
+      const retained = readFileSync(path), expected = law.retained === "old" ? previous : bytes;
+      assert.equal(createHash("sha256").update(retained).digest("hex"), Buffer.from(await crypto.subtle.digest("SHA-256", expected)).toString("hex"), `${law.id} exact bytes`);
+    }
+  }
+  console.log(`trusted-rotation-source: WebCrypto=1 cases=${fixture.rotation.sourceCases.length} writes=${fixture.rotation.writeCases.length} evidence=${evidence}; capture/write ownership only, no generation publication`);
 }
 
 /** 🔄️ Reissues the zero-target Stdio descriptor as a distinct immutable, fully verified generation. */
 async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: string, current: TrustedBootstrapMaterializationV1): Promise<TrustedBootstrapMaterializationV1> {
   const retained = trustedBootstrapCurrent(dataRoot);
   if (!retained || JSON.stringify(retained) !== JSON.stringify(current)) throw new Error("trusted stdio+GIS rotation did not start from the retained current generation");
-  const sourceBundleBytes = trustedBootstrapReadRegular(current.bundlePath, 4 * 1024 * 1024, "trusted rotation source bundle");
-  const bundle = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(sourceBundleBytes)) as Record<string, any>;
-  if (bundle.schemaVersion !== 2 || bundle.profiles?.length !== 1 || bundle.packages?.length !== 2) throw new Error("trusted rotation source is not the exact closed profile");
-  const profile = bundle.profiles[0]!;
   const trustedRoot = join(dataRoot, "trusted-catalog");
   const generationsRoot = join(trustedRoot, "generations");
   const stageRoot = join(trustedRoot, `rotation-${randomBytes(16).toString("hex")}`);
-  mkdirSync(stageRoot, { mode: 0o700 });
+  const buildControl = trustedBootstrapBuildControl(60_000);
+  const checkGeneration = () => {
+    if (buildControl.control.cancelled() || buildControl.control.remainingMs() <= 0) throw new Error("trusted rotation generation cancelled before publication");
+    buildControl.control.checkpoint("verify-generation", 8, 8);
+  };
   try {
+    const bundle = trustedBootstrapReadCurrentBundle(current, checkGeneration);
+    const profile = bundle.profiles[0]!;
+    mkdirSync(stageRoot, { mode: 0o700 });
     const codecs = {} as Record<"gis" | "stdio", TrustedBootstrapCodec[]>;
     for (const plugin of ["gis", "stdio"] as const) {
       const record = bundle.packages.find((candidate: any) => candidate.pluginId === plugin);
@@ -4780,16 +5302,30 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
       const sourceRoot = join(generationsRoot, current.generationId, "packages", plugin);
       const destinationRoot = join(stageRoot, "packages", plugin);
       mkdirSync(destinationRoot, { recursive: true, mode: 0o700 });
-      const component = trustedBootstrapReadRegular(join(sourceRoot, "component.wasm"), 64 * 1024 * 1024, `${plugin} rotation component`);
-      let descriptor = trustedBootstrapReadRegular(join(sourceRoot, "descriptor.semio"), 4 * 1024 * 1024, `${plugin} rotation descriptor`);
+      const component = trustedBootstrapReadRegular(join(sourceRoot, "component.wasm"), 64 * 1024 * 1024, `${plugin} rotation component`, checkGeneration);
+      let descriptor = trustedBootstrapReadRegular(join(sourceRoot, "descriptor.semio"), 4 * 1024 * 1024, `${plugin} rotation descriptor`, checkGeneration);
+      let actorBytes: Uint8Array | undefined;
+      try {
       if (component.byteLength !== record.component.byteLength || createHash("sha256").update(component).digest("hex") !== record.component.sha256 || descriptor.byteLength !== record.descriptor.byteLength || createHash("sha256").update(descriptor).digest("hex") !== record.descriptor.sha256) throw new Error(`trusted rotation ${plugin} source differs from its retained receipt`);
+      const actor = trustedBootstrapBrowserActorV1(record.browserActor, { componentSha256: record.component.sha256, descriptorByteSha256: record.descriptor.sha256 }, plugin === "gis" ? "wasm" : "react");
+      record.browserActor = actor;
+      if (actor.kind === "closed-browser-actor") {
+        if (actor.path !== "packages/gis/browser/closed-actor.mjs") throw new Error("rotation actor path differs from fixed GIS closure");
+        actorBytes = readStableBuildFile(join(sourceRoot, "browser", "closed-actor.mjs"), actor.byteLength, { remaining: actor.byteLength }, checkGeneration);
+        if (actorBytes.byteLength !== actor.byteLength || createHash("sha256").update(actorBytes).digest("hex") !== actor.sha256) throw new Error("rotation actor differs from its verified receipt");
+        mkdirSync(join(destinationRoot, "browser"), { mode: 0o700 });
+        trustedBootstrapWriteNew(join(destinationRoot, "browser", "closed-actor.mjs"), actorBytes, checkGeneration);
+        trustedBootstrapFsyncDirectory(join(destinationRoot, "browser"));
+      }
       if (plugin === "stdio") {
         const value = decodePackValue(descriptor) as unknown as Record<string, any>;
         if (value.packageId !== record.packageId || value.manifest?.pluginId !== plugin || value.manifest?.version !== record.version || value.role !== record.role || value.execution !== "isolated" || typeof value.hashes?.coreWasmSha256 !== "string") throw new Error("trusted rotation Stdio descriptor identity changed");
         value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`;
         value.hashes.descriptorSha256 = "";
         value.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(value)).digest("hex");
-        descriptor = Buffer.from(encodePackValue(value));
+        const updatedDescriptor = Buffer.from(encodePackValue(value));
+        descriptor.fill(0);
+        descriptor = updatedDescriptor;
         const json = Buffer.from(JSON.stringify(packValueToExactJson(value as PackValue)), "utf8");
         try {
           verifyFreshCatalogPackageV1(json, descriptor, { pluginId: plugin, packageId: record.packageId, version: record.version, role: "plugin", execution: "isolated", wasmSha256: record.component.sha256, coreWasmSha256: value.hashes.coreWasmSha256 });
@@ -4797,13 +5333,15 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
         record.descriptor.byteLength = descriptor.byteLength;
         record.descriptor.sha256 = createHash("sha256").update(descriptor).digest("hex");
       }
-      trustedBootstrapWriteNew(join(destinationRoot, "component.wasm"), component);
-      trustedBootstrapWriteNew(join(destinationRoot, "descriptor.semio"), descriptor);
+      trustedBootstrapWriteNew(join(destinationRoot, "component.wasm"), component, checkGeneration);
+      trustedBootstrapWriteNew(join(destinationRoot, "descriptor.semio"), descriptor, checkGeneration);
       trustedBootstrapFsyncDirectory(destinationRoot);
+      } finally { component.fill(0); descriptor.fill(0); actorBytes?.fill(0); }
     }
     const packageSummary = bundle.packages.map((record: any) => ({
       pluginId: record.pluginId, packageId: record.packageId, version: record.version, role: record.role,
       componentSha256: record.component.sha256, componentBlake3: record.component.blake3, descriptorSha256: record.descriptor.sha256,
+      browserActor: record.browserActor,
       codecCount: record.nativeCodecs.length, targetCount: record.openTargets.length,
     }));
     const profileSummary = { id: profile.id, selectedClosure: profile.selectedClosure, packages: packageSummary, openTarget: { pluginId: profile.openTarget.package.pluginId, ...profile.openTarget.target } };
@@ -4812,17 +5350,20 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
     profile.generationId = generationId;
     const bundleBytes = Buffer.from(`${JSON.stringify(bundle)}\n`, "utf8");
     if (bundleBytes.byteLength > 4 * 1024 * 1024) throw new Error("trusted rotation bundle exceeds 4 MiB");
-    trustedBootstrapWriteNew(join(stageRoot, "trusted-catalog.json"), bundleBytes);
+    trustedBootstrapWriteNew(join(stageRoot, "trusted-catalog.json"), bundleBytes, checkGeneration);
     trustedBootstrapFsyncDirectory(join(stageRoot, "packages"));
     trustedBootstrapFsyncDirectory(stageRoot);
     const generationRoot = join(generationsRoot, generationId);
     if (existsSync(generationRoot)) throw new Error("trusted rotation generation already exists");
+    trustedBootstrapVerifyGeneration(stageRoot, bundleBytes, new Map(bundle.packages.map((record: any) => [record.pluginId, { component: record.component, descriptor: record.descriptor, browserActor: record.browserActor }])), checkGeneration);
     renameSync(stageRoot, generationRoot);
     trustedBootstrapFsyncDirectory(generationsRoot);
     return { profileId: profile.id, generationId, bundleSha256: createHash("sha256").update(bundleBytes).digest("hex"), bundlePath: join(generationRoot, "trusted-catalog.json") };
   } catch (error) {
     rmSync(stageRoot, { recursive: true, force: true });
     throw error;
+  } finally {
+    buildControl.close();
   }
 }
 
@@ -4830,19 +5371,14 @@ function trustedBootstrapCurrent(dataRoot: string): TrustedBootstrapMaterializat
   const trustedRoot = join(dataRoot, "trusted-catalog");
   const pointerPath = join(trustedRoot, "current.json");
   if (!existsSync(pointerPath)) return undefined;
-  const info = lstatSync(pointerPath);
-  if (info.isSymbolicLink() || !info.isFile() || info.size === 0 || info.size > 64 * 1024) throw new Error("trusted catalog current pointer is not a bounded regular file");
-  const bytes = readFileSync(pointerPath);
+  const bytes = Buffer.from(trustedBootstrapReadRegular(pointerPath, 64 * 1024, "trusted catalog current pointer", () => {}));
   let pointer: any;
   try { pointer = JSON.parse(bytes.toString("utf8")); } catch { throw new Error("trusted catalog current pointer does not decode"); }
   if (JSON.stringify(Object.keys(pointer).sort()) !== JSON.stringify(["bundleSha256", "generationId", "profileId"]) || pointer.profileId !== "local-stdio-gis-open-v1" || !/^[0-9a-f]{64}$/u.test(pointer.generationId) || !/^[0-9a-f]{64}$/u.test(pointer.bundleSha256) || !bytes.equals(Buffer.from(`${JSON.stringify(pointer)}\n`, "utf8"))) throw new Error("trusted catalog current pointer is not exact canonical metadata");
   const bundlePath = join(trustedRoot, "generations", pointer.generationId, "trusted-catalog.json");
-  const bundleInfo = lstatSync(bundlePath);
-  if (bundleInfo.isSymbolicLink() || !bundleInfo.isFile() || bundleInfo.size === 0 || bundleInfo.size > 4 * 1024 * 1024) throw new Error("trusted catalog current bundle is not a bounded regular file");
-  const bundleBytes = readFileSync(bundlePath);
-  const bundle = JSON.parse(bundleBytes.toString("utf8"));
-  if (createHash("sha256").update(bundleBytes).digest("hex") !== pointer.bundleSha256 || bundle.schemaVersion !== 2 || bundle.profiles?.length !== 1 || bundle.profiles[0]?.id !== pointer.profileId || bundle.profiles[0]?.generationId !== pointer.generationId) throw new Error("trusted catalog current pointer differs from its immutable bundle");
-  return { profileId: pointer.profileId, generationId: pointer.generationId, bundleSha256: pointer.bundleSha256, bundlePath };
+  const receipt = Object.freeze({ profileId: pointer.profileId, generationId: pointer.generationId, bundleSha256: pointer.bundleSha256, bundlePath });
+  trustedBootstrapReadCurrentBundle(receipt, () => {});
+  return receipt;
 }
 
 function publishTrustedBootstrapCurrent(dataRoot: string, receipt: TrustedBootstrapMaterializationV1): void {
@@ -4850,7 +5386,7 @@ function publishTrustedBootstrapCurrent(dataRoot: string, receipt: TrustedBootst
   const trustedRoot = join(dataRoot, "trusted-catalog");
   const temporary = join(trustedRoot, `.current-${randomBytes(16).toString("hex")}.json`);
   try {
-    trustedBootstrapWriteNew(temporary, pointer);
+    trustedBootstrapWriteNew(temporary, pointer, () => {});
     renameSync(temporary, join(trustedRoot, "current.json"));
     trustedBootstrapFsyncDirectory(trustedRoot);
   } finally { rmSync(temporary, { force: true }); }
@@ -5392,10 +5928,10 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--source" && segments[0] !== "--native" && segments[0] !== "--process")) throw new Error("usage: trusted-stdio-gis-bundle-check [--source|--native|--process]");
     await proveTrustedStdioGisBootstrapFixture(this.repoRoot);
     const describeSource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts"), "utf8");
-    const producerStart = describeSource.indexOf("function freshCopy(");
+    const producerStart = describeSource.indexOf("function freshStage(");
     const producerEnd = describeSource.indexOf("\n/** @emoji 🛂️ Shared implementation", producerStart);
     const producer = describeSource.slice(producerStart, producerEnd);
-    if (producerStart < 0 || producerEnd < 0 || !producer.includes("CARGO_INCREMENTAL: \"0\"") || !producer.includes("RUSTC_WRAPPER: \"\"") || !producer.includes("pluginWasmArtifactPath(") || !producer.includes("verifyFreshCatalogPackageV1(") || !producer.includes("freshCopy(") || !producer.includes("blake3Hex") || !producer.includes("if (!complete) rmSync(destination") || producer.indexOf("closeSync(output)") > producer.indexOf("if (!complete) rmSync(destination") || producer.includes("atomicDescriptorPair") || producer.includes("plugin-registry:generate") || producer.includes("ownerRoot")) throw new Error("fresh component producer is not isolated, descriptor-verified, bounded, close-before-cleanup, or side-effect free");
+    if (producerStart < 0 || producerEnd < 0 || !producer.includes("CARGO_INCREMENTAL: \"0\"") || !producer.includes("RUSTC_WRAPPER: \"\"") || !producer.includes("pluginWasmArtifactPath(") || !producer.includes("verifyFreshCatalogPackageV1(") || !producer.includes("readStableBuildFile(cargoComponent") || !producer.includes("freshStage(snapshot.descriptorBytes") || !producer.includes("snapshot?.descriptorBytes.fill(0)") || !producer.includes("blake3Hex(componentBytes)") || !producer.includes("if (!complete) rmSync(destination") || producer.indexOf("closeSync(output)") > producer.indexOf("if (!complete) rmSync(destination") || producer.includes("freshCopy(") || producer.includes("atomicDescriptorPair") || producer.includes("plugin-registry:generate") || producer.includes("ownerRoot")) throw new Error("fresh component producer is not isolated, descriptor-verified, bounded, close-before-cleanup, or side-effect free");
     const catalogSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
     const providerSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
     const runtimeSource = readFileSync(resolve(this.repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8").split("\nmod tests {")[0]!;
@@ -5423,6 +5959,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     const ordered = (source: string, earlier: string, later: string): boolean => source.indexOf(earlier) >= 0 && source.indexOf(earlier) < source.indexOf(later);
     const missingFence = [
       ["materializer publication", !materializer.includes("publishTrustedBootstrapCurrent")],
+      ["codec capture before component production", ordered(materializer, "captureTrustedBootstrapCodecsV1(", "await produceFreshComponentV1(") && !materializer.includes("trustedBootstrapSourceCodecs(")],
       ["independent versions", !materializer.includes("stdio.version !== gis.version")],
       ["development publication", !dev.includes("publishTrustedBootstrapCurrent")],
       ["writer cleanup", ordered(writer, "closeSync(output)", "if (!complete) rmSync(path")],
@@ -8374,6 +8911,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("canonical-pair-check", CanonicalPairCheckScript)
   .register("native-openable-catalog-provider-check", NativeOpenableCatalogProviderCheckScript)
   .register("native-catalog-selection-check", NativeCatalogSelectionCheckScript)
+  .register("document-browser-actor-identity-check", DocumentBrowserActorIdentityCheckScript)
   .register("open-plan-check", OpenPlanCheckScript)
   .register("open-plan-server-check", OpenPlanServerCheckScript)
   .register("browser-document-open-check", BrowserDocumentOpenCheckScript)

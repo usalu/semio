@@ -1,3 +1,13 @@
-; abnf stdio.json snapshot
-document = payload
-payload = *OCTET
+; abnf remodeling.remodeling.snapshot — the .spk document container (post SEMIO-envelope unwrap)
+document      = magic header 1*segment footer
+magic         = %x89 %x53 %x50 %x4B %x0D %x0A %x1A %x0A
+header        = 24OCTET                    ; version-major/minor u16, required/optional flags u32, crc32 u32, 8 reserved
+segment       = kind flags stored-len [raw-len] payload crc32
+kind          = %x00 / %x01 / %x02 / %x03 / %x04 / %x05 / %x06 / %x07 / %x08 / %x7F
+flags         = OCTET                      ; bit0 compressed, bits1-3 codec id
+stored-len    = varint
+raw-len       = varint                     ; present only when flags bit0 is set
+payload       = *OCTET                     ; stored-len octets of encode_record_fields output
+crc32         = 4OCTET
+footer        = %x53.50.4B.46.4F.4F.54.31 76OCTET
+varint        = *(%x80-FF) %x00-7F

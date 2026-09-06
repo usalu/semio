@@ -115,3 +115,48 @@ This is a coherent **retained caller** contract, not a generic awaitable primiti
 2. Add shutdown-during-running-`More`: close the pool while the callback is held, release it, then assert it cannot re-arm and removal with the original ticket is terminal. This exercises the repaired closed-state edge rather than only install-after-shutdown.
 3. The cooperative law has no queued Io job and the native law has no job/hook competition. Add two rotating `More` Io hooks plus an actual Io `Job`, and assert alternation/rotation under the same DRR permit accounting. This is the remaining evidence for the stated job/hook fairness, not just hook progress.
 4. The non-native script still checks only the maintenance module's existence (`async/📦️packages/🦀️rust/📜️script.ts:31-33`). Add marker assertions for closed-state checks, pool identity/generation, `PoolWork`, both native/wasm hook methods, and the exact law selectors; otherwise a future source regression can make the lightweight gate misleading.
+
+## Re-review: Callback-Owned `Retire` (2026-09-06)
+
+### What is now sound
+
+The callback-only retirement repair is correctly placed in the registry rather than recursively invoking `remove` under a running callback:
+
+- `WorkerMaintenanceStep::Retire` is a distinct result at [maintenance lines 17-24](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🦀️.rs:17).
+- `PoolWork::run` invokes user callback code outside the registry mutex and hands its disposition to `finish` at [lines 84-95](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🦀️.rs:84).
+- `finish(Retire)` deletes only the exact ticket's slot after that invocation returns at [lines 164-177](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🦀️.rs:164). This deliberately discards a concurrent `requested` bit, so a request issued while the callback runs cannot strand the former generation.
+- The direct registry law requests the selected ticket while it is running, finishes `Retire`, then requires `Stale` and a new generation at [lines 271-284](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🦀️.rs:271). The source-registered native 64-cycle capacity law is at [async lines 2152-2177](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🦀️.rs:2152).
+- Artifact authority uses `Retire` only in its committed maintenance callback after it has released the strong terminal job, the handoff ticket, and the fixed cursor/pool-use at [artifact lines 4065-4089](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs:4065). Its reservation `Drop` is the only external `remove`, and that happens before `commit`, when the callback cannot yet run ([lines 4114-4128](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs:4114)). Thus the original same-callback self-remove leak is repaired for the mounted authority owner.
+
+### P0: panic between taking the cursor and restoring it loses the retained owner
+
+The new terminal path has a separate owner-loss edge. `artifact_runner_retirement_step` takes the only `ArtifactRunnerRetirementCursor` from its fixed global row at [artifact lines 4072-4074](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs:4072), then invokes its close callback at [line 4075](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs:4075) without local unwind containment. `PoolWork::run` catches that panic outside the callback and records only `Fault` ([maintenance line 90](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🦀️.rs:90). During stack unwinding, however, `cursor` is dropped:
+
+1. the fixed global row remains `None`;
+2. its `_pool_use` and strong runner/close owner are dropped;
+3. `ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index]` is not cleared because the terminal branch was skipped;
+4. the maintenance ticket becomes idle `Fault`, so it will not automatically call the now-empty row again.
+
+That violates the retained-owner/fail-stop boundary: a callback panic can silently lose the only cleanup authority while permanently consuming the global generation slot.
+
+The minimal correction is local to `artifact_runner_retirement_step`: wrap only `(owner.close)()` in `catch_unwind(AssertUnwindSafe(..))`; on `Err`, write the unchanged exact `cursor` back to the same `ARTIFACT_RUNNER_RETIREMENTS[index]` row before returning `WorkerMaintenanceStep::Fault`. Do not clear the generation, ticket, terminal job, or pool use on this branch, and do not turn it into `More` (that would spin a repeated panic). A later explicit recovery request can retry the retained cursor; absence of such recovery remains a visible fail-closed fault, not an owner loss.
+
+Add an injected-close native law with this order: reserve/commit one cursor; cause its first `close` call to panic; wait for the callback turn; assert same fixed generation, cursor, strong pool use, and exact ticket remain; request a second turn after changing the injected close to terminal; require cursor/generation/ticket to disappear exactly once and `WorkerPool::shutdown()` to become terminal. The existing 65-drop capacity law does not cover this unwinding path.
+
+### P1: public `Retire` versus external `remove(false)` needs one stated terminal rule
+
+For the current ArtifactAuthority this race is excluded by the pre-commit-only external remove described above. For a future public callback, an external owner could call `remove(ticket)` while the callback is running (receiving `false`) and that callback could return `Retire`. `finish` will then erase the slot, and the external owner's later exact `remove(ticket)` returns `Stale`, not `true`. This is safe against ABA but not the old retained-remove acknowledgement shape.
+
+Document `Retire` as **callback-owned terminal retirement**: a caller that delegates terminal cleanup to such a callback must treat later `Stale` as the callback's terminal witness and must not retain a second `remove` cursor. If a generic external close owner needs `true` acknowledgement, its callback must return `Idle`/`Fault` and preserve the existing `remove(false) -> later true` protocol. Add one direct registry law for this interleaving so the distinction cannot regress.
+
+No native run was performed for this re-review. The source gate and registrations observed above are not a qualification receipt.
+
+## Re-review: Artifact Retirement Panic Recovery (2026-09-06)
+
+The prior P0 is fixed in the current source. `artifact_runner_retirement_step` now takes the exact fixed-row cursor, invokes only `owner.close()` inside a local `catch_unwind`, and restores the same `Option<ArtifactRunnerRetirementCursor>` to the same slot before returning `Fault` ([artifact](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs:4065)). Thus the outer WorkerPool catch never observes an ownerless row: the generation remains nonzero, the cursor retains the terminal job, strong runner, ticket, and `WorkerPoolUse`, and the registry leaves the hook faulted/idle until an explicit request.
+
+The new law [artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs:5011) exercises the required sequence: first call panics; same generation and row remain; pool shutdown sees its one retained use; an explicit exact-ticket request reaches a second terminal attempt; then shutdown succeeds. The 65-owner reuse law at [5058](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs:5058) further checks that callback-owned `Retire` actually returns both the registry and fixed retirement capacities.
+
+No new P0 is visible in this callback boundary. One P1 hardening case remains: the panic injection occurs before the close closure makes a resource-side effect. Add a second injected closure that records an intentionally idempotent pre-terminal transition and then panics, then verify the retained retry reaches terminal without duplicate close/release. The wrapper can restore its cursor but cannot itself roll back arbitrary side effects inside a future `close_one`; that contract must be idempotent/fail-closed in the close owner.
+
+No build was run by this audit. WGPU reports source gates green and registers the panic law as mount law 20 and the reuse law as 21; those are source/owner reports, not an independent qualification claim.

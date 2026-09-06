@@ -749,6 +749,68 @@ mod tests {
         assert_eq!(&bytes[..8], &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]);
     }
 
+    /// 🧫️ The one cross-language oracle both implementations of the bmp hop assert. The bun twin
+    /// (`🚪️io/🧪️tests/🟦️.ts`) writes and reads the SAME `bmpHex` from its own hand-written BMP v3
+    /// codec, so a drift between this plugin's Rust path (composite → stdio `SemioImageToBmp` →
+    /// stdio `encode_bmp`) and an independent second implementation fails in BOTH languages instead
+    /// of going unnoticed.
+    const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("🧪️tests/🧫️fixtures/🪟️solid-3x2.json"), include_str!("🧪️tests/🧫️fixtures/🌈️gradient-5x3.json")];
+
+    fn parity_fixture(text: &str) -> (u32, u32, Vec<u8>, String) {
+        use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonValue};
+        let JsonValue::Object { members } = parse_json_text(text).expect("parity fixture is valid json") else { panic!("parity fixture root must be an object") };
+        let member = |key: &str| members.iter().find(|entry| entry.key == key).map(|entry| entry.value.clone()).unwrap_or_else(|| panic!("parity fixture has no {key:?} member"));
+        let number = |value: &JsonValue| match value {
+            JsonValue::Number { lexeme } => lexeme.parse::<u32>().expect("parity fixture numbers are integers"),
+            other => panic!("parity fixture expected a number, got {other:?}"),
+        };
+        let width = number(&member("width"));
+        let height = number(&member("height"));
+        let JsonValue::Array { items } = member("rgba8") else { panic!("parity fixture rgba8 must be an array") };
+        let rgba8 = items.iter().map(|item| number(item) as u8).collect();
+        let JsonValue::String { value: bmp_hex } = member("bmpHex") else { panic!("parity fixture bmpHex must be a string") };
+        (width, height, rgba8, bmp_hex)
+    }
+
+    fn hex_of(bytes: &[u8]) -> String {
+        bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut text, byte| {
+            text.push_str(&format!("{byte:02x}"));
+            text
+        })
+    }
+
+    fn bytes_of(hex: &str) -> Vec<u8> {
+        (0..hex.len() / 2).map(|index| u8::from_str_radix(&hex[index * 2..index * 2 + 2], 16).expect("parity fixture hex")).collect()
+    }
+
+    fn parity_document(width: u32, height: u32, rgba8: Vec<u8>) -> RasterSnapshot {
+        let image = SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() };
+        raster_document_from_semio_image(&image, "parity", "Parity").expect("parity document")
+    }
+
+    /// 🧪️ The Rust bmp EXPORT must produce the exact bytes the TypeScript twin produces.
+    #[semio_framework_async_macros::async_test]
+    async fn bmp_export_matches_the_typescript_parity_fixture() {
+        for text in BMP_PARITY_FIXTURES {
+            let (width, height, rgba8, bmp_hex) = parity_fixture(text);
+            let document = parity_document(width, height, rgba8);
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
+            assert_eq!(hex_of(&bytes), bmp_hex, "the Rust bmp writer drifted from the TypeScript twin");
+        }
+    }
+
+    /// 🧪️ The Rust bmp IMPORT must recover the exact canvas the TypeScript twin recovers.
+    #[semio_framework_async_macros::async_test]
+    async fn bmp_import_matches_the_typescript_parity_fixture() {
+        for text in BMP_PARITY_FIXTURES {
+            let (width, height, rgba8, bmp_hex) = parity_fixture(text);
+            let document = crate::artifacts::raster::io::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes_of(&bmp_hex)).expect("bmp import");
+            let composite = raster_composite_image(&document).expect("composite of the imported document");
+            assert_eq!((composite.width, composite.height), (width, height));
+            assert_eq!(composite.frames[0].rgba8, rgba8, "the Rust bmp reader drifted from the TypeScript twin");
+        }
+    }
+
     /// 🧪️ Every hop this subset declines is declined with a SENTENCE, never with silently wrong
     /// bytes and never with a bare "not implemented".
     #[semio_framework_async_macros::async_test]
@@ -864,13 +926,11 @@ pub mod derived_composition {
                     }
                 }
                 if source.dialect == DEP_PDF {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::raster::io::import::deserializers::artifacts::pdf::v1_4::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
+                    // 🚫️ The pdf leaf can never succeed (this repo's `PdfSnapshot` decodes no pixels),
+                    // so swallowing its `Err` the way the real decoders above are swallowed would
+                    // answer a pdf source with "no source in a known read dialect" — a wrong reason.
+                    // The leaf's own sentence is returned instead.
+                    return Err(ComposeError { message: crate::artifacts::raster::io::import::deserializers::artifacts::pdf::v1_4::any::RASTER_PDF_IMPORT_UNSUPPORTED.into(), diagnostics: Vec::new() });
                 }
                 if source.dialect == DEP_PNG {
                     let bytes: Vec<u8> = match &source.payload {

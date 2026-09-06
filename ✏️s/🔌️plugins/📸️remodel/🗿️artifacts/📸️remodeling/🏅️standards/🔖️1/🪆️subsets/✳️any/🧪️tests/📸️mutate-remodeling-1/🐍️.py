@@ -1,6 +1,6 @@
-"""🐍️ `s.remodeling.remodeling`'s second, independent implementation of 34 of its 35 mutation kinds.
+"""🐍️ `s.remodel.remodeling`'s second, independent implementation of 34 of its 35 mutation kinds.
 
-`s.remodeling.remodeling` is a semio-NATIVE reconstruction JOB document — streams, calibrations,
+`s.remodel.remodeling` is a semio-NATIVE reconstruction JOB document — streams, calibrations,
 ground control points, the eight `ReconstructionParams` sub-records a pipeline runs under, and the
 engine-owned results — not a point cloud or a mesh file. A reader of COLMAP, LAS or PLY output would
 be judging a different artifact, and nothing reads `.dsl.semio`. This subset's own no-oracle decision
@@ -13,12 +13,21 @@ verb table (rule 5 in particular: an inverse is computed from BASE, and a cascad
 cascade is RE-CONNECTED after the primary record is recreated). It imports nothing from the Rust it
 judges and transliterates none of it.
 
-🚧 `commit-reconstruction` — the 35th kind — is DELIBERATELY NOT covered here, for the same reason
-this feature's own Rust adapter treats it specially: its diff reads process-global staging state
-(`commit_staged_remodeling_reconstruction`) a static `(before, mutation, after)` fixture cannot carry,
-and its one committed vector is a REFUSAL, not an applied mutation. It stays exactly where it already
-was — asserted by the Rust subject alone, in its own `@mode-error`/unconverted `@mode-property`
-scenario outlines — and is not claimed by this reference.
+🚧 `commit-reconstruction` — the 35th kind — is covered as the REFUSAL its own vector declares, not
+as an applied mutation, and it has no entry in `APPLIERS`. Its diff reads process-global staging state
+(`commit_staged_remodeling_reconstruction`) that a static `(before, mutation, after)` triple cannot
+carry, so its vector is the case-local one the feature's prose provenances. What this reference states
+about it is derived from the verb's own meaning — a commit PUBLISHES what a staged run produced, so a
+`sparse` argument carrying an inline point buffer instead of a staging handle names no staged run and
+cannot be published — and it requires, independently of production, that the committed after-document
+really is the before-document unchanged. It does NOT claim to reproduce production's diagnostic text;
+the code is the feature's own declaration and the subject asserts it was raised.
+
+📍️ WHERE A VECTOR LIVES IS THE FEATURE'S ANSWER, not this module's. Every scenario carries a doc
+string naming its `(before, mutation, after)` URIs, resolved through the plan at RUN time. Nothing
+here transcribes a fixture path: the 2026-09-05 repo-wide path-shortening pass renamed every case
+directory under this subset, and a hard-coded table of those names is exactly the drift that broke
+this case before.
 
 🔑 `create-asset` — the ONE genuine content-address hazard in this vocabulary. Production mints a
 NEW `assets.<key>.childId` via `image_asset_child_handle`, which hashes the raw `ImageAsset` bytes
@@ -54,45 +63,50 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Fixtures
-_ROOT = "asset://🧬️schema/🧬️mutations"
-
-# 🗺️ kind -> (dir, fixture, wire tag). `commit-reconstruction` is intentionally absent.
-VECTORS = {
-    "create-stream": ("🌱create-stream", "🎥️adds-stream-c-bound-to-cam-b", "createStream"),
-    "delete-stream": ("🪓delete-stream", "🚫️removes-stream-b-and-cascades-its-gcp-observation", "deleteStream"),
-    "change-stream-sync": ("⏱️change-stream-sync", "⏱️shifts-stream-a-sync-offset-to-minus-seven-and-a-half", "changeStreamSync"),
-    "add-stream-frame": ("➕add-stream-frame", "🎞️appends-a-third-frame-to-stream-a", "addStreamFrame"),
-    "remove-stream-frame": ("➖remove-stream-frame", "🚫️removes-the-last-frame-of-stream-a", "removeStreamFrame"),
-    "replace-stream-source": ("🔁replace-stream-source", "🧹️clears-the-video-source-of-stream-a", "replaceStreamSource"),
-    "create-asset": ("🧷create-asset", "🖼️stores-a-new-jpeg-frame-asset", "createAsset"),
-    "delete-asset": ("🗞️delete-asset", "🗑️removes-asset-a-and-reports-its-stale-references", "deleteAsset"),
-    "create-camera-calibration": ("🔭create-camera-calibration", "📷️adds-the-cam-c-fisheye-calibration", "createCameraCalibration"),
-    "update-camera-calibration": ("🛠️update-camera-calibration", "🔍️refines-the-cam-a-focal-length-and-rms", "updateCameraCalibration"),
-    "delete-camera-calibration": ("🚫delete-camera-calibration", "🚫️removes-the-cam-b-calibration", "deleteCameraCalibration"),
-    "create-rig-extrinsic": ("⛓️create-rig-extrinsic", "🔗️adds-a-rig-extrinsic-for-cam-b", "createRigExtrinsic"),
-    "delete-rig-extrinsic": ("✂️delete-rig-extrinsic", "✂️drops-the-cam-a-rig-extrinsic", "deleteRigExtrinsic"),
-    "update-rig-extrinsic": ("🔩update-rig-extrinsic", "📍️retunes-the-cam-a-rig-translation", "updateRigExtrinsic"),
-    "create-gcp": ("🧿create-gcp", "📍️adds-gcp-tower-with-one-observation", "createGcp"),
-    "delete-gcp": ("🚮delete-gcp", "🚫️removes-gcp-corner-and-cascades-its-observation", "deleteGcp"),
-    "add-gcp-observation": ("🔎add-gcp-observation", "🔎️adds-the-first-observation-to-gcp-ridge", "addGcpObservation"),
-    "remove-gcp-observation": ("🚷remove-gcp-observation", "🚫️removes-the-only-observation-of-gcp-corner", "removeGcpObservation"),
-    "update-ingest-params": ("🥣update-ingest-params", "🔍️tightens-the-ingest-sharpness-gate", "updateIngestParams"),
-    "update-feature-params": ("🌠update-feature-params", "🔎️switches-the-detector-to-akaze", "updateFeatureParams"),
-    "update-match-params": ("🪢update-match-params", "🌳️switches-the-matcher-to-a-kd-tree", "updateMatchParams"),
-    "update-sfm-params": ("🧮update-sfm-params", "🎯️switches-the-robust-loss-to-cauchy", "updateSfmParams"),
-    "update-dense-params": ("🌁update-dense-params", "🔬️raises-the-dense-resolution-and-confidence-gate", "updateDenseParams"),
-    "update-mesh-params": ("🕸️update-mesh-params", "🔳️doubles-the-texture-size-and-drops-the-watertight-guarantee", "updateMeshParams"),
-    "update-motion-params": ("🏎️update-motion-params", "🏃️enables-motion-tracking", "updateMotionParams"),
-    "update-geo-params": ("🌐update-geo-params", "🌐️enables-georeferencing-with-an-origin", "updateGeoParams"),
-    "replace-job": ("🏗️replace-job", "🎨️advances-the-job-to-texturing", "replaceJob"),
-    "replace-sparse": ("⭐replace-sparse", "✨️swaps-in-an-uncolored-four-point-sparse-cloud", "replaceSparse"),
-    "replace-dense": ("☁️replace-dense", "☁️swaps-in-a-two-point-classified-dense-cloud", "replaceDense"),
-    "replace-mesh-result": ("🧱replace-mesh-result", "🕸️swaps-in-an-imported-untextured-mesh", "replaceMeshResult"),
-    "replace-trajectory": ("🛣️replace-trajectory", "🧹️clears-the-camera-trajectory", "replaceTrajectory"),
-    "replace-tracks": ("🚂replace-tracks", "⏸️replaces-the-moving-track-with-two-static-tracks", "replaceTracks"),
-    "replace-geo-products": ("🗾replace-geo-products", "🗺️adds-the-dtm-and-ortho-rasters", "replaceGeoProducts"),
-    "replace-qc": ("🧾replace-qc", "📋️records-a-qc-report-carrying-a-watertight-summary", "replaceQc"),
+# 🗺️ kind -> the internally-tagged discriminator its committed payload carries. WHERE a vector
+# lives is the feature file's answer, not this module's: every scenario names its own
+# `(before, mutation, after)` URIs in a doc string, which the host resolves at run time.
+TAGS = {
+    "create-stream": "createStream",
+    "delete-stream": "deleteStream",
+    "change-stream-sync": "changeStreamSync",
+    "add-stream-frame": "addStreamFrame",
+    "remove-stream-frame": "removeStreamFrame",
+    "replace-stream-source": "replaceStreamSource",
+    "create-asset": "createAsset",
+    "delete-asset": "deleteAsset",
+    "create-camera-calibration": "createCameraCalibration",
+    "update-camera-calibration": "updateCameraCalibration",
+    "delete-camera-calibration": "deleteCameraCalibration",
+    "create-rig-extrinsic": "createRigExtrinsic",
+    "delete-rig-extrinsic": "deleteRigExtrinsic",
+    "update-rig-extrinsic": "updateRigExtrinsic",
+    "create-gcp": "createGcp",
+    "delete-gcp": "deleteGcp",
+    "add-gcp-observation": "addGcpObservation",
+    "remove-gcp-observation": "removeGcpObservation",
+    "update-ingest-params": "updateIngestParams",
+    "update-feature-params": "updateFeatureParams",
+    "update-match-params": "updateMatchParams",
+    "update-sfm-params": "updateSfmParams",
+    "update-dense-params": "updateDenseParams",
+    "update-mesh-params": "updateMeshParams",
+    "update-motion-params": "updateMotionParams",
+    "update-geo-params": "updateGeoParams",
+    "replace-job": "replaceJob",
+    "replace-sparse": "replaceSparse",
+    "replace-dense": "replaceDense",
+    "replace-mesh-result": "replaceMeshResult",
+    "replace-trajectory": "replaceTrajectory",
+    "replace-tracks": "replaceTracks",
+    "replace-geo-products": "replaceGeoProducts",
+    "replace-qc": "replaceQc",
+    "commit-reconstruction": "commitReconstruction",
 }
+
+# 🚧 The one kind whose committed vector is a REFUSAL rather than an applied mutation, so it is
+# answered by the refusal handlers below instead of by an entry in `APPLIERS`.
+REFUSAL_KIND = "commit-reconstruction"
 
 PARAMS_KEY = {
     "update-ingest-params": "ingest",
@@ -106,13 +120,29 @@ PARAMS_KEY = {
 }
 
 
-def _leaf_root(kind: str) -> str:
-    dirname, fixture, _tag = VECTORS[kind]
-    return f"{_ROOT}/{dirname}/🧪️tests/{fixture}"
+def doc_json(ctx: Context):
+    """📜️ The scenario's own doc string — the Python `Context` has no accessor of its own. It is the
+    feature file's single statement of where this row's vector lives, so nothing here transcribes a
+    fixture path that could drift away from the directory it names."""
+    for step in ctx.scenario["steps"]:
+        if step.get("docString"):
+            return json.loads(step["docString"])
+    raise AssertionError("scenario %s carries no doc string" % ctx.scenario["id"])
 
 
 def _read_json(ctx: Context, uri: str):
     return json.loads(ctx.fixture_bytes(uri))
+
+
+def spec_of(ctx: Context, kind: str):
+    """🧫️ The `(before, mutation, after)` triple the scenario addresses, with its payload already
+    unwrapped and checked to carry this kind's own discriminator."""
+    spec = doc_json(ctx)
+    assert spec["kind"] == kind, f"scenario {ctx.scenario['id']} carries a {spec['kind']!r} doc string"
+    base = _read_json(ctx, spec["before"])
+    actual_tag, payload = unwrap(_read_json(ctx, spec["mutation"]))
+    assert actual_tag == TAGS[kind], f"unexpected wire tag {actual_tag!r} for scenario {ctx.scenario['id']}"
+    return spec, base, payload, _read_json(ctx, spec["after"])
 
 
 def unwrap(wire):
@@ -446,13 +476,8 @@ def inverse_mutation(kind, base, payload):
 # region 🔖️Oracle
 def _mutate_for(kind):
     def handler(ctx: Context) -> Outcome:
-        root = _leaf_root(kind)
-        _dir, _fixture, wire_tag = VECTORS[kind]
-        base = _read_json(ctx, f"{root}/📸️snapshot/⬅️before/🔣️.json")
-        actual_tag, payload = unwrap(_read_json(ctx, f"{root}/🦠️mutation/🔣️.json"))
-        assert actual_tag == wire_tag, f"unexpected wire tag {actual_tag!r} for scenario mutate-{kind}"
+        _spec, base, payload, expected_after = spec_of(ctx, kind)
         after = APPLIERS[kind](base, payload)
-        expected_after = _read_json(ctx, f"{root}/📸️snapshot/➡️after/🔣️.json")
         if kind == "create-asset":
             key = payload["key"]
             expected_child = expected_after["assets"][key]["childId"]
@@ -467,11 +492,7 @@ def _mutate_for(kind):
 
 def _inverse_for(kind):
     def handler(ctx: Context) -> Outcome:
-        root = _leaf_root(kind)
-        _dir, _fixture, wire_tag = VECTORS[kind]
-        base = _read_json(ctx, f"{root}/📸️snapshot/⬅️before/🔣️.json")
-        actual_tag, payload = unwrap(_read_json(ctx, f"{root}/🦠️mutation/🔣️.json"))
-        assert actual_tag == wire_tag, f"unexpected wire tag {actual_tag!r} for scenario inverse-{kind}"
+        _spec, base, payload, _expected_after = spec_of(ctx, kind)
         current = APPLIERS[kind](base, payload)
         assert current != base, f"inverse-{kind}: the forward mutation left the document untouched, so restoring it proves nothing"
         for step_kind, step_payload in inverse_mutation(kind, base, payload):
@@ -481,17 +502,66 @@ def _inverse_for(kind):
         return Outcome(projection=current, raw=raw)
 
     return handler
+
+
+def refuses_commit(payload) -> bool:
+    """🚧 `commit-reconstruction` PUBLISHES what a staged reconstruction produced, so every result
+    argument it accepts must be a replayable staging handle. This vector's `sparse` argument is a
+    plain point buffer — a `points` blob with no handle beside it — which names no staged run and
+    therefore cannot be published. Derived from the verb's own meaning, not from production's code."""
+    sparse = payload.get("sparse")
+    return isinstance(sparse, dict) and "points" in sparse and "handle" not in sparse
+
+
+def _refusal_mutate(kind):
+    def handler(ctx: Context) -> Outcome:
+        spec, base, payload, expected_after = spec_of(ctx, kind)
+        assert refuses_commit(payload), f"mutate-{kind}: this reference accepts the vector, yet the feature declares it refused as {spec['code']!r}"
+        assert expected_after == base, f"mutate-{kind}: a refused commit must leave the scene untouched, but the committed after-document differs from the before-document"
+        raw = json.dumps(base, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return Outcome(projection=base, raw=raw)
+
+    return handler
+
+
+def _refusal_inverse(kind):
+    def handler(ctx: Context) -> Outcome:
+        _spec, base, payload, _expected_after = spec_of(ctx, kind)
+        assert refuses_commit(payload), f"inverse-{kind}: this reference accepts the vector, so undoing it would not be the identity the feature describes"
+        raw = json.dumps(base, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return Outcome(projection=base, raw=raw)
+
+    return handler
+
+
+def identity_handler(ctx: Context) -> Outcome:
+    """🔁️ The reference cannot PARSE `.dsl.semio` — this subset's committed text grammar is the
+    repository-wide placeholder whose whole body is `payload = OCTET+`, reported by the oracle
+    registry's own `remodeling-mutation-semantics` entry. What it can state from the committed bytes
+    alone is what a faithful parse-and-reprint must produce: those same bytes. It requires in role
+    that the carrier really is this artifact's DSL and not an empty or JSON file, so a handler that
+    answered with whatever it was handed would be caught here."""
+    carrier = doc_json(ctx)["carrier"]
+    committed = ctx.fixture_bytes(carrier)
+    text = committed.decode("utf-8")
+    assert text.strip(), "identity-round-trip: the committed example is empty"
+    assert not text.lstrip().startswith(("{", "[")), "identity-round-trip: the committed example is JSON, not the DSL carrier this scenario names"
+    return Outcome(projection=text, raw=committed)
 # endregion 🔖️Oracle
 
 
 # region 🔖️Registration
 def adapter() -> Adapter:
-    """🧭️ Registration is by full expanded scenario id, mirroring the feature's `Examples` tables.
-    Oracle role only, and only for the 34 kinds `VECTORS` declares — `commit-reconstruction` and
-    `identity-round-trip` both stay subject-only, for the reasons the module docstring and the
-    feature's own prose state."""
+    """🧭️ Registration is by full expanded scenario id, mirroring the feature's `Examples` tables, in
+    the ORACLE role only — registering these handlers as subjects too would make the reference its own
+    subject and manufacture a green self-comparison. Every planned scenario is answered: the runner
+    plans a role over ALL of them and errors on a gap, so a kind left out would report as an
+    unregistered scenario rather than as the honest scope limit it was meant to be."""
     built = Adapter("python")
-    for kind in VECTORS:
-        built = built.oracle(f"mutate-{kind}", _mutate_for(kind)).oracle(f"inverse-{kind}", _inverse_for(kind))
-    return built
+    for kind in TAGS:
+        if kind == REFUSAL_KIND:
+            built = built.oracle(f"mutate-{kind}", _refusal_mutate(kind)).oracle(f"inverse-{kind}", _refusal_inverse(kind))
+        else:
+            built = built.oracle(f"mutate-{kind}", _mutate_for(kind)).oracle(f"inverse-{kind}", _inverse_for(kind))
+    return built.oracle("identity-round-trip", identity_handler)
 # endregion 🔖️Registration

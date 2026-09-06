@@ -80,9 +80,10 @@ async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
 use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
-    close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage,
-    DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor,
-    DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
+    close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend, register_db_io_backend_prepared_with_use,
+    retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult,
+    DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities,
+    WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
 };
 
 macro_rules! with_admitted_artifact {
@@ -700,7 +701,9 @@ impl PostgresDbIoExecutor {
                 bootstrap_schema(&self.pool).await?;
                 Ok(DbIoResult::Unit)
             }
-            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => Err(DbError::Unavailable("remote WAL mutation requires a mounted session-scoped writer fence".to_string())),
+            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => {
+                Err(DbError::Unavailable("remote WAL mutation requires a mounted session-scoped writer fence".to_string()))
+            }
             DbIoTask::WalRead { document, index, range, output, .. } => Ok(DbIoResult::Pages(self.wal_read_into(document.as_str(), *index, *range, output).await?)),
             DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, self.segment_len(artifact, *index))?)),
             DbIoTask::WalState { document, index, .. } => Ok(DbIoResult::WalSegmentState(with_admitted_artifact!(operation, document, artifact, self.segment_state(artifact, *index))?)),
@@ -837,14 +840,15 @@ pub struct PostgresStorage {
 }
 
 impl PostgresStorage {
-    pub async fn connect(worker_pool: Arc<WorkerPool>, database_url: &str) -> Result<Self, DbError> {
+    pub async fn connect(worker_pool: Arc<WorkerPool>, database_url: &str) -> Result<Self, DbStorageOpenRejected> {
         let database_url = DbIoText::try_from_str(database_url)?;
+        let rollback = DbIoBackendRollbackReservation::try_reserve()?;
+        let pool_use = worker_pool.acquire_use().map_err(|error| DbError::Unavailable(format!("PostgreSQL DB I/O backend WorkerPool use rejected: {error:?}")))?;
         let executor = Box::new(PostgresDbIoExecutor::new(database_url.clone())?);
-        let control = register_db_io_backend(DbIoBackendKind::Postgres, executor, worker_pool.clone())?;
+        let control = register_db_io_backend_prepared_with_use(DbIoBackendKind::Postgres, executor, worker_pool.clone(), pool_use, rollback)?;
         let storage = Self { control, worker_pool, closed: std::sync::atomic::AtomicBool::new(false) };
         if let Err(error) = storage.execute(DbIoTask::BackendOpen { backend: control, path: database_url }).await {
-            let _ = storage.execute(DbIoTask::BackendClose { backend: control }).await;
-            return Err(error);
+            return Err(DbStorageOpenRejected::registered(error, control));
         }
         Ok(storage)
     }

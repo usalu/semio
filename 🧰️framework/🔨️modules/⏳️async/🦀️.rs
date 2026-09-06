@@ -2111,6 +2111,35 @@ mod native_pool {
         }
 
         #[test]
+        fn worker_maintenance_native_self_retire_reuses_all_fixed_slots() {
+            fn retire(_: [u64; 2]) -> WorkerMaintenanceStep {
+                WorkerMaintenanceStep::Retire
+            }
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🔔️maintenance/🧪️fixtures/🔣️.json")).unwrap();
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+            for _ in 0..fixture["selfRetire"]["cycles"].as_u64().unwrap() {
+                let ticket = pool.install_maintenance_hook(Lane::Io, retire, [0; 2]).unwrap();
+                assert_eq!(pool.request_maintenance(ticket), Ok(WorkerMaintenanceRequest::Requested));
+                let deadline = Instant::now() + Duration::from_secs(5);
+                loop {
+                    match pool.request_maintenance(ticket) {
+                        Err(WorkerMaintenanceError::Stale) => break,
+                        Ok(WorkerMaintenanceRequest::Requested | WorkerMaintenanceRequest::Coalesced) => std::thread::yield_now(),
+                        other => panic!("self-retiring maintenance hook lost exact generation: {other:?}"),
+                    }
+                    assert!(Instant::now() < deadline, "self-retiring maintenance callback did not release its exact slot");
+                }
+            }
+            let tickets: Vec<_> = (0..WORKER_MAINTENANCE_CAPACITY).map(|_| pool.install_maintenance_hook(Lane::Io, retire, [0; 2]).unwrap()).collect();
+            assert_eq!(pool.install_maintenance_hook(Lane::Io, retire, [0; 2]), Err(WorkerMaintenanceError::Capacity));
+            for ticket in tickets {
+                assert!(pool.remove_maintenance_hook(ticket).unwrap());
+            }
+            assert_eq!(pool.shutdown(), Ok(()));
+            eprintln!("[DEBUG] running maintenance callbacks retired themselves after return and reused every fixed slot across 64 generations");
+        }
+
+        #[test]
         fn worker_maintenance_native_running_close_and_shutdown_keep_exact_invocation() {
             static ENTERED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
             static RELEASE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);

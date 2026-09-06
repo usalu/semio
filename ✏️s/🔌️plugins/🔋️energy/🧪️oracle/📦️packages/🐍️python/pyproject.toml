@@ -1,0 +1,36 @@
+# 🔮️ Test-only oracle venv for the 🔋️energy plugin: Honeybee → OpenStudio → EnergyPlus.
+#
+# Every pin lives in the `test` dependency group, never in `[project] dependencies`: the repository's
+# own dependency-truth gate (`bun ./📜️script.ts verify dependencies literal-external`) classifies a
+# `dependencies = [...]` list as production-runtime and a `test = [...]` list as test-only, and none
+# of this is reachable from a shipped semio artifact. `default-groups` keeps `uv sync`/`uv run`
+# zero-touch without a `--group` flag at every call site.
+#
+# This is a STANDALONE uv project rather than a group in the root `pyproject.toml` (the ifcopenshell
+# precedent) for one measured reason: the root pins `requires-python = ">=3.14,<3.15"`, and
+# `uv pip compile --python-version 3.14 --python-platform windows openstudio==3.11.0` resolves to
+# "unsatisfiable" — the compiled OpenStudio bindings publish no cp314 `win_amd64` wheel, so adding
+# them to the root group would break the Windows leg of the zero-touch requirement. Python 3.12 is
+# the widest common denominator across the macOS/Linux/Windows wheel matrix and `uv sync` downloads
+# that interpreter itself.
+#
+# Licenses: openstudio and EnergyPlus are BSD-3-Clause; ladybug-* and honeybee-* are AGPL-3.0-only
+# and are invoked here only as an out-of-process validation reference, never linked or shipped.
+[project]
+name = "semio-s-plugin-energy-oracle"
+version = "0.1.0"
+description = "Honeybee/OpenStudio/EnergyPlus reference runner for the semio energy engine"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+test = [
+    "honeybee-energy==1.123.32",
+    "honeybee-openstudio==0.7.2",
+    "ladybug-core==0.44.59",
+    "openstudio==3.11.0",
+]
+
+[tool.uv]
+package = false
+default-groups = ["test"]

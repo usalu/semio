@@ -103,7 +103,7 @@ pub(crate) struct WalWriterSignalReservation {
 impl WalWriterSignalReservation {
     pub(crate) fn commit(mut self) -> WalWriterRelease {
         self.committed = true;
-        WalWriterRelease { key: self.key, required_epoch: self.required_epoch, resolved: false }
+        WalWriterRelease { key: self.key, required_epoch: self.required_epoch, requested: false, resolved: false }
     }
 }
 
@@ -119,6 +119,7 @@ impl Drop for WalWriterSignalReservation {
 pub struct WalWriterRelease {
     key: WalWriterKey,
     required_epoch: u64,
+    requested: bool,
     resolved: bool,
 }
 
@@ -144,7 +145,16 @@ impl std::fmt::Debug for WalWriterReleaseFailure {
 }
 
 impl WalWriterRelease {
-    pub fn retry(self) -> Self {
+    fn request_release(&mut self) {
+        if !self.requested {
+            self.requested = true;
+            if request(self.key) {
+                request_controller(self.key.backend);
+            }
+        }
+    }
+
+    pub fn retry(mut self) -> Self {
         let mut cell = cell(self.key).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if cell.active == Some(self.key) {
             assert!(!cell.deferred_fault_waiter, "writer retry cannot overtake its exact deferred fault waiter");
@@ -152,8 +162,17 @@ impl WalWriterRelease {
             cell.waiter = None;
         }
         drop(cell);
+        self.requested = true;
         request_controller(self.key.backend);
         self
+    }
+}
+
+impl Drop for WalWriterRelease {
+    fn drop(&mut self) {
+        if !self.resolved {
+            self.request_release();
+        }
     }
 }
 
@@ -162,6 +181,7 @@ impl std::future::Future for WalWriterRelease {
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Self::Output> {
         assert!(!self.resolved, "writer close polled after terminal transfer");
+        self.request_release();
         let result = {
             let mut cell = cell(self.key).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if cell.deferred_fault_waiter && !deferred_wake_pending(self.key) {
@@ -173,7 +193,7 @@ impl std::future::Future for WalWriterRelease {
             Poll::Pending => Poll::Pending,
             Poll::Ready(result) => {
                 self.resolved = true;
-                Poll::Ready(result.map_err(|error| WalWriterReleaseFailure { error, release: Self { key: self.key, required_epoch: self.required_epoch, resolved: false } }))
+                Poll::Ready(result.map_err(|error| WalWriterReleaseFailure { error, release: Self { key: self.key, required_epoch: self.required_epoch, requested: true, resolved: false } }))
             }
         }
     }
@@ -422,10 +442,7 @@ pub(crate) fn restore_controller_after_refusal(backend: DbIoBackendControl) -> R
     let (slot, generation) = db_io_backend_parts(backend);
     let mut row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let owner = row.as_mut().filter(|owner| owner.backend == backend).ok_or_else(|| DbError::Closed)?;
-    let ticket = owner
-        .pool
-        .install_maintenance_hook(Lane::Io, controller_step, [u64::from(slot), generation])
-        .map_err(|error| DbError::Unavailable(format!("WAL writer refusal fixture restore: {error:?}")))?;
+    let ticket = owner.pool.install_maintenance_hook(Lane::Io, controller_step, [u64::from(slot), generation]).map_err(|error| DbError::Unavailable(format!("WAL writer refusal fixture restore: {error:?}")))?;
     owner.ticket = Some(ticket);
     Ok(())
 }

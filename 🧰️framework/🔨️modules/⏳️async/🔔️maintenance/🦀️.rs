@@ -15,12 +15,15 @@ pub struct WorkerMaintenanceTicket {
     generation: u64,
 }
 
-/// 👣️ A finite callback yields, sleeps until another request, or retains a fault.
+/// 👣️ A finite callback yields, sleeps until another request, retains a fault, or retires its
+/// callback-owned terminal slot. `Retire` requires sole close authority and must not race an
+/// external `remove_maintenance_hook` owner.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WorkerMaintenanceStep {
     More,
     Idle,
     Fault,
+    Retire,
 }
 
 /// 🚧️ No refusal consumes a callback or invokes its owner's cleanup.
@@ -197,8 +200,17 @@ impl WorkerMaintenanceRegistry {
     fn finish(&self, invocation: Invocation, step: WorkerMaintenanceStep) {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         let closed = state.closed;
+        let slot = usize::from(invocation.ticket.slot);
+        let retire = {
+            let entry = self.exact(&mut state, invocation.ticket).expect("running maintenance slot cannot be retired or reused");
+            assert!(entry.running, "maintenance invocation finished twice");
+            step == WorkerMaintenanceStep::Retire
+        };
+        if retire {
+            state.entries[slot] = None;
+            return;
+        }
         let entry = self.exact(&mut state, invocation.ticket).expect("running maintenance slot cannot be retired or reused");
-        assert!(entry.running, "maintenance invocation finished twice");
         entry.running = false;
         if closed || entry.closing {
             entry.requested = false;
@@ -296,5 +308,21 @@ mod tests {
         registry.state.lock().unwrap().next_generation = u64::MAX;
         assert_eq!(registry.install(Lane::Io, idle, [0; 2]), Err(WorkerMaintenanceError::GenerationExhausted));
         eprintln!("[DEBUG] maintenance admission fenced foreign pools, capacity+1, retired generations, and exhausted generation without wrapping");
+    }
+
+    #[test]
+    fn worker_maintenance_running_callback_retires_requested_generation_exactly_once() {
+        let registry = WorkerMaintenanceRegistry::new();
+        let ticket = registry.install(Lane::Io, idle, [0; 2]).unwrap();
+        assert_eq!(registry.request(ticket), Ok(WorkerMaintenanceRequest::Requested));
+        let Some(PoolWork::Maintenance(invocation)) = registry.select(Lane::Io, &mut VecDeque::new()) else {
+            panic!("requested self-retiring hook was not selected");
+        };
+        assert_eq!(registry.request(ticket), Ok(WorkerMaintenanceRequest::Requested));
+        registry.finish(invocation, WorkerMaintenanceStep::Retire);
+        assert_eq!(registry.request(ticket), Err(WorkerMaintenanceError::Stale));
+        let replacement = registry.install(Lane::Io, idle, [0; 2]).unwrap();
+        assert_ne!(replacement.generation, ticket.generation);
+        assert!(registry.remove(replacement).unwrap());
     }
 }

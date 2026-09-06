@@ -1,7 +1,7 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]

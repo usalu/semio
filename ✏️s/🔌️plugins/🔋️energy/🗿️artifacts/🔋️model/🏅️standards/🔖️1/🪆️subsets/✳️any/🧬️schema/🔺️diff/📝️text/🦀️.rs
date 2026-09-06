@@ -13,6 +13,14 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Apply
+/// 🔗️ The link a slot delta leaves behind — `Detached` clears the slot, `Attached` fills it.
+fn link_of(delta: &EnergyLinkSlotDelta) -> Option<store::ArtifactLink> {
+    match delta {
+        EnergyLinkSlotDelta::Detached => None,
+        EnergyLinkSlotDelta::Attached { link } => Some(link.clone()),
+    }
+}
+
 impl EnergyModelDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &EnergyModelArtifact) -> protocol::MutationApplyResult<EnergyModelArtifact> {
@@ -33,8 +41,11 @@ impl EnergyModelDiff {
             if let Some(zones) = &self.zones {
                 next.zones = zones.clone();
             }
-            if let Some(referenced_model) = &self.referenced_model {
-                next.referenced_model = referenced_model.clone();
+            if let Some(delta) = &self.referenced_model {
+                next.referenced_model = link_of(delta);
+            }
+            if let Some(delta) = &self.weather_link {
+                next.weather_link = link_of(delta);
             }
             if let Some(results_json) = &self.results_json {
                 next.results_json = results_json.clone();
@@ -63,8 +74,11 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
             if let Some(zones) = &self.zones {
                 next.zones = zones.clone();
             }
-            if let Some(referenced_model) = &self.referenced_model {
-                next.referenced_model = referenced_model.clone();
+            if let Some(delta) = &self.referenced_model {
+                next.referenced_model = link_of(delta);
+            }
+            if let Some(delta) = &self.weather_link {
+                next.weather_link = link_of(delta);
             }
             next
         })
@@ -86,6 +100,7 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
         take!(structure);
         take!(zones);
         take!(referenced_model);
+        take!(weather_link);
         take!(results_json);
     }
 }

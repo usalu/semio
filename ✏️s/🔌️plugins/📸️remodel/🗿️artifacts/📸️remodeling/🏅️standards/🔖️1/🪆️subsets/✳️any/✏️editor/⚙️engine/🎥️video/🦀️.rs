@@ -2968,9 +2968,12 @@ pub fn write_avi_mjpg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
             rc_frame_top: 0,
             rc_frame_right: width as i32,
             rc_frame_bottom: height as i32,
+            rc_frame_width: 16,
+            strh_extra: Vec::new(),
         },
         strf: AviStreamFormat::BitmapInfo { size: 40, width: width as i32, height: height as i32, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 0, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
         chunks,
+        strl_extra: Vec::new(),
     };
     let snapshot = AviSnapshot {
         schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
@@ -2990,6 +2993,7 @@ pub fn write_avi_mjpg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
         streams: vec![stream],
         idx1_present: true,
         unknown_chunks: Vec::new(),
+        hdrl_extra: Vec::new(),
     };
     avi_engine::encode_avi(&snapshot)
 }

@@ -4,59 +4,72 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "source"
   ],
   "properties": {
     "id": {
       "type": "string"
     },
     "source": {
-      "title": "VideoSource",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "codec",
-        "container",
-        "durationMs",
-        "frameCount",
-        "height",
-        "name",
-        "width"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
+      "anyOf": [
+        {
+          "type": "object",
+          "title": "VideoSource",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "container",
+            "codec",
+            "durationMs",
+            "frameCount",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "container": {
+              "type": "string"
+            },
+            "codec": {
+              "type": "string",
+              "title": "VideoCodec",
+              "enum": [
+                "avc",
+                "hevc",
+                "vp9",
+                "av1",
+                "mjpeg",
+                "unknown"
+              ]
+            },
+            "durationMs": {
+              "type": "number",
+              "format": "double"
+            },
+            "frameCount": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "width": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          }
         },
-        "container": {
-          "type": "string"
-        },
-        "codec": {
-          "type": "string",
-          "enum": [
-            "avc",
-            "hevc",
-            "vp9",
-            "av1",
-            "mjpeg",
-            "unknown"
-          ]
-        },
-        "durationMs": {
-          "type": "number"
-        },
-        "frameCount": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "width": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "height": {
-          "type": "integer",
-          "minimum": 0
+        {
+          "type": "null"
         }
-      }
+      ]
     }
   }
 }

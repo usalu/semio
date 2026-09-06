@@ -36,11 +36,12 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["stage", "cause", "owner", "sameDocumentAcquire"],
+          "required": ["stage", "cause", "owner", "releaseActivation", "sameDocumentAcquire"],
           "properties": {
             "stage": { "const": "self-acquiring-open-failure" },
             "cause": { "const": "original-open-error" },
             "owner": { "const": "exact-writer-release" },
+            "releaseActivation": { "const": "first-explicit-close-poll" },
             "sameDocumentAcquire": { "const": "conflict" }
           }
         }

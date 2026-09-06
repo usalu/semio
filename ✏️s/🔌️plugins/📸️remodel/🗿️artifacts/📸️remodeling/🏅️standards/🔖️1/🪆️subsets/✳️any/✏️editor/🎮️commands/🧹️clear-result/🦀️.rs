@@ -40,6 +40,6 @@ fn empty_result() -> RemodelingMesh {
 pub struct ClearResult {}
 
 /// 🧹️ Resets all seven `ReconstructionResults` fields in one undoable step.
-pub async fn handle(_payload: &ClearResult, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &ClearResult, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![replace_mesh_result(Box::new(empty_result())), replace_sparse(None), replace_dense(None), replace_trajectory(None), replace_tracks(Vec::new()), replace_geo_products(None), replace_qc(None)]))
 }

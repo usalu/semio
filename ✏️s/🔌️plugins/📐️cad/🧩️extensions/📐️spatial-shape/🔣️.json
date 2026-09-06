@@ -1,23 +1,48 @@
 {
-  "descriptorVersion": 1,
-  "role": "plugin",
-  "manifest": {
-    "pluginId": "empty",
-    "label": "Empty",
-    "version": "0.0.0",
-    "apps": [],
-    "examples": [],
-    "capabilities": [],
-    "topicContributions": [],
-    "commands": [],
-    "artifactKinds": []
+  "contributions": {
+    "topicContributions": [
+      {
+        "payload": {
+          "appId": "cad-play",
+          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}",
+          "iconId": "box",
+          "label": "Spatial Shape",
+          "moduleId": "spatial-shape"
+        },
+        "topic": "cad.computer"
+      }
+    ]
   },
-  "execution": "isolated",
-  "quotas": {},
-  "contributions": {},
+  "descriptorVersion": 1,
+  "execution": "declarative",
   "hashes": {
-    "wasmSha256": "d77ec8ebc85fd286e5cdb3f24d037137461e9293524cbf94d7809a7d58fd98ab",
-    "coreWasmSha256": "d77ec8ebc85fd286e5cdb3f24d037137461e9293524cbf94d7809a7d58fd98ab",
-    "descriptorSha256": "7919165697487d2cdee0c6e4162a25dc8f6e57d0fa751f6239ed5b6b872de5a5"
-  }
+    "coreWasmSha256": "577f6163ec4a4f3662a1617a6489263709fe2bfcf41a4bd156e20b3f5ea3f216",
+    "descriptorSha256": "6edbf25e2e16b2728e662101c08f441d68f4bba2bf52a4895006d81e57f08a15",
+    "wasmSha256": "45f482b4689564bc89ea3ffcd94e9efb1bc3b80e145e1c47dbe54866509aacda"
+  },
+  "manifest": {
+    "apps": [],
+    "artifactKinds": [],
+    "capabilities": [],
+    "commands": [],
+    "examples": [],
+    "label": "CAD Spatial Shape",
+    "pluginId": "cad-extension-spatial-shape",
+    "topicContributions": [
+      {
+        "payload": {
+          "appId": "cad-play",
+          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}",
+          "iconId": "box",
+          "label": "Spatial Shape",
+          "moduleId": "spatial-shape"
+        },
+        "topic": "cad.computer"
+      }
+    ],
+    "version": "0.1.0"
+  },
+  "packageId": "",
+  "quotas": {},
+  "role": "extension"
 }

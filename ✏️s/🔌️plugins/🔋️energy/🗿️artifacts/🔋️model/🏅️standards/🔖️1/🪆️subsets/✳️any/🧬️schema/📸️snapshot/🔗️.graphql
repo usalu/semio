@@ -6,4 +6,5 @@ type EnergyModelSnapshot {
   structure: JSON!
   zones: JSON!
   referencedModel: JSON
+  weatherLink: JSON
 }

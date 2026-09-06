@@ -103,6 +103,17 @@
       "terminalHandoff": "once"
     }
   },
+  "committedRecovery": {
+    "witness": { "recordKind": "event", "transaction": "committed", "bodyRecords": 1, "transactionId": 71, "segmentIndex": 5 },
+    "journalBegins": 0,
+    "cancellation": "forbidden-after-commit",
+    "cases": [
+      { "id": "all-base", "frontiers": ["base", "base", "base"], "receipt": "matching", "expected": "apply" },
+      { "id": "all-post", "frontiers": ["post", "post", "post"], "receipt": "matching", "expected": "already-applied" },
+      { "id": "mixed", "frontiers": ["post", "base", "base"], "receipt": "matching", "expected": "reject" },
+      { "id": "foreign-receipt", "frontiers": ["base", "base", "base"], "receipt": "foreign", "expected": "reject" }
+    ]
+  },
   "expected": {
     "anchorSha256": "8fa0d6568bd058b287a2969948d051c65b73028bc4065219422cc37b3aa7ec88",
     "decisionSha256": "e73f56dcf3fb6d51a2464b12dd338a75053574a45edbc2649b2d7a23b8fda181",

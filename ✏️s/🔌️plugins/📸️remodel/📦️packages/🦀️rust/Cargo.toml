@@ -40,6 +40,13 @@ semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️
 semio-framework = { workspace = true }
 semio-framework-os = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+# 🧵️ The retained command factory names `semio_framework_job::Operation` in its `ToolJobFactory`
+# signatures, so the job crate has to be linked here the same way `🖨️raster` and `🌍️gis` link it.
+semio-framework-job = { workspace = true }
+# 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY: `scene_surface`/`PanelTreeBuilder` speak the semantic
+# contract's own `SurfaceKind`/`BuiltNode`, a different type from the retained `ui_wgpu` spelling the SDK
+# root re-exports — the same explicit dependency `🧱️block` and `🌊️flow` carry for their window scenes.
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }

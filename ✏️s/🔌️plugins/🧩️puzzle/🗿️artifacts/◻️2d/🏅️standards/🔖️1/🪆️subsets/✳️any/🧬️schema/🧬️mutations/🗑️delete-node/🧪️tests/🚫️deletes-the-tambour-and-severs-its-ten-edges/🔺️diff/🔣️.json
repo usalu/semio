@@ -1,0 +1,53 @@
+{
+  "artifact": null,
+  "schema": null,
+  "camera": null,
+  "nodes": {
+    "added": [],
+    "removed": [
+      "17d5dec8-87b2-44a9-84ff-93b7e7419bdd"
+    ],
+    "patched": [],
+    "reordered": null
+  },
+  "edges": {
+    "added": [],
+    "removed": [
+      "015032e9-67ed-4736-adab-a6e10351079b",
+      "13c6ff51-664b-46a2-a291-9cf044bef338",
+      "39e4e640-81a9-4e5f-a9bb-2c39baa9ec0f",
+      "5bf74e9f-c6f9-4e2b-bf76-d823f6946f24",
+      "77d41b5c-e532-45b3-ba07-7bc3fa960fe8",
+      "8684b51c-94f5-4a50-be16-526ac8e0892a",
+      "8fd1aad8-5f00-4032-900d-a91810294ffc",
+      "b1ecc6c5-722a-4814-9047-a87222bbaa4d",
+      "f38996aa-33cd-433c-8217-fb6c55262b20",
+      "feba8972-394f-4ecc-923c-9f1701881fd0"
+    ],
+    "patched": [],
+    "reordered": null
+  },
+  "meta": null,
+  "selectedIds": null,
+  "activeUtilityId": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "selectionMethod": null,
+  "gridSnapEnabled": null,
+  "gridFactor": null,
+  "suggestionOffset": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "brushCandidateSourceHandleId": null,
+  "locale": null,
+  "terminology": null,
+  "lodModeByPaneJson": null,
+  "engagementInputByPaneJson": null,
+  "brushCandidatesJson": null,
+  "nodeKindWeightsJson": null,
+  "handleKindWeightsJson": null,
+  "activeUtilityByWindowIdJson": null,
+  "hoveredNodeId": null,
+  "previewSeq": null
+}

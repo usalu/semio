@@ -14,14 +14,21 @@ const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
+fn decode_value<T: dsl::FromValue>(text: &str) -> T {
+    let json = pack::parse_json(text).expect("fixture JSON decodes");
+    dsl::from_dsl_value(pack::json_to_dsl_value(&json)).expect("fixture value decodes")
+}
+fn encode_value<T: dsl::ToValue>(value: &T) -> pack::JsonValue {
+    pack::json_from_dsl_value(&dsl::ToValue::to_value(value))
+}
 fn before() -> SSpaceSnapshot {
-    serde_json::from_str(BEFORE).expect("before space index decodes")
+    decode_value(BEFORE)
 }
 fn expected_after() -> SSpaceSnapshot {
-    serde_json::from_str(AFTER).expect("after space index decodes")
+    decode_value(AFTER)
 }
 fn mutation() -> SSpaceMutation {
-    serde_json::from_str(MUTATION).expect("create-artifact mutation decodes")
+    decode_value(MUTATION)
 }
 fn built_outcome() -> protocol::MutationOutcome<SSpaceDiff> {
     <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &before())
@@ -54,13 +61,13 @@ async fn deleting_the_created_row_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SSpaceSnapshot = serde_json::from_str(text).expect("space index snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("space index snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("space index snapshot reparses");
+        let decoded = decode_value::<SSpaceSnapshot>(text);
+        let reencoded = encode_value(&decoded);
+        let original = pack::parse_json(text).expect("space index snapshot reparses");
         assert_eq!(reencoded, original, "create-artifact/appends-artifact-3-to-the-index: committed {label} index JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("createArtifact payload encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("createArtifact payload reparses");
+    let reencoded = encode_value(&mutation());
+    let original = pack::parse_json(MUTATION).expect("mutation fixture reparses");
     assert_eq!(reencoded, original, "create-artifact/appends-artifact-3-to-the-index: committed createArtifact JSON is not canonical");
 }
 
@@ -68,8 +75,8 @@ async fn committed_json_is_canonical() {
 /// no `mutation.duplicate-id` fault at all.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "create-artifact/appends-artifact-3-to-the-index: this fixture declares an applied outcome");
+    let declared = pack::parse_json(OUTCOME).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(pack::JsonValue::as_str), Some("applied"), "create-artifact/appends-artifact-3-to-the-index: this fixture declares an applied outcome");
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), None, "create-artifact/appends-artifact-3-to-the-index: creating a fresh id must raise no mutation.duplicate-id fault");
     assert!(produced.messages().is_empty(), "create-artifact/appends-artifact-3-to-the-index: an accepted create emits no diagnostics");
@@ -79,25 +86,25 @@ async fn declared_outcome_holds() {
 /// diff pins that the append rewrites the row vector and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let produced = serde_json::to_value(built_outcome().diff()).expect("produced create-artifact diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = encode_value(built_outcome().diff());
+    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-artifact/appends-artifact-3-to-the-index: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to `SSpaceDiff` and re-encodes unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SSpaceDiff = serde_json::from_str(DIFF).expect("committed create-artifact diff decodes");
+    let decoded = decode_value::<SSpaceDiff>(DIFF);
     assert!(decoded.schema.is_none(), "create-artifact/appends-artifact-3-to-the-index: creating a row must leave the index schema field alone");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let reencoded = encode_value(&decoded);
+    let original = pack::parse_json(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-artifact/appends-artifact-3-to-the-index: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff alone carries the before-index to the after-index.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SSpaceDiff = serde_json::from_str(DIFF).expect("committed create-artifact diff decodes");
+    let decoded = decode_value::<SSpaceDiff>(DIFF);
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-index");
     assert_eq!(produced, expected_after(), "create-artifact/appends-artifact-3-to-the-index: committed diff did not carry before to after");
 }

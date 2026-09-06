@@ -1,5 +1,0 @@
-# ♻️ Direct replace-model payload.
-input ReplaceModelInput {
-  mutation: String!
-  newModelJson: String!
-}

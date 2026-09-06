@@ -17,7 +17,7 @@ pub struct PlaceGcpObservation {
     pub pixel_y: f32,
 }
 
-pub async fn handle(payload: &PlaceGcpObservation, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &PlaceGcpObservation, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     if !doc.snapshot.gcps.iter().any(|gcp| gcp.id == payload.gcp_id) {
         return Ok(Emit::default());
     }

@@ -529,14 +529,13 @@ pub mod artifacts {
             }
         }
 
-        #[path = "."]
+        /// 📚️ Facet-path alias for the subset's own example fixtures. The taxonomy files are mounted
+        /// ONCE, at the crate root's `📚️Examples` region (`crate::examples::art_raster_demo`) — the
+        /// same shape `🧩️puzzle` documents in its own subset root — so `🧬️schema`'s
+        /// `default_raster_document`/`raster_example_document` may keep addressing them through the
+        /// artifact facet without the carrier's `include_str!` being expanded twice.
         pub mod examples {
-            #[path = "."]
-            pub mod demo {
-                #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
+            pub use crate::examples::art_raster_demo as demo;
         }
     }
 }
@@ -594,6 +593,8 @@ pub mod editor {
             pub mod patch_layer;
             #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️patch-layers/🦀️.rs"]
             pub mod patch_layers;
+            #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
+            pub mod set_active_example;
             #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️set-active-utility/🦀️.rs"]
             pub mod set_active_utility;
             #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌫️set-brush-opacity/🦀️.rs"]
@@ -713,8 +714,14 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::RasterApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_raster_demo_session;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+    mod app_raster_demo_session_tests;
     #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_raster_demo;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+    mod art_raster_demo_tests;
 }
 //#endregion 📚️Examples
 

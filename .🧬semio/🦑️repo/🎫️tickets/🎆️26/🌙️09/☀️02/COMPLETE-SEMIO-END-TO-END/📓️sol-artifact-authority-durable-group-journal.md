@@ -8,6 +8,8 @@ The Store sink construction is non-I/O. Its retained commit states distinguish p
 
 The authority now retains the same clone-shared `WorkerPoolUse` cell as its Database document-mount owner. Pool shutdown is therefore `Busy` while the journal mailbox/authority can still make progress. Database mount scheduling retains transient submissions behind one coalesced retry, but a hard scheduler refusal parks the exact job as `NonRunnable` with no timer and exposes an executor shutdown block. Neither path can turn an uncertain journal owner into absence.
 
+Replay now has a crate-private `ArtifactCommittedDurableGroupDecisionV1` boundary. It is constructed only by consuming a `WalCommittedTransaction`; it accepts exactly one committed `Event` body, re-admits the canonical Store record, checks its document against the replay document, captures the transaction and segment identities from the WAL gate, and finishes the transaction before returning. Transactions without an Event are ignored. An Event mixed with another body or a second Event is rejected before any projection escapes. No API accepts an Event plus caller-supplied receipt or transaction metadata.
+
 ## Exact ownership and admission
 
 - No second WAL writer is acquired.
@@ -21,13 +23,26 @@ The authority now retains the same clone-shared `WorkerPoolUse` cell as its Data
 
 The strict fixture and schema are under `🗿️artifact/🧪️fixtures/📓️durable-group-journal`. The independent Bun oracle uses AJV 2020-12, Node SHA-256, UTF-8 byte lengths, and an independent canonical-varint/framing calculation.
 
-- Direct oracle: GREEN, `AJV=1 cases=6 max-event=507609 store-margin=16089`.
+- Direct oracle: GREEN, `AJV=1 cases=6 witnesses=6 max-event=507609 store-margin=16089`.
 - Registered Nx target `@semio-tech/framework-os-kernel:durable-group-journal-check`: GREEN, exit 0 with the same receipt.
 - Rust parser gate for Store, WAL, artifact, and engine sources: GREEN.
-- Native exact group is registered as `durable-group-journal-native-check` with three laws; native qualification is pending.
+- Native exact group is registered as `durable-group-journal-native-check` with four laws; the newest law is native-pending.
 
-The exact native laws cover one canonical forced-Fsync event and replay, cancellation before handoff, and forged hash rejection before mailbox transfer.
+The first exact native law constructs the opaque witness from the committed transaction and checks its document, transaction, segment, canonical record, and decision identities. A fourth law executes all six neutral witness rows against physical WAL: one canonical Event is admitted, an ordinary Command and an aborted Event are invisible, and Event-plus-Command, two-Event, or foreign-document transactions are rejected only after their borrowed owners are finished. The remaining laws cover cancellation before handoff and forged hash rejection before mailbox transfer.
+
+The first native attempt `bUcnaf/00` built and listed the group, then exposed
+that the deliberately unrelated control transaction used memory durability and
+was absent from physical replay. The fixture now submits that control
+transaction with `DurabilityClass::Fsync`, preserving the intended two committed
+transactions while admitting exactly one decision witness. This correction is
+source-qualified and awaits the exact native rerun.
+
+Root receipt `ZJRrWu/00` is GREEN for the three-law boundary, executable SHA-256
+`0349c09335867ba4d64bb04258c7483bdafc674a302616822c6877a789bd64a5`.
+It qualifies the two-transaction/one-witness Fsync path and the retained journal
+shutdown cursor. The six-vector committed/aborted/mixed/foreign witness law was
+registered after that run and remains native-pending.
 
 ## Nonclaims
 
-This boundary proves only durable decision-journal append ownership. An Event record is not yet a durable decision recovery decoder, an inference WAL witness, or atomic three-Store publication. Those require a typed facade decoder and verified same-transaction replay before Hub acceptance.
+This boundary proves durable decision-journal append ownership and an opaque committed-transaction read witness. It is not yet an inference approval witness or atomic three-Store publication: the retained GIS owner must still pass the witness's private record through `recover_store_owned` against the exact three live Store frontiers, publish through the mounted fixed host, and reopen through the same recovery path before Hub acceptance.

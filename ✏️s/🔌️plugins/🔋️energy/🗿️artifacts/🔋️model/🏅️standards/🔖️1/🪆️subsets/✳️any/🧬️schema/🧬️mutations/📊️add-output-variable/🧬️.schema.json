@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddOutputVariable",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "key",
+    "reportingFrequency"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "key": {
+      "type": "string"
+    },
+    "reportingFrequency": {
+      "enum": [
+        "Timestep",
+        "Hourly",
+        "Daily",
+        "Monthly",
+        "RunPeriod"
+      ]
+    }
+  }
+}

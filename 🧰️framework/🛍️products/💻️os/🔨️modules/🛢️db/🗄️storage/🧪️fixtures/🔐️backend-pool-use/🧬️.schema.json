@@ -7,8 +7,8 @@
     "version": { "const": 1 },
     "cases": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 9,
+      "maxItems": 9,
       "uniqueItems": true,
       "items": {
         "type": "object",
@@ -21,11 +21,15 @@
               "task-derives-registered-pool",
               "dropped-facade-retains-use",
               "compaction-acquires-before-admission",
-              "forged-kind-rejected-before-page-admission"
+              "forged-kind-rejected-before-page-admission",
+              "rollback-reserved-before-owner-transfer",
+              "all-retirement-tiers-full-return-exact-executor",
+              "committed-rollback-retains-use-until-terminal",
+              "prepared-post-transfer-refusal-returns-close-owner"
             ]
           },
-          "registeredUses": { "type": "integer", "minimum": 1, "maximum": 2 },
-          "expected": { "enum": ["busy", "registered-pool", "deferred-close", "retained-rejection", "stale-generation"] }
+          "registeredUses": { "type": "integer", "minimum": 0, "maximum": 2 },
+          "expected": { "enum": ["busy", "registered-pool", "deferred-close", "retained-rejection", "stale-generation", "exact-owner"] }
         }
       }
     }

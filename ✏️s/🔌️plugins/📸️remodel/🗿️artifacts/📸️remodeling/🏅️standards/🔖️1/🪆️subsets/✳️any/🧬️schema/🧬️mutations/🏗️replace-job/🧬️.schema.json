@@ -8,17 +8,19 @@
   ],
   "properties": {
     "job": {
-      "title": "ReconstructionJob",
       "type": "object",
+      "title": "ReconstructionJob",
       "additionalProperties": false,
       "required": [
-        "cameraPosesPreview",
-        "cancelRequested",
         "id",
-        "progress01",
-        "sparsePointCloudPreview",
         "stage",
-        "stageCursor"
+        "progress01",
+        "cancelRequested",
+        "stageCursor",
+        "startedAtMs",
+        "error",
+        "cameraPosesPreview",
+        "sparsePointCloudPreview"
       ],
       "properties": {
         "id": {
@@ -26,6 +28,7 @@
         },
         "stage": {
           "type": "string",
+          "title": "ReconstructionStage",
           "enum": [
             "idle",
             "ingesting",
@@ -48,26 +51,35 @@
           ]
         },
         "progress01": {
-          "type": "number"
+          "type": "number",
+          "format": "float"
         },
         "cancelRequested": {
           "type": "boolean"
         },
         "stageCursor": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "startedAtMs": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
         },
         "error": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "cameraPosesPreview": {
           "type": "array",
           "items": {
-            "title": "CameraPosePreview",
             "type": "object",
+            "title": "CameraPosePreview",
             "additionalProperties": false,
             "required": [
               "cameraId",
@@ -81,7 +93,8 @@
               "rotationWxyz": {
                 "type": "array",
                 "items": {
-                  "type": "number"
+                  "type": "number",
+                  "format": "float"
                 },
                 "minItems": 4,
                 "maxItems": 4
@@ -89,7 +102,8 @@
               "translation": {
                 "type": "array",
                 "items": {
-                  "type": "number"
+                  "type": "number",
+                  "format": "float"
                 },
                 "minItems": 3,
                 "maxItems": 3
@@ -98,7 +112,9 @@
           }
         },
         "sparsePointCloudPreview": {
-          "type": "string"
+          "type": "string",
+          "format": "base64",
+          "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)"
         }
       }
     }

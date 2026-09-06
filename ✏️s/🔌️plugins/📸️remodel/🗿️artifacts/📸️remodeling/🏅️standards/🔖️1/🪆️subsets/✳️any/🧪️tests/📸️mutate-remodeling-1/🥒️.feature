@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-remodeling-1-any
 Feature: Apply every typed remodeling-scene mutation to its committed specification vector and against an independent Python implementation
-  `s.remodeling.remodeling` is a semio-NATIVE artifact, and the document is a reconstruction
+  `s.remodel.remodeling` is a semio-NATIVE artifact, and the document is a reconstruction
   JOB — streams, calibrations, ground control points, the eight parameter blocks a pipeline runs
   under, and the engine-owned results — not a point cloud or a mesh file. A reader of COLMAP, LAS or
   PLY output would therefore be judging a different artifact, and nothing reads `.dsl.semio`. That is
@@ -14,7 +14,8 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   appended recording that the `asset://` blocker it named is now resolved.
 
   🐍️ `🐍️component.py` beside this file is the second IMPLEMENTATION that decision named as the
-  remaining debt: 34 of this vocabulary's 35 kinds, written in Python from this subset's own
+  remaining debt: all 35 of this vocabulary's kinds — 34 as applied mutations and
+  `commit-reconstruction` as the refusal its own vector declares — written in Python from this subset's own
   committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json` document shape and each kind's own
   committed `(before, mutation, after)` leaf fixture, and from
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
@@ -60,10 +61,19 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   leave the scene untouched. Note also that `commit-reconstruction`'s own inverse restores only `job`
   and the six result slots — never `assets` or `durable_artifacts` — so the inverse law holds for this
   refusal vector and would NOT hold for a commit that published new assets; that is a real weakness of
-  the kind, recorded here rather than hidden by the vector that dodges it. Because this kind's two
-  scenarios carry no `<vector>` row, the runner executes NO oracle role for them, every assertion
-  lives in the subject handler, and the three `local://` fixtures above are the only committed bytes
-  either half reads by a name this feature does not carry.
+  the kind, recorded here rather than hidden by the vector that dodges it. This kind's two scenarios
+  address that vector by the same doc-string mechanism as every other row — three `local://` URIs in
+  place of the `asset://` triple a `<vector>` builds — so both halves resolve it at run time and both
+  halves answer for it, the reference deriving the refusal from the payload's own shape rather than
+  adopting production's verdict.
+
+  🔁 `identity-round-trip` compares the two halves on the PRINTED CARRIER rather than on a parsed
+  document, because the reference cannot parse `.dsl.semio`: this subset's committed text grammar is
+  the repository-wide placeholder whose whole body is `payload = OCTET+`, which the oracle registry's
+  own `remodeling-mutation-semantics` entry already reports. What the reference CAN state from the
+  committed bytes alone is what the carrier must be after a faithful parse-and-reprint — those same
+  bytes. The subject asserts the other half, that reparsing its own printout yields the document it
+  first parsed, inside its handler, where a byte comparison could not reach it.
 
   @id-mutate
   @level-exhaustive
@@ -84,7 +94,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | id                        | vector                                                       |
       | create-stream             | 🌱create-stream/🧪️tests/🎥️adds-stream-c-458900                |
       | delete-stream             | 🪓delete-stream/🧪️tests/🚫️removes-stream-b-0f62a7             |
-      | change-stream-sync        | ⏱️change-stream-sync/🧪️tests/t038                            |
+      | change-stream-sync        | ⏱️change-stream-sync/🧪️tests/⏱️shifts-stream-a-5b442c        |
       | add-stream-frame          | ➕add-stream-frame/🧪️tests/🎞️appends-a-third-8ac259           |
       | remove-stream-frame       | ➖remove-stream-frame/🧪️tests/🚫️removes-the-last-304bdf       |
       | replace-stream-source     | 🔁replace-stream-source/🧪️tests/🧹️clears-the-video-143f2b     |
@@ -105,7 +115,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | update-match-params       | 🪢update-match-params/🧪️tests/🌳️switches-the-652d03           |
       | update-sfm-params         | 🧮update-sfm-params/🧪️tests/🎯️switches-the-7f0371             |
       | update-dense-params       | 🌁update-dense-params/🧪️tests/🔬️raises-the-dense-ddb263       |
-      | update-mesh-params        | 🕸️update-mesh-params/🧪️tests/t039                            |
+      | update-mesh-params        | 🕸️update-mesh-params/🧪️tests/🔳️doubles-the-c245d5            |
       | update-motion-params      | 🏎️update-motion-params/🧪️tests/🏃️enables-motion-2444a3       |
       | update-geo-params         | 🌐update-geo-params/🧪️tests/🌐️enables-georefere-18a68a        |
       | replace-job               | 🏗️replace-job/🧪️tests/🎨️advances-the-job-c1e878              |
@@ -121,12 +131,21 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   @level-exhaustive
   @mode-error
   Scenario Outline: Applying <id> is refused exactly as its vector declares
-    Given the committed before-document and mutation payload of the <id> specification vector
+    Given the case-local refusal vector for the <id> kind
+      """
+      {
+        "kind": "<id>",
+        "before": "local://⬅️commit-reconstruction-before.json",
+        "mutation": "local://🦠️commit-reconstruction-mutation.json",
+        "after": "local://➡️commit-reconstruction-after.json",
+        "code": "<code>"
+      }
+      """
     When <id> is applied through apply_remodeling_mutation_json
     Then the document is left untouched and the declared <code> refusal was raised
     Examples:
-      | id                        | code                                   |
-      | commit-reconstruction     | mutation.invalid-reconstruction-sparse |
+      | id                    | code                                   |
+      | commit-reconstruction | mutation.invalid-reconstruction-sparse |
 
   @id-inverse
   @level-exhaustive
@@ -147,7 +166,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | id                        | vector                                                       |
       | create-stream             | 🌱create-stream/🧪️tests/🎥️adds-stream-c-458900                |
       | delete-stream             | 🪓delete-stream/🧪️tests/🚫️removes-stream-b-0f62a7             |
-      | change-stream-sync        | ⏱️change-stream-sync/🧪️tests/t038                            |
+      | change-stream-sync        | ⏱️change-stream-sync/🧪️tests/⏱️shifts-stream-a-5b442c        |
       | add-stream-frame          | ➕add-stream-frame/🧪️tests/🎞️appends-a-third-8ac259           |
       | remove-stream-frame       | ➖remove-stream-frame/🧪️tests/🚫️removes-the-last-304bdf       |
       | replace-stream-source     | 🔁replace-stream-source/🧪️tests/🧹️clears-the-video-143f2b     |
@@ -168,7 +187,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | update-match-params       | 🪢update-match-params/🧪️tests/🌳️switches-the-652d03           |
       | update-sfm-params         | 🧮update-sfm-params/🧪️tests/🎯️switches-the-7f0371             |
       | update-dense-params       | 🌁update-dense-params/🧪️tests/🔬️raises-the-dense-ddb263       |
-      | update-mesh-params        | 🕸️update-mesh-params/🧪️tests/t039                            |
+      | update-mesh-params        | 🕸️update-mesh-params/🧪️tests/🔳️doubles-the-c245d5            |
       | update-motion-params      | 🏎️update-motion-params/🧪️tests/🏃️enables-motion-2444a3       |
       | update-geo-params         | 🌐update-geo-params/🧪️tests/🌐️enables-georefere-18a68a        |
       | replace-job               | 🏗️replace-job/🧪️tests/🎨️advances-the-job-c1e878              |
@@ -183,18 +202,33 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   @id-inverse
   @level-exhaustive
   @mode-differential
-  Scenario Outline: Undoing <id> restores its committed before-document (subject-only)
-    Given the committed before-document and mutation payload of the <id> specification vector
+  Scenario Outline: Undoing <id> restores the document its refusal never moved
+    Given the case-local refusal vector for the <id> kind
+      """
+      {
+        "kind": "<id>",
+        "before": "local://⬅️commit-reconstruction-before.json",
+        "mutation": "local://🦠️commit-reconstruction-mutation.json",
+        "after": "local://➡️commit-reconstruction-after.json",
+        "code": "<code>"
+      }
+      """
     When <id> and then every step of its own computed inverse are applied through undo_remodeling_mutation_json
-    Then the document is the committed before-document again, member positions included
+    Then the document is the committed before-document again, member positions included, and the two implementations agree
     Examples:
-      | id                        |
-      | commit-reconstruction     |
+      | id                    | code                                   |
+      | commit-reconstruction | mutation.invalid-reconstruction-sparse |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Parse and reprint the real committed example without passing bytes through
-    Given the real committed example asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio
+    Given the real committed example this artifact ships
+      """
+      {
+        "kind": "identity-round-trip",
+        "carrier": "asset://📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"
+      }
+      """
     When it is parsed, printed back to DSL and parsed again through round_trip_remodeling_dsl
     Then both parses agree on one document, and the reprinted text reproduces the committed example byte for byte

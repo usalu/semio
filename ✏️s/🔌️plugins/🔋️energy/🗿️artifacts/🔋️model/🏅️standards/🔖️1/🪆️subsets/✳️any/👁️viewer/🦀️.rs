@@ -7,7 +7,7 @@
 use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::viewer::model::modes::view;
 use crate::viewer::model::modes::view::windows::{simulation, structure, zones};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
@@ -48,14 +48,14 @@ impl ArtifactViewer for EnergyModelViewer {
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> EnergyModelSnapshot {
+    fn initial_snapshot() -> EnergyModelSnapshot {
         EnergyModelSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `EnergyModelViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not
     /// `unreachable!()`) so a future view-only action is a pure addition, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -65,13 +65,15 @@ impl ArtifactViewer for EnergyModelViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
-        semio_framework_plugin::built_to_component_tree(match body_key {
-            structure::BODY_KEY => structure::render(doc.snapshot),
-            zones::BODY_KEY => zones::render(doc.snapshot),
-            simulation::BODY_KEY => crate::energy_simulation_session::with_adopted_projection(doc.render_operation(), simulation::render),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
+        let node = match body_key {
+            structure::BODY_KEY => structure::render(doc.snapshot)?,
+            zones::BODY_KEY => zones::render(doc.snapshot)?,
+            simulation::BODY_KEY => crate::energy_simulation_session::with_adopted_projection(doc.render_operation(), |projection| simulation::render(projection, &doc.snapshot.model)),
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️Viewer
@@ -109,10 +111,19 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn viewer_declares_both_windows() {
+    async fn viewer_declares_all_three_windows() {
         let def = create_energy_model_viewer();
-        assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));
-        assert!(def.window_kinds.iter().any(|w| w.id == zones::WINDOW_KIND_ID));
+        for id in [structure::WINDOW_KIND_ID, zones::WINDOW_KIND_ID, simulation::WINDOW_KIND_ID] {
+            assert!(def.window_kinds.iter().any(|window| window.id == id), "missing window kind {id}");
+        }
+    }
+
+    /// 👁️ A viewer declares no dispatchable verb at all — its two kit windows use the READ-ONLY
+    /// `window_kind()` variants (no `set-node`/`set-cell`) and its simulation window declares none.
+    #[semio_framework_async_macros::async_test]
+    async fn viewer_declares_no_dispatchable_action() {
+        let def = create_energy_model_viewer();
+        assert!(def.window_kinds.iter().all(|window| window.actions.is_empty()), "a viewer window declared an action");
     }
 }
 //#endregion 🧪️Tests

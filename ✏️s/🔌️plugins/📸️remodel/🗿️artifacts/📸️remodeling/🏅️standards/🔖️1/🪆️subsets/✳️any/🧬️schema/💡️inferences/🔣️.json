@@ -3,31 +3,100 @@
   "title": "RemodelingInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds",
+    "relativeCameraPoses"
+  ],
   "properties": {
     "bounds": {
       "$ref": "#/$defs/RemodelingBounds",
+      "x-semio-derived": true
+    },
+    "relativeCameraPoses": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/RemodelingPoseDelta"
+      },
       "x-semio-derived": true
     }
   },
   "$defs": {
     "RemodelingBoundingBox": {
       "type": "object",
+      "title": "RemodelingBoundingBox",
       "additionalProperties": false,
-      "required": ["min", "max"],
+      "required": [
+        "min",
+        "max"
+      ],
       "properties": {
-        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
       }
     },
     "RemodelingBounds": {
       "type": "object",
+      "title": "RemodelingBounds",
       "additionalProperties": false,
-      "required": ["boundingBox", "vertexCount", "faceCount"],
+      "required": [
+        "boundingBox",
+        "vertexCount",
+        "faceCount"
+      ],
       "properties": {
-        "boundingBox": { "$ref": "#/$defs/RemodelingBoundingBox" },
-        "vertexCount": { "type": "integer" },
-        "faceCount": { "type": "integer" }
+        "boundingBox": {
+          "$ref": "#/$defs/RemodelingBoundingBox"
+        },
+        "vertexCount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "faceCount": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    },
+    "RemodelingPoseDelta": {
+      "type": "object",
+      "title": "RemodelingPoseDelta",
+      "additionalProperties": false,
+      "required": [
+        "translationDelta",
+        "rotationAngleRad"
+      ],
+      "properties": {
+        "translationDelta": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "rotationAngleRad": {
+          "type": "number",
+          "format": "double"
+        }
       }
     }
   }

@@ -12,7 +12,7 @@ Status: schema, owner-preserving Rust API migration, source oracle, and exact na
 - Cluster replication acquires the follower writer before inventory, uses `open_acquired`, and returns the exact permit on recovery rejection. A later close fault returns the live follower WAL.
 - CLI repair, migration, document open/create, compaction, and replication explicitly drive typed rejections to terminal before reporting their ordinary cause.
 
-The retained writer signal/backend cell remains the nonpanicking fail-closed owner if a rejection is abandoned: permit/release construction already requests backend close and the backend table retains the physical guard. Abandonment does not claim terminal success. Normal production paths now retain and drive the typed owner explicitly.
+The retained writer signal/backend cell remains the nonpanicking fail-closed owner if a rejection is abandoned. Explicit permit-to-release transfer is dormant: the first `WalWriterRelease` poll requests backend close, so a caller sees the retained rejection while the exact writer is still fenced. Dropping either a permit or an unpolled release requests nonblocking cleanup and leaves the physical guard in the backend table until terminal ACK. Abandonment does not claim terminal success. Normal production paths retain and drive the typed owner explicitly.
 
 ## Validated current frontier
 
@@ -39,7 +39,7 @@ The registered writer source oracle evaluates the exact owner transition and sou
 ```text
 NX_ISOLATE_PLUGINS=false bun ./📜️script.ts nx run @semio-tech/framework-os-kernel:wal-writer-authority-check --skip-nx-cache
 exit 0
-wal-writer-authority-independent-oracle: AJV=5 exact-u64=1 cases=3 mutations=6 remote=5 writer-slots=32 retained-result=1 directory-barriers=4 wal-open-owner=1
+wal-writer-authority-independent-oracle: AJV=6 exact-u64=1 cases=3 mutations=6 remote=5 writer-slots=32 retained-result=1 directory-barriers=4 wal-open-owner=1 backend-pool-use=5
 ```
 
 ## Exact native registration
@@ -52,4 +52,4 @@ The existing `wal-writer-authority-native-check` all-features exact group now in
 
 ## Nonclaims
 
-The source receipt is not a Rust compile or runtime result. The registered laws have not yet run. The first implementation corpus uses injected WAL begin faults and exact conflict/terminal reacquisition; repeated physical guard-close faulting remains covered by the writer-controller laws in the same exact group, not yet by a combined WAL-open plus guard-fault law. Cancellation of an abandoned `ArtifactAuthority::spawn` receiver still relies on the backend release cell rather than a caller-recoverable authority-mount handle and needs a later dedicated cancellation law.
+The source receipt is not a Rust compile or runtime result. Root receipt `yDnbws` built and reached `artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owner_retry`, where it exposed the former eager-release defect by allowing same-document reacquisition before retained cleanup. The dormant-transfer correction postdates that receipt and remains native-pending. The first implementation corpus uses injected WAL begin faults and exact conflict/terminal reacquisition; repeated physical guard-close faulting remains covered by the writer-controller laws in the same exact group. Cancellation of an abandoned `ArtifactAuthority::spawn` receiver still relies on the backend release cell rather than a caller-recoverable authority-mount handle and needs a later dedicated cancellation law.

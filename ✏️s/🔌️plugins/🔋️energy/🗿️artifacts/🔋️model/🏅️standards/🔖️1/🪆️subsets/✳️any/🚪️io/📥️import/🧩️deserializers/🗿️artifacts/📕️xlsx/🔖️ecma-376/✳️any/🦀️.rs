@@ -9,7 +9,7 @@ pub async fn deserialize(from: &XlsxSnapshot) -> Result<EnergyModelSnapshot, sto
     Ok(EnergyModelSnapshot::default())
 }
 
-pub async fn deserialize_bytes(bytes: &[u8]) -> Result<EnergyModelSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<EnergyModelSnapshot, store::TextError> {
     let _ = bytes;
     Ok(EnergyModelSnapshot::default())
 }

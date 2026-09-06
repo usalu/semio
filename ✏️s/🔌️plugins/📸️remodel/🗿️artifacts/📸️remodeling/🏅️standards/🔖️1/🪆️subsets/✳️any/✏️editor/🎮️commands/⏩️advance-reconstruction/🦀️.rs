@@ -10,7 +10,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 pub use run_reconstruction::AdvanceReconstruction;
 
 /// ⏱️ Delegates one generation-checked unit to the shared reconstruction session.
-pub async fn handle(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     run_reconstruction::advance_reconstruction(payload, doc)
 }
 //#endregion 🔖️AdvanceReconstruction

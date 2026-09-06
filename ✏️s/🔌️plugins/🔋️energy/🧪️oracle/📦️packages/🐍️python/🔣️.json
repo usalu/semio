@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "_comment": "🔮️ Pinned third-party physics-oracle toolchain for the 🔋️energy plugin, provisioned by the sibling `📜️script.ts oracle setup` into `.🧬semio/🦑️repo/⚡️cache/oracles/<tool>-<version>-<platform>/`. Every archive is verified against the sha256 recorded here (the digest GitHub's own release API reports for that asset), so a corrupted or substituted download fails closed. TEST-ONLY: nothing under this package is reachable from any shipped semio artifact.",
+  "tools": [
+    {
+      "tool": "openstudio",
+      "version": "3.11.0",
+      "build": "241b8abb4d",
+      "bundles": { "energyplus": "25.2.0" },
+      "license": "BSD-3-Clause",
+      "releaseUrl": "https://github.com/NREL/OpenStudio/releases/tag/v3.11.0",
+      "downloadUrlTemplate": "https://github.com/NREL/OpenStudio/releases/download/v3.11.0/{asset}",
+      "stripComponents": 1,
+      "binaries": {
+        "openstudio": "bin/openstudio",
+        "energyplus": "EnergyPlus/energyplus",
+        "energyplusIdd": "EnergyPlus/Energy+.idd"
+      },
+      "_binariesComment": "🗂️ The OpenStudio archive's bundled EnergyPlus omits `WeatherData/`, `ExampleFiles/` and `PostProcess/ReadVarsESO` — the annual weather year is committed as a fixture instead and results are read from the SQLite output, so `energyplus -r` is never used.",
+      "platforms": {
+        "darwin-arm64": { "asset": "OpenStudio-3.11.0+241b8abb4d-Darwin-arm64.tar.gz", "bytes": 329156193, "sha256": "b7f859038e2962371ff1e12ffe509235f01a7d54f631f04b458dfb5d7be36464" },
+        "darwin-x64": { "asset": "OpenStudio-3.11.0+241b8abb4d-Darwin-x86_64.tar.gz", "bytes": 346763726, "sha256": "2f461ece4025877d9ea46d5d2f066f7c1e5fb9fc0dc57ef52eb297a990b79d19" },
+        "linux-arm64": { "asset": "OpenStudio-3.11.0+241b8abb4d-Ubuntu-24.04-arm64.tar.gz", "bytes": 378199648, "sha256": "8769978a3d3673f9953645c355e62be9c18c369f2870984a65893695d27932fe" },
+        "linux-x64": { "asset": "OpenStudio-3.11.0+241b8abb4d-Ubuntu-24.04-x86_64.tar.gz", "bytes": 400204960, "sha256": "69456da262a4c2c11e6d12b554e27d4fb1947850bb219f987d7b2d0d84893fc7" },
+        "win32-arm64": { "asset": "OpenStudio-3.11.0+241b8abb4d-Windows.tar.gz", "bytes": 326792808, "sha256": "d87f737ef44fc38aa96600dd2d8a329b39ffbd9865fc7952f93dcd191b84fc46" },
+        "win32-x64": { "asset": "OpenStudio-3.11.0+241b8abb4d-Windows.tar.gz", "bytes": 326792808, "sha256": "d87f737ef44fc38aa96600dd2d8a329b39ffbd9865fc7952f93dcd191b84fc46" }
+      }
+    }
+  ],
+  "python": {
+    "version": "3.12",
+    "reason": "🐍️ The `openstudio` bindings are a compiled SWIG wrapper whose Windows wheel matrix stops at cp313; 3.12 is the widest common denominator across the macOS/Linux/Windows wheels and is pinned in `pyproject.toml` so `uv sync` downloads it without touching the repository's own 3.14 interpreter."
+  }
+}

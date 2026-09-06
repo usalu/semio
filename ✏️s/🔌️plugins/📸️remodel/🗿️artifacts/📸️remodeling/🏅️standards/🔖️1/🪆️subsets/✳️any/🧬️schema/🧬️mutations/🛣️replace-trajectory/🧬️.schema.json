@@ -3,50 +3,62 @@
   "title": "ReplaceTrajectory",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "trajectory"
+  ],
   "properties": {
     "trajectory": {
-      "title": "CameraTrajectory",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "poses"
-      ],
-      "properties": {
-        "poses": {
-          "type": "array",
-          "items": {
-            "title": "CameraPosePreview",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "cameraId",
-              "rotationWxyz",
-              "translation"
-            ],
-            "properties": {
-              "cameraId": {
-                "type": "string"
-              },
-              "rotationWxyz": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 4,
-                "maxItems": 4
-              },
-              "translation": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 3,
-                "maxItems": 3
+      "anyOf": [
+        {
+          "type": "object",
+          "title": "CameraTrajectory",
+          "additionalProperties": false,
+          "required": [
+            "poses"
+          ],
+          "properties": {
+            "poses": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "title": "CameraPosePreview",
+                "additionalProperties": false,
+                "required": [
+                  "cameraId",
+                  "rotationWxyz",
+                  "translation"
+                ],
+                "properties": {
+                  "cameraId": {
+                    "type": "string"
+                  },
+                  "rotationWxyz": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  "translation": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                  }
+                }
               }
             }
           }
+        },
+        {
+          "type": "null"
         }
-      }
+      ]
     }
   }
 }

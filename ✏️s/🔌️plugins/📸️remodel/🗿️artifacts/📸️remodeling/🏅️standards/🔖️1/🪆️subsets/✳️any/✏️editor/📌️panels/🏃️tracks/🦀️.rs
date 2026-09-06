@@ -4,7 +4,7 @@
 
 use crate::artifacts::remodeling::RemodelingSnapshot;
 use crate::editor::remodeling::terminology::RemodelingLabels;
-use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
+use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const REMODELING_PANEL_TRACKS_ID: &str = "remodeling.tracks";
@@ -12,21 +12,25 @@ pub const REMODELING_PLAY_BODY_TRACKS: &str = "remodeling.play.tracks";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(REMODELING_PANEL_TRACKS_ID.into()), label: LocalizedLabel::native("Tracks", "Spuren"), group: PanelGroup::Details, body_key: Some(REMODELING_PLAY_BODY_TRACKS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiNode {
+pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemblyResult<BuiltNode> {
+    let mut rows: Vec<UiAssemblyResult<BuiltNode>> = Vec::new();
     if scene.results.tracks.is_empty() {
-        return ui_stack_vertical(vec![ui_text(labels.tracks_none), ui_text(labels.motion_not_implemented)]);
+        rows.push(tree_item("remodeling-tracks.none", labels.tracks_none.as_str()));
+        rows.push(tree_item("remodeling-tracks.gap", labels.motion_not_implemented.as_str()));
+    } else {
+        rows.push(tree_item("remodeling-tracks.count", format!("{}: {}", labels.tracks.as_str(), scene.results.tracks.len())));
+        for track in &scene.results.tracks {
+            rows.push(tree_item(format!("remodeling-tracks.track.{}", track.id), format!("{} ({:?}): {} frames, {:.2} m/s", track.id, track.class, track.length, track.mean_speed_m_s)));
+        }
     }
-    let mut lines = vec![ui_text(Label::data(format!("{}: {}", labels.tracks.as_str(), scene.results.tracks.len())))];
-    for track in &scene.results.tracks {
-        lines.push(ui_text(Label::data(format!("{} ({:?}): {} frames, {:.2} m/s", track.id, track.class, track.length, track.mean_speed_m_s))));
-    }
-    ui_stack_vertical(lines)
+    let rows = crate::editor::remodeling::ui_node_list(rows)?;
+    PanelTreeBuilder::new("remodeling-tracks")?.section("remodeling-tracks.motion", Some(crate::editor::remodeling::ui_label(labels.panel_tracks.as_str())?), true, rows)?.build()
 }
 //#endregion 🔖️Render
 
@@ -38,8 +42,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_empty_track_list_renders_the_documented_gap_message() {
-        let mut app = app();
-        assert!(render_body(&mut app, REMODELING_PLAY_BODY_TRACKS).contains("No motion tracks"));
+        let mut app = app().await;
+        assert!(render_body(&mut app, REMODELING_PLAY_BODY_TRACKS).await.contains("No motion tracks"));
     }
 }
 //#endregion 🧪️Tests

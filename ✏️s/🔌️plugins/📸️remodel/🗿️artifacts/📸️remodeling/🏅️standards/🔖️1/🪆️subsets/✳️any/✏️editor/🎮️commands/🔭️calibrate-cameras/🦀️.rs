@@ -17,7 +17,7 @@ pub struct CalibrateCameras {}
 /// `create-camera-calibration` per newly-derived camera. A documented simplification standing in for
 /// a real Zhang/checkerboard calibration pass (no calibration target detection is wired into this
 /// program).
-pub async fn handle(_payload: &CalibrateCameras, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &CalibrateCameras, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     let scene = doc.snapshot;
     let mut seen: Vec<String> = scene.calibration.cameras.iter().map(|camera| camera.id.clone()).collect();
     let mut mutations = Vec::new();

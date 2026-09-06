@@ -1,4 +1,16 @@
-module Remodeling_remodeling_inference;
-type Document = unit {
-    payload: bytes &eod;
+module Remodeling_inference;
+
+# 🌉 RemodelingInference has no DslRecord derive and no dedicated codec; its only wire form is the value
+# bridge (store::to_dsl_value -> pack_rt::encode_wire_value = os_pack::encode_record_body of the
+# one-field value_bridge_spec()).
+
+public type Body = unit {
+    symbol_count: uint64 &convert=$$;
+    symbols:      Symbol[self.symbol_count];
+    fields:       bytes &eod;
+};
+
+type Symbol = unit {
+    len:  uint64 &convert=$$;
+    text: bytes &size=self.len;
 };

@@ -8,15 +8,15 @@
   ],
   "properties": {
     "params": {
-      "title": "MotionParams",
       "type": "object",
+      "title": "MotionParams",
       "additionalProperties": false,
       "required": [
         "enabled",
         "maxTracks",
-        "minTrackLengthFrames",
+        "trackWindowPx",
         "minTrackQuality",
-        "trackWindowPx"
+        "minTrackLengthFrames"
       ],
       "properties": {
         "enabled": {
@@ -24,17 +24,21 @@
         },
         "maxTracks": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "trackWindowPx": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "minTrackQuality": {
-          "type": "number"
+          "type": "number",
+          "format": "float"
         },
         "minTrackLengthFrames": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         }
       }

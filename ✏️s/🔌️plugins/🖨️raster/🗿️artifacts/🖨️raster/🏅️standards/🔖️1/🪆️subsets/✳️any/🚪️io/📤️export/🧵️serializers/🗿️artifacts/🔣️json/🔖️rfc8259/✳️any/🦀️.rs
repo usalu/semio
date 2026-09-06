@@ -4,7 +4,7 @@
 //! `JsonSnapshot::from_value`/stdio's own real `write_json_pretty` do the structural conversion —
 //! no hand-rolled bridge needed here.
 use crate::artifacts::raster::RasterSnapshot;
-use dsl::{FromValue, ToValue};
+use dsl::ToValue;
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_pretty, JsonSnapshot};
 use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}

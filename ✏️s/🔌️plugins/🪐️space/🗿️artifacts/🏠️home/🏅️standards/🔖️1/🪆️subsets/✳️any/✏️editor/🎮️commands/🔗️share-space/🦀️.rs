@@ -45,7 +45,7 @@ mod tests {
     async fn empty_email_opens_the_share_dialog() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
-        let doc = doc_view(&history, &doc_snapshot);
+        let doc = doc_view(&history, &doc_snapshot).await;
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: String::new(), role: String::new() }, &doc, &cfg).expect("handle");
@@ -56,7 +56,7 @@ mod tests {
     async fn email_and_role_relay_upsert_member() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
-        let doc = doc_view(&history, &doc_snapshot);
+        let doc = doc_view(&history, &doc_snapshot).await;
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: "ada@semio.dev".into(), role: "author".into() }, &doc, &cfg).expect("handle");
@@ -78,7 +78,7 @@ mod tests {
     async fn blank_role_defaults_to_spectator() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
-        let doc = doc_view(&history, &doc_snapshot);
+        let doc = doc_view(&history, &doc_snapshot).await;
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = handle(&ShareSpace { space_id: "sp-1".into(), email: "ada@semio.dev".into(), role: String::new() }, &doc, &cfg).expect("handle");

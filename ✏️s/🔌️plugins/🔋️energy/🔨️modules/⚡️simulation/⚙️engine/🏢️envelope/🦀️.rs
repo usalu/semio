@@ -123,14 +123,18 @@ pub fn solve_exterior_surface_temp(outside_air_c: f64, sky_temp_k: f64, wind_spe
 }
 
 /// 🌡️ Solve interior surface temperature [°C] for heat balance.
+///
+/// Sign convention, stated because it used to be inverted: `conduction_from_outside_w_m2` and the
+/// returned `convection_w_m2` are both POSITIVE INTO THE ZONE, so a surface delivering heat to the
+/// room is warmer than the room air, not colder.
 pub fn solve_interior_surface_temp(zone_air_c: f64, conduction_from_outside_w_m2: f64, solar_absorbed_w_m2: f64, int_conv: &InteriorConvectionModel) -> SurfaceHeatBalance {
     let mut t_s = zone_air_c;
     for _ in 0..20 {
         let h = int_conv.h_w_m2k(t_s, zone_air_c);
-        t_s = zone_air_c - (solar_absorbed_w_m2 + conduction_from_outside_w_m2) / h.max(0.1);
+        t_s = zone_air_c + (solar_absorbed_w_m2 + conduction_from_outside_w_m2) / h.max(0.1);
     }
     let h = int_conv.h_w_m2k(t_s, zone_air_c);
-    SurfaceHeatBalance { convection_w_m2: h * (zone_air_c - t_s), conduction_w_m2: conduction_from_outside_w_m2, solar_absorbed_w_m2, longwave_net_w_m2: 0.0, surface_temp_c: t_s }
+    SurfaceHeatBalance { convection_w_m2: h * (t_s - zone_air_c), conduction_w_m2: conduction_from_outside_w_m2, solar_absorbed_w_m2, longwave_net_w_m2: 0.0, surface_temp_c: t_s }
 }
 
 /// 🔥️ Steady-state opaque conduction flux [W/m²] through construction.
@@ -179,10 +183,18 @@ mod tests {
         assert!((q - (-6.25)).abs() < 0.01);
     }
 
+    /// 🧪️ Heat LEAVING the zone through the wall must leave the inside face COLDER than the room
+    /// air — the direction the previous formula had backwards — while the energy leaving through
+    /// convection still equals the energy leaving through conduction.
     #[test]
     fn interior_surface_balance_near_air() {
-        let balance = solve_interior_surface_temp(22.0, -2.0, 0.0, &InteriorConvectionModel::default());
-        assert!(balance.surface_temp_c > 22.0);
-        assert!(balance.residual_w_m2().abs() < 0.1);
+        let losing = solve_interior_surface_temp(22.0, -2.0, 0.0, &InteriorConvectionModel::default());
+        assert!(losing.surface_temp_c < 22.0, "surface was {} °C", losing.surface_temp_c);
+        assert!((losing.convection_w_m2 - (-2.0)).abs() < 1e-6, "convection was {} W/m²", losing.convection_w_m2);
+        assert!(losing.residual_w_m2().abs() < 0.1);
+
+        let gaining = solve_interior_surface_temp(22.0, 2.0, 0.0, &InteriorConvectionModel::default());
+        assert!(gaining.surface_temp_c > 22.0, "surface was {} °C", gaining.surface_temp_c);
+        assert!((gaining.convection_w_m2 - 2.0).abs() < 1e-6, "convection was {} W/m²", gaining.convection_w_m2);
     }
 }

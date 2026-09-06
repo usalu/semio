@@ -18,7 +18,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactReta
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
     ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
-    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use dsl::os_pack::json::Value;
 use std::collections::HashMap;
@@ -109,12 +109,26 @@ pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_ut
     }
 }
 
-/// 🎬️ Builds an `ActionDescriptor` dispatched through the raster app's single controller — the one call
-/// site every window/panel/option goes through.
+/// 🎬️ Builds the semantic-UI action binding dispatched through the raster app's single controller — the
+/// one call site every panel/window *node* goes through. Not for `WindowMeasure` chrome, which rides the
+/// renderer's own [`ActionDescriptor`] record — see [`raster_measure_action`].
 pub fn raster_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     ActionFactory::new(RASTER_PLAY_CONTROLLER_ID).action(action, args)
 }
 
+/// 🎚️ Builds the window-chrome `ActionDescriptor` a [`WindowMeasure`] carries — the measure tree is a
+/// renderer-side record, not a semantic-UI node, so it takes the descriptor verbatim rather than the
+/// fixed-capacity `(ActionId, Option<UiValue>)` pair [`raster_action`] returns.
+pub fn raster_measure_action(action: &str) -> ActionDescriptor {
+    ActionDescriptor { controller_id: RASTER_PLAY_CONTROLLER_ID.into(), action: action.into(), args: None }
+}
+
+/// 🏷️ Admits one resolved raster string into the semantic UI contract's fixed-capacity label owner —
+/// every panel/window label goes through here rather than the renderer's unbounded `Label`.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref().to_string())
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster UI label admission failed"))
+}
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -198,11 +212,13 @@ semio_framework_plugin::app_commands! {
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setLocale" as "locale" => set_locale::SetLocale,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
+use crate::editor::raster::commands::set_active_example;
 use crate::editor::raster::commands::set_active_utility;
 use crate::editor::raster::commands::set_locale;
 use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
@@ -212,9 +228,9 @@ use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite
 
 //#region 🧵️RetainedCommands
 /// 🧵️ Every `RasterCommand` row, without exception — the retained route table, the manifest's
-/// `Migrated` classification list and `RasterCommand::TOOL_JOB_IDS` are the SAME sixteen ids, which is
-/// exactly what the framework's `validate_tool_job_rows` demands (`expected = TOOL_JOB_IDS ∩ migrated`
-/// must equal the proof set). Row order mirrors the `app_commands!` declaration order above.
+/// `Migrated` classification list and `RasterCommand::TOOL_JOB_IDS` are the SAME seventeen ids, which
+/// is exactly what the framework's `validate_tool_job_rows` demands (`expected = TOOL_JOB_IDS ∩
+/// migrated` must equal the proof set). Row order mirrors the `app_commands!` declaration order above.
 const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "addLayer",
     "dropLayerKind",
@@ -232,15 +248,21 @@ const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setCameraZoom",
     "setActiveUtility",
     "setLocale",
+    "setActiveExample",
 ];
 const RASTER_RETAINED_PAYLOAD_SCHEMA: &str = "raster.tool-command.v1";
 const RASTER_RETAINED_RAW_BYTES: usize = 65_536;
 const RASTER_RETAINED_WORK_ITEMS: usize = 4_096;
 /// 🛣️ Publication lanes per route, read off each handler's own `Emit` in `🎮️commands/*/🦀️.rs` — the
-/// nine layer verbs build `Emit { artifact_mutations, .. }`/`Emit::mutations(..)` over `RasterMutation`
-/// and never touch the config, while the seven session verbs build `Emit::config(..)` over
-/// `RasterConfigMutation` and never touch the document. No raster handler emits both lanes, a draft, a
-/// presence or a transient mutation, so no route declares more than one lane here.
+/// ten document verbs build `Emit { artifact_mutations, .. }`/`Emit::mutations(..)` over
+/// `RasterMutation` and never touch the config, while the seven session verbs build `Emit::config(..)`
+/// over `RasterConfigMutation` and never touch the document. No raster handler emits both lanes, a
+/// draft, a presence or a transient mutation, so no route declares more than one lane here.
+///
+/// 🎬️ `setActiveExample` is a document verb, not a session one: raster has no whole-document replace
+/// mutation, so `🎮️commands/🎬️set-active-example` spells loading an example as an ordered batch of
+/// real `RasterMutation`s (delete every root layer, re-point the asset pool, plant the example forest)
+/// — the Artifact lane, exactly like every other layer verb.
 ///
 /// 🎥️ `setCamera`/`setCameraZoom`/`setCompositeViewport`/`setActiveUtility`/`setLocale` stay session-only
 /// `ActionKind::View` declarations in `🔖️Manifest` (ticket 26/07/31 — camera is runtime state, never a
@@ -263,6 +285,7 @@ const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
 fn raster_retained_contract() -> ToolExecutionContract {
@@ -671,7 +694,8 @@ impl ArtifactEditor for RasterPlayApp {
         contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
-            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveUtility", "setLocale"
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveUtility", "setLocale",
+            "setActiveExample"
         ]
     }
 
@@ -737,8 +761,12 @@ impl ArtifactEditor for RasterPlayApp {
         Some(crate::editor::raster::config::schema::app_schema_descriptor())
     }
 
+    /// 📄️ Boots on the bundled `📚️examples/🎬️demo` Semio-logo carrier (the same `.dsl.semio` text
+    /// `setActiveExample` loads), so every window renders real content instead of the all-`Default`
+    /// scaffold. `empty_raster_document()` stays the tests' blank slate — mirrors block2d's
+    /// `default_block2d_snapshot`.
     fn initial_snapshot() -> RasterSnapshot {
-        crate::artifacts::raster::schema::empty_raster_document()
+        crate::artifacts::raster::schema::default_raster_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -803,15 +831,17 @@ impl ArtifactEditor for RasterPlayApp {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = raster_play_labels(config);
-        match body_key {
-            composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config),
-            navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config),
-            crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS => crate::editor::raster::panels::document::render(document, config, labels),
-            crate::editor::raster::panels::masks::RASTER_PLAY_BODY_MASKS => crate::editor::raster::panels::masks::render(document, config, labels),
-            crate::editor::raster::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::editor::raster::panels::catalogue::render(labels),
-            crate::editor::raster::panels::inspection::RASTER_PLAY_BODY_PROPERTIES => crate::editor::raster::panels::inspection::render(document, config, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        let node = match body_key {
+            composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config)?,
+            navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config)?,
+            crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS => crate::editor::raster::panels::document::render(document, config, labels)?,
+            crate::editor::raster::panels::masks::RASTER_PLAY_BODY_MASKS => crate::editor::raster::panels::masks::render(document, config, labels)?,
+            crate::editor::raster::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::editor::raster::panels::catalogue::render(labels)?,
+            crate::editor::raster::panels::inspection::RASTER_PLAY_BODY_PROPERTIES => crate::editor::raster::panels::inspection::render(document, config, labels)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster unknown-body label admission failed"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️RasterPlayApp
@@ -898,11 +928,13 @@ fn raster_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group:
 /// Only the leaf action/keybinding/utility declarations (which have no dedicated `_def` passthrough) are
 /// written out inline.
 ///
-/// 🚧️ SDK GAP (contract §2.4, `📓️w2-cad-report.md` "SDK gaps found" #4): `EditorBuilder`/
-/// `.editor::<E>(def: AppDefinition)` take a bare `AppDefinition`, discarding `App.examples` — there
-/// is no place left on this builder for the old `.example(...)`/`.workflow(...)` calls. Both are
-/// dropped here, not silently ported; the subset's own `📚️examples/🎬️demo` facet is the likely
-/// intended replacement mechanism (unconfirmed, per cad's same finding).
+/// 📚️ CLOSED (ticket 26/09/05/RASTER-PLUGIN-END-TO-END, W2) — the old "SDK GAP #4" note here claimed
+/// `.editor::<E>(def: AppDefinition)` discards `App.examples` with no replacement, so raster's
+/// `📚️examples/🎬️demo` facet went unregistered. The replacement is `PluginBuilder::
+/// editor_with_examples`, already in production on `🌀️procedural`'s two editors: the plugin root's
+/// `examples()` now stamps the demo carrier onto `PluginManifest.examples`, which is what the react
+/// shell's `NavbarExampleSelect` reads. Examples are a PLUGIN-root registration, not a builder-chain
+/// one; nothing about them belongs in this function.
 pub fn create_raster_app() -> AppDefinition {
     Editor::builder(crate::artifacts::raster::RASTER_DIALECT).document(["semio", "raster"])
             .artifact_kind(crate::artifacts::raster::artifact_kind())
@@ -933,10 +965,12 @@ pub fn create_raster_app() -> AppDefinition {
             .panel_tab_def(crate::editor::raster::panels::catalogue::definition())
             .panel_tab_def(crate::editor::raster::panels::masks::definition())
             .panel_tab_def(crate::editor::raster::panels::inspection::definition())
-            // ✏️ Palette-visible content operations. Whole-document replace (`setSnapshot`,
-            // `setActiveExample`) is gone — file-open/load-example go through the `.example(...)`
-            // registration at the bottom of this builder, entirely outside `RasterMutation` history.
+            // ✏️ Palette-visible content operations. `setSnapshot` — the old whole-document replace —
+            // stays gone (`🎮️commands/📃️document/🦀️.rs` records why); `setActiveExample` is back as a
+            // real, undoable batch of `RasterMutation`s rather than a snapshot swap, so it is an
+            // ordinary palette mutation like block2d's and puzzle3d's.
             .mutation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
+            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🔧️ Internal content operations — layer-tree / catalogue-drop / inspector bound.
             .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Mutation))
             .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
@@ -1007,6 +1041,7 @@ pub fn create_raster_app() -> AppDefinition {
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCameraZoom", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             // 🧰️ Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
             .utility(raster_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
             .utility(raster_utility("paintBrush", LocalizedLabel::native("Brush", "Pinsel"), "paintbrush", "Paint", UtilityCategory::Utilities))
@@ -1415,21 +1450,22 @@ mod tests {
             RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
             RasterCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "paintBrush".into() }),
             RasterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::raster::examples::demo::ID.into() }),
         ]
     }
 
     /// ⚖️ LAW: raster's retained route table, its publication contracts, its bounded-first-step proofs,
-    /// `RasterCommand::TOOL_JOB_IDS` and the catalog's `Migrated` classifications are the SAME sixteen
-    /// ids — the exact join `validate_tool_job_rows` demands (`interactive-job.catalog-authority` /
-    /// `interactive-job.catalog-incomplete`). Mirrors block2d's
+    /// `RasterCommand::TOOL_JOB_IDS` and the catalog's `Migrated` classifications are the SAME
+    /// seventeen ids — the exact join `validate_tool_job_rows` demands
+    /// (`interactive-job.catalog-authority` / `interactive-job.catalog-incomplete`). Mirrors block2d's
     /// `retained_route_dispositions_are_exact_and_exhaustive`.
     #[semio_framework_async_macros::async_test]
     async fn retained_route_dispositions_are_exact_and_exhaustive() {
         use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
         use std::collections::BTreeSet;
-        assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 16);
-        assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 16);
-        assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 16);
+        assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 17);
+        assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 17);
+        assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 17);
         assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
         assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
@@ -1437,9 +1473,9 @@ mod tests {
         assert_eq!(retained, every_command().iter().map(RasterCommand::command_id).collect::<BTreeSet<_>>(), "every RasterCommand row must be a retained route");
         assert_eq!(retained, RasterCommand::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>(), "the retained table must equal the generated tool-job id set");
 
-        // 🛣️ Lane discipline, read off the handlers: nine document verbs publish into the artifact lane,
+        // 🛣️ Lane discipline, read off the handlers: ten document verbs publish into the artifact lane,
         // seven session verbs into the config lane, and no route publishes into both.
-        let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer"].into_iter().collect();
+        let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample"].into_iter().collect();
         for tool_id in RASTER_RETAINED_TOOL_IDS {
             let contract = RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
             let expected = if artifact_lane.contains(tool_id) { ArtifactToolPublicationLane::Artifact } else { ArtifactToolPublicationLane::Config };
@@ -1464,6 +1500,24 @@ mod tests {
         for command in definition.commands.iter() {
             assert_ne!(command.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "command {} is unclassified", command.id);
         }
+
+        // ⚖️ The gate's own arithmetic, spelled out: `expected = TOOL_JOB_IDS ∩ migrated` must equal the
+        // proof set. `RASTER_RETAINED_TOOL_IDS` names that proof set (its length is asserted equal to
+        // `bounded_first_step_tool_proofs().len()` above, and the macro derives the proofs from the same
+        // literal list), so a route that is proven but left unclassified — or classified but unproven —
+        // fails here instead of at runtime with `interactive-job.catalog-authority`.
+        let migrated_ids: BTreeSet<&str> = definition
+            .window_kinds
+            .iter()
+            .flat_map(|window| window.actions.iter())
+            .filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated)
+            .map(|action| action.id.as_str())
+            .collect();
+        assert_eq!(
+            RasterCommand::TOOL_JOB_IDS.iter().copied().filter(|tool_id| migrated_ids.contains(tool_id)).collect::<BTreeSet<_>>(),
+            retained,
+            "every bounded-first-step proof entry must be Migrated, and every Migrated tool-job row must be proven"
+        );
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -1479,7 +1533,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_wire_keywords_are_unique_across_every_row() {
         let commands = every_command();
-        assert_eq!(commands.len(), 16, "every RasterCommand row must be covered by every_command()");
+        assert_eq!(commands.len(), 17, "every RasterCommand row must be covered by every_command()");
         let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();
@@ -1511,6 +1565,7 @@ mod tests {
                     RasterCommand::SetCameraZoom(_) => "camera-zoom",
                     RasterCommand::SetActiveUtility(_) => "active-utility",
                     RasterCommand::SetLocale(_) => "locale",
+                    RasterCommand::SetActiveExample(_) => "set-active-example",
                 };
                 (keyword, command)
             })
@@ -1526,6 +1581,8 @@ mod tests {
     /// `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL` ticket: dropping the two leading `setSnapshot`/
     /// `setActiveExample` rows (whole-document replace is no longer expressible as a mutation)
     /// shifted every later row's binary ordinal down by two — `set-layer-visible` 4→2 (`0104`→`0102`).
+    /// `setActiveExample` returned in `26/09/05/RASTER-PLUGIN-END-TO-END` as an ordered mutation batch
+    /// rather than a snapshot swap, APPENDED as the last row, so no earlier ordinal moved.
     /// Rebased again by `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`: the `set-selection`/
     /// `set-hover`/`select-all` rows (the only other `Option`-carrying case, `set-hover`) are deleted
     /// outright — layer selection/hover is the framework-owned `"layers"` interaction domain now.

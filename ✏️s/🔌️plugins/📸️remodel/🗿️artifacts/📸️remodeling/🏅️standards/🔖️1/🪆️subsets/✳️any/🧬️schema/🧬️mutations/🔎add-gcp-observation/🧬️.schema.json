@@ -12,13 +12,13 @@
       "type": "string"
     },
     "observation": {
-      "title": "GcpObservation",
       "type": "object",
+      "title": "GcpObservation",
       "additionalProperties": false,
       "required": [
+        "streamId",
         "frameIndex",
-        "pixel",
-        "streamId"
+        "pixel"
       ],
       "properties": {
         "streamId": {
@@ -26,12 +26,14 @@
         },
         "frameIndex": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "pixel": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "number",
+            "format": "float"
           },
           "minItems": 2,
           "maxItems": 2

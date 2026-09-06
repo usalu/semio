@@ -24,5 +24,26 @@ export interface EnergyModelSetStructureField {
   value: string;
 }
 
+/** 🌳️ The window's authored verbs beside the generic `set-node` kit action — the typed twin of
+ * `🦀️.rs`'s `structure_actions()`. */
+export const ENERGY_MODEL_STRUCTURE_ACTIONS = [
+  { id: "create-surface", label: { en: "Create surface", de: "Fläche anlegen" } },
+  { id: "delete-surface", label: { en: "Delete surface", de: "Fläche löschen" } },
+  { id: "assign-surface-construction", label: { en: "Assign construction", de: "Konstruktion zuweisen" } },
+  { id: "set-material-property", label: { en: "Set material property", de: "Materialeigenschaft setzen" } },
+  { id: "set-thermostat-setpoints", label: { en: "Set thermostat setpoints", de: "Thermostat-Sollwerte setzen" } },
+  { id: "set-site", label: { en: "Set site", de: "Standort setzen" } },
+] as const;
+
+/** 🧱️ The seven SI-range-checked scalars `set-material-property` addresses. */
+export type EnergyModelMaterialProperty =
+  | "thicknessM"
+  | "conductivityWMK"
+  | "densityKgM3"
+  | "specificHeatJKgK"
+  | "thermalAbsorptance"
+  | "solarAbsorptance"
+  | "visibleAbsorptance";
+
 export const ENERGY_MODEL_STRUCTURE_WINDOW_KIND_ID = "framework.window.tree" as const;
 export const ENERGY_MODEL_STRUCTURE_BODY_KEY = "framework.window.tree" as const;

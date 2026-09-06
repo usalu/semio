@@ -23,7 +23,7 @@ pub struct SetGeoParams {
     pub ortho_max_px: u32,
 }
 
-pub async fn handle(payload: &SetGeoParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetGeoParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_geo_params(GeoParams {
         enabled: payload.enabled,
         origin_lon: payload.origin_lon,

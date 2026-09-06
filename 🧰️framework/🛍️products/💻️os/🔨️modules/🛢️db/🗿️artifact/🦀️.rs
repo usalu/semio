@@ -345,6 +345,104 @@ pub enum ArtifactDurableGroupJournalAppendV1 {
     Rejected(DbError),
     Committed(store::durable_group::DurableOwnedGroupJournalReceiptV1),
 }
+
+/// 🔏️ One fixed-three decision proven to occupy exactly one committed WAL transaction body.
+pub struct ArtifactCommittedDurableGroupDecisionV1 {
+    document: ArtifactId,
+    transaction_id: u64,
+    segment_index: u64,
+    record: store::durable_group::DurableOwnedGroupJournalRecordV1,
+}
+
+impl ArtifactCommittedDurableGroupDecisionV1 {
+    pub(crate) fn document(&self) -> &ArtifactId {
+        &self.document
+    }
+
+    pub(crate) fn transaction_id(&self) -> u64 {
+        self.transaction_id
+    }
+
+    pub(crate) fn segment_index(&self) -> u64 {
+        self.segment_index
+    }
+
+    pub(crate) fn record(&self) -> &store::durable_group::DurableOwnedGroupJournalRecordV1 {
+        &self.record
+    }
+
+    pub(crate) fn into_record(self) -> store::durable_group::DurableOwnedGroupJournalRecordV1 {
+        self.record
+    }
+
+    /// ♻️ Transfers the exact committed decision into Store-owned fixed-three recovery without exposing Event bytes or receipt fields.
+    pub fn begin_store_owned_recovery<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+        &self,
+        parent: store::ArtifactStore<ParentP, ParentMutation>,
+        drawing: store::ArtifactStore<DrawingP, DrawingMutation>,
+        value: store::ArtifactStore<ValueP, ValueMutation>,
+    ) -> Result<
+        store::durable_group::DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+        store::durable_group::DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    >
+    where
+        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ParentMutation: store::StoreMutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::StoreMutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ValueMutation: store::StoreMutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    {
+        self.record.begin_store_owned_recovery(
+            store::durable_group::DurableOwnedGroupJournalReceiptV1 {
+                anchor_sha256: self.record.anchor_sha256().to_string(),
+                decision_sha256: self.record.decision_sha256().to_string(),
+                transaction_id: self.transaction_id,
+                segment_index: self.segment_index,
+            },
+            parent,
+            drawing,
+            value,
+        )
+    }
+}
+
+pub(crate) fn committed_durable_group_decision_from_transaction<S: db_storage::WalStorage>(document: &ArtifactId, mut transaction: db_wal::WalCommittedTransaction<'_, '_, S>) -> Result<Option<ArtifactCommittedDurableGroupDecisionV1>, DbError> {
+    let transaction_id = transaction.transaction_id();
+    let segment_index = transaction.segment_index();
+    let record_count = transaction.record_count();
+    let mut event = None;
+    let mut mixed = false;
+    loop {
+        match transaction.next_record_step()? {
+            db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Event(bytes)) => {
+                if event.is_some() {
+                    mixed = true;
+                } else {
+                    let mut canonical_pack = Vec::with_capacity(bytes.len());
+                    for fragment in bytes.fragments() {
+                        canonical_pack.extend_from_slice(fragment);
+                    }
+                    event = Some(canonical_pack);
+                }
+            }
+            db_wal::WalCommittedRecordStep::Record(_) => mixed = event.is_some() || record_count > 1,
+            db_wal::WalCommittedRecordStep::Yield => continue,
+            db_wal::WalCommittedRecordStep::Done => break,
+        }
+        while transaction.close_record_step()? {}
+    }
+    transaction.finish()?;
+    let Some(canonical_pack) = event else { return Ok(None) };
+    if mixed || record_count != 1 {
+        return Err(DbError::Corrupt("durable group decision must be the sole committed transaction body".to_string()));
+    }
+    let record = store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(canonical_pack).map_err(|error| DbError::Corrupt(format!("committed durable group decision is invalid: {error}")))?;
+    if record.document().artifact_id != document.0 {
+        return Err(DbError::Corrupt("committed durable group decision targets a different replay document".to_string()));
+    }
+    Ok(Some(ArtifactCommittedDurableGroupDecisionV1 { document: document.clone(), transaction_id, segment_index, record }))
+}
 //#endregion 🔖️Receipt
 
 //#region 🔖️State
@@ -373,11 +471,7 @@ async fn push_wal_record(records: &mut db_wal::WalRecordBatch, record: db_wal::W
 }
 
 async fn close_wal_record_batch(records: &mut db_wal::WalRecordBatch) -> Result<(), DbError> {
-    let mut control = db_wal::WalCursorControl::new(
-        Arc::new(std::sync::atomic::AtomicBool::new(false)),
-        std::time::Instant::now() + std::time::Duration::from_secs(30),
-        1_000_000,
-    )?;
+    let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
     while !records.terminal_is_empty() {
         control.grant()?;
         if !records.close_step()? && !records.terminal_is_empty() {
@@ -1259,21 +1353,20 @@ impl ArtifactEngineOpenRejected {
 }
 
 impl From<DbError> for ArtifactEngineOpenRejected {
-    fn from(error: DbError) -> Self { Self::BeforeWal(error) }
+    fn from(error: DbError) -> Self {
+        Self::BeforeWal(error)
+    }
 }
 
 impl From<db_wal::ArtifactWalOpenRejected> for ArtifactEngineOpenRejected {
-    fn from(rejected: db_wal::ArtifactWalOpenRejected) -> Self { Self::WalOpen(rejected) }
+    fn from(rejected: db_wal::ArtifactWalOpenRejected) -> Self {
+        Self::WalOpen(rejected)
+    }
 }
 
 impl std::fmt::Debug for ArtifactEngineOpenRejected {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter
-            .debug_struct("ArtifactEngineOpenRejected")
-            .field("cause", self.error())
-            .field("cleanup_error", &self.cleanup_error())
-            .field("has_retained_writer", &self.has_retained_writer())
-            .finish()
+        formatter.debug_struct("ArtifactEngineOpenRejected").field("cause", self.error()).field("cleanup_error", &self.cleanup_error()).field("has_retained_writer", &self.has_retained_writer()).finish()
     }
 }
 
@@ -1355,66 +1448,92 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             let mut batch_ids: HashSet<String> = HashSet::new();
             let mut seen: u64 = 0;
             let result = async {
-            loop {
-                let mut transaction = match records.next_transaction_step().await? {
-                    db_wal::WalCommittedStep::Transaction(transaction) => transaction,
-                    db_wal::WalCommittedStep::Yield => { semio_framework_async::yield_once().await; continue; }
-                    db_wal::WalCommittedStep::Done => break,
-                };
-                batch_ids.clear();
-                let mut frontier_seen = false;
                 loop {
-                    let record = match transaction.next_record_step()? {
-                        db_wal::WalCommittedRecordStep::Record(record) => record,
-                        db_wal::WalCommittedRecordStep::Yield => { semio_framework_async::yield_once().await; continue; }
-                        db_wal::WalCommittedRecordStep::Done => break,
+                    let mut transaction = match records.next_transaction_step().await? {
+                        db_wal::WalCommittedStep::Transaction(transaction) => transaction,
+                        db_wal::WalCommittedStep::Yield => {
+                            semio_framework_async::yield_once().await;
+                            continue;
+                        }
+                        db_wal::WalCommittedStep::Done => break,
                     };
-                    if frontier_seen { return Err(DbError::Corrupt("artifact committed frontier is not terminal".to_string())); }
-                    match record {
-                        db_wal::WalRecord::Command(bytes) => {
-                            let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
-                            let retained = decode_retained_envelope(bytes, &mut control).await?;
-                            let envelope = adapt_retained_envelope(retained, &mut control).await?;
-                            if envelope.document_id.0 != core_id.0 { return Err(DbError::Corrupt("artifact envelope document differs".to_string())); }
-                            seen += 1;
-                            batch_ids.insert(envelope.mutation_id.0.clone());
-                            if seen <= applied_head_seq {
-                                engine.applied.insert(envelope.mutation_id.0.clone(), envelope);
-                            } else {
-                                let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids).await?;
-                                let touch = command_touch(&envelope, &touched);
-                                if engine.recent_touches.len() >= MAX_RECENT_TOUCHES { engine.recent_touches.pop_front(); }
-                                engine.recent_touches.push_back(touch);
-                                report.commands_replayed += 1;
+                    batch_ids.clear();
+                    let mut frontier_seen = false;
+                    loop {
+                        let record = match transaction.next_record_step()? {
+                            db_wal::WalCommittedRecordStep::Record(record) => record,
+                            db_wal::WalCommittedRecordStep::Yield => {
+                                semio_framework_async::yield_once().await;
+                                continue;
                             }
+                            db_wal::WalCommittedRecordStep::Done => break,
+                        };
+                        if frontier_seen {
+                            return Err(DbError::Corrupt("artifact committed frontier is not terminal".to_string()));
                         }
-                        db_wal::WalRecord::Frontier(frontier) => {
-                            if frontier.document != core_id { return Err(DbError::Corrupt("artifact frontier document differs".to_string())); }
-                            frontier_seen = true;
-                            engine.frontier = frontier.clone();
+                        match record {
+                            db_wal::WalRecord::Command(bytes) => {
+                                let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+                                let retained = decode_retained_envelope(bytes, &mut control).await?;
+                                let envelope = adapt_retained_envelope(retained, &mut control).await?;
+                                if envelope.document_id.0 != core_id.0 {
+                                    return Err(DbError::Corrupt("artifact envelope document differs".to_string()));
+                                }
+                                seen += 1;
+                                batch_ids.insert(envelope.mutation_id.0.clone());
+                                if seen <= applied_head_seq {
+                                    engine.applied.insert(envelope.mutation_id.0.clone(), envelope);
+                                } else {
+                                    let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids).await?;
+                                    let touch = command_touch(&envelope, &touched);
+                                    if engine.recent_touches.len() >= MAX_RECENT_TOUCHES {
+                                        engine.recent_touches.pop_front();
+                                    }
+                                    engine.recent_touches.push_back(touch);
+                                    report.commands_replayed += 1;
+                                }
+                            }
+                            db_wal::WalRecord::Frontier(frontier) => {
+                                if frontier.document != core_id {
+                                    return Err(DbError::Corrupt("artifact frontier document differs".to_string()));
+                                }
+                                frontier_seen = true;
+                                engine.frontier = frontier.clone();
+                            }
+                            _ => {}
                         }
-                        _ => {}
+                        while transaction.close_record_step()? {
+                            semio_framework_async::yield_once().await;
+                        }
                     }
-                    while transaction.close_record_step()? { semio_framework_async::yield_once().await; }
+                    if !batch_ids.is_empty() && !frontier_seen {
+                        return Err(DbError::Corrupt("artifact committed commands have no frontier".to_string()));
+                    }
+                    transaction.finish()?;
                 }
-                if !batch_ids.is_empty() && !frontier_seen { return Err(DbError::Corrupt("artifact committed commands have no frontier".to_string())); }
-                transaction.finish()?;
+                Ok::<(), DbError>(())
             }
-            Ok::<(), DbError>(())
-            }.await;
+            .await;
             let closed = async {
-            while records.close_owner_step()? { semio_framework_async::yield_once().await; }
-            Ok::<(), DbError>(())
-            }.await;
+                while records.close_owner_step()? {
+                    semio_framework_async::yield_once().await;
+                }
+                Ok::<(), DbError>(())
+            }
+            .await;
             drop(records);
             drop(wal_facet);
             result.and(closed)
-        }.await;
+        }
+        .await;
         if let Err(error) = replay {
             let state_close = async {
-                while engine.state.values.close_step()? { semio_framework_async::yield_once().await; }
+                while engine.state.values.close_step()? {
+                    semio_framework_async::yield_once().await;
+                }
                 Ok::<(), DbError>(())
-            }.await;
+            }
+            .await;
             let ArtifactEngine { wal, .. } = engine;
             if let Err(close_error) = state_close {
                 return Err(ArtifactEngineOpenRejected::retained_wal_after_cleanup_error(error, close_error, wal));
@@ -1717,26 +1836,15 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// 📓️ Appends one Store-admitted fixed-three decision as a forced-Fsync event on this
     /// authority's already-retained WAL writer. Admission and capacity rejection complete before
     /// storage I/O; every error returned by `submit` remains an uncertain durable outcome.
-    async fn append_durable_group_decision(
-        &mut self,
-        record: store::durable_group::DurableOwnedGroupJournalRecordV1,
-        cancelled: Arc<std::sync::atomic::AtomicBool>,
-        now_ms: u64,
-    ) -> Result<ArtifactDurableGroupJournalAppendV1, DbError> {
+    async fn append_durable_group_decision(&mut self, record: store::durable_group::DurableOwnedGroupJournalRecordV1, cancelled: Arc<std::sync::atomic::AtomicBool>, now_ms: u64) -> Result<ArtifactDurableGroupJournalAppendV1, DbError> {
         if cancelled.load(std::sync::atomic::Ordering::Acquire) {
             return Ok(ArtifactDurableGroupJournalAppendV1::Absent);
         }
         let (canonical_pack, decision_sha256, anchor_sha256, document) = record.into_parts();
         if document.artifact_id != self.protocol_document.0 {
-            return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(DbError::InvalidArgument(
-                "durable group decision anchor targets a different document".to_string(),
-            )));
+            return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(DbError::InvalidArgument("durable group decision anchor targets a different document".to_string())));
         }
-        let mut control = db_wal::WalCursorControl::new(
-            cancelled.clone(),
-            std::time::Instant::now() + std::time::Duration::from_secs(30),
-            1_000_000,
-        )?;
+        let mut control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
         let event = match admit_wal_bytes(canonical_pack, db_storage::DB_IO_MAX_READ_BYTES, &mut control).await {
             Ok(event) => event,
             Err(error) => return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(error)),
@@ -1767,18 +1875,18 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         if !receipt.committed {
             return Err(DbError::Internal("forced-Fsync durable group decision did not commit".to_string()));
         }
-        Ok(ArtifactDurableGroupJournalAppendV1::Committed(
-            store::durable_group::DurableOwnedGroupJournalReceiptV1 {
-                anchor_sha256,
-                decision_sha256,
-                transaction_id: receipt.tx_id,
-                segment_index: receipt.segment_index,
-            },
-        ))
+        Ok(ArtifactDurableGroupJournalAppendV1::Committed(store::durable_group::DurableOwnedGroupJournalReceiptV1 { anchor_sha256, decision_sha256, transaction_id: receipt.tx_id, segment_index: receipt.segment_index }))
     }
 
     /// 🧹 Runs compaction inside this document authority while its WAL writer stays retained.
-    pub(crate) async fn compact_retained(&mut self, holder: db_storage::DbIoText, consolidate_snapshots: bool, budget: db_compact::CompactionBudget, now_ms: u64, cancelled: Arc<std::sync::atomic::AtomicBool>) -> Result<db_compact::CompactionReport, DbError> {
+    pub(crate) async fn compact_retained(
+        &mut self,
+        holder: db_storage::DbIoText,
+        consolidate_snapshots: bool,
+        budget: db_compact::CompactionBudget,
+        now_ms: u64,
+        cancelled: Arc<std::sync::atomic::AtomicBool>,
+    ) -> Result<db_compact::CompactionReport, DbError> {
         db_compact::retained_compaction_with_wal(self.storage.clone(), &mut self.wal, holder, consolidate_snapshots, budget, now_ms, cancelled).await
     }
 
@@ -2893,12 +3001,18 @@ struct HistoryPageSet {
 }
 
 impl db_wal::WalImmutableByteSource for HistoryPageSet {
-    fn byte_len(&self) -> usize { self.len as usize }
+    fn byte_len(&self) -> usize {
+        self.len as usize
+    }
 
     fn fragment_at(&self, offset: usize, limit: usize) -> Result<&[u8], DbError> {
-        if offset >= limit || limit as u64 > self.len { return Err(DbError::Corrupt("history immutable source range".to_string())); }
+        if offset >= limit || limit as u64 > self.len {
+            return Err(DbError::Corrupt("history immutable source range".to_string()));
+        }
         let bytes = self.page_slice(offset as u64, (limit - offset) as u64)?;
-        if bytes.is_empty() { return Err(DbError::Corrupt("history immutable source lost bytes".to_string())); }
+        if bytes.is_empty() {
+            return Err(DbError::Corrupt("history immutable source lost bytes".to_string()));
+        }
         Ok(bytes)
     }
 }
@@ -3034,7 +3148,9 @@ impl HistoryEnvelopeCursor {
             }
             HistoryEnvelopeField::Document => {
                 let range = pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FIELD_BYTES as u64)?;
-                if pages.copy_small(range, scratch)? != document.0.as_bytes() { return Err(DbError::Corrupt("history envelope document differs".to_string())); }
+                if pages.copy_small(range, scratch)? != document.0.as_bytes() {
+                    return Err(DbError::Corrupt("history envelope document differs".to_string()));
+                }
                 self.field = HistoryEnvelopeField::Actor;
             }
             HistoryEnvelopeField::Actor => {
@@ -3122,7 +3238,9 @@ impl HistoryFrontierCursor {
         match self.field {
             HistoryFrontierField::Document => {
                 let range = pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FIELD_BYTES as u64)?;
-                if pages.copy_small(range, scratch)? != document.0.as_bytes() { return Err(DbError::Corrupt("history frontier document differs".to_string())); }
+                if pages.copy_small(range, scratch)? != document.0.as_bytes() {
+                    return Err(DbError::Corrupt("history frontier document differs".to_string()));
+                }
                 self.field = HistoryFrontierField::Head;
             }
             HistoryFrontierField::Head => {
@@ -3261,8 +3379,12 @@ impl HistoryReplayFuture {
             return true;
         }
         if let Some(segments) = self.segments.as_mut() {
-            if segments.close_step() { return true; }
-            if !segments.terminal_is_empty() { return true; }
+            if segments.close_step() {
+                return true;
+            }
+            if !segments.terminal_is_empty() {
+                return true;
+            }
             self.segments = None;
             return true;
         }
@@ -3283,7 +3405,15 @@ impl HistoryReplayFuture {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.authenticated.is_none() && self.segments.is_none() && self.terminal_page.is_none() && self.page_count == 0 && self.pages.pages.is_empty() && self.reservation.is_none() && self.reservation_close.is_none() && self.phase.is_none() && matches!(self.transition, HistoryReplayTransition::Complete)
+        self.authenticated.is_none()
+            && self.segments.is_none()
+            && self.terminal_page.is_none()
+            && self.page_count == 0
+            && self.pages.pages.is_empty()
+            && self.reservation.is_none()
+            && self.reservation_close.is_none()
+            && self.phase.is_none()
+            && matches!(self.transition, HistoryReplayTransition::Complete)
     }
 
     fn begin_fault(&mut self, error: DbError) {
@@ -3386,7 +3516,9 @@ impl HistoryReplayFuture {
                         None => next = Some(HistoryReplayPhase::InventoryClose),
                         Some(segment) if segments.first().and_then(|first| first.checked_add(this.segment_ordinal as u64)) != Some(segment) => fault = Some(DbError::Corrupt("history WAL inventory is not a dense retained suffix".to_string())),
                         Some(segment) => {
-                            if this.segment_ordinal == 0 && segment != 0 { this.previous_tip = db_wal::WalPriorChainTip::RetainedBoundary; }
+                            if this.segment_ordinal == 0 && segment != 0 {
+                                this.previous_tip = db_wal::WalPriorChainTip::RetainedBoundary;
+                            }
                             let storage = this.storage.clone();
                             let document = this.document.clone();
                             next = Some(HistoryReplayPhase::SegmentLen { index: segment, future: Box::pin(async move { storage.wal().await.segment_len(&document, segment).await }) });
@@ -3402,8 +3534,12 @@ impl HistoryReplayFuture {
                         fault = Some(error);
                     } else if let Some(page_count) = len.checked_add(HISTORY_REPLAY_PAGE_BYTES - 1).map(|bytes| bytes / HISTORY_REPLAY_PAGE_BYTES) {
                         let inventory_bytes = this.segments.as_ref().map_or(0, db_storage::DbIoU64List::retained_bytes);
-                        let simultaneous = this.reservation.as_ref().and_then(HistoryReplayReservation::retained_bytes)
-                            .and_then(|bytes| bytes.checked_add(len)).and_then(|bytes| bytes.checked_add(inventory_bytes))
+                        let simultaneous = this
+                            .reservation
+                            .as_ref()
+                            .and_then(HistoryReplayReservation::retained_bytes)
+                            .and_then(|bytes| bytes.checked_add(len))
+                            .and_then(|bytes| bytes.checked_add(inventory_bytes))
                             .and_then(|bytes| bytes.checked_add(std::mem::size_of::<Self>() as u64));
                         if len < protocol::format::HEADER_SIZE as u64 || page_count > HISTORY_REPLAY_SEGMENT_PAGES || simultaneous.is_none_or(|bytes| bytes > HISTORY_REPLAY_OPERATION_BYTES) {
                             fault = Some(DbError::LimitExceeded("history replay page/source byte credit"));
@@ -3421,7 +3557,9 @@ impl HistoryReplayFuture {
                     if let Some(gate) = this.gate.take() {
                         this.authenticated = Some(db_wal::WalAuthenticatedSource::new(std::mem::take(&mut this.pages), gate, *index, this.previous_tip));
                         next = Some(HistoryReplayPhase::Verify { index: *index });
-                    } else { fault = Some(DbError::Closed); }
+                    } else {
+                        fault = Some(DbError::Closed);
+                    }
                 } else {
                     match len.checked_sub(*offset) {
                         Some(remaining) => {
@@ -3482,8 +3620,8 @@ impl HistoryReplayFuture {
                 }
             }
             HistoryReplayPhase::Frame { index } => {
-                let result = db_wal::WalCursorControl::new(this.cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_millis(8), 1)
-                    .and_then(|mut control| this.authenticated.as_mut().ok_or(DbError::Closed)?.next_step(&mut control));
+                let result =
+                    db_wal::WalCursorControl::new(this.cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_millis(8), 1).and_then(|mut control| this.authenticated.as_mut().ok_or(DbError::Closed)?.next_step(&mut control));
                 match result {
                     Ok(db_wal::WalAuthenticatedStep::Yield) => {}
                     Ok(db_wal::WalAuthenticatedStep::Committed) => {
@@ -3500,9 +3638,14 @@ impl HistoryReplayFuture {
                                     this.previous_tip = db_wal::WalPriorChainTip::Verified(tip);
                                     next = Some(HistoryReplayPhase::Retire);
                                 }
-                                Err(source) => { this.authenticated = Some(source); fault = Some(DbError::Corrupt("history source finished without authentication".to_string())); }
+                                Err(source) => {
+                                    this.authenticated = Some(source);
+                                    fault = Some(DbError::Corrupt("history source finished without authentication".to_string()));
+                                }
                             }
-                        } else { fault = Some(DbError::Closed); }
+                        } else {
+                            fault = Some(DbError::Closed);
+                        }
                     }
                     Err(DbError::Unavailable(message)) if message == "wal cursor deadline reached" => {}
                     Err(error) => fault = Some(error),
@@ -3535,7 +3678,9 @@ impl HistoryReplayFuture {
                             Err(error) => fault = Some(error),
                         }
                     }
-                } else { fault = Some(DbError::Closed); }
+                } else {
+                    fault = Some(DbError::Closed);
+                }
             }
             HistoryReplayPhase::Envelope { index, cursor } => {
                 let step = match this.reservation.as_mut().and_then(|owner| owner.scratch.as_mut()) {
@@ -3554,23 +3699,25 @@ impl HistoryReplayFuture {
                     Ok(None) => {}
                 }
             }
-            HistoryReplayPhase::CopyMutation { index, range, copied, result_start } => match this.authenticated.as_ref().ok_or(DbError::Closed).and_then(|source| Self::copy_mutation_fragment(source.source(), &mut this.reservation, range, *copied, *result_start)) {
-                Err(error) => fault = Some(error),
-                Ok(0) => {
-                    if let Some(len) = range.end.checked_sub(range.start).and_then(|value| u16::try_from(value).ok()) {
-                        if let Some(reservation) = this.reservation.as_mut() {
-                            reservation.operation_ids.push(HistoryTextRange { start: *result_start as u32, len });
-                            this.result_len = *result_start + u64::from(len);
-                            next = Some(HistoryReplayPhase::CommittedBody { index: *index });
+            HistoryReplayPhase::CopyMutation { index, range, copied, result_start } => {
+                match this.authenticated.as_ref().ok_or(DbError::Closed).and_then(|source| Self::copy_mutation_fragment(source.source(), &mut this.reservation, range, *copied, *result_start)) {
+                    Err(error) => fault = Some(error),
+                    Ok(0) => {
+                        if let Some(len) = range.end.checked_sub(range.start).and_then(|value| u16::try_from(value).ok()) {
+                            if let Some(reservation) = this.reservation.as_mut() {
+                                reservation.operation_ids.push(HistoryTextRange { start: *result_start as u32, len });
+                                this.result_len = *result_start + u64::from(len);
+                                next = Some(HistoryReplayPhase::CommittedBody { index: *index });
+                            } else {
+                                fault = Some(DbError::Closed);
+                            }
                         } else {
-                            fault = Some(DbError::Closed);
+                            fault = Some(DbError::LimitExceeded("history operation id range"));
                         }
-                    } else {
-                        fault = Some(DbError::LimitExceeded("history operation id range"));
                     }
+                    Ok(count) => *copied += count,
                 }
-                Ok(count) => *copied += count,
-            },
+            }
             HistoryReplayPhase::Frontier { index, cursor } => {
                 let step = match this.reservation.as_mut().and_then(|owner| owner.scratch.as_mut()) {
                     Some(scratch) => this.authenticated.as_ref().ok_or(DbError::Closed).and_then(|source| cursor.step(source.source(), scratch, &this.document)),
@@ -3578,7 +3725,10 @@ impl HistoryReplayFuture {
                 };
                 match step {
                     Err(error) => fault = Some(error),
-                    Ok(Some(frontier)) => { this.pending_frontier = Some(frontier); next = Some(HistoryReplayPhase::CommittedBody { index: *index }); },
+                    Ok(Some(frontier)) => {
+                        this.pending_frontier = Some(frontier);
+                        next = Some(HistoryReplayPhase::CommittedBody { index: *index });
+                    }
                     Ok(None) => {}
                 }
             }
@@ -3602,7 +3752,9 @@ impl HistoryReplayFuture {
                     }
                 }
                 if fault.is_none() {
-                    if let Err(error) = this.authenticated.as_mut().ok_or(DbError::Closed).and_then(|source| source.finish_transaction()) { fault = Some(error); }
+                    if let Err(error) = this.authenticated.as_mut().ok_or(DbError::Closed).and_then(|source| source.finish_transaction()) {
+                        fault = Some(error);
+                    }
                 }
             }
             HistoryReplayPhase::Retire => {
@@ -3618,8 +3770,12 @@ impl HistoryReplayFuture {
             HistoryReplayPhase::InventoryClose => {
                 if let Some(segments) = this.segments.as_mut() {
                     segments.close_step();
-                    if segments.terminal_is_empty() { this.segments = None; }
-                } else { next = Some(HistoryReplayPhase::FinalizeSuccess); }
+                    if segments.terminal_is_empty() {
+                        this.segments = None;
+                    }
+                } else {
+                    next = Some(HistoryReplayPhase::FinalizeSuccess);
+                }
             }
             HistoryReplayPhase::FinalizeSuccess => {
                 if this.reservation.as_mut().and_then(|owner| owner.scratch.take()).is_some() {
@@ -3734,6 +3890,8 @@ pub struct ArtifactAuthority {
     address: db_actor::Address<ArtifactMessage>,
     cancel: Arc<dyn Fn() + Send + Sync>,
     handoff: Arc<ArtifactRunnerHandoff>,
+    retirement: Option<ArtifactRunnerRetirementReservation>,
+    retirement_close: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
     _pool_use: Arc<semio_framework_async::WorkerPoolUse>,
     _done: std::sync::Mutex<Option<db_actor::ReplyReceiver<()>>>,
 }
@@ -3766,11 +3924,7 @@ struct ArtifactDurableGroupJournalCommitV1 {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::durable_group::DurableOwnedGroupJournalSinkV1 for ArtifactDurableGroupJournalSinkV1 {
-    fn begin_commit(
-        &mut self,
-        decision_pack: Vec<u8>,
-        decision_sha256: String,
-    ) -> Box<dyn store::durable_group::DurableOwnedGroupJournalCommitV1> {
+    fn begin_commit(&mut self, decision_pack: Vec<u8>, decision_sha256: String) -> Box<dyn store::durable_group::DurableOwnedGroupJournalCommitV1> {
         Box::new(ArtifactDurableGroupJournalCommitV1 {
             address: self.address.clone(),
             now_ms: self.now_ms,
@@ -3783,10 +3937,7 @@ impl store::durable_group::DurableOwnedGroupJournalSinkV1 for ArtifactDurableGro
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableGroupJournalCommitV1 {
-    fn advance(
-        &mut self,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<store::durable_group::DurableOwnedGroupJournalAdvanceV1, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::durable_group::DurableOwnedGroupJournalAdvanceV1, String> {
         use store::durable_group::DurableOwnedGroupJournalAdvanceV1;
         if !grant.permits_one() {
             return Ok(DurableOwnedGroupJournalAdvanceV1::Pending);
@@ -3802,12 +3953,7 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
                 match store::durable_group::DurableOwnedGroupJournalRecordV1::admit(decision_pack, &decision_sha256) {
                     Ok(record) => {
                         let cancelled = self.cancelled.clone();
-                        let future = self.address.ask(Priority::Command, |reply| ArtifactMessage::AppendDurableGroupDecision {
-                            record,
-                            cancelled,
-                            now_ms: self.now_ms,
-                            reply,
-                        });
+                        let future = self.address.ask(Priority::Command, |reply| ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms: self.now_ms, reply });
                         self.state = ArtifactDurableGroupJournalCommitStateV1::Awaiting(Box::pin(future));
                     }
                     Err(error) => self.state = ArtifactDurableGroupJournalCommitStateV1::Rejected(error.to_string()),
@@ -3881,16 +4027,165 @@ const ARTIFACT_RUNNER_RETRY_MS: u64 = 1;
 const ARTIFACT_RUNNER_RETRY_LIMIT: u8 = 8;
 
 #[cfg(not(target_arch = "wasm32"))]
+#[repr(u8)]
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum ArtifactRunnerDriver {
+    RunnableIdle,
+    Queued,
+    Polling,
+    PollingWake,
+    Parked,
+    ClosingReady,
+    ClosingPolling,
+    ClosingPollingWake,
+    ClosingParked,
+    Terminal,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 struct ArtifactRunnerHandoff {
     pool: Arc<semio_framework_async::WorkerPool>,
-    _pool_use: Arc<semio_framework_async::WorkerPoolUse>,
+    pool_use: std::sync::Mutex<Option<Arc<semio_framework_async::WorkerPoolUse>>>,
     terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
     close_runner: std::sync::Mutex<Option<Arc<dyn Fn() -> bool + Send + Sync>>>,
+    retirement_maintenance: std::sync::Mutex<Option<(Arc<semio_framework_async::WorkerPool>, semio_framework_async::WorkerMaintenanceTicket)>>,
     active_history: std::sync::atomic::AtomicBool,
+    driver: std::sync::atomic::AtomicU8,
     terminal: std::sync::atomic::AtomicBool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+impl ArtifactRunnerHandoff {
+    fn request_retirement_maintenance(&self) {
+        let owner = self.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        if let Some((pool, ticket)) = owner {
+            let _ = pool.request_maintenance(ticket);
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+const ARTIFACT_RUNNER_RETIREMENT_SLOTS: usize = 64;
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactRunnerRetirementCursor {
+    generation: u64,
+    close: Arc<dyn Fn() -> bool + Send + Sync>,
+    handoff: Arc<ArtifactRunnerHandoff>,
+    pool: Arc<semio_framework_async::WorkerPool>,
+    _pool_use: Arc<semio_framework_async::WorkerPoolUse>,
+    ticket: semio_framework_async::WorkerMaintenanceTicket,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static ARTIFACT_RUNNER_RETIREMENTS: [std::sync::Mutex<Option<ArtifactRunnerRetirementCursor>>; ARTIFACT_RUNNER_RETIREMENT_SLOTS] = [const { std::sync::Mutex::new(None) }; ARTIFACT_RUNNER_RETIREMENT_SLOTS];
+#[cfg(not(target_arch = "wasm32"))]
+static ARTIFACT_RUNNER_RETIREMENT_GENERATIONS: [std::sync::atomic::AtomicU64; ARTIFACT_RUNNER_RETIREMENT_SLOTS] = [const { std::sync::atomic::AtomicU64::new(0) }; ARTIFACT_RUNNER_RETIREMENT_SLOTS];
+#[cfg(not(target_arch = "wasm32"))]
+static ARTIFACT_RUNNER_RETIREMENT_NEXT_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactRunnerRetirementReservation {
+    index: usize,
+    generation: u64,
+    pool: Arc<semio_framework_async::WorkerPool>,
+    ticket: Option<semio_framework_async::WorkerMaintenanceTicket>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn artifact_runner_retirement_step([index, generation]: [u64; 2]) -> semio_framework_async::WorkerMaintenanceStep {
+    let Ok(index) = usize::try_from(index) else { return semio_framework_async::WorkerMaintenanceStep::Retire };
+    let Some(slot) = ARTIFACT_RUNNER_RETIREMENTS.get(index) else { return semio_framework_async::WorkerMaintenanceStep::Retire };
+    let mut row = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if row.as_ref().is_none_or(|owner| owner.generation != generation) {
+        return semio_framework_async::WorkerMaintenanceStep::Retire;
+    }
+    let mut cursor = row.take();
+    drop(row);
+    let owner = cursor.as_mut().expect("checked artifact runner retirement owner");
+    let terminal = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (owner.close)())) {
+        Ok(terminal) => terminal,
+        Err(_) => {
+            *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = cursor;
+            return semio_framework_async::WorkerMaintenanceStep::Fault;
+        }
+    };
+    if !terminal {
+        let ready = owner.handoff.driver.load(std::sync::atomic::Ordering::Acquire) == ArtifactRunnerDriver::ClosingReady as u8;
+        let maintenance = (owner.pool.clone(), owner.ticket);
+        *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = cursor;
+        if ready {
+            let _ = maintenance.0.request_maintenance(maintenance.1);
+        }
+        return semio_framework_async::WorkerMaintenanceStep::Idle;
+    }
+    owner.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+    owner.handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+    drop(cursor);
+    ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].store(0, std::sync::atomic::Ordering::Release);
+    semio_framework_async::WorkerMaintenanceStep::Retire
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl ArtifactRunnerRetirementReservation {
+    fn try_reserve(pool: Arc<semio_framework_async::WorkerPool>) -> Result<Self, DbError> {
+        let generation = ARTIFACT_RUNNER_RETIREMENT_NEXT_GENERATION
+            .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0))
+            .map_err(|_| DbError::LimitExceeded("artifact runner retirement generation"))?;
+        for (index, slot) in ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().enumerate() {
+            if slot.compare_exchange(0, generation, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+                continue;
+            }
+            let ticket = match pool.install_maintenance_hook(semio_framework_async::Lane::UserVisible, artifact_runner_retirement_step, [index as u64, generation]) {
+                Ok(ticket) => ticket,
+                Err(error) => {
+                    slot.store(0, std::sync::atomic::Ordering::Release);
+                    return Err(DbError::Unavailable(format!("artifact runner retirement maintenance admission: {error:?}")));
+                }
+            };
+            return Ok(Self { index, generation, pool, ticket: Some(ticket) });
+        }
+        Err(DbError::Unavailable("artifact runner retirement capacity exhausted".to_string()))
+    }
+
+    fn commit(mut self, close: Arc<dyn Fn() -> bool + Send + Sync>, handoff: Arc<ArtifactRunnerHandoff>, pool_use: Arc<semio_framework_async::WorkerPoolUse>) {
+        let ticket = self.ticket.take().expect("artifact runner retirement reservation lost maintenance ticket");
+        *handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((self.pool.clone(), ticket));
+        *ARTIFACT_RUNNER_RETIREMENTS[self.index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactRunnerRetirementCursor { generation: self.generation, close, handoff, pool: self.pool.clone(), _pool_use: pool_use, ticket });
+        let _ = self.pool.request_maintenance(ticket);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for ArtifactRunnerRetirementReservation {
+    fn drop(&mut self) {
+        let Some(ticket) = self.ticket.take() else { return };
+        let _ = self.pool.remove_maintenance_hook(ticket);
+        ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[self.index].store(0, std::sync::atomic::Ordering::Release);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactRunnerClosePoll {
+    handoff: Arc<ArtifactRunnerHandoff>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for ArtifactRunnerClosePoll {
+    fn drop(&mut self) {
+        use std::sync::atomic::Ordering;
+        let driver = self.handoff.driver.load(Ordering::Acquire);
+        let next = if driver == ArtifactRunnerDriver::ClosingPollingWake as u8 { ArtifactRunnerDriver::ClosingReady } else { ArtifactRunnerDriver::ClosingParked };
+        if driver == ArtifactRunnerDriver::ClosingPolling as u8 || driver == ArtifactRunnerDriver::ClosingPollingWake as u8 {
+            if self.handoff.driver.compare_exchange(driver, next as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() && next == ArtifactRunnerDriver::ClosingReady {
+                self.handoff.request_retirement_maintenance();
+            }
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[must_use = "terminal artifact runner jobs retain the only retry or close authority"]
 pub struct ArtifactRunnerTerminalJob {
     handoff: Arc<ArtifactRunnerHandoff>,
     owner: Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>,
@@ -3911,10 +4206,37 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
     retry_armed: std::sync::atomic::AtomicBool,
     retry_generation: std::sync::atomic::AtomicU64,
-    scheduled: std::sync::atomic::AtomicBool,
     cancelled: std::sync::atomic::AtomicBool,
     close_driving: std::sync::atomic::AtomicBool,
     terminal: std::sync::atomic::AtomicBool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactRunnerPoll<A: AuthzHook + 'static, V: VersionGraph + 'static> {
+    runner: Arc<ArtifactRunner<A, V>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<A: AuthzHook + 'static, V: VersionGraph + 'static> Drop for ArtifactRunnerPoll<A, V> {
+    fn drop(&mut self) {
+        use std::sync::atomic::Ordering;
+        loop {
+            let driver = self.runner.handoff.driver.load(Ordering::Acquire);
+            let cancelled = self.runner.cancelled.load(Ordering::Acquire);
+            let next = match (driver, cancelled) {
+                (value, true) if value == ArtifactRunnerDriver::Polling as u8 || value == ArtifactRunnerDriver::PollingWake as u8 => ArtifactRunnerDriver::ClosingReady,
+                (value, false) if value == ArtifactRunnerDriver::Polling as u8 => ArtifactRunnerDriver::RunnableIdle,
+                (value, false) if value == ArtifactRunnerDriver::PollingWake as u8 => ArtifactRunnerDriver::Queued,
+                _ => return,
+            };
+            if self.runner.handoff.driver.compare_exchange(driver, next as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                if next == ArtifactRunnerDriver::Queued {
+                    self.runner.submit_scheduled();
+                }
+                return;
+            }
+        }
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -3931,7 +4253,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> std::task::Wake for Arti
 
     fn wake_by_ref(self: &Arc<Self>) {
         if let Some(runner) = self.runner.upgrade() {
-            if self.generation == runner.generation && !runner.close_driving.load(std::sync::atomic::Ordering::Acquire) {
+            if self.generation == runner.generation {
                 runner.schedule();
             }
         }
@@ -3940,14 +4262,99 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> std::task::Wake for Arti
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
-    fn schedule(self: &Arc<Self>) {
+    fn close_one(self: &Arc<Self>) -> bool {
         use std::sync::atomic::Ordering;
-        if self.terminal.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return;
+        self.cancelled.store(true, Ordering::Release);
+        self.close_driving.store(true, Ordering::Release);
+        loop {
+            let driver = self.handoff.driver.load(Ordering::Acquire);
+            if driver == ArtifactRunnerDriver::Terminal as u8
+                || driver == ArtifactRunnerDriver::Polling as u8
+                || driver == ArtifactRunnerDriver::PollingWake as u8
+                || driver == ArtifactRunnerDriver::ClosingReady as u8
+                || driver == ArtifactRunnerDriver::ClosingPolling as u8
+                || driver == ArtifactRunnerDriver::ClosingPollingWake as u8
+                || driver == ArtifactRunnerDriver::ClosingParked as u8
+            {
+                break;
+            }
+            if self.handoff.driver.compare_exchange(driver, ArtifactRunnerDriver::ClosingReady as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                break;
+            }
         }
+        let generation = self.generation;
+        let witness = self.clone();
+        self.clone().run_turn(generation, true);
+        let closed = witness.terminal.load(Ordering::Acquire);
+        witness.close_driving.store(false, Ordering::Release);
+        closed
+    }
+
+    fn retained_terminal_job(self: &Arc<Self>, kind: semio_framework_async::WorkerSubmitErrorKind) -> (semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job) {
         let runner = self.clone();
         let generation = self.generation;
-        self.submit_exact(Box::new(move || runner.run_turn(generation)), 0);
+        (kind, Box::new(move || runner.run_turn(generation, false)))
+    }
+
+    fn park_terminal_job(self: &Arc<Self>, kind: semio_framework_async::WorkerSubmitErrorKind) {
+        use std::sync::atomic::Ordering;
+        let mut terminal = self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if terminal.is_some() {
+            return;
+        }
+        loop {
+            let driver = self.handoff.driver.load(Ordering::Acquire);
+            if driver != ArtifactRunnerDriver::RunnableIdle as u8 && driver != ArtifactRunnerDriver::Queued as u8 {
+                return;
+            }
+            if self.handoff.driver.compare_exchange(driver, ArtifactRunnerDriver::Parked as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                *terminal = Some(self.retained_terminal_job(kind));
+                return;
+            }
+        }
+    }
+
+    fn schedule(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        loop {
+            let driver = self.handoff.driver.load(Ordering::Acquire);
+            if driver == ArtifactRunnerDriver::RunnableIdle as u8 {
+                if self.handoff.driver.compare_exchange(driver, ArtifactRunnerDriver::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                    self.submit_scheduled();
+                    return;
+                }
+            } else if driver == ArtifactRunnerDriver::Polling as u8 {
+                if self.handoff.driver.compare_exchange(driver, ArtifactRunnerDriver::PollingWake as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                    return;
+                }
+            } else if driver == ArtifactRunnerDriver::ClosingPolling as u8 {
+                if self.handoff.driver.compare_exchange(driver, ArtifactRunnerDriver::ClosingPollingWake as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                    return;
+                }
+            } else if driver == ArtifactRunnerDriver::ClosingParked as u8 {
+                if self.handoff.driver.compare_exchange(driver, ArtifactRunnerDriver::ClosingReady as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                    self.handoff.request_retirement_maintenance();
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
+    }
+
+    fn submit_scheduled(self: &Arc<Self>) {
+        let runner = Arc::downgrade(self);
+        let generation = self.generation;
+        self.submit_exact(
+            Box::new(move || {
+                if let Some(runner) = runner.upgrade() {
+                    if runner.generation == generation {
+                        runner.run_turn(generation, false);
+                    }
+                }
+            }),
+            0,
+        );
     }
 
     fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
@@ -3965,7 +4372,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                         ready.send(Err(ArtifactEngineOpenRejected::BeforeWal(DbError::Unavailable(format!("artifact authority WorkerPool submission failed: {kind:?}")))));
                         self.finish();
                     } else {
-                        *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
+                        drop(job);
+                        self.park_terminal_job(kind);
                     }
                 }
             },
@@ -4003,8 +4411,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
             let retry = runner.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             if let Some((job, attempt)) = retry {
                 if runner.cancelled.load(Ordering::Acquire) {
-                    runner.scheduled.store(false, Ordering::Release);
-                    *runner.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+                    drop(job);
+                    runner.park_terminal_job(semio_framework_async::WorkerSubmitErrorKind::Saturated);
                 } else {
                     runner.submit_exact(job, attempt);
                 }
@@ -4012,15 +4420,13 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         });
     }
 
-    fn terminalize_retry_authority(&self, detail: &'static str) {
+    fn terminalize_retry_authority(self: &Arc<Self>, detail: &'static str) {
         self.retry_armed.store(false, std::sync::atomic::Ordering::Release);
-        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
         if let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            let mut terminal = self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if terminal.is_none() {
-                *terminal = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+            if self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+                drop(job);
+                self.park_terminal_job(semio_framework_async::WorkerSubmitErrorKind::Saturated);
             } else {
-                drop(terminal);
                 *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
             }
         }
@@ -4047,6 +4453,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                     self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
                 }
             }
+            self.handoff.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            self.handoff.driver.store(ArtifactRunnerDriver::Terminal as u8, std::sync::atomic::Ordering::Release);
             self.handoff.terminal.store(true, std::sync::atomic::Ordering::Release);
             if let Some(done) = self.done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                 done.send(());
@@ -4063,9 +4471,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
             message => ArtifactTurn::Future(Box::pin(async move {
                 let mut engine = engine;
                 match message {
-                    ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms, reply } => {
-                        reply.send(engine.append_durable_group_decision(record, cancelled, now_ms).await)
-                    }
+                    ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms, reply } => reply.send(engine.append_durable_group_decision(record, cancelled, now_ms).await),
                     ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms).await),
                     ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path).await),
                     ArtifactMessage::Frontier { reply } => reply.send(engine.frontier().await),
@@ -4080,14 +4486,23 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         }
     }
 
-    fn run_turn(self: Arc<Self>, generation: u64) {
+    fn run_turn(self: Arc<Self>, generation: u64, direct_close: bool) {
         use std::panic::AssertUnwindSafe;
         use std::sync::atomic::Ordering;
 
         if generation != self.generation || self.terminal.load(Ordering::Acquire) {
             return;
         }
-        self.scheduled.store(false, Ordering::Release);
+        let (_close_poll, _poll) = if direct_close {
+            if self.handoff.driver.compare_exchange(ArtifactRunnerDriver::ClosingReady as u8, ArtifactRunnerDriver::ClosingPolling as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
+                return;
+            }
+            (Some(ArtifactRunnerClosePoll { handoff: self.handoff.clone() }), None)
+        } else if self.handoff.driver.compare_exchange(ArtifactRunnerDriver::Queued as u8, ArtifactRunnerDriver::Polling as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+            (None, Some(ArtifactRunnerPoll { runner: self.clone() }))
+        } else {
+            return;
+        };
         if self.cancelled.load(Ordering::Acquire) {
             let mut turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if let Some(ArtifactTurn::History { replay, .. }) = turn.as_mut() {
@@ -4234,34 +4649,31 @@ impl ArtifactAuthority {
         build: impl FnOnce() -> F + Send + 'static,
         capacities: MailboxCapacities,
     ) -> Result<ArtifactAuthority, ArtifactEngineOpenRejected> {
-        let pool_use = pool.acquire_use().map_err(|error| {
-            ArtifactEngineOpenRejected::BeforeWal(DbError::Unavailable(format!("artifact authority WorkerPool use rejected: {error:?}")))
-        })?;
+        let pool_use = pool.acquire_use().map_err(|error| ArtifactEngineOpenRejected::BeforeWal(DbError::Unavailable(format!("artifact authority WorkerPool use rejected: {error:?}"))))?;
         Self::spawn_with_pool_use(pool, pool_use, build, capacities).await
     }
 
     /// 🧵️ Mounts an authority under an already-retained process-pool use. Database document
     /// mounts pass their exact use cell through this boundary, so no second lifecycle admission
     /// can conflict after the catalog transaction has begun.
-    pub(crate) async fn spawn_with_pool_use<
-        A: AuthzHook + 'static,
-        V: VersionGraph + 'static,
-        F: Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>> + Send + 'static,
-    >(
+    pub(crate) async fn spawn_with_pool_use<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
         pool_use: Arc<semio_framework_async::WorkerPoolUse>,
         build: impl FnOnce() -> F + Send + 'static,
         capacities: MailboxCapacities,
     ) -> Result<ArtifactAuthority, ArtifactEngineOpenRejected> {
+        let retirement = ArtifactRunnerRetirementReservation::try_reserve(pool.clone()).map_err(ArtifactEngineOpenRejected::BeforeWal)?;
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), ArtifactEngineOpenRejected>>();
         let (done_tx, done_rx) = db_actor::oneshot();
         let handoff = Arc::new(ArtifactRunnerHandoff {
             pool: pool.clone(),
-            _pool_use: pool_use.clone(),
+            pool_use: std::sync::Mutex::new(Some(pool_use.clone())),
             terminal_job: std::sync::Mutex::new(None),
             close_runner: std::sync::Mutex::new(None),
+            retirement_maintenance: std::sync::Mutex::new(None),
             active_history: std::sync::atomic::AtomicBool::new(false),
+            driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::RunnableIdle as u8),
             terminal: std::sync::atomic::AtomicBool::new(false),
         });
         let runner = Arc::new(ArtifactRunner {
@@ -4278,7 +4690,6 @@ impl ArtifactAuthority {
             retry_job: std::sync::Mutex::new(None),
             retry_armed: std::sync::atomic::AtomicBool::new(false),
             retry_generation: std::sync::atomic::AtomicU64::new(1),
-            scheduled: std::sync::atomic::AtomicBool::new(false),
             cancelled: std::sync::atomic::AtomicBool::new(false),
             close_driving: std::sync::atomic::AtomicBool::new(false),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -4290,27 +4701,15 @@ impl ArtifactAuthority {
             }
         }));
         let weak = Arc::downgrade(&runner);
-        *handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move || -> bool {
-            if let Some(runner) = weak.upgrade() {
-                runner.cancelled.store(true, std::sync::atomic::Ordering::Release);
-                runner.close_driving.store(true, std::sync::atomic::Ordering::Release);
-                runner.scheduled.store(true, std::sync::atomic::Ordering::Release);
-                let generation = runner.generation;
-                let witness = runner.clone();
-                runner.run_turn(generation);
-                let closed = witness.terminal.load(std::sync::atomic::Ordering::Acquire);
-                witness.close_driving.store(false, std::sync::atomic::Ordering::Release);
-                closed
-            } else {
-                true
-            }
-        }));
+        *handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move || -> bool { weak.upgrade().is_none_or(|runner| runner.close_one()) }));
+        let retirement_runner = runner.clone();
+        let retirement_close: Arc<dyn Fn() -> bool + Send + Sync> = Arc::new(move || retirement_runner.close_one());
         let runner_for_cancel = runner.clone();
         let cancel: Arc<dyn Fn() + Send + Sync> = Arc::new(move || runner_for_cancel.cancel());
         runner.schedule();
 
         match ready_rx.await {
-            Ok(Ok(())) => Ok(ArtifactAuthority { address, cancel, handoff, _pool_use: pool_use, _done: std::sync::Mutex::new(Some(done_rx)) }),
+            Ok(Ok(())) => Ok(ArtifactAuthority { address, cancel, handoff, retirement: Some(retirement), retirement_close: Some(retirement_close), _pool_use: pool_use, _done: std::sync::Mutex::new(Some(done_rx)) }),
             Ok(Err(err)) => Err(err),
             Err(_) => Err(ArtifactEngineOpenRejected::BeforeWal(DbError::Closed)),
         }
@@ -4342,7 +4741,14 @@ impl ArtifactAuthority {
         self.address.ask(Priority::Query, |reply| ArtifactMessage::History { operation_generation, cancelled, reservation, reply })
     }
 
-    pub fn compact_retained(&self, holder: db_storage::DbIoText, consolidate_snapshots: bool, budget: db_compact::CompactionBudget, now_ms: u64, cancelled: Arc<std::sync::atomic::AtomicBool>) -> db_actor::AskFuture<ArtifactMessage, Result<db_compact::CompactionReport, DbError>> {
+    pub fn compact_retained(
+        &self,
+        holder: db_storage::DbIoText,
+        consolidate_snapshots: bool,
+        budget: db_compact::CompactionBudget,
+        now_ms: u64,
+        cancelled: Arc<std::sync::atomic::AtomicBool>,
+    ) -> db_actor::AskFuture<ArtifactMessage, Result<db_compact::CompactionReport, DbError>> {
         self.address.ask(Priority::Command, |reply| ArtifactMessage::Compact { holder, consolidate_snapshots, budget, now_ms, cancelled, reply })
     }
 
@@ -4351,15 +4757,27 @@ impl ArtifactAuthority {
     }
 
     pub fn take_terminal_job(&self) -> Option<ArtifactRunnerTerminalJob> {
+        if self.handoff.driver.load(std::sync::atomic::Ordering::Acquire) != ArtifactRunnerDriver::Parked as u8 {
+            return None;
+        }
         self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| ArtifactRunnerTerminalJob { handoff: self.handoff.clone(), owner: Some(owner) })
     }
 
     pub fn close_step(&self) -> bool {
         let active = self.handoff.active_history.load(std::sync::atomic::Ordering::Acquire);
-        if !active && self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+        let driver = self.handoff.driver.load(std::sync::atomic::Ordering::Acquire);
+        if !active
+            && driver != ArtifactRunnerDriver::Parked as u8
+            && driver != ArtifactRunnerDriver::ClosingReady as u8
+            && driver != ArtifactRunnerDriver::ClosingPolling as u8
+            && driver != ArtifactRunnerDriver::ClosingPollingWake as u8
+            && driver != ArtifactRunnerDriver::ClosingParked as u8
+            && self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+        {
             return false;
         }
-        let closed = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_none_or(|close| close());
+        let close = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        let closed = close.as_ref().is_none_or(|close| close());
         let mut terminal = self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if terminal.is_none() {
             return active;
@@ -4372,7 +4790,14 @@ impl ArtifactAuthority {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() && !self.handoff.active_history.load(std::sync::atomic::Ordering::Acquire)
+        let driver = self.handoff.driver.load(std::sync::atomic::Ordering::Acquire);
+        driver != ArtifactRunnerDriver::Parked as u8
+            && driver != ArtifactRunnerDriver::ClosingReady as u8
+            && driver != ArtifactRunnerDriver::ClosingPolling as u8
+            && driver != ArtifactRunnerDriver::ClosingPollingWake as u8
+            && driver != ArtifactRunnerDriver::ClosingParked as u8
+            && self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && !self.handoff.active_history.load(std::sync::atomic::Ordering::Acquire)
     }
 
     pub async fn submit(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
@@ -4415,26 +4840,66 @@ impl ArtifactAuthority {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+impl Drop for ArtifactAuthority {
+    fn drop(&mut self) {
+        if self.handoff.terminal.load(std::sync::atomic::Ordering::Acquire) {
+            return;
+        }
+        self.address.close();
+        (self.cancel)();
+        let Some(retirement) = self.retirement.take() else { return };
+        let Some(close) = self.retirement_close.take() else { return };
+        retirement.commit(close, self.handoff.clone(), self._pool_use.clone());
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 impl ArtifactRunnerTerminalJob {
     pub fn reason(&self) -> semio_framework_async::WorkerSubmitErrorKind {
         self.owner.as_ref().expect("terminal artifact runner job already resolved").0
     }
 
-    pub fn resume(mut self) {
+    pub fn resume(mut self) -> Result<(), Self> {
         let owner = self.owner.take().expect("terminal artifact runner job already resolved");
+        if self.handoff.driver.compare_exchange(ArtifactRunnerDriver::Parked as u8, ArtifactRunnerDriver::Queued as u8, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            if self.handoff.driver.load(std::sync::atomic::Ordering::Acquire) == ArtifactRunnerDriver::Terminal as u8 {
+                return Ok(());
+            }
+            self.owner = Some(owner);
+            return Err(self);
+        }
         match self.handoff.pool.try_submit(semio_framework_async::Lane::UserVisible, owner.1) {
-            Ok(()) => {}
+            Ok(()) => Ok(()),
             Err(error) => {
-                *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.kind(), error.into_job()));
+                self.handoff.driver.store(ArtifactRunnerDriver::Parked as u8, std::sync::atomic::Ordering::Release);
+                self.owner = Some((error.kind(), error.into_job()));
+                Err(self)
             }
         }
     }
 
-    pub fn close(mut self) {
+    pub fn close(mut self) -> Result<(), Self> {
         let owner = self.owner.take().expect("terminal artifact runner job already resolved");
-        let closed = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_none_or(|close| close());
-        if !closed {
-            *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        let driver = self.handoff.driver.load(std::sync::atomic::Ordering::Acquire);
+        if driver == ArtifactRunnerDriver::Parked as u8 {
+            if self.handoff.driver.compare_exchange(ArtifactRunnerDriver::Parked as u8, ArtifactRunnerDriver::ClosingReady as u8, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+                self.owner = Some(owner);
+                return Err(self);
+            }
+        } else if driver == ArtifactRunnerDriver::Terminal as u8 {
+            return Ok(());
+        } else if driver != ArtifactRunnerDriver::ClosingReady as u8 {
+            self.owner = Some(owner);
+            return Err(self);
+        }
+        let close = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        let closed = close.as_ref().is_none_or(|close| close());
+        if closed {
+            self.handoff.driver.store(ArtifactRunnerDriver::Terminal as u8, std::sync::atomic::Ordering::Release);
+            Ok(())
+        } else {
+            self.owner = Some(owner);
+            Err(self)
         }
     }
 }
@@ -4443,7 +4908,9 @@ impl ArtifactRunnerTerminalJob {
 impl Drop for ArtifactRunnerTerminalJob {
     fn drop(&mut self) {
         if let Some(owner) = self.owner.take() {
-            *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+            if self.handoff.driver.load(std::sync::atomic::Ordering::Acquire) != ArtifactRunnerDriver::Terminal as u8 {
+                *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+            }
         }
     }
 }
@@ -4464,6 +4931,290 @@ mod tests {
         }
     }
 
+    #[test]
+    fn artifact_runner_terminal_authority_latch_preserves_external_job_and_one_resume() {
+        use std::sync::atomic::Ordering;
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let pool_use = pool.acquire_use().unwrap();
+        let handoff = Arc::new(ArtifactRunnerHandoff {
+            pool: pool.clone(),
+            pool_use: std::sync::Mutex::new(Some(pool_use.clone())),
+            terminal_job: std::sync::Mutex::new(None),
+            close_runner: std::sync::Mutex::new(None),
+            retirement_maintenance: std::sync::Mutex::new(None),
+            active_history: std::sync::atomic::AtomicBool::new(false),
+            driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
+            terminal: std::sync::atomic::AtomicBool::new(false),
+        });
+        let turns = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let job_handoff = handoff.clone();
+        let job_turns = turns.clone();
+        *handoff.terminal_job.lock().unwrap() = Some((
+            semio_framework_async::WorkerSubmitErrorKind::Saturated,
+            Box::new(move || {
+                assert_eq!(job_handoff.driver.compare_exchange(ArtifactRunnerDriver::Queued as u8, ArtifactRunnerDriver::Polling as u8, Ordering::AcqRel, Ordering::Acquire,), Ok(ArtifactRunnerDriver::Queued as u8));
+                job_turns.fetch_add(1, Ordering::AcqRel);
+                job_handoff.driver.store(ArtifactRunnerDriver::RunnableIdle as u8, Ordering::Release);
+            }),
+        ));
+        let external = handoff.terminal_job.lock().unwrap().take().map(|owner| ArtifactRunnerTerminalJob { handoff: handoff.clone(), owner: Some(owner) }).unwrap();
+        assert_eq!(handoff.driver.load(Ordering::Acquire), ArtifactRunnerDriver::Parked as u8);
+        assert!(handoff.driver.compare_exchange(ArtifactRunnerDriver::RunnableIdle as u8, ArtifactRunnerDriver::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_err());
+        drop(external);
+        assert!(handoff.terminal_job.lock().unwrap().is_some());
+        let resumed = handoff.terminal_job.lock().unwrap().take().map(|owner| ArtifactRunnerTerminalJob { handoff: handoff.clone(), owner: Some(owner) }).unwrap();
+        assert!(resumed.resume().is_ok());
+        let (done_tx, done_rx) = std::sync::mpsc::sync_channel(1);
+        pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Maintenance, Box::new(move || done_tx.send(()).unwrap()));
+        done_rx.recv().unwrap();
+        assert_eq!(turns.load(Ordering::Acquire), 1);
+        assert_eq!(handoff.driver.load(Ordering::Acquire), ArtifactRunnerDriver::RunnableIdle as u8);
+        assert!(handoff.terminal_job.lock().unwrap().is_none());
+        drop(handoff);
+        drop(pool_use);
+        assert_eq!(pool.shutdown(), Ok(()));
+    }
+
+    #[test]
+    fn artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close() {
+        use std::sync::atomic::Ordering;
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        assert_eq!(pool.shutdown(), Ok(()));
+        let handoff = Arc::new(ArtifactRunnerHandoff {
+            pool,
+            pool_use: std::sync::Mutex::new(None),
+            terminal_job: std::sync::Mutex::new(None),
+            close_runner: std::sync::Mutex::new(None),
+            retirement_maintenance: std::sync::Mutex::new(None),
+            active_history: std::sync::atomic::AtomicBool::new(false),
+            driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
+            terminal: std::sync::atomic::AtomicBool::new(false),
+        });
+        let turns = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let job_turns = turns.clone();
+        let cursor = ArtifactRunnerTerminalJob {
+            handoff: handoff.clone(),
+            owner: Some((
+                semio_framework_async::WorkerSubmitErrorKind::Saturated,
+                Box::new(move || {
+                    job_turns.fetch_add(1, Ordering::AcqRel);
+                }),
+            )),
+        };
+        let close_handoff = handoff.clone();
+        *handoff.close_runner.lock().unwrap() = Some(Arc::new(move || {
+            assert_eq!(close_handoff.driver.load(Ordering::Acquire), ArtifactRunnerDriver::ClosingReady as u8);
+            close_handoff.terminal.store(true, Ordering::Release);
+            true
+        }));
+        let cursor = cursor.resume().unwrap_err();
+        assert_eq!(turns.load(Ordering::Acquire), 0);
+        assert_eq!(handoff.driver.load(Ordering::Acquire), ArtifactRunnerDriver::Parked as u8);
+        assert!(handoff.terminal_job.lock().unwrap().is_none());
+        assert!(cursor.close().is_ok());
+        assert_eq!(handoff.driver.load(Ordering::Acquire), ArtifactRunnerDriver::Terminal as u8);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner() {
+        let (authority, storage, pool) = journal_authority().await;
+        authority.handoff.driver.store(ArtifactRunnerDriver::Parked as u8, std::sync::atomic::Ordering::Release);
+        *authority.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) =
+            Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, Box::new(|| panic!("parked terminal job must be retired, not executed after authority Drop"))));
+        drop(authority);
+        let mut terminal = false;
+        for _ in 0..10_000 {
+            match pool.shutdown() {
+                Ok(()) => {
+                    terminal = true;
+                    break;
+                }
+                Err(semio_framework_async::WorkerPoolShutdownError::Busy { .. }) => semio_framework_async::yield_once().await,
+                Err(error) => panic!("registered authority retirement lost its pool lifecycle: {error:?}"),
+            }
+        }
+        assert!(terminal, "registered authority retirement did not release its exact pool use");
+        drop(storage);
+        assert!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().all(|generation| generation.load(std::sync::atomic::Ordering::Acquire) == 0));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry() {
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let pool_use = pool.acquire_use().unwrap();
+        let handoff = Arc::new(ArtifactRunnerHandoff {
+            pool: pool.clone(),
+            pool_use: std::sync::Mutex::new(Some(pool_use.clone())),
+            terminal_job: std::sync::Mutex::new(None),
+            close_runner: std::sync::Mutex::new(None),
+            retirement_maintenance: std::sync::Mutex::new(None),
+            active_history: std::sync::atomic::AtomicBool::new(false),
+            driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::ClosingReady as u8),
+            terminal: std::sync::atomic::AtomicBool::new(false),
+        });
+        let reservation = ArtifactRunnerRetirementReservation::try_reserve(pool.clone()).unwrap();
+        let index = reservation.index;
+        let generation = reservation.generation;
+        let attempts = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let close_attempts = attempts.clone();
+        let close_handoff = handoff.clone();
+        let close: Arc<dyn Fn() -> bool + Send + Sync> = Arc::new(move || {
+            if close_attempts.fetch_add(1, std::sync::atomic::Ordering::AcqRel) == 0 {
+                panic!("injected artifact retirement close panic");
+            }
+            close_handoff.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            close_handoff.terminal.store(true, std::sync::atomic::Ordering::Release);
+            true
+        });
+        reservation.commit(close, handoff.clone(), pool_use.clone());
+        drop(pool_use);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            let restored = ARTIFACT_RUNNER_RETIREMENTS[index]
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .as_ref()
+                .is_some_and(|owner| {
+                    owner.generation == generation
+                        && Arc::ptr_eq(&owner.handoff, &handoff)
+                        && Arc::ptr_eq(&owner.pool, &pool)
+                });
+            if attempts.load(std::sync::atomic::Ordering::Acquire) != 0 && restored {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline, "injected retirement panic did not restore its exact cursor");
+            semio_framework_async::yield_once().await;
+        }
+        assert_eq!(attempts.load(std::sync::atomic::Ordering::Acquire), 1);
+        assert_eq!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire), generation);
+        assert_eq!(pool.shutdown(), Err(semio_framework_async::WorkerPoolShutdownError::Busy { retained_uses: 1 }));
+        handoff.request_retirement_maintenance();
+        while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire) == generation {
+            assert!(std::time::Instant::now() < deadline, "explicit retirement retry did not reach terminal acknowledgement");
+            semio_framework_async::yield_once().await;
+        }
+        assert_eq!(attempts.load(std::sync::atomic::Ordering::Acquire), 2);
+        assert_eq!(pool.shutdown(), Ok(()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity() {
+        fn idle(_: [u64; 2]) -> semio_framework_async::WorkerMaintenanceStep {
+            semio_framework_async::WorkerMaintenanceStep::Idle
+        }
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+        let storage = storage().await;
+        for ordinal in 0..=ARTIFACT_RUNNER_RETIREMENT_SLOTS {
+            let engine_storage = storage.clone();
+            let document = protocol::ArtifactId(format!("retirement-reuse-{ordinal}"));
+            let authority = ArtifactAuthority::spawn(pool.clone(), move || ArtifactEngine::create_retained(document, engine_storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(4)).await.unwrap();
+            drop(authority);
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+            while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().any(|generation| generation.load(std::sync::atomic::Ordering::Acquire) != 0) {
+                assert!(std::time::Instant::now() < deadline, "artifact authority retirement did not release its callback slot");
+                semio_framework_async::yield_once().await;
+            }
+        }
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            let mut probes = Vec::with_capacity(semio_framework_async::WORKER_MAINTENANCE_CAPACITY);
+            let mut complete = true;
+            for _ in 0..semio_framework_async::WORKER_MAINTENANCE_CAPACITY {
+                match pool.install_maintenance_hook(semio_framework_async::Lane::Io, idle, [0; 2]) {
+                    Ok(ticket) => probes.push(ticket),
+                    Err(semio_framework_async::WorkerMaintenanceError::Capacity) => {
+                        complete = false;
+                        break;
+                    }
+                    Err(error) => panic!("artifact retirement capacity probe failed: {error:?}"),
+                }
+            }
+            for ticket in probes {
+                assert!(pool.remove_maintenance_hook(ticket).unwrap());
+            }
+            if complete {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline, "artifact authority retirement leaked a maintenance callback slot");
+            semio_framework_async::yield_once().await;
+        }
+        assert_eq!(pool.shutdown(), Ok(()));
+        eprintln!("[DEBUG] artifact authority Drop reused its self-retiring maintenance slot beyond the fixed 64-owner capacity");
+    }
+
+    #[test]
+    fn artifact_runner_terminal_close_returns_exact_cursor_until_retained_wake() {
+        use std::sync::atomic::Ordering;
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let pool_use = pool.acquire_use().unwrap();
+        let handoff = Arc::new(ArtifactRunnerHandoff {
+            pool: pool.clone(),
+            pool_use: std::sync::Mutex::new(Some(pool_use.clone())),
+            terminal_job: std::sync::Mutex::new(None),
+            close_runner: std::sync::Mutex::new(None),
+            retirement_maintenance: std::sync::Mutex::new(None),
+            active_history: std::sync::atomic::AtomicBool::new(true),
+            driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
+            terminal: std::sync::atomic::AtomicBool::new(false),
+        });
+        let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let close_handoff = handoff.clone();
+        let close_polls = polls.clone();
+        *handoff.close_runner.lock().unwrap() = Some(Arc::new(move || {
+            assert_eq!(close_handoff.driver.compare_exchange(ArtifactRunnerDriver::ClosingReady as u8, ArtifactRunnerDriver::ClosingPolling as u8, Ordering::AcqRel, Ordering::Acquire,), Ok(ArtifactRunnerDriver::ClosingReady as u8));
+            if close_polls.fetch_add(1, Ordering::AcqRel) == 0 {
+                close_handoff.driver.store(ArtifactRunnerDriver::ClosingParked as u8, Ordering::Release);
+                return false;
+            }
+            close_handoff.active_history.store(false, Ordering::Release);
+            close_handoff.pool_use.lock().unwrap().take();
+            close_handoff.terminal.store(true, Ordering::Release);
+            true
+        }));
+        *handoff.terminal_job.lock().unwrap() = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, Box::new(|| {})));
+        let cursor = handoff.terminal_job.lock().unwrap().take().map(|owner| ArtifactRunnerTerminalJob { handoff: handoff.clone(), owner: Some(owner) }).unwrap();
+        let cursor = cursor.close().unwrap_err();
+        assert_eq!(polls.load(Ordering::Acquire), 1);
+        assert_eq!(handoff.driver.load(Ordering::Acquire), ArtifactRunnerDriver::ClosingParked as u8);
+        assert!(handoff.terminal_job.lock().unwrap().is_none());
+        let cursor = cursor.close().unwrap_err();
+        assert_eq!(polls.load(Ordering::Acquire), 1, "close cursor must not repoll before a retained wake");
+        assert_eq!(handoff.driver.compare_exchange(ArtifactRunnerDriver::ClosingParked as u8, ArtifactRunnerDriver::ClosingReady as u8, Ordering::AcqRel, Ordering::Acquire,), Ok(ArtifactRunnerDriver::ClosingParked as u8));
+        assert!(cursor.close().is_ok());
+        assert_eq!(polls.load(Ordering::Acquire), 2);
+        assert_eq!(handoff.driver.load(Ordering::Acquire), ArtifactRunnerDriver::Terminal as u8);
+        drop(handoff);
+        drop(pool_use);
+        assert_eq!(pool.shutdown(), Ok(()));
+    }
+
+    #[test]
+    fn artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn() {
+        use std::sync::atomic::Ordering;
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let pool_use = pool.acquire_use().unwrap();
+        let handoff = Arc::new(ArtifactRunnerHandoff {
+            pool: pool.clone(),
+            pool_use: std::sync::Mutex::new(Some(pool_use.clone())),
+            terminal_job: std::sync::Mutex::new(None),
+            close_runner: std::sync::Mutex::new(None),
+            retirement_maintenance: std::sync::Mutex::new(None),
+            active_history: std::sync::atomic::AtomicBool::new(true),
+            driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::ClosingPolling as u8),
+            terminal: std::sync::atomic::AtomicBool::new(false),
+        });
+        drop(ArtifactRunnerClosePoll { handoff: handoff.clone() });
+        assert_eq!(handoff.driver.load(Ordering::Acquire), ArtifactRunnerDriver::ClosingParked as u8);
+        assert!(handoff.driver.compare_exchange(ArtifactRunnerDriver::ClosingReady as u8, ArtifactRunnerDriver::ClosingPolling as u8, Ordering::AcqRel, Ordering::Acquire).is_err());
+        assert_eq!(handoff.driver.compare_exchange(ArtifactRunnerDriver::ClosingParked as u8, ArtifactRunnerDriver::ClosingReady as u8, Ordering::AcqRel, Ordering::Acquire,), Ok(ArtifactRunnerDriver::ClosingParked as u8));
+        assert_eq!(handoff.driver.compare_exchange(ArtifactRunnerDriver::ClosingReady as u8, ArtifactRunnerDriver::ClosingPolling as u8, Ordering::AcqRel, Ordering::Acquire,), Ok(ArtifactRunnerDriver::ClosingReady as u8));
+        handoff.driver.store(ArtifactRunnerDriver::Terminal as u8, Ordering::Release);
+        handoff.pool_use.lock().unwrap().take();
+        drop(handoff);
+        drop(pool_use);
+        assert_eq!(pool.shutdown(), Ok(()));
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn artifact_open_ignores_neutral_aborted_command_snapshot_and_cas() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
@@ -4477,8 +5228,12 @@ mod tests {
         assert_eq!(engine.frontier.head_seq, 0);
         assert!(engine.state.values.is_empty());
         assert!(engine.applied.is_empty());
-        while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
-        while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while engine.wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
+        while engine.state.values.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4513,16 +5268,24 @@ mod tests {
     async fn artifact_history_replay_uses_neutral_committed_inventory_and_retires_every_owner() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
         for (name, compacted, hole) in [
-            ("high-water-across-segments", false, false), ("high-water-across-segments", true, false), ("high-water-across-segments", false, true),
-            ("aborted-commands-snapshot-cas-have-no-effects", false, false), ("commit-outside-transaction", false, false), ("active-incomplete-needs-durable-abort", false, false),
+            ("high-water-across-segments", false, false),
+            ("high-water-across-segments", true, false),
+            ("high-water-across-segments", false, true),
+            ("aborted-commands-snapshot-cas-have-no-effects", false, false),
+            ("commit-outside-transaction", false, false),
+            ("active-incomplete-needs-durable-abort", false, false),
         ] {
             let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).unwrap();
             let document = ArtifactId::from("committed-history");
             let memory = db_wal::tests::committed_fixture_storage(row, &document).await;
             if compacted || hole {
                 let writer = db_storage::WalStorage::acquire_writer(&memory, &document).await.unwrap();
-                if compacted { db_storage::WalStorage::delete_segment(&memory, &writer, 0).await.unwrap(); }
-                if hole { db_storage::WalStorage::create_segment(&memory, &writer, 3).await.unwrap(); }
+                if compacted {
+                    db_storage::WalStorage::delete_segment(&memory, &writer, 0).await.unwrap();
+                }
+                if hole {
+                    db_storage::WalStorage::create_segment(&memory, &writer, 3).await.unwrap();
+                }
                 writer.release().await.unwrap();
             }
             let storage = StdArc::new(db_storage::DbBackend::Memory(memory));
@@ -4558,7 +5321,9 @@ mod tests {
         assert_eq!(view.entries.len() as u64, projection["expected"]["entries"].as_u64().unwrap());
         let entry = view.entries[0];
         assert_eq!(entry.operation_count, 2);
-        for (index, id) in projection["expected"]["operationIds"].as_array().unwrap().iter().enumerate() { assert!(view.operation_id_eq(0, index, id.as_str().unwrap())); }
+        for (index, id) in projection["expected"]["operationIds"].as_array().unwrap().iter().enumerate() {
+            assert!(view.operation_id_eq(0, index, id.as_str().unwrap()));
+        }
         assert_eq!(entry.head_seq, projection["expected"]["headSeq"].as_u64().unwrap());
         assert_eq!(entry.commit_seq, projection["expected"]["commitSeq"].as_u64().unwrap());
         assert_eq!((entry.head_seq, entry.commit_seq, entry.chain_hash, entry.epoch), (receipt.frontier.head_seq, receipt.frontier.commit_seq, receipt.frontier.chain_hash, receipt.frontier.epoch));
@@ -4576,17 +5341,22 @@ mod tests {
                     "published" => replay.reservation.as_ref().is_some_and(|owner| owner.entries.len() == 1),
                     _ => unreachable!(),
                 };
-                if target { return std::task::Poll::Ready(true); }
+                if target {
+                    return std::task::Poll::Ready(true);
+                }
                 turns += 1;
                 assert!(turns < 100_000, "history cancellation checkpoint stopped progressing");
                 match Pin::new(&mut replay).poll(context) {
                     std::task::Poll::Pending => std::task::Poll::Pending,
                     std::task::Poll::Ready(result) => {
-                        if let Ok(mut view) = result { while view.close_step() {} }
+                        if let Ok(mut view) = result {
+                            while view.close_step() {}
+                        }
                         std::task::Poll::Ready(false)
                     }
                 }
-            }).await;
+            })
+            .await;
             assert!(reached);
             assert!(replay.authenticated.is_some());
             assert_eq!(replay.reservation.as_ref().unwrap().entries.len(), usize::from(checkpoint == "published"));
@@ -4595,8 +5365,12 @@ mod tests {
             assert!(replay.terminal_is_empty());
             eprintln!("[DEBUG] history cancelled and retired authenticated source at {checkpoint}");
         }
-        while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
-        while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while engine.wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
+        while engine.state.values.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         eprintln!("[DEBUG] history projected one committed two-operation entry with the exact submitted frontier");
     }
 
@@ -4618,29 +5392,45 @@ mod tests {
                     "frontier" => db_wal::WalRecord::Frontier(Frontier { document: ArtifactId(document), head_seq: 1, commit_seq: 1, chain_hash: [7; 32], epoch: 3 }),
                     _ => unreachable!(),
                 };
-                records.push(record).unwrap_or_else(|mut record| { while record.close_step().unwrap() {} panic!("hostile history fixture exceeded record capacity"); });
+                records.push(record).unwrap_or_else(|mut record| {
+                    while record.close_step().unwrap() {}
+                    panic!("hostile history fixture exceeded record capacity");
+                });
             }
             let facet = backing.wal().await;
             engine.wal.submit(&facet, &records, DurabilityClass::Fsync, 1).await.unwrap();
-            while records.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            while records.close_step().unwrap() {
+                semio_framework_async::yield_once().await;
+            }
             drop(records);
             drop(facet);
             let mut replay = engine.history_replay(1, StdArc::new(std::sync::atomic::AtomicBool::new(false)), HistoryReplayReservation::try_new().unwrap());
             let rejected = match (&mut replay).await {
                 Err(DbError::Corrupt(_)) => true,
-                Ok(mut view) => { while view.close_step() {} false },
+                Ok(mut view) => {
+                    while view.close_step() {}
+                    false
+                }
                 Err(_) => false,
             };
             assert!(replay.terminal_is_empty());
-            while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
-            while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            while engine.wal.close_step().unwrap() {
+                semio_framework_async::yield_once().await;
+            }
+            while engine.state.values.close_step().unwrap() {
+                semio_framework_async::yield_once().await;
+            }
             drop(engine);
             assert!(rejected, "history admitted {}", row["name"]);
             let rejected = match ArtifactEngine::open_retained(document_id().await, backing, ArtifactEngineConfig::default(), 2).await {
                 Err(rejected) => matches!(rejected_engine_open_error(rejected).await, DbError::Corrupt(_)),
                 Ok((mut engine, _)) => {
-                    while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
-                    while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+                    while engine.wal.close_step().unwrap() {
+                        semio_framework_async::yield_once().await;
+                    }
+                    while engine.state.values.close_step().unwrap() {
+                        semio_framework_async::yield_once().await;
+                    }
                     false
                 }
             };
@@ -4996,8 +5786,12 @@ mod tests {
             let count = stored_json(engine.get("count").await.unwrap().unwrap()).await;
             assert!(store::pack_rt::json_values_equal(&count, &serde_json::json!(2)));
             let frontier = engine.frontier().await;
-            while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
-            while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+            while engine.wal.close_step().unwrap() {
+                semio_framework_async::yield_once().await;
+            }
+            while engine.state.values.close_step().unwrap() {
+                semio_framework_async::yield_once().await;
+            }
             (count, frontier)
         };
 
@@ -5011,8 +5805,12 @@ mod tests {
         assert_eq!(name, serde_json::json!("hello"));
         let count: serde_json::Value = stored_json(reopened.get("count").await.unwrap().unwrap()).await;
         assert_eq!(count, before_count);
-        while reopened.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
-        while reopened.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while reopened.wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
+        while reopened.state.values.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
         eprintln!("[DEBUG] replay preserved the complete live frontier and exact decoded numeric representation after explicit owner retirement");
     }
 
@@ -5244,29 +6042,16 @@ mod tests {
     //#endregion 🔖️Outbox + CommitLog
 
     //#region 🔖️Actor
-    async fn journal_authority(
-    ) -> (ArtifactAuthority, StdArc<db_storage::DbBackend>, StdArc<semio_framework_async::WorkerPool>) {
-        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(
-            semio_framework_async::ProcessKind::InteractiveNative,
-            3,
-        )));
+    async fn journal_authority() -> (ArtifactAuthority, StdArc<db_storage::DbBackend>, StdArc<semio_framework_async::WorkerPool>) {
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
         let storage = storage().await;
         let engine_storage = storage.clone();
-        let authority = ArtifactAuthority::spawn(
-            pool.clone(),
-            move || ArtifactEngine::create_retained(protocol::ArtifactId("map-a".to_string()), engine_storage, ArtifactEngineConfig::default(), 0),
-            MailboxCapacities::uniform(16),
-        )
-        .await
-        .unwrap();
+        let authority = ArtifactAuthority::spawn(pool.clone(), move || ArtifactEngine::create_retained(protocol::ArtifactId("map-a".to_string()), engine_storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).await.unwrap();
         (authority, storage, pool)
     }
 
     fn journal_grant() -> store::ArtifactStoreOneItemGrant {
-        store::ArtifactStoreOneItemGrant {
-            maximum_items: 1,
-            maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,
-        }
+        store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES }
     }
 
     fn close_journal_commit(commit: &mut dyn store::durable_group::DurableOwnedGroupJournalCommitV1) {
@@ -5281,14 +6066,38 @@ mod tests {
     }
 
     async fn shutdown_journal_authority(authority: &ArtifactAuthority, pool: &semio_framework_async::WorkerPool) {
+        let mut terminal_job = None;
         for _ in 0..10_000 {
             if authority.shutdown_step() {
                 pool.shutdown();
                 return;
             }
+            if terminal_job.is_none() {
+                terminal_job = authority.take_terminal_job();
+            }
+            if let Some(job) = terminal_job.take() {
+                if let Err(retained) = job.close() {
+                    terminal_job = Some(retained);
+                }
+            }
             semio_framework_async::yield_once().await;
         }
         panic!("journal authority did not terminate");
+    }
+
+    async fn durable_group_witness_batch(kinds: &[serde_json::Value], canonical_pack: &[u8]) -> db_wal::WalRecordBatch {
+        let mut control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
+        let mut records = db_wal::WalRecordBatch::new();
+        for kind in kinds {
+            let bytes = admit_wal_bytes(canonical_pack.to_vec(), db_storage::DB_IO_MAX_READ_BYTES, &mut control).await.unwrap();
+            let record = match kind.as_str().unwrap() {
+                "event" => db_wal::WalRecord::Event(bytes),
+                "command" => db_wal::WalRecord::Command(bytes),
+                other => panic!("unknown durable witness record kind {other}"),
+            };
+            push_wal_record(&mut records, record, &mut control).await.unwrap();
+        }
+        records
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5312,48 +6121,101 @@ mod tests {
         close_journal_commit(commit.as_mut());
         drop(commit);
         drop(sink);
+        let mut ordinary = envelope("ordinary-after-durable-decision", &[], "map-owner", &[("/ordinary", serde_json::json!(true))]).await;
+        ordinary.document_id = protocol::ArtifactId("map-a".to_string());
+        authority.submit(CommandBatch::new(vec![ordinary]).await.unwrap(), SubmitOptions { durability: DurabilityClass::Fsync, ..SubmitOptions::default() }, 8).await.unwrap();
         shutdown_journal_authority(&authority, &pool).await;
 
         let wal_facet = storage.wal().await;
         let mut replay = db_wal::replay_committed_document(
             &wal_facet,
             &ArtifactId::from("map-a"),
-            db_wal::WalCursorControl::new(
-                StdArc::new(std::sync::atomic::AtomicBool::new(false)),
-                std::time::Instant::now() + std::time::Duration::from_secs(30),
-                1_000_000,
-            )
-            .unwrap(),
+            db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap(),
         )
         .await
         .unwrap();
-        let mut events = Vec::new();
+        let replay_document = ArtifactId::from("map-a");
+        let mut witnesses = Vec::new();
+        let mut committed_transactions = 0;
         loop {
-            let mut transaction = match replay.next_transaction_step().await.unwrap() {
+            let transaction = match replay.next_transaction_step().await.unwrap() {
                 db_wal::WalCommittedStep::Transaction(transaction) => transaction,
                 db_wal::WalCommittedStep::Yield => continue,
                 db_wal::WalCommittedStep::Done => break,
             };
-            loop {
-                match transaction.next_record_step().unwrap() {
-                    db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Event(bytes)) => {
-                        let mut event = Vec::with_capacity(bytes.len());
-                        for fragment in bytes.fragments() {
-                            event.extend_from_slice(fragment);
-                        }
-                        events.push(event);
-                    }
-                    db_wal::WalCommittedRecordStep::Record(_) | db_wal::WalCommittedRecordStep::Yield => {}
-                    db_wal::WalCommittedRecordStep::Done => break,
-                }
-                while transaction.close_record_step().unwrap() {}
+            committed_transactions += 1;
+            if let Some(witness) = committed_durable_group_decision_from_transaction(&replay_document, transaction).unwrap() {
+                witnesses.push(witness);
             }
-            transaction.finish().unwrap();
         }
         while replay.close_owner_step().unwrap() {}
-        assert_eq!(events, vec![canonical_pack]);
+        assert_eq!(committed_transactions, 2);
+        assert_eq!(witnesses.len(), 1);
+        let witness = witnesses.pop().unwrap();
+        assert_eq!(witness.document(), &replay_document);
+        assert_eq!(witness.transaction_id(), receipt.transaction_id);
+        assert_eq!(witness.segment_index(), receipt.segment_index);
+        assert_eq!(witness.record().canonical_pack(), canonical_pack);
+        assert_eq!(witness.into_record().decision_sha256(), decision_sha256);
         assert_eq!(receipt.transaction_id, 1);
         eprintln!("[DEBUG] typed authority journal committed one exact canonical Store decision through its retained WAL writer and forced Fsync");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn committed_durable_group_decision_accepts_only_one_exact_event_transaction() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📓️durable-group-journal/🔣️.json")).unwrap();
+        let document = ArtifactId::from(fixture["record"]["document"].as_str().unwrap());
+        let record = store::durable_group::durable_owned_group_journal_test_record();
+        let canonical_pack = record.canonical_pack().to_vec();
+        let backing = storage().await;
+        let wal_storage = backing.wal().await;
+        let mut wal = db_wal::ArtifactWal::create(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await.unwrap();
+        for (ordinal, row) in fixture["committedDecisionWitnessCases"].as_array().unwrap().iter().filter(|row| row["transaction"] == "committed").enumerate() {
+            let mut records = durable_group_witness_batch(row["recordKinds"].as_array().unwrap(), &canonical_pack).await;
+            let receipt = wal.submit(&wal_storage, &records, DurabilityClass::Fsync, ordinal as u64 + 1).await.unwrap();
+            assert!(receipt.committed);
+            close_wal_record_batch(&mut records).await.unwrap();
+        }
+        wal.close().await.unwrap();
+
+        let mut replay =
+            db_wal::replay_committed_document(&wal_storage, &document, db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap())
+                .await
+                .unwrap();
+        for row in fixture["committedDecisionWitnessCases"].as_array().unwrap().iter().filter(|row| row["transaction"] == "committed") {
+            let transaction = loop {
+                match replay.next_transaction_step().await.unwrap() {
+                    db_wal::WalCommittedStep::Transaction(transaction) => break transaction,
+                    db_wal::WalCommittedStep::Yield => continue,
+                    db_wal::WalCommittedStep::Done => panic!("durable witness fixture lost a committed transaction"),
+                }
+            };
+            let replay_document = if row["replayDocument"] == "foreign" { ArtifactId::from("foreign-map") } else { document.clone() };
+            let outcome = committed_durable_group_decision_from_transaction(&replay_document, transaction);
+            match row["expected"].as_str().unwrap() {
+                "witness" => {
+                    let witness = outcome.unwrap().expect("one exact Event must produce a committed decision witness");
+                    assert_eq!(witness.document(), &replay_document);
+                    assert_eq!(witness.record().canonical_pack(), canonical_pack);
+                }
+                "ignored" => assert!(outcome.unwrap().is_none()),
+                "rejected" => assert!(matches!(outcome, Err(DbError::Corrupt(_)))),
+                other => panic!("unknown durable witness expectation {other}"),
+            }
+        }
+        assert!(matches!(replay.next_transaction_step().await.unwrap(), db_wal::WalCommittedStep::Done));
+        while replay.close_owner_step().unwrap() {}
+        assert!(replay.terminal_is_empty());
+
+        let aborted = db_wal::tests::aborted_event_fixture_storage(&document, &canonical_pack).await;
+        let mut replay =
+            db_wal::replay_committed_document(&aborted, &document, db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap())
+                .await
+                .unwrap();
+        assert!(matches!(replay.next_transaction_step().await.unwrap(), db_wal::WalCommittedStep::Done));
+        while replay.close_owner_step().unwrap() {}
+        assert!(replay.terminal_is_empty());
+        eprintln!("[DEBUG] committed decision witness admitted one sole canonical Event, ignored Command or aborted Event, and rejected mixed, duplicate, or foreign Event transactions");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5414,9 +6276,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
-        let result = ArtifactAuthority::spawn(pool.clone(), || async {
-            Err::<ArtifactEngine<AllowAll, NullVersionGraph>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string())))
-        }, MailboxCapacities::uniform(4));
+        let result = ArtifactAuthority::spawn(
+            pool.clone(),
+            || async { Err::<ArtifactEngine<AllowAll, NullVersionGraph>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string()))) },
+            MailboxCapacities::uniform(4),
+        );
         let rejected = match result.await {
             Err(rejected) => rejected,
             Ok(_) => panic!("artifact authority admitted a rejected builder"),
@@ -5702,8 +6566,12 @@ mod tests {
             assert!(terminal);
             assert!(replay.terminal_is_empty());
         }
-        while engine.wal.close_step().unwrap() { semio_framework_async::yield_once().await; }
-        while engine.state.values.close_step().unwrap() { semio_framework_async::yield_once().await; }
+        while engine.wal.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
+        while engine.state.values.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
     }
     //#endregion 🔖️Actor
 }

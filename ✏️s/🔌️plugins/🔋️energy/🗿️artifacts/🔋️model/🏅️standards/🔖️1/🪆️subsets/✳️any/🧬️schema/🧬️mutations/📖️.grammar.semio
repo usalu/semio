@@ -5,5 +5,21 @@ start mutation
 
 artifact-mark = "energy.model-mutations"
 mutation = artifact-mark op+
-op = replace-model
-replace-model = "replace-model" "new-model-json" "=" TEXT
+op = rename-model | change-model-version | update-site | update-ground-temperature | update-run-period | replace-airflow-network | add-output-variable | remove-output-variable | bind-weather-file | unbind-weather-file | connect-referenced-model | disconnect-referenced-model | rename-zone | change-zone-volume | change-zone-multiplier | change-zone-conditioned | change-zone-floor-area-participation
+rename-model = "rename-model" "new-name" "=" TEXT
+change-model-version = "change-model-version" "new-version" "=" TEXT
+update-site = "update-site" "latitude-deg" "=" NUMBER "longitude-deg" "=" NUMBER "elevation-m" "=" NUMBER "time-zone-hours" "=" NUMBER "north-axis-deg" "=" NUMBER
+update-ground-temperature = "update-ground-temperature" "building-surface-c" "=" NUMBER "shallow-c" "=" NUMBER "deep-c" "=" NUMBER
+update-run-period = "update-run-period" "start-month" "=" NUMBER "start-day" "=" NUMBER "end-month" "=" NUMBER "end-day" "=" NUMBER "year" "=" NUMBER
+replace-airflow-network = "replace-airflow-network" "present" "=" NUMBER "zone-ids" "=" NUMBER "node-ids" "=" NUMBER "outdoor-node-id" "=" NUMBER "link-ids" "=" NUMBER
+add-output-variable = "add-output-variable" "name" "=" TEXT "key" "=" TEXT "reporting-frequency" "=" TEXT
+remove-output-variable = "remove-output-variable" "name" "=" TEXT "key" "=" TEXT
+bind-weather-file = "bind-weather-file" "target-uri" "=" TEXT
+unbind-weather-file = "unbind-weather-file"
+connect-referenced-model = "connect-referenced-model" "target-uri" "=" TEXT
+disconnect-referenced-model = "disconnect-referenced-model"
+rename-zone = "rename-zone" "id" "=" NUMBER "new-name" "=" TEXT
+change-zone-volume = "change-zone-volume" "id" "=" NUMBER "new-volume-m3" "=" NUMBER
+change-zone-multiplier = "change-zone-multiplier" "id" "=" NUMBER "new-multiplier" "=" NUMBER
+change-zone-conditioned = "change-zone-conditioned" "id" "=" NUMBER "new-conditioned" "=" NUMBER
+change-zone-floor-area-participation = "change-zone-floor-area-participation" "id" "=" NUMBER "new-part-of-total-floor-area" "=" NUMBER

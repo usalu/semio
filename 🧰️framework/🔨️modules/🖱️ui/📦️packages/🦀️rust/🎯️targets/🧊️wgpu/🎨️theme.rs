@@ -128,6 +128,12 @@ pub struct Theme {
     pub diagram_accent: Rgba,
     pub diagram_accent_fill: Rgba,
     pub error: Rgba,
+    /// ✅️ Settled-and-accepted outcome paint (validated commit, passed check) — the positive
+    /// counterpart of [`Theme::error`]; renderers take outcome colors from here, never inline.
+    pub success: Rgba,
+    /// ⏳️ Still-running outcome paint (queued, applying, awaiting a decision) — the neutral third
+    /// state between [`Theme::success`] and [`Theme::error`].
+    pub progress: Rgba,
     /// 🪜️ Plain per-level fill, indexed by `Level::index` — `ui-surface`'s wgpu counterpart, backing
     /// `Theme::surface`/`glass`. Populated from the generated `levelBase..levelMenu`
     /// chrome paints (see `from_chrome` below).
@@ -234,6 +240,8 @@ fn from_chrome(chrome: &ChromePalette, presence_appearance: PresenceAppearance) 
         diagram_accent: Rgba::new(0.25, 0.45, 0.65, 0.9),
         diagram_accent_fill: Rgba::new(0.25, 0.35, 0.55, 0.8),
         error: Rgba::new(0.95, 0.35, 0.35, 1.0),
+        success: Rgba::from_srgb8(36, 158, 91, 255),
+        progress: Rgba::from_srgb8(67, 132, 245, 255),
         level_bg: [
             Rgba::from_chrome(&chrome.level_base),
             Rgba::from_chrome(&chrome.level_window),

@@ -3,6 +3,7 @@
 use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
+use crate::editor::raster::ui_label;
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -29,9 +30,9 @@ pub fn definition() -> PanelTabDefinition {
 /// precedent in lowpoly's inspection panel), always falling back to the schema+brush summary.
 pub fn render(document: &RasterDocument, runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let rows = crate::editor::raster::ui_node_list([
-        tree_item_desc("raster-play-inspector.schema", labels.schema_prefix, Some(document.schema.clone()))?,
-        tree_item_desc("raster-play-inspector.brush", labels.brush_prefix, Some(format!("{} @ {}", runtime.brush_size, runtime.brush_opacity)))?,
+        tree_item_desc("raster-play-inspector.schema", ui_label(labels.schema_prefix.as_str())?, Some(document.schema.clone())),
+        tree_item_desc("raster-play-inspector.brush", ui_label(labels.brush_prefix.as_str())?, Some(format!("{} @ {}", runtime.brush_size, runtime.brush_opacity))),
     ])?;
-    PanelTreeBuilder::new("raster-play-inspector")?.section("raster-play-inspector.summary", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, rows)?.build()
+    PanelTreeBuilder::new("raster-play-inspector")?.section("raster-play-inspector.summary", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
 //#endregion 🔖️Render

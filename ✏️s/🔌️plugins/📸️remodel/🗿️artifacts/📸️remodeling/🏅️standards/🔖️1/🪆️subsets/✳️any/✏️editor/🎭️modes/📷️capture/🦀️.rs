@@ -9,11 +9,11 @@ pub const REMODELING_PLAY_MODE_CAPTURE: &str = "capture";
 pub const REMODELING_PLAY_LAYOUT_CAPTURE: &str = "remodeling-capture";
 
 //#region 🔖️Definition
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: REMODELING_PLAY_MODE_CAPTURE.into(), label: LocalizedLabel::native("Capture", "Aufnahme"), icon_id: "camera".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-pub async fn layout() -> NamedLayout {
+pub fn layout() -> NamedLayout {
     create_named_layout(
         REMODELING_PLAY_LAYOUT_CAPTURE,
         "Capture",

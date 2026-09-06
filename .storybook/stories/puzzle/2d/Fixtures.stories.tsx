@@ -1,27 +1,26 @@
 // #region 🧲️Header
 // 💻️ .storybook/story/puzzle/2d/Fixtures.stories.tsx
 // Specs: Host the framework renderer's `🖥️Board2dHost` against the *real* puzzle-2d example fixtures (not hand-authored story data).
-// Summary: Same story-local-reducer pattern as `./Board.stories.tsx` (emulating `apply_board_events_from_json`) for interaction, but the fixture data comes from the real `puzzle/2d/example/*.puzzle2d` DSL-text fixtures (`Puzzle2dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-2d-rs`'s `puzzle2dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript). This file only proves those real fixtures round-trip through the host; the interaction-mechanics coverage (lasso/brush/lod) lives in `Board.stories.tsx`.
+// Summary: Same story-local-reducer pattern as `./Board.stories.tsx` (emulating `apply_board_events_from_json`) for interaction, but the fixture data comes from the real `◻️2d/…/📚️examples/*/🖼️assets/*/🗣️.dsl.semio` DSL-text fixtures (`Puzzle2dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-wasm`'s `puzzle2dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript). This file only proves those real fixtures round-trip through the host; the interaction-mechanics coverage (lasso/brush/lod) lives in `Board.stories.tsx`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { Board2dHost } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
+import { Board2dHost } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 
-import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📚️examples/🌲️concrete-forest/🖼️assets/🗣️forest.dsl.semio?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio?raw";
-import capsuleDreamFixtureDsl from "../../../../.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/PUZZLE-DESIGN-PARITY/🌙️capsule-dream-out/🗣️dream.2d.dsl.semio?raw";
+import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw";
 
 //#region WasmFixtureLoader
-/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-2d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
+/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-wasm`'s wasm module once (mirrors the renderer react target's `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
 type Puzzle2dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle2dParseDslJson: (dslText: string) => string };
 let puzzle2dWasmModulePromise: Promise<Puzzle2dWasmModule> | null = null;
 function loadPuzzle2dWasm(): Promise<Puzzle2dWasmModule> {
   if (!puzzle2dWasmModulePromise) {
-    puzzle2dWasmModulePromise = import("@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js").then(async (mod) => {
+    puzzle2dWasmModulePromise = import("../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js").then(async (mod) => {
       await (mod as unknown as Puzzle2dWasmModule).default();
       return mod as unknown as Puzzle2dWasmModule;
     });
@@ -278,7 +277,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🏯️ 180 nodes / 179 edges — the real Nakagin Capsule Tower 2D board fixture (`puzzle/2d/example/nakagin-capsule-tower.puzzle2d`). */
+/** 🏯️ 180 nodes / 179 edges — the real Nakagin Capsule Tower 2D board fixture (`📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio`). */
 export const NakaginCapsuleTower: Story = {
   args: {
     fixtureDsl: nakaginCapsuleTowerFixtureDsl,
@@ -286,18 +285,10 @@ export const NakaginCapsuleTower: Story = {
   },
 };
 
-/** 🌲️ The real Concrete Forest 2D board fixture (`puzzle/2d/example/concrete-forest.puzzle2d`). */
+/** 🌲️ The real Concrete Forest 2D board fixture (`📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio`). */
 export const ConcreteForest: Story = {
   args: {
     fixtureDsl: concreteForestFixtureDsl,
-    interactive: true,
-  },
-};
-
-/** 🌙️ Capsule Dream 2D projection (2880 nodes / 2864 edges) — ticket `PUZZLE-DESIGN-PARITY` `🌙️capsule-dream-out/🗣️dream.2d.dsl.semio` until the `◻️2d/📚️examples/🌙️capsule-dream` unit lands. */
-export const CapsuleDream: Story = {
-  args: {
-    fixtureDsl: capsuleDreamFixtureDsl,
     interactive: true,
   },
 };

@@ -116,8 +116,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends-a-capsule-to-the-tower/🦀️.rs"]
+                                    mod tests_appends_a_capsule_to_the_tower;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends-node-c/🦀️.rs"]
                                     mod tests_appends_node_c;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-capsule-id-the-tower-already-holds/🦀️.rs"]
+                                    mod tests_rejects_a_capsule_id_the_tower_already_holds;
                                 }
                                 #[path = "."]
                                 pub mod delete_node {
@@ -128,6 +134,12 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️deletes-the-tambour-and-severs-its-ten-edges/🦀️.rs"]
+                                    mod tests_deletes_the_tambour_and_severs_its_ten_edges;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_capsule_the_board_never_held;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️removes-node-a-and-severs-edge/🦀️.rs"]
                                     mod tests_removes_node_a_and_severs_edge;
@@ -142,8 +154,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/📍️moves-a-capsule-across-the-shaft/🦀️.rs"]
+                                    mod tests_moves_a_capsule_across_the_shaft;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/📍️moves-node-a/🦀️.rs"]
                                     mod tests_moves_node_a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/🚫️rejects-moving-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_moving_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod replace_node_geometry {
@@ -157,6 +175,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️circle-to-rectangle/🦀️.rs"]
                                     mod tests_circle_to_rectangle;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️squares-the-concrete-forest-seed/🦀️.rs"]
+                                    mod tests_squares_the_concrete_forest_seed;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🚫️rejects-reshaping-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_reshaping_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_node_kind {
@@ -168,8 +192,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🏗️rekinds-a-capsule-j-as-a-capsule-l/🦀️.rs"]
+                                    mod tests_rekinds_a_capsule_j_as_a_capsule_l;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🏷️reassigns-node-a-kind/🦀️.rs"]
                                     mod tests_reassigns_node_a_kind;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🚫️rejects-rekinding-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_rekinding_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod edit_node_text {
@@ -181,8 +211,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/✏️recodes-a-capsule-id-code/🦀️.rs"]
+                                    mod tests_recodes_a_capsule_id_code;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/✏️retitles-node-a/🦀️.rs"]
                                     mod tests_retitles_node_a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🚫️rejects-recoding-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_recoding_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_node_icon {
@@ -194,8 +230,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🎨️swaps-a-capsule-icon/🦀️.rs"]
+                                    mod tests_swaps_a_capsule_icon;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🎨️swaps-node-a-icon/🦀️.rs"]
                                     mod tests_swaps_node_a_icon;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🚫️rejects-reiconing-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_reiconing_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod scale_node {
@@ -209,6 +251,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/📏️doubles-node-a/🦀️.rs"]
                                     mod tests_doubles_node_a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/📏️scales-a-capsule-by-three-halves/🦀️.rs"]
+                                    mod tests_scales_a_capsule_by_three_halves;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/🚫️rejects-scaling-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_scaling_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_node_visible {
@@ -220,8 +268,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🙈️hides-a-capsule/🦀️.rs"]
+                                    mod tests_hides_a_capsule;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🙈️hides-node-a/🦀️.rs"]
                                     mod tests_hides_node_a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🚫️rejects-hiding-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_hiding_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_node_locked {
@@ -235,6 +289,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🔒️locks-node-a/🦀️.rs"]
                                     mod tests_locks_node_a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🔒️locks-the-first-storey-tambour/🦀️.rs"]
+                                    mod tests_locks_the_first_storey_tambour;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🚫️rejects-locking-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_locking_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_node_root {
@@ -248,6 +308,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🌳️promotes-node-a-to-root/🦀️.rs"]
                                     mod tests_promotes_node_a_to_root;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🌳️promotes-the-base-to-root/🦀️.rs"]
+                                    mod tests_promotes_the_base_to_root;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🚫️rejects-rooting-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_rooting_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_node_anchor {
@@ -259,8 +325,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/⚓️derives-a-capsule-pose-from-its-door-edge/🦀️.rs"]
+                                    mod tests_derives_a_capsule_pose_from_its_door_edge;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/⚓️fixed-to-derived/🦀️.rs"]
                                     mod tests_fixed_to_derived;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/🚫️rejects-anchoring-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_anchoring_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod add_node_handle {
@@ -272,8 +344,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/➕️adds-a-third-slot-door-to-the-tambour/🦀️.rs"]
+                                    mod tests_adds_a_third_slot_door_to_the_tambour;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/➕️appends-handle-3-to-node-b/🦀️.rs"]
                                     mod tests_appends_handle_3_to_node_b;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_adding_a_door_to_a_capsule_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod remove_node_handle {
@@ -284,6 +362,12 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️rejects-removing-a-door-the-tambour-never-had/🦀️.rs"]
+                                    mod tests_rejects_removing_a_door_the_tambour_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/🦀️.rs"]
+                                    mod tests_removes_a_tambour_door_and_severs_its_capsule_edge;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes-handle-2-and-severs-edge/🦀️.rs"]
                                     mod tests_removes_handle_2_and_severs_edge;
@@ -298,8 +382,11 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/⏸️rekind-handle-1-is-noop/🦀️.rs"]
-                                    mod tests_rekind_handle_1_is_noop;
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🔌️rekinds-an-unconnected-tambour-door/🦀️.rs"]
+                                    mod tests_rekinds_an_unconnected_tambour_door;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🚫️rejects-replacing-a-door-the-tambour-never-had/🦀️.rs"]
+                                    mod tests_rejects_replacing_a_door_the_tambour_never_had;
                                 }
                                 #[path = "."]
                                 pub mod connect_handles {
@@ -311,8 +398,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/⏸️keeps-an-edge-the-tower-already-holds/🦀️.rs"]
+                                    mod tests_keeps_an_edge_the_tower_already_holds;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/🪢️adds-second-edge/🦀️.rs"]
                                     mod tests_adds_second_edge;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/🪢️rewires-the-capsule-the-subgraph-left-loose/🦀️.rs"]
+                                    mod tests_rewires_the_capsule_the_subgraph_left_loose;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_handles {
@@ -323,6 +416,12 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/✂️severs-a-capsule-from-the-first-storey-tambour/🦀️.rs"]
+                                    mod tests_severs_a_capsule_from_the_first_storey_tambour;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/🚫️rejects-severing-an-edge-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_severing_an_edge_the_board_never_held;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/🚫️removes-edge-1/🦀️.rs"]
                                     mod tests_removes_edge_1;
@@ -339,6 +438,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/📍️repositions-edge-1/🦀️.rs"]
                                     mod tests_repositions_edge_1;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/🚫️rejects-reposing-an-edge-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_reposing_an_edge_the_board_never_held;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/🧮️reposes-a-capsule-door-edge/🦀️.rs"]
+                                    mod tests_reposes_a_capsule_door_edge;
                                 }
                                 #[path = "."]
                                 pub mod change_edge_kind {
@@ -350,8 +455,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🏷️kinds-a-capsule-door-edge-as-a-link/🦀️.rs"]
+                                    mod tests_kinds_a_capsule_door_edge_as_a_link;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🏷️rekinds-edge-1/🦀️.rs"]
                                     mod tests_rekinds_edge_1;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🚫️rejects-kinding-an-edge-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_kinding_an_edge_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_edge_tips {
@@ -365,6 +476,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🔀️swaps-edge-1-tips/🦀️.rs"]
                                     mod tests_swaps_edge_1_tips;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🖇️tips-a-capsule-door-edge/🦀️.rs"]
+                                    mod tests_tips_a_capsule_door_edge;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🚫️rejects-tipping-an-edge-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_tipping_an_edge_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_edge_visible {
@@ -376,8 +493,14 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🙈️hides-a-capsule-door-edge/🦀️.rs"]
+                                    mod tests_hides_a_capsule_door_edge;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🙈️hides-edge-1/🦀️.rs"]
                                     mod tests_hides_edge_1;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🚫️rejects-hiding-an-edge-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_hiding_an_edge_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_edge_locked {
@@ -391,6 +514,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🔒️locks-edge-1/🦀️.rs"]
                                     mod tests_locks_edge_1;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🔒️locks-the-base-to-tambour-edge/🦀️.rs"]
+                                    mod tests_locks_the_base_to_tambour_edge;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🚫️rejects-locking-an-edge-the-board-never-held/🦀️.rs"]
+                                    mod tests_rejects_locking_an_edge_the_board_never_held;
                                 }
                                 #[path = "."]
                                 pub mod change_manifest_id {
@@ -404,6 +533,9 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🧪️tests/📦️repoints-manifest/🦀️.rs"]
                                     mod tests_repoints_manifest;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🧪️tests/📦️repoints-the-tower-at-its-example-manifest/🦀️.rs"]
+                                    mod tests_repoints_the_tower_at_its_example_manifest;
                                 }
                                 #[path = "."]
                                 pub mod connect_kind_compatibility {
@@ -417,6 +549,9 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds-handle-kind-pair/🦀️.rs"]
                                     mod tests_adds_handle_kind_pair;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️admits-the-reverse-tambour-circular-pair/🦀️.rs"]
+                                    mod tests_admits_the_reverse_tambour_circular_pair;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_kind_compatibility {
@@ -427,6 +562,12 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-the-tambour-rectangular-pair/🦀️.rs"]
+                                    mod tests_withdraws_the_tambour_rectangular_pair;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️rejects-withdrawing-a-pair-the-relation-never-held/🦀️.rs"]
+                                    mod tests_rejects_withdrawing_a_pair_the_relation_never_held;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-handle-kind-pair/🦀️.rs"]
                                     mod tests_removes_handle_kind_pair;
@@ -443,6 +584,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-handle-kind-catalog/🦀️.rs"]
                                     mod tests_installs_handle_kind_catalog;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-the-tower-handle-catalog/🦀️.rs"]
+                                    mod tests_installs_the_tower_handle_catalog;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/🗑️clears-the-installed-handle-catalog/🦀️.rs"]
+                                    mod tests_clears_the_installed_handle_catalog;
                                 }
                             }
                         }
@@ -804,7 +951,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧪️tests/🚫️removes-part-a-and-severs-fastener/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧪️tests/🚫️removes-part-a-and-5f0581/🦀️.rs"]
                                     mod tests_removes_part_a_and_severs_fastener;
                                 }
                                 #[path = "."]
@@ -999,7 +1146,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/🚫️removes-grip-1-and-severs-fastener/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/🚫️removes-grip-1-and-5d2306/🦀️.rs"]
                                     mod tests_removes_grip_1_and_severs_fastener;
                                 }
                                 #[path = "."]
@@ -1129,7 +1276,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-grip-pair/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-grip-1464bd/🦀️.rs"]
                                     mod tests_removes_grip_pair;
                                 }
                                 #[path = "."]
@@ -1491,7 +1638,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🚫️removes-object-a-and-severs-attraction/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🚫️removes-object-a-and-ce36fb/🦀️.rs"]
                                     mod tests_removes_object_a_and_severs_attraction;
                                 }
                                 #[path = "."]
@@ -1611,7 +1758,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🧪️tests/🌀️appends-vortex-3-to-object-b/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🧪️tests/🌀️appends-vortex-3-to-e60441/🦀️.rs"]
                                     mod tests_appends_vortex_3_to_object_b;
                                 }
                                 #[path = "."]
@@ -1623,7 +1770,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/🚫️removes-vortex-2-and-severs-attraction/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/🚫️removes-vortex-2-8436d0/🦀️.rs"]
                                     mod tests_removes_vortex_2_and_severs_attraction;
                                 }
                                 #[path = "."]
@@ -1671,7 +1818,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🧪️tests/📍️repositions-attraction-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🧪️tests/📍️repositions-43523e/🦀️.rs"]
                                     mod tests_repositions_attraction_1;
                                 }
                                 #[path = "."]
@@ -1815,7 +1962,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🧪️tests/🖇️repoints-reference-1-source/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🧪️tests/🖇️repoints-017eb5/🦀️.rs"]
                                     mod tests_repoints_reference_1_source;
                                 }
                                 #[path = "."]
@@ -1863,7 +2010,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds-vortex-kind-pair/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds-vortex-kind-664041/🦀️.rs"]
                                     mod tests_adds_vortex_kind_pair;
                                 }
                                 #[path = "."]
@@ -1875,7 +2022,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-vortex-kind-pair/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-vortex-a24eec/🦀️.rs"]
                                     mod tests_removes_vortex_kind_pair;
                                 }
                                 #[path = "."]
@@ -1887,7 +2034,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-vortex-kind-catalog/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-vortex-a9d291/🦀️.rs"]
                                     mod tests_installs_vortex_kind_catalog;
                                 }
                             }

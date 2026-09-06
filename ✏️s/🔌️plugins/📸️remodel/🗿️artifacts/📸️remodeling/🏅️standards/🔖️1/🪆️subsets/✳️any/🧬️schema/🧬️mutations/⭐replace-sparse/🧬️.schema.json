@@ -3,22 +3,40 @@
   "title": "ReplaceSparse",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "sparse"
+  ],
   "properties": {
     "sparse": {
-      "title": "SparseCloud",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "points"
-      ],
-      "properties": {
-        "points": {
-          "type": "string"
+      "anyOf": [
+        {
+          "type": "object",
+          "title": "SparseCloud",
+          "additionalProperties": false,
+          "required": [
+            "points",
+            "colors"
+          ],
+          "properties": {
+            "points": {
+              "type": "string",
+              "format": "base64",
+              "description": "base64 of little-endian f32 lanes (semio_s_plugin_remodel PackedF32)"
+            },
+            "colors": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "base64",
+              "description": "base64 of raw u8 lanes (semio_s_plugin_remodel PackedU8)"
+            }
+          }
         },
-        "colors": {
-          "type": "string"
+        {
+          "type": "null"
         }
-      }
+      ]
     }
   }
 }

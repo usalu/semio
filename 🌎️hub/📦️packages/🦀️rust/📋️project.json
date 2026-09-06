@@ -427,6 +427,30 @@
         "command": "bun ./📜️script.ts space-public-boundary-check"
       }
     },
+    "document-browser-actor-identity-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts document-browser-actor-identity-check"
+      }
+    },
+    "document-browser-actor-identity-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts document-browser-actor-identity-check --native"
+      }
+    },
+    "trusted-browser-actor-catalog-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts document-browser-actor-identity-check --catalog-native"
+      }
+    },
     "trusted-stdio-gis-bootstrap": {
       "executor": "nx:run-commands",
       "cache": false,

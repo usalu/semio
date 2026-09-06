@@ -545,15 +545,17 @@
     },
     {
       "owner": "Puzzle2dPlayApp",
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
-      "ports": [],
-      "input": "port + Media(media-envelope) + immutable snapshot",
+      "ports": [
+        "kit:in"
+      ],
+      "input": "port + Media(structured-json) + immutable snapshot",
       "output": "Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>",
-      "currentMonolith": true,
+      "currentMonolith": false,
       "workBound": {
-        "maxRawWireBytes": 8388608,
-        "maxDecodedItems": 8192,
+        "maxRawWireBytes": 65536,
+        "maxDecodedItems": 4096,
         "maxWorkUnitsPerStep": 4096,
         "checkpointEverySteps": 1
       },

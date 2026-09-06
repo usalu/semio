@@ -1,10 +1,12 @@
 //! 🏁️ Remodeling mutation — one atomic durable reconstruction terminal event.
 
-use crate::artifacts::remodeling::{CameraTrajectory, GeoProducts, ImageAsset, QcReportSnapshot, ReconstructionJob, RemodelingMesh, RemodelingSnapshot, SparseCloud, committed_remodeling_asset_handle, durable_staged_remodeling_asset, durable_staged_remodeling_mesh};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::mutations::{RemodelingMutation, replace_geo_products, replace_job, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory};
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::mutations::{replace_geo_products, replace_job, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory, RemodelingMutation};
+use crate::artifacts::remodeling::{
+    committed_remodeling_asset_handle, durable_staged_remodeling_asset, durable_staged_remodeling_mesh, CameraTrajectory, GeoProducts, ImageAsset, QcReportSnapshot, ReconstructionJob, RemodelingMesh, RemodelingSnapshot, SparseCloud,
+};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🖼️ One compact named content handle published by a reconstruction commit.
@@ -18,10 +20,9 @@ pub struct ReconstructionAssetCommit {
 }
 
 /// 🏁️ Atomic terminal payload: compact handles plus bounded scalar/report metadata.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 #[dsl(keyword = "commit-reconstruction")]
 pub struct CommitReconstruction {
     #[dsl(block)]

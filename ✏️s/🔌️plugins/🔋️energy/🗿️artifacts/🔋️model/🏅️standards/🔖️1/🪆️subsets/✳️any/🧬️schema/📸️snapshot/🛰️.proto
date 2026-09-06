@@ -7,4 +7,5 @@ message EnergyModelSnapshot {
   bytes structure = 3;
   bytes zones = 4;
   bytes referenced_model = 5;
+  bytes weather_link = 6;
 }

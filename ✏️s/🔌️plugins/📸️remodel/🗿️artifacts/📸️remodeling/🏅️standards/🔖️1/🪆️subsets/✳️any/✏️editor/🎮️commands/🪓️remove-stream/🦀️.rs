@@ -13,6 +13,6 @@ pub struct RemoveStream {
     pub stream_id: String,
 }
 
-pub async fn handle(payload: &RemoveStream, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveStream, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![delete_stream(payload.stream_id.clone())]))
 }

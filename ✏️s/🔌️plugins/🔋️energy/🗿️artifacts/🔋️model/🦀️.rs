@@ -235,7 +235,7 @@ pub fn energy_model(snapshot: &EnergyModelSnapshot) -> crate::model::Model {
 /// are composed child handles, not a plain field.
 pub fn energy_snapshot_with_state(schema: impl Into<String>, model: &crate::model::Model, referenced_model: Option<store::ArtifactLink>) -> EnergyModelSnapshot {
     let (structure, zones) = energy_children_from_model(model);
-    EnergyModelSnapshot { schema: schema.into(), model: model.clone(), structure, zones, referenced_model }
+    EnergyModelSnapshot { schema: schema.into(), model: model.clone(), structure, zones, referenced_model, weather_link: None }
 }
 //#endregion 🔖️RetainedArtifactState
 //#endregion 🔖️Composition

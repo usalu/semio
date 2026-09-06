@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "componentHex", "descriptorHex", "cases"],
+  "properties": {
+    "schema": { "const": "semio.hub.generation-stage.v1" },
+    "componentHex": { "const": "616263" },
+    "descriptorHex": { "const": "646566" },
+    "cases": {
+      "const": [
+        { "change": "none", "accepted": true },
+        { "change": "component", "accepted": false },
+        { "change": "descriptor", "accepted": false },
+        { "change": "bundle", "accepted": false },
+        { "change": "extra-file", "accepted": false },
+        { "change": "missing-file", "accepted": false },
+        { "change": "symlink-file", "accepted": false },
+        { "change": "symlink-directory", "accepted": false },
+        { "change": "post-read-component", "accepted": false },
+        { "change": "oversize-component", "accepted": false },
+        { "change": "cancelled", "accepted": false },
+        { "change": "receipt-path", "accepted": true },
+        { "change": "actor", "accepted": false },
+        { "change": "actor-source", "accepted": false },
+        { "change": "actor-path", "accepted": false },
+        { "change": "missing-actor", "accepted": false },
+        { "change": "oversize-actor", "accepted": false },
+        { "change": "post-read-actor", "accepted": false },
+        { "change": "actor-symlink", "accepted": false }
+      ]
+    }
+  }
+}

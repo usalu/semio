@@ -8,35 +8,40 @@
   ],
   "properties": {
     "params": {
-      "title": "SfmParams",
       "type": "object",
+      "title": "SfmParams",
       "additionalProperties": false,
       "required": [
-        "baMaxIterations",
-        "huberDeltaPx",
-        "minTrackLength",
         "ransacIterations",
         "ransacThresholdPx",
-        "robustLoss"
+        "minTrackLength",
+        "baMaxIterations",
+        "robustLoss",
+        "huberDeltaPx"
       ],
       "properties": {
         "ransacIterations": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "ransacThresholdPx": {
-          "type": "number"
+          "type": "number",
+          "format": "float"
         },
         "minTrackLength": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "baMaxIterations": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "robustLoss": {
           "type": "string",
+          "title": "RobustLossKind",
           "enum": [
             "l2",
             "huber",
@@ -44,7 +49,8 @@
           ]
         },
         "huberDeltaPx": {
-          "type": "number"
+          "type": "number",
+          "format": "float"
         }
       }
     }

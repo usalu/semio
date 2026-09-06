@@ -397,13 +397,9 @@ pub async fn register_studio_port_for_test(space_id: &str, port: Arc<dyn OsBackb
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn sync_os_space_document_helper(document: &OsSpaceDocument, backbone_uri: &str, port: &Arc<BackbonePorts>) -> Result<(), VcsError> {
+pub(crate) async fn sync_os_space_document_helper(document: &OsSpaceDocument, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError> {
     let mut synced = document.clone();
     synced.backbone = Some(document_backbone_ref(backbone_uri).await);
-    // 🧬️ UFCS, not `.write(..)`: `BackbonePorts` satisfies BOTH `OsBackbonePort` and `SpaceBackbonePort`
-    // via their respective blanket impls over `store::BackbonePort` — both traits are `use`d in this
-    // file, so a plain method call is ambiguous (E0034). Disambiguate to the same trait this fn's
-    // pre-O1 signature used (`OsBackbonePort`).
     OsBackbonePort::write(port.as_ref(), backbone_uri, &encode_backbone_payload(&synced)?)
 }
 

@@ -9,7 +9,7 @@
         {
           "status": "Migrated",
           "lanes": ["Artifact"],
-          "routes": ["addLayer", "deleteLayer", "dropLayerKind", "duplicateLayer", "moveLayer", "patchLayer", "patchLayers", "setLayerVisible", "toggleLayerVisible"]
+          "routes": ["addLayer", "deleteLayer", "dropLayerKind", "duplicateLayer", "moveLayer", "patchLayer", "patchLayers", "setActiveExample", "setLayerVisible", "toggleLayerVisible"]
         },
         {
           "status": "Migrated",

@@ -8,8 +8,8 @@ use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutati
 use crate::editor::remodeling::engine::{describe_video_probe, images as remodeling_image, video as remodeling_video, video_codec_to_artifact};
 use crate::editor::remodeling::payload_from_data_url;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use std::collections::VecDeque;
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::VecDeque;
 
 //#region 🔖️VideoImportScratch
 /// 📥️ Rolling blur-gate scratch for one in-progress `importVideoFramePayload`/`importVideoBytesPayload`
@@ -90,7 +90,7 @@ pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remod
     use crate::editor::remodeling::testkit::dispatch;
     use crate::editor::remodeling::RemodelingCommand;
     for index in 0..n {
-        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index }));
+        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index })).await;
     }
 }
 
@@ -147,7 +147,7 @@ pub struct ImportVideoBytesPayload {
 /// demux/MJPEG/baseline-AVC decoder extracts frames fully in-process. The whole batch materializes
 /// inside this ONE pure call, so it needs no coalesce key (already exactly one `Emit`, hence one
 /// undo step). An undecodable codec surfaces as a `Notify` naming it, with provenance from the probe.
-pub async fn handle(payload: &ImportVideoBytesPayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &ImportVideoBytesPayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     let probe = match remodeling_video::probe(&bytes) {
         Ok(probe) => probe,

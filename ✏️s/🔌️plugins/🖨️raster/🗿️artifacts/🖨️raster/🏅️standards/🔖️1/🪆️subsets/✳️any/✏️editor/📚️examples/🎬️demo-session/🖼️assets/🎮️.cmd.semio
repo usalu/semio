@@ -1,2 +1,13 @@
 semio raster.raster.cmd v1
+# Demo session: load the Semio logo carrier, then pick up the brush over it
 action=demo
+exampleId=demo
+steps=[
+  setActiveExample exampleId=demo
+  setCompositeViewport width=1024 height=1024
+  setActiveUtility utilityId=paintBrush
+  setBrushSize value=24
+  setBrushOpacity value=0.85
+]
+actor=example
+started="0"

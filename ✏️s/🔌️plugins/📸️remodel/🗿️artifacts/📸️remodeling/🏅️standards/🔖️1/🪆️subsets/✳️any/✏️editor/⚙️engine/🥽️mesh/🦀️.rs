@@ -9,7 +9,7 @@
 // this file is byte-identical to the crate it was moved from (see 🦀️.rs for the wiring).
 use crate::editor::remodeling::engine::{camera as remodeling_camera, dense as remodeling_dense, images as remodeling_image};
 
-use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, VecDeque};
 
 // #region 🔖️TriMesh
 /// ➕️ Adds two 3-vectors.

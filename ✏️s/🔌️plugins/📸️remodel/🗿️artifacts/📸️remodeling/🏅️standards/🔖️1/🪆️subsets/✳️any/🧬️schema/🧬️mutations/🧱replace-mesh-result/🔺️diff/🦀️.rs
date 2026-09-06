@@ -6,7 +6,7 @@ use crate::artifacts::remodeling::RemodelingSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceMeshResult, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if payload.mesh.mesh.target.artifact_id.starts_with("mesh-stage:") {
-        return protocol::MutationOutcome::error("mutation.incomplete-mesh", "Private reconstruction staging handles are accepted only by CommitReconstruction.".into(), [payload.mesh.mesh.child_id.clone()]);
+        return protocol::MutationOutcome::error("mutation.incomplete-mesh", "Private reconstruction staging handles are accepted only by CommitReconstruction.", [payload.mesh.mesh.child_id.clone()]);
     }
     let mesh = (*payload.mesh).clone();
     if mesh == base.results.mesh {

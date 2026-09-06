@@ -1,7 +1,13 @@
-# 💡️ Remodeling inference schema — reconstructed-mesh bounds (bounding box + vertex/face counts).
+# 💡️ Remodeling inference schema — derived, never persisted.
 
 type RemodelingInference {
   bounds: RemodelingBounds! @derived
+  relativeCameraPoses: [RemodelingPoseDeltaEntry!]! @derived
+}
+
+type RemodelingBoundingBox {
+  min: [Float!]!
+  max: [Float!]!
 }
 
 type RemodelingBounds {
@@ -10,7 +16,12 @@ type RemodelingBounds {
   faceCount: Int!
 }
 
-type RemodelingBoundingBox {
-  min: [Float!]!
-  max: [Float!]!
+type RemodelingPoseDelta {
+  translationDelta: [Float!]!
+  rotationAngleRad: Float!
+}
+
+type RemodelingPoseDeltaEntry {
+  key: String!
+  value: RemodelingPoseDelta!
 }

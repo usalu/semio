@@ -2,11 +2,11 @@
 //! rigid pose = `{rotation_wxyz, translation_m}`, inseparable — same `update` reasoning as
 //! `update-camera-calibration`).
 
-use crate::artifacts::remodeling::{RemodelingSnapshot, RigExtrinsic};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{RemodelingSnapshot, RigExtrinsic};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔩 `update-rig-extrinsic` payload — full FINAL-state `RigExtrinsic` record.

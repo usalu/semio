@@ -1,16 +1,15 @@
-//! ⚖️ EnergyModel artifact — state-patch-representation wire codec + laws.
-
-use crate::artifacts::model::schema::mutations::text::EnergyModelMutation;
-use protocol::OpBinary;
-
-/// 🧾️ Direct-owner binary tags in aggregate declaration order.
-pub const BINARY_TAG_REGISTRY: &[(&str, u32)] = &[("ReplaceModel", super::replace_model::binary::BINARY_TAG)];
+//! ⚖️ EnergyModel artifact — the binary operation surface (`spr`) and its laws. Tags are the
+//! aggregate's own variant ordinals, emitted by `dsl::variants_binary` from the `dsl::DslEnum`
+//! derive: there is no hand-maintained tag registry to collide on.
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
+
+use crate::artifacts::model::schema::mutations::text::EnergyModelMutation;
+use protocol::OpBinary;
 
 /// 📦️ Encodes an `EnergyModelMutation` to its binary state-patch form.
 pub fn encode_op(operation: &EnergyModelMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -26,20 +25,13 @@ pub fn decode_op(bytes: &[u8]) -> Result<EnergyModelMutation, protocol::Protocol
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::model::mutations::replace_model;
 
     #[semio_framework_async_macros::async_test]
-    async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = EnergyModelMutation::ReplaceModel(replace_model::ReplaceModel { new_model_json: "{}".to_string() });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
-        let bytes = encode_op(&operation).expect("encode");
-        assert_eq!(decode_op(&bytes).expect("decode"), operation);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn replace_model_round_trips() {
-        let operation = EnergyModelMutation::ReplaceModel(replace_model::ReplaceModel { new_model_json: r#"{"name":"demo"}"#.to_string() });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
+    async fn every_kind_round_trips_through_this_codec() {
+        for operation in crate::artifacts::model::mutations::wire_probes() {
+            let bytes = encode_op(&operation).expect("encode");
+            assert_eq!(decode_op(&bytes).expect("decode"), operation);
+        }
     }
 }
 //#endregion 🧪️Tests

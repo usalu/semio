@@ -1,15 +1,84 @@
 dialect grammar
-grammar remodeling.op
+grammar remodeling.remodeling.op
 extension remodeling
 use family-scene
 start mutation
 
+# 📖️ The op text form one `RemodelingMutation` prints as (protocol::OpText::print_op): the
+# variant keyword followed by that payload printed as one inline DSL record. One production per
+# semantic kind, in RemodelingMutation variant order; the shapes are the DSL cell classes
+# (TEXT/UINT/INT/NUM/QTY/BOOL/ENUM/CRD/TUPLE/BLOCK/TABLE), a trailing `?` marking an Option lane.
+
 artifact-mark = "remodeling.remodeling-op"
-mutation = artifact-mark mesh-op+
-mesh-op = "add-vertex" vtx-field+ | "set-face" face-field+ | "transform-mesh" xfm-field+ | "merge-solid" merge-field+
-vtx-field = "x" "=" FLOAT | "y" "=" FLOAT | "z" "=" FLOAT
-face-field = "index" "=" INT | "loop" "=" list
-xfm-field = "axis" "=" IDENT | "angle" "=" FLOAT
-merge-field = "target" "=" IDENT | "source" "=" IDENT
-list = "[" INT* "]"
-layer = IDENT "@" FLOAT FLOAT FLOAT?
+mutation = artifact-mark op+
+op = create-stream-op
+   | delete-stream-op
+   | change-stream-sync-op
+   | add-stream-frame-op
+   | remove-stream-frame-op
+   | replace-stream-source-op
+   | create-asset-op
+   | delete-asset-op
+   | create-camera-calibration-op
+   | update-camera-calibration-op
+   | delete-camera-calibration-op
+   | create-rig-extrinsic-op
+   | delete-rig-extrinsic-op
+   | update-rig-extrinsic-op
+   | create-gcp-op
+   | delete-gcp-op
+   | add-gcp-observation-op
+   | remove-gcp-observation-op
+   | update-ingest-params-op
+   | update-feature-params-op
+   | update-match-params-op
+   | update-sfm-params-op
+   | update-dense-params-op
+   | update-mesh-params-op
+   | update-motion-params-op
+   | update-geo-params-op
+   | replace-job-op
+   | replace-sparse-op
+   | replace-dense-op
+   | replace-mesh-result-op
+   | replace-trajectory-op
+   | replace-tracks-op
+   | replace-geo-products-op
+   | replace-qc-op
+   | commit-reconstruction-op
+
+create-stream-op = "create-stream" "stream" "=" BLOCK
+delete-stream-op = "delete-stream" "id" "=" TEXT
+change-stream-sync-op = "change-stream-sync" "id" "=" TEXT "new-sync-offset-ms" "=" NUM
+add-stream-frame-op = "add-stream-frame" "id" "=" TEXT "frame" "=" BLOCK "kind" "=" ENUM
+remove-stream-frame-op = "remove-stream-frame" "id" "=" TEXT "frame-index" "=" UINT
+replace-stream-source-op = "replace-stream-source" "id" "=" TEXT "source" "=" BLOCK?
+create-asset-op = "create-asset" "key" "=" TEXT "asset" "=" BLOCK
+delete-asset-op = "delete-asset" "key" "=" TEXT
+create-camera-calibration-op = "create-camera-calibration" "camera" "=" BLOCK
+update-camera-calibration-op = "update-camera-calibration" "camera" "=" BLOCK
+delete-camera-calibration-op = "delete-camera-calibration" "camera-id" "=" TEXT
+create-rig-extrinsic-op = "create-rig-extrinsic" "extrinsic" "=" BLOCK
+delete-rig-extrinsic-op = "delete-rig-extrinsic" "camera-id" "=" TEXT
+update-rig-extrinsic-op = "update-rig-extrinsic" "extrinsic" "=" BLOCK
+create-gcp-op = "create-gcp" "gcp" "=" BLOCK
+delete-gcp-op = "delete-gcp" "id" "=" TEXT
+add-gcp-observation-op = "add-gcp-observation" "id" "=" TEXT "observation" "=" BLOCK
+remove-gcp-observation-op = "remove-gcp-observation" "id" "=" TEXT "observation-index" "=" UINT
+update-ingest-params-op = "update-ingest-params" "params" "=" BLOCK
+update-feature-params-op = "update-feature-params" "params" "=" BLOCK
+update-match-params-op = "update-match-params" "params" "=" BLOCK
+update-sfm-params-op = "update-sfm-params" "params" "=" BLOCK
+update-dense-params-op = "update-dense-params" "params" "=" BLOCK
+update-mesh-params-op = "update-mesh-params" "params" "=" BLOCK
+update-motion-params-op = "update-motion-params" "params" "=" BLOCK
+update-geo-params-op = "update-geo-params" "params" "=" BLOCK
+replace-job-op = "replace-job" "job" "=" BLOCK
+replace-sparse-op = "replace-sparse" "sparse" "=" BLOCK?
+replace-dense-op = "replace-dense" "dense" "=" BLOCK?
+replace-mesh-result-op = "replace-mesh-result" "mesh" "=" BLOCK
+replace-trajectory-op = "replace-trajectory" "trajectory" "=" BLOCK?
+replace-tracks-op = "replace-tracks" "tracks" "=" TABLE
+replace-geo-products-op = "replace-geo-products" "geo" "=" BLOCK?
+replace-qc-op = "replace-qc" "qc" "=" BLOCK?
+commit-reconstruction-op = "commit-reconstruction" "job" "=" BLOCK "sparse" "=" BLOCK? "trajectory" "=" BLOCK? "mesh" "=" BLOCK? "geo" "=" BLOCK? "qc" "=" BLOCK? "assets" "=" TABLE

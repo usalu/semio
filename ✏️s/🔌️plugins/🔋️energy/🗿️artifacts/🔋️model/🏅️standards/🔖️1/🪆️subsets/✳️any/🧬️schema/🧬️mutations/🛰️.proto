@@ -1,12 +1,114 @@
 syntax = "proto3";
-package semio.s.energy.model;
+package semio.s.energy.model.mutation;
 
-message ReplaceModel {
-  string new_model_json = 1;
+// 🧬️ EnergyModel mutation schema - one message per handcrafted semantic mutation kind.
+// `oneof` field numbers are allocated by the ticket ledger's per-group ranges
+// (📓️mutation-tag-ledger.md), never sequentially, so concurrent groups never collide.
+
+message RenameModel {
+  string new_name = 1;
+}
+
+message ChangeModelVersion {
+  string new_version = 1;
+}
+
+message UpdateSite {
+  double latitude_deg = 1;
+  double longitude_deg = 2;
+  double elevation_m = 3;
+  double time_zone_hours = 4;
+  double north_axis_deg = 5;
+}
+
+message UpdateGroundTemperature {
+  repeated double building_surface_c = 1;
+  repeated double shallow_c = 2;
+  double deep_c = 3;
+}
+
+message UpdateRunPeriod {
+  uint32 start_month = 1;
+  uint32 start_day = 2;
+  uint32 end_month = 3;
+  uint32 end_day = 4;
+  uint32 year = 5;
+}
+
+message ReplaceAirflowNetwork {
+  bool present = 1;
+  repeated uint32 zone_ids = 2;
+  repeated uint32 node_ids = 3;
+  uint32 outdoor_node_id = 4;
+  repeated uint32 link_ids = 5;
+}
+
+message AddOutputVariable {
+  string name = 1;
+  string key = 2;
+  string reporting_frequency = 3;
+}
+
+message RemoveOutputVariable {
+  string name = 1;
+  string key = 2;
+}
+
+message BindWeatherFile {
+  string target_uri = 1;
+}
+
+message UnbindWeatherFile {}
+
+message ConnectReferencedModel {
+  string target_uri = 1;
+}
+
+message DisconnectReferencedModel {}
+
+message RenameZone {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ChangeZoneVolume {
+  uint32 id = 1;
+  double new_volume_m3 = 2;
+}
+
+message ChangeZoneMultiplier {
+  uint32 id = 1;
+  uint32 new_multiplier = 2;
+}
+
+message ChangeZoneConditioned {
+  uint32 id = 1;
+  bool new_conditioned = 2;
+}
+
+message ChangeZoneFloorAreaParticipation {
+  uint32 id = 1;
+  bool new_part_of_total_floor_area = 2;
 }
 
 message EnergyModelMutation {
-  oneof op {
-    ReplaceModel replace_model = 1;
+  oneof kind {
+    RenameModel rename_model = 1;
+    ChangeModelVersion change_model_version = 2;
+    UpdateSite update_site = 3;
+    UpdateGroundTemperature update_ground_temperature = 4;
+    UpdateRunPeriod update_run_period = 5;
+    ReplaceAirflowNetwork replace_airflow_network = 6;
+    AddOutputVariable add_output_variable = 7;
+    RemoveOutputVariable remove_output_variable = 8;
+    BindWeatherFile bind_weather_file = 9;
+    UnbindWeatherFile unbind_weather_file = 10;
+    ConnectReferencedModel connect_referenced_model = 11;
+    DisconnectReferencedModel disconnect_referenced_model = 12;
+    RenameZone rename_zone = 100;
+    ChangeZoneVolume change_zone_volume = 101;
+    ChangeZoneMultiplier change_zone_multiplier = 102;
+    ChangeZoneConditioned change_zone_conditioned = 103;
+    ChangeZoneFloorAreaParticipation change_zone_floor_area_participation = 104;
   }
 }

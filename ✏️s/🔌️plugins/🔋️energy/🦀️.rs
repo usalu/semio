@@ -23,6 +23,13 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `ArtifactApp`s for `.document_codec::<A>()` to bind to. `ArtifactDeclaration::document_codec_bare::
 /// <Snapshot, Mutation>(schema)` still expresses that — see `crate::artifacts::model::declaration()`.
 ///
+/// 📚️ Ticket 26/09/06/ENERGY-PLUGIN-END-TO-END: the editor is registered through
+/// `.editor_with_examples::<…>(…, crate::editor::model::examples())` rather than the bare
+/// `.editor::<…>` — that second argument is the ONLY thing that fills `PluginManifest.examples`, and
+/// the react shell's example picker (`NavbarExampleSelect`, fed by `activePluginManifest.examples`)
+/// stays hidden while it is empty. A viewer never receives examples (`project_artifact_declarations`
+/// only collects them for `AppRole::Editor`), so `.viewer::<…>` keeps its plain form.
+///
 /// 🎭️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `.editor::<EnergyModelEditor>(…)`/
 /// `.viewer::<EnergyModelViewer>(…)` register this plugin's first two document surfaces for
 /// `s.energy.model@1/*` — energy is no longer a zero-app headless library, so the terminal builder
@@ -37,7 +44,7 @@ pub fn plugin() -> Result<Plugin<EnergyApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:energy")
         .artifact(crate::artifacts::model::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::model::EnergyModelEditor>(crate::editor::model::create_energy_model_editor())
+        .editor_with_examples::<crate::editor::model::EnergyModelEditor>(crate::editor::model::create_energy_model_editor(), crate::editor::model::examples())
         .editor_mutation_roster::<crate::editor::model::EnergyModelEditor>()
         .viewer::<crate::viewer::model::EnergyModelViewer>(crate::viewer::model::create_energy_model_viewer())
         .viewer_mutation_roster::<crate::viewer::model::EnergyModelViewer>()

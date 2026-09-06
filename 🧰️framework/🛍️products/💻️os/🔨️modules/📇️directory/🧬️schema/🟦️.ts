@@ -7,6 +7,9 @@
  * same-named payload field would collide on the wire. Flagged as a `sharedFileRequest` in lane
  * 0-A's report. */
 
+export { DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, documentBrowserActorLeaseFromPlanV1, parseDocumentExecutionTargetBrowserActorV1, parseDocumentOpenBrowserActorV1, sameDocumentBrowserActorV1 } from "./🌐️browser-actor/🟦️.ts";
+export type { DocumentBrowserActorSourceV1, DocumentClosedBrowserActorV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1 } from "./🌐️browser-actor/🟦️.ts";
+
 //#region 🔖️Vocabulary
 export type DirectorySpaceKind = "atelier" | "studio" | "archive";
 export type DirectorySpaceVisibility = "private" | "public";

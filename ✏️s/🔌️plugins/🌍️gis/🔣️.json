@@ -1,9 +1,8 @@
 {
   "activationEvents": [
     {
-      "kind": "onArtifactKind",
-      "value": {
-        "kind": "2d.map"
+      "onArtifactKind": {
+        "kind": "s.gis.gismap"
       }
     }
   ],
@@ -22,6 +21,367 @@
     }
   ],
   "contributions": {
+    "composerEntries": [
+      {
+        "reads": [
+          {
+            "artifactKind": "s.gis.gismap",
+            "standard": "1",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.dwg",
+            "standard": "ac1018",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.dxf",
+            "standard": "r12",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.pdf",
+            "standard": "1.4",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.png",
+            "standard": "1.2",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.svg",
+            "standard": "1.1",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          }
+        ],
+        "writes": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "reads": [
+          {
+            "artifactKind": "s.gis.gisterrain",
+            "standard": "1",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.dwg",
+            "standard": "ac1018",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.gltf",
+            "standard": "2.0",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.las",
+            "standard": "1.0",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.obj",
+            "standard": "3.0",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.ply",
+            "standard": "1.0",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.png",
+            "standard": "1.2",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.stl",
+            "standard": "ascii",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          }
+        ],
+        "writes": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
+    "inferenceServices": [
+      {
+        "algorithmVersion": 1,
+        "artifactKind": "s.gis.gismap",
+        "artifactSchema": "s.gis.gismap",
+        "artifactSchemaVersion": 1,
+        "contributor": "gis",
+        "documentSchema": "gis.map",
+        "documentSchemaVersion": 1,
+        "inferenceSchema": "s.gis.gismap.inference",
+        "inferenceSchemaVersion": 1,
+        "owner": "gis",
+        "policyVersion": 1
+      }
+    ],
+    "ioEntries": [
+      {
+        "counterpart": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.dwg",
+          "standard": "ac1018",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.dxf",
+          "standard": "r12",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.pdf",
+          "standard": "1.4",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.png",
+          "standard": "1.2",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.dwg",
+          "standard": "ac1018",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.gltf",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.las",
+          "standard": "1.0",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.obj",
+          "standard": "3.0",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.ply",
+          "standard": "1.0",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.png",
+          "standard": "1.2",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.stl",
+          "standard": "ascii",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import",
+        "owner": {
+          "artifactKind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
     "panels": [
       {
         "bodyKey": "gis2d.play.document",
@@ -161,9 +521,9 @@
   "descriptorVersion": 1,
   "execution": "isolated",
   "hashes": {
-    "coreWasmSha256": "90a7cd5fc5aa1d0ccb755c7a920ea779d60398e942305ea6bc71478f43d0f15a",
-    "descriptorSha256": "5be61f0b3aab6dc86dbb992810d5f4cc5632dd32e27a74d966fa47ba033af06b",
-    "wasmSha256": "78a180b8fcf22d57778a88b5bc93821e832ebf63bf23d90ae36bfd1e756c27eb"
+    "coreWasmSha256": "7e5c3bd0570f88a893b88f968af607550acc550915c3b165b5ca3e6aa78693f4",
+    "descriptorSha256": "9907f9a60510b04450dd8fb48557d59264cfefa965b9fd7eeb6a3b12abdf318f",
+    "wasmSha256": "662a9f85feed22a7efceef285407e0da8cd5af574a182872d5218c3955770ade"
   },
   "manifest": {
     "apps": [
@@ -181,7 +541,7 @@
               "stdio.png",
               "stdio.svg"
             ],
-            "id": "2d.map",
+            "id": "s.gis.gismap",
             "importFormats": [],
             "importStdioKinds": [
               "stdio.dwg",
@@ -320,7 +680,7 @@
           "artifact": {
             "componentKind": "gismap",
             "dimension": "2d",
-            "id": "2d.map",
+            "id": "s.gis.gismap",
             "name": "2D Map"
           },
           "documentMediaType": {
@@ -345,7 +705,7 @@
             {
               "direction": "out",
               "id": "map:out",
-              "kindId": "2d.map",
+              "kindId": "s.gis.gismap",
               "label": "Map",
               "mediaType": {
                 "class": "twoD",
@@ -434,7 +794,7 @@
           {
             "direction": "out",
             "id": "map:out",
-            "kindId": "2d.map",
+            "kindId": "s.gis.gismap",
             "label": "Map",
             "mediaType": {
               "class": "twoD",
@@ -1463,6 +1823,48 @@
                     "scopes": [
                       "documents.read",
                       "shell.observe"
+                    ]
+                  }
+                }
+              },
+              {
+                "args": [],
+                "category": "inference",
+                "iconId": "code",
+                "id": "proposeBoundsRegion",
+                "inPalette": true,
+                "kind": "shell",
+                "label": {
+                  "native": {
+                    "de": "Begrenzungsregion vorschlagen",
+                    "en": "Propose Bounds Region"
+                  },
+                  "reuse": {
+                    "de": "Begrenzungsregion vorschlagen",
+                    "en": "Propose Bounds Region"
+                  }
+                },
+                "semantics": {
+                  "effects": {
+                    "destructive": false,
+                    "external": false,
+                    "reversible": false
+                  },
+                  "execution": {
+                    "cancellable": false,
+                    "class": "interactive",
+                    "expectedRevision": false,
+                    "idempotency": "none",
+                    "interactiveJob": "migrated",
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    }
+                  },
+                  "policy": {
+                    "approval": "never",
+                    "scopes": [
+                      "shell.navigate"
                     ]
                   }
                 }
@@ -3897,7 +4299,7 @@
               "stdio.png",
               "stdio.svg"
             ],
-            "id": "2d.map",
+            "id": "s.gis.gismap",
             "importFormats": [],
             "importStdioKinds": [
               "stdio.dwg",
@@ -4021,7 +4423,7 @@
           "artifact": {
             "componentKind": "gisterrain",
             "dimension": "3d",
-            "id": "gis.terrain",
+            "id": "s.gis.gisterrain",
             "name": "GIS Terrain"
           },
           "documentMediaType": {
@@ -4035,7 +4437,7 @@
             {
               "direction": "in",
               "id": "map:in",
-              "kindId": "2d.map",
+              "kindId": "s.gis.gismap",
               "label": "Map",
               "mediaType": {
                 "class": "twoD",
@@ -4123,7 +4525,7 @@
           {
             "direction": "in",
             "id": "map:in",
-            "kindId": "2d.map",
+            "kindId": "s.gis.gismap",
             "label": "Map",
             "mediaType": {
               "class": "twoD",
@@ -6702,7 +7104,39 @@
         ]
       }
     ],
-    "artifactKinds": [],
+    "artifactKinds": [
+      {
+        "componentKind": "gismap",
+        "dimension": "2d",
+        "exportFormats": [],
+        "exportStdioKinds": [
+          "stdio.dwg",
+          "stdio.dxf",
+          "stdio.json",
+          "stdio.pdf",
+          "stdio.png",
+          "stdio.svg"
+        ],
+        "id": "s.gis.gismap",
+        "importFormats": [],
+        "importStdioKinds": [
+          "stdio.dwg",
+          "stdio.dxf",
+          "stdio.json",
+          "stdio.pdf",
+          "stdio.png",
+          "stdio.svg"
+        ],
+        "mediaCapability": "meshOnly",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "name": "2D Map",
+        "schema": "gis.map",
+        "sourceFormat": "gis.map"
+      }
+    ],
     "capabilities": [
       {
         "artifact": "document",
@@ -6722,6 +7156,7 @@
     "topicContributions": [],
     "version": "0.1.0"
   },
+  "packageId": "semio:gis",
   "quotas": {},
   "role": "plugin"
 }

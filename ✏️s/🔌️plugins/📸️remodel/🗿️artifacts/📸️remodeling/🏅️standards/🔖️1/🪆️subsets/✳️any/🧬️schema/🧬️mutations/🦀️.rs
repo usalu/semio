@@ -6,7 +6,6 @@
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::RemodelingSnapshot;
 use protocol::Mutation as _;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
@@ -14,9 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// collection (streams, assets, camera calibrations, rig extrinsics, GCPs), `update` for the 8
 /// inseparable `ReconstructionParams` sub-facets and the calibration/rig full-record replace, and
 /// `replace` for the engine-owned job/results large structured sub-payloads.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RemodelingSnapshot, diff = RemodelingDiff, schema = "remodeling.scene")]
 pub enum RemodelingMutation {
     CreateStream(CreateStream),
@@ -431,8 +429,8 @@ mod tests {
 /// reads — into real typed values.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RemodelingSnapshot, RemodelingMutation), String> {
-    let snapshot: RemodelingSnapshot = serde_json::from_str(snapshot_json).map_err(|error| format!("the committed remodeling snapshot JSON does not decode: {error}"))?;
-    let mutation: RemodelingMutation = serde_json::from_str(mutation_json).map_err(|error| format!("the committed remodeling mutation JSON does not decode: {error}"))?;
+    let snapshot: RemodelingSnapshot = pack::from_json_str(snapshot_json).map_err(|error| format!("the committed remodeling snapshot JSON does not decode: {error}"))?;
+    let mutation: RemodelingMutation = pack::from_json_str(mutation_json).map_err(|error| format!("the committed remodeling mutation JSON does not decode: {error}"))?;
     Ok((snapshot, mutation))
 }
 
@@ -453,7 +451,7 @@ fn bridge_step(snapshot: &RemodelingSnapshot, mutation: &RemodelingMutation) -> 
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_render(snapshot: &RemodelingSnapshot, messages: Vec<String>) -> Result<String, String> {
-    serde_json::to_string(&serde_json::json!({ "snapshot": snapshot, "messages": messages })).map_err(|error| error.to_string())
+    Ok(pack::json_to_string(&pack::json_object([("snapshot".to_string(), pack::json_from_dsl_value(&dsl::ToValue::to_value(snapshot))), ("messages".to_string(), pack::json_array(messages.into_iter().map(pack::JsonValue::String)))])))
 }
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
@@ -496,7 +494,11 @@ pub fn round_trip_remodeling_dsl(text: &str) -> Result<String, String> {
     let parsed = <RemodelingSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed remodeling example does not parse: {error:?}"))?;
     let printed = <RemodelingSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <RemodelingSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted remodeling document does not parse: {error:?}"))?;
-    serde_json::to_string(&serde_json::json!({ "printed": printed, "snapshot": parsed, "reparsed": reparsed })).map_err(|error| error.to_string())
+    Ok(pack::json_to_string(&pack::json_object([
+        ("printed".to_string(), pack::JsonValue::String(printed)),
+        ("snapshot".to_string(), pack::json_from_dsl_value(&dsl::ToValue::to_value(&parsed))),
+        ("reparsed".to_string(), pack::json_from_dsl_value(&dsl::ToValue::to_value(&reparsed))),
+    ])))
 }
 //#endregion 🌉️ExternalCodecBridge
 

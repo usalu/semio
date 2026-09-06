@@ -4910,6 +4910,38 @@
       }
     },
     {
+      "name": "⚖️gate🌐️document-browser-actor-identity🌎️hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run os-hub:document-browser-actor-identity-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.109601 }
+    },
+    {
+      "name": "⚖️gate🌐️document-browser-actor-identity🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run os-hub:document-browser-actor-identity-native-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target"
+      },
+      "presentation": { "group": "4_gate", "order": 411.109602 }
+    },
+    {
+      "name": "⚖️gate🌐️trusted-browser-actor-catalog🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run os-hub:trusted-browser-actor-catalog-native-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/space-public-boundary-sol-target"
+      },
+      "presentation": { "group": "4_gate", "order": 411.109603 }
+    },
+    {
       "name": "⚖️gate🧬️trusted-stdio-gis-bundle🌎️hub",
       "type": "node-terminal",
       "request": "launch",
@@ -6228,6 +6260,22 @@
       "presentation": { "group": "4_build", "order": 122 }
     },
     {
+      "name": "🖨️describe🧩️puzzle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/puzzle-plugin:describe",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 122.1 }
+    },
+    {
+      "name": "🧪️lint🧩️puzzle🧬️fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/puzzle-plugin:fixtures-lint",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 122.2 }
+    },
+    {
       "name": "📦️build🌐️gis📍️2d",
       "type": "node-terminal",
       "request": "launch",
@@ -6320,10 +6368,80 @@
       "cwd": "${workspaceFolder}"
     },
     {
+      "name": "🧪️test🏺️remodel📚️examples",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/remodel-js:test",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test🧩️puzzle📚️examples",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/puzzle-js:test",
+      "cwd": "${workspaceFolder}"
+    },
+    {
       "name": "🔋️ Energy JS Tests",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/energy-js:test",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🔮️oracle🔋️energy⚙️setup",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/energy-oracle-py:oracle-setup",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🔮️oracle🔋️energy🔍️status",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/energy-oracle-py:oracle-status",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🔮️oracle🔋️energy🏛️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/energy-oracle-py:oracle-native -- 600 ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🌦️denver-tmy/🌦️.epw ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏛️bestest-600/🔮️energyplus.json",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🔮️oracle🔋️energy▶️run",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/energy-oracle-py:oracle-run -- ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏛️bestest-600/🔋️model.json ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🌦️denver-tmy/🌦️.epw ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏛️bestest-600/🔮️energyplus.json",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🔮️oracle🔋️energy🧫️emit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/energy-oracle-py:oracle-emit -- 600 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/🧫️bestest-600-semio-model.json",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪️test🔋️energy🔮️oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/energy-oracle-py:test",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🏛️bestest🔋️energy♻️regenerate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "SEMIO_ENERGY_BESTEST_REGENERATE=1 cargo test -p semio-s-plugin-energy --lib bestest::tests::regenerate_bestest_fixtures -- --nocapture",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🏛️bestest🔋️energy🧪️laws",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p semio-s-plugin-energy --lib bestest:: -- --nocapture",
       "cwd": "${workspaceFolder}"
     },
     {

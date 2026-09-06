@@ -103,9 +103,15 @@ impl FromValue for ZoneEquipmentPriority {
 // #endregion 🔖️ZoneEquipmentPriority
 
 // #region 🔖️Thermostat
+/// 🎚️ Proportional control fraction. A throttle range of zero is the IDEAL on/off thermostat
+/// ANSI/ASHRAE 140 §5.2 specifies — full output the moment the error turns positive — not a dead
+/// controller, which is what returning zero there used to make it.
 fn proportional_fraction(error: f64, throttle: f64) -> f64 {
-    if error <= 0.0 || throttle <= 0.0 {
+    if error <= 0.0 {
         return 0.0;
+    }
+    if throttle <= 0.0 {
+        return 1.0;
     }
     (error / throttle).clamp(0.0, 1.0)
 }

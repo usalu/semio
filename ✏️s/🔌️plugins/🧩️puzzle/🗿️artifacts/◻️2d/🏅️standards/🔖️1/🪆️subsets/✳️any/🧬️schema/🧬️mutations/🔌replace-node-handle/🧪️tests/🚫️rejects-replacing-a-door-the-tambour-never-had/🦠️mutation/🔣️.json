@@ -1,0 +1,11 @@
+{
+  "mutation": "replaceNodeHandle",
+  "nodeId": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
+  "handleId": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl3_d0",
+  "newHandle": {
+    "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl3_d0",
+    "handleKind": "door tambour right",
+    "angle": 0.0,
+    "radius": 3.0
+  }
+}

@@ -16,7 +16,7 @@ pub struct SetIngestParams {
     pub min_sharpness: f32,
 }
 
-pub async fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_ingest_params(IngestParams { frame_sample_stride: payload.frame_sample_stride, max_frames: payload.max_frames, downscale_long_edge_px: payload.downscale_long_edge_px, min_sharpness: payload.min_sharpness })]))
 }
 
@@ -30,8 +30,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_sfm_params_command_materializes_typed_fields_into_operations() {
-        let mut app = app();
-        let result = dispatch(&mut app, RemodelingCommand::SetSfmParams(set_sfm_params::SetSfmParams { ransac_iterations: 500, ransac_threshold_px: 1.5, min_track_length: 4, ba_max_iterations: 20, robust_loss: "cauchy".into(), huber_delta_px: 2.5 }));
+        let mut app = app().await;
+        let result =
+            dispatch(&mut app, RemodelingCommand::SetSfmParams(set_sfm_params::SetSfmParams { ransac_iterations: 500, ransac_threshold_px: 1.5, min_track_length: 4, ba_max_iterations: 20, robust_loss: "cauchy".into(), huber_delta_px: 2.5 })).await;
         assert_eq!(result.mutations.len(), 1, "typed command produces one SetSfmParams operation");
         let params = app.snapshot().expect("materialize projection").params.sfm;
         assert_eq!(params.ransac_iterations, 500);
@@ -42,8 +43,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_geo_params_command_materializes_typed_fields_into_operations() {
-        let mut app = app();
-        dispatch(&mut app, RemodelingCommand::SetGeoParams(set_geo_params::SetGeoParams { enabled: true, origin_lon: None, origin_lat: None, origin_alt: None, gsd_m: 0.02, dsm_cell_m: 0.2, dtm_filter_radius_m: 2.0, ortho_max_px: 2048 }));
+        let mut app = app().await;
+        dispatch(&mut app, RemodelingCommand::SetGeoParams(set_geo_params::SetGeoParams { enabled: true, origin_lon: None, origin_lat: None, origin_alt: None, gsd_m: 0.02, dsm_cell_m: 0.2, dtm_filter_radius_m: 2.0, ortho_max_px: 2048 })).await;
         let params = app.snapshot().expect("materialize projection").params.geo;
         assert!(params.enabled);
         assert_eq!(params.gsd_m, 0.02);
@@ -53,7 +54,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_mesh_params_command_materializes_watertight_knobs() {
-        let mut app = app();
+        let mut app = app().await;
         dispatch(
             &mut app,
             RemodelingCommand::SetMeshParams(set_mesh_params::SetMeshParams {
@@ -67,7 +68,7 @@ mod tests {
                 hole_fill_max_boundary_verts: 256,
                 self_intersection_check: true,
             }),
-        );
+        ).await;
         let params = app.snapshot().expect("materialize projection").params.mesh;
         assert_eq!(params.tsdf_voxel_size_mm, 3.0);
         assert!(!params.guarantee_watertight);
@@ -77,8 +78,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_ingest_params_command_materializes_min_sharpness() {
-        let mut app = app();
-        dispatch(&mut app, RemodelingCommand::SetIngestParams(SetIngestParams { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.42 }));
+        let mut app = app().await;
+        dispatch(&mut app, RemodelingCommand::SetIngestParams(SetIngestParams { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.42 })).await;
         assert_eq!(app.snapshot().expect("materialize projection").params.ingest.min_sharpness, 0.42);
     }
 
@@ -86,10 +87,10 @@ mod tests {
     /// rather than failing the dispatch.
     #[semio_framework_async_macros::async_test]
     async fn unknown_enum_keywords_fall_back_to_the_documented_defaults() {
-        let mut app = app();
-        dispatch(&mut app, RemodelingCommand::SetFeatureParams(set_feature_params::SetFeatureParams { detector: "nonsense".into(), target_count: 10, octaves: 1, edge_threshold: 1.0 }));
-        dispatch(&mut app, RemodelingCommand::SetMatchParams(set_match_params::SetMatchParams { matcher: "nonsense".into(), ratio_test: 0.5, cross_check: false, sequential_window: 1, max_pairs_per_frame: 1, loop_closure: false }));
-        dispatch(&mut app, RemodelingCommand::SetDenseParams(set_dense_params::SetDenseParams { resolution: "nonsense".into(), window_radius_px: 1, min_view_consistency: 1, confidence_threshold: 0.1, max_points: 10 }));
+        let mut app = app().await;
+        dispatch(&mut app, RemodelingCommand::SetFeatureParams(set_feature_params::SetFeatureParams { detector: "nonsense".into(), target_count: 10, octaves: 1, edge_threshold: 1.0 })).await;
+        dispatch(&mut app, RemodelingCommand::SetMatchParams(set_match_params::SetMatchParams { matcher: "nonsense".into(), ratio_test: 0.5, cross_check: false, sequential_window: 1, max_pairs_per_frame: 1, loop_closure: false })).await;
+        dispatch(&mut app, RemodelingCommand::SetDenseParams(set_dense_params::SetDenseParams { resolution: "nonsense".into(), window_radius_px: 1, min_view_consistency: 1, confidence_threshold: 0.1, max_points: 10 })).await;
         let params = app.snapshot().expect("materialize projection").params;
         assert_eq!(params.feature.detector, FeatureDetector::Orb);
         assert_eq!(params.matching.matcher, MatcherKind::BruteForce);
@@ -98,8 +99,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_motion_params_command_materializes_typed_fields() {
-        let mut app = app();
-        dispatch(&mut app, RemodelingCommand::SetMotionParams(set_motion_params::SetMotionParams { enabled: true, max_tracks: 32, track_window_px: 11, min_track_quality: 0.4, min_track_length_frames: 7 }));
+        let mut app = app().await;
+        dispatch(&mut app, RemodelingCommand::SetMotionParams(set_motion_params::SetMotionParams { enabled: true, max_tracks: 32, track_window_px: 11, min_track_quality: 0.4, min_track_length_frames: 7 })).await;
         let params = app.snapshot().expect("materialize projection").params.motion;
         assert!(params.enabled);
         assert_eq!(params.max_tracks, 32);

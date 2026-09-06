@@ -1,14 +1,28 @@
-//! deser remodeling via txt
-//! 🐛️ Pre-migration content here referenced `crate::artifacts::json`/`crate::artifacts::txt`,
-//! types that don't exist in this crate (dead code, never mounted by the old glue, never
-//! compiled) -- likely a copy-paste of stdio's own internal json<-txt bridge into the wrong
-//! plugin's txt target folder. Left as an honest stub producing this artifact's own real
-//! snapshot type, pending a real txt import/export implementation.
 use crate::artifacts::remodeling::RemodelingSnapshot;
-pub async fn register() {}
-pub async fn deserialize(_from: &semio_s_plugin_stdio::artifacts::txt::TxtSnapshot) -> Result<RemodelingSnapshot, String> {
-    Err("txt import not yet implemented".into())
-}
-pub async fn deserialize_bytes(_bytes: &[u8]) -> Result<RemodelingSnapshot, String> {
-    Err("txt import not yet implemented".into())
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+/// 🎯️ The foreign dialect this leaf reads.
+pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
+
+/// 🧩️ `s.stdio.txt@utf-8/*` → `s.remodel.remodeling@1/*` — this subset's own DSL reader, the exact
+/// inverse of the export leaf's `print_dsl`.
+pub struct TxtIntoRemodeling;
+
+impl Deserializer<RemodelingSnapshot> for TxtIntoRemodeling {
+    const FROM: Dialect = TXT_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    async fn sniff(payload: &IoPayload) -> Confidence {
+        match payload {
+            IoPayload::Text(text) if text.contains("remodeling") => Confidence::Low,
+            _ => Confidence::None,
+        }
+    }
+    async fn deserialize(payload: &IoPayload) -> IoResult<RemodelingSnapshot> {
+        let IoPayload::Text(text) = payload else {
+            return Err(IoError { message: "txt→remodeling: expected a text payload".to_string(), diagnostics: Vec::new() });
+        };
+        let snapshot = <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError { message: format!("txt→remodeling: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(snapshot))
+    }
 }

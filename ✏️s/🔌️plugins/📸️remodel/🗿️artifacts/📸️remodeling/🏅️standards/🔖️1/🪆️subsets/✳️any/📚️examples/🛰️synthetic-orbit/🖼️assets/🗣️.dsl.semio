@@ -1,0 +1,56 @@
+semio remodeling.remodeling.dsl v1
+schema=remodeling.scene id=remodeling assets={
+}
+calibration {
+  cameras [id:TEXT label:TEXT model:TEXT fx:NUM fy:NUM cx:NUM cy:NUM skew:NUM distortion:TUPLE rms-reprojection-px:NUM locked:BOOL] {
+    synthetic-cam "Synthetic Orbit Camera" brownConrady 272 272 160 120 0 -0.019999999552965164,0.004999999888241291,0,0,0 0.5 true
+  }
+  rig [camera-id:TEXT rotation-wxyz:TUPLE translation-m:CRD] {
+  }
+}
+params {
+  ingest {
+    frame-sample-stride=1 max-frames=32 downscale-long-edge-px=320 min-sharpness=0
+  }
+  feature {
+    detector=akaze target-count=600 octaves=4 edge-threshold=10
+  }
+  matching {
+    matcher=brute-force ratio-test=0.8500000238418579 cross-check=true sequential-window=6 max-pairs-per-frame=16 loop-closure=true
+  }
+  sfm {
+    ransac-iterations=1000 ransac-threshold-px=2 min-track-length=2 ba-max-iterations=25 robust-loss=huber huber-delta-px=1.5
+  }
+  dense {
+    resolution=low window-radius-px=2 min-view-consistency=3 confidence-threshold=0.5 max-points=50000
+  }
+  mesh {
+    tsdf-voxel-size-mm=100mm tsdf-truncation-mm=330mm decimate-target-triangles=20000 smoothing-iterations=1 texture-enabled=false texture-size=256 guarantee-watertight=true hole-fill-max-boundary-verts=512 self-intersection-check=false
+  }
+  motion {
+    enabled=false max-tracks=64 track-window-px=21 min-track-quality=0.30000001192092896 min-track-length-frames=5
+  }
+  geo {
+    enabled=false gsd-m=0.05000000074505806m dsm-cell-m=0.10000000149011612m dtm-filter-radius-m=2m ortho-max-px=4096
+  }
+}
+job {
+  id="" stage=idle progress-0-1=0 cancel-requested=false stage-cursor=0 sparse-point-cloud-preview=""
+  camera-poses-preview [camera-id:TEXT rotation-wxyz:TUPLE translation:CRD] {
+  }
+}
+results {
+  mesh {
+    source=placeholder
+    mesh {
+      child_id=remodeling-mesh-901ccade3f60f8f1 target="remodeling-mesh!s.stdio.semio@v1/mesh"
+    }
+  }
+  tracks [id:TEXT length:UINT class:ENUM mean-speed-m-s:QTY] {
+  }
+}
+streams [id:TEXT name:TEXT kind:ENUM camera-id:TEXT sync-offset-ms:NUM fps-hint:NUM frames:TABLE source:BLOCK] {
+  synthetic-orbit "Synthetic Orbit" image-sequence synthetic-cam 0 2 [ {index=0 timestamp-ms=0 asset-id=synthetic-orbit-frame-0} {index=1 timestamp-ms=500 asset-id=synthetic-orbit-frame-1} {index=2 timestamp-ms=1000 asset-id=synthetic-orbit-frame-2} {index=3 timestamp-ms=1500 asset-id=synthetic-orbit-frame-3} {index=4 timestamp-ms=2000 asset-id=synthetic-orbit-frame-4} {index=5 timestamp-ms=2500 asset-id=synthetic-orbit-frame-5} {index=6 timestamp-ms=3000 asset-id=synthetic-orbit-frame-6} {index=7 timestamp-ms=3500 asset-id=synthetic-orbit-frame-7} {index=8 timestamp-ms=4000 asset-id=synthetic-orbit-frame-8} {index=9 timestamp-ms=4500 asset-id=synthetic-orbit-frame-9} ] _
+}
+gcps [id:TEXT name:TEXT world-position:CRD observations:TABLE] {
+}

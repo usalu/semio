@@ -23,12 +23,10 @@ use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor,
-    EditorApp, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode,
-    MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
+    Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError,
+    MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
-use serde_json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
 use store::EngineHandles;
@@ -47,12 +45,9 @@ pub fn remodeling_action(action: &str, args: Option<semio_framework_plugin::UiVa
     semio_framework_plugin::ActionFactory::new(REMODELING_PLAY_APP_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -65,29 +60,36 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+/// ☑️ A window-measure/`ActionDescriptor` action — `WindowMeasure` is the RETAINED (`ui_wgpu`) vocabulary
+/// and takes a plain `ActionDescriptor { controller_id, action, args }`, not the fallible
+/// `(ActionId, Option<UiValue>)` pair `remodeling_action` builds for semantic-contract chrome.
+pub fn remodeling_window_action(action: &str, args: Option<dsl::DslValue>) -> semio_framework_plugin::ActionDescriptor {
+    semio_framework_plugin::ActionDescriptor { controller_id: REMODELING_PLAY_APP_ID.into(), action: action.into(), args }
+}
+
+/// 🏷️ Admits one dynamic string as a semantic-contract `Label` — the SECOND `Label` type in scope
+/// (`plugin_app_close_prelude::Label`, what `PanelTreeBuilder::section`/`tree_item` take), never the
+/// retained `ui_wgpu` `Label` the SDK root's glob also re-exports and this file imports unqualified.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI label admission failed"))
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
@@ -95,9 +97,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
@@ -120,7 +120,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// 🧭️ Relocated from the artifact's `⚙️engine/🦀️.rs` (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
 /// STATE-MACHINES, #2553): it returns `AppIo` — app-owned by construction — so it never belonged on
 /// the artifact side.
-pub async fn remodeling_io() -> AppIo {
+pub fn remodeling_io() -> AppIo {
     AppIo {
         document_schema: "remodeling.scene".into(),
         document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
@@ -134,7 +134,7 @@ pub async fn remodeling_io() -> AppIo {
 /// 🔌️ `photos:in` — incoming photos to insert as source images for reconstruction; pinned to the
 /// `2d.image` kind (declared by `shooting`'s manifest — identical-shape duplicates are harmless, so this
 /// app does not redeclare it).
-pub async fn remodeling_photos_in_port() -> MediaPortSpec {
+pub fn remodeling_photos_in_port() -> MediaPortSpec {
     MediaPortSpec {
         id: "photos:in".into(),
         label: "Photos".into(),
@@ -148,7 +148,7 @@ pub async fn remodeling_photos_in_port() -> MediaPortSpec {
 
 /// 🔌️ `mesh:out` — the current reconstructed mesh; pinned to the `3d.mesh` kind (declared by `lowpoly`'s
 /// manifest — reused rather than redeclared, per the port recipe).
-pub async fn remodeling_mesh_out_port() -> MediaPortSpec {
+pub fn remodeling_mesh_out_port() -> MediaPortSpec {
     MediaPortSpec {
         id: "mesh:out".into(),
         label: "Mesh".into(),
@@ -242,6 +242,8 @@ semio_framework_plugin::app_commands! {
         "exportQcReport" as "export-qc-report" => export_qc_report::ExportQcReport,
         "advanceReconstruction" as "advance-reconstruction" => advance_reconstruction::AdvanceReconstruction,
         "cancelReconstruction" as "cancel-reconstruction" => cancel_reconstruction::CancelReconstruction,
+        // 🎬️ Example picker — appended last, preserving every existing variant ordinal.
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
     }
 }
 
@@ -252,7 +254,7 @@ use crate::editor::remodeling::commands::{add_stream, import_frame_payload, impo
 use crate::editor::remodeling::commands::{advance_reconstruction, cancel_reconstruction, retry_stage, run_reconstruction, run_stage};
 use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
 use crate::editor::remodeling::commands::{export_qc_report, import_frames, import_video};
-use crate::editor::remodeling::commands::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table};
+use crate::editor::remodeling::commands::{set_active_example, set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table};
 use crate::editor::remodeling::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
 //#endregion 🔖️Commands
 
@@ -263,38 +265,29 @@ use crate::editor::remodeling::commands::{set_dense_params, set_feature_params, 
 mod args_bridge {
     use super::*;
 
-    fn field<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a Value> {
+    fn field<'a>(args: Option<&'a dsl::DslValue>, key: &str) -> Option<&'a dsl::DslValue> {
         args?.get(key)
     }
 
     /// 🔤️ A string arg — also accepts a number, so a select whose option ids are numeric (`textureSize`)
     /// reads the same whether the host sends `"2048"` or `2048`.
-    fn text(args: Option<&Value>, key: &str) -> Option<String> {
-        match field(args, key)? {
-            Value::String(value) => Some(value.clone()),
-            Value::Number(value) => Some(value.to_string()),
-            _ => None,
-        }
+    fn text(args: Option<&dsl::DslValue>, key: &str) -> Option<String> {
+        let value = field(args, key)?;
+        value.as_str().map(str::to_owned).or_else(|| value.as_u64().map(|number| number.to_string())).or_else(|| value.as_i64().map(|number| number.to_string())).or_else(|| value.as_f64().map(|number| number.to_string()))
     }
 
     /// 🔢️ A numeric arg — also accepts a numeric string, which is how select-sourced numbers arrive.
-    fn number(args: Option<&Value>, key: &str) -> Option<f64> {
-        match field(args, key)? {
-            Value::Number(value) => value.as_f64(),
-            Value::String(value) => value.parse().ok(),
-            _ => None,
-        }
+    fn number(args: Option<&dsl::DslValue>, key: &str) -> Option<f64> {
+        let value = field(args, key)?;
+        value.as_f64().or_else(|| value.as_str()?.parse().ok())
     }
 
-    fn flag(args: Option<&Value>, key: &str) -> Option<bool> {
-        match field(args, key)? {
-            Value::Bool(value) => Some(*value),
-            Value::String(value) => value.parse().ok(),
-            _ => None,
-        }
+    fn flag(args: Option<&dsl::DslValue>, key: &str) -> Option<bool> {
+        let value = field(args, key)?;
+        value.as_bool().or_else(|| value.as_str()?.parse().ok())
     }
 
-    fn vec3(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
+    fn vec3(args: Option<&dsl::DslValue>, key: &str) -> Option<[f64; 3]> {
         let items = field(args, key)?.as_array()?;
         Some([items.first()?.as_f64()?, items.get(1)?.as_f64()?, items.get(2)?.as_f64()?])
     }
@@ -304,7 +297,7 @@ mod args_bridge {
     }
 
     #[allow(clippy::too_many_lines)]
-    pub fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelingCommand, Fault> {
+    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<RemodelingCommand, Fault> {
         let text_or = |key: &str, fallback: &str| text(args, key).unwrap_or_else(|| fallback.to_string());
         let f64_or = |key: &str, fallback: f64| number(args, key).unwrap_or(fallback);
         let f32_or = |key: &str, fallback: f32| number(args, key).map_or(fallback, |value| value as f32);
@@ -378,9 +371,12 @@ mod args_bridge {
                 downscale_long_edge_px: u32_or("downscaleLongEdgePx", 1600),
                 min_sharpness: f32_or("minSharpness", 0.3),
             }),
-            "setFeatureParams" => {
-                RemodelingCommand::SetFeatureParams(set_feature_params::SetFeatureParams { detector: text_or("detector", "orb"), target_count: u32_or("targetCount", 4000), octaves: u32_or("octaves", 4), edge_threshold: f32_or("edgeThreshold", 10.0) })
-            }
+            "setFeatureParams" => RemodelingCommand::SetFeatureParams(set_feature_params::SetFeatureParams {
+                detector: text_or("detector", "orb"),
+                target_count: u32_or("targetCount", 4000),
+                octaves: u32_or("octaves", 4),
+                edge_threshold: f32_or("edgeThreshold", 10.0),
+            }),
             "setMatchParams" => RemodelingCommand::SetMatchParams(set_match_params::SetMatchParams {
                 matcher: text_or("matcher", "brute-force"),
                 ratio_test: f32_or("ratioTest", 0.8),
@@ -461,6 +457,7 @@ mod args_bridge {
             "importFrames" => RemodelingCommand::ImportFrames(import_frames::ImportFrames {}),
             "importVideo" => RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
             "exportQcReport" => RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),
+            "setActiveExample" => RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_or("exampleId", crate::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID) }),
             _ => return Err(unknown(action)),
         })
     }
@@ -474,20 +471,149 @@ mod args_bridge {
 pub struct RemodelingPlayApp;
 
 //#region 🧵️RetainedCommands
-const REMODELING_BOUNDED_TOOL_IDS: &[&str] = &["importFrames", "importVideo"];
+/// 🧵️ Every `RemodelingCommand` row, in `app_commands!` declaration order. The framework demands set
+/// EQUALITY between this list, the `Migrated` classification list in `🔖️Manifest` and the
+/// `bounded_first_step_tool_proofs!` rows (`validate_tool_job_rows`: `expected = TOOL_JOB_IDS ∩ migrated`
+/// must equal the proof set, else `interactive-job.catalog-incomplete`), so all three are kept in one
+/// order and asserted equal by `retained_route_dispositions_are_exact_and_exhaustive`.
+/// `setActiveUtility` is framework-injected by `.utility(..)` and already carries `Migrated`
+/// (`ActionDefinition::resumable_framework_catalog`), so it appears here but NOT in the manifest's
+/// explicit classification list.
+const REMODELING_RETAINED_TOOL_IDS: &[&str] = &[
+    "runReconstruction",
+    "retryStage",
+    "runStage",
+    "importFramePayload",
+    "importVideoFramePayload",
+    "importVideoDone",
+    "importVideoBytesPayload",
+    "addStream",
+    "removeStream",
+    "setStreamSync",
+    "editCalibration",
+    "calibrateCameras",
+    "addGcp",
+    "removeGcp",
+    "placeGcpObservation",
+    "setIngestParams",
+    "setFeatureParams",
+    "setMatchParams",
+    "setSfmParams",
+    "setDenseParams",
+    "setMeshParams",
+    "setMotionParams",
+    "setGeoParams",
+    "resetPlaceholderMesh",
+    "clearSparse",
+    "clearDense",
+    "clearMeshResult",
+    "clearTracks",
+    "clearGeoProducts",
+    "clearResult",
+    "setCamera",
+    "setLayerVisibility",
+    "setFrameCursor",
+    "setReportTable",
+    "setActiveUtility",
+    "setLocale",
+    "importFrames",
+    "importVideo",
+    "exportQcReport",
+    "advanceReconstruction",
+    "cancelReconstruction",
+    "setActiveExample",
+];
 const REMODELING_RETAINED_PAYLOAD_SCHEMA: &str = "remodeling.scene.tool-command.v1";
-const REMODELING_BOUNDED_RAW_BYTES: usize = 65_536;
-const REMODELING_BOUNDED_WORK_ITEMS: usize = 1;
+const REMODELING_RETAINED_RAW_BYTES: usize = 65_536;
+const REMODELING_RETAINED_WORK_ITEMS: usize = 4_096;
 
-fn remodeling_bounded_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(REMODELING_BOUNDED_RAW_BYTES, 64, REMODELING_BOUNDED_WORK_ITEMS, 262_144, 7_500)
+/// 🛣️ One publication lane per route, read off each handler's own `Emit` in `🎮️commands/*/🦀️.rs`:
+/// every reconstruction, ingestion, calibration, parameter and clear verb builds
+/// `Emit::mutations(..)`/`Emit::amend(..)`/`Emit { artifact_mutations, .. }` over `RemodelingMutation`
+/// (`Artifact`); the six session verbs build `Emit::config(..)` over `RemodelingConfigMutation`
+/// (`Config`); the three shell verbs build `Emit::effect(..)` only — `RequestFileOpen`,
+/// `RequestMediaFrames`, `DownloadMediaExport` — and never touch a store (`HostOnly`). No remodeling
+/// handler emits two store lanes, a draft, a presence or a transient mutation, so no route declares
+/// more than one lane.
+const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    artifact_route("runReconstruction"),
+    artifact_route("retryStage"),
+    artifact_route("runStage"),
+    artifact_route("importFramePayload"),
+    artifact_route("importVideoFramePayload"),
+    artifact_route("importVideoDone"),
+    artifact_route("importVideoBytesPayload"),
+    artifact_route("addStream"),
+    artifact_route("removeStream"),
+    artifact_route("setStreamSync"),
+    artifact_route("editCalibration"),
+    artifact_route("calibrateCameras"),
+    artifact_route("addGcp"),
+    artifact_route("removeGcp"),
+    artifact_route("placeGcpObservation"),
+    artifact_route("setIngestParams"),
+    artifact_route("setFeatureParams"),
+    artifact_route("setMatchParams"),
+    artifact_route("setSfmParams"),
+    artifact_route("setDenseParams"),
+    artifact_route("setMeshParams"),
+    artifact_route("setMotionParams"),
+    artifact_route("setGeoParams"),
+    artifact_route("resetPlaceholderMesh"),
+    artifact_route("clearSparse"),
+    artifact_route("clearDense"),
+    artifact_route("clearMeshResult"),
+    artifact_route("clearTracks"),
+    artifact_route("clearGeoProducts"),
+    artifact_route("clearResult"),
+    config_route("setCamera"),
+    config_route("setLayerVisibility"),
+    config_route("setFrameCursor"),
+    config_route("setReportTable"),
+    config_route("setActiveUtility"),
+    config_route("setLocale"),
+    host_route("importFrames"),
+    host_route("importVideo"),
+    host_route("exportQcReport"),
+    artifact_route("advanceReconstruction"),
+    artifact_route("cancelReconstruction"),
+    artifact_route("setActiveExample"),
+];
+
+/// 📄️ One document-lane publication row.
+const fn artifact_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] }
 }
 
-fn remodeling_bounded_extent(command: &RemodelingCommand, _snapshot: &RemodelingSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    REMODELING_BOUNDED_TOOL_IDS.contains(&command.command_id()).then_some(REMODELING_BOUNDED_WORK_ITEMS)
+/// 👁️ One config-lane publication row.
+const fn config_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] }
 }
 
-fn remodeling_bounded_reduce(
+/// 🐚️ One shell-effect-only publication row.
+const fn host_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] }
+}
+
+fn remodeling_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(REMODELING_RETAINED_RAW_BYTES, REMODELING_RETAINED_WORK_ITEMS, 1, 262_144, 7_500)
+}
+
+/// 📏️ One bounded first step per retained route, admitted only while the WHOLE addressable document
+/// (streams and their frames, embedded assets, ground control points and their observations, calibrated
+/// cameras) plus this edit fit inside `REMODELING_RETAINED_WORK_ITEMS`. `streams.len()` alone would
+/// understate a document whose single stream carries a thousand frames, so the frames are counted too.
+fn remodeling_retained_extent(command: &RemodelingCommand, snapshot: &RemodelingSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    if !REMODELING_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return None;
+    }
+    let frames: usize = snapshot.streams.iter().map(|stream| stream.frames.len()).sum();
+    let observations: usize = snapshot.gcps.iter().map(|gcp| gcp.observations.len()).sum();
+    let items = snapshot.streams.len().checked_add(frames)?.checked_add(snapshot.assets.len())?.checked_add(snapshot.gcps.len())?.checked_add(observations)?.checked_add(snapshot.calibration.cameras.len())?.checked_add(1)?;
+    (items <= REMODELING_RETAINED_WORK_ITEMS).then_some(1)
+}
+
+fn remodeling_retained_reduce(
     command: &RemodelingCommand,
     snapshot: &RemodelingSnapshot,
     config: &RemodelingConfig,
@@ -496,23 +622,26 @@ fn remodeling_bounded_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
 ) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, NoDraftMutation>, Fault> {
-    if !REMODELING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.route"), "the bounded Remodeling reducer rejects resumable routes"));
+    if !REMODELING_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.route"), "the bounded Remodeling reducer rejects undeclared routes"));
     }
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
 }
 
-struct RemodelingCommandJobFactory {
+/// 🏭️ The app-owned retained command job factory — `factory_type:` in the proof block below binds this
+/// exact Rust type to `EditorApp<RemodelingPlayApp>`, which is what turns a bare (and therefore
+/// `interactive-job.missing-owned-reducer`) proof into an exact-owner proof.
+struct RemodelingRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
-impl RemodelingCommandJobFactory {
+impl RemodelingRetainedCommandJobFactory {
     fn new(controller_id: &str) -> Self {
-        Self { keys: REMODELING_BOUNDED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+        Self { keys: REMODELING_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
 
-impl semio_framework::ToolJobFactory for RemodelingCommandJobFactory {
+impl semio_framework::ToolJobFactory for RemodelingRetainedCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<RemodelingPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<RemodelingPlayApp>>;
 
@@ -529,7 +658,7 @@ impl semio_framework::ToolJobFactory for RemodelingCommandJobFactory {
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
-        remodeling_bounded_contract()
+        remodeling_retained_contract()
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
@@ -543,23 +672,285 @@ impl semio_framework::ToolJobFactory for RemodelingCommandJobFactory {
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > REMODELING_BOUNDED_RAW_BYTES || checkpoint.is_some() {
+        if input.declared_bytes() > REMODELING_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("bounded Remodeling command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RemodelingCommandJobFactory {
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedCommandJobFactory {
     type Owner = semio_framework_plugin::EditorApp<RemodelingPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = REMODELING_BOUNDED_TOOL_IDS;
+    const TOOL_IDS: &'static [&'static str] = REMODELING_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importFrames", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importVideo", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    ];
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = REMODELING_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+/// 📬️ The document lane's one-item retained preparation. Without it every route declaring
+/// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract and
+/// stays dispatch-dead, no matter how it is classified.
+struct RemodelingStorePreparationFactory;
+
+struct RemodelingStorePreparation {
+    base: Option<store::SnapshotRead<RemodelingSnapshot>>,
+    mutation: Option<RemodelingMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<RemodelingSnapshot, RemodelingMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<RemodelingSnapshot, RemodelingMutation> for RemodelingStorePreparationFactory {
+    fn preflight(&self, _mutation: &RemodelingMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Remodeling Store preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<RemodelingSnapshot, RemodelingMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutation>>, store::ArtifactStoreOneItemPreparationRequest<RemodelingSnapshot, RemodelingMutation>> {
+        let scene = request.base.get();
+        let frames: usize = scene.streams.iter().map(|stream| stream.frames.len()).sum();
+        let item_count = scene.streams.len().saturating_add(frames).saturating_add(scene.assets.len()).saturating_add(scene.gcps.len());
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || item_count > REMODELING_RETAINED_WORK_ITEMS
+        {
+            return Err(request);
+        }
+        Ok(Box::new(RemodelingStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutation> for RemodelingStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Remodeling preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Remodeling preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Remodeling preparation lost its Store authority".to_string())?;
+        let id = format!("remodeling-retained-{}", authority.next_sequence_number());
+        let edit = remodeling_retained_edit(id, authority, vec![mutation], inverse, self.description.take());
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<RemodelingSnapshot, RemodelingMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<RemodelingSnapshot, RemodelingMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Remodeling preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+
+/// 📬️ The config lane's twin — remodeling's six session verbs (`setCamera`/`setLayerVisibility`/
+/// `setFrameCursor`/`setReportTable`/`setActiveUtility`/`setLocale`) publish into the config store, and
+/// the runtime rejects a `Config` publication contract outright when this factory is absent.
+struct RemodelingConfigStorePreparationFactory;
+
+struct RemodelingConfigStorePreparation {
+    base: Option<store::SnapshotRead<RemodelingConfig>>,
+    mutation: Option<RemodelingConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<RemodelingConfig, RemodelingConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<RemodelingConfig, RemodelingConfigMutation> for RemodelingConfigStorePreparationFactory {
+    fn preflight(&self, _mutation: &RemodelingConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Remodeling config preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<RemodelingConfig, RemodelingConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RemodelingConfig, RemodelingConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<RemodelingConfig, RemodelingConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(RemodelingConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<RemodelingConfig, RemodelingConfigMutation> for RemodelingConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Remodeling config preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Remodeling config preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Remodeling config preparation lost its Store authority".to_string())?;
+        let id = format!("remodeling-config-retained-{}", authority.next_sequence_number());
+        let edit = remodeling_retained_edit(id, authority, vec![mutation], inverse, self.description.take());
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<RemodelingConfig, RemodelingConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<RemodelingConfig, RemodelingConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Remodeling config preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+
+/// 🧾️ The one `protocol::Edit` envelope both lanes above stage — identical field-for-field, so it is
+/// written once and parameterised by the mutation type rather than duplicated per lane.
+fn remodeling_retained_edit<M>(id: String, authority: &store::ArtifactStoreOneItemLiveAuthority, forwards: Vec<M>, inverse: Vec<M>, description: Option<String>) -> protocol::Edit<M> {
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards,
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+//#endregion 📬️StorePreparation
 
 impl ArtifactEditor for RemodelingPlayApp {
     type Snapshot = RemodelingSnapshot;
@@ -578,36 +969,52 @@ impl ArtifactEditor for RemodelingPlayApp {
     const DIALECT: Dialect = crate::artifacts::remodeling::REMODELING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(RemodelingStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(RemodelingConfigStorePreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<RemodelingPlayApp>,
-        owner_file: "✏️s/🔌️plugins/📸️remodeling/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.remodeling.remodeling@1/*#editor",
+        owner_file: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.remodel.remodeling@1/*#editor",
         document_schema: "remodeling.scene",
-        factory: "RemodelingCommandJobFactory",
-        factory_type: RemodelingCommandJobFactory,
-        tools: {
-            "importFrames" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "importVideo" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-        }
+        factory: "RemodelingRetainedCommandJobFactory",
+        factory_type: RemodelingRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        tools: [
+            "runReconstruction", "retryStage", "runStage",
+            "importFramePayload", "importVideoFramePayload", "importVideoDone", "importVideoBytesPayload",
+            "addStream", "removeStream", "setStreamSync",
+            "editCalibration", "calibrateCameras", "addGcp", "removeGcp", "placeGcpObservation",
+            "setIngestParams", "setFeatureParams", "setMatchParams", "setSfmParams", "setDenseParams", "setMeshParams", "setMotionParams", "setGeoParams",
+            "resetPlaceholderMesh", "clearSparse", "clearDense", "clearMeshResult", "clearTracks", "clearGeoProducts", "clearResult",
+            "setCamera", "setLayerVisibility", "setFrameCursor", "setReportTable", "setActiveUtility", "setLocale",
+            "importFrames", "importVideo", "exportQcReport",
+            "advanceReconstruction", "cancelReconstruction", "setActiveExample"
+        ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(RemodelingCommandJobFactory::new(&controller))
+        registry.register(RemodelingRetainedCommandJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !REMODELING_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if !REMODELING_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.tool-mismatch"), "Remodeling command does not match its exact registered tool"));
         }
-        if remodeling_bounded_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+        if remodeling_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.extent"), "Remodeling bounded route exceeded its declared work extent"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, remodeling_bounded_reduce, remodeling_bounded_extent));
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, remodeling_retained_reduce, remodeling_retained_extent));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -626,29 +1033,32 @@ impl ArtifactEditor for RemodelingPlayApp {
             operation_context,
             request.completion,
             RemodelingCommand::command_id,
-            REMODELING_BOUNDED_RAW_BYTES,
-            REMODELING_BOUNDED_WORK_ITEMS,
+            REMODELING_RETAINED_RAW_BYTES,
+            REMODELING_RETAINED_WORK_ITEMS,
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::remodeling::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> RemodelingSnapshot {
-        default_remodeling_scene()
+    /// 🚀️ Boots on the registered boot example when its committed text parses, falling back to the
+    /// artifact's own `default_remodeling_scene()` otherwise — the same shape `🧱️block`'s
+    /// `default_block2d_snapshot()` uses, so an unparsable example degrades instead of panicking.
+    fn initial_snapshot() -> RemodelingSnapshot {
+        crate::editor::remodeling::examples::boot_snapshot()
     }
 
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(remodeling_io())
     }
 
     /// 🎞️ `mesh:out` (the current reconstructed mesh, GLB-encoded) plus the inherited `document:out`
     /// default (the pack of `doc.snapshot`, replicated inline — overriding `export_media` shadows the
     /// trait's provided body for every port, not just the new one).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
                 // 🧩️ `results.mesh.mesh` is now a composed `s.stdio.semio/v1/mesh` CHILD handle
@@ -675,7 +1085,7 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// `document:in` stays `MediaError::NotImplemented`, unchanged from the inherited default: remodeling
     /// has no whole-document-replace `Mutation` variant to satisfy `whole_document_mutation`
     /// (`RemodelingMutation` is deliberately field-granular — see that enum's doc comment).
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "photos:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -714,7 +1124,7 @@ impl ArtifactEditor for RemodelingPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &RemodelingCommand) -> &'static str {
+    fn command_id(command: &RemodelingCommand) -> &'static str {
         command.command_id()
     }
 
@@ -725,11 +1135,11 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// i.e. the whole manifest surface was dead from the host's side. Arg keys are the camelCase ids
     /// declared in `🔖️Manifest`; each is read leniently (missing → the manifest's own default) because
     /// `effective_action_args` stages defaults before dispatch and select-typed args arrive as strings.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelingCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<RemodelingCommand, Fault> {
         args_bridge::command_from_action(action, args)
     }
 
-    async fn handle(
+    fn handle(
         command: &RemodelingCommand,
         doc: &ArtifactView<'_, RemodelingSnapshot>,
         cfg: &ConfigView<'_, RemodelingConfig>,
@@ -740,11 +1150,11 @@ impl ArtifactEditor for RemodelingPlayApp {
         command.dispatch(doc, cfg)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let scene = doc.snapshot;
         let config = cfg.snapshot;
         let labels = remodeling_labels(config);
-        match body_key {
+        let built = match body_key {
             model::windows::model::REMODELING_PLAY_BODY_MAIN => model::windows::model::render(scene, config),
             capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, config),
             analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, config),
@@ -755,19 +1165,27 @@ impl ArtifactEditor for RemodelingPlayApp {
             calibration_panel::REMODELING_PLAY_BODY_CALIBRATION => calibration_panel::render(scene, labels),
             tracks::REMODELING_PLAY_BODY_TRACKS => tracks::render(scene, labels),
             quality::REMODELING_PLAY_BODY_QC => quality::render(scene, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        };
+        built.map(semio_framework_plugin::built_to_component_tree)
     }
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    async fn window_measures(_doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(model::windows::model::REMODELING_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.snapshot, remodeling_labels(cfg.snapshot)))])
     }
 }
 //#endregion 🔖️RemodelingPlayApp
 
 //#region 🔖️Manifest
+/// 🛠️ An internal (non-palette) action declaration — the panel/window/gesture-bound vocabulary the
+/// chrome dispatches, never a palette command. Every row still needs to EXIST as an `ActionDefinition`,
+/// because the classification gate and `validate_tool_job_rows` both read the declared action set.
+fn remodeling_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
+}
+
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/utility declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
@@ -1000,11 +1418,71 @@ pub fn create_remodeling_app() -> AppDefinition {
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", LocalizedLabel::native("Sculpt", "Formen"), "paintbrush") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("measure", LocalizedLabel::native("Measure", "Messen"), "scaling") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", LocalizedLabel::native("Place GCP", "Passpunkt setzen"), "crosshair") })
-            // 🧵️ Only fixture-classified O(1) config/view and host-request reducers are admitted here.
-            // Every document mutation, reconstruction step, payload decode, calibration traversal, QC
-            // encoding, and cancellation route remains fail-closed until resumable work is mounted.
+            // 👁️ Internal (non-palette) view actions the panels/windows dispatch — declared so they are
+            // real `ActionDefinition`s the classification gate and the tool-proof catalog can both see.
+            .action_with(remodeling_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
+            // 🎬️ Example picker — one option per `crate::editor::remodeling::examples::REMODELING_EXAMPLES`
+            // entry, so appending an example there is the only edit a new example needs.
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation) })
+            .action_args("setActiveExample", vec![ActionArgDef::select(
+                "exampleId",
+                LocalizedLabel::native("Example", "Beispiel"),
+                crate::editor::remodeling::examples::REMODELING_EXAMPLES.iter().map(|example| ActionArgOption::new(example.id, crate::editor::remodeling::examples::example_label(example))).collect(),
+            )
+            .default_value(crate::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID)])
+            // 🧵️ Phase-8 dispositions. Every declared row is `Migrated`: each is backed by the
+            // exact-owner `RemodelingRetainedCommandJobFactory` proof in `🧵️RetainedCommands` and by the
+            // document/config one-item store preparations in `📬️StorePreparation`, so UI dispatch (which
+            // rejects anything that is not `Migrated`) and the release-blocking
+            // `validate_interactive_job_classification` gate both admit it. The framework demands set
+            // EQUALITY here: `validate_tool_job_rows` computes `expected = TOOL_JOB_IDS ∩ migrated` and
+            // faults `interactive-job.catalog-incomplete` unless it equals the proof set.
+            //
+            // 🧰️ `setActiveUtility` — the 42nd `RemodelingCommand` row — is deliberately absent: it is
+            // framework-injected by `.utility(..)` INSIDE `build_definition`, after this builder chain has
+            // run, and `ActionDefinition::resumable_framework_catalog` already classifies it `Migrated`.
+            // Calling `.action_interactive_job("setActiveUtility", ..)` here would silently match nothing.
+            .action_interactive_job("runReconstruction", InteractiveJobClassification::Migrated)
+            .action_interactive_job("retryStage", InteractiveJobClassification::Migrated)
+            .action_interactive_job("runStage", InteractiveJobClassification::Migrated)
+            .action_interactive_job("advanceReconstruction", InteractiveJobClassification::Migrated)
+            .action_interactive_job("cancelReconstruction", InteractiveJobClassification::Migrated)
             .action_interactive_job("importFrames", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importFramePayload", InteractiveJobClassification::Migrated)
             .action_interactive_job("importVideo", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importVideoFramePayload", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importVideoDone", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importVideoBytesPayload", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStream", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeStream", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStreamSync", InteractiveJobClassification::Migrated)
+            .action_interactive_job("editCalibration", InteractiveJobClassification::Migrated)
+            .action_interactive_job("calibrateCameras", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addGcp", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeGcp", InteractiveJobClassification::Migrated)
+            .action_interactive_job("placeGcpObservation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setIngestParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFeatureParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setMatchParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSfmParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setDenseParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setMeshParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setMotionParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGeoParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("resetPlaceholderMesh", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearSparse", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearDense", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearMeshResult", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearTracks", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearGeoProducts", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearResult", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLayerVisibility", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFrameCursor", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setReportTable", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportQcReport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             // 🎯️ Typed channel surface — `io()` is this same information's single source of truth,
             // reused here rather than duplicated.
             .io(remodeling_io())
@@ -1039,26 +1517,30 @@ pub(crate) mod testkit {
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands`/
     /// `testkit::new_app_with_registry` still expect — framework testkit gap, not modifiable here
     /// (`🧰️framework/**` is outside this packet's lease).
-    pub async fn remodeling_app_manifest_for_testkit() -> App {
+    pub fn remodeling_app_manifest_for_testkit() -> App {
         App { definition: create_remodeling_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// The RUNTIME side stays async (`ArtifactApp`/`VcsArtifactApp` are async traits, unlike the
+    /// AUTHORING `ArtifactEditor` this crate implements), so every harness entry point awaits.
     pub async fn app() -> RemodelingApp {
-        new_app::<EditorApp<RemodelingPlayApp>>()
+        new_app::<EditorApp<RemodelingPlayApp>>().await
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn app_with_registry() -> RemodelingApp {
-        new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_testkit)
+        new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_testkit).await
     }
 
     pub async fn dispatch(app: &mut RemodelingApp, command: RemodelingCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
+    /// 🖼️ The rendered tree as text — `ComponentTree` is neither `Serialize` nor `ToValue`, so its own
+    /// `Debug` projection is what body assertions match against.
     pub async fn render(app: &mut RemodelingApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
     }
 }
 //#endregion 🧪️Testkit
@@ -1117,9 +1599,9 @@ mod tests {
     async fn retained_command_catalog_matches_the_serde_json_oracle() {
         let oracle = SerdeJsonRemodelingRetainedCatalogOracle.summarize(include_str!("🧪️fixtures/🚧️retained-command-limits/🔣️.json"));
         let command_ids: std::collections::BTreeSet<&str> = every_command().iter().map(RemodelingCommand::command_id).collect();
-        let bounded_ids: std::collections::BTreeSet<&str> = REMODELING_BOUNDED_TOOL_IDS.iter().copied().collect();
+        let bounded_ids: std::collections::BTreeSet<&str> = REMODELING_RETAINED_TOOL_IDS.iter().copied().collect();
         let bounded_owned = bounded_ids.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
-        let host_only_ids = <RemodelingCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+        let host_only_ids = <RemodelingRetainedCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
             .iter()
             .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
             .map(|contract| contract.tool_id.to_string())
@@ -1128,20 +1610,23 @@ mod tests {
             routes: command_ids.len(),
             bounded: bounded_ids.len(),
             resumable: command_ids.difference(&bounded_ids).count(),
-            unique: bounded_ids.len() == REMODELING_BOUNDED_TOOL_IDS.len() && bounded_ids.is_subset(&command_ids),
+            unique: bounded_ids.len() == REMODELING_RETAINED_TOOL_IDS.len() && bounded_ids.is_subset(&command_ids),
             bounded_ids: bounded_owned.clone(),
             host_only_ids,
         };
-        assert_eq!(oracle, RemodelingRetainedCatalogSummary { routes: 41, bounded: 2, resumable: 39, unique: true, bounded_ids: bounded_owned.clone(), host_only_ids: bounded_owned });
+        let expected_host_only = ["exportQcReport", "importFrames", "importVideo"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(oracle, RemodelingRetainedCatalogSummary { routes: 42, bounded: 42, resumable: 0, unique: true, bounded_ids: bounded_owned, host_only_ids: expected_host_only });
         assert_eq!(subject, oracle);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
         let fixture = include_str!("🧪️fixtures/🚧️retained-command-limits/🔣️.json");
-        let expected = REMODELING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        let expected = ["exportQcReport", "importFrames", "importVideo"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
         let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
         let wrong_tool = fixture.replacen("\"importFrames\"", "\"forgedImport\"", 1);
+        assert_ne!(wrong_lane, fixture, "the hostile lane mutation must actually change the fixture");
+        assert_ne!(wrong_tool, fixture, "the hostile tool mutation must actually change the fixture");
         assert_ne!(SerdeJsonRemodelingRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);
         assert_ne!(SerdeJsonRemodelingRetainedCatalogOracle.summarize(&wrong_tool).host_only_ids, expected);
     }
@@ -1151,7 +1636,7 @@ mod tests {
     /// ⚡️ One representative value per `RemodelingCommand` row, in declaration (= binary ordinal) order —
     /// the permanent wire guard's fixture, carried over verbatim from the pre-migration
     /// `remodeling_protocol` baseline (see this ticket's `🧪️wire-baseline-before.txt`).
-    async fn every_command() -> Vec<RemodelingCommand> {
+    fn every_command() -> Vec<RemodelingCommand> {
         vec![
             RemodelingCommand::RunReconstruction(run_reconstruction::RunReconstruction {}),
             RemodelingCommand::RetryStage(retry_stage::RetryStage { stage: "extracting-features".into() }),
@@ -1229,7 +1714,40 @@ mod tests {
                 tick: 2,
             }),
             RemodelingCommand::CancelReconstruction(cancel_reconstruction::CancelReconstruction {}),
+            RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
         ]
+    }
+
+    /// ⚖️ The exhaustiveness law `validate_tool_job_rows` enforces at runtime, asserted here so a new
+    /// `RemodelingCommand` row that forgets its classification, its proof or its publication contract
+    /// fails in `cargo test` rather than at app-construction time in the browser.
+    #[semio_framework_async_macros::async_test]
+    async fn retained_route_dispositions_are_exact_and_exhaustive() {
+        let commands: std::collections::BTreeSet<&str> = every_command().iter().map(RemodelingCommand::command_id).collect();
+        let retained: std::collections::BTreeSet<&str> = REMODELING_RETAINED_TOOL_IDS.iter().copied().collect();
+        assert_eq!(retained.len(), REMODELING_RETAINED_TOOL_IDS.len(), "retained tool ids must be unique");
+        assert_eq!(retained, commands, "every command row is a retained route and vice versa");
+
+        assert_eq!(<RemodelingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), REMODELING_RETAINED_TOOL_IDS.len());
+
+        let contracts = <RemodelingRetainedCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
+        assert_eq!(contracts.len(), REMODELING_RETAINED_TOOL_IDS.len());
+        assert_eq!(contracts.iter().map(|contract| contract.tool_id).collect::<std::collections::BTreeSet<_>>(), retained);
+        for contract in contracts {
+            assert_eq!(contract.lanes.len(), 1, "route '{}' declares exactly one publication lane", contract.tool_id);
+        }
+
+        assert!(<RemodelingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
+        assert!(<RemodelingPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some(), "the Config lane is rejected outright without a config one-item preparation factory");
+
+        // 🧭️ `try_build_definition` fans every declared action into every window kind, so the built
+        // definition's per-window action lists are where a declaration is observable after the fact.
+        let definition = create_remodeling_app();
+        let declared: std::collections::BTreeMap<&str, InteractiveJobClassification> =
+            definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|action| (action.id.as_str(), action.semantics.execution.interactive_job)).collect();
+        for id in &retained {
+            assert_eq!(declared.get(id), Some(&InteractiveJobClassification::Migrated), "action '{id}' must be declared and classified Migrated");
+        }
     }
 
     /// ⚖️ Every row round trips through BOTH projections, and its printed line starts with the row's own
@@ -1335,13 +1853,16 @@ mod tests {
     /// a `u32` field, and a `setCamera` payload is accepted both flat and `{camera:{…}}`-nested.
     #[semio_framework_async_macros::async_test]
     async fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
-        let mesh = RemodelingPlayApp::command_from_action("setMeshParams", Some(&serde_json::json!({ "textureSize": "4096" }))).expect("bridge");
+        let mesh = RemodelingPlayApp::command_from_action("setMeshParams", Some(&dsl::DslValue::from(&serde_json::json!({ "textureSize": "4096" })))).expect("bridge");
         let RemodelingCommand::SetMeshParams(payload) = mesh else { panic!("expected SetMeshParams") };
         assert_eq!(payload.texture_size, 4096);
 
-        let flat = RemodelingPlayApp::command_from_action("setCamera", Some(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 }))).expect("bridge");
-        let nested = RemodelingPlayApp::command_from_action("setCamera", Some(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 } }))).expect("bridge");
+        let flat = RemodelingPlayApp::command_from_action("setCamera", Some(&dsl::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 })))).expect("bridge");
+        let nested = RemodelingPlayApp::command_from_action("setCamera", Some(&dsl::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 } })))).expect("bridge");
         assert_eq!(flat, nested);
+
+        let example = RemodelingPlayApp::command_from_action("setActiveExample", Some(&dsl::DslValue::from(&serde_json::json!({ "exampleId": "demo-session" })))).expect("bridge");
+        assert_eq!(example, RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-session".into() }));
     }
 
     //#endregion 🔖️CommandSurface
@@ -1349,7 +1870,7 @@ mod tests {
     /// 🖼️ Render smoke test: every window/panel body key this app declares must render without panicking.
     #[semio_framework_async_macros::async_test]
     async fn render_does_not_panic_for_known_body_keys() {
-        let mut app = app();
+        let mut app = app().await;
         for body_key in [
             model::windows::model::REMODELING_PLAY_BODY_MAIN,
             capture::windows::frames::REMODELING_PLAY_BODY_FRAMES,
@@ -1362,39 +1883,41 @@ mod tests {
             tracks::REMODELING_PLAY_BODY_TRACKS,
             quality::REMODELING_PLAY_BODY_QC,
         ] {
-            let _ = render(&mut app, body_key);
+            let _ = render(&mut app, body_key).await;
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn render_unknown_body_key_reports_it_by_name() {
-        let mut app = app();
-        assert!(render(&mut app, "remodeling.play.nope").contains("Unknown body: remodeling.play.nope"));
+        let mut app = app().await;
+        assert!(render(&mut app, "remodeling.play.nope").await.contains("Unknown body: remodeling.play.nope"));
     }
 
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_declares_three_modes_three_windows_and_this_apps_panel_tabs() {
-        let definition = create_remodeling_app().definition;
+        let definition = create_remodeling_app();
         assert_eq!(definition.modes.len(), 3);
         assert_eq!(definition.window_kinds.len(), 3);
-        for panel_id in [media::REMODELING_PANEL_MEDIA_ID, results::REMODELING_PANEL_RESULTS_ID, parameters::REMODELING_PANEL_PARAMETERS_ID, calibration_panel::REMODELING_PANEL_CALIBRATION_ID, tracks::REMODELING_PANEL_TRACKS_ID, quality::REMODELING_PANEL_QC_ID] {
+        for panel_id in
+            [media::REMODELING_PANEL_MEDIA_ID, results::REMODELING_PANEL_RESULTS_ID, parameters::REMODELING_PANEL_PARAMETERS_ID, calibration_panel::REMODELING_PANEL_CALIBRATION_ID, tracks::REMODELING_PANEL_TRACKS_ID, quality::REMODELING_PANEL_QC_ID]
+        {
             assert!(definition.panel_tabs.iter().any(|tab| tab.id() == panel_id), "panel tab {panel_id} must be present");
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remodeling_io_declares_photos_in_and_mesh_out_on_the_manifest() {
-        let app = create_remodeling_app();
-        assert!(app.definition.media_inputs.iter().any(|port| port.id == "photos:in"));
-        assert!(app.definition.media_outputs.iter().any(|port| port.id == "mesh:out"));
+        let definition = create_remodeling_app();
+        assert!(definition.media_inputs.iter().any(|port| port.id == "photos:in"));
+        assert!(definition.media_outputs.iter().any(|port| port.id == "mesh:out"));
     }
 
     /// 🧰️ The registry-backed app enforces View/Shell kind discipline — a view row must not slip
     /// through as an operation.
     #[semio_framework_async_macros::async_test]
     async fn view_rows_dispatch_cleanly_against_the_real_registry() {
-        let mut app = app_with_registry();
+        let mut app = app_with_registry().await;
         let result = testkit::meta("local");
         app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result).expect("view dispatch");
     }
@@ -1422,7 +1945,7 @@ mod tests {
     /// stream, creating it on the first import and appending on subsequent ones.
     #[semio_framework_async_macros::async_test]
     async fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
-        let app = app();
+        let app = app().await;
         let projection = app.snapshot().expect("projection");
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
@@ -1452,7 +1975,7 @@ mod tests {
     /// 🔌️ `mesh:out` exports the current reconstructed mesh as a GLB-encoded `3d.mesh` `Media`.
     #[semio_framework_async_macros::async_test]
     async fn export_media_mesh_out_exports_a_structured_3d_mesh() {
-        let app = app();
+        let app = app().await;
         let projection = app.snapshot().expect("projection");
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);

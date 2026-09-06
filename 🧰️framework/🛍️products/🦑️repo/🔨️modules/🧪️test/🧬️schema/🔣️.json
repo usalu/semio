@@ -70,8 +70,8 @@
       }
     },
     "QualifyingOracleKind": {
-      "description": "✅️ The only kinds that can DISCHARGE a mutation's external-oracle requirement.",
-      "enum": ["third-party-library", "third-party-cli", "standards-reference-tool"]
+      "description": "✅️ The only kinds that can DISCHARGE a mutation's external-oracle requirement. `verified-native-second-implementation` is the one exception to \"a second implementation never discharges\", it exists ONLY for a format no third party can even in principle implement, and `nativeSecondImplementationBreaches` makes the claim EARNED rather than asserted — evidence object, native format, full capability coverage, a recorded no-third-party survey, a different implementation language, a specification source and at least one fixture vector.",
+      "enum": ["third-party-library", "third-party-cli", "standards-reference-tool", "verified-native-second-implementation"]
     },
     "SupplementalOracleKind": {
       "description": "➕️ Required supplements that can never substitute for a qualifying oracle. `cross-semio-implementation` names a second implementation written inside this repository — useful, and explicitly NOT independent evidence.",
@@ -141,7 +141,48 @@
         "homepage": { "type": "string" },
         "rationale": { "type": "string" },
         "hostPath": { "type": "string" },
-        "productionDebt": { "$ref": "#/$defs/ProductionDebt" }
+        "productionDebt": { "$ref": "#/$defs/ProductionDebt" },
+        "nativeSecondImplementation": { "$ref": "#/$defs/NativeSecondImplementationEvidence" }
+      }
+    },
+    "NativeSecondImplementationEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🌱️ What makes a `verified-native-second-implementation` claim EARNED rather than asserted. Required by `nativeSecondImplementationBreaches` whenever an entry carries that kind, and forbidden otherwise.",
+      "required": ["format", "noThirdPartySurvey", "subjectImplementationLanguage", "secondImplementationLanguage", "specificationSource", "fixtureCoverage"],
+      "properties": {
+        "format": { "type": "string", "minLength": 1, "description": "🎯️ The `mutationManifests[].artifact` id this claims native status for — cross-checked against a real manifest this same contribution owns." },
+        "noThirdPartySurvey": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "🔍️ The recorded negative search: what was checked, and why each candidate considered was declined.",
+          "required": ["ecosystemsSearched", "candidatesConsidered"],
+          "properties": {
+            "ecosystemsSearched": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+            "candidatesConsidered": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["package", "reason"],
+                "properties": { "package": { "type": "string", "minLength": 1 }, "reason": { "type": "string", "minLength": 10 } }
+              }
+            }
+          }
+        },
+        "subjectImplementationLanguage": { "type": "string", "minLength": 1 },
+        "secondImplementationLanguage": { "type": "string", "minLength": 1 },
+        "specificationSource": { "type": "string", "minLength": 1, "description": "📖️ The written specification this was authored FROM — never the subject's own source." },
+        "fixtureCoverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["vectors", "capabilitiesCovered"],
+          "properties": {
+            "vectors": { "type": "integer", "minimum": 1 },
+            "capabilitiesCovered": { "type": "array", "items": { "$ref": "#/$defs/DottedId" }, "minItems": 1 }
+          }
+        }
       }
     },
     "ProbeRegistryEntry": {

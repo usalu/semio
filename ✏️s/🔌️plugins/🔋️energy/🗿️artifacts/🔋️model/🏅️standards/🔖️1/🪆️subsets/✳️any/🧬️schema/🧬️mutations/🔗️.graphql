@@ -1,7 +1,110 @@
-# 🧬️ EnergyModel mutation schema — closed vocabulary, one variant.
+# 🧬️ EnergyModel mutation schema — one type per handcrafted semantic mutation kind.
 
-type ReplaceModel {
-  newModelJson: String!
+type RenameModel {
+  newName: String!
 }
 
-union EnergyModelMutation = ReplaceModel
+type ChangeModelVersion {
+  newVersion: String!
+}
+
+type UpdateSite {
+  latitudeDeg: Float!
+  longitudeDeg: Float!
+  elevationM: Float!
+  timeZoneHours: Float!
+  northAxisDeg: Float!
+}
+
+type UpdateGroundTemperature {
+  buildingSurfaceC: [Float!]!
+  shallowC: [Float!]!
+  deepC: Float!
+}
+
+type UpdateRunPeriod {
+  startMonth: Int!
+  startDay: Int!
+  endMonth: Int!
+  endDay: Int!
+  year: Int!
+}
+
+type ReplaceAirflowNetwork {
+  present: Boolean!
+  zoneIds: [Int!]!
+  nodeIds: [Int!]!
+  outdoorNodeId: Int!
+  linkIds: [Int!]!
+}
+
+type AddOutputVariable {
+  name: String!
+  key: String!
+  reportingFrequency: String!
+}
+
+type RemoveOutputVariable {
+  name: String!
+  key: String!
+}
+
+type BindWeatherFile {
+  targetUri: String!
+}
+
+type UnbindWeatherFile {
+  mutation: String!
+}
+
+type ConnectReferencedModel {
+  targetUri: String!
+}
+
+type DisconnectReferencedModel {
+  mutation: String!
+}
+
+type RenameZone {
+  id: Int!
+  newName: String!
+}
+
+type ChangeZoneVolume {
+  id: Int!
+  newVolumeM3: Float!
+}
+
+type ChangeZoneMultiplier {
+  id: Int!
+  newMultiplier: Int!
+}
+
+type ChangeZoneConditioned {
+  id: Int!
+  newConditioned: Boolean!
+}
+
+type ChangeZoneFloorAreaParticipation {
+  id: Int!
+  newPartOfTotalFloorArea: Boolean!
+}
+
+union EnergyModelMutation =
+  RenameModel
+  | ChangeModelVersion
+  | UpdateSite
+  | UpdateGroundTemperature
+  | UpdateRunPeriod
+  | ReplaceAirflowNetwork
+  | AddOutputVariable
+  | RemoveOutputVariable
+  | BindWeatherFile
+  | UnbindWeatherFile
+  | ConnectReferencedModel
+  | DisconnectReferencedModel
+  | RenameZone
+  | ChangeZoneVolume
+  | ChangeZoneMultiplier
+  | ChangeZoneConditioned
+  | ChangeZoneFloorAreaParticipation

@@ -1,3 +1,6 @@
-; abnf stdio.json diff
-document = payload
-payload = *OCTET
+; abnf remodeling.remodeling.diff — value-bridge record body (no dedicated codec: RemodelingDiff has no DslRecord derive)
+body         = symbol-count *symbol fields
+symbol-count = varint
+symbol       = varint *OCTET               ; length-prefixed UTF-8 symbol-table entry
+fields       = *OCTET                      ; self-describing per-field-id tag stream
+varint       = *(%x80-FF) %x00-7F

@@ -106,6 +106,14 @@ semio-framework-os-services = { workspace = true }
 tokio = { version = "1", features = ["sync", "rt", "net", "time"], default-features = false }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+# 🌉️ The browser half of the same crate the native half above already depends on: `🧊️renderer/🦀️.rs:2`
+# aliases it as `wasm_bindgen_futures` for the wasm-bindgen expansion and `:122` imports
+# `browser::spawn_local`, `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs:19` imports `browser::JsFuture` and
+# `🧵️frame-job/🦀️.rs:13` imports `Lane` — all four unresolved (`E0463`/`E0433`/`E0432`) because this
+# dependency existed only under `cfg(not(target_arch = "wasm32"))`, which is why the browser target
+# never compiled. `entrypoint` stays OFF here: `block_on` must not be reachable from a browser build.
+# Workspace-internal — `bun ./📜️script.ts verify dependencies` is unchanged.
+semio-framework-async = { workspace = true }
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"

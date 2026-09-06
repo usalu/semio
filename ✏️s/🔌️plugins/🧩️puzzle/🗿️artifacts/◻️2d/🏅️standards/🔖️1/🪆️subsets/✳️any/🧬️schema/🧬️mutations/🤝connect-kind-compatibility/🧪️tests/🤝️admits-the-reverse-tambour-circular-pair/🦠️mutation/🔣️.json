@@ -1,0 +1,8 @@
+{
+  "mutation": "connectKindCompatibility",
+  "source": "tambour circular top",
+  "target": "tambour circular bottom",
+  "bidirectional": true,
+  "important": false,
+  "specificity": "handle"
+}

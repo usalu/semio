@@ -4,7 +4,8 @@ type RemodelingArtifact {
   schema: String! @state(class: ARTIFACT)
   id: String! @state(class: ARTIFACT)
   streams: [MediaStream!]! @state(class: ARTIFACT)
-  assets: [ImageAssetEntry!]! @state(class: ARTIFACT)
+  assets: [RemodelingAssetChildEntry!]! @state(class: ARTIFACT)
+  durableArtifacts: [RemodelingDurableArtifactEntry!]! @state(class: ARTIFACT)
   calibration: CalibrationState! @state(class: ARTIFACT)
   params: ReconstructionParams! @state(class: ARTIFACT)
   gcps: [GroundControlPoint!]! @state(class: ARTIFACT)
@@ -19,15 +20,294 @@ type RemodelingArtifact {
   locale: String! @state(class: CONFIG)
 }
 
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type ArtifactRef {
+  artifactId: String!
+  dialect: ArtifactDialect!
+}
+
+type CalibrationState {
+  cameras: [CameraCalibration!]!
+  rig: [RigExtrinsic!]!
+}
+
+type CameraCalibration {
+  id: String!
+  label: String!
+  model: String!
+  fx: Float!
+  fy: Float!
+  cx: Float!
+  cy: Float!
+  skew: Float!
+  distortion: [Float!]!
+  rmsReprojectionPx: Float
+  locked: Boolean!
+}
+
+type CameraPosePreview {
+  cameraId: String!
+  rotationWxyz: [Float!]!
+  translation: [Float!]!
+}
+
+type CameraTrajectory {
+  poses: [CameraPosePreview!]!
+}
+
+type DenseCloud {
+  positions: String!
+  colors: String
+  confidence: String
+  classification: String
+}
+
+type DenseParams {
+  resolution: DenseResolution!
+  windowRadiusPx: Int!
+  minViewConsistency: Int!
+  confidenceThreshold: Float!
+  maxPoints: Int!
+}
+
+enum DenseResolution {
+  Low
+  Medium
+  High
+}
+
+enum FeatureDetector {
+  Orb
+  Akaze
+  Harris
+}
+
+type FeatureParams {
+  detector: FeatureDetector!
+  targetCount: Int!
+  octaves: Int!
+  edgeThreshold: Float!
+}
+
+type FrameRef {
+  index: Int!
+  timestampMs: Float!
+  assetId: String!
+}
+
+type GcpObservation {
+  streamId: String!
+  frameIndex: Int!
+  pixel: [Float!]!
+}
+
+type GeoParams {
+  enabled: Boolean!
+  originLon: Float
+  originLat: Float
+  originAlt: Float
+  gsdM: Float!
+  dsmCellM: Float!
+  dtmFilterRadiusM: Float!
+  orthoMaxPx: Int!
+}
+
+type GeoProducts {
+  dsmAssetId: String
+  dtmAssetId: String
+  orthoAssetId: String
+}
+
+type GroundControlPoint {
+  id: String!
+  name: String!
+  worldPosition: [Float!]!
+  observations: [GcpObservation!]!
+}
+
+type IngestParams {
+  frameSampleStride: Int!
+  maxFrames: Int!
+  downscaleLongEdgePx: Int!
+  minSharpness: Float!
+}
+
+type MatchParams {
+  matcher: MatcherKind!
+  ratioTest: Float!
+  crossCheck: Boolean!
+  sequentialWindow: Int!
+  maxPairsPerFrame: Int!
+  loopClosure: Boolean!
+}
+
+enum MatcherKind {
+  BruteForce
+  KdTree
+}
+
+enum MediaKind {
+  ImageSequence
+  Video
+}
+
+type MediaStream {
+  id: String!
+  name: String!
+  kind: MediaKind!
+  cameraId: String
+  syncOffsetMs: Float!
+  fpsHint: Float!
+  frames: [FrameRef!]!
+  source: VideoSource
+}
+
+type MeshParams {
+  tsdfVoxelSizeMm: Float!
+  tsdfTruncationMm: Float!
+  decimateTargetTriangles: Int!
+  smoothingIterations: Int!
+  textureEnabled: Boolean!
+  textureSize: Int!
+  guaranteeWatertight: Boolean!
+  holeFillMaxBoundaryVerts: Int!
+  selfIntersectionCheck: Boolean!
+}
+
+enum MeshSource {
+  Placeholder
+  Reconstructed
+  Imported
+}
+
+type MotionParams {
+  enabled: Boolean!
+  maxTracks: Int!
+  trackWindowPx: Int!
+  minTrackQuality: Float!
+  minTrackLengthFrames: Int!
+}
+
+type MotionTrackSummary {
+  id: String!
+  length: Int!
+  class: TrackClass!
+  meanSpeedMS: Float!
+}
+
+type QcReportSnapshot {
+  reprojectionRmsPx: Float!
+  gcpCheckpointRmse: Float
+  watertight: WatertightReportSnapshot
+  meanTrackLength: Float!
+  registeredFrameRatio: Float!
+  denseCoverageRatio: Float!
+  warnings: [String!]!
+}
+
+type ReconstructionJob {
+  id: String!
+  stage: ReconstructionStage!
+  progress01: Float!
+  cancelRequested: Boolean!
+  stageCursor: Int!
+  startedAtMs: Float
+  error: String
+  cameraPosesPreview: [CameraPosePreview!]!
+  sparsePointCloudPreview: String!
+}
+
+type ReconstructionParams {
+  ingest: IngestParams!
+  feature: FeatureParams!
+  matching: MatchParams!
+  sfm: SfmParams!
+  dense: DenseParams!
+  mesh: MeshParams!
+  motion: MotionParams!
+  geo: GeoParams!
+}
+
+type ReconstructionResults {
+  sparse: SparseCloud
+  dense: DenseCloud
+  mesh: RemodelingMesh!
+  trajectory: CameraTrajectory
+  tracks: [MotionTrackSummary!]!
+  geo: GeoProducts
+  qc: QcReportSnapshot
+}
+
+enum ReconstructionStage {
+  Idle
+  Ingesting
+  Calibrating
+  ExtractingFeatures
+  MatchingFeatures
+  EstimatingPoses
+  BundleAdjusting
+  Georeferencing
+  DenseStereo
+  FusingVolume
+  ExtractingSurface
+  CleaningMesh
+  Texturing
+  TrackingMotion
+  DerivingGeoProducts
+  ReportingQc
+  Done
+  Failed
+}
+
+type RemodelingAssetChild {
+  childId: String!
+  target: ArtifactRef!
+}
+
+type RemodelingAssetChildEntry {
+  key: String!
+  value: RemodelingAssetChild!
+}
+
+type RemodelingDurableArtifact {
+  kind: String!
+  mime: String
+  width: Int!
+  height: Int!
+  chunks: [String!]!
+}
+
+type RemodelingDurableArtifactEntry {
+  key: String!
+  value: RemodelingDurableArtifact!
+}
+
+type RemodelingMesh {
+  mesh: RemodelingMeshChild!
+  source: MeshSource!
+  textureAssetId: String
+  watertight: WatertightReportSnapshot
+}
+
+type RemodelingMeshChild {
+  childId: String!
+  target: ArtifactRef!
+}
+
 type RemodelingUiCamera {
   position: [Float!]!
   target: [Float!]!
   fov: Float!
 }
 
-type RemodelingUiSelection {
-  mode: String!
-  ids: [String!]!
+type RemodelingUiFrameCursor {
+  streamId: String
+  frameIndex: Int!
 }
 
 type RemodelingUiLayers {
@@ -38,16 +318,76 @@ type RemodelingUiLayers {
   gcps: Boolean!
 }
 
-type RemodelingUiFrameCursor {
-  streamId: String
-  frameIndex: Int!
+type RemodelingUiSelection {
+  mode: String!
+  ids: [String!]!
 }
 
-type MediaStream { id: String! }
-type ImageAsset { mime: String! }
-type ImageAssetEntry { key: String! value: ImageAsset! }
-type CalibrationState { _placeholder: Boolean }
-type ReconstructionParams { _placeholder: Boolean }
-type GroundControlPoint { id: String! }
-type ReconstructionJob { _placeholder: Boolean }
-type ReconstructionResults { _placeholder: Boolean }
+type RigExtrinsic {
+  cameraId: String!
+  rotationWxyz: [Float!]!
+  translationM: [Float!]!
+}
+
+enum RobustLossKind {
+  L2
+  Huber
+  Cauchy
+}
+
+type SfmParams {
+  ransacIterations: Int!
+  ransacThresholdPx: Float!
+  minTrackLength: Int!
+  baMaxIterations: Int!
+  robustLoss: RobustLossKind!
+  huberDeltaPx: Float!
+}
+
+type SparseCloud {
+  points: String!
+  colors: String
+}
+
+enum TrackClass {
+  Static
+  Moving
+}
+
+enum VideoCodec {
+  Avc
+  Hevc
+  Vp9
+  Av1
+  Mjpeg
+  Unknown
+}
+
+type VideoSource {
+  name: String!
+  container: String!
+  codec: VideoCodec!
+  durationMs: Float!
+  frameCount: Int!
+  width: Int!
+  height: Int!
+}
+
+type WatertightReportSnapshot {
+  vertexCount: Int!
+  triangleCount: Int!
+  boundaryEdgeCount: Int!
+  boundaryLoopCount: Int!
+  nonManifoldEdgeCount: Int!
+  nonManifoldVertexCount: Int!
+  connectedComponents: Int!
+  consistentlyOriented: Boolean!
+  eulerCharacteristic: Int!
+  genus: Int
+  signedVolume: Float!
+  selfIntersectionPairs: Int
+  closedFallbackUsed: Boolean!
+  isClosed: Boolean!
+  isTwoManifold: Boolean!
+  isWatertight: Boolean!
+}

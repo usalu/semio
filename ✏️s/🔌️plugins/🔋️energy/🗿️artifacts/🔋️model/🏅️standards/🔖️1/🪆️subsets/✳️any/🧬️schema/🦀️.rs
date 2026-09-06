@@ -51,6 +51,11 @@ pub struct EnergyModelArtifact {
     #[link_slot(roles("model"))]
     #[serde(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
+    /// 🌦️ Forward link to the `🌦️epw` stdio artifact this model is simulated against.
+    #[state(artifact)]
+    #[link_slot(roles("weather"))]
+    #[serde(rename = "weatherLink", default, skip_serializing_if = "Option::is_none")]
+    pub weather_link: Option<store::ArtifactLink>,
     /// 📋️ Opaque JSON of `crate::Results` — recomputed by the BEM engine; never persisted.
     #[state(artifact)]
     pub results_json: String,
@@ -66,6 +71,7 @@ impl ToValue for EnergyModelArtifact {
             ("structure".to_string(), to_dsl_value(&self.structure).unwrap_or(DslValue::Null)),
             ("zones".to_string(), to_dsl_value(&self.zones).unwrap_or(DslValue::Null)),
             ("referencedModel".to_string(), to_dsl_value(&self.referenced_model).unwrap_or(DslValue::Null)),
+            ("weatherLink".to_string(), to_dsl_value(&self.weather_link).unwrap_or(DslValue::Null)),
             ("resultsJson".to_string(), self.results_json.to_value()),
         ])
     }
@@ -80,6 +86,7 @@ impl FromValue for EnergyModelArtifact {
             structure: from_dsl_value(field("structure")).map_err(ValueError::new)?,
             zones: from_dsl_value(field("zones")).map_err(ValueError::new)?,
             referenced_model: from_dsl_value(field("referencedModel")).map_err(ValueError::new)?,
+            weather_link: from_dsl_value(field("weatherLink")).map_err(ValueError::new)?,
             results_json: String::from_value(field("resultsJson"))?,
         })
     }
@@ -96,12 +103,12 @@ impl Default for EnergyModelArtifact {
 impl EnergyModelArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> EnergyModelSnapshot {
-        EnergyModelSnapshot { schema: self.schema.clone(), model: self.model.clone(), structure: self.structure.clone(), zones: self.zones.clone(), referenced_model: self.referenced_model.clone() }
+        EnergyModelSnapshot { schema: self.schema.clone(), model: self.model.clone(), structure: self.structure.clone(), zones: self.zones.clone(), referenced_model: self.referenced_model.clone(), weather_link: self.weather_link.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving preview empty.
     pub fn from_snapshot(snapshot: EnergyModelSnapshot) -> Self {
-        Self { schema: snapshot.schema, model: snapshot.model, structure: snapshot.structure, zones: snapshot.zones, referenced_model: snapshot.referenced_model, results_json: String::new() }
+        Self { schema: snapshot.schema, model: snapshot.model, structure: snapshot.structure, zones: snapshot.zones, referenced_model: snapshot.referenced_model, weather_link: snapshot.weather_link, results_json: String::new() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -111,6 +118,7 @@ impl EnergyModelArtifact {
         self.structure = snapshot.structure;
         self.zones = snapshot.zones;
         self.referenced_model = snapshot.referenced_model;
+        self.weather_link = snapshot.weather_link;
     }
 }
 //#endregion 🔖️Conversions
@@ -166,19 +174,19 @@ pub mod derived_construction {
         type Snapshot = EnergyModelSnapshot;
         type Mutation = EnergyModelMutation;
         type Diff = EnergyModelDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: EnergyModelSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -186,12 +194,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <EnergyModelDiff as protocol::MutationDiff<EnergyModelSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -219,11 +227,11 @@ pub mod derived_analysis {
         type Parts = EnergyModelParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = EnergyModelParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

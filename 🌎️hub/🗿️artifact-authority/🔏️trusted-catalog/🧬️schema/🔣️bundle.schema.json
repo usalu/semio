@@ -103,10 +103,25 @@
         "blake3": { "$ref": "#/$defs/digest" }
       }
     },
+    "browserActor": {
+      "oneOf": [
+        { "$ref": "https://semio.tech/schemas/os/document-browser-actor-v1.json#/$defs/none" },
+        {
+          "type": "object",
+          "$ref": "https://semio.tech/schemas/os/document-browser-actor-v1.json#/$defs/identity",
+          "unevaluatedProperties": false,
+          "required": ["path", "byteLength"],
+          "properties": {
+            "path": { "$ref": "#/$defs/relativePath" },
+            "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 }
+          }
+        }
+      ]
+    },
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "nativeCodecs", "openTargets"],
+      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "browserActor", "nativeCodecs", "openTargets"],
       "properties": {
         "pluginId": { "$ref": "#/$defs/identity" },
         "packageId": { "$ref": "#/$defs/identity" },
@@ -115,6 +130,7 @@
         "dependencies": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/dependency" } },
         "component": { "$ref": "#/$defs/component" },
         "descriptor": { "$ref": "#/$defs/file" },
+        "browserActor": { "$ref": "#/$defs/browserActor" },
         "nativeCodecs": { "type": "array", "maxItems": 16384, "items": { "$ref": "#/$defs/codec" } },
         "openTargets": { "type": "array", "maxItems": 1024, "items": { "$ref": "#/$defs/openTarget" } }
       }

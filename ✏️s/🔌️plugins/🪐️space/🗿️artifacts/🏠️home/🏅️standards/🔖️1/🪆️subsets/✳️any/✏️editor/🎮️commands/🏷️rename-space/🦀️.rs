@@ -51,7 +51,7 @@ mod tests {
         })
         .to_string();
         let config = protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json }, &HomeConfig::default()).diff().clone();
-        let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: String::new() }, &config);
+        let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: String::new() }, &config).await;
         let (dialog_id, args) = match &emit.effects[0] {
             Effect::OpenDialog { dialog_id, args, .. } => (dialog_id.clone(), args.clone()),
             other => panic!("expected OpenDialog, got {other:?}"),
@@ -63,7 +63,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn non_empty_name_relays_the_rename() {
-        let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: "New Name".into() }, &HomeConfig::default());
+        let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: "New Name".into() }, &HomeConfig::default()).await;
         let (action_id, args) = emit
             .effects
             .iter()

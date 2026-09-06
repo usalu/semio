@@ -1,15 +1,26 @@
-//! remodeling -> obj
-use crate::artifacts::remodeling::schema::snapshot::RemodelingSnapshot;
-use semio_s_plugin_stdio::artifacts::obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
+use crate::artifacts::remodeling::standards::v1::subsets::any::io as io_root;
+use crate::artifacts::remodeling::RemodelingSnapshot;
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{resolve_ready, ArtifactSerializer};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
 
-pub async fn register() {}
+/// 🎯️ The foreign dialect this leaf writes.
+pub const OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };
 
-pub async fn serialize(snapshot: &RemodelingSnapshot) -> Result<ObjSnapshot, store::TextError> {
-    let _ = STDIO_OBJ_DOCUMENT_SCHEMA;
-    let bytes = <RemodelingSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <ObjSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
-}
+/// 🧵️ `s.remodel.remodeling@1/*` → `s.stdio.obj@3.0/*` — the reconstructed surface `results.mesh`
+/// only, through stdio's real `SemioMeshToObj` serializer + `obj::engine::encode_obj`. A scene with
+/// only a point cloud gets a typed `Err` naming that, never an empty solid.
+pub struct RemodelingIntoObj;
 
-pub async fn serialize_bytes(snapshot: &RemodelingSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<ObjSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+impl Serializer<RemodelingSnapshot> for RemodelingIntoObj {
+    const INTO: Dialect = OBJ_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    async fn serialize(from: &RemodelingSnapshot) -> IoResult<IoPayload> {
+        let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError { message: format!("remodeling→obj: nothing to export: {reason}"), diagnostics: Vec::new() })?;
+        let obj = resolve_ready(SemioMeshToObj::serialize(&semio)).map_err(|error| IoError { message: format!("remodeling→obj: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(IoPayload::Text(encode_obj(&obj))))
+    }
 }

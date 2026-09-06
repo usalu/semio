@@ -1,0 +1,6 @@
+{
+  activeUtilityId=null artifact=null assets=null calibration=null camera=null durableArtifacts=null frameCursor=null
+  gcps={ values=[ { id="gcp-1" name="Corner" worldPosition=[ 1 2 3 ] observations=[ ] } ] }
+  id=null job={ id="" stage="idle" progress01=0.5 cancelRequested=false stageCursor=3 sparsePointCloudPreview="" cameraPosesPreview=[ ] }
+  layers=null locale="en" params=null reportTable=null results=null schema=null selection=null streams=null
+}

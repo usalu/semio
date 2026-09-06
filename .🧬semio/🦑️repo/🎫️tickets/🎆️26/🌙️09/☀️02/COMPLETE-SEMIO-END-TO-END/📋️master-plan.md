@@ -17,6 +17,35 @@ Ship one coherent Semio system in which:
 
 ## Coordination Contract
 
+### Current Checkpoint — September 6
+
+This checkpoint supersedes older active-frontier status without promoting
+component tests to whole-product completion. The goal and ticket remain open.
+Root is coordinating the full four-slot fleet; two Sol execution lanes own
+Home/Space runtime materialization and DB retained lifecycle, with Terra
+read-only audits and root actor catalog integration. Repo ticket MCP tools
+remain unavailable in the active tool catalog; no lifecycle result is invented.
+
+- Shared integer conversion is GREEN15 native50874/xvoyyB; thirteen codec laws
+  plus actual Directory authority decoding and actor identity admission.
+- WAL writer94910/seKuJE is GREEN37 and worker maintenance7182/48iOYL GREEN13.
+  Mount94844/tE5UHu remains RED at the first pool-shutdown law despite the
+  initial PoolUse-phase repair; the retained-use owner census continues.
+- Actor-aware source bootstrap83166 and rotation-source60086 pass. Native
+  catalog49777/Gt5a6S is active after a no-default-feature harness failure.
+  Latest source97245 passes26 actor records,8 body oracle rows,8 raw-length
+  vectors,19 generation-file cases,6 source-capture cases and7 actual write
+  cancellation/exclusive-owner cases. Registry launch freshness91581 passes.
+  Real GIS actor materialization, public plan/lease propagation and isolated
+  browser activation are not yet qualified.
+- Home current source reached GREEN46; warm runtime55879/pCWWNn passed groups
+  00/01 then failed group02 compilation at three further typed async fixture
+  boundaries. The owning Sol lane is continuing its full adjacent census;
+  no current group02 runtime rendering pass is yet claimed.
+
+Current details: `📓️root-exact-integer-value-codec.md`,
+`📓️root-trusted-browser-actor-catalog.md` and the Sol lifecycle/Home reports.
+
 ### Active Frontier — 2026-09-05
 
 This checkpoint supersedes the historical qualification paragraphs below. Root coordinates a four-slot fleet: Sol execution owns current Home/Space materialization and WAL retained-lifecycle work; Terra provides read-only implementation/audit packets. Native compilers reuse separately owned warm targets without competing invocations in one cache.
@@ -374,3 +403,54 @@ Exit: no skipped/zero-test acceptance gate, no declared stub contribution, no un
 - Home native82583 exposed149 async test migration errors. The execution lane repaired the concrete boundary; source12 passes. Subsequent Tj3Gs6/60QtKH diagnostics are repaired, including the Store assembly operation bounds. Current21866/v4J1FZ group00 is GREEN1 and group01 OS host full is GREEN1 for actual transformed SVG extraction; group02 now runs the three real Home row-materialization laws on public-member. Space's second threads1 wasm build ended before describe with Cargo101 under severe host memory pressure; no second compiler runs while Home owns that lane. Current frontend descriptor/materialization and real bilingual multi-user browser acceptance remain outstanding.
 
 A second coordinator (Claude Fable 5.1, session `c34c334c`) joined this ticket at 03:45 and claimed only residual slices that have a Terra packet and no Sol implementation report: directory command receipt transport (P0-F), AI Map proposal/approval server core (P1-C/D slices A–C), author space-administration page/pane, browser execution-target lease (P0-C), and a native/process qualification run of the presence-lease, invite-transaction, ordered-publication, event-page and admin-journey gates. Lane table, rules and reports: `📓️fable-coordination.md`. Sol-owned slices are untouched; concurrent edits are expected and rereads precede every edit.
+
+### Sol September6 Continuation
+
+Journal64870/ZJRrWu now passes all3 exact native laws, including two committed
+transactions yielding one retained decision witness. SHA256 is
+`0349c09335867ba4d64bb04258c7483bdafc674a302616822c6877a789bd64a5`.
+Three-Store recovery/approval remains open. Root is adding test-first exact
+signed/unsigned primitive decoding after the actor corpus exposed coercion;
+the shared audit identifies direct version, generation, lease-length and
+socket-expiry leaves. Home source38 is GREEN; its live row laws are still
+compiling after repeated request-handler/OS-host-SVG prerequisite passes.
+
+Current actor identity foundation is schema-first and source GREEN49. The exact
+native44 attempt38439/yH4sCA compiled/listed and exposed generic `u64` fractional
+truncation; an adjacent exact bounded length decoder now passes native21033,
+`pNZ7zK/00`, one exact default-feature kernel law across49 neutral cases.
+Both twins require independent package
+source and renderer for lease projection. Mandatory catalog/public field census
+and actor delivery are not yet implemented. See
+`📓️root-browser-actor-identity-contract.md` and the Terra propagation/Worker
+admission reports.
+
+DB current continuation: writer98692/Be9XY4 and6243/eBCsE9 reach the retained
+cross-key wake law; the first11 selectors pass in the latter before the fixture
+mistakenly requires Pending from an intentionally Ready retained rejection.
+Journal93700/bUcnaf observes only one physical transaction because its added
+control transaction was Memory, not Fsync;54176/7gwJw6 next requires the shutdown
+helper to retain/drive the external close cursor.63610/6indWO is an intermediate
+typed-constructor/authority-retirement compile RED. WG has repaired those exact
+sites, added owner-bearing storage-open rejection propagation and a preadmitted
+authority retirement registry, and reports source GREEN with mount19. Those
+later lifecycle states remain native-pending; mount61554 GREEN17 is still the
+latest complete native mount receipt, not exhaustive lifetime acceptance.
+
+Latest native acceptance is mount61554 GREEN17 (`exact-cargo-laws-gfGodw`, SHA256 `fc3caa3df81b904c9cabdc6d6da02baff4997b2c7d5c9bbf85cb0fb6a6fa9157`). Writer29219 executes9 passing laws then finds law10's old eager-release assertion; the law now observes Conflict before first poll and Closed after the explicit release signal. Full writer36, committed durable journal witness3 and composed Hub journeys remain next. Source2758 is GREEN for codec capture15, generation fence12, fresh handoff11 and the existing fixed bootstrap corpus, including the capture-before-production ordering ratchet.
+
+Previous-turn classification: substantive progress. The goal remains active and unbounded; no completion or ticket-close claim is warranted. Root continues coordination with two Sol execution lanes and one Terra read-only lane at the four-slot limit. Repo MCP ticket tools remain absent from available metadata, so no ticket lifecycle operation is fabricated.
+
+Latest continuation supersedes the older receipts below: browser90129 is GREEN20 after sharing stable bounded file capture with the actual fresh-component producer. Fresh producer30368 is GREEN5, then test-first handoff60035 RED and14082 GREEN11 qualify a required one-shot copied lease, source erasure, cancellation and unawaited-consumer draining. The existing Hub bootstrap source corpus remains GREEN; actual browser actor/catalog materialization is still open. See `📓️root-fresh-component-snapshot-staging.md` and `📓️root-fresh-component-lease-handoff.md`.
+
+Generation-stage83439 is GREEN12 after92975 missing-helper RED,49776 GREEN9,63730 GREEN11 and10555 receipt-path spread RED. Initial, existing and rotated generations now share bounded whole-file digest/path revalidation, with no callbacks after the final identity pass. Fresh handoff11 and the existing bootstrap source corpus remain green; codec input capture and actual actor/Hub activation remain open. See `📓️root-trusted-generation-final-fence.md`.
+
+Codec-source75033 is GREEN15 after test-first71181: the producer captures both inputs once before long builds, validates the exact bounded26+2 semantic closure, freezes rows and uses deterministic non-locale order. The expected generation remains unchanged. Browser27596 freshly passes artifact20, host22, WASI15 and all source/compiler/policy/component checks (`browser-actor-factory-w2TJJT`,115627bytes). Actual actor catalog/Worker activation remains open. See `📓️root-trusted-codec-source-capture.md`.
+
+Native46637/bw5a5F advances through eleven mount laws, then law12 reaches a mandatory ordinary fixture submission rejected as Contended. WG corrected that liveness probe to retained timer admission without changing lifecycle assertions. Writer55699/q7gnQt stops during the in-flight backend registration signature change at storage2662, before any native writer law. Source AJV6/backend-pool-use8 passes; neither mount16 nor writer35 is accepted. Terra additionally identified an externally owned pending close needing a retained cursor after authority drop, which WG owns alongside all-tier registration rollback.
+
+Native97224 passes eleven mount laws then finds Busy2 versus Busy1; after owner/latch changes94265 (`exact-cargo-laws-oanQof`) is RED on the first mount law's post-ACK shutdown Busy1. WG and Terra are tracing that current owner; no mount15 or writer35 acceptance is claimed. Home source33 remains GREEN and native groups00/01 repeatedly pass while group02 compilation advances through current first-party value/async/typed-owner test migrations on its exclusive warm cache. This is continuing implementation progress, not an unchanged-state wait.
+
+- Browser source39397 is GREEN17 for actual canonical policy/source/compiler/parser/runtime binding;74686 is GREEN20 after exact-control RED28744, adding a public no-path builder API and observed cleanup of its private scratch on success/cancellation. Independent Node closed-byte parity, AJV/WebCrypto, WASI15/host22 and compiler/component laws pass. Exact Cargo harness13789 is GREEN26/596 assertions. Canonical async guest28719 remains the older14+8 receipt; Home owns its fresh no-path builder/guest-stream-drop run. The discovered live stdio/GIS bootstrap producer supersedes the earlier no-producer assumption and is being audited before catalog integration. See `📓️root-browser-wasi-activation.md`.
+- Mount82097/RIqL0s and53820/uv5IaM each pass eight laws then fail the retained cleanup parking law. Independent writer28565/yDnbws reaches native execution but fails `artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owner_retry` at WAL4046. Terra links both to eager release activation while constructing a retained rejection; WG owns a dormant release handoff and the saturation rollback lifetime P0. Neither mount14 nor writer35 is qualified. Store read-only three-edit projection cannot approve or replay the group without a DB committed witness and live three-Store recovery. See `📓️root-hub-presence-admin-native-current.md` and `📓️terra-store-three-edit-wal-witness-current-audit.md`.
+- Home repeatedly passes request-handler and full OS-host SVG extraction groups, then advances through the Space/Home stale path/import/async test constructor cohort. Current source31 and full known constructor/path census are green; native62144 is active on its exclusive warm cache. The latest frontend6013 probe is connection refused and its previous Vite listener is absent. No current rendered frontend or multi-user browser journey is claimed. See `📓️root-current-frontend-observation.md`.

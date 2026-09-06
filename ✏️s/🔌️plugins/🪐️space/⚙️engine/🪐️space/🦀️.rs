@@ -50,7 +50,7 @@ use store::EngineHandles;
 /// `<artifact_kind>@<standard>/<subset>#<role>`) — was the bare `"studio"`, which stopped parsing the
 /// moment that migration's validation landed in `PluginBuilder::document_app`'s `build_definition`.
 pub const S_PLAY_APP_ID: &str = "s.space.studio@1/*#editor";
-pub const S_PLAY_CONTROLLER_ID: &str = "s-play";
+pub const S_PLAY_CONTROLLER_ID: &str = "s.space.studio@1/*#editor";
 pub const S_PLAY_CATALOGUE_TAB_ID: &str = "s-play-catalogue";
 pub const S_PLAY_PARAMETERS_TAB_ID: &str = "s-play-parameters";
 pub const S_PLAY_INSPECTOR_TAB_ID: &str = "s-play-inspector";
@@ -69,12 +69,9 @@ pub(crate) fn s_play_action(action: &str, args: Option<semio_framework_plugin::U
     semio_framework_plugin::ActionFactory::new(S_PLAY_CONTROLLER_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -87,27 +84,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -117,13 +107,10 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
-
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
 /// action targeting one `(granularity, id)` pair in the `graph` domain — replaces the deleted
@@ -201,9 +188,12 @@ async fn space_workflow_context_menu_items(
         // 🗂️ Empty-canvas menu: paste/select-all stay top-level (the two most frequent verbs here),
         // reorganize is a rarer layout action so it moves into its own taxonomy group.
         menu = menu
-            .item(ContextMenuItemSpec { id: "paste-instance".into(), label: Some(labels.context_paste.into()), icon: Some("clipboard".into()), action: Some("pasteAppInstance".into()), ..Default::default() }).await
-            .item(ContextMenuItemSpec { id: "select-all".into(), label: Some(labels.context_select_all.into()), icon: Some("maximize-2".into()), action: Some(SELECT_ALL_ACTION_ID.into()), ..Default::default() }).await
-            .group("transform", |m| m.item(ContextMenuItemSpec { id: "reorganize".into(), label: Some(labels.context_reorganize.into()), icon: Some("layout-grid".into()), action: Some("reorganizeWorkflow".into()), ..Default::default() })).await;
+            .item(ContextMenuItemSpec { id: "paste-instance".into(), label: Some(labels.context_paste.into()), icon: Some("clipboard".into()), action: Some("pasteAppInstance".into()), ..Default::default() })
+            .await
+            .item(ContextMenuItemSpec { id: "select-all".into(), label: Some(labels.context_select_all.into()), icon: Some("maximize-2".into()), action: Some(SELECT_ALL_ACTION_ID.into()), ..Default::default() })
+            .await
+            .group("transform", |m| m.item(ContextMenuItemSpec { id: "reorganize".into(), label: Some(labels.context_reorganize.into()), icon: Some("layout-grid".into()), action: Some("reorganizeWorkflow".into()), ..Default::default() }))
+            .await;
     }
     if hit_node.is_some() || !nodes.is_empty() {
         // 🗂️ Node menu: open/duplicate stay top-level (the two most frequent verbs); copy moves into
@@ -211,14 +201,20 @@ async fn space_workflow_context_menu_items(
         // trailing destructive leaf — `organize_context_menu` (run automatically at the
         // `VcsArtifactApp::context_menu` funnel) inserts the pre-destructive separator itself.
         menu = menu
-            .item(ContextMenuItemSpec { id: "open-instance".into(), label: Some(labels.context_open_instance.into()), icon: Some("external-link".into()), action: Some("openInstance".into()), ..Default::default() }).await
-            .item(ContextMenuItemSpec { id: "duplicate-instance".into(), label: Some(labels.context_duplicate.into()), icon: Some("copy".into()), action: Some("duplicateAppInstance".into()), ..Default::default() }).await
-            .group("transfer", |m| m.item(ContextMenuItemSpec { id: "copy-instance".into(), label: Some(labels.context_copy.into()), icon: Some("clipboard-copy".into()), action: Some("copyAppInstance".into()), ..Default::default() })).await
-            .group("settings", |m| m.item(ContextMenuItemSpec { id: "rename-instance".into(), label: Some(labels.context_rename_label.into()), icon: Some("edit-3".into()), action: Some("renameAppInstance".into()), ..Default::default() })).await;
+            .item(ContextMenuItemSpec { id: "open-instance".into(), label: Some(labels.context_open_instance.into()), icon: Some("external-link".into()), action: Some("openInstance".into()), ..Default::default() })
+            .await
+            .item(ContextMenuItemSpec { id: "duplicate-instance".into(), label: Some(labels.context_duplicate.into()), icon: Some("copy".into()), action: Some("duplicateAppInstance".into()), ..Default::default() })
+            .await
+            .group("transfer", |m| m.item(ContextMenuItemSpec { id: "copy-instance".into(), label: Some(labels.context_copy.into()), icon: Some("clipboard-copy".into()), action: Some("copyAppInstance".into()), ..Default::default() }))
+            .await
+            .group("settings", |m| m.item(ContextMenuItemSpec { id: "rename-instance".into(), label: Some(labels.context_rename_label.into()), icon: Some("edit-3".into()), action: Some("renameAppInstance".into()), ..Default::default() }))
+            .await;
         if !nodes.is_empty() {
-            menu = menu.group("selection", |m| {
-                m.item(ContextMenuItemSpec { id: "clear-selection".into(), label: Some(labels.context_clear_selection.into()), icon: Some("square-dashed".into()), action: Some(CLEAR_SELECTION_ACTION_ID.into()), ..Default::default() })
-            }).await;
+            menu = menu
+                .group("selection", |m| {
+                    m.item(ContextMenuItemSpec { id: "clear-selection".into(), label: Some(labels.context_clear_selection.into()), icon: Some("square-dashed".into()), action: Some(CLEAR_SELECTION_ACTION_ID.into()), ..Default::default() })
+                })
+                .await;
         }
         let phrase = selection_count_phrase(is_de, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })]).await;
         let remove_label = if phrase.is_empty() { labels.context_remove.as_str().to_string() } else { format!("{} ({phrase})", labels.context_remove.as_str()) };
@@ -312,10 +308,31 @@ const SPACE_BOUNDED_TOOL_IDS: &[&str] = &[
 /// dispatches on its own (no `🏛️ShellHost`/`🕸️NodeGraph` call site, verified by id), and each needs
 /// its own reducer/extent review before it can claim a bounded first step.
 const SPACE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
-    "patchParameter", "addParameter", "removeParameter", "moveMediaNode", "connectMediaPorts", "disconnectMediaEdge",
-    "removeAppInstance", "deleteSelection", "copyAppInstance", "duplicateAppInstance", "pasteAppInstance", "renameAppInstance",
-    "patchMediaNodes", "patchAppInstances", "bindParameterField", "unbindParameterField", "reorganizeWorkflow", "workflowEngagementSubmit",
-    "compiledDagEngagementSubmit", "nodeGraphEdit", "exportMedia", "importMedia", "importMediaPayload", "exportStudioPack", "exportStudioDsl",
+    "patchParameter",
+    "addParameter",
+    "removeParameter",
+    "moveMediaNode",
+    "connectMediaPorts",
+    "disconnectMediaEdge",
+    "removeAppInstance",
+    "deleteSelection",
+    "copyAppInstance",
+    "duplicateAppInstance",
+    "pasteAppInstance",
+    "renameAppInstance",
+    "patchMediaNodes",
+    "patchAppInstances",
+    "bindParameterField",
+    "unbindParameterField",
+    "reorganizeWorkflow",
+    "workflowEngagementSubmit",
+    "compiledDagEngagementSubmit",
+    "nodeGraphEdit",
+    "exportMedia",
+    "importMedia",
+    "importMediaPayload",
+    "exportStudioPack",
+    "exportStudioDsl",
 ];
 const SPACE_RETAINED_PAYLOAD_SCHEMA: &str = "os.workflow.space.tool-command.v1";
 /// 📦️ `setAppRegistrations` carries the whole live catalog as one JSON argument and
@@ -457,7 +474,9 @@ struct SpaceConfigPreparation {
 
 fn space_config_bytes(config: &SpaceConfig) -> Result<usize, String> {
     let items = config.camera.len().saturating_add(config.collapsed_node_ids.len()).saturating_add(config.preview_off_node_ids.len()).saturating_add(config.clipboard_node_ids.len());
-    if items > SPACE_CONFIG_MAXIMUM_ITEMS { return Err("Space Config exceeds its retained item envelope".into()); }
+    if items > SPACE_CONFIG_MAXIMUM_ITEMS {
+        return Err("Space Config exceeds its retained item envelope".into());
+    }
     let mut bytes = 0usize;
     for value in config.camera.keys().chain(config.collapsed_node_ids.iter()).chain(config.preview_off_node_ids.iter()).chain(config.clipboard_node_ids.iter()) {
         bytes = bytes.saturating_add(value.len());
@@ -468,9 +487,13 @@ fn space_config_bytes(config: &SpaceConfig) -> Result<usize, String> {
     for value in [&config.workflow_engagement_input, &config.compiled_dag_engagement_input, &config.active_panel_tab, &config.locale] {
         bytes = bytes.saturating_add(value.len());
     }
-    if bytes > SPACE_CONFIG_TEXT_BYTES { return Err("Space Config exceeds its encoded text envelope".into()); }
+    if bytes > SPACE_CONFIG_TEXT_BYTES {
+        return Err("Space Config exceeds its encoded text envelope".into());
+    }
     let bytes = bytes.saturating_add(std::mem::size_of::<SpaceConfig>()).saturating_add(items.saturating_mul(128));
-    if bytes > SPACE_CONFIG_MAXIMUM_BYTES { return Err("Space Config exceeds its retained byte envelope".into()); }
+    if bytes > SPACE_CONFIG_MAXIMUM_BYTES {
+        return Err("Space Config exceeds its retained byte envelope".into());
+    }
     Ok(bytes)
 }
 
@@ -485,9 +508,13 @@ fn space_config_mutation_bytes(mutation: &SpaceConfigMutation) -> Result<usize, 
         SpaceConfigMutation::SetClipboard { node_ids } => node_ids.iter().map(String::len).sum(),
         _ => return Err("Space Config preparation rejects a non-retained mutation".into()),
     };
-    if bytes > SPACE_CONFIG_TEXT_BYTES { return Err("Space Config mutation exceeds its encoded text envelope".into()); }
+    if bytes > SPACE_CONFIG_TEXT_BYTES {
+        return Err("Space Config mutation exceeds its encoded text envelope".into());
+    }
     let bytes = bytes.saturating_add(std::mem::size_of::<SpaceConfigMutation>());
-    if bytes > SPACE_CONFIG_MAXIMUM_BYTES { return Err("Space Config mutation exceeds its retained byte envelope".into()); }
+    if bytes > SPACE_CONFIG_MAXIMUM_BYTES {
+        return Err("Space Config mutation exceeds its retained byte envelope".into());
+    }
     Ok(bytes)
 }
 
@@ -496,21 +523,43 @@ fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Re
     space_config_mutation_bytes(&mutation)?;
     let mut post = base.clone();
     let inverse = match &mutation {
-        SpaceConfigMutation::SetActivePanelTab { tab_id } => { post.active_panel_tab = tab_id.clone(); SpaceConfigMutation::SetActivePanelTab { tab_id: base.active_panel_tab.clone() } }
+        SpaceConfigMutation::SetActivePanelTab { tab_id } => {
+            post.active_panel_tab = tab_id.clone();
+            SpaceConfigMutation::SetActivePanelTab { tab_id: base.active_panel_tab.clone() }
+        }
         SpaceConfigMutation::SetCamera { window_id, camera } => {
             post.camera.insert(window_id.clone(), *camera);
             base.camera.get(window_id).map_or_else(|| SpaceConfigMutation::Snapshot { config: base.clone() }, |camera| SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera })
         }
         SpaceConfigMutation::SetClient { client_id, client_name } => {
-            post.client_id = client_id.clone(); post.client_name = client_name.clone();
+            post.client_id = client_id.clone();
+            post.client_name = client_name.clone();
             SpaceConfigMutation::SetClient { client_id: base.client_id.clone(), client_name: base.client_name.clone() }
         }
-        SpaceConfigMutation::SetWorkflowEngagementInput { value } => { post.workflow_engagement_input = value.clone(); SpaceConfigMutation::SetWorkflowEngagementInput { value: base.workflow_engagement_input.clone() } }
-        SpaceConfigMutation::SetCompiledDagEngagementInput { value } => { post.compiled_dag_engagement_input = value.clone(); SpaceConfigMutation::SetCompiledDagEngagementInput { value: base.compiled_dag_engagement_input.clone() } }
-        SpaceConfigMutation::SetFocusedNode { node_id } => { post.focused_node_id = node_id.clone(); SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() } }
-        SpaceConfigMutation::SetActiveNode { node_id } => { post.active_node_id = node_id.clone(); SpaceConfigMutation::SetActiveNode { node_id: base.active_node_id.clone() } }
-        SpaceConfigMutation::SetSpaceId { space_id } => { post.space_id = space_id.clone(); SpaceConfigMutation::SetSpaceId { space_id: base.space_id.clone() } }
-        SpaceConfigMutation::SetClipboard { node_ids } => { post.clipboard_node_ids = node_ids.clone(); SpaceConfigMutation::SetClipboard { node_ids: base.clipboard_node_ids.clone() } }
+        SpaceConfigMutation::SetWorkflowEngagementInput { value } => {
+            post.workflow_engagement_input = value.clone();
+            SpaceConfigMutation::SetWorkflowEngagementInput { value: base.workflow_engagement_input.clone() }
+        }
+        SpaceConfigMutation::SetCompiledDagEngagementInput { value } => {
+            post.compiled_dag_engagement_input = value.clone();
+            SpaceConfigMutation::SetCompiledDagEngagementInput { value: base.compiled_dag_engagement_input.clone() }
+        }
+        SpaceConfigMutation::SetFocusedNode { node_id } => {
+            post.focused_node_id = node_id.clone();
+            SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() }
+        }
+        SpaceConfigMutation::SetActiveNode { node_id } => {
+            post.active_node_id = node_id.clone();
+            SpaceConfigMutation::SetActiveNode { node_id: base.active_node_id.clone() }
+        }
+        SpaceConfigMutation::SetSpaceId { space_id } => {
+            post.space_id = space_id.clone();
+            SpaceConfigMutation::SetSpaceId { space_id: base.space_id.clone() }
+        }
+        SpaceConfigMutation::SetClipboard { node_ids } => {
+            post.clipboard_node_ids = node_ids.clone();
+            SpaceConfigMutation::SetClipboard { node_ids: base.clipboard_node_ids.clone() }
+        }
         _ => return Err("Space Config preparation rejects a non-retained mutation".into()),
     };
     space_config_bytes(&post)?;
@@ -520,51 +569,92 @@ fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Re
 fn space_config_edit(forward: SpaceConfigMutation, inverse: SpaceConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SpaceConfigMutation> {
     let id = format!("space-config-retained-{}", authority.next_sequence_number());
     protocol::Edit {
-        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse: vec![inverse],
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
         }],
-        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
     }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<SpaceConfig, SpaceConfigMutation> for SpaceConfigPreparationFactory {
     fn preflight(&self, mutation: &SpaceConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SPACE_CONFIG_METADATA_BYTES) { return Err("Space Config preparation rejects its lane or description envelope".into()); }
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SPACE_CONFIG_METADATA_BYTES) {
+            return Err("Space Config preparation rejects its lane or description envelope".into());
+        }
         space_config_mutation_bytes(mutation)?;
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>> {
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>> {
         if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
-            || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > SPACE_CONFIG_METADATA_BYTES { return Err(request); }
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > SPACE_CONFIG_METADATA_BYTES
+        {
+            return Err(request);
+        }
         Ok(Box::new(SpaceConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes: 0, cancelled: false, closing: false,
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes: 0,
+            cancelled: false,
+            closing: false,
         }))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> for SpaceConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Space Config preparation lost its exact base".to_string())?.get();
             let mutation = self.mutation.as_ref().ok_or_else(|| "Space Config preparation lost its mutation".to_string())?;
             space_config_bytes(base)?;
             space_config_mutation_bytes(mutation)?;
             let bytes = SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024;
-            if grant.maximum_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            }
             self.candidate = Some(prepare_space_config(base, self.mutation.take().ok_or_else(|| "Space Config preparation lost its mutation".to_string())?)?);
             self.retained_bytes = bytes;
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
             return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
         }
-        if grant.maximum_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if grant.maximum_bytes < self.retained_bytes {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
         let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Space Config preparation lost its candidate".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Space Config preparation lost its Store authority".to_string())?;
         let prepared = authority.prepare_one_item(space_config_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
@@ -573,45 +663,71 @@ impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> fo
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>> { self.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if !self.closing || !grant.permits_one() {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
         if self.prepared.is_some() || self.candidate.is_some() {
-            if grant.maximum_bytes < self.retained_bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
-            if self.prepared.take().is_none() { self.candidate = None; }
+            if grant.maximum_bytes < self.retained_bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            if self.prepared.take().is_none() {
+                self.candidate = None;
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.as_ref() {
             let bytes = space_config_mutation_bytes(mutation)?;
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.mutation = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         if let Some(description) = self.description.as_ref() {
             let bytes = description.len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.description = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Space Config preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() {
+                return Err("Space Config preparation could not return its exact base root".into());
+            }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
             let bytes = authority.actor().len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
             self.authority = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
 
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -876,7 +992,9 @@ impl ArtifactApp for SpaceApp {
         // strip it so Space body keys still match.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
-            crate::engine::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => crate::engine::space::modes::main::windows::workflow::render(&SpaceApp::default(), projection, config).await.map(semio_framework_plugin::built_to_component_tree),
+            crate::engine::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => {
+                crate::engine::space::modes::main::windows::workflow::render(&SpaceApp::default(), projection, config).await.map(semio_framework_plugin::built_to_component_tree)
+            }
             crate::engine::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::engine::space::modes::main::windows::media_vfs::render(projection, &config.locale).await.map(semio_framework_plugin::built_to_component_tree),
             crate::engine::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::engine::space::modes::main::windows::compiled_dag::render(projection).await.map(semio_framework_plugin::built_to_component_tree),
             S_PLAY_CATALOGUE_BODY_KEY => crate::engine::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)).await.map(semio_framework_plugin::built_to_component_tree),
@@ -1083,7 +1201,6 @@ pub async fn create_space_app() -> App {
         .keybinding("mod+s", "commitCheckpoint").await;
     let definition = builder.build_definition();
     let mut app = App { definition, examples: Vec::new() };
-    app.definition.controller_id = S_PLAY_CONTROLLER_ID.into();
     let mut app = app.workflow("s", "S Studio", "studio").await;
     for (id, label) in S_STUDIO_EXAMPLES {
         // 🚧️ `OsWorkflowArtifactDocument` (= `BackboneDocument<WorkflowSnapshot, WorkflowMutation>`)
@@ -1112,7 +1229,7 @@ pub(crate) mod testkit {
     use super::*;
     use semio_framework_os::{apply_workflow_operation, register_app_io, ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity};
     use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
-    use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel, SurfaceKind};
+    use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel};
 
     pub(crate) fn empty_history() -> HistoryView {
         HistoryView::empty()
@@ -1137,7 +1254,7 @@ pub(crate) mod testkit {
     }
 
     pub(crate) async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
-        app.dispatch_typed(command, &semio_framework_plugin::testkit::meta("local")).expect("dispatch")
+        app.dispatch_typed(command, &semio_framework_plugin::testkit::meta("local")).await.expect("dispatch")
     }
 
     /// 🕹️ Routes through `SpaceCommand::dispatch` (the `app_commands!`-generated, framework-fixed
@@ -1163,7 +1280,7 @@ pub(crate) mod testkit {
 
     /// 📽️ Folds studio config operations onto a config snapshot the way the store would.
     pub(crate) async fn apply_config(config: &SpaceConfig, operations: &[crate::engine::space::config::SpaceConfigMutation]) -> SpaceConfig {
-        apply_config_mutations(config, operations)
+        apply_config_mutations(config, operations).await
     }
 
     /// 🪪️ Canonical surface id for a synthetic test-registry app (ticket
@@ -1178,11 +1295,17 @@ pub(crate) mod testkit {
     async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str, ports: Vec<MediaPortSpec>) {
         let surface_id = test_surface_id(app_id).await;
         let definition = App::builder(surface_id, LocalizedLabel::data(label))
+            .await
             .document(document.iter().map(|segment| segment.to_string()))
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
-            .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), SurfaceKind::Canvas2d, "square-pen")
+            .await
+            .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_framework_ui_contract::SurfaceKind::Canvas2d, "square-pen")
+            .await
             .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
-                .with_ports(ports))
+                .await
+                .with_ports(ports)
+                .await)
+            .await
             .build_definition();
         register_app_io(plugin_id, &definition);
     }
@@ -1272,10 +1395,13 @@ mod tests {
     #[test]
     fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
         let base = SpaceConfig::default();
-        let mut expected = serde_json::to_value(&base).expect("JSON oracle base");
-        expected["workflowEngagementInput"] = pack::json!("draft");
+        let base_value = pack::json_from_dsl_value(&dsl::ToValue::to_value(&base));
+        let mut expected: serde_json::Value = serde_json::from_str(&pack::json_to_string(&base_value)).expect("third-party JSON decode");
+        expected["workflowEngagementInput"] = serde_json::json!("draft");
         let (post, inverse, _) = prepare_space_config(&base, SpaceConfigMutation::SetWorkflowEngagementInput { value: "draft".into() }).expect("bounded config candidate");
-        assert_eq!(serde_json::to_value(post).expect("JSON oracle post"), expected);
+        let post_value = pack::json_from_dsl_value(&dsl::ToValue::to_value(&post));
+        let post_oracle: serde_json::Value = serde_json::from_str(&pack::json_to_string(&post_value)).expect("third-party JSON decode");
+        assert_eq!(post_oracle, expected);
         assert!(matches!(inverse, SpaceConfigMutation::SetWorkflowEngagementInput { value } if value == base.workflow_engagement_input));
         assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES) }).is_ok());
         assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES + 1) }).is_err());
@@ -1375,7 +1501,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn initial_snapshot_is_empty_not_demo() {
         let _app = SpaceApp::default();
-        assert!(SpaceApp::initial_snapshot().graph.nodes.is_empty());
+        assert!(SpaceApp::initial_snapshot().await.graph.nodes.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1415,7 +1541,7 @@ mod tests {
     async fn space_manifest_uses_studio_app_id() {
         let app = create_space_app().await;
         assert_eq!(app.definition.id, S_PLAY_APP_ID);
-        assert_eq!(app.definition.controller_id, "s-play");
+        assert_eq!(app.definition.controller_id, "s.space.studio@1/*#editor");
     }
 
     /// 🪪️ `ArtifactStore::dispatch_inner`'s `CommitCheckpoint` arm (🏪️store `🦀️.rs`) rejects an
@@ -1427,10 +1553,11 @@ mod tests {
     async fn commit_checkpoint_round_trips_projection() {
         use crate::engine::space::commands::spawn_app;
         testkit::seed_draw_plugin().await;
-        let mut app = VcsArtifactApp::new(SpaceApp::default()).await;
-        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
+        let mut app = VcsArtifactApp::<SpaceApp>::new(SpaceApp::default()).await;
+        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).await.expect("spawn");
         let before = app.snapshot().expect("projection").graph.nodes.len();
-        app.handle_action("commitCheckpoint", Some(&pack::json!({ "message": "snapshot" })), &plugin_testkit::meta("local")).expect("commit");
+        let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "snapshot" }));
+        app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_testkit::meta("local")).await.expect("commit");
         assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
     }
 
@@ -1438,18 +1565,20 @@ mod tests {
     async fn checkout_checkpoint_restores_projection() {
         use crate::engine::space::commands::spawn_app;
         testkit::seed_draw_plugin().await;
-        let mut app = VcsArtifactApp::new(SpaceApp::default()).await;
+        let mut app = VcsArtifactApp::<SpaceApp>::new(SpaceApp::default()).await;
         let before = app.snapshot().expect("projection").graph.nodes.len();
-        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
-        app.handle_action("commitCheckpoint", Some(&pack::json!({ "message": "after-first-spawn" })), &plugin_testkit::meta("local")).expect("commit");
+        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).await.expect("spawn");
+        let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "after-first-spawn" }));
+        app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_testkit::meta("local")).await.expect("commit");
         let after_first = app.snapshot().expect("projection").graph.nodes.len();
         assert!(after_first > before);
-        let files = app.document_pack().expect("document pack");
-        let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(&files.pack, &files.spr).expect("parse document pack");
+        let files = app.document_pack().await.expect("document pack");
+        let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(&files.pack, &files.spr).await.expect("parse document pack");
         let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
-        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn2");
+        app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).await.expect("spawn2");
         assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
-        app.handle_action("checkoutCheckpoint", Some(&pack::json!({ "checkpointId": checkpoint_id })), &plugin_testkit::meta("local")).expect("checkout");
+        let checkout_args = pack::json_to_dsl_value(&pack::json!({ "checkpointId": checkpoint_id }));
+        app.handle_action("checkoutCheckpoint", Some(&checkout_args), &plugin_testkit::meta("local")).await.expect("checkout");
         assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), after_first);
     }
 
@@ -1519,10 +1648,12 @@ mod tests {
         let config = SpaceConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let _app = SpaceApp::default();
-        let catalogue_json = pack::to_json_string(&SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg));
+        let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg).await.expect("catalogue tree");
+        let catalogue_json = plugin_testkit::project_and_retire_fixture_tree(catalogue_tree).expect("catalogue projection");
         assert!(catalogue_json.contains("\"Apps\""));
 
-        let parameters_json = pack::to_json_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg));
+        let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg).await.expect("parameters tree");
+        let parameters_json = plugin_testkit::project_and_retire_fixture_tree(parameters_tree).expect("parameters projection");
         assert!(parameters_json.contains("Add Parameter"));
         assert!(parameters_json.contains("\"Name\""));
         assert!(parameters_json.contains("\"Remove\""));
@@ -1537,12 +1668,14 @@ mod tests {
         let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
         let cfg = ConfigView { snapshot: &config };
         let _app = SpaceApp::default();
-        let parameters_json = pack::to_json_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg));
+        let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg).await.expect("parameters tree");
+        let parameters_json = plugin_testkit::project_and_retire_fixture_tree(parameters_tree).expect("parameters projection");
         assert!(parameters_json.contains("Parameter hinzufügen"));
         assert!(parameters_json.contains("\"Entfernen\""));
         assert!(!parameters_json.contains("Add Parameter"));
 
-        let inspector_json = pack::to_json_string(&SpaceApp::render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &cfg));
+        let inspector_tree = SpaceApp::render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &cfg).await.expect("inspector tree");
+        let inspector_json = plugin_testkit::project_and_retire_fixture_tree(inspector_tree).expect("inspector projection");
         assert!(inspector_json.contains("Wähle Workflow-Knoten im Arbeitsbereich aus."));
     }
 
@@ -1553,7 +1686,7 @@ mod tests {
         let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&SpaceConfig::default().locale);
         let selected_node_ids = vec!["node-1".to_string()];
-        let items = space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids);
+        let items = space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids).await;
         assert!(items.len() <= 9, "top-level context menu rows must stay within budget: {} rows", items.len());
         let last = items.last().expect("non-empty menu");
         assert_eq!(last.id, "remove-instance");

@@ -13,21 +13,23 @@
       "type": "string"
     },
     "frame": {
-      "title": "FrameRef",
       "type": "object",
+      "title": "FrameRef",
       "additionalProperties": false,
       "required": [
-        "assetId",
         "index",
-        "timestampMs"
+        "timestampMs",
+        "assetId"
       ],
       "properties": {
         "index": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "timestampMs": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "assetId": {
           "type": "string"
@@ -36,6 +38,7 @@
     },
     "kind": {
       "type": "string",
+      "title": "MediaKind",
       "enum": [
         "image-sequence",
         "video"

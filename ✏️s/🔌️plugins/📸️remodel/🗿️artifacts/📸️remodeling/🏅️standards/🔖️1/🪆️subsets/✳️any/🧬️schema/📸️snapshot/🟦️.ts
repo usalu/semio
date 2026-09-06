@@ -372,7 +372,7 @@ export type ValueSpec =
   | { k: "f64" }
   | { k: "f32" }
   | { k: "enum"; of: readonly string[] }
-  | { k: "tuple"; len: number }
+  | { k: "tuple"; len: number; w: 32 | 64 }
   | { k: "list"; of: ValueSpec }
   | { k: "map"; of: ValueSpec }
   | { k: "rec"; of: () => RecordSpec }
@@ -413,7 +413,7 @@ const opt = (of: ValueSpec): ValueSpec => ({ k: "opt", of });
 const list = (of: ValueSpec): ValueSpec => ({ k: "list", of });
 const map = (of: ValueSpec): ValueSpec => ({ k: "map", of });
 const rec = (of: () => RecordSpec): ValueSpec => ({ k: "rec", of });
-const tuple = (len: number): ValueSpec => ({ k: "tuple", len });
+const tuple = (len: number, w: 32 | 64 = 64): ValueSpec => ({ k: "tuple", len, w });
 const zeros = (len: number): number[] => Array.from({ length: len }, () => 0);
 const identityQuat = (): number[] => [1, 0, 0, 0];
 
@@ -494,7 +494,7 @@ export const CAMERA_CALIBRATION_SPEC: RecordSpec = {
     f("cx", f64, () => 0),
     f("cy", f64, () => 0),
     f("skew", f64, () => 0),
-    f("distortion", tuple(5), () => zeros(5)),
+    f("distortion", tuple(5, 32), () => zeros(5)),
     f("rms_reprojection_px", opt(f32), () => null),
     f("locked", bool, () => false),
   ],
@@ -503,7 +503,7 @@ export const CAMERA_CALIBRATION_SPEC: RecordSpec = {
 export const RIG_EXTRINSIC_SPEC: RecordSpec = {
   title: "RigExtrinsic",
   serdeDefault: true,
-  fields: [f("camera_id", text, () => ""), f("rotation_wxyz", tuple(4), identityQuat), f("translation_m", tuple(3), () => zeros(3))],
+  fields: [f("camera_id", text, () => ""), f("rotation_wxyz", tuple(4, 32), identityQuat), f("translation_m", tuple(3, 32), () => zeros(3))],
 };
 
 export const CALIBRATION_STATE_SPEC: RecordSpec = {
@@ -515,7 +515,7 @@ export const CALIBRATION_STATE_SPEC: RecordSpec = {
 export const GCP_OBSERVATION_SPEC: RecordSpec = {
   title: "GcpObservation",
   serdeDefault: false,
-  fields: [f("stream_id", text, () => ""), f("frame_index", uint, () => 0), f("pixel", tuple(2), () => zeros(2))],
+  fields: [f("stream_id", text, () => ""), f("frame_index", uint, () => 0), f("pixel", tuple(2, 32), () => zeros(2))],
 };
 
 export const GROUND_CONTROL_POINT_SPEC: RecordSpec = {
@@ -629,7 +629,7 @@ export const RECONSTRUCTION_PARAMS_SPEC: RecordSpec = {
 export const CAMERA_POSE_PREVIEW_SPEC: RecordSpec = {
   title: "CameraPosePreview",
   serdeDefault: false,
-  fields: [f("camera_id", text, () => ""), f("rotation_wxyz", tuple(4), identityQuat), f("translation", tuple(3), () => zeros(3))],
+  fields: [f("camera_id", text, () => ""), f("rotation_wxyz", tuple(4, 32), identityQuat), f("translation", tuple(3, 32), () => zeros(3))],
 };
 
 export const RECONSTRUCTION_JOB_SPEC: RecordSpec = {
@@ -790,3 +790,170 @@ export function defaultRemodelingScene(): RemodelingSnapshot {
   return scene;
 }
 //#endregion 🔖️Defaults
+
+//#region 🔖️Codec
+/** 🚫 A codec refusal carrying the JSON pointer of the value that caused it. */
+export class RemodelingCodecError extends Error {
+  constructor(
+    readonly path: string,
+    message: string,
+  ) {
+    super(`${path || "$"}: ${message}`);
+    this.name = "RemodelingCodecError";
+  }
+}
+
+const fail = (path: string, message: string): never => {
+  throw new RemodelingCodecError(path, message);
+};
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
+
+const finiteNumber = (value: unknown, path: string): number => (typeof value === "number" && Number.isFinite(value) ? value : (fail(path, `expected a finite number, got ${JSON.stringify(value)}`) as never));
+
+const wholeNumber = (value: unknown, path: string, signed: boolean): number => {
+  const number = finiteNumber(value, path);
+  if (!Number.isInteger(number)) fail(path, `expected an integer, got ${number}`);
+  if (!signed && number < 0) fail(path, `expected an unsigned integer, got ${number}`);
+  return number;
+};
+
+/** 🧩️ Decodes one value against its spec; `f32` narrows exactly as Rust's `as f32` does. */
+export function decodeValue(value: unknown, spec: ValueSpec, path: string): unknown {
+  switch (spec.k) {
+    case "text":
+      return typeof value === "string" ? value : fail(path, `expected a string, got ${JSON.stringify(value)}`);
+    case "bool":
+      return typeof value === "boolean" ? value : fail(path, `expected a boolean, got ${JSON.stringify(value)}`);
+    case "uint":
+      return wholeNumber(value, path, false);
+    case "int":
+      return wholeNumber(value, path, true);
+    case "f64":
+      return finiteNumber(value, path);
+    case "f32":
+      return Math.fround(finiteNumber(value, path));
+    case "enum":
+      return typeof value === "string" && spec.of.includes(value) ? value : fail(path, `expected one of ${spec.of.join(" | ")}, got ${JSON.stringify(value)}`);
+    case "tuple": {
+      if (!Array.isArray(value)) fail(path, `expected an array of ${spec.len} numbers, got ${JSON.stringify(value)}`);
+      const items = value as unknown[];
+      if (items.length !== spec.len) fail(path, `expected exactly ${spec.len} numbers, got ${items.length}`);
+      return items.map((item, index) => (spec.w === 32 ? Math.fround(finiteNumber(item, `${path}[${index}]`)) : finiteNumber(item, `${path}[${index}]`)));
+    }
+    case "list":
+      if (!Array.isArray(value)) fail(path, `expected an array, got ${JSON.stringify(value)}`);
+      return (value as unknown[]).map((item, index) => decodeValue(item, spec.of, `${path}[${index}]`));
+    case "map": {
+      if (!isPlainObject(value)) fail(path, `expected an object, got ${JSON.stringify(value)}`);
+      const out: Record<string, unknown> = {};
+      for (const key of Object.keys(value).sort()) out[key] = decodeValue(value[key], spec.of, `${path}.${key}`);
+      return out;
+    }
+    case "rec":
+      return decodeRecord(value, spec.of(), path);
+    case "opt":
+      return value === null || value === undefined ? null : decodeValue(value, spec.of, path);
+  }
+}
+
+/** 🧱 Decodes one record, rejecting unknown keys and keys that carry no serde default. */
+export function decodeRecord(value: unknown, spec: RecordSpec, path: string): Record<string, unknown> {
+  if (!isPlainObject(value)) fail(path, `expected a ${spec.title} object, got ${JSON.stringify(value)}`);
+  const source = value;
+  const known = new Set(spec.fields.map((field) => camelOf(field.name)));
+  for (const key of Object.keys(source)) if (!known.has(key)) fail(`${path}.${key}`, `unknown key for ${spec.title} (known: ${[...known].join(", ")})`);
+  const out: Record<string, unknown> = {};
+  for (const field of spec.fields) {
+    const key = camelOf(field.name);
+    if (!(key in source)) {
+      if (!spec.serdeDefault && !field.jsonOptional) fail(`${path}.${key}`, `missing required key for ${spec.title}`);
+      out[key] = field.dflt();
+      continue;
+    }
+    out[key] = decodeValue(source[key], field.spec, `${path}.${key}`);
+  }
+  return out;
+}
+
+/** 📸️ Decodes a parsed RFC 8259 value into a validated `RemodelingSnapshot`. */
+export const decodeRemodelingSnapshot = (json: unknown): RemodelingSnapshot => decodeRecord(json, REMODELING_SNAPSHOT_SPEC, "") as unknown as RemodelingSnapshot;
+
+/** 🔢 Shortest decimal lexeme that round-trips through the given float width — `ryu`'s rule. */
+export function floatLexeme(value: number, width: 32 | 64): string {
+  const narrow = width === 32 ? Math.fround : (n: number) => n;
+  const target = narrow(value);
+  if (Number.isInteger(target) && Math.abs(target) < 1e16) return `${target}.0`;
+  for (let digits = 1; digits <= 17; digits += 1) {
+    const candidate = target.toPrecision(digits);
+    if (narrow(Number(candidate)) === target) return Number(candidate).toString().replace("e+", "e");
+  }
+  return target.toString().replace("e+", "e");
+}
+
+const indentOf = (depth: number): string => "  ".repeat(depth);
+
+/** 🧵 Writes one value as `serde_json`'s pretty printer would, float width taken from the spec. */
+export function writeValueJson(value: unknown, spec: ValueSpec, depth: number): string {
+  switch (spec.k) {
+    case "text":
+    case "enum":
+      return JSON.stringify(value);
+    case "bool":
+      return value ? "true" : "false";
+    case "uint":
+    case "int":
+      return `${value}`;
+    case "f64":
+      return floatLexeme(value as number, 64);
+    case "f32":
+      return floatLexeme(value as number, 32);
+    case "tuple": {
+      const items = value as number[];
+      if (items.length === 0) return "[]";
+      return `[\n${items.map((item) => `${indentOf(depth + 1)}${floatLexeme(item, spec.w)}`).join(",\n")}\n${indentOf(depth)}]`;
+    }
+    case "list": {
+      const items = value as unknown[];
+      if (items.length === 0) return "[]";
+      return `[\n${items.map((item) => `${indentOf(depth + 1)}${writeValueJson(item, spec.of, depth + 1)}`).join(",\n")}\n${indentOf(depth)}]`;
+    }
+    case "map": {
+      const entries = Object.entries(value as Record<string, unknown>).sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
+      if (entries.length === 0) return "{}";
+      return `{\n${entries.map(([key, entry]) => `${indentOf(depth + 1)}${JSON.stringify(key)}: ${writeValueJson(entry, spec.of, depth + 1)}`).join(",\n")}\n${indentOf(depth)}}`;
+    }
+    case "rec":
+      return writeRecordJson(value as Record<string, unknown>, spec.of(), depth);
+    case "opt":
+      return value === null || value === undefined ? "null" : writeValueJson(value, spec.of, depth);
+  }
+}
+
+/** 🧱 Writes one record in Rust declaration order — the order `serde` emits. */
+export function writeRecordJson(value: Record<string, unknown>, spec: RecordSpec, depth: number): string {
+  if (spec.fields.length === 0) return "{}";
+  const body = spec.fields.map((field) => {
+    const key = camelOf(field.name);
+    return `${indentOf(depth + 1)}${JSON.stringify(key)}: ${writeValueJson(value[key], field.spec, depth + 1)}`;
+  });
+  return `{\n${body.join(",\n")}\n${indentOf(depth)}}`;
+}
+
+/** 📸️ Encodes a snapshot into a plain JSON value with camelCase keys in declaration order. */
+export const encodeRemodelingSnapshot = (snapshot: RemodelingSnapshot): unknown => JSON.parse(writeRecordJson(snapshot as unknown as Record<string, unknown>, REMODELING_SNAPSHOT_SPEC, 0));
+
+/** 📄️ Encodes a snapshot as `serde_json::to_string_pretty` would render it. */
+export const remodelingSnapshotToJsonText = (snapshot: RemodelingSnapshot): string => writeRecordJson(snapshot as unknown as Record<string, unknown>, REMODELING_SNAPSHOT_SPEC, 0);
+
+/** 📄️ Decodes RFC 8259 text into a validated `RemodelingSnapshot`. */
+export function remodelingSnapshotFromJsonText(text: string): RemodelingSnapshot {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    throw new RemodelingCodecError("", `not RFC 8259 text: ${(error as Error).message}`);
+  }
+  return decodeRemodelingSnapshot(parsed);
+}
+//#endregion 🔖️Codec

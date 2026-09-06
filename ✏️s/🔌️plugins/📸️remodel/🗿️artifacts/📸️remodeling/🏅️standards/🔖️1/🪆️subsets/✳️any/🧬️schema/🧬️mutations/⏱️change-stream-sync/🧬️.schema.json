@@ -12,7 +12,8 @@
       "type": "string"
     },
     "newSyncOffsetMs": {
-      "type": "number"
+      "type": "number",
+      "format": "double"
     }
   }
 }

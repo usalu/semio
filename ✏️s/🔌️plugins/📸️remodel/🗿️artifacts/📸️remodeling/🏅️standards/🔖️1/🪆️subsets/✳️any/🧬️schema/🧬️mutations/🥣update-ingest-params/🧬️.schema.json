@@ -8,30 +8,34 @@
   ],
   "properties": {
     "params": {
-      "title": "IngestParams",
       "type": "object",
+      "title": "IngestParams",
       "additionalProperties": false,
       "required": [
+        "frameSampleStride",
         "maxFrames",
-        "minSharpness",
-        "rollingWindow",
-        "stride"
+        "downscaleLongEdgePx",
+        "minSharpness"
       ],
       "properties": {
-        "stride": {
+        "frameSampleStride": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "maxFrames": {
           "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "downscaleLongEdgePx": {
+          "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "minSharpness": {
-          "type": "number"
-        },
-        "rollingWindow": {
-          "type": "integer",
-          "minimum": 0
+          "type": "number",
+          "format": "float"
         }
       }
     }

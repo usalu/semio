@@ -35,9 +35,20 @@ class DescribeScript extends BundleScript {
 /** 🧬️ One artifact mutation tree: the directory that directly contains the mutation leaves. */
 type ArtifactTarget = { readonly label: string; readonly mutationsRoot: string };
 
+/** 🦠️ The file a mutation leaf declares its payload in, or `null` when the directory is not a leaf.
+ * Two shapes are in use and both are canonical: most of the repository (puzzle 2d/3d/5d, gismap,
+ * fem2d, cad, block, …) writes it bare at `<leaf>/🦀️.rs`, while `🖍️draw` and several `🗄️stdio`
+ * artifacts nest it at `<leaf>/🦠️mutation/🦀️.rs`. Recognising only the nested one is what made this
+ * lint walk the whole repository and then report green over every tree using the other — a lint that
+ * discovers nothing passes everything. */
+function leafMutationFile(mutationsRoot: string, leaf: string): string | null {
+  return [join(mutationsRoot, leaf, "🦠️mutation/🦀️.rs"), join(mutationsRoot, leaf, "🦀️.rs")].find((candidate) => existsSync(candidate)) ?? null;
+}
+
 /** 🔎️ Discovers every mutation tree in the repository — any directory named `🧬️mutations` holding
- * at least one leaf with a `🦠️mutation/🦀️.rs`. Never a hand-maintained list: a new
- * artifact is in scope the moment it lands. */
+ * at least one leaf that carries the mutation's own Rust in either canonical shape (see
+ * [`leafMutationFile`]). Never a hand-maintained list: a new artifact is in scope the moment it
+ * lands. */
 function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
   const found: ArtifactTarget[] = [];
   const skip = new Set(["node_modules", "target", ".git", ".nx", "storybook-static", "temp"]);
@@ -60,7 +71,7 @@ function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
       }
       if (!isDir) continue;
       if (entry === "🧬️mutations") {
-        const leaves = dirsIn(child).filter((leaf) => existsSync(join(child, leaf, "🦠️mutation/🦀️.rs")));
+        const leaves = dirsIn(child).filter((leaf) => leafMutationFile(child, leaf) !== null);
         if (leaves.length > 0) found.push({ label: child.slice(repoRoot.length + 1), mutationsRoot: child });
         continue;
       }
@@ -130,10 +141,10 @@ function declaredMutations(target: ArtifactTarget) {
 
   const leaves = dirsIn(mutationsRoot)
     .filter((entry) => !NON_MUTATION_DIRS.has(entry))
-    .filter((entry) => existsSync(join(mutationsRoot, entry, "🦠️mutation/🦀️.rs")))
+    .filter((entry) => leafMutationFile(mutationsRoot, entry) !== null)
     .map((entry) => {
-      const mutationFile = join(mutationsRoot, entry, "🦠️mutation/🦀️.rs");
-      const source = existsSync(mutationFile) ? readFileSync(mutationFile, "utf8") : "";
+      const mutationFile = leafMutationFile(mutationsRoot, entry) as string;
+      const source = readFileSync(mutationFile, "utf8");
       return {
         dir: entry,
         keyword: source.match(/dsl\(keyword = "([^"]+)"\)/)?.[1] ?? null,

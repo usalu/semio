@@ -60,3 +60,11 @@ Consequence for the definition of done: item 1 (boot with the full catalog) fail
 | 6 (`plugin-build-s-6.txt`) | both literals `s`/`semio:s`, lane J landed | ~15 min incremental | stub descriptor: `artifact identity is not owned by the declaring plugin` (`preflight_artifact_identity`, `🔌️plugin/🦀️.rs:~2117`: `ArtifactKindId("s.space.*").plugin() == "space"`) |
 
 Conclusion: the host plugin's identity must be `space` repo-wide (lane K); the cache still serves the 09-02 bridge and descriptor, so the React tier cannot boot past the first guest turn until the rename lands and build 7 runs.
+
+## Milestone — 2026-09-06 05:25: the React `s` shell boots to its readiness beacon
+
+Headless probe (`console-dump-probe.ts`, Chromium 151, load average ~15) against the served shell with the rebuilt `space` core (rebuild 9, 04:51): `STATE {"ready":"s","error":null}` — the first time in this ticket that `data-semio-os-ready` was set. Chain that made it possible, in order: shard worker route fix and in-worker fault reporting (lane G), router fault isolation (lane H), studio/home/space-index owned factories (lane J), host plugin identity `space` (lane K), controller-id overrides removed (coordinator), lossless pack integer carriers projected in the UI wire decoder (coordinator). Per-plugin load failures and the catalog smoke table follow in `🗑️generated/coordinator/catalog-smoke-2`.
+
+## 05:45 — Home renders, studio opening blocked on controller ids
+
+Headless body text after the beacon: `semio · s · home Editor · Studios · Create Space · Name Kind Visibility Members Updated Origin Actions · Demo Studio atelier private 1 0 local open · Actions Utilities Display · Remote: detached · No one else is here · Settings Marketplace History Command · Agent disconnected` — the Home app's studio table, chrome and presence bar are live from the rebuilt `space` core. Clicking `open` on Demo Studio and pressing Meta+n produce no route change, no host effect and no console line: the shell drops actions whose `controllerId` matches no app (`ShellHost/🟦️.tsx:4397-4401`), and the Home/Studio descriptors still carried `s-home`/`s-play`. Fixed in source (constants now equal the surface app ids); proof waits for the catalog rebuild to re-emit `space`.

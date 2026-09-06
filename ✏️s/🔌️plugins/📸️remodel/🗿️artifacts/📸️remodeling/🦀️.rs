@@ -11,10 +11,10 @@
 
 use semio_framework::MeshData;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -94,7 +94,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::remodeling::schema::remodeling_artifact_schema_descriptor())
         .inferences([crate::artifacts::remodeling::standards::v1::subsets::any::schema::inferences::remodeling_artifact_inference_descriptor()])
-        .composers(crate::artifacts::remodeling::standards::v1::subsets::any::io::io_registry::entries())
+        .composers(crate::artifacts::remodeling::standards::v1::subsets::any::io::native_composer_entries())
         .languages(pilot_languages())
         .document_codec::<semio_framework_plugin::EditorApp<crate::editor::remodeling::RemodelingPlayApp>>()
         .try_build()
@@ -173,11 +173,13 @@ pub const REMODELING_DOCUMENT_SCHEMA: &str = "remodeling.scene";
 /// 🪪️ Ticket `26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET` contract §1 canonical surface id
 /// grammar (`<artifact_kind>@<standard>/<subset>#<role>`). Lives at the ARTIFACT level (not under
 /// `editor`/`viewer`) so a viewer file can read it without ever importing through the sibling editor
-/// module. `artifact_kind = "s.remodeling.remodeling"` matches this artifact's own `definition()` capability
-/// row `("s.remodeling.schema.artifact", "schema", "s.remodeling.remodeling", …)` above — the schema-artifact
-/// descriptor, not `artifact_kind()`'s OS-level `"3d.remodeling"` kind id (a different, unrelated
-/// namespace). `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const REMODELING_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.remodel.remodeling.remodeling", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+/// module. `artifact_kind = "s.remodel.remodeling"` is `s.<plugin-id>.<artifact-name>`, the fleet-wide
+/// dialect grammar (`s.trinity.jack`, `s.puzzle.puzzle3d`, `s.block.block2d`, `s.procedural.generation2d`)
+/// and this artifact's own identity (`ArtifactIdentity::parse("s.remodel.remodeling")` plus the
+/// `composer.native` capability row above, and the `🚪️io`/`🧬️schema` `DIALECT` constants). It is NOT
+/// `artifact_kind()`'s OS-level `"3d.remodeling"` kind id (a different, unrelated namespace).
+/// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+pub const REMODELING_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.remodel.remodeling", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 
 //#region 🧩️Composition
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "remodeling→C:mesh R:image").
@@ -227,7 +229,6 @@ pub struct RemodelingDurableArtifact {
     pub mime: Option<String>,
     pub width: u32,
     pub height: u32,
-    #[dsl(table)]
     pub chunks: Vec<String>,
 }
 
@@ -335,13 +336,7 @@ pub fn durable_remodeling_asset(asset: &ImageAsset) -> Option<RemodelingDurableA
 pub fn durable_staged_remodeling_asset(staging_id: &str, kind: &str, mime: Option<String>, width: u32, height: u32) -> Option<RemodelingDurableArtifact> {
     let content = remodeling_asset_content().lock().expect("remodeling asset content lock");
     let blob = content.get(staging_id)?;
-    Some(RemodelingDurableArtifact {
-        kind: kind.into(),
-        mime,
-        width,
-        height,
-        chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64_codec::base64_standard_encode(blob.chunks.get(&index).expect("contiguous staged asset"))).collect(),
-    })
+    Some(RemodelingDurableArtifact { kind: kind.into(), mime, width, height, chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64_codec::base64_standard_encode(blob.chunks.get(&index).expect("contiguous staged asset"))).collect() })
 }
 
 //#region 🔖️ReplayableAssetBlobs
@@ -944,13 +939,13 @@ impl PackedU8 {
 /// `Shape::Text` rather than `#[dsl(base64)]` (which is for raw `Vec<u8>` fields only) — no double
 /// encoding, no `-` sentinel: an empty buffer is just an empty quoted string.
 impl dsl::DslField for PackedF32 {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
@@ -960,13 +955,13 @@ impl dsl::DslField for PackedF32 {
 
 /// 🌉️ Same reasoning as `PackedF32`'s impl above.
 impl dsl::DslField for PackedU8 {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
@@ -1491,11 +1486,11 @@ pub struct WatertightReportSnapshot {
 /// (a `MeshDataTwin` buffer-by-buffer bridge, needed only because `MeshData` is foreign and had no
 /// `DslField` impl reachable from this crate) is gone entirely: every field left on this struct now has
 /// a real `DslField` impl on its own.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase", default)]
-#[serde(rename_all = "camelCase", default)]
 pub struct RemodelingMesh {
     #[dsl(block)]
+    #[value(default = "empty_remodeling_mesh_handle")]
     pub mesh: RemodelingMeshChild,
     pub source: MeshSource,
     pub texture_asset_id: Option<String>,
@@ -1517,13 +1512,13 @@ impl Default for RemodelingMesh {
 /// `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't apply — this is the ordinary
 /// boxed-scalar case instead). Delegates to `RemodelingMesh`'s own (now derive-generated) `DslField` impl.
 impl dsl::DslField for Box<RemodelingMesh> {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         <RemodelingMesh as dsl::DslField>::shape()
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         <RemodelingMesh as dsl::DslField>::to_value(self.as_ref())
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         <RemodelingMesh as dsl::DslField>::from_value(value).map(Box::new)
     }
 }
@@ -1615,9 +1610,8 @@ pub struct QcReportSnapshot {
 }
 
 /// 📦️ Everything a completed (or partially completed) reconstruction run has produced so far.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase", default)]
-#[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionResults {
     #[dsl(block)]
     pub sparse: Option<SparseCloud>,

@@ -17,29 +17,29 @@ pub fn diff(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> protocol
         match crate::artifacts::remodeling::stage_remodeling_asset_chunk(staging_id, kind, index, &payload.asset.data) {
             Ok(()) => return protocol::MutationOutcome::new(RemodelingDiff::default()),
             Err(crate::artifacts::remodeling::RemodelingStagingFault::Busy) => {
-                return protocol::MutationOutcome::error("mutation.asset-staging-busy", "Replayable asset staging is at its bounded capacity.".into(), [payload.key.clone()]);
+                return protocol::MutationOutcome::error("mutation.asset-staging-busy", "Replayable asset staging is at its bounded capacity.", [payload.key.clone()]);
             }
             Err(crate::artifacts::remodeling::RemodelingStagingFault::Invalid) => {}
         }
-        return protocol::MutationOutcome::error("mutation.invalid-asset-chunk", "The staged asset chunk is invalid.".into(), [payload.key.clone()]);
+        return protocol::MutationOutcome::error("mutation.invalid-asset-chunk", "The staged asset chunk is invalid.", [payload.key.clone()]);
     }
     if let Some((staging_id, index)) = crate::artifacts::remodeling::remodeling_mesh_stage_asset_parts(&payload.key) {
         match crate::artifacts::remodeling::stage_remodeling_mesh_chunk(staging_id, index, &payload.asset.data) {
             Ok(()) => return protocol::MutationOutcome::new(RemodelingDiff::default()),
             Err(crate::artifacts::remodeling::RemodelingStagingFault::Busy) => {
-                return protocol::MutationOutcome::error("mutation.mesh-staging-busy", "Replayable mesh staging is at its bounded capacity.".into(), [payload.key.clone()]);
+                return protocol::MutationOutcome::error("mutation.mesh-staging-busy", "Replayable mesh staging is at its bounded capacity.", [payload.key.clone()]);
             }
             Err(crate::artifacts::remodeling::RemodelingStagingFault::Invalid) => {}
         }
-        return protocol::MutationOutcome::error("mutation.invalid-mesh-chunk", "The staged mesh chunk is invalid.".into(), [payload.key.clone()]);
+        return protocol::MutationOutcome::error("mutation.invalid-mesh-chunk", "The staged mesh chunk is invalid.", [payload.key.clone()]);
     }
     if crate::artifacts::remodeling::remodeling_asset_content_handle_parts(&payload.asset.data).is_some() {
-        return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "Private reconstruction staging handles are accepted only by CommitReconstruction.".into(), [payload.key.clone()]);
+        return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "Private reconstruction staging handles are accepted only by CommitReconstruction.", [payload.key.clone()]);
     }
     let mut assets = base.assets.clone();
     let handle = store_remodeling_asset(&payload.key, &payload.asset);
     let Some(artifact) = durable_remodeling_asset(&payload.asset) else {
-        return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "The asset payload is malformed or exceeds its exact bounded envelope.".into(), [payload.key.clone()]);
+        return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "The asset payload is malformed or exceeds its exact bounded envelope.", [payload.key.clone()]);
     };
     let mut durable_artifacts = base.durable_artifacts.clone();
     durable_artifacts.insert(handle.child_id.clone(), artifact);

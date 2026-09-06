@@ -1,9 +1,11 @@
 //! 🧬️ Remodeling artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::remodeling::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelingAssetChild, RemodelingDurableArtifactStore, RemodelingSnapshot, VideoCodec};
+use crate::artifacts::remodeling::{
+    CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelingAssetChild, RemodelingDurableArtifactStore, RemodelingSnapshot, VideoCodec,
+};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Ids
@@ -62,9 +64,8 @@ pub fn video_codec_from_label(label: &str) -> VideoCodec {
 
 //#region 🔖️Artifact
 /// 🧬️ Full remodeling artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodeling.remodeling")]
 pub struct RemodelingArtifact {
     #[state(artifact)]
@@ -226,13 +227,7 @@ impl RemodelingArtifact {
 pub fn remodeling_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.remodeling.remodeling",
-        artifact: schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
+        artifact: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -241,11 +236,7 @@ pub fn remodeling_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
         diff: schema::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
+            rust: include_str!("🔺️diff/🦀️.rs"), typescript: include_str!("🔺️diff/🟦️.ts"), graphql: include_str!("🔺️diff/🔗️.graphql"), json_schema: include_str!("🔺️diff/🔣️.json"), proto: include_str!("🔺️diff/🛰️.proto")
         },
         mutations: schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),

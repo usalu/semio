@@ -8,60 +8,57 @@
   ],
   "properties": {
     "params": {
-      "title": "MeshParams",
       "type": "object",
+      "title": "MeshParams",
       "additionalProperties": false,
       "required": [
-        "atlasSize",
-        "chartAngleDeg",
+        "tsdfVoxelSizeMm",
+        "tsdfTruncationMm",
+        "decimateTargetTriangles",
+        "smoothingIterations",
+        "textureEnabled",
+        "textureSize",
         "guaranteeWatertight",
         "holeFillMaxBoundaryVerts",
-        "minComponentBboxFraction",
-        "minComponentFaces",
-        "selfIntersectionCheck",
-        "targetTriangles",
-        "taubinIterations",
-        "taubinLambda",
-        "taubinMu"
+        "selfIntersectionCheck"
       ],
       "properties": {
+        "tsdfVoxelSizeMm": {
+          "type": "number",
+          "format": "float"
+        },
+        "tsdfTruncationMm": {
+          "type": "number",
+          "format": "float"
+        },
+        "decimateTargetTriangles": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "smoothingIterations": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "textureEnabled": {
+          "type": "boolean"
+        },
+        "textureSize": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
         "guaranteeWatertight": {
           "type": "boolean"
         },
         "holeFillMaxBoundaryVerts": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "selfIntersectionCheck": {
           "type": "boolean"
-        },
-        "targetTriangles": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "taubinLambda": {
-          "type": "number"
-        },
-        "taubinMu": {
-          "type": "number"
-        },
-        "taubinIterations": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "minComponentFaces": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "minComponentBboxFraction": {
-          "type": "number"
-        },
-        "chartAngleDeg": {
-          "type": "number"
-        },
-        "atlasSize": {
-          "type": "integer",
-          "minimum": 0
         }
       }
     }

@@ -13,7 +13,6 @@
 use crate::artifacts::remodeling::ImageAsset;
 use crate::artifacts::remodeling::{CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
 use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, images as remodeling_image, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
-#[cfg(test)]
 
 //#region 🔖️EngineMapping
 /// ⚙️ Builds `remodeling_engine::EngineParams` from the document's 8 param sub-structs. Fields with no

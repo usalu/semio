@@ -1,11 +1,25 @@
-//! 🚪️ IO s.remodeling (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from `declaration()` at the artifact root), not per-leaf register().
+//! 🚪️ IO `s.remodel.remodeling@1/*` — the subset's complete io surface.
 //!
-//! 🧭️ `🔖️Exporters` and `🚪️DerivedIoRegistry` relocated from `⚙️engine/🦀️.rs`
-//! (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, #2553): serializer dispatch and the
-//! composer entry table are IO, not engine behaviour.
+//! 🧭️ Ticket `26/09/06/REMODEL-PLUGIN-END-TO-END` (W6): registration moved off the OLD
+//! `ArtifactComposition`/`ComposerEntry`/`io_registry` channel onto the typed
+//! `Serializer`/`Deserializer` → [`IoDeclaration`] → `SubsetDeclaration.io` channel every healthy
+//! plugin already runs (`🗒️note`, `🧱️block`). The eight `compose_export_*` rows the old
+//! `io_registry` published were cross-type `ArtifactPack` casts — `RemodelingSnapshot::encode_pack`
+//! followed by `PlySnapshot::decode_pack` and friends — which `store::ArtifactPack`'s own
+//! same-type round-trip law makes a deterministic `PackError` on every invocation; they are deleted,
+//! not shimmed. Every foreign hop below now runs through a REAL codec: `🧿️semio`'s `🔺️mesh` subset
+//! owns bidirectional `SemioMeshSnapshot ↔ {ply,las,obj,stl,gltf}` bridges and `🗄️stdio` owns the
+//! byte-level `encode_*`/`decode_*` engines, so this subset only ever maps its own scene onto
+//! `SemioMeshSnapshot` and back.
+//!
+//! 🧭️ `🔖️Exporters` and `🚪️DerivedIoRegistry` were relocated here from `⚙️engine/🦀️.rs`
+//! (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, #2553): serializer dispatch is IO, not
+//! engine behaviour.
 
-use crate::artifacts::remodeling::{ImageAsset, RemodelingSnapshot};
+use crate::artifacts::remodeling::{
+    default_remodeling_scene, image_asset_child_handle, remodeling_asset, replayable_remodeling_mesh_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, RemodelingDurableArtifact,
+    RemodelingMesh, RemodelingSnapshot, SparseCloud,
+};
 use semio_framework::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_plugin_stdio::artifacts::{
@@ -13,7 +27,7 @@ use semio_s_plugin_stdio::artifacts::{
     ply::standards::v1_0::engine as ply_engine,
     png::PngSnapshot,
     semio::standards::v1::{
-        subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv},
+        subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv},
         subsets::image::schema::snapshot::SemioImageSnapshot,
         subsets::mesh::{
             io::export::serializers::artifacts::{las::v1_0::any::SemioMeshToLas, ply::v1_0::any::SemioMeshToPly},
@@ -23,11 +37,11 @@ use semio_s_plugin_stdio::artifacts::{
 };
 use serde_json::Value;
 
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"]
+pub fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"]
+pub fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"]
 }
 
 //#region 🔖️Exporters
@@ -52,13 +66,10 @@ pub(crate) fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
 /// primitive of the FIRST mesh (the only shape `mesh_data_to_semio_mesh` ever produces). Real,
 /// bidirectional, ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`🧩️Composition` region,
 /// artifact root): backs `RemodelingMesh.mesh: store::ArtifactChild<SemioMeshSnapshot>`'s working-scene
-/// cache accessor. `face_ids`/`vertex_ids`/`edge_*`/`paint_texture_base64` are NOT representable in
+/// cache accessor, and (since W6) every `{ply,las,obj,stl,gltf}` IMPORT hop below.
+/// `face_ids`/`vertex_ids`/`edge_*`/`paint_texture_base64` are NOT representable in
 /// `SemioMeshSnapshot`'s gltf-shaped primitive (positions/normals/uvs/colors/indices only) — honestly
-/// absent here (empty/`None`), never fabricated. The working-scene cache stores the REAL, full-fidelity
-/// `MeshData` directly (never round-tripped through this conversion) precisely so those buffers are
-/// never lost for the live document; this test-only inverse documents the representable subset of
-/// canonical `SemioMeshSnapshot` content.
-#[cfg(test)]
+/// absent here (empty/`None`), never fabricated.
 pub(crate) fn semio_mesh_to_mesh_data(semio: &SemioMeshSnapshot) -> MeshData {
     let Some(primitive) = semio.meshes.first().and_then(|mesh| mesh.primitives.first()) else {
         return MeshData::default();
@@ -70,23 +81,33 @@ pub(crate) fn semio_mesh_to_mesh_data(semio: &SemioMeshSnapshot) -> MeshData {
     MeshData { positions, normals, colors, indices: primitive.indices.clone(), uvs, ..MeshData::default() }
 }
 
-/// 🌐️ Encodes a mesh as an ASCII Stanford PLY file via stdio's real `SemioMeshToPly` serializer +
+/// 🌐️ Encodes a mesh as a Stanford PLY file via stdio's real `SemioMeshToPly` serializer +
 /// `ply::engine::encode_ply` — real codec reuse, not a re-implementation (replaces this file's
 /// former hand-rolled `PlyExporter`/`mesh_to_ply`).
-pub async fn mesh_to_ply_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
+pub fn mesh_to_ply_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
     let semio = mesh_data_to_semio_mesh(mesh);
-    let ply = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&semio)).map_err(|error| error.to_string())?;
-    ply_engine::encode_ply(&ply)
+    semio_mesh_to_ply_bytes(&semio)
 }
 
 /// 🛰️ Encodes a mesh as a binary LAS point cloud (point data format 0-3, chosen automatically from
 /// whether any point carries RGB) via stdio's real `SemioMeshToLas` serializer + `las::engine::encode_las`
-/// — real codec reuse, not a re-implementation (replaces this file's former hand-rolled
-/// `LasExporter`/`mesh_to_las`; a mesh's face/index connectivity is honestly dropped, matching LAS's
-/// own "point cloud, no topology" semantics — see `SemioMeshToLas`'s own doc comment).
-pub async fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
+/// — real codec reuse, not a re-implementation (a mesh's face/index connectivity is honestly dropped,
+/// matching LAS's own "point cloud, no topology" semantics — see `SemioMeshToLas`'s own doc comment).
+pub fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
     let semio = mesh_data_to_semio_mesh(mesh);
-    let las = semio_framework_plugin::resolve_ready(SemioMeshToLas::serialize(&semio)).map_err(|error| error.to_string())?;
+    semio_mesh_to_las_bytes(&semio)
+}
+
+/// 🌐️ `SemioMeshSnapshot` → PLY bytes, the shared tail of both `mesh_to_ply_bytes` and the `🧱️ply`
+/// export leaf (which feeds a point-cloud snapshot rather than a mesh one).
+pub fn semio_mesh_to_ply_bytes(semio: &SemioMeshSnapshot) -> Result<Vec<u8>, String> {
+    let ply = resolve_ready(SemioMeshToPly::serialize(semio)).map_err(|error| error.to_string())?;
+    ply_engine::encode_ply(&ply)
+}
+
+/// 🛰️ `SemioMeshSnapshot` → LAS bytes, the shared tail of `mesh_to_las_bytes` and the `☁️las` leaf.
+pub fn semio_mesh_to_las_bytes(semio: &SemioMeshSnapshot) -> Result<Vec<u8>, String> {
+    let las = resolve_ready(SemioMeshToLas::serialize(semio)).map_err(|error| error.to_string())?;
     las_engine::encode_las(&las)
 }
 
@@ -96,15 +117,13 @@ pub async fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
 /// unavailable durable content returns `Err`, never a fabricated empty mesh.
 pub fn remodeling_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
     let scene: RemodelingSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-    crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh).ok_or_else(|| "remodeling_mesh_from_document: bounded composed mesh content is unavailable".to_string())
+    scene_mesh_data(&scene)
 }
 
-/// 🖼️ Exports whichever raster/texture asset is available (DSM, else ortho, else the mesh's baked
-/// texture) — `scene.assets` now holds composed `s.stdio.semio.image` child handles, so this reads
-/// the real bytes back through `crate::artifacts::remodeling::remodeling_asset` (working-scene cache), then
-/// re-encodes through the real png bridge below (never a raw pass-through of possibly-stale bytes).
-pub async fn remodeling_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExportResult, String> {
-    let scene: RemodelingSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+/// 🖼️ Exports whichever raster/texture asset is available (DSM, else ortho, else DTM, else the mesh's
+/// baked texture) — `scene.assets` holds composed `s.stdio.semio.image` child handles, so this reads
+/// the real bytes back through `remodeling_asset` (working-scene cache).
+pub fn remodeling_png_asset(scene: &RemodelingSnapshot) -> Result<ImageAsset, String> {
     let asset_id = scene
         .results
         .geo
@@ -112,10 +131,194 @@ pub async fn remodeling_png_export(doc: &Value) -> Result<semio_framework_os::Os
         .and_then(|geo| geo.dsm_asset_id.clone().or_else(|| geo.ortho_asset_id.clone()).or_else(|| geo.dtm_asset_id.clone()))
         .or_else(|| scene.results.mesh.texture_asset_id.clone())
         .ok_or_else(|| "no raster or texture asset is available to export as PNG".to_string())?;
-    let asset = crate::artifacts::remodeling::remodeling_asset(&scene, &asset_id).ok_or_else(|| "the referenced raster/texture asset is missing".to_string())?;
+    remodeling_asset(scene, &asset_id).ok_or_else(|| "the referenced raster/texture asset is missing".to_string())
+}
+
+/// 🖼️ `remodeling_png_asset` in the OS media-export envelope the editor's export command speaks.
+pub fn remodeling_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExportResult, String> {
+    let scene: RemodelingSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+    let asset = remodeling_png_asset(&scene)?;
     Ok(semio_framework_os::OsMediaExportResult { data: asset.data, mime_type: "image/png".into(), file_name: "remodeling-export.png".into(), encoding: Some("base64".into()) })
 }
 //#endregion 🔖️Exporters
+
+//#region 🔖️SceneGeometry
+/// 🧱️ Vertex/triangle ceiling `resolve_bounded_remodeling_mesh` enforces on replay — an imported
+/// mesh larger than this would be admitted into `durable_artifacts` and then never resolve again, so
+/// every import hop rejects it up front with a reason instead.
+const REMODELING_IMPORT_MESH_VERTICES: usize = 512;
+const REMODELING_IMPORT_MESH_TRIANGLES: usize = 512;
+/// 🧱️ One durable chunk is at most 4096 raw bytes: a one-byte field tag plus 4092 payload bytes
+/// (the largest 4-byte-aligned remainder), matching `apply_mesh_chunk`'s framing exactly.
+const REMODELING_MESH_CHUNK_VALUE_BYTES: usize = 4_092;
+/// 🧱️ Staging identity every io-seeded durable mesh handle carries, so a replayed import is
+/// distinguishable from a reconstruction commit in `durable_artifacts`.
+pub const REMODELING_IO_MESH_STAGING_ID: &str = "io-import";
+
+/// 🧊️ The scene's own reconstructed/imported mesh as flat buffers, or a reason it is unavailable.
+pub fn scene_mesh_data(scene: &RemodelingSnapshot) -> Result<MeshData, String> {
+    resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh).ok_or_else(|| "results.mesh carries no durable content admitted by the bounded 512/512 envelope".to_string())
+}
+
+/// 🧊️ The scene's mesh as a `semio/mesh` snapshot — the input every mesh-shaped export hop needs.
+pub fn scene_mesh_semio(scene: &RemodelingSnapshot) -> Result<SemioMeshSnapshot, String> {
+    let mesh = scene_mesh_data(scene)?;
+    if mesh.positions.is_empty() {
+        return Err("results.mesh resolves to an empty mesh (no vertex positions)".to_string());
+    }
+    Ok(mesh_data_to_semio_mesh(&mesh))
+}
+
+fn packed_colors_to_unit(colors: &PackedU8) -> Vec<f32> {
+    colors.to_u8_vec().iter().map(|component| f32::from(*component) / 255.0).collect()
+}
+
+fn point_cloud_semio(id: &str, positions: &[f32], colors: &[f32]) -> SemioMeshSnapshot {
+    let points: Vec<SemioPoint3> = positions.chunks_exact(3).map(|p| SemioPoint3 { x: f64::from(p[0]), y: f64::from(p[1]), z: f64::from(p[2]) }).collect();
+    let rgba: Vec<SemioRgba> = if colors.len() == points.len() * 3 { colors.chunks_exact(3).map(|c| SemioRgba { r: c[0], g: c[1], b: c[2], a: 1.0 }).collect() } else { Vec::new() };
+    let primitive = SemioPrimitive { id: format!("remodeling-{id}-0"), topology: SemioTopology::Points, positions: points, normals: Vec::new(), uvs: Vec::new(), colors: rgba, indices: Vec::new(), material_id: None };
+    SemioMeshSnapshot { schema: "stdio.semio.mesh".into(), meshes: vec![SemioMesh { id: format!("remodeling-{id}"), primitives: vec![primitive] }], materials: Vec::new(), textures: Vec::new() }
+}
+
+/// ☁️ The scene's point cloud as a `Points`-topology `semio/mesh` snapshot — `results.dense` when a
+/// dense run has produced one (strictly more points), else `results.sparse`.
+pub fn scene_cloud_semio(scene: &RemodelingSnapshot) -> Result<SemioMeshSnapshot, String> {
+    if let Some(dense) = scene.results.dense.as_ref() {
+        let positions = dense.positions.to_f32_vec_from(&scene.durable_artifacts);
+        if !positions.is_empty() {
+            let colors = dense.colors.as_ref().map(packed_colors_to_unit).unwrap_or_default();
+            return Ok(point_cloud_semio("dense", &positions, &colors));
+        }
+    }
+    if let Some(sparse) = scene.results.sparse.as_ref() {
+        let positions = sparse.points.to_f32_vec_from(&scene.durable_artifacts);
+        if !positions.is_empty() {
+            let colors = sparse.colors.as_ref().map(packed_colors_to_unit).unwrap_or_default();
+            return Ok(point_cloud_semio("sparse", &positions, &colors));
+        }
+    }
+    Err("results.sparse and results.dense are both absent or empty".to_string())
+}
+
+/// 🧊️☁️ Mesh first, point cloud second — the precedence PLY (the one format that carries both a
+/// surface and a bare point set) uses. Both reasons are reported when neither exists.
+pub fn scene_mesh_or_cloud_semio(scene: &RemodelingSnapshot) -> Result<SemioMeshSnapshot, String> {
+    match scene_mesh_semio(scene) {
+        Ok(semio) => Ok(semio),
+        Err(mesh_reason) => scene_cloud_semio(scene).map_err(|cloud_reason| format!("{mesh_reason}; {cloud_reason}")),
+    }
+}
+
+fn push_f32_chunks(chunks: &mut Vec<String>, field: u8, values: &[f32]) {
+    for window in values.chunks(REMODELING_MESH_CHUNK_VALUE_BYTES / 4) {
+        let mut framed = Vec::with_capacity(1 + window.len() * 4);
+        framed.push(field);
+        framed.extend(window.iter().flat_map(|value| value.to_le_bytes()));
+        chunks.push(base64_codec::base64_standard_encode(framed));
+    }
+}
+
+fn push_u32_chunks(chunks: &mut Vec<String>, field: u8, values: &[u32]) {
+    for window in values.chunks(REMODELING_MESH_CHUNK_VALUE_BYTES / 4) {
+        let mut framed = Vec::with_capacity(1 + window.len() * 4);
+        framed.push(field);
+        framed.extend(window.iter().flat_map(|value| value.to_le_bytes()));
+        chunks.push(base64_codec::base64_standard_encode(framed));
+    }
+}
+
+/// 🧱️ Frames a `MeshData` into the exact durable-chunk shape `apply_mesh_chunk` replays: one leading
+/// field tag per chunk (0 positions, 1 normals, 2 colors, 3 indices, 4 uvs — emitted in strictly
+/// non-decreasing tag order, which that replayer requires) and at most 4092 payload bytes each.
+fn mesh_durable_chunks(mesh: &MeshData) -> Vec<String> {
+    let mut chunks = Vec::new();
+    push_f32_chunks(&mut chunks, 0, &mesh.positions);
+    push_f32_chunks(&mut chunks, 1, &mesh.normals);
+    push_f32_chunks(&mut chunks, 2, &mesh.colors);
+    push_u32_chunks(&mut chunks, 3, &mesh.indices);
+    push_f32_chunks(&mut chunks, 4, &mesh.uvs);
+    chunks
+}
+
+fn mesh_content_id(chunks: &[String]) -> String {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    for chunk in chunks {
+        chunk.hash(&mut hasher);
+    }
+    format!("remodeling-mesh-io-{:016x}-{:016x}", hasher.finish(), chunks.len())
+}
+
+/// 🧱️ Admits an imported mesh into the scene as REAL durable content: content-addressed chunks in
+/// `durable_artifacts` plus a replayable `results.mesh.mesh` handle, exactly the shape a committed
+/// reconstruction produces (`🏗️run-reconstruction`'s `TerminalPhase::Mesh`). A mesh outside the
+/// bounded envelope is rejected with its measured size rather than stored unreadable.
+pub fn seed_remodeling_mesh(scene: &mut RemodelingSnapshot, mesh: &MeshData) -> Result<(), String> {
+    let vertices = mesh.positions.len() / 3;
+    let triangles = mesh.indices.len() / 3;
+    if vertices > REMODELING_IMPORT_MESH_VERTICES || triangles > REMODELING_IMPORT_MESH_TRIANGLES {
+        return Err(format!("imported mesh is {vertices} vertices / {triangles} triangles, beyond the bounded {REMODELING_IMPORT_MESH_VERTICES}/{REMODELING_IMPORT_MESH_TRIANGLES} envelope this document can replay"));
+    }
+    let chunks = mesh_durable_chunks(mesh);
+    let chunk_count = u64::try_from(chunks.len()).map_err(|error| error.to_string())?;
+    let content_id = mesh_content_id(&chunks);
+    scene.durable_artifacts.insert(content_id.clone(), RemodelingDurableArtifact { kind: "mesh".into(), mime: None, width: 0, height: 0, chunks });
+    scene.results.mesh = RemodelingMesh { mesh: replayable_remodeling_mesh_handle(&content_id, REMODELING_IO_MESH_STAGING_ID, chunk_count), source: MeshSource::Imported, texture_asset_id: None, watertight: None };
+    Ok(())
+}
+
+/// 🧊️ A decoded foreign mesh as a whole scene: a fresh document whose `results.mesh` is the imported
+/// surface. Triangle-less input is rejected here — `scene_from_semio_cloud` is the point-set door.
+pub fn scene_from_semio_mesh(semio: &SemioMeshSnapshot) -> Result<RemodelingSnapshot, String> {
+    let mesh = semio_mesh_to_mesh_data(semio);
+    if mesh.positions.is_empty() {
+        return Err("the decoded geometry carries no vertex positions".to_string());
+    }
+    let mut scene = default_remodeling_scene();
+    seed_remodeling_mesh(&mut scene, &mesh)?;
+    Ok(scene)
+}
+
+/// ☁️ A decoded foreign point set as a whole scene: `results.sparse` carries the points and colors,
+/// and `results.mesh` is additionally seeded when the source also carried triangles (a PLY may) —
+/// dropping real faces would be silent loss. `results.dense` stays `None`: neither `SemioMeshSnapshot`
+/// nor any of the five foreign mesh dialects has a per-point confidence channel, which is the field
+/// that distinguishes a dense cloud from a sparse one in this schema.
+pub fn scene_from_semio_cloud(semio: &SemioMeshSnapshot) -> Result<RemodelingSnapshot, String> {
+    let mesh = semio_mesh_to_mesh_data(semio);
+    if mesh.positions.is_empty() {
+        return Err("the decoded point set carries no positions".to_string());
+    }
+    let mut scene = default_remodeling_scene();
+    let colors = (!mesh.colors.is_empty()).then(|| PackedU8::from_u8_slice(&mesh.colors.iter().map(|component| (component.clamp(0.0, 1.0) * 255.0).round() as u8).collect::<Vec<u8>>()));
+    scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&mesh.positions), colors });
+    if !mesh.indices.is_empty() {
+        seed_remodeling_mesh(&mut scene, &mesh)?;
+    }
+    Ok(scene)
+}
+
+/// 🖼️ One PNG file as a whole scene: a single-frame `MediaKind::ImageSequence` stream whose frame
+/// points at a real durable image asset, the same shape `📥️import-frames` builds for a photo set.
+pub fn scene_from_png_bytes(bytes: &[u8]) -> Result<RemodelingSnapshot, String> {
+    let png = semio_s_plugin_stdio::artifacts::png::io::decode_png(bytes)?;
+    let asset = ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width: png.width, height: png.height };
+    let asset_id = "png-import-0".to_string();
+    let mut scene = default_remodeling_scene();
+    scene.assets.insert(asset_id.clone(), image_asset_child_handle(&asset_id, &asset));
+    scene.streams.push(MediaStream {
+        id: "png-import".into(),
+        name: "Imported PNG".into(),
+        kind: MediaKind::ImageSequence,
+        camera_id: None,
+        sync_offset_ms: 0.0,
+        fps_hint: 0.0,
+        frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id }],
+        source: None,
+    });
+    Ok(scene)
+}
+//#endregion 🔖️SceneGeometry
 
 //#region 🔖️SemioBridge
 /// 🌉️ Real `s.stdio.semio/v1/image` ↔ `s.stdio.png` bridge, reused verbatim from `🖨️raster`'s own
@@ -127,7 +330,7 @@ pub async fn remodeling_png_export(doc: &Value) -> Result<semio_framework_os::Os
 const SEMIO_IMAGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
-async fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) -> IoKey {
+fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) -> IoKey {
     IoKey {
         artifact_kind: owner.artifact_kind.into(),
         standard: owner.standard.0.into(),
@@ -143,7 +346,7 @@ async fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dia
 /// `io` registry exactly once, so `io_dispatch` below resolves regardless of host-boot ordering — a
 /// bare `cargo test` process never runs the plugin-host boot path that would normally call this
 /// (matches raster's `ensure_stdio_semio_and_png_registered`).
-async fn ensure_stdio_semio_and_png_registered() {
+fn ensure_stdio_semio_and_png_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         semio_s_plugin_stdio::artifacts::semio::register();
@@ -151,7 +354,7 @@ async fn ensure_stdio_semio_and_png_registered() {
     });
 }
 
-pub(crate) async fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
+pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
     let png_snapshot = semio_s_plugin_stdio::artifacts::png::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
@@ -161,7 +364,7 @@ pub(crate) async fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<S
     <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
 }
 
-pub(crate) async fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
+pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
     ensure_stdio_semio_and_png_registered();
     let payload = IoPayload::Binary(<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
@@ -176,9 +379,8 @@ pub(crate) async fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Re
 /// content. Only `image/png` round-trips losslessly today (textures/DSM/DTM/ortho exports are always
 /// PNG per this file's own `raster_to_png_asset`/mesh-texture doc comments) — `image/jpeg` (video
 /// frames, `MediaStream.frames`) is honestly reported as unsupported rather than silently coerced or
-/// dropped; wiring stdio's real `jpg` codec through this same bridge is a scoped, concrete follow-up
-/// (see this ticket's `remodeling-report.md`), not attempted here.
-pub async fn semio_image_snapshot_from_image_asset(asset: &ImageAsset) -> Result<SemioImageSnapshot, String> {
+/// dropped.
+pub fn semio_image_snapshot_from_image_asset(asset: &ImageAsset) -> Result<SemioImageSnapshot, String> {
     if asset.mime != "image/png" {
         return Err(format!("semio_image_snapshot_from_image_asset: unsupported mime {:?} (only image/png round-trips today)", asset.mime));
     }
@@ -186,19 +388,351 @@ pub async fn semio_image_snapshot_from_image_asset(asset: &ImageAsset) -> Result
     semio_image_from_png_bytes(&bytes)
 }
 
-pub async fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<ImageAsset, String> {
+pub fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<ImageAsset, String> {
     let (width, height) = (image.width, image.height);
     let bytes = png_bytes_from_semio_image(image)?;
     Ok(ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width, height })
 }
 //#endregion 🔖️SemioBridge
 
-//#region 🧪️ExportersTests
+//#region 🎹️DerivedComposition
+/// 🎹️ Native-dialect-only composition facet, bound by `derive_artifact_facets!` in this subset's
+/// `🧬️schema/🦀️.rs`. Its nine foreign-format branches are GONE (W6): each called a
+/// `📥️import` leaf's `deserialize_bytes`, all of which were cross-type `ArtifactPack` casts. Foreign
+/// dialects now reach this subset only through the typed `IoEntry` rows `io()` publishes.
+pub mod derived_composition {
+    use crate::artifacts::remodeling::standards::v1::subsets::any::schema::RemodelingAnalyzer;
+    use crate::artifacts::remodeling::RemodelingSnapshot;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+
+    const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
+
+    pub struct RemodelingComposerComposition;
+
+    impl ArtifactComposition for RemodelingComposerComposition {
+        type Snapshot = RemodelingSnapshot;
+        const WRITES: Dialect = DIALECT;
+
+        fn reads() -> &'static [Dialect] {
+            &[DIALECT]
+        }
+
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            for source in sources {
+                if source.dialect == DIALECT {
+                    let native = match &source.payload {
+                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
+                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                    };
+                    let analysis = RemodelingAnalyzer::analyze(&[native]);
+                    if let Some(snapshot) = analysis.parts.snapshot {
+                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
+                    }
+                }
+            }
+            Err(ComposeError { message: "RemodelingComposerComposition: no source in this subset's own native dialect".into(), diagnostics: Vec::new() })
+        }
+    }
+}
+pub use derived_composition::*;
+//#endregion 🎹️DerivedComposition
+
+//#region 🚪️NativeComposer
+/// 🎹️ The ONE surviving row of the old `ComposerEntry` channel: this subset's own derive-generated
+/// native composer, which the OS document-open path still resolves by `IoKey`. The eight
+/// `compose_export_*` rows that sat beside it are deleted (see this file's module doc); every foreign
+/// hop now lives on the typed `io()` channel below.
+pub fn native_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
+    use crate::artifacts::remodeling::standards::v1::subsets::any::schema::RemodelingComposer;
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::composer_entry_of::<RemodelingComposer>()]).as_slice()
+}
+//#endregion 🚪️NativeComposer
+
+//#region 🔖️IoDeclaration
+/// 🚪️ This subset's complete io surface on the framework's `io_mechanism` channel — the five native
+/// `dsl::LanguageSpec`s plus one `IoEntry` per registered foreign hop, preflighted and registered by
+/// `commit_artifact_declarations` (one `io_register` per subset).
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+    use crate::artifacts::remodeling::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::artifacts::remodeling::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::artifacts::remodeling::{RemodelingMutation, RemodelingSnapshot, REMODELING_DIALECT, REMODELING_DOCUMENT_SCHEMA};
+    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use std::sync::OnceLock;
+
+    /// 🗣️ The five hand-authored `dsl::LanguageSpec`s this subset carries — `OnceLock` because
+    /// `dsl::passthrough_hooks` is not `const fn`. Indices: 0=document 1=op 2=diff 3=pack 4=spr.
+    fn languages() -> &'static [dsl::LanguageSpec; 5] {
+        static LANGUAGES: OnceLock<[dsl::LanguageSpec; 5]> = OnceLock::new();
+        LANGUAGES.get_or_init(|| {
+            [
+                dsl::LanguageSpec {
+                    id: "remodeling.document",
+                    extension: Some("remodeling"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(crate::artifacts::remodeling::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::remodeling::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("remodeling.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "remodeling.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(crate::artifacts::remodeling::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::remodeling::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("remodeling.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "remodeling.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(crate::artifacts::remodeling::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::remodeling::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("remodeling.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "remodeling.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("remodeling.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "remodeling.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("remodeling.spr"),
+                },
+            ]
+        })
+    }
+
+    fn entries() -> &'static [IoEntry] {
+        static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    serializer_entry::<RemodelingSnapshot, export::json::v_rfc8259::any::RemodelingIntoJson>(REMODELING_DIALECT),
+                    deserializer_entry::<RemodelingSnapshot, import::json::v_rfc8259::any::JsonIntoRemodeling>(REMODELING_DIALECT),
+                    serializer_entry::<RemodelingSnapshot, export::txt::v_utf_8::any::RemodelingIntoTxt>(REMODELING_DIALECT),
+                    deserializer_entry::<RemodelingSnapshot, import::txt::v_utf_8::any::TxtIntoRemodeling>(REMODELING_DIALECT),
+                    serializer_entry::<RemodelingSnapshot, export::ply::v1_0::any::RemodelingIntoPly>(REMODELING_DIALECT),
+                    deserializer_entry::<RemodelingSnapshot, import::ply::v1_0::any::PlyIntoRemodeling>(REMODELING_DIALECT),
+                    serializer_entry::<RemodelingSnapshot, export::las::v1_0::any::RemodelingIntoLas>(REMODELING_DIALECT),
+                    deserializer_entry::<RemodelingSnapshot, import::las::v1_0::any::LasIntoRemodeling>(REMODELING_DIALECT),
+                    serializer_entry::<RemodelingSnapshot, export::obj::v3_0::any::RemodelingIntoObj>(REMODELING_DIALECT),
+                    deserializer_entry::<RemodelingSnapshot, import::obj::v3_0::any::ObjIntoRemodeling>(REMODELING_DIALECT),
+                    serializer_entry::<RemodelingSnapshot, export::stl::v_ascii::any::RemodelingIntoStl>(REMODELING_DIALECT),
+                    deserializer_entry::<RemodelingSnapshot, import::stl::v_ascii::any::StlIntoRemodeling>(REMODELING_DIALECT),
+                    serializer_entry::<RemodelingSnapshot, export::gltf::v2_0::any::RemodelingIntoGltf>(REMODELING_DIALECT),
+                    deserializer_entry::<RemodelingSnapshot, import::gltf::v2_0::any::GltfIntoRemodeling>(REMODELING_DIALECT),
+                    serializer_entry::<RemodelingSnapshot, export::png::v1_2::any::RemodelingIntoPng>(REMODELING_DIALECT),
+                    deserializer_entry::<RemodelingSnapshot, import::png::v1_2::any::PngIntoRemodeling>(REMODELING_DIALECT),
+                ]
+            })
+            .as_slice()
+    }
+
+    let langs = languages();
+    IoDeclaration {
+        native: NativeCodecs {
+            snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
+            diff: LanguagePair { text: Some(&langs[2]), binary: None },
+            mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
+            inferences: None,
+            codec: store::ArtifactCodec::of::<RemodelingSnapshot, RemodelingMutation>(REMODELING_DOCUMENT_SCHEMA.to_string()),
+        },
+        entries: entries(),
+    }
+}
+//#endregion 🔖️IoDeclaration
+
+//#region 🧪️Tests
 #[cfg(test)]
-mod exporters_tests {
+mod io_tests {
+    //! 🧪️ Every registered hop, exercised end to end. The four `🧫️fixtures/` files are authored by
+    //! `🐍️w6-io-fixtures.py` (Python stdlib `struct`/`zlib` and hand-written text only, never by this
+    //! repo's own encoders), so reading one back is a genuine cross-implementation check rather than a
+    //! self-round-trip. The two formats without such a fixture (`las`, `gltf`) are covered by an
+    //! encode→decode pass through stdio's real codecs — see `📓️w6-io.md` for the third-party oracle
+    //! rows (`las` 0.11, `ply-rs`, `tobj`, `stl_io`) that belong in this subset's `🔮️oracle/🔣️.json`.
+
     use super::*;
-    use crate::artifacts::remodeling::default_remodeling_scene;
+    use crate::artifacts::remodeling::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::artifacts::remodeling::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework_plugin::mesh_from_kind;
+
+    const PLY_FIXTURE: &[u8] = include_bytes!("🧫️fixtures/🧱️four-points.ply");
+    const OBJ_FIXTURE: &str = include_str!("🧫️fixtures/🗿️unit-cube.obj");
+    const STL_FIXTURE: &str = include_str!("🧫️fixtures/🔺️unit-tetra.stl");
+    const PNG_FIXTURE: &[u8] = include_bytes!("🧫️fixtures/📷️two-by-two.png");
+
+    /// 🔺️ Triangle count under EITHER `SemioPrimitive` convention: stdio's obj/stl/gltf import leaves
+    /// flatten face corners into a non-indexed soup ("empty `indices` means sequential"), while its ply
+    /// leaf keeps the source's shared index list. Both are legal inputs here.
+    fn triangle_count(mesh: &MeshData) -> usize {
+        if mesh.indices.is_empty() {
+            mesh.positions.len() / 9
+        } else {
+            mesh.indices.len() / 3
+        }
+    }
+
+    /// ☁️ A cloud-only scene: `results.mesh` is reset to the EMPTY handle so `scene_mesh_or_cloud_semio`
+    /// falls through to the cloud (`default_remodeling_scene` ships a placeholder box that would
+    /// otherwise win the mesh-first precedence).
+    fn scene_with_a_sparse_cloud() -> RemodelingSnapshot {
+        let mut scene = default_remodeling_scene();
+        scene.results.mesh = RemodelingMesh::default();
+        scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]), colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255])) });
+        scene
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn ply_fixture_seeds_four_sparse_points_with_colors() {
+        let outcome = import::ply::v1_0::any::PlyIntoRemodeling::deserialize(&IoPayload::Binary(PLY_FIXTURE.to_vec())).await.expect("ply fixture imports");
+        let sparse = outcome.value.results.sparse.expect("the fixture's points land in results.sparse");
+        assert_eq!(sparse.points.to_f32_vec(), vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
+        assert_eq!(sparse.colors.expect("the fixture carries red/green/blue").to_u8_vec(), vec![255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255]);
+        assert_eq!(outcome.value.results.mesh.source, MeshSource::Placeholder, "a face-less ply must not fabricate a mesh");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn ply_export_then_import_recovers_the_sparse_cloud() {
+        let scene = scene_with_a_sparse_cloud();
+        let exported = export::ply::v1_0::any::RemodelingIntoPly::serialize(&scene).await.expect("ply export");
+        let IoPayload::Binary(bytes) = exported.value else { panic!("ply is a binary payload") };
+        assert!(bytes.starts_with(b"ply"), "the export must be a real ply file");
+        let back = import::ply::v1_0::any::PlyIntoRemodeling::deserialize(&IoPayload::Binary(bytes)).await.expect("ply re-import");
+        assert_eq!(back.value.results.sparse.expect("sparse survives").points.to_f32_vec(), scene.results.sparse.expect("sparse").points.to_f32_vec());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn las_export_then_import_recovers_the_sparse_positions() {
+        let scene = scene_with_a_sparse_cloud();
+        let exported = export::las::v1_0::any::RemodelingIntoLas::serialize(&scene).await.expect("las export");
+        let IoPayload::Binary(bytes) = exported.value else { panic!("las is a binary payload") };
+        assert_eq!(&bytes[0..4], b"LASF");
+        let back = import::las::v1_0::any::LasIntoRemodeling::deserialize(&IoPayload::Binary(bytes)).await.expect("las re-import");
+        let recovered = back.value.results.sparse.expect("sparse survives").points.to_f32_vec();
+        assert_eq!(recovered.len(), 12);
+        for (left, right) in recovered.iter().zip(scene.results.sparse.expect("sparse").points.to_f32_vec()) {
+            assert!((left - right).abs() < 1e-3, "{left} vs {right} within LAS scale quantization");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn las_export_refuses_a_scene_with_no_cloud() {
+        let error = export::las::v1_0::any::RemodelingIntoLas::serialize(&default_remodeling_scene()).await.expect_err("a cloud-less scene has nothing to write as las");
+        assert!(error.message.contains("results.sparse and results.dense are both absent or empty"), "{}", error.message);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn obj_fixture_seeds_a_durable_mesh_that_replays() {
+        let outcome = import::obj::v3_0::any::ObjIntoRemodeling::deserialize(&IoPayload::Text(OBJ_FIXTURE.to_string())).await.expect("obj fixture imports");
+        let scene = outcome.value;
+        assert_eq!(scene.results.mesh.source, MeshSource::Imported);
+        let mesh = scene_mesh_data(&scene).expect("the seeded durable mesh replays");
+        assert_eq!(triangle_count(&mesh), 12, "the cube's 12 triangles survive");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn obj_export_writes_the_scene_mesh_as_real_obj_text() {
+        let scene = default_remodeling_scene();
+        let exported = export::obj::v3_0::any::RemodelingIntoObj::serialize(&scene).await.expect("obj export of the placeholder box");
+        let IoPayload::Text(text) = exported.value else { panic!("obj is a text payload") };
+        assert_eq!(text.lines().filter(|line| line.starts_with("v ")).count(), mesh_from_kind("box").vertex_count());
+        assert!(text.lines().any(|line| line.starts_with("f ")), "{text}");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn stl_fixture_seeds_a_four_facet_triangle_soup() {
+        let outcome = import::stl::v_ascii::any::StlIntoRemodeling::deserialize(&IoPayload::Text(STL_FIXTURE.to_string())).await.expect("stl fixture imports");
+        let mesh = scene_mesh_data(&outcome.value).expect("the seeded durable mesh replays");
+        assert_eq!(triangle_count(&mesh), 4, "the fixture's 4 facets survive");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn stl_export_writes_an_ascii_solid() {
+        let exported = export::stl::v_ascii::any::RemodelingIntoStl::serialize(&default_remodeling_scene()).await.expect("stl export");
+        let IoPayload::Text(text) = exported.value else { panic!("ascii stl is a text payload") };
+        assert!(text.trim_start().starts_with("solid"), "{text}");
+        assert_eq!(text.matches("facet normal").count(), mesh_from_kind("box").triangle_count());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn gltf_export_then_import_recovers_the_mesh() {
+        let exported = export::gltf::v2_0::any::RemodelingIntoGltf::serialize(&default_remodeling_scene()).await.expect("gltf export");
+        let IoPayload::Binary(bytes) = exported.value else { panic!("glb is a binary payload") };
+        assert!(bytes.starts_with(b"glTF"), "the export must be a real glb container");
+        let back = import::gltf::v2_0::any::GltfIntoRemodeling::deserialize(&IoPayload::Binary(bytes)).await.expect("glb re-import");
+        let mesh = scene_mesh_data(&back.value).expect("the seeded durable mesh replays");
+        assert_eq!(triangle_count(&mesh), mesh_from_kind("box").triangle_count());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn png_fixture_becomes_a_single_frame_image_sequence() {
+        let outcome = import::png::v1_2::any::PngIntoRemodeling::deserialize(&IoPayload::Binary(PNG_FIXTURE.to_vec())).await.expect("png fixture imports");
+        let scene = outcome.value;
+        assert_eq!(scene.streams.len(), 1);
+        assert_eq!(scene.streams[0].kind, MediaKind::ImageSequence);
+        assert_eq!(scene.streams[0].frames.len(), 1);
+        let asset_id = scene.streams[0].frames[0].asset_id.clone();
+        assert!(scene.assets.contains_key(&asset_id), "the frame points at a real registered asset handle");
+        let decoded = semio_image_from_png_bytes(PNG_FIXTURE).expect("the python-authored fixture is a real png");
+        assert_eq!((decoded.width, decoded.height), (2, 2));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn png_export_refuses_a_scene_with_no_raster_or_texture() {
+        let error = export::png::v1_2::any::RemodelingIntoPng::serialize(&default_remodeling_scene()).await.expect_err("a raster-less scene has nothing to write as png");
+        assert!(error.message.contains("no raster or texture asset is available"), "{}", error.message);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn json_round_trips_the_scene_exactly() {
+        let scene = scene_with_a_sparse_cloud();
+        let exported = export::json::v_rfc8259::any::RemodelingIntoJson::serialize(&scene).await.expect("json export");
+        let IoPayload::Text(text) = exported.value else { panic!("json is a text payload") };
+        let back = import::json::v_rfc8259::any::JsonIntoRemodeling::deserialize(&IoPayload::Text(text)).await.expect("json import");
+        assert_eq!(back.value, scene);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn txt_round_trips_the_scene_exactly_through_this_subsets_own_dsl() {
+        let scene = scene_with_a_sparse_cloud();
+        let exported = export::txt::v_utf_8::any::RemodelingIntoTxt::serialize(&scene).await.expect("dsl export");
+        let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
+        let back = import::txt::v_utf_8::any::TxtIntoRemodeling::deserialize(&IoPayload::Text(text)).await.expect("dsl import");
+        assert_eq!(back.value, scene);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn every_declared_hop_is_a_distinct_directed_pair() {
+        let entries = io().entries;
+        assert_eq!(entries.len(), 16, "8 formats x 2 directions");
+        let coordinate = |dialect: semio_framework::io_schema::Dialect| format!("{}@{}/{}", dialect.artifact_kind, dialect.standard.0, dialect.subset.0);
+        let mut pairs: Vec<(String, String)> = entries.iter().map(|entry| (coordinate(entry.from), coordinate(entry.into))).collect();
+        pairs.sort();
+        let before = pairs.len();
+        pairs.dedup();
+        assert_eq!(pairs.len(), before, "preflight_io_entries rejects a duplicate (from, into) at a different fidelity");
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn mesh_to_ply_bytes_writes_a_well_formed_ascii_file_via_stdio() {
@@ -213,25 +747,14 @@ mod exporters_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn mesh_to_las_bytes_writes_a_227_byte_header_plus_20_bytes_per_point_via_stdio() {
-        // 🧪️ `mesh_from_kind("box")` carries no vertex colors, so `SemioMeshToLas` + stdio's
-        // `choose_point_format` land on point-data format 0 (no RGB/GPS) — 20 bytes/point, same
-        // shape this file's former hand-rolled LAS 1.2 writer always produced.
         let mesh = mesh_from_kind("box");
         let bytes = mesh_to_las_bytes(&mesh).expect("las export");
         assert_eq!(&bytes[0..4], b"LASF");
         assert_eq!(bytes.len(), 227 + mesh.vertex_count() * 20);
-        let header_size = u16::from_le_bytes([bytes[94], bytes[95]]);
-        assert_eq!(header_size, 227);
-        let point_count = u32::from_le_bytes([bytes[107], bytes[108], bytes[109], bytes[110]]);
-        assert_eq!(point_count as usize, mesh.vertex_count());
+        assert_eq!(u16::from_le_bytes([bytes[94], bytes[95]]), 227);
+        assert_eq!(u32::from_le_bytes([bytes[107], bytes[108], bytes[109], bytes[110]]) as usize, mesh.vertex_count());
     }
 
-    /// 🧩️ `semio_mesh_to_mesh_data` is the real inverse of `mesh_data_to_semio_mesh`, backing
-    /// `crate::artifacts::remodeling::remodeling_mesh_workspace`'s documented cold-cache fallback path
-    /// (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`). Round-trips positions/normals/uvs/
-    /// colors/indices exactly (the shape `SemioMeshSnapshot`'s one gltf-style primitive can represent);
-    /// `face_ids`/`vertex_ids`/`edge_*`/`paint_texture_base64` are honestly NOT recovered (empty/`None`
-    /// — documented on the function itself) since that shape has no slot for them.
     #[semio_framework_async_macros::async_test]
     async fn semio_mesh_to_mesh_data_recovers_the_representable_buffers() {
         let mesh = mesh_from_kind("box");
@@ -241,296 +764,25 @@ mod exporters_tests {
         assert_eq!(recovered.normals, mesh.normals);
         assert_eq!(recovered.uvs, mesh.uvs);
         assert_eq!(recovered.indices, mesh.indices);
-        assert_eq!(recovered.colors, mesh.colors, "mesh_from_kind(\"box\") carries no vertex colors, so both sides are empty");
         assert!(recovered.face_ids.is_empty(), "face_ids has no SemioMeshSnapshot slot, honestly absent");
-        assert!(recovered.paint_texture_base64.is_none(), "paint_texture_base64 has no SemioMeshSnapshot slot, honestly absent");
-
-        let empty = semio_mesh_to_mesh_data(&SemioMeshSnapshot::default());
-        assert!(empty.positions.is_empty(), "no primitive at all yields a default MeshData, not a panic");
+        assert!(semio_mesh_to_mesh_data(&SemioMeshSnapshot::default()).positions.is_empty(), "no primitive at all yields a default MeshData, not a panic");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn png_export_round_trips_a_stored_texture_asset() {
-        // 🧪️ `remodeling_png_export` now reads real composed `s.stdio.semio/v1/image` content back
-        // through `remodeling_asset`'s working-scene cache (ticket
-        // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`), so this test seeds a REAL 4x4 RGBA8
-        // `SemioImageSnapshot`, round-trips it through the real png bridge to build the `ImageAsset`
-        // (exactly what a real texture-export call site does), and verifies the export decodes back
-        // to the SAME dimensions/pixels — never a stand-in non-PNG payload.
         use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame};
         let mut scene = default_remodeling_scene();
         let pixels: Vec<u8> = (0..4 * 4 * 4).map(|i| (i % 256) as u8).collect();
         let image = SemioImageSnapshot { width: 4, height: 4, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: pixels.clone() }], ..SemioImageSnapshot::default() };
         let asset = image_asset_from_semio_image_snapshot(&image).expect("real png bridge encode");
-        let handle = crate::artifacts::remodeling::store_remodeling_asset("tex-1", &asset);
-        scene.assets.insert("tex-1".into(), handle);
+        scene.assets.insert("tex-1".into(), crate::artifacts::remodeling::store_remodeling_asset("tex-1", &asset));
         scene.results.mesh.texture_asset_id = Some("tex-1".into());
-        let doc = serde_json::to_value(&scene).expect("serialize scene");
-        let result = remodeling_png_export(&doc).expect("png export");
+        let result = remodeling_png_export(&serde_json::to_value(&scene).expect("serialize scene")).expect("png export");
         assert_eq!(result.mime_type, "image/png");
-        assert_eq!(result.encoding.as_deref(), Some("base64".into()));
-        let exported_bytes = base64_codec::base64_standard_decode(result.data.as_bytes()).expect("valid base64");
-        let redecoded = semio_image_from_png_bytes(&exported_bytes).expect("exported bytes are real PNG");
-        assert_eq!(redecoded.width, 4);
-        assert_eq!(redecoded.height, 4);
+        assert_eq!(result.encoding.as_deref(), Some("base64"));
+        let redecoded = semio_image_from_png_bytes(&base64_codec::base64_standard_decode(result.data.as_bytes()).expect("valid base64")).expect("exported bytes are real PNG");
+        assert_eq!((redecoded.width, redecoded.height), (4, 4));
         assert_eq!(redecoded.frames.first().map(|frame| frame.rgba8.clone()), Some(pixels));
     }
 }
-//#endregion 🧪️ExportersTests
-//#region 🎹️DerivedComposition
-pub mod derived_composition {
-    use crate::artifacts::remodeling::standards::v1::subsets::any::schema::RemodelingAnalyzer;
-    use crate::artifacts::remodeling::RemodelingSnapshot;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
-
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    const DEP_GLTF: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
-    const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_LAS: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
-    const DEP_OBJ: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    const DEP_PLY: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId("*") };
-    const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    const DEP_STL: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
-    pub struct RemodelingComposerComposition;
-
-    impl ArtifactComposition for RemodelingComposerComposition {
-        type Snapshot = RemodelingSnapshot;
-        const WRITES: Dialect = DIALECT;
-
-        async fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_DWG, DEP_GLTF, DEP_JSON, DEP_LAS, DEP_OBJ, DEP_PLY, DEP_PNG, DEP_STL, DEP_TXT]
-        }
-
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            for source in sources {
-                if source.dialect == DIALECT {
-                    let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
-                    };
-                    let analysis = RemodelingAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
-                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-                if source.dialect == DEP_DWG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_GLTF {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_JSON {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_LAS {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::las::v1_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_OBJ {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PLY {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::ply::v1_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PNG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_STL {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_TXT {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::remodeling::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-            }
-            Err(ComposeError { message: "RemodelingComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
-        }
-    }
-}
-pub use derived_composition::*;
-//#endregion 🎹️DerivedComposition
-
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::artifacts::remodeling::standards::v1::subsets::any::schema::RemodelingBuilder as RemodelingAnyBuilder;
-    use crate::artifacts::remodeling::standards::v1::subsets::any::schema::RemodelingComposer as RemodelingAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
-    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
-    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
-    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
-    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
-    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
-    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
-    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
-    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
-    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
-    const REMODELING_DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
-    const REMODELING_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::remodeling::RemodelingSnapshot, ComposeError> {
-        if let Some(source) = sources.iter().find(|s| s.dialect == REMODELING_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => RemodelingAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => RemodelingAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-            };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "RemodelingComposer export: build() failed".into(), diagnostics });
-        }
-        if let Some(source) = sources.iter().find(|s| s.dialect == REMODELING_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
-            let bytes: Vec<u8> = match &source.payload {
-                IoPayload::Text(t) => t.as_bytes().to_vec(),
-                IoPayload::Binary(b) => b.clone(),
-            };
-            return crate::artifacts::remodeling::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
-        }
-        Err(ComposeError { message: "RemodelingComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
-    }
-
-    const EXPORT_LAS_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
-    async fn compose_export_las(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::remodeling::io::export::serializers::artifacts::las::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_LAS_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_PLY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId("*") };
-    async fn compose_export_ply(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::remodeling::io::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_PLY_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::remodeling::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::remodeling::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    async fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::remodeling::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    async fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::remodeling::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
-    async fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::remodeling::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_GLTF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    async fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::remodeling::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    //#endregion 🔖️ExportEntries
-
-    pub async fn entries() -> &'static [ComposerEntry] {
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    composer_entry_of::<RemodelingAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_LAS_DIALECT, reads: &[REMODELING_DIALECT], compose: compose_export_las },
-                    ComposerEntry { writes: EXPORT_PLY_DIALECT, reads: &[REMODELING_DIALECT], compose: compose_export_ply },
-                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[REMODELING_DIALECT], compose: compose_export_png },
-                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[REMODELING_DIALECT], compose: compose_export_json },
-                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[REMODELING_DIALECT], compose: compose_export_dwg },
-                    ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[REMODELING_DIALECT], compose: compose_export_stl },
-                    ComposerEntry { writes: EXPORT_GLTF_DIALECT, reads: &[REMODELING_DIALECT], compose: compose_export_gltf },
-                    ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[REMODELING_DIALECT], compose: compose_export_obj },
-                ]
-            })
-            .as_slice()
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
+//#endregion 🧪️Tests

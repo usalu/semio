@@ -14,8 +14,56 @@ export const ENERGY_SIMULATION_EVENT_SCHEMA = "semio.energy.simulation-event.v1"
 export type EnergySimulationLocale = "en" | "de";
 
 export type EnergySimulationEvent =
-  | { kind: "start"; request: bigint; locale: EnergySimulationLocale; checkpointToken: bigint; zoneTimestepMinutes: number; systemTimestepMinutes: number; warmupDays: number; runPeriodStartMonth: number; runPeriodStartDay: number; runPeriodEndMonth: number; runPeriodEndDay: number }
+  | { kind: "start"; request: bigint }
+  | { kind: "configure"; locale: EnergySimulationLocale; zoneTimestepMinutes: number; systemTimestepMinutes: number; warmupDays: number }
   | { kind: "cancel" | "retry" | "discard" | "adopt"; request: bigint; operation: bigint; generation: bigint; configDigest: bigint };
+
+/** 🧵️ Every retained tool id of this editor, in `ENERGY_MODEL_RETAINED_TOOL_IDS` order. The Rust
+ * surface asserts set equality between this roster, the typed command schema's `TOOL_JOB_IDS`, the
+ * `Migrated` classification list, the factory's publication contracts and its proof rows. */
+export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
+  "set-node",
+  "set-cell",
+  "create-zone",
+  "rename-zone",
+  "delete-zone",
+  "create-surface",
+  "delete-surface",
+  "assign-surface-construction",
+  "set-material-property",
+  "set-thermostat-setpoints",
+  "set-site",
+  "set-run-period",
+  "setActiveExample",
+  "start-energy-simulation",
+  "cancel-energy-simulation",
+  "retry-energy-simulation",
+  "discard-energy-simulation",
+  "adopt-energy-simulation",
+  "configure-energy-simulation",
+] as const;
+
+/** 📬️ The twelve verbs that publish into the document store; the other six are session-only. */
+export const ENERGY_MODEL_DOCUMENT_TOOL_IDS = ENERGY_MODEL_RETAINED_TOOL_IDS.slice(0, 13);
+
+/** 📚️ The bundled examples the plugin root registers through `editor_with_examples`. */
+export const ENERGY_MODEL_EXAMPLE_IDS = [
+  "demo",
+  "bestest-600",
+  "bestest-600ff",
+  "bestest-610",
+  "bestest-620",
+  "bestest-630",
+  "bestest-640",
+  "bestest-650",
+  "bestest-900",
+  "bestest-900ff",
+  "bestest-910",
+  "bestest-920",
+  "bestest-930",
+  "bestest-940",
+  "bestest-950",
+] as const;
 
 export interface EnergySimulationTierProjection {
   readonly operation: bigint;

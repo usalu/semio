@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. `Puzzle2dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "_comment": "🧩️ This subset's own contribution. `Puzzle2dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no third party reads the CARRIER — but five do read the FACTS the carrier states, and they are registered below: networkx and graphology for the handle-owned topology and its two cascades, shapely for node geometry, jsonschema and jsonpatch (corroborated by deepdiff, and mirrored in a second ecosystem by the npm jsonschema and fast-json-patch) for payload shape and diff reproduction. The in-repository Python second implementation stays registered alongside them and remains what it always was: useful evidence, not independent evidence.",
   "oracles": [
     {
       "id": "puzzle-2d-python-independent",
@@ -42,12 +42,241 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/📸️snapshot/🔣️.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/🧬️mutations/🔣️.json; ../../../../../🧪️tests/mutate-puzzle-2d-1/🦀️.rs; 📓️w14-final-audit.md; 🔒️dependencies.json",
         "fixtureCoverage": {
-          "vectors": 26,
+          "vectors": 75,
           "capabilitiesCovered": [
             "puzzle-2d-1-mutate"
           ]
         }
       }
+    },
+    {
+      "id": "puzzle-2d-networkx-graph",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "networkx",
+      "version": "3.6.1",
+      "capabilities": [
+        "puzzle-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "engine": {
+        "family": "networkx",
+        "implementation": "NetworkX pure-Python graph algorithms",
+        "version": "3.6.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://networkx.org/",
+      "rationale": "NetworkX answers the TOPOLOGY of `s.puzzle.2d`, at `../🧪️tests/🕸️third-party-puzzle-2d-1/🐍️.py`. It is a genuine third party: it imports nothing from this repository, reads no `.dsl.semio`, and is handed a data structure this repository does not use. The board is rebuilt as a `MultiDiGraph` whose vertices are NODES and HANDLES, with `owns` edges (node → handle) and `wire` edges (handle → handle, keyed by the board's edge id), so a node's handle list becomes graph INCIDENCE rather than array membership and an edge's endpoints become adjacency between PORT vertices. The two cascades this subset is defined by — removing a handle severs the wire attached to it, deleting a node severs every wire on any of its handles — are then not restated by the adapter at all: they are what `Graph.remove_node` does to a vertex's incident edges, and `networkx.utils.graphs_equal` is what decides agreement with the committed after-snapshot. This ANSWERS rather than repeats the survey note this subset already carries — \"GraphML, DOT and GEXF all join node to node and none of them can express an edge whose endpoints are ports OWNED BY a node\" — which is true of carrier FORMATS and not of a graph ALGORITHM library, because a port modelled as a vertex is ordinary incidence. It also carries the kind-compatibility relation as a separate `DiGraph` over kind labels, where the library's one-edge-per-ordered-pair rule enforces the relation's uniqueness and `networkx.isolates` derives which labels survive a disconnection. WHAT IT DOES NOT ADJUDICATE, stated: the anchor enum, a handle's `angle`, the ORDER of a node's handle list (graph incidence is unordered), the meaning of a kind label, and which of three refusal rules makes a `replace-node-handle` vector a no-op. HONEYBEE → OPENSTUDIO → ENERGYPLUS was evaluated for this artifact and DECLINED, on the mechanism rather than on domain intuition: Dragonfly's `Room2D.solve_adjacency` establishes adjacency by testing which wall SEGMENTS of two floor-plate polygons geometrically coincide, so it has no typed, named, pre-existing port a room OWNS, no compatibility RELATION gating which port kinds may join, and no cascade in which an edge remembers the port it was attached to and must be told to die — the three facts this vocabulary is about. Half of `Puzzle2dNode` (`root`, `iconKind`, `anchor`, `scale`, free `text`) has no Room2D counterpart, and Room2D's storey and programme data has no counterpart here, so the chain would be used for none of what it is good at. That chain belongs to 🔋️energy and is being wired for ticket 26/09/06/ENERGY-PLUGIN-END-TO-END. Recorded here rather than as a `noOracleDecision` because a no-oracle decision cannot cover a runtime mutation at all, and this capability now has real qualifying oracles.",
+      "productionDebt": {
+        "reachableFrom": [
+          "♻️mit-bestand/🔎️recherche/_neo4j/netz/netplate.py",
+          "♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/mechanisms/connectivity.py",
+          "♻️mit-bestand/🔎️recherche/_neo4j/review/2026-06-30_zukunftbau_vorstudie_snapshots/_analyze_deep.py",
+          "♻️mit-bestand/🔎️recherche/_neo4j/review/2026-06-30_zukunftbau_vorstudie_snapshots/_report_snapshots.py"
+        ],
+        "owner": "♻️mit-bestand/🔎️recherche",
+        "plan": "PRE-EXISTING and unrelated: four Neo4j research scripts in the 🔎️recherche subtree imported networkx long before this registration, and none of them is reachable from `s.puzzle.2d`, from any plugin, or from any shipped product — so they cannot make this artifact's differential compare an implementation with itself, which is the reachability the rule exists to stop. Recorded rather than hidden, and shrink-only. It closes either way round: move 🔎️recherche/_neo4j behind the contribution boundary, or add the research subtree to `pathExclusions` in 🔣️taxonomy.json the way `compose/` already is. Neither is this subset's to decide."
+      }
+    },
+    {
+      "id": "puzzle-2d-shapely-geometry",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "shapely",
+      "version": "2.1.2",
+      "capabilities": [
+        "puzzle-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "engine": {
+        "family": "geos",
+        "implementation": "Shapely 2 over the GEOS geometry engine",
+        "version": "2.1.2"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://shapely.readthedocs.io/",
+      "rationale": "Shapely 2 (on GEOS) answers the GEOMETRY of `s.puzzle.2d`, in the same adapter. A node's footprint becomes a real `Point.buffer` or `box` at the node's own scale, and the geometry verbs become the library's own affine algebra: `move-node` is `affinity.translate`, `scale-node` is `affinity.scale(origin=…)` about the node's own position, `change-node-anchor` is a claim of geometric invariance under `equals_exact`, and `replace-node-geometry`'s null-dropping circle→rectangle rebuild is held to the area its own arguments imply (πr², or width × height) and to a centroid that did not move. Every other kind must leave every footprint on the board exactly where it was, which is how a rejected or no-op vector is checked. The extent MEMBERS decide which figure a node is (a radius is a circle, a width and a height are a rectangle) because `shape` is omitted when it holds its default. WHAT IT DOES NOT ADJUDICATE: the anchor ENUM (a board concept, not a geometric one), a handle's polar `angle` on its owner, and an edge's routing record beyond its `x`/`y` origin — `gap`/`shift`/`rise`/`rotation`/`turn`/`tilt` are routing parameters, not two real endpoints, and this registration does not pretend a geometry engine can confirm them."
+    },
+    {
+      "id": "puzzle-2d-jsonschema-payloads",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "jsonschema",
+      "version": "4.26.0",
+      "capabilities": [
+        "puzzle-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "engine": {
+        "family": "jsonschema-python",
+        "implementation": "python-jsonschema draft-07 validator",
+        "version": "4.26.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://python-jsonschema.readthedocs.io/",
+      "rationale": "jsonschema answers the PAYLOAD SHAPE. Every committed `🦠️mutation`, with its internally tagged discriminator removed, is validated against its own leaf `🧬️.schema.json` by the draft the schema itself names — all 26 leaves declare draft-07 — and every leaf schema is additionally handed a member it does not declare, so an accepted payload proves the validator RAN rather than that the schema was permissive. WHAT IT DOES NOT ADJUDICATE: effect. It knows that `remove-node-handle` takes two strings; it knows nothing about what removing a handle does to a board. FIRST RUN FINDING, recorded because it is the point of registering it: this validator, and the npm `jsonschema` in the second-ecosystem case independently, reject 24 committed payloads across 5 kinds — `Option<T>` payload members are typed as plain `integer`/`number`/`string`/`object` with no null admitted while the committed payloads carry explicit `null` (`index`, `newRadius`, `sourceTip`, `targetTip`, `edgeKind`, `newCatalogs`), and the `anchor` enum is spelled with the Rust variant names `Fixed`/`Derived` while every committed payload and snapshot carries `fixed`/`derived`. The leaf schemas are wrong about the payloads this repository actually writes."
+    },
+    {
+      "id": "puzzle-2d-jsonpatch-diff",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "jsonpatch",
+      "version": "1.33",
+      "packages": [
+        {
+          "package": "deepdiff",
+          "version": "9.1.0",
+          "license": "MIT",
+          "role": "structurally unrelated second differ, corroborating whether the document moved at all",
+          "homepage": "https://zepworks.com/deepdiff/current/"
+        }
+      ],
+      "capabilities": [
+        "puzzle-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "engine": {
+        "family": "jsonpatch-python",
+        "implementation": "python-json-patch RFC 6902 implementation",
+        "version": "1.33"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://python-json-patch.readthedocs.io/",
+      "rationale": "jsonpatch answers the DIFF, corroborated by deepdiff. The committed `🔺️diff` is a TYPED `Puzzle2dDiff` with per-collection `added`/`removed`/`patched`, not RFC 6902, so the oracle DERIVES an RFC 6902 patch from `(before, after)` with `jsonpatch.make_patch`, round-trips it through `apply` to reproduce the after-snapshot exactly — a reproduction proof, not a detection — and then holds the typed diff to it: the top-level members the op paths reach must be exactly the members the typed diff declares non-null, and a record belongs in `patched` exactly when RFC 6902 needs at least one operation to turn its before-shape into its after-shape. That last test is asked per RECORD rather than by reading indices off the whole-document patch, because removing an entry from the middle of a collection shifts every later index and a whole-document patch then expresses a removal as field edits on records that never changed. deepdiff, a structurally unrelated algorithm, must agree with jsonpatch about whether the document moved at all, and both must agree with the committed outcome's own `status`. WHAT IT DOES NOT ADJUDICATE: whether the change was the RIGHT one — only that the committed diff describes the committed snapshots."
+    },
+    {
+      "id": "puzzle-2d-graphology-graph",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "graphology",
+      "version": "0.26.0",
+      "capabilities": [
+        "puzzle-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "engine": {
+        "family": "graphology",
+        "implementation": "graphology multi-directed graph over the bun runtime",
+        "version": "0.26.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://graphology.github.io/",
+      "rationale": "The SECOND ECOSYSTEM. graphology answers the topology again, in bun, in the same bipartite node/handle encoding, with `Graph.dropNode` supplying the cascade and `Graph.export` — the library's own serializer — supplying the comparison; the npm `jsonschema` answers the payload shape and `fast-json-patch` answers the diff, both on the same terms as their Python counterparts. Two engine families on two runtimes agreeing is what makes a shared bug in one library visible: on the first run the two ecosystems agreed to the vector on the 24 leaf-schema disagreements recorded under `puzzle-2d-jsonschema-payloads`, which is why those findings are credible rather than an artefact of one validator. Adapter at `../🧪️tests/🌐️third-party-puzzle-2d-1/🟦️.ts`. TWO SUBSTITUTIONS, both argued rather than convenient. `ajv` was the obvious npm schema validator and is DECLINED: it is declared `production-runtime` by five packages in this tree, and `verify dependencies literal-external` counts an oracle package production can reach as an `oracle-conflict` — an oracle production can reach is this repository comparing itself with itself. The npm `jsonschema` carries the same draft-07 role with no production reachability. GEOMETRY is deliberately not re-answered here: `@flatten-js/core` needs manual matrix composition for the anchor-relative scale shapely does in one call, so a second, weaker geometry check would add an engine to the count without adding evidence. ONE HONEST LIMITATION, recorded rather than hidden: graphology's core has no vertex RELABEL, so a `replace-node-handle` that re-identifies a port is expressed as drop-and-reattach; the Python half, whose library does have `relabel_nodes`, is what adjudicates that carry-over independently."
+    },
+    {
+      "id": "puzzle-2d-jsonschema-js-payloads",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "jsonschema",
+      "version": "1.5.0",
+      "capabilities": [
+        "puzzle-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "engine": {
+        "family": "jsonschema-js",
+        "implementation": "tdegrunt/jsonschema draft-07 validator on bun",
+        "version": "1.5.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/tdegrunt/jsonschema",
+      "rationale": "The second ecosystem's payload validator, in `../🧪️tests/🌐️third-party-puzzle-2d-1/🟦️.ts`. It stands in for `ajv`, which is DECLINED here on a rule this repository enforces mechanically: `ajv` is declared `production-runtime` by five packages in this tree and `verify dependencies literal-external` counts an oracle package production can reach as an `oracle-conflict`, which is this repository comparing itself with itself. This package carries the same draft-07 role with no production reachability, and its independence from `puzzle-2d-jsonschema-payloads` is what makes the 24 leaf-schema disagreements those two found credible: two validators, two ecosystems, the same 24 rejections."
+    },
+    {
+      "id": "puzzle-2d-fast-json-patch-diff",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "capabilities": [
+        "puzzle-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "engine": {
+        "family": "fast-json-patch",
+        "implementation": "Starcounter-Jack RFC 6902 implementation on bun",
+        "version": "3.1.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/Starcounter-Jack/JSON-Patch",
+      "rationale": "The second ecosystem's differ, in `../🧪️tests/🌐️third-party-puzzle-2d-1/🟦️.ts`, on the same terms as `puzzle-2d-jsonpatch-diff`: derive RFC 6902 from `(before, after)`, apply it back to reproduce the committed after-snapshot, and hold the typed `Puzzle2dDiff` to the members those op paths reach and to a `patched` set that is exactly the records RFC 6902 needs an operation for. Equality is asked of the library itself — an empty patch between the reproduction and the committed file — because `ordered-json-v1` holds array order significant and key order never, which a string comparison gets wrong. An unrelated implementation of the same RFC agreeing with the Python one is what rules out a differ-specific artefact."
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "python",
+      "package": "networkx",
+      "version": "3.6.1"
+    },
+    {
+      "implementation": "python",
+      "package": "shapely",
+      "version": "2.1.2"
+    },
+    {
+      "implementation": "python",
+      "package": "jsonschema",
+      "version": "4.26.0"
+    },
+    {
+      "implementation": "python",
+      "package": "jsonpatch",
+      "version": "1.33"
+    },
+    {
+      "implementation": "python",
+      "package": "deepdiff",
+      "version": "9.1.0"
+    },
+    {
+      "implementation": "typescript",
+      "package": "graphology",
+      "version": "0.26.0"
+    },
+    {
+      "implementation": "typescript",
+      "package": "jsonschema",
+      "version": "1.5.0"
+    },
+    {
+      "implementation": "typescript",
+      "package": "fast-json-patch",
+      "version": "3.1.1"
     }
   ],
   "noOracleDecisions": [],
@@ -64,8 +293,16 @@
           "mutationDirectoryName": "➕add-node-handle",
           "scenarios": [
             {
+              "id": "adds-a-third-slot-door-to-the-tambour",
+              "directoryName": "➕️adds-a-third-slot-door-to-the-tambour"
+            },
+            {
               "id": "appends-handle-3-to-node-b",
               "directoryName": "➕️appends-handle-3-to-node-b"
+            },
+            {
+              "id": "rejects-adding-a-door-to-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -75,8 +312,16 @@
           "mutationDirectoryName": "🏷️change-edge-kind",
           "scenarios": [
             {
+              "id": "kinds-a-capsule-door-edge-as-a-link",
+              "directoryName": "🏷️kinds-a-capsule-door-edge-as-a-link"
+            },
+            {
               "id": "rekinds-edge-1",
               "directoryName": "🏷️rekinds-edge-1"
+            },
+            {
+              "id": "rejects-kinding-an-edge-the-board-never-held",
+              "directoryName": "🚫️rejects-kinding-an-edge-the-board-never-held"
             }
           ]
         },
@@ -88,6 +333,14 @@
             {
               "id": "locks-edge-1",
               "directoryName": "🔒️locks-edge-1"
+            },
+            {
+              "id": "locks-the-base-to-tambour-edge",
+              "directoryName": "🔒️locks-the-base-to-tambour-edge"
+            },
+            {
+              "id": "rejects-locking-an-edge-the-board-never-held",
+              "directoryName": "🚫️rejects-locking-an-edge-the-board-never-held"
             }
           ]
         },
@@ -99,6 +352,14 @@
             {
               "id": "swaps-edge-1-tips",
               "directoryName": "🔀️swaps-edge-1-tips"
+            },
+            {
+              "id": "tips-a-capsule-door-edge",
+              "directoryName": "🖇️tips-a-capsule-door-edge"
+            },
+            {
+              "id": "rejects-tipping-an-edge-the-board-never-held",
+              "directoryName": "🚫️rejects-tipping-an-edge-the-board-never-held"
             }
           ]
         },
@@ -108,8 +369,16 @@
           "mutationDirectoryName": "👀change-edge-visible",
           "scenarios": [
             {
+              "id": "hides-a-capsule-door-edge",
+              "directoryName": "🙈️hides-a-capsule-door-edge"
+            },
+            {
               "id": "hides-edge-1",
               "directoryName": "🙈️hides-edge-1"
+            },
+            {
+              "id": "rejects-hiding-an-edge-the-board-never-held",
+              "directoryName": "🚫️rejects-hiding-an-edge-the-board-never-held"
             }
           ]
         },
@@ -121,6 +390,10 @@
             {
               "id": "repoints-manifest",
               "directoryName": "📦️repoints-manifest"
+            },
+            {
+              "id": "repoints-the-tower-at-its-example-manifest",
+              "directoryName": "📦️repoints-the-tower-at-its-example-manifest"
             }
           ]
         },
@@ -130,8 +403,16 @@
           "mutationDirectoryName": "⚓change-node-anchor",
           "scenarios": [
             {
+              "id": "derives-a-capsule-pose-from-its-door-edge",
+              "directoryName": "⚓️derives-a-capsule-pose-from-its-door-edge"
+            },
+            {
               "id": "fixed-to-derived",
               "directoryName": "⚓️fixed-to-derived"
+            },
+            {
+              "id": "rejects-anchoring-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-anchoring-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -141,8 +422,16 @@
           "mutationDirectoryName": "🎨change-node-icon",
           "scenarios": [
             {
+              "id": "swaps-a-capsule-icon",
+              "directoryName": "🎨️swaps-a-capsule-icon"
+            },
+            {
               "id": "swaps-node-a-icon",
               "directoryName": "🎨️swaps-node-a-icon"
+            },
+            {
+              "id": "rejects-reiconing-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-reiconing-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -152,8 +441,16 @@
           "mutationDirectoryName": "🏗️change-node-kind",
           "scenarios": [
             {
+              "id": "rekinds-a-capsule-j-as-a-capsule-l",
+              "directoryName": "🏗️rekinds-a-capsule-j-as-a-capsule-l"
+            },
+            {
               "id": "reassigns-node-a-kind",
               "directoryName": "🏷️reassigns-node-a-kind"
+            },
+            {
+              "id": "rejects-rekinding-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-rekinding-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -165,6 +462,14 @@
             {
               "id": "locks-node-a",
               "directoryName": "🔒️locks-node-a"
+            },
+            {
+              "id": "locks-the-first-storey-tambour",
+              "directoryName": "🔒️locks-the-first-storey-tambour"
+            },
+            {
+              "id": "rejects-locking-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-locking-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -176,6 +481,14 @@
             {
               "id": "promotes-node-a-to-root",
               "directoryName": "🌳️promotes-node-a-to-root"
+            },
+            {
+              "id": "promotes-the-base-to-root",
+              "directoryName": "🌳️promotes-the-base-to-root"
+            },
+            {
+              "id": "rejects-rooting-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-rooting-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -185,8 +498,16 @@
           "mutationDirectoryName": "👁️change-node-visible",
           "scenarios": [
             {
+              "id": "hides-a-capsule",
+              "directoryName": "🙈️hides-a-capsule"
+            },
+            {
               "id": "hides-node-a",
               "directoryName": "🙈️hides-node-a"
+            },
+            {
+              "id": "rejects-hiding-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-hiding-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -196,8 +517,16 @@
           "mutationDirectoryName": "🪢️connect-handles",
           "scenarios": [
             {
+              "id": "keeps-an-edge-the-tower-already-holds",
+              "directoryName": "⏸️keeps-an-edge-the-tower-already-holds"
+            },
+            {
               "id": "adds-second-edge",
               "directoryName": "🪢️adds-second-edge"
+            },
+            {
+              "id": "rewires-the-capsule-the-subgraph-left-loose",
+              "directoryName": "🪢️rewires-the-capsule-the-subgraph-left-loose"
             }
           ]
         },
@@ -209,6 +538,10 @@
             {
               "id": "adds-handle-kind-pair",
               "directoryName": "🤝️adds-handle-kind-pair"
+            },
+            {
+              "id": "admits-the-reverse-tambour-circular-pair",
+              "directoryName": "🤝️admits-the-reverse-tambour-circular-pair"
             }
           ]
         },
@@ -218,8 +551,16 @@
           "mutationDirectoryName": "🌱create-node",
           "scenarios": [
             {
+              "id": "appends-a-capsule-to-the-tower",
+              "directoryName": "🌱️appends-a-capsule-to-the-tower"
+            },
+            {
               "id": "appends-node-c",
               "directoryName": "🌱️appends-node-c"
+            },
+            {
+              "id": "rejects-a-capsule-id-the-tower-already-holds",
+              "directoryName": "🚫️rejects-a-capsule-id-the-tower-already-holds"
             }
           ]
         },
@@ -228,6 +569,14 @@
           "sourceMutationDirectoryName": "🗑️delete-node",
           "mutationDirectoryName": "🗑️delete-node",
           "scenarios": [
+            {
+              "id": "deletes-the-tambour-and-severs-its-ten-edges",
+              "directoryName": "🚫️deletes-the-tambour-and-severs-its-ten-edges"
+            },
+            {
+              "id": "rejects-deleting-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-deleting-a-capsule-the-board-never-held"
+            },
             {
               "id": "removes-node-a-and-severs-edge",
               "directoryName": "🚫️removes-node-a-and-severs-edge"
@@ -240,6 +589,14 @@
           "mutationDirectoryName": "✂️disconnect-handles",
           "scenarios": [
             {
+              "id": "severs-a-capsule-from-the-first-storey-tambour",
+              "directoryName": "✂️severs-a-capsule-from-the-first-storey-tambour"
+            },
+            {
+              "id": "rejects-severing-an-edge-the-board-never-held",
+              "directoryName": "🚫️rejects-severing-an-edge-the-board-never-held"
+            },
+            {
               "id": "removes-edge-1",
               "directoryName": "🚫️removes-edge-1"
             }
@@ -250,6 +607,14 @@
           "sourceMutationDirectoryName": "💔disconnect-kind-compatibility",
           "mutationDirectoryName": "💔disconnect-kind-compatibility",
           "scenarios": [
+            {
+              "id": "withdraws-the-tambour-rectangular-pair",
+              "directoryName": "💔️withdraws-the-tambour-rectangular-pair"
+            },
+            {
+              "id": "rejects-withdrawing-a-pair-the-relation-never-held",
+              "directoryName": "🚫️rejects-withdrawing-a-pair-the-relation-never-held"
+            },
             {
               "id": "removes-handle-kind-pair",
               "directoryName": "🚫️removes-handle-kind-pair"
@@ -262,8 +627,16 @@
           "mutationDirectoryName": "✏️edit-node-text",
           "scenarios": [
             {
+              "id": "recodes-a-capsule-id-code",
+              "directoryName": "✏️recodes-a-capsule-id-code"
+            },
+            {
               "id": "retitles-node-a",
               "directoryName": "✏️retitles-node-a"
+            },
+            {
+              "id": "rejects-recoding-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-recoding-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -273,8 +646,16 @@
           "mutationDirectoryName": "📍move-node",
           "scenarios": [
             {
+              "id": "moves-a-capsule-across-the-shaft",
+              "directoryName": "📍️moves-a-capsule-across-the-shaft"
+            },
+            {
               "id": "moves-node-a",
               "directoryName": "📍️moves-node-a"
+            },
+            {
+              "id": "rejects-moving-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-moving-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -283,6 +664,14 @@
           "sourceMutationDirectoryName": "➖remove-node-handle",
           "mutationDirectoryName": "➖remove-node-handle",
           "scenarios": [
+            {
+              "id": "rejects-removing-a-door-the-tambour-never-had",
+              "directoryName": "🚫️rejects-removing-a-door-the-tambour-never-had"
+            },
+            {
+              "id": "removes-a-tambour-door-and-severs-its-capsule-edge",
+              "directoryName": "🚫️removes-a-tambour-door-and-severs-its-capsule-edge"
+            },
             {
               "id": "removes-handle-2-and-severs-edge",
               "directoryName": "🚫️removes-handle-2-and-severs-edge"
@@ -297,6 +686,14 @@
             {
               "id": "repositions-edge-1",
               "directoryName": "📍️repositions-edge-1"
+            },
+            {
+              "id": "rejects-reposing-an-edge-the-board-never-held",
+              "directoryName": "🚫️rejects-reposing-an-edge-the-board-never-held"
+            },
+            {
+              "id": "reposes-a-capsule-door-edge",
+              "directoryName": "🧮️reposes-a-capsule-door-edge"
             }
           ]
         },
@@ -308,6 +705,14 @@
             {
               "id": "installs-handle-kind-catalog",
               "directoryName": "📇️installs-handle-kind-catalog"
+            },
+            {
+              "id": "installs-the-tower-handle-catalog",
+              "directoryName": "📇️installs-the-tower-handle-catalog"
+            },
+            {
+              "id": "clears-the-installed-handle-catalog",
+              "directoryName": "🗑️clears-the-installed-handle-catalog"
             }
           ]
         },
@@ -319,6 +724,14 @@
             {
               "id": "circle-to-rectangle",
               "directoryName": "🔳️circle-to-rectangle"
+            },
+            {
+              "id": "squares-the-concrete-forest-seed",
+              "directoryName": "🔳️squares-the-concrete-forest-seed"
+            },
+            {
+              "id": "rejects-reshaping-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-reshaping-a-capsule-the-board-never-held"
             }
           ]
         },
@@ -328,8 +741,12 @@
           "mutationDirectoryName": "🔌replace-node-handle",
           "scenarios": [
             {
-              "id": "rekind-handle-1-is-noop",
-              "directoryName": "⏸️rekind-handle-1-is-noop"
+              "id": "rekinds-an-unconnected-tambour-door",
+              "directoryName": "🔌️rekinds-an-unconnected-tambour-door"
+            },
+            {
+              "id": "rejects-replacing-a-door-the-tambour-never-had",
+              "directoryName": "🚫️rejects-replacing-a-door-the-tambour-never-had"
             }
           ]
         },
@@ -341,6 +758,14 @@
             {
               "id": "doubles-node-a",
               "directoryName": "📏️doubles-node-a"
+            },
+            {
+              "id": "scales-a-capsule-by-three-halves",
+              "directoryName": "📏️scales-a-capsule-by-three-halves"
+            },
+            {
+              "id": "rejects-scaling-a-capsule-the-board-never-held",
+              "directoryName": "🚫️rejects-scaling-a-capsule-the-board-never-held"
             }
           ]
         }

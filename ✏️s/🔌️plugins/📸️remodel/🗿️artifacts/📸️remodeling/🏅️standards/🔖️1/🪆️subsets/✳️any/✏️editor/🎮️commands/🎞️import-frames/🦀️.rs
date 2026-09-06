@@ -26,7 +26,7 @@ pub const REMODELING_VIDEO_ACCEPT: &str = "video/mp4,video/quicktime,video/webm,
 #[dsl(keyword = "import-frames")]
 pub struct ImportFrames {}
 
-pub async fn handle(_payload: &ImportFrames, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &ImportFrames, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(117), accept: REMODELING_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true }))
 }
 
@@ -40,9 +40,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_pickers_emit_a_host_effect_and_no_operations() {
-        let mut app = app();
+        let mut app = app().await;
         for command in [RemodelingCommand::ImportFrames(ImportFrames {}), RemodelingCommand::ImportVideo(import_video::ImportVideo {})] {
-            let result = dispatch(&mut app, command);
+            let result = dispatch(&mut app, command).await;
             assert!(result.mutations.is_empty(), "a shell picker never mutates the document");
             assert_eq!(result.requested_effects.len(), 1);
         }
@@ -51,8 +51,8 @@ mod tests {
     /// 📤️ Exporting a report the document does not have yet is a no-op, not an error.
     #[semio_framework_async_macros::async_test]
     async fn export_qc_report_is_a_no_op_without_a_report() {
-        let mut app = app();
-        let result = dispatch(&mut app, RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}));
+        let mut app = app().await;
+        let result = dispatch(&mut app, RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {})).await;
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
     }

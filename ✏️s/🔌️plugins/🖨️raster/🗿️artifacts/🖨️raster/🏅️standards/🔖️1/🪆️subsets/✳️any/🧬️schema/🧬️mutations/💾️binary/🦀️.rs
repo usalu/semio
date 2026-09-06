@@ -1108,6 +1108,17 @@ fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool {
     true
 }
 
+/// ⚖️ The same reservation on the two retirement paths that reach the same pumps: a job step spends the
+/// caller's `StepContext` fuel, while `ArtifactStoreInitializationAuthority::close_step` carries no
+/// context at all — its own `maximum_items`/`maximum_bytes` grant IS the unit, already checked by the
+/// caller, so `None` reserves unconditionally rather than fabricating a context.
+fn raster_reserve_granted_unit(cx: Option<&mut semio_framework_job::StepContext<'_>>) -> bool {
+    match cx {
+        Some(cx) => raster_reserve_unit(cx),
+        None => true,
+    }
+}
+
 fn raster_retirement_frame_requirement(layer_depth: usize, value_depth: usize) -> Result<usize, &'static str> {
     let required =
         layer_depth.checked_add(value_depth.checked_mul(2).ok_or("raster-store.preflight-combined-depth-overflow")?).and_then(|value| value.checked_add(RASTER_RETIREMENT_WRAPPER_FRAMES)).ok_or("raster-store.preflight-combined-depth-overflow")?;
@@ -3441,9 +3452,9 @@ impl RasterStoreInitializationAuthority {
         self.phase = RasterStoreInitializationPhase::RetireFault;
     }
 
-    fn pump_active(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, String> {
+    fn pump_active(&mut self, mut cx: Option<&mut semio_framework_job::StepContext<'_>>) -> Result<bool, String> {
         if self.active_terminal {
-            if !raster_reserve_unit(cx) {
+            if !raster_reserve_granted_unit(cx.as_deref_mut()) {
                 return Ok(true);
             }
             drop(self.active.take());
@@ -3451,7 +3462,7 @@ impl RasterStoreInitializationAuthority {
             return Ok(true);
         }
         let Some(active) = self.active.as_mut() else { return Ok(false) };
-        if !raster_reserve_unit(cx) {
+        if !raster_reserve_granted_unit(cx.as_deref_mut()) {
             return Ok(true);
         }
         match active.close_step(1, RASTER_OWNED_FIELD_BYTES)? {
@@ -3466,8 +3477,8 @@ impl RasterStoreInitializationAuthority {
         }
     }
 
-    fn pump_terminal_retirement(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, String> {
-        if self.pump_active(cx)? {
+    fn pump_terminal_retirement(&mut self, mut cx: Option<&mut semio_framework_job::StepContext<'_>>) -> Result<bool, String> {
+        if self.pump_active(cx.as_deref_mut())? {
             return Ok(false);
         }
         if let Some(candidate) = self.candidate.as_mut() {
@@ -3477,7 +3488,7 @@ impl RasterStoreInitializationAuthority {
                 return Ok(false);
             }
             let disposer = self.candidate_disposer.as_mut().expect("Raster candidate disposer remains retained");
-            return match disposer.close_step(candidate, 1, RASTER_OWNED_FIELD_BYTES)? {
+            return match disposer.close_step(candidate, 1, RASTER_OWNED_FIELD_BYTES).map_err(|fault| format!("{}: {}", fault.code.0, fault.message))? {
                 semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
                     drop(self.candidate_disposer.take());
                     drop(self.candidate.take());
@@ -3534,7 +3545,7 @@ impl RasterStoreInitializationAuthority {
             }
         }
         if self.envelope_retirement_terminal {
-            if !raster_reserve_unit(cx) {
+            if !raster_reserve_granted_unit(cx.as_deref_mut()) {
                 return Ok(false);
             }
             drop(self.envelope_retirement.take());
@@ -3542,7 +3553,7 @@ impl RasterStoreInitializationAuthority {
             return Ok(true);
         }
         if let Some(retirement) = self.envelope_retirement.as_mut() {
-            if !raster_reserve_unit(cx) {
+            if !raster_reserve_granted_unit(cx.as_deref_mut()) {
                 return Ok(false);
             }
             return match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES)? {
@@ -3555,7 +3566,7 @@ impl RasterStoreInitializationAuthority {
             };
         }
         if let Some(control) = self.control_reservation.as_mut() {
-            if !raster_reserve_unit(cx) {
+            if !raster_reserve_granted_unit(cx.as_deref_mut()) {
                 return Ok(false);
             }
             if control.return_one()? {
@@ -3596,7 +3607,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
         if cx.should_yield() {
             return semio_framework_job::StepOutcome::Yield;
         }
-        match self.pump_active(cx) {
+        match self.pump_active(Some(cx)) {
             Ok(true) => return semio_framework_job::StepOutcome::Yield,
             Ok(false) => {}
             Err(error) => {
@@ -3931,7 +3942,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     }
                 }
             }
-            RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(cx) {
+            RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(Some(cx)) {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
                     drop(self.initial_digest.take());
@@ -3985,7 +3996,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
         if maximum_items == 0 || maximum_bytes < RASTER_OWNED_FIELD_BYTES {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        match self.pump_terminal_retirement() {
+        match self.pump_terminal_retirement(None) {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
                 drop(self.initial_digest.take());

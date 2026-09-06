@@ -6,7 +6,6 @@ use pack::json;
 use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{plugin_app_close_prelude::Value, ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "export-media")]
 pub struct ExportMedia {
@@ -76,6 +75,7 @@ mod tests {
             dir_name: "dwg".into(),
             is_binary: true,
         }])
+        .await
         .expect("register neutral format descriptor");
         semio_framework_os::workflow::register_os_media_export_handler_kind("2d.drawing", DWG_FORMAT_ID, |_doc| {
             Ok(semio_framework_os::OsMediaExportResult { data: base64_codec::base64_standard_encode(b"space-home-io-test"), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
@@ -116,7 +116,8 @@ mod tests {
         assert_eq!(import.config_mutations, vec![SpaceConfigMutation::SetPendingImport { node_id: Some(node.id), format: Some(DWG_FORMAT_ID.into()) }]);
 
         let pending_config = apply_config(&config, &import.config_mutations).await;
-        let payload = studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).await.expect("handle");
+        let payload =
+            studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).await.expect("handle");
         assert!(payload.artifact_mutations.is_empty());
     }
 }

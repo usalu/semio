@@ -12,14 +12,14 @@
       "type": "string"
     },
     "asset": {
-      "title": "ImageAsset",
       "type": "object",
+      "title": "ImageAsset",
       "additionalProperties": false,
       "required": [
-        "data",
-        "height",
         "mime",
-        "width"
+        "data",
+        "width",
+        "height"
       ],
       "properties": {
         "mime": {
@@ -30,10 +30,12 @@
         },
         "width": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "height": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         }
       }

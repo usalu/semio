@@ -882,13 +882,12 @@ impl DatabaseCapabilityOpenFuture {
     fn try_prepare(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, schedule: bool) -> Result<Self, DatabaseCapabilityOpenRejected> {
         let pool_use = match pool.acquire_use() {
             Ok(pool_use) => pool_use,
-            Err(error) => {
-                return Err(DatabaseCapabilityOpenRejected {
-                    error: Some(DbError::Unavailable(format!("database capability-open WorkerPool use rejected: {error:?}"))),
-                    storage: Some(storage),
-                })
-            }
+            Err(error) => return Err(DatabaseCapabilityOpenRejected { error: Some(DbError::Unavailable(format!("database capability-open WorkerPool use rejected: {error:?}"))), storage: Some(storage) }),
         };
+        Self::try_prepare_with_use(pool, pool_use, storage, schedule)
+    }
+
+    fn try_prepare_with_use(pool: Arc<WorkerPool>, pool_use: Arc<WorkerPoolUse>, storage: Arc<db_storage::DbBackend>, schedule: bool) -> Result<Self, DatabaseCapabilityOpenRejected> {
         let admission = match DatabaseCapabilityOpenAdmission::try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES) {
             Ok(admission) => admission,
             Err(error) => return Err(DatabaseCapabilityOpenRejected { error: Some(error), storage: Some(storage) }),
@@ -1988,14 +1987,12 @@ impl DatabaseCatalogReadFuture {
     fn try_prepare(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, key: DatabaseCatalogRootKey, schedule: bool) -> Result<Self, DatabaseCatalogReadRejected> {
         let pool_use = match pool.acquire_use() {
             Ok(pool_use) => pool_use,
-            Err(error) => {
-                return Err(DatabaseCatalogReadRejected {
-                    error: Some(DbError::Unavailable(format!("database catalog-read WorkerPool use rejected: {error:?}"))),
-                    storage: Some(storage),
-                    key: Some(key),
-                })
-            }
+            Err(error) => return Err(DatabaseCatalogReadRejected { error: Some(DbError::Unavailable(format!("database catalog-read WorkerPool use rejected: {error:?}"))), storage: Some(storage), key: Some(key) }),
         };
+        Self::try_prepare_with_use(pool, pool_use, storage, key, schedule)
+    }
+
+    fn try_prepare_with_use(pool: Arc<WorkerPool>, pool_use: Arc<WorkerPoolUse>, storage: Arc<db_storage::DbBackend>, key: DatabaseCatalogRootKey, schedule: bool) -> Result<Self, DatabaseCatalogReadRejected> {
         let admission = match DatabaseCatalogReadAdmission::try_claim() {
             Ok(admission) => admission,
             Err(error) => return Err(DatabaseCatalogReadRejected { error: Some(error), storage: Some(storage), key: Some(key) }),
@@ -3342,17 +3339,20 @@ impl DatabaseCatalogBootstrapFuture {
     fn try_prepare_with_key(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, pages: db_storage::DbIoPages, key: DatabaseCatalogBootstrapKey, expected: EpochFence, schedule: bool) -> Result<Self, DatabaseCatalogBootstrapRejected> {
         let pool_use = match pool.acquire_use() {
             Ok(pool_use) => pool_use,
-            Err(error) => {
-                return Err(DatabaseCatalogBootstrapRejected::new(
-                    pool,
-                    DbError::Unavailable(format!("database catalog-bootstrap WorkerPool use rejected: {error:?}")),
-                    storage,
-                    pages,
-                    key,
-                    expected,
-                ))
-            }
+            Err(error) => return Err(DatabaseCatalogBootstrapRejected::new(pool, DbError::Unavailable(format!("database catalog-bootstrap WorkerPool use rejected: {error:?}")), storage, pages, key, expected)),
         };
+        Self::try_prepare_with_use(pool, pool_use, storage, pages, key, expected, schedule)
+    }
+
+    fn try_prepare_with_use(
+        pool: Arc<WorkerPool>,
+        pool_use: Arc<WorkerPoolUse>,
+        storage: Arc<db_storage::DbBackend>,
+        pages: db_storage::DbIoPages,
+        key: DatabaseCatalogBootstrapKey,
+        expected: EpochFence,
+        schedule: bool,
+    ) -> Result<Self, DatabaseCatalogBootstrapRejected> {
         let admission = match DatabaseCatalogBootstrapAdmission::try_claim(pages.page_count()) {
             Ok(admission) => admission,
             Err(error) => return Err(DatabaseCatalogBootstrapRejected::new(pool, error, storage, pages, key, expected)),
@@ -4578,10 +4578,7 @@ pub mod vcs_integration {
 
         fn close_store_step(&self) -> Result<bool, DbError> {
             #[cfg(test)]
-            let inject_failure = self
-                .shutdown_failures
-                .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |remaining| remaining.checked_sub(1))
-                .is_ok();
+            let inject_failure = self.shutdown_failures.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |remaining| remaining.checked_sub(1)).is_ok();
             let mut store = {
                 let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                 if state.busy_generation.is_some() || state.waiters.iter().any(Option::is_some) {
@@ -4842,13 +4839,7 @@ pub mod vcs_integration {
 
         fn shutdown_step(&self) -> VersionGraphFuture<'_, VersionGraphShutdownStep> {
             Box::pin(async move {
-                let next = self
-                    .stores
-                    .lock()
-                    .map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?
-                    .iter()
-                    .next()
-                    .map(|(document, cell)| (document.clone(), cell.clone()));
+                let next = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?.iter().next().map(|(document, cell)| (document.clone(), cell.clone()));
                 let Some((document, cell)) = next else { return Ok(VersionGraphShutdownStep::Complete) };
                 if !cell.close_store_step()? {
                     return Ok(VersionGraphShutdownStep::Progress);
@@ -4887,28 +4878,14 @@ pub mod vcs_integration {
             let document = ArtifactId("vcs-owner-catalog".to_string());
             let mut edit_ids = Vec::new();
             for index in 0..9u8 {
-                let change = ChangeRecord {
-                    parent: edit_ids.last().cloned(),
-                    content_hash: pack::ContentHash([index.checked_add(1).unwrap(); 32]),
-                    author: ActorId("owner".to_string()),
-                    message: format!("change-{index}"),
-                    timestamp_ms: u64::from(index) + 1,
-                };
+                let change =
+                    ChangeRecord { parent: edit_ids.last().cloned(), content_hash: pack::ContentHash([index.checked_add(1).unwrap(); 32]), author: ActorId("owner".to_string()), message: format!("change-{index}"), timestamp_ms: u64::from(index) + 1 };
                 let edit_id = graph.record_change(&document, change).await.expect("every retained history mutation keeps its exact retirement authority");
                 assert!(!edit_id.is_empty());
                 edit_ids.push(edit_id);
             }
             let checkpoint = graph
-                .checkpoint(
-                    &document,
-                    CheckpointRequest {
-                        parent_checkpoint: None,
-                        change_ids: edit_ids,
-                        message: "checkpoint-after-nine".to_string(),
-                        authors: vec![ActorId("owner".to_string())],
-                        timestamp_ms: 10,
-                    },
-                )
+                .checkpoint(&document, CheckpointRequest { parent_checkpoint: None, change_ids: edit_ids, message: "checkpoint-after-nine".to_string(), authors: vec![ActorId("owner".to_string())], timestamp_ms: 10 })
                 .await
                 .expect("checkpoint keeps exact history retirement authority");
             assert!(!checkpoint.is_empty());
@@ -4932,13 +4909,7 @@ pub mod vcs_integration {
         async fn vcs_shutdown_error_reinstalls_exact_store_and_retry_reaches_terminal() {
             let graph = VcsVersionGraph::new().await;
             let document = ArtifactId("vcs-shutdown-retry".to_string());
-            let change = ChangeRecord {
-                parent: None,
-                content_hash: pack::ContentHash([7; 32]),
-                author: ActorId("owner".to_string()),
-                message: "before-close".to_string(),
-                timestamp_ms: 1,
-            };
+            let change = ChangeRecord { parent: None, content_hash: pack::ContentHash([7; 32]), author: ActorId("owner".to_string()), message: "before-close".to_string(), timestamp_ms: 1 };
             graph.record_change(&document, change).await.expect("seed retained VCS store");
             let exact_cell = {
                 let stores = graph.stores.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -6034,7 +6005,7 @@ enum DatabaseCreateCatalogDriverAuthority {
 
 struct DatabaseCreateCatalogState {
     pool: Arc<WorkerPool>,
-    _pool_use: Arc<WorkerPoolUse>,
+    pool_use: std::sync::Mutex<Option<Arc<WorkerPoolUse>>>,
     catalog: Arc<Mutex<CatalogState>>,
     slot: usize,
     generation: u64,
@@ -7067,6 +7038,7 @@ impl DatabaseCreateCatalogState {
         }
         drop(result);
         self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        self.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
         self.finished.store(true, std::sync::atomic::Ordering::Release);
         let mut registry = database_create_catalog_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
@@ -7079,6 +7051,7 @@ impl DatabaseCreateCatalogState {
             return;
         }
         self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        self.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
         self.finished.store(true, std::sync::atomic::Ordering::Release);
         let mut registry = database_create_catalog_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
@@ -7109,15 +7082,19 @@ impl DatabaseCreateCatalogFuture {
     fn try_prepare(pool: Arc<WorkerPool>, catalog: Arc<Mutex<CatalogState>>, storage: Arc<db_storage::DbBackend>, document: protocol::ArtifactId, schedule: bool) -> Result<Self, DatabaseCreateCatalogRejected> {
         let pool_use = match pool.acquire_use() {
             Ok(pool_use) => pool_use,
-            Err(error) => {
-                return Err(DatabaseCreateCatalogRejected::new(
-                    pool,
-                    DbError::Unavailable(format!("database create-catalog WorkerPool use rejected: {error:?}")),
-                    storage,
-                    document,
-                ))
-            }
+            Err(error) => return Err(DatabaseCreateCatalogRejected::new(pool, DbError::Unavailable(format!("database create-catalog WorkerPool use rejected: {error:?}")), storage, document)),
         };
+        Self::try_prepare_with_use(pool, pool_use, catalog, storage, document, schedule)
+    }
+
+    fn try_prepare_with_use(
+        pool: Arc<WorkerPool>,
+        pool_use: Arc<WorkerPoolUse>,
+        catalog: Arc<Mutex<CatalogState>>,
+        storage: Arc<db_storage::DbBackend>,
+        document: protocol::ArtifactId,
+        schedule: bool,
+    ) -> Result<Self, DatabaseCreateCatalogRejected> {
         let admission = match DatabaseCreateCatalogAdmission::try_claim(&document) {
             Ok(admission) => admission,
             Err(error) => return Err(DatabaseCreateCatalogRejected::new(pool, error, storage, document)),
@@ -7150,7 +7127,7 @@ impl DatabaseCreateCatalogFuture {
         let deadline_ms = created_at_ms.checked_add(DATABASE_CREATE_CATALOG_DEADLINE_MS).unwrap_or(u64::MAX);
         let state = Arc::new(DatabaseCreateCatalogState {
             pool,
-            _pool_use: pool_use,
+            pool_use: std::sync::Mutex::new(Some(pool_use)),
             catalog,
             slot,
             generation,
@@ -7405,6 +7382,7 @@ pub enum DatabaseShutdownPhase {
     Authority,
     VersionGraph,
     Emit,
+    PoolUse,
 }
 
 /// 🧱️ A live shared owner that prevents destructive shutdown progress.
@@ -7475,21 +7453,20 @@ impl DatabaseDocumentOpenRejected {
 }
 
 impl From<DbError> for DatabaseDocumentOpenRejected {
-    fn from(error: DbError) -> Self { Self::Database(error) }
+    fn from(error: DbError) -> Self {
+        Self::Database(error)
+    }
 }
 
 impl From<db_artifact::ArtifactEngineOpenRejected> for DatabaseDocumentOpenRejected {
-    fn from(rejected: db_artifact::ArtifactEngineOpenRejected) -> Self { Self::Engine(rejected) }
+    fn from(rejected: db_artifact::ArtifactEngineOpenRejected) -> Self {
+        Self::Engine(rejected)
+    }
 }
 
 impl std::fmt::Debug for DatabaseDocumentOpenRejected {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter
-            .debug_struct("DatabaseDocumentOpenRejected")
-            .field("cause", self.error())
-            .field("cleanup_error", &self.cleanup_error())
-            .field("has_retained_writer", &self.has_retained_writer())
-            .finish()
+        formatter.debug_struct("DatabaseDocumentOpenRejected").field("cause", self.error()).field("cleanup_error", &self.cleanup_error()).field("has_retained_writer", &self.has_retained_writer()).finish()
     }
 }
 
@@ -7566,7 +7543,9 @@ enum DatabaseDocumentMountFailure {
 }
 
 impl From<DbError> for DatabaseDocumentMountFailure {
-    fn from(error: DbError) -> Self { Self::Terminal(error) }
+    fn from(error: DbError) -> Self {
+        Self::Terminal(error)
+    }
 }
 
 type DatabaseDocumentMountFuture = std::pin::Pin<Box<dyn Future<Output = Result<DatabaseDocumentMountReply, DatabaseDocumentMountFailure>> + Send + 'static>>;
@@ -7586,11 +7565,7 @@ enum DatabaseDocumentMountPoll {
 }
 
 enum DatabaseDocumentMountSlot {
-    Opening {
-        generation: u64,
-        owner: Arc<DatabaseDocumentMountOwner>,
-        waiters: [Option<DatabaseDocumentMountWaiter>; DATABASE_DOCUMENT_MOUNT_WAITERS],
-    },
+    Opening { generation: u64, owner: Arc<DatabaseDocumentMountOwner>, waiters: [Option<DatabaseDocumentMountWaiter>; DATABASE_DOCUMENT_MOUNT_WAITERS] },
     Ready(DatabaseDocumentMountReply),
 }
 
@@ -7703,9 +7678,7 @@ impl DatabaseDocumentMountOwner {
 
     fn request_drive(self: &Arc<Self>, resume: bool) {
         use std::sync::atomic::Ordering;
-        if self.terminal.load(Ordering::Acquire)
-            || self.driver.load(Ordering::Acquire) == DatabaseDocumentMountDriver::NonRunnable as u8
-        {
+        if self.terminal.load(Ordering::Acquire) || self.driver.load(Ordering::Acquire) == DatabaseDocumentMountDriver::NonRunnable as u8 {
             return;
         }
         if resume {
@@ -7721,16 +7694,7 @@ impl DatabaseDocumentMountOwner {
 
     fn queue_if_idle(self: &Arc<Self>) {
         use std::sync::atomic::Ordering;
-        if self
-            .driver
-            .compare_exchange(
-                DatabaseDocumentMountDriver::Idle as u8,
-                DatabaseDocumentMountDriver::Queued as u8,
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            )
-            .is_err()
-        {
+        if self.driver.compare_exchange(DatabaseDocumentMountDriver::Idle as u8, DatabaseDocumentMountDriver::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
         let owner = Arc::downgrade(self);
@@ -7790,16 +7754,7 @@ impl DatabaseDocumentMountOwner {
 
     fn poll_once(self: Arc<Self>) {
         use std::sync::atomic::Ordering;
-        if self
-            .driver
-            .compare_exchange(
-                DatabaseDocumentMountDriver::Queued as u8,
-                DatabaseDocumentMountDriver::Polling as u8,
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            )
-            .is_err()
-        {
+        if self.driver.compare_exchange(DatabaseDocumentMountDriver::Queued as u8, DatabaseDocumentMountDriver::Polling as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
         self.wake_requested.store(false, Ordering::Release);
@@ -7867,16 +7822,7 @@ impl DatabaseDocumentMountOwner {
                     if self.wake_requested.swap(false, Ordering::AcqRel) {
                         continue;
                     }
-                    if self
-                        .driver
-                        .compare_exchange(
-                            DatabaseDocumentMountDriver::Polling as u8,
-                            DatabaseDocumentMountDriver::Idle as u8,
-                            Ordering::AcqRel,
-                            Ordering::Acquire,
-                        )
-                        .is_err()
-                    {
+                    if self.driver.compare_exchange(DatabaseDocumentMountDriver::Polling as u8, DatabaseDocumentMountDriver::Idle as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
                         return;
                     }
                     if self.wake_requested.swap(false, Ordering::AcqRel) {
@@ -7997,6 +7943,55 @@ pub struct Database<A: db_artifact::AuthzHook + 'static = db_artifact::AllowAll,
 // classified as thread-owning alongside `db_artifact`, per its report's "db_engine (per-submit
 // bridge threads)"). Every `.wal()`/`.snapshot()`/`.catalog()`/`.index()`/`.payload()`/`.lease()`
 // accessor call is `.await`ed inside the SAME `block_on`, never a bare synchronous call.
+/// 🧲️ Filesystem database-open rejection retaining storage cleanup authority.
+#[must_use = "database-open rejection must close its retained storage before exposing the cause"]
+pub enum DatabaseOpenAtRejected {
+    Storage(db_storage::DbStorageOpenRejected),
+    Database { cause: DbError, cleanup_error: Option<DbError>, storage: Arc<db_storage::DbBackend> },
+}
+
+impl DatabaseOpenAtRejected {
+    pub fn error(&self) -> &DbError {
+        match self {
+            Self::Storage(rejected) => rejected.error(),
+            Self::Database { cause, .. } => cause,
+        }
+    }
+
+    pub fn cleanup_error(&self) -> Option<&DbError> {
+        match self {
+            Self::Storage(rejected) => rejected.cleanup_error(),
+            Self::Database { cleanup_error, .. } => cleanup_error.as_ref(),
+        }
+    }
+
+    pub async fn retry_close(self) -> Result<DbError, Self> {
+        match self {
+            Self::Storage(rejected) => rejected.retry_close().await.map_err(Self::Storage),
+            Self::Database { cause, mut cleanup_error, storage } => {
+                let result = match storage.as_ref() {
+                    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+                    db_storage::DbBackend::Fs(storage) => storage.close().await,
+                    _ => Err(DbError::Internal("database open-at rejection lost its filesystem storage".to_string())),
+                };
+                match result {
+                    Ok(()) => Ok(cause),
+                    Err(error) => {
+                        cleanup_error = Some(error);
+                        Err(Self::Database { cause, cleanup_error, storage })
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl std::fmt::Debug for DatabaseOpenAtRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("DatabaseOpenAtRejected").field("cause", self.error()).field("cleanup_error", &self.cleanup_error()).finish()
+    }
+}
+
 impl Database<db_artifact::AllowAll> {
     /// @emoji 🚀️ The frozen entry point: opens (or initializes, if `storage` is fresh) a `Database`
     /// over an arbitrary `Arc<db_storage::DbBackend>` backend, wired with the default `AllowAll` authz and
@@ -8007,10 +8002,13 @@ impl Database<db_artifact::AllowAll> {
 
     /// @emoji 🚀️ The zero-touch filesystem entry point. The caller supplies the process pool
     /// before storage construction, so opening can never take a pool-less inline path.
-    pub async fn open_at(pool: Arc<WorkerPool>, root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DbError> {
-        let fs = db_storage::FsStorage::open(pool.clone(), root).await?;
+    pub async fn open_at(pool: Arc<WorkerPool>, root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DatabaseOpenAtRejected> {
+        let fs = db_storage::FsStorage::open(pool.clone(), root).await.map_err(DatabaseOpenAtRejected::Storage)?;
         let storage: Arc<db_storage::DbBackend> = Arc::new(db_storage::DbBackend::Fs(fs));
-        Database::open(pool, DbConfig::for_profile(profile), storage).await
+        match Database::open(pool, DbConfig::for_profile(profile), storage.clone()).await {
+            Ok(database) => Ok(database),
+            Err(cause) => Err(DatabaseOpenAtRejected::Database { cause, cleanup_error: None, storage }),
+        }
     }
 
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
@@ -8064,7 +8062,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
 
     async fn open_with(pool: Arc<WorkerPool>, config: DbConfig, storage: Arc<db_storage::DbBackend>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
         let pool_use = pool.acquire_use().map_err(|error| DbError::Unavailable(format!("database WorkerPool use rejected: {error:?}")))?;
-        let capability_probe = match Self::open_retained(pool.clone(), storage) {
+        let capability_probe = match DatabaseCapabilityOpenFuture::try_prepare_with_use(pool.clone(), pool_use.clone(), storage, true) {
             Ok(probe) => probe,
             Err(rejected) => return Err(rejected.close_and_take_error()),
         };
@@ -8083,7 +8081,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         let health = Arc::new(db_observe::HealthRegistry::new());
         health.set("db_engine.storage", if storage_capabilities.durable { db_observe::HealthState::Healthy } else { db_observe::HealthState::Degraded("storage backend is not durable".to_string()) });
 
-        let catalog_probe = match Self::open_catalog_read_retained(pool.clone(), storage) {
+        let catalog_probe = match DatabaseCatalogReadFuture::try_prepare_with_use(pool.clone(), pool_use.clone(), storage, DatabaseCatalogRootKey::root(), true) {
             Ok(probe) => probe,
             Err(rejected) => return Err(rejected.close_and_take_error(pool.clone())),
         };
@@ -8095,7 +8093,15 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             }
             None => {
                 let pages = encode_catalog_pages(&[]).await?;
-                let bootstrap = match Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages) {
+                let bootstrap = match DatabaseCatalogBootstrapFuture::try_prepare_with_use(
+                    pool.clone(),
+                    pool_use.clone(),
+                    storage,
+                    pages,
+                    DatabaseCatalogBootstrapKey::root(),
+                    EpochFence::INITIAL,
+                    true,
+                ) {
                     Ok(bootstrap) => bootstrap,
                     Err(rejected) => return Err(rejected.close_and_take_error()),
                 };
@@ -8179,12 +8185,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         DatabaseDocumentMountFailure::Retained { rejected, resume }
     }
 
-    async fn refresh_catalog_document(
-        pool: Arc<WorkerPool>,
-        storage: Arc<db_storage::DbBackend>,
-        catalog: Arc<Mutex<CatalogState>>,
-        document: &protocol::ArtifactId,
-    ) -> Result<bool, DbError> {
+    async fn refresh_catalog_document(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, catalog: Arc<Mutex<CatalogState>>, document: &protocol::ArtifactId) -> Result<bool, DbError> {
         let read = match DatabaseCatalogReadFuture::try_submit(pool.clone(), storage, DatabaseCatalogRootKey::root()) {
             Ok(read) => read,
             Err(rejected) => return Err(rejected.close_and_take_error(pool)),
@@ -8207,11 +8208,12 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
 
     async fn publish_mount_catalog(
         pool: Arc<WorkerPool>,
+        pool_use: Arc<WorkerPoolUse>,
         storage: Arc<db_storage::DbBackend>,
         catalog: Arc<Mutex<CatalogState>>,
         document: protocol::ArtifactId,
     ) -> Result<(), DbError> {
-        let transaction = match DatabaseCreateCatalogFuture::try_submit(pool, catalog, storage, document) {
+        let transaction = match DatabaseCreateCatalogFuture::try_prepare_with_use(pool, pool_use, catalog, storage, document, true) {
             Ok(transaction) => transaction,
             Err(rejected) => return Err(rejected.close_and_take_error()),
         };
@@ -8262,7 +8264,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     ) -> Result<DatabaseDocumentMountReply, DatabaseDocumentMountFailure> {
         let mut create = !catalog_known && policy != DatabaseDocumentMountPolicy::Open;
         if create {
-            if let Err(error) = Self::publish_mount_catalog(pool.clone(), storage.clone(), catalog.clone(), document.clone()).await {
+            if let Err(error) = Self::publish_mount_catalog(pool.clone(), pool_use.clone(), storage.clone(), catalog.clone(), document.clone()).await {
                 if policy != DatabaseDocumentMountPolicy::Ensure || !matches!(error, DbError::AlreadyExists(_) | DbError::Fenced { .. }) {
                     return Err(error.into());
                 }
@@ -8284,21 +8286,11 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             let create_storage = storage.clone();
             let create_document = document.clone();
             let created_at_ms = now_ms().await;
-            match db_artifact::ArtifactAuthority::spawn_with_pool_use(
-                create_pool,
-                pool_use.clone(),
-                move || db_artifact::ArtifactEngine::create_retained(create_document, create_storage, create_config, created_at_ms),
-                mailbox_capacities,
-            )
-            .await
-            {
+            match db_artifact::ArtifactAuthority::spawn_with_pool_use(create_pool, pool_use.clone(), move || db_artifact::ArtifactEngine::create_retained(create_document, create_storage, create_config, created_at_ms), mailbox_capacities).await {
                 Ok(authority) => authority,
                 Err(rejected) => {
                     let retry_open = policy == DatabaseDocumentMountPolicy::Ensure && matches!(rejected.error(), DbError::AlreadyExists(_));
-                    let resume = retry_open.then(|| {
-                        Box::pin(Self::run_open_document_mount(pool.clone(), pool_use.clone(), storage.clone(), document.clone(), open_config, mailbox_capacities, emit.clone()))
-                            as DatabaseDocumentMountFuture
-                    });
+                    let resume = retry_open.then(|| Box::pin(Self::run_open_document_mount(pool.clone(), pool_use.clone(), storage.clone(), document.clone(), open_config, mailbox_capacities, emit.clone())) as DatabaseDocumentMountFuture);
                     return Err(Self::retained_mount_rejection(rejected, resume));
                 }
             }
@@ -8331,17 +8323,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 let generation = *generation;
                 let (reply, raw_receiver) = db_actor::oneshot();
                 waiters[slot] = Some(DatabaseDocumentMountWaiter { policy, create_claim: false, reply });
-                (
-                    DatabaseDocumentMountWait {
-                        receiver: raw_receiver,
-                        registry: Arc::downgrade(&self.open_artifacts),
-                        document: document.0.clone(),
-                        generation,
-                        slot,
-                        resolved: false,
-                    },
-                    Some(owner.clone()),
-                )
+                (DatabaseDocumentMountWait { receiver: raw_receiver, registry: Arc::downgrade(&self.open_artifacts), document: document.0.clone(), generation, slot, resolved: false }, Some(owner.clone()))
             } else {
                 if policy == DatabaseDocumentMountPolicy::Create && catalog_known {
                     return Err(DbError::AlreadyExists(format!("document {} already exists", document.0)).into());
@@ -8380,17 +8362,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 let mut waiters = std::array::from_fn(|_| None);
                 waiters[0] = Some(DatabaseDocumentMountWaiter { policy, create_claim: policy == DatabaseDocumentMountPolicy::Create, reply });
                 registry.slots.insert(document.0.clone(), DatabaseDocumentMountSlot::Opening { generation, owner: owner.clone(), waiters });
-                (
-                    DatabaseDocumentMountWait {
-                        receiver: raw_receiver,
-                        registry: Arc::downgrade(&self.open_artifacts),
-                        document: document.0.clone(),
-                        generation,
-                        slot: 0,
-                        resolved: false,
-                    },
-                    Some(owner),
-                )
+                (DatabaseDocumentMountWait { receiver: raw_receiver, registry: Arc::downgrade(&self.open_artifacts), document: document.0.clone(), generation, slot: 0, resolved: false }, Some(owner))
             }
         };
         if let Some(owner) = owner {
@@ -8402,12 +8374,9 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     }
 
     /// 🪴️ Admits the exact create-document catalog transaction before any catalog owner is copied.
-    pub fn create_document_catalog_retained(
-        &self,
-        document: protocol::ArtifactId,
-    ) -> Result<DatabaseCreateCatalogFuture, DatabaseRetainedActivityRejected<DatabaseCreateCatalogRejected>> {
-        let _pool_use = self.require_open_use().map_err(DatabaseRetainedActivityRejected::Closed)?;
-        DatabaseCreateCatalogFuture::try_submit(self.pool.clone(), self.catalog.clone(), self.storage.clone(), document)
+    pub fn create_document_catalog_retained(&self, document: protocol::ArtifactId) -> Result<DatabaseCreateCatalogFuture, DatabaseRetainedActivityRejected<DatabaseCreateCatalogRejected>> {
+        let pool_use = self.require_open_use().map_err(DatabaseRetainedActivityRejected::Closed)?;
+        DatabaseCreateCatalogFuture::try_prepare_with_use(self.pool.clone(), pool_use, self.catalog.clone(), self.storage.clone(), document, true)
             .map_err(DatabaseRetainedActivityRejected::Retained)
     }
 
@@ -8456,16 +8425,10 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         }
         if let Some((_, authority)) = self.closing_authority.as_ref() {
             if !authority.shutdown_step() {
-                return Ok(DatabaseShutdownProgress::Progress {
-                    phase: DatabaseShutdownPhase::Authority,
-                    remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() + 1,
-                });
+                return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() + 1 });
             }
             self.closing_authority.take();
-            return Ok(DatabaseShutdownProgress::Progress {
-                phase: DatabaseShutdownPhase::Authority,
-                remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len(),
-            });
+            return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() });
         }
         let opening = {
             let registry = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned");
@@ -8480,10 +8443,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             }
             owner.drive();
             semio_framework_async::yield_once().await;
-            return Ok(DatabaseShutdownProgress::Progress {
-                phase: DatabaseShutdownPhase::Authority,
-                remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len(),
-            });
+            return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() });
         }
         let next = {
             let registry = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned");
@@ -8500,10 +8460,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             let slot = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").slots.remove(&document).expect("selected shutdown authority disappeared");
             let DatabaseDocumentMountSlot::Ready(completion) = slot else { return Err(DbError::Internal("selected shutdown mount was not ready".to_string())) };
             self.closing_authority = Some((document, completion.authority));
-            return Ok(DatabaseShutdownProgress::Progress {
-                phase: DatabaseShutdownPhase::Authority,
-                remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() + 1,
-            });
+            return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() + 1 });
         }
         let shared_authorities = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len();
         if shared_authorities != 0 {
@@ -8525,6 +8482,9 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             self.shutdown_emit_started = true;
             self.emit.emit(EmitEvent::new("db_engine.database_shutdown")).await;
             return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Emit, remaining_authorities: 0 });
+        }
+        if self.pool_use.as_ref().is_some_and(|pool_use| Arc::strong_count(pool_use) != 1) {
+            return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::PoolUse, remaining_authorities: 0 });
         }
         self.pool_use.take();
         self.shutdown_complete = true;
@@ -8584,11 +8544,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         let holder = db_storage::DbIoText::try_from_str(holder)?;
         let requested_at_ms = now_ms().await;
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let result = self
-            .compact_document_retained(document, holder, consolidate_snapshots, requested_at_ms, cancelled)
-            .await?
-            .await
-            .map_err(DatabaseDocumentOpenRejected::Database)?;
+        let result = self.compact_document_retained(document, holder, consolidate_snapshots, requested_at_ms, cancelled).await?.await.map_err(DatabaseDocumentOpenRejected::Database)?;
         result.map_err(DatabaseDocumentOpenRejected::Database)
     }
 
@@ -8601,8 +8557,8 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         origin: protocol::ActorId,
         snapshot_chunk_bytes: usize,
     ) -> Result<db_sync::DatabaseSyncHelloFuture, DatabaseRetainedActivityRejected<db_sync::DatabaseSyncHelloRejected>> {
-        let _pool_use = self.require_open_use().map_err(DatabaseRetainedActivityRejected::Closed)?;
-        db_sync::DatabaseSyncHelloFuture::try_submit(self.pool.clone(), self.storage.clone(), document, hello_frontier, session_id, origin, snapshot_chunk_bytes)
+        let pool_use = self.require_open_use().map_err(DatabaseRetainedActivityRejected::Closed)?;
+        db_sync::DatabaseSyncHelloFuture::try_submit_with_use(self.pool.clone(), pool_use, self.storage.clone(), document, hello_frontier, session_id, origin, snapshot_chunk_bytes)
             .map_err(DatabaseRetainedActivityRejected::Retained)
     }
 
@@ -12552,6 +12508,30 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn database_create_catalog_resolved_drop_retains_use_until_terminal_drain() {
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+        let (storage, catalog, _) = create_catalog_fixture(Vec::new()).await;
+        let result = DatabaseCreateCatalogFuture::try_submit(pool.clone(), catalog, storage, protocol::ArtifactId(String::from("resolved-owner-drop")))
+            .unwrap()
+            .await
+            .unwrap();
+        let generation = result.state.as_ref().expect("resolved result retains its exact catalog state").generation;
+        assert_eq!(pool.shutdown(), Err(semio_framework_async::WorkerPoolShutdownError::Busy { retained_uses: 1 }));
+        drop(result);
+        let terminal = take_database_create_catalog_terminal(generation).expect("dropping an unconsumed result exposes its retained terminal owner");
+        for _ in 0..1024 {
+            if terminal.terminal_is_empty() {
+                break;
+            }
+            let _ = terminal.close_step();
+            semio_framework_async::yield_once().await;
+        }
+        assert!(terminal.terminal_is_empty());
+        drop(terminal);
+        assert_eq!(pool.shutdown(), Ok(()));
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn database_concurrent_ensure_mounts_one_actor_and_one_writer() {
         let pool = test_worker_pool();
         let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
@@ -12619,23 +12599,14 @@ mod tests {
             }
         };
         assert_eq!(rejected_document_open_error(rejected).await, DbError::Closed);
+        assert!(matches!(database.create_document_catalog_retained(protocol::ArtifactId(String::from("post-terminal-catalog"))), Err(DatabaseRetainedActivityRejected::Closed(DbError::Closed))));
         assert!(matches!(
-            database.create_document_catalog_retained(protocol::ArtifactId(String::from("post-terminal-catalog"))),
-            Err(DatabaseRetainedActivityRejected::Closed(DbError::Closed))
-        ));
-        assert!(matches!(
-            database.hello_retained(
-                to_core_document_id(&document).await,
-                None,
-                String::from("post-terminal-session"),
-                protocol::ActorId(String::from("post-terminal-actor")),
-                4096,
-            ),
+            database.hello_retained(to_core_document_id(&document).await, None, String::from("post-terminal-session"), protocol::ActorId(String::from("post-terminal-actor")), 4096,),
             Err(DatabaseRetainedActivityRejected::Closed(DbError::Closed))
         ));
         assert_eq!(database.checkpoint_document(&document, String::from("post-terminal-checkpoint"), &[]).await, Err(DbError::Closed));
         let (ran_tx, ran_rx) = std::sync::mpsc::sync_channel(1);
-        pool.submit(Lane::UserVisible, Box::new(move || ran_tx.send(()).unwrap()));
+        pool.submit_at(pool.now_ms(), Lane::UserVisible, Box::new(move || ran_tx.send(()).unwrap()));
         ran_rx.recv().unwrap();
         drop(unrelated);
         assert_eq!(pool.shutdown(), Ok(()));
@@ -12668,6 +12639,7 @@ mod tests {
             String::from("non-runnable-mount"),
             1,
             Box::pin(async { std::future::pending::<Result<DatabaseDocumentMountReply, DatabaseDocumentMountFailure>>().await }),
+            Arc::new(Mutex::new(None)),
             Arc::new(Mutex::new(None)),
         );
         owner.request_drive(false);
@@ -12846,11 +12818,7 @@ mod tests {
         let mut database = Database::open_with_emit(pool.clone(), DbConfig::for_profile(Profile::Test), storage, Arc::new(emit.clone())).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-reentrant-wake"));
         let mut mount = Box::pin(database.ensure_document(&document));
-        let probe = Arc::new(MountFanoutLockProbe {
-            registry: database.open_artifacts.clone(),
-            called: std::sync::atomic::AtomicBool::new(false),
-            unlocked: std::sync::atomic::AtomicBool::new(false),
-        });
+        let probe = Arc::new(MountFanoutLockProbe { registry: database.open_artifacts.clone(), called: std::sync::atomic::AtomicBool::new(false), unlocked: std::sync::atomic::AtomicBool::new(false) });
         let waker = std::task::Waker::from(probe.clone());
         let mut context = std::task::Context::from_waker(&waker);
         assert!(mount.as_mut().poll(&mut context).is_pending());
@@ -13071,6 +13039,8 @@ mod tests {
         let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
         fault.set_script(crate::db_testkit::FaultScript { fail_nth_sync: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
         let document = protocol::ArtifactId(String::from("single-flight-unlock-fault"));
+        let (parked_tx, parked_rx) = std::sync::mpsc::sync_channel(1);
+        *database.mount_parked_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move || parked_tx.send(()).unwrap()));
         let mut first = Box::pin(database.ensure_document(&document));
         let mut second = Box::pin(database.ensure_document(&document));
         std::future::poll_fn(|context| {
@@ -13079,23 +13049,16 @@ mod tests {
             std::task::Poll::Ready(())
         })
         .await;
-        let mut exact = None;
-        for _ in 0..100_000 {
-            {
-                let registry = database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                if let Some(DatabaseDocumentMountSlot::Opening { generation, owner, .. }) = registry.slots.get(&document.0) {
-                    let work = owner.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    if matches!(&*work, DatabaseDocumentMountWork::Parked { rejected, .. } if rejected.has_retained_writer()) {
-                        exact = Some((*generation, Arc::as_ptr(owner)));
-                    }
-                }
-            }
-            if exact.is_some() {
-                break;
-            }
-            semio_framework_async::yield_once().await;
-        }
-        let exact = exact.expect("temporary unlock fault parks the retained mount owner");
+        parked_rx.recv().unwrap();
+        let exact = {
+            let registry = database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let DatabaseDocumentMountSlot::Opening { generation, owner, .. } = registry.slots.get(&document.0).expect("temporary unlock fault retains the mounted owner") else { panic!("temporary unlock fault replaced its opening slot") };
+            let work = owner.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let DatabaseDocumentMountWork::Parked { rejected, .. } = &*work else { panic!("temporary unlock fault did not park its retained owner") };
+            assert!(rejected.has_retained_writer());
+            assert!(matches!(rejected.cleanup_error(), Some(DbError::Unavailable(detail)) if detail.contains("injected WAL writer unlock failure")));
+            (*generation, Arc::as_ptr(owner))
+        };
         drop(first);
         drop(second);
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(true));
@@ -13160,17 +13123,15 @@ mod tests {
             joins.push(join);
         }
         let release_gate = gate.clone();
-        if let Err(error) = pool.try_submit(
+        pool.submit_at(
+            pool.now_ms(),
             Lane::UserVisible,
             Box::new(move || {
                 let (lock, ready) = &*release_gate;
                 *lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = true;
                 ready.notify_one();
             }),
-        ) {
-            drop(error.into_job());
-            panic!("shared pool rejected the release job");
-        }
+        );
         let first = first.await.unwrap();
         for join in joins {
             let joined = join.await.unwrap();
@@ -13489,10 +13450,7 @@ mod tests {
 
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let control = DatabaseShutdownControl::new(std::time::Instant::now() + std::time::Duration::from_secs(5), cancelled.clone());
-        assert!(matches!(
-            database.shutdown_step(&control).await.unwrap(),
-            DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, .. }
-        ));
+        assert!(matches!(database.shutdown_step(&control).await.unwrap(), DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, .. }));
         let exact_authority = Arc::as_ptr(&database.closing_authority.as_ref().expect("database retains closing authority").1);
         cancelled.store(true, std::sync::atomic::Ordering::Release);
         assert_eq!(database.shutdown(&control).await, Err(DbError::Closed));
@@ -13523,10 +13481,7 @@ mod tests {
         let document = protocol::ArtifactId("shutdown-shared-owner".to_string());
         let handle = database.create_document(ArtifactSpec::new(document).await).await.unwrap();
         let control = DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5));
-        assert_eq!(
-            database.shutdown_step(&control).await.unwrap(),
-            DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Authorities(1))
-        );
+        assert_eq!(database.shutdown_step(&control).await.unwrap(), DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Authorities(1)));
         assert_eq!(handle.frontier().await.unwrap().head_seq, 0);
         drop(handle);
         database.shutdown(&control).await.expect("released shared authority permits terminal shutdown");

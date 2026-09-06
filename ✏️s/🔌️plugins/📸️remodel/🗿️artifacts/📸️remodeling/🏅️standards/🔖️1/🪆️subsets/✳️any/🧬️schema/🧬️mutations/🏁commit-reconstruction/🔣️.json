@@ -4,7 +4,7 @@
   "semanticKind": "commit-reconstruction",
   "displayName": "Commit Reconstruction",
   "emoji": "🏁",
-  "aggregateVariant": "ReconstructionAssetCommit",
+  "aggregateVariant": "CommitReconstruction",
   "payloadSchema": "🧬️.schema.json",
   "textOpcode": "commit-reconstruction",
   "binaryTag": null,

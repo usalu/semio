@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "_comment": "🌦️ The ANSI/ASHRAE Standard 140 §5.2 reference weather year, committed verbatim from NREL's own BESTEST-GSR shared resources (`shared_resources/725650TYCST.epw`) so every BESTEST fixture in this subset — the semio engine's and the EnergyPlus oracle's alike — reads byte-identical weather. Renamed to the repository's taxonomy filename; contents are unmodified.",
+  "source": "https://raw.githubusercontent.com/NREL/BESTEST-GSR/master/shared_resources/725650TYCST.epw",
+  "upstreamName": "725650TYCST.epw",
+  "sha256": "1d0402144460a26265555a18a9cdfe4f0f7d9b4f57d6194847af7959b518571f",
+  "bytes": 1611228,
+  "station": "DENVER INTL AP, CO, USA (TMY3 725650)",
+  "latitudeDeg": 39.83,
+  "longitudeDeg": -104.65,
+  "timeZoneHours": -7.0,
+  "elevationM": 1650.0,
+  "records": 8760,
+  "license": "BSD-3-Clause (NREL/BESTEST-GSR)"
+}

@@ -35,8 +35,16 @@ function bootDescriptor(): { pluginVariant: string; appRole: string; hub?: { hub
   };
 }
 
+/** @emoji 🪪️ The trunk shell is single-mount by construction (`#root`, one transferred `OffscreenCanvas`),
+ * so its canvas carries the fixed `#semio-wgpu-canvas` identity `🌐️.html`'s own stylesheet and the
+ * parity harness's wgpu boot gate (`🧑‍💻dev/…/📜️script.ts` `triageParityBoot`) both address it by. The
+ * multi-mount library path (`../🎬️renderer-boot/🟦️.ts`'s `bootFrameworkOsWgpu`) deliberately stays
+ * id-less — several independently-rooted mounts coexist on one page there. */
+export const WGPU_CANVAS_ID = "semio-wgpu-canvas";
+
 function canvasElement(): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
+  canvas.id = WGPU_CANVAS_ID;
   canvas.tabIndex = 0;
   canvas.setAttribute("aria-label", locale() === "de" ? "Semio Arbeitsfläche" : "Semio workspace");
   canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none;outline:none;";

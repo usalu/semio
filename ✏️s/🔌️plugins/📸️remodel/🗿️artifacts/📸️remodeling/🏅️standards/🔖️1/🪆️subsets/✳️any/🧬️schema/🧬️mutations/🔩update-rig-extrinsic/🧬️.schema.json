@@ -8,58 +8,35 @@
   ],
   "properties": {
     "extrinsic": {
-      "title": "RigExtrinsic",
       "type": "object",
+      "title": "RigExtrinsic",
       "additionalProperties": false,
       "required": [
         "cameraId",
-        "poseInRig"
+        "rotationWxyz",
+        "translationM"
       ],
       "properties": {
         "cameraId": {
           "type": "string"
         },
-        "poseInRig": {
-          "title": "Se3",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "r",
-            "t"
-          ],
-          "properties": {
-            "r": {
-              "title": "Mat3d",
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "cols"
-              ],
-              "properties": {
-                "cols": {
-                  "type": "array",
-                  "items": {
-                    "type": "array",
-                    "items": {
-                      "type": "number"
-                    },
-                    "minItems": 3,
-                    "maxItems": 3
-                  },
-                  "minItems": 3,
-                  "maxItems": 3
-                }
-              }
-            },
-            "t": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 3,
-              "maxItems": 3
-            }
-          }
+        "rotationWxyz": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "translationM": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 3,
+          "maxItems": 3
         }
       }
     }

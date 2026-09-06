@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeModelVersion",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newVersion"
+  ],
+  "properties": {
+    "newVersion": {
+      "type": "string"
+    }
+  }
+}

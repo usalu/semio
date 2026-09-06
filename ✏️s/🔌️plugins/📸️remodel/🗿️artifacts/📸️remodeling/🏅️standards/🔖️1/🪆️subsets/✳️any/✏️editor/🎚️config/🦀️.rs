@@ -6,8 +6,8 @@
 //! must never depend on the app, so nothing under `🗿️artifacts/` may reference these types.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🎥️ Ephemeral viewport orbit camera — never persisted as document content, mirrors the pre-B1

@@ -311,6 +311,7 @@ impl BrowserRendererWorker {
     }
 }
 
+#[wasm_bindgen]
 impl BrowserRendererWorker {
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&mut self) -> Result<bool, JsValue> {

@@ -1,36 +1,56 @@
-//! 🖌️ `set-fill-count` command.
+//! 🖌️ `set-fill-count` command — the whole 2d brush-fill session.
+//!
+//! 🧵️ The session lives inside one retained tool job: [`Puzzle2dFillSessionWork`] owns the capture
+//! ingress, the `BoardFillJob` search and the placement-apply cursor for the lifetime of that job,
+//! and publishes exactly one `Emit` (every accepted placement plus the terminal
+//! [`Puzzle2dConfigMutation::Fill`] runtime). There is no process-global session registry, no worker
+//! pool and no self-dispatched continuation effect: an `ArtifactApp` is a set of associated fns with
+//! no live instance, so a session keyed by `app_instance_id` in a `static` slot table could never be
+//! reached from a retained work — and a retained work never sees the `ArtifactView` such a key comes
+//! from. What survives across dispatches instead is the checkpoint the design already had: the
+//! `Puzzle2dFillRuntime` in `Config` (count, seed, accepted count, lifecycle) plus the placements
+//! already committed to the document, which is exactly what `brushFillSessionStep` resumes from.
 
-use crate::artifacts::puzzle2d::op::Puzzle2dPlaySnapshot;
-use crate::editor::puzzle2d::config::Puzzle2dFillLifecycle;
+use crate::artifacts::puzzle2d::op::{Puzzle2dMutation, Puzzle2dPlaySnapshot};
+use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dFillLifecycle, Puzzle2dFillRuntime, Puzzle2dFillText};
 use crate::editor::puzzle2d::modes::edit::tools::fill;
+use crate::editor::puzzle2d::Puzzle2dPlayApp;
+use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
+use semio_framework_plugin::{EditorApp, Emit, Fault};
 use serde_json::Value;
-use std::sync::atomic::{AtomicPtr, Ordering};
 
-const FILL_SESSION_CAPACITY: usize = 8;
-const FILL_SESSION_LOCKED: *mut FillSessionNode = usize::MAX as *mut FillSessionNode;
+/// 🪣️ The eight verbs that drive one fill session.
+pub const PUZZLE2D_FILL_SESSION_ACTIONS: &[&str] = &["setFillCount", "brushFillSessionBegin", "brushFillSessionStep", "brushFillSessionClear", "brushFillSessionAdopt", "brushFillSessionCancel", "brushFillSessionRetry", "brushFillSessionDiscard"];
 
-/// 🪪️ Owns only the mounted fill continuation authority and its bounded publications.
-pub struct Puzzle2dFillActionCtx<'a> {
-    pub runtime: &'a mut crate::editor::puzzle2d::config::Puzzle2dFillRuntime,
-    pub effects: &'a mut Vec<Effect>,
-    pub artifact_mutations: &'a mut Vec<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>,
-    pub operation: Option<semio_framework_plugin::AppOperationContext>,
-    pub boundary_fault: &'a mut Option<&'static str>,
+/// 🔎️ Whether `action` opens or resumes a search rather than only moving the runtime lifecycle.
+pub fn is_fill_search_action(action: &str) -> bool {
+    matches!(action, "setFillCount" | "brushFillSessionBegin" | "brushFillSessionRetry" | "brushFillSessionStep")
 }
 
-enum FillTerminal {
-    Completed(infinite_canvas::BoardFillResult),
-    Cancelled,
-    Fault(&'static str),
+pub fn is_fill_session_action(action: &str) -> bool {
+    PUZZLE2D_FILL_SESSION_ACTIONS.contains(&action)
 }
 
-enum FillWork {
-    AwaitingSnapshot,
-    Session(semio_framework_job::MountedWorkerJobSession<ArtifactBoardFillJob>),
-    Rejected(semio_framework_job::WorkerJobSessionAdmissionRejected<ArtifactBoardFillJob>),
-    Detached(infinite_canvas::BoardFillJob),
-    Empty,
+/// 🍰️ Per-`step()` chunk sizes and the fixed chunk ceiling of every fill stage. The declared extent
+/// IS the enforced ceiling — a capture or apply that would run past its budget faults, and a search
+/// that would is published as a resumable `CheckpointReady` runtime instead of running unbounded.
+const PUZZLE2D_FILL_CAPTURE_UNITS_PER_STEP: usize = 2_048;
+const PUZZLE2D_FILL_CAPTURE_CHUNKS: usize = 256;
+const PUZZLE2D_FILL_SEARCH_UNITS_PER_STEP: usize = 512;
+const PUZZLE2D_FILL_SEARCH_CHUNKS: usize = 512;
+const PUZZLE2D_FILL_APPLY_UNITS_PER_STEP: usize = 4_096;
+const PUZZLE2D_FILL_APPLY_CHUNKS: usize = 256;
+const PUZZLE2D_FILL_CONTROL_CHUNKS: usize = 4;
+const PUZZLE2D_FILL_OUTCOME_CLOSE_UNITS: usize = 4_096;
+const PUZZLE2D_FILL_STEP_FUEL: u64 = 1;
+
+/// ⏱️ The inner search context spends exactly one fuel unit — the granularity the engine's own
+/// batch driver used — and is never clock-bounded: the retained job already
+/// enforces the wall-clock step deadline before it calls [`Puzzle2dFillSessionWork::step`], and a
+/// checkpoint replay must re-derive exactly the same cursor, which a wall clock would break.
+fn puzzle2d_fill_monotonic_zero() -> Option<u64> {
+    Some(0)
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -151,21 +171,6 @@ struct ArtifactFillCaptureCursor {
     byte: usize,
 }
 
-struct ArtifactBoardFillJob {
-    operation: semio_framework_job::Operation,
-    render_generation: u64,
-    canonical_base_revision: [u8; 32],
-    maximum_count: u32,
-    suggestion_offset: f64,
-    snapshot: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>,
-    snapshot_return: Option<store::SnapshotReadReturn>,
-    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,
-    capture: ArtifactFillCaptureCursor,
-    inner: Option<infinite_canvas::BoardFillJob>,
-    fault: Option<&'static str>,
-    closing: bool,
-}
-
 impl ArtifactFillCaptureCursor {
     fn new() -> Self {
         Self {
@@ -201,579 +206,6 @@ impl ArtifactFillCaptureCursor {
             byte: 0,
         }
     }
-}
-
-impl ArtifactBoardFillJob {
-    fn new(operation: semio_framework_job::Operation, render_generation: u64, canonical_base_revision: [u8; 32], maximum_count: u32, suggestion_offset: f64, snapshot: store::SnapshotRead<Puzzle2dPlaySnapshot>) -> Self {
-        Self {
-            operation,
-            render_generation,
-            canonical_base_revision,
-            maximum_count,
-            suggestion_offset,
-            snapshot: Some(snapshot),
-            snapshot_return: None,
-            ingress: Some(infinite_canvas::BoardFillSnapshotIngress::new(suggestion_offset)),
-            capture: ArtifactFillCaptureCursor::new(),
-            inner: None,
-            fault: None,
-            closing: false,
-        }
-    }
-
-    fn nodes(document: &Value) -> Result<&[Value], &'static str> {
-        document.get("nodes").and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-nodes")
-    }
-
-    fn edges(document: &Value) -> Result<&[Value], &'static str> {
-        document.get("edges").and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-edges")
-    }
-
-    fn node_kinds(document: &Value) -> Result<&[Value], &'static str> {
-        document.get("meta").and_then(|meta| meta.get("kindCatalogs")).and_then(|catalogs| catalogs.get("nodes")).and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-node-kinds")
-    }
-
-    fn rules(document: &Value) -> Option<&[Value]> {
-        document.get("meta").and_then(|meta| meta.get("kindCompatibility")).or_else(|| document.get("kindCompatibility")).and_then(Value::as_array).map(Vec::as_slice)
-    }
-
-    fn finite(value: Option<f64>, default: f64) -> f64 {
-        value.filter(|value| value.is_finite()).unwrap_or(default)
-    }
-
-    fn capture_node_one(&mut self) -> Result<(), &'static str> {
-        let document = &self.snapshot.as_ref().ok_or("puzzle2d-fill-snapshot-owner")?.get().0;
-        let nodes = Self::nodes(document)?;
-        let Some(node) = nodes.get(self.capture.node) else {
-            if self.capture.node_field != ArtifactNodeCaptureField::Begin {
-                return Err("puzzle2d-fill-capture-stale-node");
-            }
-            self.capture.stage = ArtifactFillCaptureStage::Handles;
-            return Ok(());
-        };
-        match self.capture.node_field {
-            ArtifactNodeCaptureField::Begin => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_node().map_err(capture_fault_code)?;
-                self.capture.node_field = ArtifactNodeCaptureField::Id;
-            }
-            ArtifactNodeCaptureField::Id => {
-                let value = node.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-node-id")?;
-                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_node_id_byte(byte).map_err(capture_fault_code)?;
-                    self.capture.byte += 1;
-                } else {
-                    self.capture.byte = 0;
-                    self.capture.node_field = ArtifactNodeCaptureField::X;
-                }
-            }
-            ArtifactNodeCaptureField::X => {
-                self.capture.node_x = Self::finite(node.get("x").and_then(Value::as_f64), 0.0);
-                self.capture.node_field = ArtifactNodeCaptureField::Y;
-            }
-            ArtifactNodeCaptureField::Y => {
-                self.capture.node_y = Self::finite(node.get("y").and_then(Value::as_f64), 0.0);
-                self.capture.node_field = ArtifactNodeCaptureField::Scale;
-            }
-            ArtifactNodeCaptureField::Scale => {
-                self.capture.node_scale = Self::finite(node.get("scale").and_then(Value::as_f64), 1.0).max(f64::EPSILON);
-                self.capture.node_field = ArtifactNodeCaptureField::Shape;
-            }
-            ArtifactNodeCaptureField::Shape => {
-                self.capture.node_rectangle = node.get("shape").and_then(Value::as_str) == Some("rectangle");
-                self.capture.node_field = ArtifactNodeCaptureField::ExtentX;
-            }
-            ArtifactNodeCaptureField::ExtentX => {
-                let field = if self.capture.node_rectangle { "width" } else { "radius" };
-                let extent = Self::finite(node.get(field).and_then(Value::as_f64), 1.0).max(f64::EPSILON) * self.capture.node_scale;
-                self.capture.node_extent_x = if self.capture.node_rectangle { extent * 0.5 } else { extent };
-                self.capture.node_field = ArtifactNodeCaptureField::ExtentY;
-            }
-            ArtifactNodeCaptureField::ExtentY => {
-                self.capture.node_extent_y = if self.capture.node_rectangle { Self::finite(node.get("height").and_then(Value::as_f64), 1.0).max(f64::EPSILON) * self.capture.node_scale * 0.5 } else { self.capture.node_extent_x };
-                self.capture.node_field = ArtifactNodeCaptureField::Bound0;
-            }
-            ArtifactNodeCaptureField::Bound0 => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_node_bound(0, self.capture.node_x - self.capture.node_extent_x).map_err(capture_fault_code)?;
-                self.capture.node_field = ArtifactNodeCaptureField::Bound1;
-            }
-            ArtifactNodeCaptureField::Bound1 => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_node_bound(1, self.capture.node_y - self.capture.node_extent_y).map_err(capture_fault_code)?;
-                self.capture.node_field = ArtifactNodeCaptureField::Bound2;
-            }
-            ArtifactNodeCaptureField::Bound2 => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_node_bound(2, self.capture.node_x + self.capture.node_extent_x).map_err(capture_fault_code)?;
-                self.capture.node_field = ArtifactNodeCaptureField::Bound3;
-            }
-            ArtifactNodeCaptureField::Bound3 => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_node_bound(3, self.capture.node_y + self.capture.node_extent_y).map_err(capture_fault_code)?;
-                self.capture.node_field = ArtifactNodeCaptureField::Publish;
-            }
-            ArtifactNodeCaptureField::Publish => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_node().map_err(capture_fault_code)?;
-                self.capture.node += 1;
-                self.capture.node_field = ArtifactNodeCaptureField::Begin;
-            }
-        }
-        Ok(())
-    }
-
-    fn capture_handle_one(&mut self) -> Result<(), &'static str> {
-        let document = &self.snapshot.as_ref().ok_or("puzzle2d-fill-snapshot-owner")?.get().0;
-        let nodes = Self::nodes(document)?;
-        let Some(node) = nodes.get(self.capture.handle_node) else {
-            self.capture.stage = ArtifactFillCaptureStage::Kinds;
-            return Ok(());
-        };
-        let handles = node.get("handles").and_then(Value::as_array).ok_or("puzzle2d-fill-capture-handles")?;
-        let Some(handle) = handles.get(self.capture.handle) else {
-            if self.capture.handle_field != ArtifactHandleCaptureField::Begin {
-                return Err("puzzle2d-fill-capture-stale-handle");
-            }
-            self.capture.handle_node += 1;
-            self.capture.handle = 0;
-            self.capture.handle_edge = 0;
-            self.capture.handle_connected = false;
-            return Ok(());
-        };
-        match self.capture.handle_field {
-            ArtifactHandleCaptureField::Begin => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_handle().map_err(capture_fault_code)?;
-                self.capture.handle_field = ArtifactHandleCaptureField::Id;
-            }
-            ArtifactHandleCaptureField::Id => {
-                let value = handle.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-handle-id")?;
-                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_handle_text_byte(infinite_canvas::BoardFillIngressHandleText::Id, byte).map_err(capture_fault_code)?;
-                    self.capture.byte += 1;
-                } else {
-                    self.capture.byte = 0;
-                    self.capture.handle_field = ArtifactHandleCaptureField::ScanEdges;
-                }
-            }
-            ArtifactHandleCaptureField::ScanEdges => {
-                let id = handle.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-handle-id")?;
-                let edges = Self::edges(document)?;
-                if let Some(edge) = edges.get(self.capture.handle_edge) {
-                    self.capture.handle_edge += 1;
-                    if edge.get("source").and_then(Value::as_str) == Some(id) || edge.get("target").and_then(Value::as_str) == Some(id) {
-                        self.capture.handle_connected = true;
-                    }
-                } else {
-                    self.capture.handle_field = ArtifactHandleCaptureField::NodeKind;
-                }
-            }
-            ArtifactHandleCaptureField::NodeKind | ArtifactHandleCaptureField::HandleKind | ArtifactHandleCaptureField::WireKind | ArtifactHandleCaptureField::EdgeKind => {
-                let (value, field, next) = match self.capture.handle_field {
-                    ArtifactHandleCaptureField::NodeKind => (node.get("nodeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressHandleText::NodeKind, ArtifactHandleCaptureField::HandleKind),
-                    ArtifactHandleCaptureField::HandleKind => (handle.get("handleKind").and_then(Value::as_str).unwrap_or("port"), infinite_canvas::BoardFillIngressHandleText::HandleKind, ArtifactHandleCaptureField::WireKind),
-                    ArtifactHandleCaptureField::WireKind => (handle.get("wireKind").and_then(Value::as_str).unwrap_or("wire.link"), infinite_canvas::BoardFillIngressHandleText::WireKind, ArtifactHandleCaptureField::EdgeKind),
-                    ArtifactHandleCaptureField::EdgeKind => (handle.get("edgeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressHandleText::EdgeKind, ArtifactHandleCaptureField::X),
-                    _ => return Err("puzzle2d-fill-capture-handle-field"),
-                };
-                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_handle_text_byte(field, byte).map_err(capture_fault_code)?;
-                    self.capture.byte += 1;
-                } else {
-                    self.capture.byte = 0;
-                    self.capture.handle_field = next;
-                }
-            }
-            ArtifactHandleCaptureField::X => {
-                self.capture.handle_x = Self::finite(node.get("x").and_then(Value::as_f64), 0.0);
-                self.capture.handle_field = ArtifactHandleCaptureField::Y;
-            }
-            ArtifactHandleCaptureField::Y => {
-                self.capture.handle_y = Self::finite(node.get("y").and_then(Value::as_f64), 0.0);
-                self.capture.handle_field = ArtifactHandleCaptureField::Angle;
-            }
-            ArtifactHandleCaptureField::Angle => {
-                self.capture.handle_angle = Self::finite(handle.get("angle").and_then(Value::as_f64), 0.0);
-                self.capture.handle_field = ArtifactHandleCaptureField::Shape;
-            }
-            ArtifactHandleCaptureField::Shape => {
-                self.capture.handle_rectangle = node.get("shape").and_then(Value::as_str) == Some("rectangle");
-                self.capture.handle_field = ArtifactHandleCaptureField::ExtentX;
-            }
-            ArtifactHandleCaptureField::ExtentX => {
-                let field = if self.capture.handle_rectangle { "width" } else { "radius" };
-                self.capture.handle_extent_x = Self::finite(node.get(field).and_then(Value::as_f64), 1.0).max(f64::EPSILON);
-                self.capture.handle_field = ArtifactHandleCaptureField::ExtentY;
-            }
-            ArtifactHandleCaptureField::ExtentY => {
-                self.capture.handle_extent_y = if self.capture.handle_rectangle { Self::finite(node.get("height").and_then(Value::as_f64), 1.0).max(f64::EPSILON) } else { self.capture.handle_extent_x };
-                self.capture.handle_field = ArtifactHandleCaptureField::Radius;
-            }
-            ArtifactHandleCaptureField::Radius => {
-                self.capture.handle_radius = if self.capture.handle_rectangle { self.capture.handle_extent_x.max(self.capture.handle_extent_y) * 0.5 } else { self.capture.handle_extent_x };
-                self.capture.handle_field = ArtifactHandleCaptureField::NodeVisible;
-            }
-            ArtifactHandleCaptureField::NodeVisible => {
-                self.capture.handle_node_visible = node.get("visible").and_then(Value::as_bool) != Some(false);
-                self.capture.handle_field = ArtifactHandleCaptureField::HandleVisible;
-            }
-            ArtifactHandleCaptureField::HandleVisible => {
-                self.capture.handle_visible = handle.get("visible").and_then(Value::as_bool) != Some(false);
-                self.capture.handle_field = ArtifactHandleCaptureField::Visible;
-            }
-            ArtifactHandleCaptureField::Visible => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_visible(self.capture.handle_node_visible && self.capture.handle_visible).map_err(capture_fault_code)?;
-                self.capture.handle_field = ArtifactHandleCaptureField::Connected;
-            }
-            ArtifactHandleCaptureField::Connected => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_connected(self.capture.handle_connected).map_err(capture_fault_code)?;
-                self.capture.handle_field = ArtifactHandleCaptureField::SlotX;
-            }
-            ArtifactHandleCaptureField::SlotX => {
-                let distance = self.capture.handle_radius + self.suggestion_offset;
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_slot(0, self.capture.handle_x + self.capture.handle_angle.cos() * distance).map_err(capture_fault_code)?;
-                self.capture.handle_field = ArtifactHandleCaptureField::SlotY;
-            }
-            ArtifactHandleCaptureField::SlotY => {
-                let distance = self.capture.handle_radius + self.suggestion_offset;
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_slot(1, self.capture.handle_y + self.capture.handle_angle.sin() * distance).map_err(capture_fault_code)?;
-                self.capture.handle_field = ArtifactHandleCaptureField::Weight;
-            }
-            ArtifactHandleCaptureField::Weight => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_weight(1.0).map_err(capture_fault_code)?;
-                self.capture.handle_field = ArtifactHandleCaptureField::Publish;
-            }
-            ArtifactHandleCaptureField::Publish => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_handle().map_err(capture_fault_code)?;
-                self.capture.handle += 1;
-                self.capture.handle_edge = 0;
-                self.capture.handle_connected = false;
-                self.capture.handle_field = ArtifactHandleCaptureField::Begin;
-            }
-        }
-        Ok(())
-    }
-
-    fn capture_kind_one(&mut self) -> Result<(), &'static str> {
-        let document = &self.snapshot.as_ref().ok_or("puzzle2d-fill-snapshot-owner")?.get().0;
-        let kinds = Self::node_kinds(document)?;
-        let Some(kind) = kinds.get(self.capture.kind) else {
-            if self.capture.kind_field != ArtifactKindCaptureField::Begin {
-                return Err("puzzle2d-fill-capture-stale-kind");
-            }
-            self.capture.stage = ArtifactFillCaptureStage::Rules;
-            return Ok(());
-        };
-        let templates = kind.get("handles").and_then(Value::as_array).ok_or("puzzle2d-fill-capture-kind-handles")?;
-        let template = templates.get(self.capture.template);
-        match self.capture.kind_field {
-            ArtifactKindCaptureField::Begin => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_kind().map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::Id;
-            }
-            ArtifactKindCaptureField::Id => {
-                let value = kind.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-kind-id")?;
-                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_text_byte(infinite_canvas::BoardFillIngressKindText::Id, byte).map_err(capture_fault_code)?;
-                    self.capture.byte += 1;
-                } else {
-                    self.capture.byte = 0;
-                    self.capture.kind_field = ArtifactKindCaptureField::Shape;
-                }
-            }
-            ArtifactKindCaptureField::Shape => {
-                let rectangle = kind.get("shape").and_then(Value::as_str) == Some("rectangle");
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_rectangle(rectangle).map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::Scale;
-            }
-            ArtifactKindCaptureField::Scale => {
-                self.capture.kind_size = 96.0 * Self::finite(kind.get("scale").and_then(Value::as_f64), 1.0).max(f64::EPSILON);
-                self.capture.kind_field = ArtifactKindCaptureField::Radius;
-            }
-            ArtifactKindCaptureField::Radius => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_radius(self.capture.kind_size * 0.5).map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::Width;
-            }
-            ArtifactKindCaptureField::Width => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_width(self.capture.kind_size).map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::Height;
-            }
-            ArtifactKindCaptureField::Height => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_height(self.capture.kind_size).map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::IconBegin;
-            }
-            ArtifactKindCaptureField::IconBegin => {
-                if kind.get("icon").and_then(Value::as_str).is_some() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_kind_icon().map_err(capture_fault_code)?;
-                    self.capture.kind_field = ArtifactKindCaptureField::Icon;
-                } else {
-                    self.capture.kind_field = ArtifactKindCaptureField::Weight;
-                }
-            }
-            ArtifactKindCaptureField::Icon => {
-                let value = kind.get("icon").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-kind-icon")?;
-                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_text_byte(infinite_canvas::BoardFillIngressKindText::Icon, byte).map_err(capture_fault_code)?;
-                    self.capture.byte += 1;
-                } else {
-                    self.capture.byte = 0;
-                    self.capture.kind_field = ArtifactKindCaptureField::Weight;
-                }
-            }
-            ArtifactKindCaptureField::Weight => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_weight(1.0).map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::TemplateBegin;
-            }
-            ArtifactKindCaptureField::TemplateBegin => {
-                if template.is_some() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_kind_handle().map_err(capture_fault_code)?;
-                    self.capture.kind_field = ArtifactKindCaptureField::TemplateHandleKind;
-                } else {
-                    self.capture.kind_field = ArtifactKindCaptureField::Publish;
-                }
-            }
-            ArtifactKindCaptureField::TemplateHandleKind | ArtifactKindCaptureField::TemplateWireKind | ArtifactKindCaptureField::TemplateEdgeKind => {
-                let template = template.ok_or("puzzle2d-fill-capture-stale-template")?;
-                let (value, field, next) = match self.capture.kind_field {
-                    ArtifactKindCaptureField::TemplateHandleKind => {
-                        (template.get("handleKind").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-template-kind")?, infinite_canvas::BoardFillIngressTemplateText::HandleKind, ArtifactKindCaptureField::TemplateWireKind)
-                    }
-                    ArtifactKindCaptureField::TemplateWireKind => (template.get("wireKind").and_then(Value::as_str).unwrap_or("wire.link"), infinite_canvas::BoardFillIngressTemplateText::WireKind, ArtifactKindCaptureField::TemplateEdgeKind),
-                    ArtifactKindCaptureField::TemplateEdgeKind => (template.get("edgeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressTemplateText::EdgeKind, ArtifactKindCaptureField::TemplateAngle),
-                    _ => return Err("puzzle2d-fill-capture-template-field"),
-                };
-                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_handle_text_byte(field, byte).map_err(capture_fault_code)?;
-                    self.capture.byte += 1;
-                } else {
-                    self.capture.byte = 0;
-                    self.capture.kind_field = next;
-                }
-            }
-            ArtifactKindCaptureField::TemplateAngle => {
-                let template = template.ok_or("puzzle2d-fill-capture-stale-template")?;
-                let angle = Self::finite(template.get("angle").and_then(Value::as_f64), 0.0);
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_handle_angle(angle).map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::TemplateRadius;
-            }
-            ArtifactKindCaptureField::TemplateRadius => {
-                let template = template.ok_or("puzzle2d-fill-capture-stale-template")?;
-                let radius = template.get("radius").and_then(Value::as_f64).filter(|value| value.is_finite() && *value > 0.0);
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_handle_radius(radius).map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::TemplateWeight;
-            }
-            ArtifactKindCaptureField::TemplateWeight => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_handle_weight(1.0).map_err(capture_fault_code)?;
-                self.capture.kind_field = ArtifactKindCaptureField::TemplatePublish;
-            }
-            ArtifactKindCaptureField::TemplatePublish => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_kind_handle().map_err(capture_fault_code)?;
-                self.capture.template += 1;
-                self.capture.kind_field = ArtifactKindCaptureField::TemplateBegin;
-            }
-            ArtifactKindCaptureField::Publish => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_kind().map_err(capture_fault_code)?;
-                self.capture.kind += 1;
-                self.capture.template = 0;
-                self.capture.kind_field = ArtifactKindCaptureField::Begin;
-            }
-        }
-        Ok(())
-    }
-
-    fn capture_rule_one(&mut self) -> Result<(), &'static str> {
-        let document = &self.snapshot.as_ref().ok_or("puzzle2d-fill-snapshot-owner")?.get().0;
-        let Some(rules) = Self::rules(document) else {
-            if self.capture.rule_field != ArtifactRuleCaptureField::Begin {
-                return Err("puzzle2d-fill-capture-stale-rule");
-            }
-            self.capture.stage = ArtifactFillCaptureStage::Complete;
-            return Ok(());
-        };
-        let Some(rule) = rules.get(self.capture.rule) else {
-            if self.capture.rule_field != ArtifactRuleCaptureField::Begin {
-                return Err("puzzle2d-fill-capture-stale-rule");
-            }
-            self.capture.stage = ArtifactFillCaptureStage::Complete;
-            return Ok(());
-        };
-        match self.capture.rule_field {
-            ArtifactRuleCaptureField::Begin => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_rule().map_err(capture_fault_code)?;
-                self.capture.rule_field = ArtifactRuleCaptureField::Source;
-            }
-            ArtifactRuleCaptureField::Source | ArtifactRuleCaptureField::Target => {
-                let (value, field, next) = match self.capture.rule_field {
-                    ArtifactRuleCaptureField::Source => (rule.get("source").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-rule-source")?, infinite_canvas::BoardFillIngressRuleText::Source, ArtifactRuleCaptureField::Target),
-                    ArtifactRuleCaptureField::Target => (rule.get("target").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-rule-target")?, infinite_canvas::BoardFillIngressRuleText::Target, ArtifactRuleCaptureField::Bidirectional),
-                    _ => return Err("puzzle2d-fill-capture-rule-field"),
-                };
-                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
-                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_rule_text_byte(field, byte).map_err(capture_fault_code)?;
-                    self.capture.byte += 1;
-                } else {
-                    self.capture.byte = 0;
-                    self.capture.rule_field = next;
-                }
-            }
-            ArtifactRuleCaptureField::Bidirectional => {
-                let bidirectional = rule.get("bidirectional").and_then(Value::as_bool).unwrap_or(false);
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_rule_bidirectional(bidirectional).map_err(capture_fault_code)?;
-                self.capture.rule_field = ArtifactRuleCaptureField::Specificity;
-            }
-            ArtifactRuleCaptureField::Specificity => {
-                let specificity = rule.get("specificity").and_then(Value::as_str).unwrap_or("handle");
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_rule_specificity(specificity).map_err(capture_fault_code)?;
-                self.capture.rule_field = ArtifactRuleCaptureField::Publish;
-            }
-            ArtifactRuleCaptureField::Publish => {
-                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_rule().map_err(capture_fault_code)?;
-                self.capture.rule += 1;
-                self.capture.rule_field = ArtifactRuleCaptureField::Begin;
-            }
-        }
-        Ok(())
-    }
-
-    fn capture_one(&mut self) -> Result<(), &'static str> {
-        match self.capture.stage {
-            ArtifactFillCaptureStage::Nodes => self.capture_node_one(),
-            ArtifactFillCaptureStage::Handles => self.capture_handle_one(),
-            ArtifactFillCaptureStage::Kinds => self.capture_kind_one(),
-            ArtifactFillCaptureStage::Rules => self.capture_rule_one(),
-            ArtifactFillCaptureStage::Complete => {
-                let snapshot = self.ingress.as_mut().and_then(infinite_canvas::BoardFillSnapshotIngress::take_snapshot).ok_or("puzzle2d-fill-capture-snapshot")?;
-                self.ingress = None;
-                self.inner = Some(infinite_canvas::BoardFillJob::with_operation(snapshot, self.maximum_count, self.operation));
-                Ok(())
-            }
-        }
-    }
-
-    fn take_preview(&mut self) -> Option<infinite_canvas::BoardFillPreview> {
-        self.inner.as_mut().and_then(infinite_canvas::BoardFillJob::take_preview)
-    }
-
-    fn take_checkpoint(&mut self) -> Option<infinite_canvas::BoardFillCheckpoint> {
-        self.inner.as_mut().and_then(infinite_canvas::BoardFillJob::take_checkpoint)
-    }
-
-    fn adopt_checkpoint(&mut self, checkpoint: infinite_canvas::BoardFillCheckpoint) -> Result<(), infinite_canvas::BoardFillCheckpoint> {
-        let Some(inner) = self.inner.as_mut() else { return Err(checkpoint) };
-        inner.adopt_checkpoint(checkpoint)
-    }
-
-    fn take_fault(&mut self) -> Option<&'static str> {
-        self.fault.take().or_else(|| self.inner.as_mut().and_then(infinite_canvas::BoardFillJob::take_fault))
-    }
-
-    fn fault_outcome(&mut self, code: &'static str) -> semio_framework_job::StepOutcome {
-        self.fault = Some(code);
-        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
-    }
-}
-
-impl semio_framework_job::InteractiveJob for ArtifactBoardFillJob {
-    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        if context.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
-        }
-        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return self.fault_outcome("stale-puzzle2d-artifact-fill-operation");
-        }
-        if self.snapshot.as_ref().is_none_or(|snapshot| !snapshot.commit_authority_matches(self.render_generation, self.canonical_base_revision)) {
-            return self.fault_outcome("stale-puzzle2d-artifact-fill-snapshot");
-        }
-        if context.should_yield() {
-            return semio_framework_job::StepOutcome::Yield;
-        }
-        if let Some(inner) = self.inner.as_mut() {
-            return semio_framework_job::InteractiveJob::step(inner, context);
-        }
-        context.set_stage("puzzle2d-fill-artifact-capture");
-        if let Err(code) = self.capture_one() {
-            return self.fault_outcome(code);
-        }
-        context.consume_fuel(1);
-        if context.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
-        }
-        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return self.fault_outcome("stale-puzzle2d-artifact-fill-operation");
-        }
-        if self.snapshot.as_ref().is_none_or(|snapshot| !snapshot.commit_authority_matches(self.render_generation, self.canonical_base_revision)) {
-            return self.fault_outcome("stale-puzzle2d-artifact-fill-snapshot");
-        }
-        if context.should_yield() {
-            return semio_framework_job::StepOutcome::Yield;
-        }
-        semio_framework_job::StepOutcome::Yield
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        self.begin_close();
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if let Some(inner) = self.inner.as_mut() {
-            semio_framework_job::InteractiveJob::begin_close(inner);
-            let step = semio_framework_job::InteractiveJob::close_step(inner, 1, maximum_bytes);
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete) && semio_framework_job::InteractiveJob::terminal_is_empty(inner) {
-                self.inner = None;
-            }
-            return step;
-        }
-        if let Some(ingress) = self.ingress.as_mut() {
-            ingress.begin_close();
-            let step = ingress.close_step(1, maximum_bytes);
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete) && ingress.terminal_is_empty() {
-                self.ingress = None;
-            }
-            return step;
-        }
-        if let Some(snapshot) = self.snapshot.take() {
-            let Some(witness) = snapshot.return_to_registry_witness() else {
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
-            };
-            self.snapshot_return = Some(witness);
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotRead<Puzzle2dPlaySnapshot>>() };
-        }
-        if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if self.snapshot_return.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotReadReturn>() };
-        }
-        if self.fault.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.snapshot.is_none() && self.snapshot_return.is_none() && self.ingress.is_none() && self.inner.is_none() && self.fault.is_none()
-    }
-}
-
-impl Drop for ArtifactBoardFillJob {
-    fn drop(&mut self) {
-        assert!(semio_framework_job::InteractiveJob::terminal_is_empty(self), "Puzzle2d artifact fill job must reach exact terminal-empty before Drop");
-    }
-}
-
-struct FillSessionNode {
-    app_instance_id: u32,
-    operation: semio_framework_job::Operation,
-    canonical_base_revision: [u8; 32],
-    maximum_count: u32,
-    cancel: semio_framework_async::CancelToken,
-    work: FillWork,
-    retained_outcome: Option<semio_framework_job::StepOutcome>,
-    outcome_terminal: bool,
-    terminal_published: bool,
-    checkpoint: Option<infinite_canvas::BoardFillCheckpoint>,
-    apply: Option<FillPlacementApplyCursor>,
-    checkpoint_sequence: u64,
-    terminal: Option<FillTerminal>,
-    closing: bool,
 }
 
 struct FillPlacementApplyCursor {
@@ -1249,329 +681,6 @@ impl Drop for FillPlacementApplyCursor {
     }
 }
 
-impl FillSessionNode {
-    fn matches(&self, app_instance_id: u32, operation: u64, generation: u64) -> bool {
-        self.app_instance_id == app_instance_id && self.operation.operation.0 == operation && self.operation.generation.0 == generation
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-        self.cancel.cancel_now();
-    }
-
-    fn close_step(&mut self) -> bool {
-        if self.terminal.take().is_some() {
-            return false;
-        }
-        if let Some(outcome) = self.retained_outcome.as_mut() {
-            if !outcome.terminal_is_empty() {
-                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                return false;
-            }
-            self.retained_outcome = None;
-            return false;
-        }
-        if let Some(apply) = self.apply.as_mut() {
-            if apply.close_step() {
-                self.apply = None;
-            }
-            return false;
-        }
-        if let Some(checkpoint) = self.checkpoint.take() {
-            match &mut self.work {
-                FillWork::Session(session) => {
-                    let Some(job) = session.checked_out_job_mut() else {
-                        session.begin_close();
-                        self.work = FillWork::Detached(checkpoint.into_closing_job());
-                        return false;
-                    };
-                    if let Err(checkpoint) = job.adopt_checkpoint(checkpoint) {
-                        session.begin_close();
-                        self.work = FillWork::Detached(checkpoint.into_closing_job());
-                        return false;
-                    }
-                    session.begin_close();
-                    return false;
-                }
-                _ => {
-                    self.work = FillWork::Detached(checkpoint.into_closing_job());
-                    return false;
-                }
-            }
-        }
-        match &mut self.work {
-            FillWork::AwaitingSnapshot => self.work = FillWork::Empty,
-            FillWork::Session(session) => {
-                session.begin_close();
-                if matches!(session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::WorkerJobCloseStep::Complete) && session.terminal_is_empty() {
-                    self.work = FillWork::Empty;
-                }
-            }
-            FillWork::Rejected(rejected) => {
-                rejected.begin_close();
-                if matches!(rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && rejected.terminal_is_empty() {
-                    self.work = FillWork::Empty;
-                }
-            }
-            FillWork::Detached(job) => {
-                semio_framework_job::InteractiveJob::begin_close(job);
-                if matches!(semio_framework_job::InteractiveJob::close_step(job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && semio_framework_job::InteractiveJob::terminal_is_empty(job) {
-                    self.work = FillWork::Empty;
-                }
-            }
-            FillWork::Empty => {}
-        }
-        self.terminal_is_empty()
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        matches!(self.work, FillWork::Empty) && self.retained_outcome.is_none() && self.checkpoint.is_none() && self.apply.is_none() && self.terminal.is_none()
-    }
-}
-
-impl Drop for FillSessionNode {
-    fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Puzzle2d fill node must reach exact terminal-empty before Drop");
-    }
-}
-
-struct FillSessionBacking {
-    pointer: std::ptr::NonNull<std::mem::MaybeUninit<FillSessionNode>>,
-    initialized: bool,
-}
-
-impl FillSessionBacking {
-    fn try_new() -> Option<Self> {
-        let layout = std::alloc::Layout::new::<FillSessionNode>();
-        let pointer = std::ptr::NonNull::new(unsafe { std::alloc::alloc(layout) }.cast::<std::mem::MaybeUninit<FillSessionNode>>())?;
-        Some(Self { pointer, initialized: false })
-    }
-
-    fn write(mut self, node: FillSessionNode) -> Box<FillSessionNode> {
-        let pointer = self.pointer.as_ptr().cast::<FillSessionNode>();
-        unsafe { pointer.write(node) };
-        self.initialized = true;
-        unsafe { Box::from_raw(pointer) }
-    }
-}
-
-impl Drop for FillSessionBacking {
-    fn drop(&mut self) {
-        if !self.initialized {
-            unsafe { std::alloc::dealloc(self.pointer.as_ptr().cast::<u8>(), std::alloc::Layout::new::<FillSessionNode>()) };
-        }
-    }
-}
-
-const _: fn() = || {
-    fn assert_send<T: Send>() {}
-    assert_send::<ArtifactBoardFillJob>();
-    assert_send::<FillSessionNode>();
-};
-
-struct FillRegistrySlot {
-    node: AtomicPtr<FillSessionNode>,
-}
-
-impl FillRegistrySlot {
-    const fn new() -> Self {
-        Self { node: AtomicPtr::new(std::ptr::null_mut()) }
-    }
-}
-
-static FILL_SESSION_SLOTS: [FillRegistrySlot; FILL_SESSION_CAPACITY] = [const { FillRegistrySlot::new() }; FILL_SESSION_CAPACITY];
-
-struct FillSessionGuard {
-    slot: usize,
-    node: Option<Box<FillSessionNode>>,
-}
-
-impl FillSessionGuard {
-    fn node_mut(&mut self) -> Option<&mut FillSessionNode> {
-        self.node.as_deref_mut()
-    }
-
-    fn retire(mut self) {
-        let Some(node) = self.node.take() else { return };
-        if !node.terminal_is_empty() {
-            self.node = Some(node);
-            return;
-        }
-        FILL_SESSION_SLOTS[self.slot].node.store(std::ptr::null_mut(), Ordering::Release);
-        drop(node);
-    }
-}
-
-impl Drop for FillSessionGuard {
-    fn drop(&mut self) {
-        let Some(node) = self.node.take() else { return };
-        FILL_SESSION_SLOTS[self.slot].node.store(Box::into_raw(node), Ordering::Release);
-    }
-}
-
-struct FillSessionReservation {
-    slot: usize,
-    published: bool,
-}
-
-impl Drop for FillSessionReservation {
-    fn drop(&mut self) {
-        if self.published {
-            return;
-        }
-        let _ = FILL_SESSION_SLOTS[self.slot].node.compare_exchange(FILL_SESSION_LOCKED, std::ptr::null_mut(), Ordering::AcqRel, Ordering::Acquire);
-    }
-}
-
-fn reserve_session_slot() -> Option<FillSessionReservation> {
-    for (index, slot) in FILL_SESSION_SLOTS.iter().enumerate() {
-        if slot.node.compare_exchange(std::ptr::null_mut(), FILL_SESSION_LOCKED, Ordering::AcqRel, Ordering::Acquire).is_ok() {
-            return Some(FillSessionReservation { slot: index, published: false });
-        }
-    }
-    None
-}
-
-fn publish_session(mut reservation: FillSessionReservation, node: Box<FillSessionNode>) {
-    FILL_SESSION_SLOTS[reservation.slot].node.store(Box::into_raw(node), Ordering::Release);
-    reservation.published = true;
-}
-
-fn take_matching_session(app_instance_id: u32, operation: u64, generation: u64) -> Option<FillSessionGuard> {
-    for (index, slot) in FILL_SESSION_SLOTS.iter().enumerate() {
-        let pointer = slot.node.load(Ordering::Acquire);
-        if pointer.is_null() || pointer == FILL_SESSION_LOCKED || slot.node.compare_exchange(pointer, FILL_SESSION_LOCKED, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            continue;
-        }
-        let node = unsafe { Box::from_raw(pointer) };
-        if node.matches(app_instance_id, operation, generation) {
-            return Some(FillSessionGuard { slot: index, node: Some(node) });
-        }
-        slot.node.store(Box::into_raw(node), Ordering::Release);
-    }
-    None
-}
-
-fn take_snapshot_pending_session(render: semio_framework_plugin::AppRenderOperationContext) -> Option<FillSessionGuard> {
-    for (index, slot) in FILL_SESSION_SLOTS.iter().enumerate() {
-        let pointer = slot.node.load(Ordering::Acquire);
-        if pointer.is_null() || pointer == FILL_SESSION_LOCKED || slot.node.compare_exchange(pointer, FILL_SESSION_LOCKED, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            continue;
-        }
-        let node = unsafe { Box::from_raw(pointer) };
-        if node.app_instance_id == render.app_instance_id && node.canonical_base_revision == render.canonical_base_revision && matches!(&node.work, FillWork::AwaitingSnapshot) && !node.closing {
-            return Some(FillSessionGuard { slot: index, node: Some(node) });
-        }
-        slot.node.store(Box::into_raw(node), Ordering::Release);
-    }
-    None
-}
-
-fn pump_abandoned_session(active: Option<(u32, u64, u64)>) -> bool {
-    for (index, slot) in FILL_SESSION_SLOTS.iter().enumerate() {
-        let pointer = slot.node.load(Ordering::Acquire);
-        if pointer.is_null() || pointer == FILL_SESSION_LOCKED || slot.node.compare_exchange(pointer, FILL_SESSION_LOCKED, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            continue;
-        }
-        let mut guard = FillSessionGuard { slot: index, node: Some(unsafe { Box::from_raw(pointer) }) };
-        let is_active = guard.node.as_ref().is_some_and(|node| active.is_some_and(|key| node.matches(key.0, key.1, key.2)));
-        if is_active {
-            continue;
-        }
-        if let Some(node) = guard.node_mut() {
-            node.begin_close();
-            if node.close_step() {
-                guard.retire();
-                return true;
-            }
-        }
-        return true;
-    }
-    false
-}
-
-#[cfg(test)]
-fn registry_has_sessions() -> bool {
-    FILL_SESSION_SLOTS.iter().any(|slot| !slot.node.load(Ordering::Acquire).is_null())
-}
-
-fn fill_action_effect(generation: u64, action: &'static str) -> Effect {
-    Effect::DispatchAction {
-        req: semio_framework_plugin::kernel::RequestId(semio_framework_job::allocate_operation_id().0),
-        action: action.into(),
-        args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "generation": generation }))),
-        delay_ms: 1,
-    }
-}
-
-fn queue_fill_action(ctx: &mut Puzzle2dFillActionCtx<'_>, action: &'static str) {
-    ctx.effects.push(fill_action_effect(ctx.runtime.fill_job_generation, action));
-}
-
-fn fill_worker_pool() -> semio_framework_async::WorkerPool {
-    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-    semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
-}
-
-/// 🔍️ Requests one immutable store lease only for an exact awaiting fill authority.
-pub fn prepare_snapshot_read(render: semio_framework_plugin::AppRenderOperationContext, _snapshot: &Puzzle2dPlaySnapshot) -> bool {
-    take_snapshot_pending_session(render).is_some()
-}
-
-/// 🧵️ Transfers the exact immutable document lease into the shared-worker capture session.
-pub fn reconcile_snapshot_read(doc: &semio_framework_plugin::ArtifactView<'_, Puzzle2dPlaySnapshot>, config: &semio_framework_plugin::ConfigView<'_, crate::editor::puzzle2d::config::Puzzle2dConfig>) -> Vec<Effect> {
-    let Some(render) = doc.render_operation() else { return Vec::new() };
-    let Some(mut guard) = take_snapshot_pending_session(render) else { return Vec::new() };
-    let snapshot = match doc.take_snapshot_read() {
-        Ok(snapshot) => snapshot,
-        Err(_) => return Vec::new(),
-    };
-    let Some(node) = guard.node_mut() else { return Vec::new() };
-    let generation = node.operation.generation.0;
-    let job = ArtifactBoardFillJob::new(node.operation, render.generation.0, render.canonical_base_revision, node.maximum_count, config.snapshot.suggestion_offset, snapshot);
-    let params = semio_framework_job::BatchJobParams {
-        operation: node.operation.operation,
-        generation: node.operation.generation,
-        cancel: node.cancel.clone(),
-        config: semio_framework_job::BatchDriveConfig { site: "puzzle2d.fill", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-        now_us: semio_framework_job::default_now_us,
-    };
-    match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
-        Ok(session) => node.work = FillWork::Session(session),
-        Err(rejected) => {
-            node.work = FillWork::Rejected(rejected);
-            node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-admission-rejected"));
-            node.begin_close();
-        }
-    }
-    vec![fill_action_effect(generation, "brushFillSessionStep")]
-}
-
-fn base_revision(authority: &semio_framework_plugin::AppOperationContext) -> u64 {
-    u64::from_le_bytes([
-        authority.canonical_base_revision[0],
-        authority.canonical_base_revision[1],
-        authority.canonical_base_revision[2],
-        authority.canonical_base_revision[3],
-        authority.canonical_base_revision[4],
-        authority.canonical_base_revision[5],
-        authority.canonical_base_revision[6],
-        authority.canonical_base_revision[7],
-    ])
-}
-
-fn fill_fault(ctx: &mut Puzzle2dFillActionCtx<'_>, code: &'static str) {
-    match crate::editor::puzzle2d::config::Puzzle2dFillText::try_from_str(code) {
-        Some(code) => ctx.runtime.fill_job_fault_code = Some(code),
-        None => *ctx.boundary_fault = Some("puzzle2d-fill-runtime-text-capacity"),
-    }
-    ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Faulted;
-}
-
-pub fn reject_fill_request(ctx: &mut Puzzle2dFillActionCtx<'_>, code: &'static str) {
-    fill_fault(ctx, code);
-}
-
 fn capture_fault_code(fault: infinite_canvas::BoardFillCaptureFault) -> &'static str {
     match fault {
         infinite_canvas::BoardFillCaptureFault::TextCapacity => "puzzle2d-fill-capture-text-capacity",
@@ -1588,630 +697,1025 @@ fn capture_fault_code(fault: infinite_canvas::BoardFillCaptureFault) -> &'static
     }
 }
 
-fn action_authority<'a>(ctx: &'a Puzzle2dFillActionCtx<'_>) -> Option<&'a semio_framework_plugin::AppOperationContext> {
-    ctx.operation.as_ref()
+//#region 🪣️Session
+/// 🧵️ Where one fill session currently is. `Control` applies the verb's runtime transition, `Capture`
+/// streams the document into the engine's fixed ingress, `Search` drives the `BoardFillJob`, `Apply`
+/// drains one checkpoint's pending placement into mutations before handing the checkpoint back.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle2dFillStage {
+    Control,
+    Capture,
+    Search,
+    Apply,
+    Complete,
+    Closing,
 }
 
-fn is_fresh(ctx: &Puzzle2dFillActionCtx<'_>, node: &FillSessionNode) -> bool {
-    action_authority(ctx).is_some_and(|authority| {
-        authority.app_instance_id == node.app_instance_id
-            && authority.operation_id == node.operation.operation.0
-            && authority.generation == node.operation.generation.0
-            && authority.canonical_base_revision == node.canonical_base_revision
-            && ctx.runtime.fill_job_operation == node.operation.operation.0
-            && ctx.runtime.fill_job_generation == node.operation.generation.0
-            && ctx.runtime.fill_job_base_revision == node.operation.base_revision.0
-    })
+/// 🪣️ One brush-fill session as a retained tool work. Every owner it holds — ingress, search job,
+/// checkpoint, placement cursor, retained outcome — is released through [`Puzzle2dFillSessionWork::
+/// close_step`] so each engine owner reaches its exact terminal-empty state before `Drop`.
+pub struct Puzzle2dFillSessionWork {
+    tool_id: &'static str,
+    stage: Puzzle2dFillStage,
+    operation: semio_framework_job::Operation,
+    preview_sequence: u64,
+    maximum_count: u32,
+    capture: ArtifactFillCaptureCursor,
+    capture_chunks: usize,
+    search_chunks: usize,
+    apply_chunks: usize,
+    suggestion_offset: f64,
+    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,
+    search: Option<infinite_canvas::BoardFillJob>,
+    closing_search: Option<infinite_canvas::BoardFillJob>,
+    checkpoint: Option<infinite_canvas::BoardFillCheckpoint>,
+    apply: Option<FillPlacementApplyCursor>,
+    outcome: Option<semio_framework_job::StepOutcome>,
+    runtime: Option<Puzzle2dFillRuntime>,
+    mutations: Vec<Puzzle2dMutation>,
+    effects: Vec<Effect>,
+    closing: bool,
 }
 
-fn queue_fill_step(ctx: &mut Puzzle2dFillActionCtx<'_>) {
-    queue_fill_action(ctx, "brushFillSessionStep");
-}
-
-fn queue_fill_adopt(ctx: &mut Puzzle2dFillActionCtx<'_>) {
-    queue_fill_action(ctx, "brushFillSessionAdopt");
-}
-
-fn queue_fill_discard(ctx: &mut Puzzle2dFillActionCtx<'_>) {
-    queue_fill_action(ctx, "brushFillSessionDiscard");
-}
-
-fn publish_preview(ctx: &mut Puzzle2dFillActionCtx<'_>, preview: infinite_canvas::BoardFillPreview) {
-    if let Some(stage) = crate::editor::puzzle2d::config::Puzzle2dFillText::try_from_str(preview.stage.id()) {
-        ctx.runtime.fill_job_stage = stage;
-    } else {
-        fill_fault(ctx, "puzzle2d-fill-stage-capacity");
-        return;
+impl Puzzle2dFillSessionWork {
+    /// 🪪️ One work per admitted verb — the retained job's decode phase refuses a payload whose
+    /// action id does not equal [`crate::retained_command::PuzzleCommandWork::tool_id`].
+    pub fn new(tool_id: &'static str) -> Self {
+        Self {
+            tool_id,
+            stage: Puzzle2dFillStage::Control,
+            operation: semio_framework_job::Operation::new(semio_framework_job::OperationId(0), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), 0),
+            preview_sequence: 0,
+            maximum_count: 0,
+            capture: ArtifactFillCaptureCursor::new(),
+            capture_chunks: 0,
+            search_chunks: 0,
+            apply_chunks: 0,
+            suggestion_offset: 0.0,
+            ingress: None,
+            search: None,
+            closing_search: None,
+            checkpoint: None,
+            apply: None,
+            outcome: None,
+            runtime: None,
+            mutations: Vec::new(),
+            effects: Vec::new(),
+            closing: false,
+        }
     }
-    ctx.runtime.fill_job_accepted_count = u64::from(preview.accepted_count);
-    ctx.runtime.fill_job_search_count = preview.search_count;
-    ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Running;
-}
 
-fn close_session_work_one(node: &mut FillSessionNode) {
-    match &mut node.work {
-        FillWork::Session(session) => {
-            session.begin_close();
-            if matches!(session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::WorkerJobCloseStep::Complete) && session.terminal_is_empty() {
-                node.work = FillWork::Empty;
-            }
-        }
-        FillWork::Rejected(rejected) => {
-            rejected.begin_close();
-            if matches!(rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && rejected.terminal_is_empty() {
-                node.work = FillWork::Empty;
-            }
-        }
-        FillWork::Detached(job) => {
-            semio_framework_job::InteractiveJob::begin_close(job);
-            if matches!(semio_framework_job::InteractiveJob::close_step(job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && semio_framework_job::InteractiveJob::terminal_is_empty(job) {
-                node.work = FillWork::Empty;
-            }
-        }
-        FillWork::AwaitingSnapshot | FillWork::Empty => {}
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
     }
-}
 
-pub fn begin_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>, count: u32, seed: u64) {
-    let abandonment_pending = pump_abandoned_session(None);
-    if count > fill::PUZZLE2D_FILL_COUNT_MAX {
-        fill_fault(ctx, "puzzle2d-fill-count-capacity");
-        if abandonment_pending {
-            queue_fill_discard(ctx);
-        }
-        return;
+    fn runtime_mut(&mut self) -> Result<&mut Puzzle2dFillRuntime, Fault> {
+        self.runtime.as_mut().ok_or_else(|| Fault::from("puzzle2d-fill-runtime-owner"))
     }
-    let Some(authority) = action_authority(ctx).cloned() else {
-        fill_fault(ctx, "puzzle2d-fill-operation-authority");
-        return;
-    };
-    let Some(slot) = reserve_session_slot() else {
-        fill_fault(ctx, "puzzle2d-fill-session-capacity");
-        if abandonment_pending {
-            queue_fill_discard(ctx);
-        }
-        return;
-    };
-    let Some(backing) = FillSessionBacking::try_new() else {
-        fill_fault(ctx, "puzzle2d-fill-session-backing");
-        return;
-    };
-    let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(authority.operation_id), semio_framework_job::RevisionId(base_revision(&authority)), semio_framework_job::Generation(authority.generation), seed);
-    let cancel = semio_framework_job::root_cancel_token();
-    let node = backing.write(FillSessionNode {
-        app_instance_id: authority.app_instance_id,
-        operation,
-        canonical_base_revision: authority.canonical_base_revision,
-        maximum_count: count,
-        cancel,
-        work: FillWork::AwaitingSnapshot,
-        retained_outcome: None,
-        outcome_terminal: false,
-        terminal_published: false,
-        checkpoint: None,
-        apply: None,
-        checkpoint_sequence: 0,
-        terminal: None,
-        closing: false,
-    });
-    publish_session(slot, node);
-    ctx.runtime.fill_job_operation = operation.operation.0;
-    ctx.runtime.fill_job_generation = operation.generation.0;
-    ctx.runtime.fill_job_seed = seed;
-    ctx.runtime.fill_job_base_revision = operation.base_revision.0;
-    ctx.runtime.fill_job_checkpoint_sequence = 0;
-    ctx.runtime.fill_job_accepted_count = 0;
-    ctx.runtime.fill_job_search_count = 0;
-    let Some(stage) = crate::editor::puzzle2d::config::Puzzle2dFillText::try_from_str("capture") else {
-        fill_fault(ctx, "puzzle2d-fill-stage-capacity");
-        return;
-    };
-    ctx.runtime.fill_job_stage = stage;
-    ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Capturing;
-    ctx.runtime.fill_job_fault_code = None;
-    queue_fill_step(ctx);
-}
 
-fn apply_checkpoint_step(ctx: &mut Puzzle2dFillActionCtx<'_>, node: &mut FillSessionNode) {
-    if node.apply.is_none() {
-        let Some(checkpoint) = node.checkpoint.as_mut() else {
-            fill_fault(ctx, "puzzle2d-fill-checkpoint-owner");
-            node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-checkpoint-owner"));
-            node.begin_close();
-            queue_fill_discard(ctx);
-            return;
+    fn text(code: &'static str) -> Result<Puzzle2dFillText, Fault> {
+        Puzzle2dFillText::try_from_str(code).ok_or_else(|| Fault::from("puzzle2d-fill-runtime-text-capacity"))
+    }
+
+    /// 🩹️ A fault is a published lifecycle, not a dropped session: the runtime carries the code so
+    /// the panel can offer `brushFillSessionRetry`/`brushFillSessionDiscard`.
+    fn fault(&mut self, code: &'static str) -> Result<(), Fault> {
+        let text = Self::text(code)?;
+        let runtime = self.runtime_mut()?;
+        runtime.fill_job_fault_code = Some(text);
+        runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Faulted;
+        self.stage = Puzzle2dFillStage::Complete;
+        Ok(())
+    }
+
+    fn begin_search(&mut self, config: &Puzzle2dConfig, count: u32, seed: u64) -> Result<(), Fault> {
+        if count > fill::PUZZLE2D_FILL_COUNT_MAX {
+            return self.fault("puzzle2d-fill-count-capacity");
+        }
+        self.maximum_count = count;
+        self.operation = semio_framework_job::Operation::new(self.operation.operation, self.operation.base_revision, self.operation.generation, seed);
+        self.suggestion_offset = config.suggestion_offset;
+        self.ingress = Some(infinite_canvas::BoardFillSnapshotIngress::new(config.suggestion_offset));
+        self.capture = ArtifactFillCaptureCursor::new();
+        let stage = Self::text("capture")?;
+        let operation = self.operation;
+        let runtime = self.runtime_mut()?;
+        runtime.fill_job_operation = operation.operation.0;
+        runtime.fill_job_generation = operation.generation.0;
+        runtime.fill_job_base_revision = operation.base_revision.0;
+        runtime.fill_job_seed = seed;
+        runtime.fill_job_checkpoint_sequence = 0;
+        runtime.fill_job_accepted_count = 0;
+        runtime.fill_job_search_count = 0;
+        runtime.fill_job_stage = stage;
+        runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Capturing;
+        runtime.fill_job_fault_code = None;
+        self.stage = Puzzle2dFillStage::Capture;
+        Ok(())
+    }
+
+    fn publish_preview(&mut self, preview: infinite_canvas::BoardFillPreview) -> Result<(), Fault> {
+        let Some(stage) = Puzzle2dFillText::try_from_str(preview.stage.id()) else {
+            return self.fault("puzzle2d-fill-stage-capacity");
         };
-        if let Some(placement) = checkpoint.take_pending_placement() {
-            node.apply = Some(FillPlacementApplyCursor::new(placement));
-        }
+        let runtime = self.runtime_mut()?;
+        runtime.fill_job_stage = stage;
+        runtime.fill_job_accepted_count = u64::from(preview.accepted_count);
+        runtime.fill_job_search_count = preview.search_count;
+        runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Running;
+        Ok(())
     }
-    if let Some(apply) = node.apply.as_mut() {
-        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Applying;
-        match apply.step(ctx.artifact_mutations) {
-            Ok(FillPlacementApplyStep::Pending) => {
-                queue_fill_adopt(ctx);
-                return;
-            }
-            Ok(FillPlacementApplyStep::Complete) => node.apply = None,
-            Err(code) => {
-                node.terminal = Some(FillTerminal::Fault(code));
-                fill_fault(ctx, code);
-                node.begin_close();
-                queue_fill_discard(ctx);
-                return;
-            }
-        }
-    }
-    let Some(checkpoint) = node.checkpoint.take() else {
-        node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-checkpoint-owner"));
-        fill_fault(ctx, "puzzle2d-fill-checkpoint-owner");
-        node.begin_close();
-        queue_fill_discard(ctx);
-        return;
-    };
-    let FillWork::Session(session) = &mut node.work else {
-        node.checkpoint = Some(checkpoint);
-        node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-checkpoint-session"));
-        fill_fault(ctx, "puzzle2d-fill-checkpoint-session");
-        node.begin_close();
-        queue_fill_discard(ctx);
-        return;
-    };
-    let Some(job) = session.checked_out_job_mut() else {
-        node.checkpoint = Some(checkpoint);
-        queue_fill_adopt(ctx);
-        return;
-    };
-    if let Err(checkpoint) = job.adopt_checkpoint(checkpoint) {
-        node.checkpoint = Some(checkpoint);
-        node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-checkpoint-stale"));
-        fill_fault(ctx, "puzzle2d-fill-checkpoint-stale");
-        node.begin_close();
-        queue_fill_discard(ctx);
-        return;
-    }
-    if session.resume().is_err() {
-        node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-checkpoint-resume"));
-        fill_fault(ctx, "puzzle2d-fill-checkpoint-resume");
-        node.begin_close();
-        queue_fill_discard(ctx);
-        return;
-    }
-    ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Running;
-    queue_fill_step(ctx);
-}
 
-fn pump_fill_worker(ctx: &mut Puzzle2dFillActionCtx<'_>, node: &mut FillSessionNode) {
-    let FillWork::Session(session) = &mut node.work else { return };
-    let pool = fill_worker_pool();
-    let poll = session.pump_one(&pool, semio_framework_async::Lane::Interactive);
-    match poll {
-        Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
-            let Some(outcome) = session.take_checked_out_outcome() else {
-                node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-outcome-owner"));
-                fill_fault(ctx, "puzzle2d-fill-outcome-owner");
-                node.begin_close();
-                queue_fill_discard(ctx);
-                return;
-            };
-            node.outcome_terminal = outcome.is_terminal();
-            match &outcome {
-                semio_framework_job::StepOutcome::PreviewReady(_) => {
-                    if let Some(preview) = session.checked_out_job_mut().and_then(ArtifactBoardFillJob::take_preview) {
-                        publish_preview(ctx, preview);
-                    }
-                }
-                semio_framework_job::StepOutcome::CheckpointReady(_) => match session.checked_out_job_mut().and_then(ArtifactBoardFillJob::take_checkpoint) {
-                    Some(checkpoint) => match node.checkpoint_sequence.checked_add(1) {
-                        Some(sequence) => {
-                            node.checkpoint_sequence = sequence;
-                            ctx.runtime.fill_job_checkpoint_sequence = sequence;
-                            ctx.runtime.fill_job_accepted_count = u64::from(checkpoint.accepted_count());
-                            node.checkpoint = Some(checkpoint);
-                            ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::CheckpointReady;
-                        }
-                        None => {
-                            node.checkpoint = Some(checkpoint);
-                            node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-checkpoint-sequence"));
-                            fill_fault(ctx, "puzzle2d-fill-checkpoint-sequence");
-                            node.begin_close();
-                        }
-                    },
-                    None => {
-                        node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-checkpoint-missing"));
-                        fill_fault(ctx, "puzzle2d-fill-checkpoint-missing");
-                        node.begin_close();
-                    }
-                },
-                semio_framework_job::StepOutcome::Complete(candidate) => match publish_commit_candidate(candidate, ctx.artifact_mutations) {
-                    Some(Ok(result)) => {
-                        ctx.runtime.fill_job_accepted_count = u64::from(result.accepted_count);
-                        ctx.runtime.fill_job_search_count = result.search_count;
-                        node.terminal = Some(FillTerminal::Completed(result));
-                        node.terminal_published = true;
-                        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::AwaitingAdoption;
-                    }
-                    Some(Err(_)) => {
-                        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Applying;
-                    }
-                    None => {
-                        node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-result-missing"));
-                        node.terminal_published = true;
-                        fill_fault(ctx, "puzzle2d-fill-result-missing");
-                    }
-                },
-                semio_framework_job::StepOutcome::Cancelled => {
-                    node.terminal = Some(FillTerminal::Cancelled);
-                    ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::AwaitingAdoption;
-                }
-                semio_framework_job::StepOutcome::Fault(_) => {
-                    let code = match session.checked_out_job_mut().and_then(ArtifactBoardFillJob::take_fault) {
-                        Some(code) => code,
-                        None => "puzzle2d-fill-worker-fault",
-                    };
-                    node.terminal = Some(FillTerminal::Fault(code));
-                    fill_fault(ctx, code);
-                }
-                semio_framework_job::StepOutcome::Yield => {
-                    ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Running;
+    /// 🧵️ One `BoardFillJob::step` under a fuel-only context bound to this retained operation.
+    fn search_step_one(&mut self) -> Option<semio_framework_job::StepOutcome> {
+        let Self { search, preview_sequence, operation, .. } = self;
+        let job = search.as_mut()?;
+        let budget = semio_framework_job::StepBudget::new(PUZZLE2D_FILL_STEP_FUEL, u64::MAX);
+        let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, budget, semio_framework_job::root_cancel_token(), puzzle2d_fill_monotonic_zero, preview_sequence);
+        Some(semio_framework_job::InteractiveJob::step(job, &mut context))
+    }
+
+    /// 🚰️ Drains a retained outcome's payload pages before it is released — the engine's outcomes
+    /// assert exact terminal-emptiness on `Drop`.
+    fn drain_outcome(&mut self) -> Result<(), Fault> {
+        for _ in 0..PUZZLE2D_FILL_OUTCOME_CLOSE_UNITS {
+            if self.outcome.as_ref().is_none_or(semio_framework_job::StepOutcome::terminal_is_empty) {
+                self.outcome = None;
+                return Ok(());
+            }
+            if let Some(outcome) = self.outcome.as_mut() {
+                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+        }
+        Err(Fault::from("puzzle2d-fill-outcome-close-budget"))
+    }
+
+    fn absorb_outcome(&mut self, outcome: semio_framework_job::StepOutcome) -> Result<(), Fault> {
+        match &outcome {
+            semio_framework_job::StepOutcome::PreviewReady(_) => {
+                let preview = self.search.as_mut().and_then(infinite_canvas::BoardFillJob::take_preview);
+                if let Some(preview) = preview {
+                    self.publish_preview(preview)?;
                 }
             }
-            node.retained_outcome = Some(outcome);
-            if node.outcome_terminal || node.checkpoint.is_some() {
-                queue_fill_adopt(ctx);
+            semio_framework_job::StepOutcome::CheckpointReady(_) => {
+                let taken = self.search.as_mut().and_then(infinite_canvas::BoardFillJob::take_checkpoint);
+                match taken {
+                    Some(checkpoint) => {
+                        let accepted = checkpoint.accepted_count();
+                        self.checkpoint = Some(checkpoint);
+                        let runtime = self.runtime_mut()?;
+                        runtime.fill_job_checkpoint_sequence = runtime.fill_job_checkpoint_sequence.saturating_add(1);
+                        runtime.fill_job_accepted_count = u64::from(accepted);
+                        runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::CheckpointReady;
+                        self.stage = Puzzle2dFillStage::Apply;
+                    }
+                    None => self.fault("puzzle2d-fill-checkpoint-missing")?,
+                }
+            }
+            semio_framework_job::StepOutcome::Complete(candidate) => {
+                let published = publish_commit_candidate(candidate, &mut self.mutations);
+                match published {
+                    Some(Ok(result)) => {
+                        let runtime = self.runtime_mut()?;
+                        runtime.fill_job_accepted_count = u64::from(result.accepted_count);
+                        runtime.fill_job_search_count = result.search_count;
+                        runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::AwaitingAdoption;
+                        self.stage = Puzzle2dFillStage::Complete;
+                    }
+                    Some(Err(code)) => self.fault(code)?,
+                    None => self.fault("puzzle2d-fill-result-missing")?,
+                }
+            }
+            semio_framework_job::StepOutcome::Cancelled => {
+                self.runtime_mut()?.fill_job_lifecycle = Puzzle2dFillLifecycle::Cancelled;
+                self.stage = Puzzle2dFillStage::Complete;
+            }
+            semio_framework_job::StepOutcome::Fault(_) => {
+                let code = self.search.as_mut().and_then(infinite_canvas::BoardFillJob::take_fault).unwrap_or("puzzle2d-fill-worker-fault");
+                self.fault(code)?;
+            }
+            semio_framework_job::StepOutcome::Yield => {}
+        }
+        self.outcome = Some(outcome);
+        self.drain_outcome()
+    }
+
+    /// 🔁️ Hands an applied checkpoint back to the search so the engine resumes from its own state.
+    fn adopt_checkpoint(&mut self) -> Result<(), Fault> {
+        let Some(checkpoint) = self.checkpoint.take() else { return Ok(()) };
+        let handback = match self.search.as_mut() {
+            Some(job) => job.adopt_checkpoint(checkpoint).err(),
+            None => Some(checkpoint),
+        };
+        if let Some(checkpoint) = handback {
+            self.closing_search = Some(checkpoint.into_closing_job());
+            return self.fault("puzzle2d-fill-checkpoint-stale");
+        }
+        self.runtime_mut()?.fill_job_lifecycle = Puzzle2dFillLifecycle::Running;
+        self.stage = Puzzle2dFillStage::Search;
+        Ok(())
+    }
+
+    fn apply_one(&mut self) -> Result<(), Fault> {
+        if self.apply.is_none() {
+            let placement = self.checkpoint.as_mut().and_then(infinite_canvas::BoardFillCheckpoint::take_pending_placement);
+            match placement {
+                Some(placement) => {
+                    self.apply = Some(FillPlacementApplyCursor::new(placement));
+                    self.runtime_mut()?.fill_job_lifecycle = Puzzle2dFillLifecycle::Applying;
+                }
+                None => return self.adopt_checkpoint(),
+            }
+        }
+        let stepped = {
+            let Self { apply, mutations, .. } = self;
+            let Some(cursor) = apply.as_mut() else { return Ok(()) };
+            cursor.step(mutations)
+        };
+        match stepped {
+            Ok(FillPlacementApplyStep::Pending) => Ok(()),
+            Ok(FillPlacementApplyStep::Complete) => {
+                self.apply = None;
+                Ok(())
+            }
+            Err(code) => self.fault(code),
+        }
+    }
+
+    /// 🏁️ The one publication a session makes: every accepted placement, plus the runtime the next
+    /// verb resumes from, plus the tool activation `setFillCount` requests.
+    fn complete(&mut self, config: &Puzzle2dConfig) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        let runtime = self.runtime.take().ok_or_else(|| Fault::from("puzzle2d-fill-runtime-owner"))?;
+        let config_mutations = if runtime.differs_from(config) { vec![Puzzle2dConfigMutation::Fill { runtime }] } else { Vec::new() };
+        let artifact_mutations = std::mem::take(&mut self.mutations);
+        let effects = std::mem::take(&mut self.effects);
+        self.stage = Puzzle2dFillStage::Complete;
+        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations, config_mutations, coalesce_key: None, effects, ui_scope: UiDirtyScope::Full, ..Default::default() }))
+    }
+
+    /// 🚰️ Releases one engine owner per call, innermost first: the checkpoint hands its state back
+    /// to the search before the search itself closes, matching the order the engine's own `Drop`
+    /// assertions require.
+    fn close_one(&mut self) -> bool {
+        if let Some(outcome) = self.outcome.as_mut() {
+            if outcome.terminal_is_empty() {
+                self.outcome = None;
             } else {
-                queue_fill_step(ctx);
+                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             }
+            return true;
         }
-        Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Rejected) => {
-            ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Queued;
-            queue_fill_step(ctx);
+        if let Some(cursor) = self.apply.as_mut() {
+            if cursor.close_step() {
+                self.apply = None;
+            }
+            return true;
         }
-        Ok(semio_framework_job::WorkerJobPoll::Closing) => {
-            close_session_work_one(node);
-            queue_fill_discard(ctx);
+        if let Some(checkpoint) = self.checkpoint.take() {
+            let handback = match self.search.as_mut() {
+                Some(job) => job.adopt_checkpoint(checkpoint).err(),
+                None => Some(checkpoint),
+            };
+            if let Some(checkpoint) = handback {
+                self.closing_search = Some(checkpoint.into_closing_job());
+            }
+            return true;
         }
-        Ok(semio_framework_job::WorkerJobPoll::TerminalEmpty) => {
-            node.work = FillWork::Empty;
-            queue_fill_adopt(ctx);
+        if self.closing_search.is_some() {
+            Self::close_job_slot(&mut self.closing_search);
+            return true;
         }
-        Ok(_) => queue_fill_step(ctx),
-        Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(_)) => {
-            ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Queued;
-            queue_fill_step(ctx);
+        if self.search.is_some() {
+            Self::close_job_slot(&mut self.search);
+            return true;
         }
-        Err(_) => {
-            node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-worker-contention"));
-            fill_fault(ctx, "puzzle2d-fill-worker-contention");
-            node.begin_close();
-            queue_fill_discard(ctx);
+        if let Some(ingress) = self.ingress.as_mut() {
+            ingress.begin_close();
+            if matches!(ingress.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && ingress.terminal_is_empty() {
+                self.ingress = None;
+            }
+            return true;
         }
+        if self.mutations.pop().is_some() {
+            return true;
+        }
+        if self.effects.pop().is_some() {
+            return true;
+        }
+        self.runtime.take().is_some()
+    }
+
+    fn close_job_slot(slot: &mut Option<infinite_canvas::BoardFillJob>) {
+        let Some(job) = slot.as_mut() else { return };
+        semio_framework_job::InteractiveJob::begin_close(job);
+        if matches!(semio_framework_job::InteractiveJob::close_step(job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && semio_framework_job::InteractiveJob::terminal_is_empty(job) {
+            *slot = None;
+        }
+    }
+
+    fn session_is_empty(&self) -> bool {
+        self.outcome.is_none() && self.apply.is_none() && self.checkpoint.is_none() && self.closing_search.is_none() && self.search.is_none() && self.ingress.is_none() && self.mutations.is_empty() && self.effects.is_empty() && self.runtime.is_none()
     }
 }
 
-pub fn step_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>, expected_generation: Option<u64>) {
-    let active = action_authority(ctx).map(|authority| (authority.app_instance_id, authority.operation_id, authority.generation));
-    if expected_generation.is_some_and(|generation| generation != ctx.runtime.fill_job_generation) {
-        pump_abandoned_session(active);
-        return;
+//#endregion 🪣️Session
+
+//#region 🔬️Capture
+/// 🔬️ Streams the document into the engine's fixed-capacity fill ingress one field — and, for text,
+/// one byte — per call, so a capture never allocates and never outruns its step budget.
+impl Puzzle2dFillSessionWork {
+    fn nodes(document: &Value) -> Result<&[Value], &'static str> {
+        document.get("nodes").and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-nodes")
     }
-    let Some(authority) = action_authority(ctx).cloned() else {
-        pump_abandoned_session(None);
-        fill_fault(ctx, "puzzle2d-fill-operation-authority");
-        return;
-    };
-    pump_abandoned_session(Some((authority.app_instance_id, authority.operation_id, authority.generation)));
-    let Some(mut guard) = take_matching_session(authority.app_instance_id, authority.operation_id, authority.generation) else { return };
-    let Some(node) = guard.node_mut() else { return };
-    if !is_fresh(ctx, node) {
-        node.begin_close();
-        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Closing;
-        if node.close_step() {
-            guard.retire();
-        } else {
-            queue_fill_discard(ctx);
+
+    fn edges(document: &Value) -> Result<&[Value], &'static str> {
+        document.get("edges").and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-edges")
+    }
+
+    fn node_kinds(document: &Value) -> Result<&[Value], &'static str> {
+        document.get("meta").and_then(|meta| meta.get("kindCatalogs")).and_then(|catalogs| catalogs.get("nodes")).and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-node-kinds")
+    }
+
+    fn rules(document: &Value) -> Option<&[Value]> {
+        document.get("meta").and_then(|meta| meta.get("kindCompatibility")).or_else(|| document.get("kindCompatibility")).and_then(Value::as_array).map(Vec::as_slice)
+    }
+
+    fn finite(value: Option<f64>, default: f64) -> f64 {
+        value.filter(|value| value.is_finite()).unwrap_or(default)
+    }
+
+    fn capture_node_one(&mut self, document: &Value) -> Result<(), &'static str> {
+        let nodes = Self::nodes(document)?;
+        let Some(node) = nodes.get(self.capture.node) else {
+            if self.capture.node_field != ArtifactNodeCaptureField::Begin {
+                return Err("puzzle2d-fill-capture-stale-node");
+            }
+            self.capture.stage = ArtifactFillCaptureStage::Handles;
+            return Ok(());
+        };
+        match self.capture.node_field {
+            ArtifactNodeCaptureField::Begin => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_node().map_err(capture_fault_code)?;
+                self.capture.node_field = ArtifactNodeCaptureField::Id;
+            }
+            ArtifactNodeCaptureField::Id => {
+                let value = node.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-node-id")?;
+                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_node_id_byte(byte).map_err(capture_fault_code)?;
+                    self.capture.byte += 1;
+                } else {
+                    self.capture.byte = 0;
+                    self.capture.node_field = ArtifactNodeCaptureField::X;
+                }
+            }
+            ArtifactNodeCaptureField::X => {
+                self.capture.node_x = Self::finite(node.get("x").and_then(Value::as_f64), 0.0);
+                self.capture.node_field = ArtifactNodeCaptureField::Y;
+            }
+            ArtifactNodeCaptureField::Y => {
+                self.capture.node_y = Self::finite(node.get("y").and_then(Value::as_f64), 0.0);
+                self.capture.node_field = ArtifactNodeCaptureField::Scale;
+            }
+            ArtifactNodeCaptureField::Scale => {
+                self.capture.node_scale = Self::finite(node.get("scale").and_then(Value::as_f64), 1.0).max(f64::EPSILON);
+                self.capture.node_field = ArtifactNodeCaptureField::Shape;
+            }
+            ArtifactNodeCaptureField::Shape => {
+                self.capture.node_rectangle = node.get("shape").and_then(Value::as_str) == Some("rectangle");
+                self.capture.node_field = ArtifactNodeCaptureField::ExtentX;
+            }
+            ArtifactNodeCaptureField::ExtentX => {
+                let field = if self.capture.node_rectangle { "width" } else { "radius" };
+                let extent = Self::finite(node.get(field).and_then(Value::as_f64), 1.0).max(f64::EPSILON) * self.capture.node_scale;
+                self.capture.node_extent_x = if self.capture.node_rectangle { extent * 0.5 } else { extent };
+                self.capture.node_field = ArtifactNodeCaptureField::ExtentY;
+            }
+            ArtifactNodeCaptureField::ExtentY => {
+                self.capture.node_extent_y = if self.capture.node_rectangle { Self::finite(node.get("height").and_then(Value::as_f64), 1.0).max(f64::EPSILON) * self.capture.node_scale * 0.5 } else { self.capture.node_extent_x };
+                self.capture.node_field = ArtifactNodeCaptureField::Bound0;
+            }
+            ArtifactNodeCaptureField::Bound0 => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_node_bound(0, self.capture.node_x - self.capture.node_extent_x).map_err(capture_fault_code)?;
+                self.capture.node_field = ArtifactNodeCaptureField::Bound1;
+            }
+            ArtifactNodeCaptureField::Bound1 => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_node_bound(1, self.capture.node_y - self.capture.node_extent_y).map_err(capture_fault_code)?;
+                self.capture.node_field = ArtifactNodeCaptureField::Bound2;
+            }
+            ArtifactNodeCaptureField::Bound2 => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_node_bound(2, self.capture.node_x + self.capture.node_extent_x).map_err(capture_fault_code)?;
+                self.capture.node_field = ArtifactNodeCaptureField::Bound3;
+            }
+            ArtifactNodeCaptureField::Bound3 => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_node_bound(3, self.capture.node_y + self.capture.node_extent_y).map_err(capture_fault_code)?;
+                self.capture.node_field = ArtifactNodeCaptureField::Publish;
+            }
+            ArtifactNodeCaptureField::Publish => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_node().map_err(capture_fault_code)?;
+                self.capture.node += 1;
+                self.capture.node_field = ArtifactNodeCaptureField::Begin;
+            }
         }
-        return;
+        Ok(())
     }
-    if node.closing {
-        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Closing;
-        if node.close_step() {
-            guard.retire();
-            ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Discarded;
-        } else {
-            queue_fill_discard(ctx);
+
+    fn capture_handle_one(&mut self, document: &Value) -> Result<(), &'static str> {
+        let nodes = Self::nodes(document)?;
+        let Some(node) = nodes.get(self.capture.handle_node) else {
+            self.capture.stage = ArtifactFillCaptureStage::Kinds;
+            return Ok(());
+        };
+        let handles = node.get("handles").and_then(Value::as_array).ok_or("puzzle2d-fill-capture-handles")?;
+        let Some(handle) = handles.get(self.capture.handle) else {
+            if self.capture.handle_field != ArtifactHandleCaptureField::Begin {
+                return Err("puzzle2d-fill-capture-stale-handle");
+            }
+            self.capture.handle_node += 1;
+            self.capture.handle = 0;
+            self.capture.handle_edge = 0;
+            self.capture.handle_connected = false;
+            return Ok(());
+        };
+        match self.capture.handle_field {
+            ArtifactHandleCaptureField::Begin => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_handle().map_err(capture_fault_code)?;
+                self.capture.handle_field = ArtifactHandleCaptureField::Id;
+            }
+            ArtifactHandleCaptureField::Id => {
+                let value = handle.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-handle-id")?;
+                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_handle_text_byte(infinite_canvas::BoardFillIngressHandleText::Id, byte).map_err(capture_fault_code)?;
+                    self.capture.byte += 1;
+                } else {
+                    self.capture.byte = 0;
+                    self.capture.handle_field = ArtifactHandleCaptureField::ScanEdges;
+                }
+            }
+            ArtifactHandleCaptureField::ScanEdges => {
+                let id = handle.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-handle-id")?;
+                let edges = Self::edges(document)?;
+                if let Some(edge) = edges.get(self.capture.handle_edge) {
+                    self.capture.handle_edge += 1;
+                    if edge.get("source").and_then(Value::as_str) == Some(id) || edge.get("target").and_then(Value::as_str) == Some(id) {
+                        self.capture.handle_connected = true;
+                    }
+                } else {
+                    self.capture.handle_field = ArtifactHandleCaptureField::NodeKind;
+                }
+            }
+            ArtifactHandleCaptureField::NodeKind | ArtifactHandleCaptureField::HandleKind | ArtifactHandleCaptureField::WireKind | ArtifactHandleCaptureField::EdgeKind => {
+                let (value, field, next) = match self.capture.handle_field {
+                    ArtifactHandleCaptureField::NodeKind => (node.get("nodeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressHandleText::NodeKind, ArtifactHandleCaptureField::HandleKind),
+                    ArtifactHandleCaptureField::HandleKind => (handle.get("handleKind").and_then(Value::as_str).unwrap_or("port"), infinite_canvas::BoardFillIngressHandleText::HandleKind, ArtifactHandleCaptureField::WireKind),
+                    ArtifactHandleCaptureField::WireKind => (handle.get("wireKind").and_then(Value::as_str).unwrap_or("wire.link"), infinite_canvas::BoardFillIngressHandleText::WireKind, ArtifactHandleCaptureField::EdgeKind),
+                    ArtifactHandleCaptureField::EdgeKind => (handle.get("edgeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressHandleText::EdgeKind, ArtifactHandleCaptureField::X),
+                    _ => return Err("puzzle2d-fill-capture-handle-field"),
+                };
+                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_handle_text_byte(field, byte).map_err(capture_fault_code)?;
+                    self.capture.byte += 1;
+                } else {
+                    self.capture.byte = 0;
+                    self.capture.handle_field = next;
+                }
+            }
+            ArtifactHandleCaptureField::X => {
+                self.capture.handle_x = Self::finite(node.get("x").and_then(Value::as_f64), 0.0);
+                self.capture.handle_field = ArtifactHandleCaptureField::Y;
+            }
+            ArtifactHandleCaptureField::Y => {
+                self.capture.handle_y = Self::finite(node.get("y").and_then(Value::as_f64), 0.0);
+                self.capture.handle_field = ArtifactHandleCaptureField::Angle;
+            }
+            ArtifactHandleCaptureField::Angle => {
+                self.capture.handle_angle = Self::finite(handle.get("angle").and_then(Value::as_f64), 0.0);
+                self.capture.handle_field = ArtifactHandleCaptureField::Shape;
+            }
+            ArtifactHandleCaptureField::Shape => {
+                self.capture.handle_rectangle = node.get("shape").and_then(Value::as_str) == Some("rectangle");
+                self.capture.handle_field = ArtifactHandleCaptureField::ExtentX;
+            }
+            ArtifactHandleCaptureField::ExtentX => {
+                let field = if self.capture.handle_rectangle { "width" } else { "radius" };
+                self.capture.handle_extent_x = Self::finite(node.get(field).and_then(Value::as_f64), 1.0).max(f64::EPSILON);
+                self.capture.handle_field = ArtifactHandleCaptureField::ExtentY;
+            }
+            ArtifactHandleCaptureField::ExtentY => {
+                self.capture.handle_extent_y = if self.capture.handle_rectangle { Self::finite(node.get("height").and_then(Value::as_f64), 1.0).max(f64::EPSILON) } else { self.capture.handle_extent_x };
+                self.capture.handle_field = ArtifactHandleCaptureField::Radius;
+            }
+            ArtifactHandleCaptureField::Radius => {
+                self.capture.handle_radius = if self.capture.handle_rectangle { self.capture.handle_extent_x.max(self.capture.handle_extent_y) * 0.5 } else { self.capture.handle_extent_x };
+                self.capture.handle_field = ArtifactHandleCaptureField::NodeVisible;
+            }
+            ArtifactHandleCaptureField::NodeVisible => {
+                self.capture.handle_node_visible = node.get("visible").and_then(Value::as_bool) != Some(false);
+                self.capture.handle_field = ArtifactHandleCaptureField::HandleVisible;
+            }
+            ArtifactHandleCaptureField::HandleVisible => {
+                self.capture.handle_visible = handle.get("visible").and_then(Value::as_bool) != Some(false);
+                self.capture.handle_field = ArtifactHandleCaptureField::Visible;
+            }
+            ArtifactHandleCaptureField::Visible => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_visible(self.capture.handle_node_visible && self.capture.handle_visible).map_err(capture_fault_code)?;
+                self.capture.handle_field = ArtifactHandleCaptureField::Connected;
+            }
+            ArtifactHandleCaptureField::Connected => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_connected(self.capture.handle_connected).map_err(capture_fault_code)?;
+                self.capture.handle_field = ArtifactHandleCaptureField::SlotX;
+            }
+            ArtifactHandleCaptureField::SlotX => {
+                let distance = self.capture.handle_radius + self.suggestion_offset;
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_slot(0, self.capture.handle_x + self.capture.handle_angle.cos() * distance).map_err(capture_fault_code)?;
+                self.capture.handle_field = ArtifactHandleCaptureField::SlotY;
+            }
+            ArtifactHandleCaptureField::SlotY => {
+                let distance = self.capture.handle_radius + self.suggestion_offset;
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_slot(1, self.capture.handle_y + self.capture.handle_angle.sin() * distance).map_err(capture_fault_code)?;
+                self.capture.handle_field = ArtifactHandleCaptureField::Weight;
+            }
+            ArtifactHandleCaptureField::Weight => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_handle_weight(1.0).map_err(capture_fault_code)?;
+                self.capture.handle_field = ArtifactHandleCaptureField::Publish;
+            }
+            ArtifactHandleCaptureField::Publish => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_handle().map_err(capture_fault_code)?;
+                self.capture.handle += 1;
+                self.capture.handle_edge = 0;
+                self.capture.handle_connected = false;
+                self.capture.handle_field = ArtifactHandleCaptureField::Begin;
+            }
         }
-        return;
+        Ok(())
     }
-    if let Some(outcome) = node.retained_outcome.as_mut() {
-        if node.outcome_terminal && !node.terminal_published {
-            if let semio_framework_job::StepOutcome::Complete(candidate) = outcome {
-                match publish_commit_candidate(candidate, ctx.artifact_mutations) {
-                    Some(Ok(result)) => {
-                        ctx.runtime.fill_job_accepted_count = u64::from(result.accepted_count);
-                        ctx.runtime.fill_job_search_count = result.search_count;
-                        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::AwaitingAdoption;
-                        node.terminal = Some(FillTerminal::Completed(result));
-                        node.terminal_published = true;
+
+    fn capture_kind_one(&mut self, document: &Value) -> Result<(), &'static str> {
+        let kinds = Self::node_kinds(document)?;
+        let Some(kind) = kinds.get(self.capture.kind) else {
+            if self.capture.kind_field != ArtifactKindCaptureField::Begin {
+                return Err("puzzle2d-fill-capture-stale-kind");
+            }
+            self.capture.stage = ArtifactFillCaptureStage::Rules;
+            return Ok(());
+        };
+        let templates = kind.get("handles").and_then(Value::as_array).ok_or("puzzle2d-fill-capture-kind-handles")?;
+        let template = templates.get(self.capture.template);
+        match self.capture.kind_field {
+            ArtifactKindCaptureField::Begin => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_kind().map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::Id;
+            }
+            ArtifactKindCaptureField::Id => {
+                let value = kind.get("id").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-kind-id")?;
+                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_text_byte(infinite_canvas::BoardFillIngressKindText::Id, byte).map_err(capture_fault_code)?;
+                    self.capture.byte += 1;
+                } else {
+                    self.capture.byte = 0;
+                    self.capture.kind_field = ArtifactKindCaptureField::Shape;
+                }
+            }
+            ArtifactKindCaptureField::Shape => {
+                let rectangle = kind.get("shape").and_then(Value::as_str) == Some("rectangle");
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_rectangle(rectangle).map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::Scale;
+            }
+            ArtifactKindCaptureField::Scale => {
+                self.capture.kind_size = 96.0 * Self::finite(kind.get("scale").and_then(Value::as_f64), 1.0).max(f64::EPSILON);
+                self.capture.kind_field = ArtifactKindCaptureField::Radius;
+            }
+            ArtifactKindCaptureField::Radius => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_radius(self.capture.kind_size * 0.5).map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::Width;
+            }
+            ArtifactKindCaptureField::Width => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_width(self.capture.kind_size).map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::Height;
+            }
+            ArtifactKindCaptureField::Height => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_height(self.capture.kind_size).map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::IconBegin;
+            }
+            ArtifactKindCaptureField::IconBegin => {
+                if kind.get("icon").and_then(Value::as_str).is_some() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_kind_icon().map_err(capture_fault_code)?;
+                    self.capture.kind_field = ArtifactKindCaptureField::Icon;
+                } else {
+                    self.capture.kind_field = ArtifactKindCaptureField::Weight;
+                }
+            }
+            ArtifactKindCaptureField::Icon => {
+                let value = kind.get("icon").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-kind-icon")?;
+                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_text_byte(infinite_canvas::BoardFillIngressKindText::Icon, byte).map_err(capture_fault_code)?;
+                    self.capture.byte += 1;
+                } else {
+                    self.capture.byte = 0;
+                    self.capture.kind_field = ArtifactKindCaptureField::Weight;
+                }
+            }
+            ArtifactKindCaptureField::Weight => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_weight(1.0).map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::TemplateBegin;
+            }
+            ArtifactKindCaptureField::TemplateBegin => {
+                if template.is_some() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_kind_handle().map_err(capture_fault_code)?;
+                    self.capture.kind_field = ArtifactKindCaptureField::TemplateHandleKind;
+                } else {
+                    self.capture.kind_field = ArtifactKindCaptureField::Publish;
+                }
+            }
+            ArtifactKindCaptureField::TemplateHandleKind | ArtifactKindCaptureField::TemplateWireKind | ArtifactKindCaptureField::TemplateEdgeKind => {
+                let template = template.ok_or("puzzle2d-fill-capture-stale-template")?;
+                let (value, field, next) = match self.capture.kind_field {
+                    ArtifactKindCaptureField::TemplateHandleKind => {
+                        (template.get("handleKind").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-template-kind")?, infinite_canvas::BoardFillIngressTemplateText::HandleKind, ArtifactKindCaptureField::TemplateWireKind)
                     }
-                    Some(Err(_)) => {
-                        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Applying;
-                        queue_fill_adopt(ctx);
-                        return;
+                    ArtifactKindCaptureField::TemplateWireKind => (template.get("wireKind").and_then(Value::as_str).unwrap_or("wire.link"), infinite_canvas::BoardFillIngressTemplateText::WireKind, ArtifactKindCaptureField::TemplateEdgeKind),
+                    ArtifactKindCaptureField::TemplateEdgeKind => (template.get("edgeKind").and_then(Value::as_str).unwrap_or(""), infinite_canvas::BoardFillIngressTemplateText::EdgeKind, ArtifactKindCaptureField::TemplateAngle),
+                    _ => return Err("puzzle2d-fill-capture-template-field"),
+                };
+                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_kind_handle_text_byte(field, byte).map_err(capture_fault_code)?;
+                    self.capture.byte += 1;
+                } else {
+                    self.capture.byte = 0;
+                    self.capture.kind_field = next;
+                }
+            }
+            ArtifactKindCaptureField::TemplateAngle => {
+                let template = template.ok_or("puzzle2d-fill-capture-stale-template")?;
+                let angle = Self::finite(template.get("angle").and_then(Value::as_f64), 0.0);
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_handle_angle(angle).map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::TemplateRadius;
+            }
+            ArtifactKindCaptureField::TemplateRadius => {
+                let template = template.ok_or("puzzle2d-fill-capture-stale-template")?;
+                let radius = template.get("radius").and_then(Value::as_f64).filter(|value| value.is_finite() && *value > 0.0);
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_handle_radius(radius).map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::TemplateWeight;
+            }
+            ArtifactKindCaptureField::TemplateWeight => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_kind_handle_weight(1.0).map_err(capture_fault_code)?;
+                self.capture.kind_field = ArtifactKindCaptureField::TemplatePublish;
+            }
+            ArtifactKindCaptureField::TemplatePublish => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_kind_handle().map_err(capture_fault_code)?;
+                self.capture.template += 1;
+                self.capture.kind_field = ArtifactKindCaptureField::TemplateBegin;
+            }
+            ArtifactKindCaptureField::Publish => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_kind().map_err(capture_fault_code)?;
+                self.capture.kind += 1;
+                self.capture.template = 0;
+                self.capture.kind_field = ArtifactKindCaptureField::Begin;
+            }
+        }
+        Ok(())
+    }
+
+    fn capture_rule_one(&mut self, document: &Value) -> Result<(), &'static str> {
+        let Some(rules) = Self::rules(document) else {
+            if self.capture.rule_field != ArtifactRuleCaptureField::Begin {
+                return Err("puzzle2d-fill-capture-stale-rule");
+            }
+            self.capture.stage = ArtifactFillCaptureStage::Complete;
+            return Ok(());
+        };
+        let Some(rule) = rules.get(self.capture.rule) else {
+            if self.capture.rule_field != ArtifactRuleCaptureField::Begin {
+                return Err("puzzle2d-fill-capture-stale-rule");
+            }
+            self.capture.stage = ArtifactFillCaptureStage::Complete;
+            return Ok(());
+        };
+        match self.capture.rule_field {
+            ArtifactRuleCaptureField::Begin => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.begin_rule().map_err(capture_fault_code)?;
+                self.capture.rule_field = ArtifactRuleCaptureField::Source;
+            }
+            ArtifactRuleCaptureField::Source | ArtifactRuleCaptureField::Target => {
+                let (value, field, next) = match self.capture.rule_field {
+                    ArtifactRuleCaptureField::Source => (rule.get("source").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-rule-source")?, infinite_canvas::BoardFillIngressRuleText::Source, ArtifactRuleCaptureField::Target),
+                    ArtifactRuleCaptureField::Target => (rule.get("target").and_then(Value::as_str).ok_or("puzzle2d-fill-capture-rule-target")?, infinite_canvas::BoardFillIngressRuleText::Target, ArtifactRuleCaptureField::Bidirectional),
+                    _ => return Err("puzzle2d-fill-capture-rule-field"),
+                };
+                if let Some(byte) = value.as_bytes().get(self.capture.byte).copied() {
+                    self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.push_rule_text_byte(field, byte).map_err(capture_fault_code)?;
+                    self.capture.byte += 1;
+                } else {
+                    self.capture.byte = 0;
+                    self.capture.rule_field = next;
+                }
+            }
+            ArtifactRuleCaptureField::Bidirectional => {
+                let bidirectional = rule.get("bidirectional").and_then(Value::as_bool).unwrap_or(false);
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_rule_bidirectional(bidirectional).map_err(capture_fault_code)?;
+                self.capture.rule_field = ArtifactRuleCaptureField::Specificity;
+            }
+            ArtifactRuleCaptureField::Specificity => {
+                let specificity = rule.get("specificity").and_then(Value::as_str).unwrap_or("handle");
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.set_rule_specificity(specificity).map_err(capture_fault_code)?;
+                self.capture.rule_field = ArtifactRuleCaptureField::Publish;
+            }
+            ArtifactRuleCaptureField::Publish => {
+                self.ingress.as_mut().ok_or("puzzle2d-fill-capture-ingress")?.publish_rule().map_err(capture_fault_code)?;
+                self.capture.rule += 1;
+                self.capture.rule_field = ArtifactRuleCaptureField::Begin;
+            }
+        }
+        Ok(())
+    }
+
+    fn capture_one(&mut self, document: &Value) -> Result<(), &'static str> {
+        match self.capture.stage {
+            ArtifactFillCaptureStage::Nodes => self.capture_node_one(document),
+            ArtifactFillCaptureStage::Handles => self.capture_handle_one(document),
+            ArtifactFillCaptureStage::Kinds => self.capture_kind_one(document),
+            ArtifactFillCaptureStage::Rules => self.capture_rule_one(document),
+            ArtifactFillCaptureStage::Complete => {
+                let snapshot = self.ingress.as_mut().and_then(infinite_canvas::BoardFillSnapshotIngress::take_snapshot).ok_or("puzzle2d-fill-capture-snapshot")?;
+                self.ingress = None;
+                self.search = Some(infinite_canvas::BoardFillJob::with_operation(snapshot, self.maximum_count, self.operation));
+                Ok(())
+            }
+        }
+    }
+}
+//#endregion 🔬️Capture
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dFillSessionWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    /// 🪪️ The retained operation is the session identity — it replaces the `(app_instance_id,
+    /// operation_id, generation)` key the removed process-global slot table used.
+    fn bind_operation(&mut self, operation: semio_framework_job::Operation) {
+        self.operation = operation;
+    }
+
+    /// 📐️ A control verb costs its four runtime-transition steps. A search verb declares the exact
+    /// per-stage chunk ceilings it is allowed to spend, which is also what
+    /// [`Puzzle2dFillSessionWork::step`] enforces — the extent is the budget, not an estimate.
+    fn extent(&self, command: &crate::editor::puzzle2d::Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        if command.action_id() != self.tool_id {
+            return None;
+        }
+        if !is_fill_search_action(self.tool_id) {
+            return Some(PUZZLE2D_FILL_CONTROL_CHUNKS);
+        }
+        if snapshot.0.get("schema").and_then(Value::as_str) != Some(crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA) {
+            return None;
+        }
+        if requested_fill_count(self.tool_id, command.args()).is_some_and(|count| count > fill::PUZZLE2D_FILL_COUNT_MAX) {
+            return None;
+        }
+        let items = PUZZLE2D_FILL_CAPTURE_CHUNKS.checked_add(PUZZLE2D_FILL_SEARCH_CHUNKS)?.checked_add(PUZZLE2D_FILL_APPLY_CHUNKS)?.checked_add(PUZZLE2D_FILL_CONTROL_CHUNKS)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &crate::editor::puzzle2d::Puzzle2dCommand,
+        snapshot: &Puzzle2dPlaySnapshot,
+        config: &Puzzle2dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        if self.runtime.is_none() {
+            self.runtime = Some(Puzzle2dFillRuntime::from_config(config));
+        }
+        match self.stage {
+            Puzzle2dFillStage::Control => {
+                let action = self.tool_id;
+                let mut runtime = self.runtime.take().ok_or_else(|| Fault::from("puzzle2d-fill-runtime-owner"))?;
+                let mut effects = std::mem::take(&mut self.effects);
+                let outcome = fill_session_control(action, command.args(), &mut runtime, &mut effects);
+                self.runtime = Some(runtime);
+                self.effects = effects;
+                match outcome {
+                    Ok(Some((count, seed))) => {
+                        self.begin_search(config, count, seed)?;
+                        if self.stage == Puzzle2dFillStage::Complete {
+                            return self.complete(config);
+                        }
+                        Ok(Self::progress("puzzle2d-fill-capture", "Capturing board for fill", "Board wird für Füllung erfasst"))
                     }
-                    None => {
-                        node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-result-missing"));
-                        node.terminal_published = true;
-                        fill_fault(ctx, "puzzle2d-fill-result-missing");
+                    Ok(None) => self.complete(config),
+                    Err(code) => {
+                        self.fault(code)?;
+                        self.complete(config)
                     }
                 }
             }
+            Puzzle2dFillStage::Capture => {
+                if self.capture_chunks >= PUZZLE2D_FILL_CAPTURE_CHUNKS {
+                    self.fault("puzzle2d-fill-capture-budget")?;
+                    return self.complete(config);
+                }
+                self.capture_chunks = self.capture_chunks.saturating_add(1);
+                for _ in 0..PUZZLE2D_FILL_CAPTURE_UNITS_PER_STEP {
+                    if self.search.is_some() {
+                        break;
+                    }
+                    if let Err(code) = self.capture_one(&snapshot.0) {
+                        self.fault(code)?;
+                        return self.complete(config);
+                    }
+                }
+                if self.search.is_some() {
+                    self.runtime_mut()?.fill_job_lifecycle = Puzzle2dFillLifecycle::Queued;
+                    self.stage = Puzzle2dFillStage::Search;
+                }
+                Ok(Self::progress("puzzle2d-fill-capture", "Capturing board for fill", "Board wird für Füllung erfasst"))
+            }
+            Puzzle2dFillStage::Search => {
+                if self.search_chunks >= PUZZLE2D_FILL_SEARCH_CHUNKS {
+                    self.runtime_mut()?.fill_job_lifecycle = Puzzle2dFillLifecycle::CheckpointReady;
+                    return self.complete(config);
+                }
+                self.search_chunks = self.search_chunks.saturating_add(1);
+                for _ in 0..PUZZLE2D_FILL_SEARCH_UNITS_PER_STEP {
+                    if self.stage != Puzzle2dFillStage::Search {
+                        break;
+                    }
+                    let Some(outcome) = self.search_step_one() else {
+                        self.fault("puzzle2d-fill-search-owner")?;
+                        break;
+                    };
+                    self.absorb_outcome(outcome)?;
+                }
+                if self.stage == Puzzle2dFillStage::Complete {
+                    return self.complete(config);
+                }
+                Ok(Self::progress("puzzle2d-fill-search", "Searching a fill placement", "Füllplatzierung wird gesucht"))
+            }
+            Puzzle2dFillStage::Apply => {
+                if self.apply_chunks >= PUZZLE2D_FILL_APPLY_CHUNKS {
+                    self.fault("puzzle2d-fill-apply-budget")?;
+                    return self.complete(config);
+                }
+                self.apply_chunks = self.apply_chunks.saturating_add(1);
+                for _ in 0..PUZZLE2D_FILL_APPLY_UNITS_PER_STEP {
+                    if self.stage != Puzzle2dFillStage::Apply {
+                        break;
+                    }
+                    self.apply_one()?;
+                }
+                if self.stage == Puzzle2dFillStage::Complete {
+                    return self.complete(config);
+                }
+                Ok(Self::progress("puzzle2d-fill-apply", "Applying a fill placement", "Füllplatzierung wird angewendet"))
+            }
+            Puzzle2dFillStage::Complete => Err(Fault::from("puzzle2d-fill-complete-repolled")),
+            Puzzle2dFillStage::Closing => Err(Fault::from("puzzle2d-fill-closing")),
         }
-        if !outcome.terminal_is_empty() {
-            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            queue_fill_adopt(ctx);
-            return;
-        }
-        node.retained_outcome = None;
-        if node.outcome_terminal {
-            node.outcome_terminal = false;
-            node.terminal_published = false;
-            close_session_work_one(node);
-            queue_fill_adopt(ctx);
-            return;
-        }
-        if node.checkpoint.is_some() {
-            queue_fill_adopt(ctx);
-            return;
-        }
-        let FillWork::Session(session) = &mut node.work else {
-            node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-resume-session"));
-            fill_fault(ctx, "puzzle2d-fill-resume-session");
-            node.begin_close();
-            queue_fill_discard(ctx);
-            return;
-        };
-        if session.resume().is_err() {
-            node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-resume-contention"));
-            fill_fault(ctx, "puzzle2d-fill-resume-contention");
-            node.begin_close();
-            queue_fill_discard(ctx);
-        } else {
-            queue_fill_step(ctx);
-        }
-        return;
     }
-    if node.checkpoint.is_some() || node.apply.is_some() {
-        apply_checkpoint_step(ctx, node);
-        return;
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle2dFillStage::Closing;
+        self.closing = true;
     }
-    match &mut node.work {
-        FillWork::AwaitingSnapshot => ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Capturing,
-        FillWork::Session(_) => pump_fill_worker(ctx, node),
-        FillWork::Rejected(_) => {
-            node.begin_close();
-            queue_fill_discard(ctx);
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        FillWork::Detached(_) => {
-            node.begin_close();
-            queue_fill_discard(ctx);
+        if self.close_one() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        FillWork::Empty => queue_fill_adopt(ctx),
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.session_is_empty()
     }
 }
 
-pub fn adopt_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>, expected_generation: Option<u64>) {
-    if expected_generation.is_some_and(|generation| generation != ctx.runtime.fill_job_generation) {
-        pump_abandoned_session(None);
-        return;
-    }
-    let Some(authority) = action_authority(ctx).cloned() else { return };
-    let Some(mut guard) = take_matching_session(authority.app_instance_id, ctx.runtime.fill_job_operation, ctx.runtime.fill_job_generation) else { return };
-    let Some(node) = guard.node_mut() else { return };
-    if node.checkpoint.is_some() || node.apply.is_some() || node.retained_outcome.is_some() {
-        drop(guard);
-        step_fill_job(ctx, expected_generation);
-        return;
-    }
-    let Some(terminal) = node.terminal.take() else {
-        close_session_work_one(node);
-        return;
-    };
-    match terminal {
-        FillTerminal::Completed(result) => {
-            ctx.runtime.fill_job_accepted_count = u64::from(result.accepted_count);
-            ctx.runtime.fill_job_search_count = result.search_count;
-            ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Completed;
-            ctx.runtime.fill_job_fault_code = None;
+//#region 🎛️Control
+/// 🔢️ The count a search verb asks for, when the verb carries one in its arguments.
+fn requested_fill_count(action: &str, args: Option<&Value>) -> Option<u32> {
+    match action {
+        "setFillCount" => {
+            let value = args.and_then(|args| args.get("count").or_else(|| args.get("value"))).and_then(Value::as_f64)?;
+            if !value.is_finite() || value < 0.0 {
+                return None;
+            }
+            u32::try_from(value.round() as i64).ok()
         }
-        FillTerminal::Cancelled => {
-            ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Cancelled;
-            ctx.runtime.fill_job_fault_code = None;
-        }
-        FillTerminal::Fault(code) => fill_fault(ctx, code),
-    }
-    node.begin_close();
-    queue_fill_discard(ctx);
-}
-
-pub fn cancel_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>, expected_generation: Option<u64>) {
-    if expected_generation.is_some_and(|generation| generation != ctx.runtime.fill_job_generation) {
-        pump_abandoned_session(None);
-        return;
-    }
-    let Some(authority) = action_authority(ctx).cloned() else { return };
-    let Some(mut guard) = take_matching_session(authority.app_instance_id, ctx.runtime.fill_job_operation, ctx.runtime.fill_job_generation) else { return };
-    let Some(node) = guard.node_mut() else { return };
-    node.cancel.cancel_now();
-    node.terminal = Some(FillTerminal::Cancelled);
-    node.begin_close();
-    ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Closing;
-    queue_fill_discard(ctx);
-}
-
-pub fn discard_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>, expected_generation: Option<u64>) {
-    let Some(authority) = action_authority(ctx).cloned() else {
-        if pump_abandoned_session(None) {
-            queue_fill_discard(ctx);
-        }
-        return;
-    };
-    let generation = match expected_generation {
-        Some(generation) => generation,
-        None => ctx.runtime.fill_job_generation,
-    };
-    let Some(mut guard) = take_matching_session(authority.app_instance_id, ctx.runtime.fill_job_operation, generation) else {
-        if pump_abandoned_session(None) {
-            queue_fill_discard(ctx);
-        }
-        return;
-    };
-    let Some(node) = guard.node_mut() else { return };
-    node.begin_close();
-    if node.close_step() {
-        guard.retire();
-        if generation == ctx.runtime.fill_job_generation {
-            ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Discarded;
-        }
-    } else {
-        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Closing;
-        queue_fill_discard(ctx);
+        "brushFillSessionBegin" => args.and_then(|args| args.get("maxCount")).and_then(Value::as_u64).and_then(|count| u32::try_from(count).ok()),
+        _ => None,
     }
 }
 
-pub fn retry_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>) {
-    let count = ctx.runtime.fill_count;
-    let seed = ctx.runtime.fill_job_seed;
-    begin_fill_job(ctx, count, seed);
+/// 🧹️ Returns the fill runtime to its idle shape, keeping the requested count.
+fn discard_runtime(runtime: &mut Puzzle2dFillRuntime) {
+    runtime.fill_job_operation = 0;
+    runtime.fill_job_generation = 0;
+    runtime.fill_job_seed = 0;
+    runtime.fill_job_base_revision = 0;
+    runtime.fill_job_checkpoint_sequence = 0;
+    runtime.fill_job_accepted_count = 0;
+    runtime.fill_job_search_count = 0;
+    runtime.fill_job_stage = Puzzle2dFillText::default();
+    runtime.fill_job_fault_code = None;
+    runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Discarded;
 }
 
-/// 🪣️ Activates fill and starts one persistent, generation-tagged job session.
-pub fn set_fill_count(ctx: &mut Puzzle2dFillActionCtx<'_>, args: Option<&Value>) {
-    let Some(value) = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()) else {
-        fill_fault(ctx, "puzzle2d-fill-count");
-        return;
-    };
-    if !value.is_finite() || value < 0.0 || value.round() > f64::from(fill::PUZZLE2D_FILL_COUNT_MAX) {
-        fill_fault(ctx, "puzzle2d-fill-count-capacity");
-        return;
-    }
-    let count = value.round() as u32;
-    ctx.runtime.fill_count = count;
-    ctx.effects.push(Effect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
-    begin_fill_job(ctx, count, 1);
+/// 🧰️ Cancels whatever fill the runtime describes — the one call `setActiveUtility` makes when the
+/// operator leaves the fill utility. There is no live session to reach any more: discarding the
+/// runtime IS discarding the session, because the runtime is the only thing a later verb resumes
+/// from.
+pub fn discard_fill_session(runtime: &mut Puzzle2dFillRuntime) {
+    discard_runtime(runtime);
 }
+
+/// 🎛️ The runtime transition every fill verb performs. Returns `Some((count, seed))` when the verb
+/// must additionally open or resume a search, `None` when the transition is the whole verb.
+///
+/// `brushFillSessionStep` is a real resumption, not a poll: the placements a previous session
+/// accepted are already committed to the document, so the remaining count plus the stored seed is
+/// the entire continuation state.
+fn fill_session_control(action: &str, args: Option<&Value>, runtime: &mut Puzzle2dFillRuntime, effects: &mut Vec<Effect>) -> Result<Option<(u32, u64)>, &'static str> {
+    match action {
+        "setFillCount" => {
+            let Some(value) = args.and_then(|args| args.get("count").or_else(|| args.get("value"))).and_then(Value::as_f64) else {
+                return Err("puzzle2d-fill-count");
+            };
+            if !value.is_finite() || value < 0.0 || value.round() > f64::from(fill::PUZZLE2D_FILL_COUNT_MAX) {
+                return Err("puzzle2d-fill-count-capacity");
+            }
+            let count = value.round() as u32;
+            runtime.fill_count = count;
+            effects.push(Effect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
+            Ok(Some((count, 1)))
+        }
+        "brushFillSessionBegin" => crate::editor::puzzle2d::commands::fill_session_begin::fill_session_begin(args, runtime),
+        "brushFillSessionRetry" => Ok(Some((runtime.fill_count, runtime.fill_job_seed.max(1)))),
+        "brushFillSessionStep" => crate::editor::puzzle2d::commands::fill_session_step::fill_session_step(runtime),
+        "brushFillSessionAdopt" => {
+            runtime.fill_job_lifecycle = if runtime.fill_job_fault_code.is_some() { Puzzle2dFillLifecycle::Faulted } else { Puzzle2dFillLifecycle::Completed };
+            Ok(None)
+        }
+        "brushFillSessionCancel" => {
+            runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Cancelled;
+            runtime.fill_job_fault_code = None;
+            Ok(None)
+        }
+        "brushFillSessionDiscard" => {
+            discard_runtime(runtime);
+            Ok(None)
+        }
+        "brushFillSessionClear" => {
+            crate::editor::puzzle2d::commands::fill_session_clear::fill_session_clear(runtime);
+            Ok(None)
+        }
+        _ => Err("puzzle2d-fill-action-unmapped"),
+    }
+}
+//#endregion 🎛️Control
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    static REGISTRY_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-    fn empty_node(operation: u64, generation: u64) -> Box<FillSessionNode> {
-        FillSessionBacking::try_new().expect("registry node backing").write(FillSessionNode {
-            app_instance_id: 7,
-            operation: semio_framework_job::Operation::new(semio_framework_job::OperationId(operation), semio_framework_job::RevisionId(11), semio_framework_job::Generation(generation), 3),
-            canonical_base_revision: [9; 32],
-            maximum_count: 0,
-            cancel: semio_framework_job::root_cancel_token(),
-            work: FillWork::Empty,
-            retained_outcome: None,
-            outcome_terminal: false,
-            terminal_published: false,
-            checkpoint: None,
-            apply: None,
-            checkpoint_sequence: 0,
-            terminal: None,
-            closing: true,
-        })
+    fn production_of(source: &str) -> &str {
+        source.split("//#region 🧪️Tests").next().unwrap_or(source)
     }
 
-    /// 🧮️ The fixed session authority admits MAX exact reservations and refuses MAX+1 before owner construction.
-    #[test]
-    fn fill_registry_max_and_max_plus_one_are_exact() {
-        let _serial = REGISTRY_TEST_LOCK.lock().expect("registry test lock");
-        assert!(!registry_has_sessions());
-        let mut reservations: [Option<FillSessionReservation>; FILL_SESSION_CAPACITY] = std::array::from_fn(|_| None);
-        for reservation in &mut reservations {
-            *reservation = reserve_session_slot();
-            assert!(reservation.is_some());
-        }
-        assert!(reserve_session_slot().is_none());
-        drop(reservations);
-        assert!(!registry_has_sessions());
-        let unwind = std::panic::catch_unwind(|| {
-            let _reservation = reserve_session_slot().expect("panic reservation");
-            panic!("hostile pre-publication panic");
-        });
-        assert!(unwind.is_err());
-        assert!(!registry_has_sessions());
-    }
-
-    /// 🛟️ Panic-unwound and lost guards republish the exact generation-qualified owner for later retirement.
-    #[test]
-    fn fill_registry_guard_drop_recovers_exact_owner() {
-        let _serial = REGISTRY_TEST_LOCK.lock().expect("registry test lock");
-        assert!(!registry_has_sessions());
-        let slot = reserve_session_slot().expect("registry reservation");
-        publish_session(slot, empty_node(31, 5));
-        let unwind = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            let _guard = take_matching_session(7, 31, 5).expect("exact checked-out owner");
-            panic!("hostile lost handle");
-        }));
-        assert!(unwind.is_err());
-        assert!(take_matching_session(7, 31, 6).is_none());
-        let guard = take_matching_session(7, 31, 5).expect("republished exact owner");
-        guard.retire();
-        assert!(!registry_has_sessions());
-    }
-
-    /// 🪪️ The terminal generation is an exact identity and cannot alias generation zero.
-    #[test]
-    fn fill_registry_terminal_generation_does_not_wrap_or_alias() {
-        let _serial = REGISTRY_TEST_LOCK.lock().expect("registry test lock");
-        assert!(!registry_has_sessions());
-        let slot = reserve_session_slot().expect("registry reservation");
-        publish_session(slot, empty_node(41, u64::MAX));
-        assert!(take_matching_session(7, 41, 0).is_none());
-        let guard = take_matching_session(7, 41, u64::MAX).expect("terminal generation owner");
-        guard.retire();
-        assert!(!registry_has_sessions());
-    }
-
-    fn mounted_fill_source_contract(source: &str) -> bool {
-        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
-        let Some(context_start) = production.find("pub struct Puzzle2dFillActionCtx") else { return false };
-        let Some(context_end_relative) = production[context_start..].find("enum FillTerminal") else { return false };
-        let context = &production[context_start..context_start + context_end_relative];
-        let Some(worker_start) = production.find("impl semio_framework_job::InteractiveJob for ArtifactBoardFillJob") else { return false };
-        let Some(worker_end) = production[worker_start..].find("impl Drop for ArtifactBoardFillJob") else { return false };
-        let worker = &production[worker_start..worker_start + worker_end];
-        context.contains("Puzzle2dFillRuntime")
-            && context.contains("boundary_fault")
-            && !context.contains("Puzzle2dConfig")
-            && !context.contains("Vec<Value>")
-            && !context.contains("BTreeMap")
-            && !context.contains("String")
-            && production.contains("snapshot: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>")
-            && worker.contains("context.consume_fuel(1)")
-            && worker.contains("commit_authority_matches(self.render_generation, self.canonical_base_revision)")
-            && production.contains("semio_framework_job::MountedWorkerJobSession::try_new(job, params)")
-            && production.contains("semio_framework_async::process_worker_pool")
-            && production.contains("semio_framework_job::StepOutcome::Complete(candidate)")
-            && production.contains("infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate)")
-            && production.matches("publish_commit_candidate(candidate, ctx.artifact_mutations)").count() == 2
-            && production.contains("terminal_published")
-            && !production.contains("BoardFillJob::take_result")
-            && !production.contains("FillWork::Capture")
+    /// 🧵️ The session must stay inside the retained work: no process-global slot table, no worker
+    /// pool, no store lease, no self-dispatched continuation effect.
+    fn registry_free_session_source_contract(source: &str) -> bool {
+        let production = production_of(source);
+        let Some(start) = production.find("pub struct Puzzle2dFillSessionWork {") else { return false };
+        let Some(end) = production[start..].find("impl Puzzle2dFillSessionWork {") else { return false };
+        let owner = &production[start..start + end];
+        owner.contains("search: Option<infinite_canvas::BoardFillJob>")
+            && owner.contains("checkpoint: Option<infinite_canvas::BoardFillCheckpoint>")
+            && owner.contains("apply: Option<FillPlacementApplyCursor>")
+            && owner.contains("operation: semio_framework_job::Operation")
+            && !owner.contains("app_instance_id")
+            && !production.contains("AtomicPtr")
+            && !production.contains("FILL_SESSION_SLOTS")
+            && !production.contains("semio_framework_async::process_worker_pool")
+            && !production.contains("MountedWorkerJobSession")
+            && !production.contains("store::SnapshotRead")
+            && !production.contains("Effect::DispatchAction")
+            && production.contains("fn bind_operation(&mut self, operation: semio_framework_job::Operation)")
+            && production.contains("semio_framework_job::StepContext::new(operation.operation, operation.generation, budget, semio_framework_job::root_cancel_token(), puzzle2d_fill_monotonic_zero, preview_sequence)")
+            && production.contains("Puzzle2dConfigMutation::Fill { runtime }")
     }
 
     fn fixed_placement_owner_source_contract(source: &str) -> bool {
-        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
-        let Some(start) = production.find("struct FillSessionNode") else { return false };
+        let production = production_of(source);
+        let Some(start) = production.find("struct FillPlacementApplyCursor {") else { return false };
         let Some(end) = production[start..].find("fn try_document_str") else { return false };
         let owners = &production[start..start + end];
-        let Some(apply_start) = production.find("impl FillPlacementApplyCursor") else { return false };
+        let Some(apply_start) = production.find("impl FillPlacementApplyCursor {") else { return false };
         let Some(apply_end) = production[apply_start..].find("impl Drop for FillPlacementApplyCursor") else { return false };
         let apply = &production[apply_start..apply_start + apply_end];
         let Some(view_start) = production.find("enum FillPlacementPublishHandles") else { return false };
@@ -2244,7 +1748,7 @@ mod tests {
     }
 
     fn full_terminal_candidate_source_contract(source: &str) -> bool {
-        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
+        let production = production_of(source);
         let Some(start) = production.find("fn publish_commit_candidate") else { return false };
         let Some(end) = production[start..].find("impl FillPlacementApplyCursor") else { return false };
         let publish = &production[start..start + end];
@@ -2257,11 +1761,11 @@ mod tests {
     }
 
     fn granular_capture_source_contract(source: &str) -> bool {
-        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
+        let production = production_of(source);
         let Some(start) = production.find("fn capture_node_one") else { return false };
-        let Some(end) = production[start..].find("fn take_preview") else { return false };
+        let Some(end) = production[start..].find("//#endregion 🔬️Capture") else { return false };
         let capture = &production[start..start + end];
-        capture.matches(".get(").count() == 57
+        capture.matches(".get(").count() == 53
             && capture.matches("as_bytes().get(self.capture.byte)").count() == 7
             && capture.matches("self.ingress").count() == 39
             && capture.matches(".push_node_id_byte(").count() == 1
@@ -2279,7 +1783,7 @@ mod tests {
     }
 
     fn placement_publish_source_contract(source: &str) -> bool {
-        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
+        let production = production_of(source);
         let Some(start) = production.find("fn publish_fixed_placement") else { return false };
         let Some(end) = production[start..].find("fn publish_commit_candidate") else { return false };
         let publish = &production[start..start + end];
@@ -2289,20 +1793,21 @@ mod tests {
         reserve < handles && handles < node && publish.contains("Some(try_document_text(*placement.edge_kind)?)") && publish.matches("mutations.push(").count() == 2 && !production.contains("ReserveMutations")
     }
 
-    /// 🧵️ Removing worker-owned capture or restoring mutable terminal rereads fails the live source law.
+    /// 🧵️ Reintroducing the process-global slot registry, the worker pool, the store lease or the
+    /// self-dispatched continuation effect fails the live session-ownership law.
     #[test]
-    fn mounted_fill_worker_and_terminal_mutations_are_rejected() {
+    fn registry_and_worker_pool_reintroductions_are_rejected() {
         let source = include_str!("🦀️.rs");
-        assert!(mounted_fill_source_contract(source));
-        let ui_capture = source.replacen("impl semio_framework_job::InteractiveJob for ArtifactBoardFillJob", "impl semio_framework_job::InteractiveJob for RemovedArtifactBoardFillJob", 1);
-        assert!(!mounted_fill_source_contract(&ui_capture));
-        let mutable_terminal = source.replacen("infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate)", "job.take_result()", 1);
-        assert!(!mounted_fill_source_contract(&mutable_terminal));
-        let dynamic_runtime = source.replacen("pub runtime: &'a mut crate::editor::puzzle2d::config::Puzzle2dFillRuntime,", "pub runtime: &'a mut crate::editor::puzzle2d::config::Puzzle2dFillRuntime, pub dynamic: Vec<Value>,", 1);
-        assert!(!mounted_fill_source_contract(&dynamic_runtime));
+        assert!(registry_free_session_source_contract(source));
+        let registry = source.replacen("    closing: bool,\n}", "    closing: bool,\n    app_instance_id: u32,\n}", 1);
+        assert!(!registry_free_session_source_contract(&registry));
+        let pool = source.replacen("fn puzzle2d_fill_monotonic_zero", "fn pool() { semio_framework_async::process_worker_pool(); }\nfn puzzle2d_fill_monotonic_zero", 1);
+        assert!(!registry_free_session_source_contract(&pool));
+        let lease = source.replacen("    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,", "    lease: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>,\n    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,", 1);
+        assert!(!registry_free_session_source_contract(&lease));
     }
 
-    /// 🧷️ Injected dynamic retained placement text and re-coalesced fixed text both fail the mounted ownership law.
+    /// 🧷️ Injected dynamic retained placement text and re-coalesced fixed text both fail the placement ownership law.
     #[test]
     fn mounted_fill_fixed_placement_owner_mutations_are_rejected() {
         let source = include_str!("🦀️.rs");
@@ -2346,7 +1851,7 @@ mod tests {
         assert!(!full_terminal_candidate_source_contract(&discarded));
     }
 
-    /// 🔬️ Re-coalescing source fields or whole text into one worker grant fails the live capture law.
+    /// 🔬️ Re-coalescing source fields or whole text into one capture grant fails the live capture law.
     #[test]
     fn mounted_fill_capture_granularity_mutations_are_rejected() {
         let source = include_str!("🦀️.rs");
@@ -2386,16 +1891,70 @@ mod tests {
                 }
             }
         });
-        let kinds = ArtifactBoardFillJob::node_kinds(&document).expect("document node-kind slice");
+        let kinds = Puzzle2dFillSessionWork::node_kinds(&document).expect("document node-kind slice");
         assert_eq!(kinds.len(), 1);
         assert_eq!(kinds[0].get("id").and_then(Value::as_str), Some("seed"));
 
         let engine_shaped = serde_json::json!({ "meta": { "kindCatalogs": { "nodeKinds": [{ "id": "seed" }] } } });
-        assert_eq!(
-            ArtifactBoardFillJob::node_kinds(&engine_shaped).err(),
-            Some("puzzle2d-fill-capture-node-kinds"),
-            "the engine's `nodeKinds` spelling must not satisfy fill's document read, else this guard proves nothing"
-        );
+        assert_eq!(Puzzle2dFillSessionWork::node_kinds(&engine_shaped).err(), Some("puzzle2d-fill-capture-node-kinds"), "the engine's `nodeKinds` spelling must not satisfy fill's document read, else this guard proves nothing");
+    }
+
+    /// 🎛️ Every control verb is a pure runtime transition, and only the four search verbs ask for a
+    /// search — the property that lets `setActiveUtility` discard a session without reaching any
+    /// live owner.
+    #[test]
+    fn fill_control_verbs_are_pure_runtime_transitions() {
+        let mut effects = Vec::new();
+        let mut runtime = Puzzle2dFillRuntime::from_config(&Puzzle2dConfig::default());
+        runtime.fill_count = 12;
+        runtime.fill_job_accepted_count = 4;
+        runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Running;
+        assert_eq!(fill_session_control("brushFillSessionStep", None, &mut runtime, &mut effects), Ok(Some((8, 1))));
+        assert!(effects.is_empty());
+
+        runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Completed;
+        assert_eq!(fill_session_control("brushFillSessionStep", None, &mut runtime, &mut effects), Ok(None));
+        assert_eq!(runtime.fill_job_lifecycle, Puzzle2dFillLifecycle::Completed);
+
+        assert_eq!(fill_session_control("brushFillSessionCancel", None, &mut runtime, &mut effects), Ok(None));
+        assert_eq!(runtime.fill_job_lifecycle, Puzzle2dFillLifecycle::Cancelled);
+
+        assert_eq!(fill_session_control("brushFillSessionClear", None, &mut runtime, &mut effects), Ok(None));
+        assert_eq!(runtime.fill_job_lifecycle, Puzzle2dFillLifecycle::Discarded);
+        assert_eq!(runtime.fill_count, 0);
+        assert_eq!(runtime.fill_job_accepted_count, 0);
+
+        assert_eq!(fill_session_control("setFillCount", Some(&serde_json::json!({ "count": 3 })), &mut runtime, &mut effects), Ok(Some((3, 1))));
+        assert_eq!(effects.len(), 1);
+        assert_eq!(fill_session_control("setFillCount", Some(&serde_json::json!({ "count": f64::from(fill::PUZZLE2D_FILL_COUNT_MAX) + 1.0 })), &mut runtime, &mut effects), Err("puzzle2d-fill-count-capacity"));
+        assert_eq!(fill_session_control("setFillCount", None, &mut runtime, &mut effects), Err("puzzle2d-fill-count"));
+        assert_eq!(fill_session_control("brushFillSessionBegin", Some(&serde_json::json!({ "maxCount": 2 })), &mut runtime, &mut effects), Err("puzzle2d-fill-start-seed"));
+        assert_eq!(fill_session_control("brushFillSessionBegin", Some(&serde_json::json!({ "maxCount": 2, "seed": 9 })), &mut runtime, &mut effects), Ok(Some((2, 9))));
+    }
+
+    /// 📐️ A control verb declares four work items; a search verb declares its exact per-stage chunk
+    /// ceilings, and an over-count request is refused at preflight rather than mid-run.
+    #[test]
+    fn fill_session_extent_is_the_enforced_budget() {
+        use crate::retained_command::PuzzleCommandWork;
+        let snapshot = Puzzle2dPlaySnapshot(serde_json::json!({ "schema": crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] }));
+        let interaction = protocol::InteractionState::default();
+        let search_budget = PUZZLE2D_FILL_CAPTURE_CHUNKS + PUZZLE2D_FILL_SEARCH_CHUNKS + PUZZLE2D_FILL_APPLY_CHUNKS + PUZZLE2D_FILL_CONTROL_CHUNKS;
+        assert!(search_budget <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
+
+        let cancel = Puzzle2dFillSessionWork::new("brushFillSessionCancel");
+        let command = crate::editor::puzzle2d::Puzzle2dCommand::from_action("brushFillSessionCancel", None, None);
+        assert_eq!(cancel.extent(&command, &snapshot, &interaction), Some(PUZZLE2D_FILL_CONTROL_CHUNKS));
+
+        let fill = Puzzle2dFillSessionWork::new("setFillCount");
+        let command = crate::editor::puzzle2d::Puzzle2dCommand::from_action("setFillCount", Some(serde_json::json!({ "count": 8 })), None);
+        assert_eq!(fill.extent(&command, &snapshot, &interaction), Some(search_budget));
+
+        let over = crate::editor::puzzle2d::Puzzle2dCommand::from_action("setFillCount", Some(serde_json::json!({ "count": u64::from(fill::PUZZLE2D_FILL_COUNT_MAX) + 1 })), None);
+        assert_eq!(fill.extent(&over, &snapshot, &interaction), None);
+
+        let foreign = crate::editor::puzzle2d::Puzzle2dCommand::from_action("addNode", None, None);
+        assert_eq!(fill.extent(&foreign, &snapshot, &interaction), None);
     }
 }
 //#endregion 🧪️Tests

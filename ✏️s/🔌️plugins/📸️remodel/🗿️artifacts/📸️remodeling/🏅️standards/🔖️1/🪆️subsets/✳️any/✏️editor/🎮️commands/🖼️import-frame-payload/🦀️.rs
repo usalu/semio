@@ -55,7 +55,7 @@ pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remod
     use crate::editor::remodeling::testkit::dispatch;
     use crate::editor::remodeling::RemodelingCommand;
     for index in 0..n {
-        dispatch(app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index }));
+        dispatch(app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index })).await;
     }
 }
 
@@ -110,7 +110,7 @@ pub struct ImportFramePayload {
 
 /// 📥️ A still-image drop-zone/file-picker payload; a `video/*` mime is re-routed to the in-process
 /// video-bytes decoder.
-pub async fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     let Some((mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     if mime.starts_with("video/") {
         return import_video_bytes_payload::handle(&import_video_bytes_payload::ImportVideoBytesPayload { payload: payload.payload.clone(), name: payload.name.clone() }, doc, cfg);

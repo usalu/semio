@@ -4,6 +4,7 @@
   "idleWake": { "nativeWithoutIngress": true, "cooperativePumpsAtMost": 64, "steps": 2, "queuedJobs": 0 },
   "competingWork": { "jobs": [0, 1], "hooks": [10, 11], "order": [0, 10, 1, 11] },
   "runningClose": { "firstRemoveTerminal": false, "secondRemoveTerminal": true, "shutdownRearms": false },
+  "selfRetire": { "cycles": 64, "requestWhileRunning": true, "laterRequest": "stale", "reusesCapacity": true },
   "lifecycle": [
     { "action": "install", "owner": "a", "expected": "installed" },
     { "action": "request", "owner": "a", "expected": "requested" },

@@ -22,6 +22,7 @@
     "structure": { "type": "object", "x-semio-state": "artifact", "x-semio-child-kind": "s.stdio.semio.value" },
     "zones": { "type": "object", "x-semio-state": "artifact", "x-semio-child-kind": "s.stdio.semio.table" },
     "referencedModel": { "x-semio-state": "artifact", "x-semio-link-roles": ["model"] },
+    "weatherLink": { "x-semio-state": "artifact", "x-semio-link-roles": ["weather"] },
     "resultsJson": {
       "type": "string",
       "x-semio-state": "artifact"

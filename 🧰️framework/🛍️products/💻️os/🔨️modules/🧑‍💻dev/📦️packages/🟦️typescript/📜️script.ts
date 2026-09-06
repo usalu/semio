@@ -81,6 +81,10 @@ function publishShardWorker(): void {
 }
 const extensionOutRoot = defaultExtensionInstallRoot(repoRoot);
 const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🟦️session.ts");
+/** @emoji 🧊️ The one wgpu renderer package the dev router delegates `serve`/`wasm`/`native` to — a single
+ * constant so the ship, dev and bench call sites can never drift onto different (or extinct) paths. */
+const WGPU_PACKAGE_ROOT = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust");
+const WGPU_SCRIPT_PATH = join(WGPU_PACKAGE_ROOT, "📜️script.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 const PLUGIN_WASM_STACK_BYTES = 8 * 1024 * 1024;
@@ -1318,9 +1322,8 @@ class DevScript extends BundleScript {
           process.exit(1);
         }
       }
-      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts");
-      const serveStatus = runCmdStatus("bun", [wgpuScript, "serve"], {
-        cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"),
+      const serveStatus = runCmdStatus("bun", [WGPU_SCRIPT_PATH, "serve"], {
+        cwd: WGPU_PACKAGE_ROOT,
         env: {
           ...process.env,
           SEMIO_PLUGIN: plugin,
@@ -1372,8 +1375,7 @@ class BuildScript extends BundleScript {
     await new PluginBuildScript(this.root).run([plugin]);
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
-      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts");
-      if (runCmdStatus("bun", [wgpuScript, "wasm", "--release"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("wgpu trunk build failed");
+      if (runCmdStatus("bun", [WGPU_SCRIPT_PATH, "wasm", "--release"], { cwd: WGPU_PACKAGE_ROOT, budgetMs: buildBudgetMs() }) !== 0) throw new Error("wgpu trunk build failed");
       return;
     }
     await buildEngineWasm(plugin, renderer);
@@ -1886,7 +1888,7 @@ async function waitForStudioE2eCondition(page: import("playwright").Page, predic
       .locator("body")
       .innerText()
       .catch(() => "");
-    const children = await page.locator("#root *").count();
+    const children = await page.locator("#root *").count().catch(() => 0);
     if (predicate({ text, children })) return { text, children };
     await page.waitForTimeout(500);
   }
@@ -1900,8 +1902,8 @@ async function openStudioE2e(page: import("playwright").Page, deadline: number):
       .locator("body")
       .innerText()
       .catch(() => "");
-    const path = await page.evaluate(() => location.pathname);
-    const children = await page.locator("#root *").count();
+    const path = new URL(page.url()).pathname;
+    const children = await page.locator("#root *").count().catch(() => 0);
     if (/Catalogue/i.test(text) && /Parameters/i.test(text) && path.startsWith("/spaces/")) {
       return { text, children };
     }
@@ -5088,9 +5090,8 @@ class BenchPluginsScript extends BundleScript {
       const wasmPath = join(targetDir, "wasm32-wasip2", "wasm-dev", "semio_framework_os_scale_fixture.wasm");
       if (!existsSync(wasmPath)) throw new Error(`bench: expected wasm artifact missing: ${wasmPath}`);
       const nativeReportPath = join(outDir, "🔣️bench-native-raw.json");
-      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts");
       console.log(`bench: running native scale-bench (shards=${shardCount})`);
-      if (runCmdStatus("bun", [wgpuScript, "native", "--scale", registryPath, "--scale-wasm", wasmPath, "--shards", String(shardCount), "--report", nativeReportPath], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
+      if (runCmdStatus("bun", [WGPU_SCRIPT_PATH, "native", "--scale", registryPath, "--scale-wasm", wasmPath, "--shards", String(shardCount), "--report", nativeReportPath], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
         throw new Error("bench: native scale-bench run failed");
       }
       const nativeReport = JSON.parse(readFileSync(nativeReportPath, "utf8")) as { budgets: Record<string, unknown>[] };

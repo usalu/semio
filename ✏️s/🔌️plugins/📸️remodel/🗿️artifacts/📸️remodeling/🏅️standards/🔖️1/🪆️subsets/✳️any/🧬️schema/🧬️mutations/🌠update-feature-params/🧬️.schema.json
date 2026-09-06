@@ -8,18 +8,19 @@
   ],
   "properties": {
     "params": {
-      "title": "FeatureParams",
       "type": "object",
+      "title": "FeatureParams",
       "additionalProperties": false,
       "required": [
         "detector",
-        "edgeThreshold",
+        "targetCount",
         "octaves",
-        "targetCount"
+        "edgeThreshold"
       ],
       "properties": {
         "detector": {
           "type": "string",
+          "title": "FeatureDetector",
           "enum": [
             "orb",
             "akaze",
@@ -28,14 +29,17 @@
         },
         "targetCount": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "octaves": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "edgeThreshold": {
-          "type": "number"
+          "type": "number",
+          "format": "float"
         }
       }
     }

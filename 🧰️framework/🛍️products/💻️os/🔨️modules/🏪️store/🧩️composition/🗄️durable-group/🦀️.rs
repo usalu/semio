@@ -350,6 +350,48 @@ impl DurableOwnedGroupJournalRecordV1 {
             document: decision.anchor.parent,
         })
     }
+
+    /// ♻️ Reconstructs only Store-private sealed owners from one committed decision and the exact three retained live Stores.
+    pub fn begin_store_owned_recovery<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+        &self,
+        receipt: DurableOwnedGroupJournalReceiptV1,
+        parent: ArtifactStore<ParentP, ParentMutation>,
+        drawing: ArtifactStore<DrawingP, DrawingMutation>,
+        value: ArtifactStore<ValueP, ValueMutation>,
+    ) -> Result<DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>
+    where
+        ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+        DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+        ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    {
+        let rejected = |error, parent, drawing, value| DurableOwnedMapRecoveryRejectedV1 { error, parent, drawing, value };
+        let decision = match DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&self.canonical_pack) {
+            Ok(decision) if decision.decision_sha256 == self.decision_sha256 && decision.anchor_sha256 == self.anchor_sha256 && decision.anchor.parent == self.document => decision,
+            Ok(_) => return Err(rejected(DurableOwnedGroupDecisionError::InvalidHash, parent, drawing, value)),
+            Err(error) => return Err(rejected(error, parent, drawing, value)),
+        };
+        if receipt.decision_sha256 != self.decision_sha256 || receipt.anchor_sha256 != self.anchor_sha256 || receipt.transaction_id == 0 {
+            return Err(rejected(DurableOwnedGroupDecisionError::InvalidHash, parent, drawing, value));
+        }
+        match decision.recover_store_owned(&parent, &drawing, &value) {
+            Ok(DurableOwnedThreeStoreRecoveryV1::AlreadyApplied) => Ok(DurableOwnedMapRecoveryStartV1::AlreadyApplied(DurableOwnedMapRecoveryOwnersV1 { parent, drawing, value })),
+            Ok(DurableOwnedThreeStoreRecoveryV1::Apply(bound)) => match bound.begin_retained_recovery(receipt) {
+                Ok(coordinator) => Ok(DurableOwnedMapRecoveryStartV1::Apply(DurableOwnedMapRecoveryHostV1 {
+                    operation: std::mem::ManuallyDrop::new(Some(DurableOwnedMapRecoveryOperationV1 {
+                        parent: std::mem::ManuallyDrop::new(Some(parent)),
+                        drawing: std::mem::ManuallyDrop::new(Some(drawing)),
+                        value: std::mem::ManuallyDrop::new(Some(value)),
+                        coordinator: std::mem::ManuallyDrop::new(Some(coordinator)),
+                    })),
+                })),
+                Err(error) => Err(rejected(error, parent, drawing, value)),
+            },
+            Err(error) => Err(rejected(error, parent, drawing, value)),
+        }
+    }
 }
 
 /// 🧭️ One retained journal turn. `Rejected` proves that no mailbox/WAL transfer began,
@@ -800,6 +842,7 @@ pub(super) struct DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, Drawin
     journal: Option<Box<dyn DurableOwnedGroupJournalCommitV1>>,
     receipt: Option<DurableOwnedGroupJournalReceiptV1>,
     phase: DurableOwnedThreeStoreCommitPhaseV1,
+    recovery_committed: bool,
     cancel_requested: bool,
     cancel_forwarded: bool,
     journal_close_started: bool,
@@ -851,6 +894,79 @@ where
     pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
     pub value: ArtifactStore<ValueP, ValueMutation>,
     pub sink: Box<dyn DurableOwnedGroupJournalSinkV1>,
+}
+
+/// ♻️ Exact three Store owners returned by committed recovery after terminal publication or an idempotent post-frontier match.
+pub struct DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    pub parent: ArtifactStore<ParentP, ParentMutation>,
+    pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
+    pub value: ArtifactStore<ValueP, ValueMutation>,
+}
+
+/// 🚧 Committed recovery rejection preserves every Store owner for corrected retry or close.
+pub struct DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    pub error: DurableOwnedGroupDecisionError,
+    pub parent: ArtifactStore<ParentP, ParentMutation>,
+    pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
+    pub value: ArtifactStore<ValueP, ValueMutation>,
+}
+
+struct DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
+    drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
+    value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
+    coordinator: std::mem::ManuallyDrop<Option<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+}
+
+/// 🧭 Retained committed-recovery host; no journal sink exists because its opaque DB witness already proves the transaction committed.
+pub struct DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    operation: std::mem::ManuallyDrop<Option<DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+}
+
+/// 🔀 Either the exact committed decision still needs Store publication or all three Stores already match its post-frontier.
+pub enum DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    Apply(DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
+    AlreadyApplied(DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
 }
 
 /// 🎫 One exact unbound Store admission. No group identity can enter before the private bind.
@@ -1324,6 +1440,37 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
             journal: None,
             receipt: None,
             phase: DurableOwnedThreeStoreCommitPhaseV1::StagingParent,
+            recovery_committed: false,
+            cancel_requested: false,
+            cancel_forwarded: false,
+            journal_close_started: false,
+        })
+    }
+
+    fn begin_retained_recovery(
+        self,
+        receipt: DurableOwnedGroupJournalReceiptV1,
+    ) -> Result<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError> {
+        self.decision.validate()?;
+        if receipt.decision_sha256 != self.decision.decision_sha256 || receipt.anchor_sha256 != self.decision.anchor_sha256 || receipt.transaction_id == 0 {
+            return Err(DurableOwnedGroupDecisionError::InvalidHash);
+        }
+        let decision_sha256 = self.decision.decision_sha256.clone();
+        let visibility_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let visibility = visibility_owner.view();
+        Ok(DurableOwnedThreeStoreCommitV1 {
+            parent: Some(self.parent),
+            drawing: Some(self.drawing),
+            value: Some(self.value),
+            decision: Some(self.decision),
+            decision_pack: None,
+            decision_sha256,
+            visibility_owner: Some(visibility_owner),
+            visibility: Some(visibility),
+            journal: None,
+            receipt: Some(receipt),
+            phase: DurableOwnedThreeStoreCommitPhaseV1::StagingParent,
+            recovery_committed: true,
             cancel_requested: false,
             cancel_forwarded: false,
             journal_close_started: false,
@@ -1345,6 +1492,9 @@ where
     }
 
     pub(super) fn cancel(&mut self) -> bool {
+        if self.recovery_committed {
+            return false;
+        }
         if matches!(
             self.phase,
             DurableOwnedThreeStoreCommitPhaseV1::PublishingParentLease
@@ -1437,6 +1587,27 @@ where
         sink: &mut dyn DurableOwnedGroupJournalSinkV1,
         grant: super::ArtifactStoreOneItemGrant,
     ) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
+        self.advance_with_sink(parent_store, drawing_store, value_store, Some(sink), grant)
+    }
+
+    fn advance_recovery(
+        &mut self,
+        parent_store: &mut ArtifactStore<ParentP, ParentMutation>,
+        drawing_store: &mut ArtifactStore<DrawingP, DrawingMutation>,
+        value_store: &mut ArtifactStore<ValueP, ValueMutation>,
+        grant: super::ArtifactStoreOneItemGrant,
+    ) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
+        self.advance_with_sink(parent_store, drawing_store, value_store, None, grant)
+    }
+
+    fn advance_with_sink(
+        &mut self,
+        parent_store: &mut ArtifactStore<ParentP, ParentMutation>,
+        drawing_store: &mut ArtifactStore<DrawingP, DrawingMutation>,
+        value_store: &mut ArtifactStore<ValueP, ValueMutation>,
+        mut sink: Option<&mut dyn DurableOwnedGroupJournalSinkV1>,
+        grant: super::ArtifactStoreOneItemGrant,
+    ) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
         if self.phase == DurableOwnedThreeStoreCommitPhaseV1::Complete {
             return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Complete);
         }
@@ -1456,7 +1627,9 @@ where
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing,
                     Err((error, outcome)) => {
                         self.parent = Some(outcome);
-                        self.begin_abort()?;
+                        if !self.recovery_committed {
+                            self.begin_abort()?;
+                        }
                         return Err(error);
                     }
                 }
@@ -1467,7 +1640,9 @@ where
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StagingValue,
                     Err((error, outcome)) => {
                         self.drawing = Some(outcome);
-                        self.begin_abort()?;
+                        if !self.recovery_committed {
+                            self.begin_abort()?;
+                        }
                         return Err(error);
                     }
                 }
@@ -1478,19 +1653,32 @@ where
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StartingJournal,
                     Err((error, outcome)) => {
                         self.value = Some(outcome);
-                        self.begin_abort()?;
+                        if !self.recovery_committed {
+                            self.begin_abort()?;
+                        }
                         return Err(error);
                     }
                 }
             }
             DurableOwnedThreeStoreCommitPhaseV1::StartingJournal => {
-                let decision_bytes = self.decision_pack.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.len();
-                if grant.maximum_bytes < decision_bytes {
-                    return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
+                if self.recovery_committed {
+                    let receipt = self.receipt.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                    if receipt.decision_sha256 != self.decision_sha256 || self.decision.as_ref().is_none_or(|decision| receipt.anchor_sha256 != decision.anchor_sha256) {
+                        return Err(DurableOwnedGroupDecisionError::InvalidHash);
+                    }
+                    if !self.visibility_owner.as_mut().is_some_and(crate::os_vcs::ArtifactGroupVisibilityOwner::commit) {
+                        return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
+                    }
+                    self.phase = DurableOwnedThreeStoreCommitPhaseV1::PublishingParentLease;
+                } else {
+                    let decision_bytes = self.decision_pack.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.len();
+                    if grant.maximum_bytes < decision_bytes {
+                        return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
+                    }
+                    let decision_pack = self.decision_pack.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+                    self.journal = Some(sink.as_deref_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.begin_commit(decision_pack, self.decision_sha256.clone()));
+                    self.phase = DurableOwnedThreeStoreCommitPhaseV1::Journal;
                 }
-                let decision_pack = self.decision_pack.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                self.journal = Some(sink.begin_commit(decision_pack, self.decision_sha256.clone()));
-                self.phase = DurableOwnedThreeStoreCommitPhaseV1::Journal;
             }
             DurableOwnedThreeStoreCommitPhaseV1::Journal => {
                 let journal = self.journal.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
@@ -1750,6 +1938,122 @@ where
 
     pub fn terminal_is_empty(&self) -> bool {
         self.operation.is_none()
+    }
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+{
+    fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
+        self.coordinator.as_ref().map(DurableOwnedThreeStoreCommitV1::phase)
+    }
+
+    fn capture_snapshot(&self) -> Result<DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP>, DurableOwnedGroupDecisionError> {
+        capture_store_owned_three_snapshot(
+            self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+            self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+            self.value.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+        )
+    }
+
+    fn acknowledge(&mut self) -> bool {
+        let Some(receipt) = self.coordinator.as_ref().and_then(|coordinator| coordinator.receipt.clone()) else { return false };
+        self.coordinator.as_mut().is_some_and(|coordinator| coordinator.acknowledge(&receipt))
+    }
+
+    fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
+        self.coordinator.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.advance_recovery(
+            self.parent.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+            self.drawing.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+            self.value.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
+            grant,
+        )
+    }
+
+    fn take_terminal_owners(&mut self) -> Option<DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+        if !self.coordinator.as_ref().is_some_and(DurableOwnedThreeStoreCommitV1::terminal_is_empty) || self.parent.is_none() || self.drawing.is_none() || self.value.is_none() {
+            return None;
+        }
+        drop(self.coordinator.take().expect("validated terminal Map recovery coordinator remains owned"));
+        Some(DurableOwnedMapRecoveryOwnersV1 {
+            parent: self.parent.take().expect("validated terminal recovered parent Store remains owned"),
+            drawing: self.drawing.take().expect("validated terminal recovered drawing Store remains owned"),
+            value: self.value.take().expect("validated terminal recovered value Store remains owned"),
+        })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none()
+    }
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    fn drop(&mut self) {
+        assert!(self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none(), "retained committed Map recovery reached Drop before exact terminal owner handoff");
+    }
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    DrawingP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    ValueP: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+{
+    pub fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
+        self.operation.as_ref().and_then(DurableOwnedMapRecoveryOperationV1::phase)
+    }
+
+    pub fn capture_snapshot(&self) -> Result<DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP>, DurableOwnedGroupDecisionError> {
+        self.operation.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.capture_snapshot()
+    }
+
+    pub fn acknowledge(&mut self) -> bool {
+        self.operation.as_mut().is_some_and(DurableOwnedMapRecoveryOperationV1::acknowledge)
+    }
+
+    pub fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
+        self.operation.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.advance(grant)
+    }
+
+    pub fn take_terminal_owners(&mut self) -> Option<DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+        let owners = self.operation.as_mut()?.take_terminal_owners()?;
+        drop(self.operation.take().expect("terminal Map recovery host retains its empty operation slot"));
+        Some(owners)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.operation.is_none()
+    }
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + ValueToValue + ValueFromValue,
+    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
+    DrawingP: Clone + ValueToValue + ValueFromValue,
+    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
+    ValueP: Clone + ValueToValue + ValueFromValue,
+    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+{
+    fn drop(&mut self) {
+        assert!(self.operation.is_none(), "committed Map recovery host reached Drop before terminal owner handoff");
     }
 }
 
@@ -3687,6 +3991,48 @@ mod tests {
         close_demo_artifact_store(&mut value_store);
         close_demo_artifact_store(&mut drawing_store);
         close_demo_artifact_store(&mut parent_store);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn durable_committed_record_recovers_all_three_stores_without_reappending_journal() {
+        let (parent, drawing, value) = owned_three_stores().await;
+        let bound = bound_three(&parent, &drawing, &value);
+        let decision = bound.decision.clone();
+        let record = DurableOwnedGroupJournalRecordV1::admit_canonical(decision.encode_pack()).expect("committed recovery record remains canonical");
+        let receipt = DurableOwnedGroupJournalReceiptV1 {
+            anchor_sha256: decision.anchor_sha256.clone(),
+            decision_sha256: decision.decision_sha256.clone(),
+            transaction_id: 71,
+            segment_index: 5,
+        };
+        drop(bound);
+        let mut host = match record.begin_store_owned_recovery(receipt.clone(), parent, drawing, value).unwrap_or_else(|_| panic!("base frontiers return every owner through a retained recovery host")) {
+            DurableOwnedMapRecoveryStartV1::Apply(host) => host,
+            DurableOwnedMapRecoveryStartV1::AlreadyApplied(_) => panic!("base frontiers cannot report an applied decision"),
+        };
+        let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+        for _ in 0..128 {
+            match host.advance(grant).expect("committed recovery advances one retained Store turn") {
+                DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(returned) => {
+                    assert_eq!(returned, receipt);
+                    assert!(host.acknowledge());
+                }
+                DurableOwnedThreeStoreCommitAdvanceV1::Complete => break,
+                DurableOwnedThreeStoreCommitAdvanceV1::Progress(_) | DurableOwnedThreeStoreCommitAdvanceV1::Blocked => {}
+            }
+        }
+        let DurableOwnedMapRecoveryOwnersV1 { parent, drawing, value } = host.take_terminal_owners().expect("terminal recovery ACK returns all three exact Stores");
+        assert!(host.terminal_is_empty());
+        assert_eq!([parent.current().await.n, drawing.current().await.n, value.current().await.n], [Some(7), Some(11), Some(13)]);
+        let replay = DurableOwnedGroupJournalRecordV1::admit_canonical(decision.encode_pack()).expect("same committed decision re-admits canonically");
+        let DurableOwnedMapRecoveryStartV1::AlreadyApplied(DurableOwnedMapRecoveryOwnersV1 { mut parent, mut drawing, mut value }) =
+            replay.begin_store_owned_recovery(receipt, parent, drawing, value).unwrap_or_else(|_| panic!("all-post replay remains idempotent"))
+        else {
+            panic!("all three post-frontiers must not publish twice")
+        };
+        close_demo_artifact_store(&mut value);
+        close_demo_artifact_store(&mut drawing);
+        close_demo_artifact_store(&mut parent);
     }
 
     #[semio_framework_async_macros::async_test]

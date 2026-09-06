@@ -28,6 +28,12 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
+#[path = "🌐️browser-actor/🦀️.rs"]
+pub mod browser_actor;
+pub use browser_actor::{
+    DocumentBrowserActorByteLengthV1, DocumentBrowserActorErrorV1, DocumentBrowserActorSourceV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
+};
+
 /// 🔐️ Domain prefix for the one canonical descriptor digest encoding.
 pub const DESCRIPTOR_DIGEST_V1_DOMAIN: &[u8] = b"semio.document-descriptor.digest.v1\0";
 
@@ -247,11 +253,7 @@ fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
 /// 🛡️ Admits one fully assigned event into the durable directory log and bounded page protocol.
 pub fn validate_directory_event_page_event(event: &DirectoryEvent) -> Result<(), DirectoryEventPageErrorV1> {
     let encoded = crate::os_pack::json::to_json_string(event);
-    if event.seq == 0
-        || event.seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER
-        || encoded.len() > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES
-        || directory_event_page_has_control(&crate::ToValue::to_value(event))
-    {
+    if event.seq == 0 || event.seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER || encoded.len() > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES || directory_event_page_has_control(&crate::ToValue::to_value(event)) {
         Err(DirectoryEventPageErrorV1::Invalid)
     } else {
         Ok(())
@@ -294,10 +296,7 @@ impl DirectoryEventPageV1 {
         }
         let mut previous = self.after_seq_exclusive;
         for event in &self.events {
-            if event.seq <= previous
-                || event.seq > self.through_seq_inclusive
-                || validate_directory_event_page_event(event).is_err()
-            {
+            if event.seq <= previous || event.seq > self.through_seq_inclusive || validate_directory_event_page_event(event).is_err() {
                 return Err(DirectoryEventPageErrorV1::Invalid);
             }
             previous = event.seq;
@@ -467,9 +466,7 @@ impl DirectoryCommandErrorCodeV1 {
 }
 
 fn valid_directory_command_request_id(value: &str) -> bool {
-    value.len() == DIRECTORY_COMMAND_REQUEST_ID_LEN
-        && !value.as_bytes().iter().all(|byte| *byte == b'0')
-        && value.as_bytes().iter().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+    value.len() == DIRECTORY_COMMAND_REQUEST_ID_LEN && !value.as_bytes().iter().all(|byte| *byte == b'0') && value.as_bytes().iter().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
 /// 🆕️ Mints one fresh 32-hex nonzero idempotency correlation from the platform identity boundary.
@@ -534,15 +531,7 @@ impl DirectoryCommandReceiptV1 {
 
     /// 🔐️ Seals one completion by hashing its declaration-ordered unsigned canonical JSON.
     pub fn seal(request_id: impl Into<String>, command_sha256: impl Into<String>, outcome: DirectoryCommandOutcomeV1, events: Vec<DirectoryEvent>, result: DirectoryCommandResultV1) -> Self {
-        let mut receipt = Self {
-            schema: "semio.directory.command-receipt.v1".into(),
-            request_id: request_id.into(),
-            command_sha256: command_sha256.into(),
-            outcome,
-            events,
-            result,
-            receipt_sha256: String::new(),
-        };
+        let mut receipt = Self { schema: "semio.directory.command-receipt.v1".into(), request_id: request_id.into(), command_sha256: command_sha256.into(), outcome, events, result, receipt_sha256: String::new() };
         receipt.receipt_sha256 = semio_framework_hash::sha256_hex(receipt.canonical_unsigned_json().as_bytes());
         receipt
     }
@@ -593,10 +582,7 @@ impl DirectoryCommandReceiptV1 {
             return Err(DirectoryCommandErrorCodeV1::TooLarge);
         }
         let receipt: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
-        if crate::os_pack::json::to_json_string(&receipt) != json
-            || receipt.request_id != request.request_id
-            || receipt.command_sha256 != directory_command_sha256(&request.command)
-        {
+        if crate::os_pack::json::to_json_string(&receipt) != json || receipt.request_id != request.request_id || receipt.command_sha256 != directory_command_sha256(&request.command) {
             return Err(DirectoryCommandErrorCodeV1::Invalid);
         }
         receipt.validate()?;
@@ -1065,11 +1051,7 @@ pub enum DirectorySpaceAdministrationPageErrorV1 {
 fn directory_space_administration_cursor_valid(cursor: &Option<String>) -> bool {
     match cursor {
         None => true,
-        Some(cursor) => {
-            !cursor.is_empty()
-                && cursor.len() <= DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES
-                && cursor.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
-        }
+        Some(cursor) => !cursor.is_empty() && cursor.len() <= DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES && cursor.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.')),
     }
 }
 
@@ -1164,10 +1146,7 @@ impl DirectorySpaceAdministrationPageV1 {
         }
         let ok = match self {
             Self::Public { space, documents, .. } => {
-                space.id == *space_id
-                    && space.visibility == DirectorySpaceVisibility::Public
-                    && documents.rows.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS
-                    && directory_space_administration_cursor_valid(&documents.next_cursor)
+                space.id == *space_id && space.visibility == DirectorySpaceVisibility::Public && documents.rows.len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS && directory_space_administration_cursor_valid(&documents.next_cursor)
             }
             Self::Member { space, members, documents, .. } => {
                 space.id == *space_id
@@ -1509,9 +1488,7 @@ fn valid_document_open_receipt(value: &str) -> bool {
             b'_' => Some(63),
             _ => None,
         };
-        secret.len() == 43
-            && secret.bytes().all(|byte| base64_value(byte).is_some())
-            && secret.as_bytes().last().and_then(|byte| base64_value(*byte)).is_some_and(|tail| tail & 0b11 == 0)
+        secret.len() == 43 && secret.bytes().all(|byte| base64_value(byte).is_some()) && secret.as_bytes().last().and_then(|byte| base64_value(*byte)).is_some_and(|tail| tail & 0b11 == 0)
     })
 }
 
@@ -1554,9 +1531,7 @@ impl DocumentOpenPlanV1 {
             || self.expires_at_unix_ms.checked_sub(now_ms).is_none_or(|ttl| ttl > DOCUMENT_OPEN_PLAN_MAX_TTL_MS)
             || ids.iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES))
             || self.parent_dialect.artifact_kind != self.artifact.kind
-            || [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset]
-                .into_iter()
-                .any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES) || value.trim() != value.as_str())
+            || [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset].into_iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES) || value.trim() != value.as_str())
             || !valid_document_open_hash(&self.descriptor_digest_v1)
             || !valid_document_open_hash(&self.catalog.generation_id)
             || !valid_document_open_hash(&self.package.component_sha256)
@@ -1673,9 +1648,7 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
             || self.version != 1
             || ids.iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES))
             || self.parent_dialect.artifact_kind != self.artifact.kind
-            || [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset]
-                .into_iter()
-                .any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES) || value.trim() != value.as_str())
+            || [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset].into_iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES) || value.trim() != value.as_str())
             || !valid_document_open_hash(&self.descriptor_digest_v1)
             || !valid_document_open_hash(&self.catalog.generation_id)
             || !valid_document_open_hash(&self.package.component_sha256)
@@ -2246,7 +2219,6 @@ pub fn reduce_gis_map_inference_port_v1(current: &GisMapInferencePortStatusV1, e
 }
 //#endregion 💡️InferencePort
 
-
 /// 🚨️ Descriptor values that cannot participate in canonical authority hashing.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DescriptorDigestError {
@@ -2603,7 +2575,15 @@ mod tests {
         let minted = mint_directory_command_request_id();
         assert!(minted.len() == DIRECTORY_COMMAND_REQUEST_ID_LEN && minted.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f')) && minted != "0".repeat(DIRECTORY_COMMAND_REQUEST_ID_LEN));
         assert_ne!(minted, mint_directory_command_request_id());
-        for (status, code) in [(401u16, DirectoryCommandErrorCodeV1::Unauthorized), (403, DirectoryCommandErrorCodeV1::Forbidden), (409, DirectoryCommandErrorCodeV1::RequestConflict), (410, DirectoryCommandErrorCodeV1::StaleSession), (413, DirectoryCommandErrorCodeV1::TooLarge), (503, DirectoryCommandErrorCodeV1::Overloaded), (500, DirectoryCommandErrorCodeV1::Invalid)] {
+        for (status, code) in [
+            (401u16, DirectoryCommandErrorCodeV1::Unauthorized),
+            (403, DirectoryCommandErrorCodeV1::Forbidden),
+            (409, DirectoryCommandErrorCodeV1::RequestConflict),
+            (410, DirectoryCommandErrorCodeV1::StaleSession),
+            (413, DirectoryCommandErrorCodeV1::TooLarge),
+            (503, DirectoryCommandErrorCodeV1::Overloaded),
+            (500, DirectoryCommandErrorCodeV1::Invalid),
+        ] {
             assert_eq!(DirectoryCommandErrorCodeV1::from_status(status), code);
             assert_eq!(code.is_transient(), matches!(code, DirectoryCommandErrorCodeV1::Overloaded));
         }
@@ -2739,6 +2719,42 @@ mod tests {
         intent: DocumentOpenIntentV1,
         valid_plan: DocumentOpenPlanV1,
         exchange_intent: DocumentPlanSocketGrantIntentV1,
+    }
+
+    #[test]
+    fn document_authority_json_integer_tokens_never_coerce() {
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🔣️.json")).expect("neutral exact integer corpus");
+        let fixture: DocumentOpenPlanFixture = crate::os_pack::json::from_json_str(include_str!("../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).unwrap();
+        let intent_json = crate::os_pack::json::to_json_string(&fixture.intent);
+        assert!(intent_json.contains("\"version\":1"));
+        for row in corpus["raw"].as_array().unwrap() {
+            let raw = row.as_str().unwrap();
+            macro_rules! check {
+                ($($ty:ty),+ $(,)?) => { $(
+                    let reference = serde_json::from_str::<$ty>(raw);
+                    let ours = crate::os_pack::json::from_json_str::<$ty>(raw);
+                    assert_eq!(ours.is_ok(), reference.is_ok(), "JSON admission {} {raw}", stringify!($ty));
+                    if let (Ok(ours), Ok(reference)) = (ours, reference) {
+                        assert_eq!(ours, reference, "JSON exact {} {raw}", stringify!($ty));
+                    }
+                )+ };
+            }
+            check!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+            let version = serde_json::from_str::<u32>(raw);
+            let intent = crate::os_pack::json::from_json_str::<DocumentOpenIntentV1>(&intent_json.replace("\"version\":1", &format!("\"version\":{raw}")));
+            assert_eq!(intent.is_ok(), version.is_ok(), "intent integer {raw}");
+            if let (Ok(intent), Ok(version)) = (intent, version) {
+                assert_eq!(intent.version, version);
+                assert_eq!(intent.validate().is_ok(), version == 1, "intent version authority {raw}");
+            }
+            let expiry = serde_json::from_str::<i64>(raw);
+            let grant_json = format!(r#"{{"schema":"fixture","protocol":"fixture","grant":"fixture","actorId":"fixture","expiresAtMs":{raw}}}"#);
+            let grant = crate::os_pack::json::from_json_str::<crate::os_directory::client::SocketGrantReceiptV1>(&grant_json);
+            assert_eq!(grant.is_ok(), expiry.is_ok(), "socket expiry integer {raw}");
+            if let (Ok(grant), Ok(expiry)) = (grant, expiry) {
+                assert_eq!(grant.expires_at_ms, expiry, "socket expiry exact {raw}");
+            }
+        }
     }
 
     #[semio_framework_async_macros::async_test]

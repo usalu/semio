@@ -1,11 +1,11 @@
 //! ⚙️ Remodeling mutation — `UpdateMatchParams`: full-record replace of `ReconstructionParams.matching` (always
 //! set wholesale from the palette form's flat field list — genuinely inseparable).
 
-use crate::artifacts::remodeling::{MatchParams, RemodelingSnapshot};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{MatchParams, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ⚙️ `update-match-params` payload — full FINAL-state `MatchParams`.

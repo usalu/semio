@@ -1,0 +1,42 @@
+{
+  "mutation": "replaceKindCatalogs",
+  "newCatalogs": {
+    "nodes": [],
+    "handles": [
+      {
+        "id": "door capsule right",
+        "compatibleWith": [
+          "door tambour right"
+        ],
+        "description": "Right-hand capsule door",
+        "icon": "capsule",
+        "color": "#c8552a",
+        "defaultWireKind": "wire.link"
+      },
+      {
+        "id": "door tambour right",
+        "compatibleWith": [
+          "door capsule right",
+          "platform right"
+        ],
+        "description": "Right-hand tambour door",
+        "icon": "tambour",
+        "color": "#2a6ec8",
+        "defaultWireKind": "wire.link"
+      },
+      {
+        "id": "door tambour left",
+        "compatibleWith": [
+          "door capsule left",
+          "platform left"
+        ],
+        "description": "Left-hand tambour door",
+        "icon": "tambour",
+        "color": "#2ac888",
+        "defaultWireKind": "wire.link"
+      }
+    ],
+    "edges": [],
+    "wires": []
+  }
+}

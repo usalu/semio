@@ -13,8 +13,8 @@
 
 use crate::artifacts::remodeling::{CameraPosePreview, RemodelingSnapshot};
 use crate::lie::{Se3, So3};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️PoseDelta
 /// 🔄️ The rigid motion from the previous camera in trajectory order to this one, `Se3` logged down

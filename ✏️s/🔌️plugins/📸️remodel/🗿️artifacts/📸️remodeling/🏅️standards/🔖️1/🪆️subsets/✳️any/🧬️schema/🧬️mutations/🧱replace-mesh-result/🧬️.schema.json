@@ -8,43 +8,69 @@
   ],
   "properties": {
     "mesh": {
-      "title": "RemodelingMesh",
       "type": "object",
+      "title": "RemodelingMesh",
       "additionalProperties": false,
       "required": [
         "mesh",
-        "source"
+        "source",
+        "textureAssetId",
+        "watertight"
       ],
       "properties": {
         "mesh": {
           "type": "object",
+          "title": "RemodelingMeshChild",
+          "description": "store::ArtifactChild<SemioMeshSnapshot> — an owned child handle; only childId and target cross the wire.",
+          "additionalProperties": false,
+          "required": [
+            "childId",
+            "target"
+          ],
           "properties": {
             "childId": {
               "type": "string"
             },
             "target": {
               "type": "object",
+              "title": "ArtifactRef",
+              "additionalProperties": false,
+              "required": [
+                "artifactId",
+                "dialect"
+              ],
               "properties": {
                 "artifactId": {
                   "type": "string"
                 },
                 "dialect": {
-                  "type": "string"
+                  "type": "object",
+                  "title": "ArtifactDialect",
+                  "additionalProperties": false,
+                  "required": [
+                    "artifactKind",
+                    "standard",
+                    "subset"
+                  ],
+                  "properties": {
+                    "artifactKind": {
+                      "type": "string"
+                    },
+                    "standard": {
+                      "type": "string"
+                    },
+                    "subset": {
+                      "type": "string"
+                    }
+                  }
                 }
-              },
-              "required": [
-                "artifactId",
-                "dialect"
-              ]
+              }
             }
-          },
-          "required": [
-            "childId",
-            "target"
-          ]
+          }
         },
         "source": {
           "type": "string",
+          "title": "MeshSource",
           "enum": [
             "placeholder",
             "reconstructed",
@@ -52,86 +78,115 @@
           ]
         },
         "textureAssetId": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "watertight": {
-          "title": "WatertightReportSnapshot",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "boundaryEdgeCount",
-            "boundaryLoopCount",
-            "closedFallbackUsed",
-            "connectedComponents",
-            "consistentlyOriented",
-            "eulerCharacteristic",
-            "isClosed",
-            "isTwoManifold",
-            "isWatertight",
-            "nonManifoldEdgeCount",
-            "nonManifoldVertexCount",
-            "signedVolume",
-            "triangleCount",
-            "vertexCount"
-          ],
-          "properties": {
-            "vertexCount": {
-              "type": "integer",
-              "minimum": 0
+          "anyOf": [
+            {
+              "type": "object",
+              "title": "WatertightReportSnapshot",
+              "additionalProperties": false,
+              "required": [
+                "vertexCount",
+                "triangleCount",
+                "boundaryEdgeCount",
+                "boundaryLoopCount",
+                "nonManifoldEdgeCount",
+                "nonManifoldVertexCount",
+                "connectedComponents",
+                "consistentlyOriented",
+                "eulerCharacteristic",
+                "genus",
+                "signedVolume",
+                "selfIntersectionPairs",
+                "closedFallbackUsed",
+                "isClosed",
+                "isTwoManifold",
+                "isWatertight"
+              ],
+              "properties": {
+                "vertexCount": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "triangleCount": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "boundaryEdgeCount": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "boundaryLoopCount": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "nonManifoldEdgeCount": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "nonManifoldVertexCount": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "connectedComponents": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "consistentlyOriented": {
+                  "type": "boolean"
+                },
+                "eulerCharacteristic": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "genus": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64"
+                },
+                "signedVolume": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "selfIntersectionPairs": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "closedFallbackUsed": {
+                  "type": "boolean"
+                },
+                "isClosed": {
+                  "type": "boolean"
+                },
+                "isTwoManifold": {
+                  "type": "boolean"
+                },
+                "isWatertight": {
+                  "type": "boolean"
+                }
+              }
             },
-            "triangleCount": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "boundaryEdgeCount": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "boundaryLoopCount": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "nonManifoldEdgeCount": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "nonManifoldVertexCount": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "connectedComponents": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "consistentlyOriented": {
-              "type": "boolean"
-            },
-            "eulerCharacteristic": {
-              "type": "integer"
-            },
-            "genus": {
-              "type": "integer"
-            },
-            "signedVolume": {
-              "type": "number"
-            },
-            "selfIntersectionPairs": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "closedFallbackUsed": {
-              "type": "boolean"
-            },
-            "isClosed": {
-              "type": "boolean"
-            },
-            "isTwoManifold": {
-              "type": "boolean"
-            },
-            "isWatertight": {
-              "type": "boolean"
+            {
+              "type": "null"
             }
-          }
+          ]
         }
       }
     }

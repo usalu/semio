@@ -1,3 +1,9 @@
-; abnf stdio.json mutations
-document = payload
-payload = *OCTET
+; abnf remodeling.remodeling.op — one encoded RemodelingMutation (dsl::variants_binary::encode_op)
+frame        = format ordinal record-body
+format       = %x01                        ; OP_BINARY_FORMAT
+ordinal      = varint                      ; index into DslVariants::variants(), 0..34
+record-body  = symbol-count *symbol fields
+symbol-count = varint
+symbol       = varint *OCTET               ; length-prefixed UTF-8 symbol-table entry
+fields       = *OCTET                      ; self-describing per-field-id tag stream
+varint       = *(%x80-FF) %x00-7F

@@ -31,9 +31,9 @@ mod tests {
     async fn delete_artifact_removes_the_row() {
         let mut app = testkit::new_app().await;
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
-            .expect("create artifact");
+            .await.expect("create artifact");
         let id = app.snapshot().unwrap().artifacts[0].id.clone();
-        app.dispatch_typed(SpaceIndexCommand::DeleteArtifact(DeleteArtifact { id: id.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("delete artifact");
+        app.dispatch_typed(SpaceIndexCommand::DeleteArtifact(DeleteArtifact { id: id.clone() }), &semio_framework_plugin::testkit::meta("local")).await.expect("delete artifact");
         let snapshot = app.snapshot().expect("projection");
         assert!(snapshot.artifacts.iter().all(|row| row.id != id));
     }

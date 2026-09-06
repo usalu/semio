@@ -1,20 +1,24 @@
 //! 🖌️ `fill-session-begin` command.
 
-use crate::editor::puzzle2d::commands::set_fill_count::Puzzle2dFillActionCtx;
+use crate::editor::puzzle2d::config::Puzzle2dFillRuntime;
+use crate::editor::puzzle2d::modes::edit::tools::fill;
 use serde_json::Value;
 
-pub fn fill_session_begin(ctx: &mut Puzzle2dFillActionCtx<'_>, args: Option<&Value>) {
-    let Some(max_count) = args.and_then(|value| value.get("maxCount")).and_then(|value| value.as_u64()) else {
-        crate::editor::puzzle2d::commands::set_fill_count::reject_fill_request(ctx, "puzzle2d-fill-start-count");
-        return;
+/// 🏁️ Opens a fill session at an explicit count and seed. Returns the `(count, seed)` the retained
+/// session work must search for; the caller publishes the runtime transition.
+pub fn fill_session_begin(args: Option<&Value>, runtime: &mut Puzzle2dFillRuntime) -> Result<Option<(u32, u64)>, &'static str> {
+    let Some(max_count) = args.and_then(|args| args.get("maxCount")).and_then(Value::as_u64) else {
+        return Err("puzzle2d-fill-start-count");
     };
     let Ok(max_count) = u32::try_from(max_count) else {
-        crate::editor::puzzle2d::commands::set_fill_count::reject_fill_request(ctx, "puzzle2d-fill-start-count");
-        return;
+        return Err("puzzle2d-fill-start-count");
     };
-    let Some(seed) = args.and_then(|value| value.get("seed")).and_then(|value| value.as_u64()) else {
-        crate::editor::puzzle2d::commands::set_fill_count::reject_fill_request(ctx, "puzzle2d-fill-start-seed");
-        return;
+    if max_count > fill::PUZZLE2D_FILL_COUNT_MAX {
+        return Err("puzzle2d-fill-count-capacity");
+    }
+    let Some(seed) = args.and_then(|args| args.get("seed")).and_then(Value::as_u64) else {
+        return Err("puzzle2d-fill-start-seed");
     };
-    crate::editor::puzzle2d::commands::set_fill_count::begin_fill_job(ctx, max_count, seed);
+    runtime.fill_count = max_count;
+    Ok(Some((max_count, seed)))
 }

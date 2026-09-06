@@ -2,7 +2,7 @@
 //! in `🎮️commands/🖌️brush::{set_brush_size,set_brush_opacity}`.
 
 use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::raster_action;
+use crate::editor::raster::raster_measure_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
@@ -33,7 +33,7 @@ pub fn measure(config: &RasterConfig) -> WindowMeasure {
                 waiting: None,
                 disabled: None,
                 reveal: None,
-                on_change: raster_action("setBrushSize", None),
+                on_change: raster_measure_action("setBrushSize"),
             },
             WindowMeasure::Slider {
                 id: "raster-paintBrush-opacity".into(),
@@ -47,7 +47,7 @@ pub fn measure(config: &RasterConfig) -> WindowMeasure {
                 waiting: None,
                 disabled: None,
                 reveal: None,
-                on_change: raster_action("setBrushOpacity", None),
+                on_change: raster_measure_action("setBrushOpacity"),
             },
         ],
     }

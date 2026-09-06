@@ -3,7 +3,115 @@ grammar remodeling.snapshot
 extension remodeling
 start document
 
-document = header body
-header = "schema" SP "remodeling.remodeling.snapshot" NL
-body = payload NL?
-payload = OCTET+
+# 📖️ The real `.remodeling` document text: what `store::ArtifactDsl::print_dsl` emits for a
+# `RemodelingSnapshot` through the framework record printer (`dsl::print`, JoinMode::Document),
+# and what `parse_dsl` reads back. Layout (indent/newlines) is lexer trivia, so this grammar is
+# a pure token grammar; keyed fields are order-independent on the parse side, so every record
+# body below is an unordered set of its real keys rather than a fixed sequence.
+# The leading `remodeling.remodeling` mark is the envelope id the `semio remodeling.remodeling.dsl v1`
+# preamble reduces to (`SemioEnvelope::envelope_id`), which is what the framework fixture sweep
+# hands a recognizer after `split_text_preamble`.
+
+artifact-mark = "remodeling.remodeling"
+document = artifact-mark snapshot-body
+snapshot-body = schema-line id-line snapshot-part*
+schema-line = "schema" "=" "remodeling.scene"
+id-line = "id" "=" name
+snapshot-part = assets-map | durable-artifacts-map | calibration-block | params-block | job-block | results-block | streams-table | gcps-table
+
+name = IDENT | TEXT
+num = INT | FLOAT
+quantity = num IDENT
+coord3 = "@" num "," num "," num
+pair = num "," num
+quad = num "," num "," num "," num
+quint = num "," num "," num "," num "," num
+text-list = "[" name* "]"
+cell = PLACEHOLDER
+
+assets-map = "assets" "=" "{" asset-entry* "}"
+asset-entry = name "=" child-handle
+child-handle = "child_id" "=" name "target" "=" TEXT
+durable-artifacts-map = "durable-artifacts" "=" "{" durable-entry* "}"
+durable-entry = name "=" durable-field+
+durable-field = "kind" "=" name | "mime" "=" name | "width" "=" INT | "height" "=" INT | "chunks" "=" text-list
+
+calibration-block = "calibration" "{" cameras-table rig-table "}"
+cameras-table = "cameras" cameras-header "{" camera-row* "}"
+cameras-header = "[" "id" ":" "TEXT" "label" ":" "TEXT" "model" ":" "TEXT" "fx" ":" "NUM" "fy" ":" "NUM" "cx" ":" "NUM" "cy" ":" "NUM" "skew" ":" "NUM" "distortion" ":" "TUPLE" "rms-reprojection-px" ":" "NUM" "locked" ":" "BOOL" "]"
+camera-row = name name name num num num num num quint {num | cell} BOOL
+rig-table = "rig" rig-header "{" rig-row* "}"
+rig-header = "[" "camera-id" ":" "TEXT" "rotation-wxyz" ":" "TUPLE" "translation-m" ":" "CRD" "]"
+rig-row = name quad coord3
+
+streams-table = "streams" streams-header "{" stream-row* "}"
+streams-header = "[" "id" ":" "TEXT" "name" ":" "TEXT" "kind" ":" "ENUM" "camera-id" ":" "TEXT" "sync-offset-ms" ":" "NUM" "fps-hint" ":" "NUM" "frames" ":" "TABLE" "source" ":" "BLOCK" "]"
+stream-row = name name media-kind {name | cell} num num frame-list {video-source-block | cell}
+media-kind = "image-sequence" | "video"
+frame-list = "[" frame-item* "]"
+frame-item = "{" frame-field+ "}"
+frame-field = "index" "=" INT | "timestamp-ms" "=" num | "asset-id" "=" name
+video-source-block = "{" video-source-field+ "}"
+video-source-field = "name" "=" name | "container" "=" name | "codec" "=" video-codec | "duration-ms" "=" num | "frame-count" "=" INT | "width" "=" INT | "height" "=" INT
+video-codec = "avc" | "hevc" | "vp9" | "av1" | "mjpeg" | "unknown"
+
+gcps-table = "gcps" gcps-header "{" gcp-row* "}"
+gcps-header = "[" "id" ":" "TEXT" "name" ":" "TEXT" "world-position" ":" "CRD" "observations" ":" "TABLE" "]"
+gcp-row = name name coord3 observation-list
+observation-list = "[" observation-item* "]"
+observation-item = "{" observation-field+ "}"
+observation-field = "stream-id" "=" name | "frame-index" "=" INT | "pixel" "=" pair
+
+params-block = "params" "{" params-part* "}"
+params-part = ingest-block | feature-block | matching-block | sfm-block | dense-block | mesh-params-block | motion-block | geo-block
+ingest-block = "ingest" "{" ingest-field* "}"
+ingest-field = "frame-sample-stride" "=" INT | "max-frames" "=" INT | "downscale-long-edge-px" "=" INT | "min-sharpness" "=" num
+feature-block = "feature" "{" feature-field* "}"
+feature-field = "detector" "=" detector | "target-count" "=" INT | "octaves" "=" INT | "edge-threshold" "=" num
+detector = "orb" | "akaze" | "harris"
+matching-block = "matching" "{" matching-field* "}"
+matching-field = "matcher" "=" matcher | "ratio-test" "=" num | "cross-check" "=" BOOL | "sequential-window" "=" INT | "max-pairs-per-frame" "=" INT | "loop-closure" "=" BOOL
+matcher = "brute-force" | "kd-tree"
+sfm-block = "sfm" "{" sfm-field* "}"
+sfm-field = "ransac-iterations" "=" INT | "ransac-threshold-px" "=" num | "min-track-length" "=" INT | "ba-max-iterations" "=" INT | "robust-loss" "=" robust-loss | "huber-delta-px" "=" num
+robust-loss = "l2" | "huber" | "cauchy"
+dense-block = "dense" "{" dense-field* "}"
+dense-field = "resolution" "=" dense-resolution | "window-radius-px" "=" INT | "min-view-consistency" "=" INT | "confidence-threshold" "=" num | "max-points" "=" INT
+dense-resolution = "low" | "medium" | "high"
+mesh-params-block = "mesh" "{" mesh-params-field* "}"
+mesh-params-field = "tsdf-voxel-size-mm" "=" quantity | "tsdf-truncation-mm" "=" quantity | "decimate-target-triangles" "=" INT | "smoothing-iterations" "=" INT | "texture-enabled" "=" BOOL | "texture-size" "=" INT | "guarantee-watertight" "=" BOOL | "hole-fill-max-boundary-verts" "=" INT | "self-intersection-check" "=" BOOL
+motion-block = "motion" "{" motion-field* "}"
+motion-field = "enabled" "=" BOOL | "max-tracks" "=" INT | "track-window-px" "=" INT | "min-track-quality" "=" num | "min-track-length-frames" "=" INT
+geo-block = "geo" "{" geo-param-field* "}"
+geo-param-field = "enabled" "=" BOOL | "origin-lon" "=" num | "origin-lat" "=" num | "origin-alt" "=" num | "gsd-m" "=" quantity | "dsm-cell-m" "=" quantity | "dtm-filter-radius-m" "=" quantity | "ortho-max-px" "=" INT
+
+job-block = "job" "{" job-part* "}"
+job-part = job-field | poses-table
+job-field = "id" "=" name | "stage" "=" stage | "progress-0-1" "=" num | "cancel-requested" "=" BOOL | "stage-cursor" "=" INT | "started-at-ms" "=" num | "error" "=" name | "sparse-point-cloud-preview" "=" name
+stage = "idle" | "ingesting" | "calibrating" | "extracting-features" | "matching-features" | "estimating-poses" | "bundle-adjusting" | "georeferencing" | "dense-stereo" | "fusing-volume" | "extracting-surface" | "cleaning-mesh" | "texturing" | "tracking-motion" | "deriving-geo-products" | "reporting-qc" | "done" | "failed"
+poses-table = "camera-poses-preview" poses-header "{" pose-row* "}"
+poses-header = "[" "camera-id" ":" "TEXT" "rotation-wxyz" ":" "TUPLE" "translation" ":" "CRD" "]"
+pose-row = name quad coord3
+
+results-block = "results" "{" results-part* "}"
+results-part = sparse-block | dense-result-block | mesh-result-block | trajectory-block | geo-products-block | qc-block | tracks-table
+sparse-block = "sparse" "{" sparse-field+ "}"
+sparse-field = "points" "=" name | "colors" "=" name
+dense-result-block = "dense" "{" dense-result-field+ "}"
+dense-result-field = "positions" "=" name | "colors" "=" name | "confidence" "=" name | "classification" "=" name
+mesh-result-block = "mesh" "{" mesh-result-part* "}"
+mesh-result-part = "source" "=" mesh-source | "texture-asset-id" "=" name | mesh-child-block | watertight-block
+mesh-source = "placeholder" | "reconstructed" | "imported"
+mesh-child-block = "mesh" "{" child-handle "}"
+watertight-block = "watertight" "{" watertight-field* "}"
+watertight-field = "vertex-count" "=" INT | "triangle-count" "=" INT | "boundary-edge-count" "=" INT | "boundary-loop-count" "=" INT | "non-manifold-edge-count" "=" INT | "non-manifold-vertex-count" "=" INT | "connected-components" "=" INT | "consistently-oriented" "=" BOOL | "euler-characteristic" "=" INT | "genus" "=" INT | "signed-volume" "=" num | "self-intersection-pairs" "=" INT | "closed-fallback-used" "=" BOOL | "is-closed" "=" BOOL | "is-two-manifold" "=" BOOL | "is-watertight" "=" BOOL
+trajectory-block = "trajectory" "{" trajectory-poses-table "}"
+trajectory-poses-table = "poses" poses-header "{" pose-row* "}"
+geo-products-block = "geo" "{" geo-product-field+ "}"
+geo-product-field = "dsm-asset-id" "=" name | "dtm-asset-id" "=" name | "ortho-asset-id" "=" name
+qc-block = "qc" "{" qc-part* "}"
+qc-part = "reprojection-rms-px" "=" num | "gcp-checkpoint-rmse" "=" num | "mean-track-length" "=" num | "registered-frame-ratio" "=" num | "dense-coverage-ratio" "=" num | watertight-block | "warnings" "=" text-list
+tracks-table = "tracks" tracks-header "{" track-row* "}"
+tracks-header = "[" "id" ":" "TEXT" "length" ":" "UINT" "class" ":" "ENUM" "mean-speed-m-s" ":" "QTY" "]"
+track-row = name INT track-class quantity
+track-class = "static" | "moving"

@@ -1,23 +1,41 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/mutations/add-node-handle.json",
   "title": "AddNodeHandle",
+  "description": "The `add-node-handle` mutation record — internally tagged `\"mutation\": \"addNodeHandle\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "handle",
-    "nodeId"
+    "mutation",
+    "nodeId",
+    "handle"
   ],
   "properties": {
+    "mutation": {
+      "const": "addNodeHandle"
+    },
     "nodeId": {
       "type": "string"
     },
     "handle": {
+      "$ref": "#/$defs/Puzzle2dHandle"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "Puzzle2dHandle": {
       "title": "Puzzle2dHandle",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "angle",
-        "id"
+        "id",
+        "angle"
       ],
       "properties": {
         "id": {
@@ -48,10 +66,6 @@
           "type": "boolean"
         }
       }
-    },
-    "index": {
-      "type": "integer",
-      "minimum": 0
     }
   }
 }

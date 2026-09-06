@@ -40,14 +40,13 @@ pub struct InferenceWalTargetV1 {
     pub proposal_hash: String,
     pub mutation_id: String,
     pub command_hash: String,
-    pub decision_hash: String,
     pub actor: String,
     pub maximum_records: u64,
 }
 
 impl InferenceWalTargetV1 {
     fn validate(&self, fence: &InferenceDocumentFenceV1) -> Result<(), InferenceErrorV1> {
-        if !hex(&self.job_id, 32) || !hex(&self.proposal_hash, 64) || !hex(&self.mutation_id, 32) || !hex(&self.command_hash, 64) || !hex(&self.decision_hash, 64) || self.maximum_records == 0 || self.maximum_records > 65_536 {
+        if !hex(&self.job_id, 32) || !hex(&self.proposal_hash, 64) || !hex(&self.mutation_id, 32) || !hex(&self.command_hash, 64) || self.maximum_records == 0 || self.maximum_records > 65_536 {
             return Err(InferenceErrorV1::Bounds);
         }
         let (user, session) = self.actor.strip_prefix("user:").and_then(|value| value.split_once("#session:")).ok_or(InferenceErrorV1::Invalid)?;
@@ -192,11 +191,11 @@ struct Transaction {
     id: u64,
     records: u32,
     events: u32,
-    matched: Option<(u64, u64)>,
+    matched: Option<(u64, u64, String)>,
 }
 
 #[cfg(feature = "native-artifact-execution")]
-fn durable_decision_event_matches(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<bool, InferenceErrorV1> {
+fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<Option<String>, InferenceErrorV1> {
     use semio_s_plugin_gis::artifacts::gismap::{mutations::GisMapMutation, GisMapSnapshot};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::{
         drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot},
@@ -204,16 +203,13 @@ fn durable_decision_event_matches(bytes: &[u8], target: &InferenceWalTargetV1, d
     };
 
     let record = directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(bytes.to_vec()).map_err(|_| InferenceErrorV1::Invalid)?;
-    if record.decision_sha256() != target.decision_hash {
-        return Ok(false);
-    }
     if record.document().artifact_id != document.0 {
         return Err(InferenceErrorV1::Invalid);
     }
     let verified = record
         .verify_fixed_three_edits::<GisMapSnapshot, GisMapMutation, SemioDrawingSnapshot, SemioDrawingMutation, SemioValueSnapshot, SemioValueMutation>()
         .map_err(|_| InferenceErrorV1::Invalid)?;
-    if verified.decision_sha256() != target.decision_hash || verified.document().artifact_id != document.0 {
+    if verified.document().artifact_id != document.0 {
         return Err(InferenceErrorV1::Invalid);
     }
     let parent = verified.parent();
@@ -224,11 +220,11 @@ fn durable_decision_event_matches(bytes: &[u8], target: &InferenceWalTargetV1, d
         || parent.actor.as_deref() != Some(target.actor.as_str())
         || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(target.actor.as_str())
     {
-        return Err(InferenceErrorV1::Invalid);
+        return Ok(None);
     }
     let proposal = directory::os_pack::json::to_json_string(&parent.forwards[0]).into_bytes();
     if super::sha256(&proposal) != target.proposal_hash {
-        return Err(InferenceErrorV1::Invalid);
+        return Ok(None);
     }
     let inverse = directory::os_pack::json::to_json_string(&parent.inverse).into_bytes();
     let command = super::command::encode_server_stamped_command_v1(&super::command::CanonicalInferenceCommandPartsV1 {
@@ -241,7 +237,7 @@ fn durable_decision_event_matches(bytes: &[u8], target: &InferenceWalTargetV1, d
         inverse_payload: &inverse,
         timestamp: meta.timestamp,
     })?;
-    Ok(super::sha256(&command) == target.command_hash)
+    Ok((super::sha256(&command) == target.command_hash).then(|| verified.decision_sha256().to_string()))
 }
 
 async fn verify_retained(state: &VerifierState, target: &InferenceWalTargetV1, fence: &Arc<InferenceDocumentFenceV1>, control: &InferenceOperationControlV1) -> Result<Option<CommittedInferenceWalWitnessV1>, InferenceErrorV1> {
@@ -334,8 +330,8 @@ async fn scan(
                         if transaction.records != *record_count {
                             return Err(InferenceErrorV1::Invalid);
                         }
-                        if let Some((segment_index, record_index)) = transaction.matched {
-                            if transaction.records != 1 || transaction.events != 1 || matched_transaction.replace((*tx_id, segment_index, record_index)).is_some() {
+                        if let Some((segment_index, record_index, decision_hash)) = transaction.matched {
+                            if transaction.records != 1 || transaction.events != 1 || matched_transaction.replace((*tx_id, segment_index, record_index, decision_hash)).is_some() {
                                 return Err(InferenceErrorV1::Invalid);
                             }
                         }
@@ -357,8 +353,10 @@ async fn scan(
                                 control.checkpoint(records)?;
                                 exact.extend_from_slice(fragment);
                             }
-                            if exact.starts_with(b"\x89SEMIO\r\n\x1a\n") && durable_decision_event_matches(&exact, target, &document)? {
-                                transaction.matched = Some((current_segment, records));
+                            if exact.starts_with(b"\x89SEMIO\r\n\x1a\n") {
+                                if let Some(decision_hash) = durable_decision_event_match(&exact, target, &document)? {
+                                    transaction.matched = Some((current_segment, records, decision_hash));
+                                }
                             }
                         }
                     }
@@ -390,7 +388,7 @@ async fn scan(
     }
     control.checkpoint(records)?;
     target.validate(fence)?;
-    Ok(matched_transaction.map(|(transaction_id, segment_index, record_index)| CommittedInferenceWalWitnessV1 {
+    Ok(matched_transaction.map(|(transaction_id, segment_index, record_index, decision_hash)| CommittedInferenceWalWitnessV1 {
         fence: fence.clone(),
         scope: target.scope.clone(),
         generation: target.generation,
@@ -398,7 +396,7 @@ async fn scan(
         proposal_hash: target.proposal_hash.clone(),
         mutation_id: target.mutation_id.clone(),
         command_hash: target.command_hash.clone(),
-        decision_hash: target.decision_hash.clone(),
+        decision_hash,
         transaction_id,
         segment_index,
         record_index,

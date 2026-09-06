@@ -3,7 +3,11 @@
 
 use crate::artifacts::remodeling::RemodelingSnapshot;
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingFrameCursor};
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+// 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
+// (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
+// different types, so both are imported explicitly.
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -13,7 +17,7 @@ const REMODELING_PLAY_SURFACE_FRAMES: &str = "remodeling.play.frames";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: REMODELING_PLAY_WINDOW_FRAMES.into(),
         label: LocalizedLabel::native("Frames", "Frames"),
@@ -38,7 +42,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// GCP observation planted on it, as point markers. Keypoint circles/match lines/track polylines are a
 /// documented gap: those live only in the reconstruction engine's in-progress runtime scratch and are
 /// never distilled into durable document state, so there is nothing to render for them.
-async fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor) -> String {
+fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor) -> String {
     let mut layers: Vec<Value> = Vec::new();
     let Some(stream_id) = &cursor.stream_id else { return "[]".into() };
     let Some(stream) = scene.streams.iter().find(|stream| &stream.id == stream_id) else { return "[]".into() };
@@ -67,9 +71,9 @@ async fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrame
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 
-pub async fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let scene_2d = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &config.frame_cursor), snapshot: None };
-    build_canvas_2d_scene(REMODELING_PLAY_SURFACE_FRAMES, crate::editor::remodeling::REMODELING_PLAY_APP_ID, scene_2d)
+    semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_FRAMES, ContractSurfaceKind::Canvas2d, &scene_2d)
 }
 //#endregion 🔖️Scene
 
@@ -87,8 +91,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_a_canvas_2d_surface() {
-        let mut app = app();
-        assert!(render_body(&mut app, REMODELING_PLAY_BODY_FRAMES).contains(REMODELING_PLAY_SURFACE_FRAMES));
+        let mut app = app().await;
+        assert!(render_body(&mut app, REMODELING_PLAY_BODY_FRAMES).await.contains(REMODELING_PLAY_SURFACE_FRAMES));
     }
 }
 //#endregion 🧪️Tests

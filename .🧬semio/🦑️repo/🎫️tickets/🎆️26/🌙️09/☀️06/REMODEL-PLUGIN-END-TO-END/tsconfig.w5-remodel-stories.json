@@ -1,0 +1,9 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "types": ["react", "react-dom"]
+  },
+  "include": ["../../../../../../../.storybook/stories/remodel/**/*.ts", "../../../../../../../.storybook/stories/remodel/**/*.tsx"]
+}

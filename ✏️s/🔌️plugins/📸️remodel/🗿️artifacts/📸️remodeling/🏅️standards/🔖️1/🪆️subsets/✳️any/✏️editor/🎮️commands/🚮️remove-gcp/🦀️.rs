@@ -13,6 +13,6 @@ pub struct RemoveGcp {
     pub gcp_id: String,
 }
 
-pub async fn handle(payload: &RemoveGcp, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveGcp, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![delete_gcp(payload.gcp_id.clone())]))
 }

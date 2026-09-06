@@ -1,9 +1,126 @@
 dialect grammar
-grammar remodeling.mutations
+grammar remodeling.op
 extension remodeling
-start document
+start op
 
-document = header body
-header = "schema" SP "remodeling.remodeling.mutations" NL
-body = payload NL?
-payload = OCTET+
+# ⚡️ The real op text form: `protocol::OpText::print_op` prints `<keyword> <payload record>` as ONE
+# inline DSL record (`dsl::print(..., JoinMode::Inline)`), the keyword coming from
+# `dsl::DslVariants::to_named_record` (kebab-case of the `RemodelingMutation` variant) and every
+# payload field from that variant's own `RecordSpec`. Keyed fields print in `keyed_field_rank`
+# order (scalars, then Block/List/Map, then Table), and an absent `Option` keyed field is omitted
+# entirely — modelled below as an optional group, never as a `none` placeholder keyword.
+# One production per variant, in `RemodelingMutation` declaration order.
+
+op = create-stream-op | delete-stream-op | change-stream-sync-op | add-stream-frame-op | remove-stream-frame-op | replace-stream-source-op | create-asset-op | delete-asset-op | create-camera-calibration-op | update-camera-calibration-op | delete-camera-calibration-op | create-rig-extrinsic-op | delete-rig-extrinsic-op | update-rig-extrinsic-op | create-gcp-op | delete-gcp-op | add-gcp-observation-op | remove-gcp-observation-op | update-ingest-params-op | update-feature-params-op | update-match-params-op | update-sfm-params-op | update-dense-params-op | update-mesh-params-op | update-motion-params-op | update-geo-params-op | replace-job-op | replace-sparse-op | replace-dense-op | replace-mesh-result-op | replace-trajectory-op | replace-tracks-op | replace-geo-products-op | replace-qc-op | commit-reconstruction-op
+
+create-stream-op = "create-stream" "stream" "=" media-stream-block
+delete-stream-op = "delete-stream" "id" "=" name
+change-stream-sync-op = "change-stream-sync" "id" "=" name "new-sync-offset-ms" "=" num
+add-stream-frame-op = "add-stream-frame" "id" "=" name "kind" "=" media-kind "frame" "=" frame-block
+remove-stream-frame-op = "remove-stream-frame" "id" "=" name "frame-index" "=" INT
+replace-stream-source-op = "replace-stream-source" "id" "=" name {"source" "=" video-source-block}?
+create-asset-op = "create-asset" "key" "=" name "asset" "=" image-asset-block
+delete-asset-op = "delete-asset" "key" "=" name
+create-camera-calibration-op = "create-camera-calibration" "camera" "=" camera-block
+update-camera-calibration-op = "update-camera-calibration" "camera" "=" camera-block
+delete-camera-calibration-op = "delete-camera-calibration" "camera-id" "=" name
+create-rig-extrinsic-op = "create-rig-extrinsic" "extrinsic" "=" rig-block
+delete-rig-extrinsic-op = "delete-rig-extrinsic" "camera-id" "=" name
+update-rig-extrinsic-op = "update-rig-extrinsic" "extrinsic" "=" rig-block
+create-gcp-op = "create-gcp" "gcp" "=" gcp-block
+delete-gcp-op = "delete-gcp" "id" "=" name
+add-gcp-observation-op = "add-gcp-observation" "id" "=" name "observation" "=" observation-block
+remove-gcp-observation-op = "remove-gcp-observation" "id" "=" name "observation-index" "=" INT
+update-ingest-params-op = "update-ingest-params" "params" "=" "{" ingest-field* "}"
+update-feature-params-op = "update-feature-params" "params" "=" "{" feature-field* "}"
+update-match-params-op = "update-match-params" "params" "=" "{" matching-field* "}"
+update-sfm-params-op = "update-sfm-params" "params" "=" "{" sfm-field* "}"
+update-dense-params-op = "update-dense-params" "params" "=" "{" dense-field* "}"
+update-mesh-params-op = "update-mesh-params" "params" "=" "{" mesh-params-field* "}"
+update-motion-params-op = "update-motion-params" "params" "=" "{" motion-field* "}"
+update-geo-params-op = "update-geo-params" "params" "=" "{" geo-param-field* "}"
+replace-job-op = "replace-job" "job" "=" job-block
+replace-sparse-op = "replace-sparse" {"sparse" "=" sparse-block}?
+replace-dense-op = "replace-dense" {"dense" "=" dense-cloud-block}?
+replace-mesh-result-op = "replace-mesh-result" "mesh" "=" mesh-result-block
+replace-trajectory-op = "replace-trajectory" {"trajectory" "=" trajectory-block}?
+replace-tracks-op = "replace-tracks" "tracks" "=" "[" track-record* "]"
+replace-geo-products-op = "replace-geo-products" {"geo" "=" geo-products-block}?
+replace-qc-op = "replace-qc" {"qc" "=" qc-block}?
+commit-reconstruction-op = "commit-reconstruction" "job" "=" job-block {"sparse" "=" sparse-block}? {"trajectory" "=" trajectory-block}? {"mesh" "=" mesh-result-block}? {"geo" "=" geo-products-block}? {"qc" "=" qc-block}? "assets" asset-commit-header "{" asset-commit-row* "}"
+
+name = IDENT | TEXT
+num = INT | FLOAT
+quantity = num IDENT
+coord3 = "@" num "," num "," num
+pair = num "," num
+quad = num "," num "," num "," num
+quint = num "," num "," num "," num "," num
+text-list = "[" name* "]"
+
+media-kind = "image-sequence" | "video"
+video-codec = "avc" | "hevc" | "vp9" | "av1" | "mjpeg" | "unknown"
+detector = "orb" | "akaze" | "harris"
+matcher = "brute-force" | "kd-tree"
+robust-loss = "l2" | "huber" | "cauchy"
+dense-resolution = "low" | "medium" | "high"
+mesh-source = "placeholder" | "reconstructed" | "imported"
+track-class = "static" | "moving"
+stage = "idle" | "ingesting" | "calibrating" | "extracting-features" | "matching-features" | "estimating-poses" | "bundle-adjusting" | "georeferencing" | "dense-stereo" | "fusing-volume" | "extracting-surface" | "cleaning-mesh" | "texturing" | "tracking-motion" | "deriving-geo-products" | "reporting-qc" | "done" | "failed"
+
+media-stream-block = "{" media-stream-part* "}"
+media-stream-part = "id" "=" name | "name" "=" name | "kind" "=" media-kind | "camera-id" "=" name | "sync-offset-ms" "=" num | "fps-hint" "=" num | "source" "=" video-source-block | frames-table
+frames-table = "frames" frames-header "{" frame-row* "}"
+frames-header = "[" "index" ":" "UINT" "timestamp-ms" ":" "NUM" "asset-id" ":" "TEXT" "]"
+frame-row = INT num name
+frame-block = "{" frame-field+ "}"
+frame-field = "index" "=" INT | "timestamp-ms" "=" num | "asset-id" "=" name
+video-source-block = "{" video-source-field+ "}"
+video-source-field = "name" "=" name | "container" "=" name | "codec" "=" video-codec | "duration-ms" "=" num | "frame-count" "=" INT | "width" "=" INT | "height" "=" INT
+image-asset-block = "{" image-asset-field+ "}"
+image-asset-field = "mime" "=" name | "data" "=" name | "width" "=" INT | "height" "=" INT
+camera-block = "{" camera-field+ "}"
+camera-field = "id" "=" name | "label" "=" name | "model" "=" name | "fx" "=" num | "fy" "=" num | "cx" "=" num | "cy" "=" num | "skew" "=" num | "distortion" "=" quint | "rms-reprojection-px" "=" num | "locked" "=" BOOL
+rig-block = "{" rig-field+ "}"
+rig-field = "camera-id" "=" name | "rotation-wxyz" "=" quad | "translation-m" "=" coord3
+gcp-block = "{" gcp-part* "}"
+gcp-part = "id" "=" name | "name" "=" name | "world-position" "=" coord3 | observations-table
+observations-table = "observations" observations-header "{" observation-row* "}"
+observations-header = "[" "stream-id" ":" "TEXT" "frame-index" ":" "UINT" "pixel" ":" "TUPLE" "]"
+observation-row = name INT pair
+observation-block = "{" observation-field+ "}"
+observation-field = "stream-id" "=" name | "frame-index" "=" INT | "pixel" "=" pair
+
+ingest-field = "frame-sample-stride" "=" INT | "max-frames" "=" INT | "downscale-long-edge-px" "=" INT | "min-sharpness" "=" num
+feature-field = "detector" "=" detector | "target-count" "=" INT | "octaves" "=" INT | "edge-threshold" "=" num
+matching-field = "matcher" "=" matcher | "ratio-test" "=" num | "cross-check" "=" BOOL | "sequential-window" "=" INT | "max-pairs-per-frame" "=" INT | "loop-closure" "=" BOOL
+sfm-field = "ransac-iterations" "=" INT | "ransac-threshold-px" "=" num | "min-track-length" "=" INT | "ba-max-iterations" "=" INT | "robust-loss" "=" robust-loss | "huber-delta-px" "=" num
+dense-field = "resolution" "=" dense-resolution | "window-radius-px" "=" INT | "min-view-consistency" "=" INT | "confidence-threshold" "=" num | "max-points" "=" INT
+mesh-params-field = "tsdf-voxel-size-mm" "=" quantity | "tsdf-truncation-mm" "=" quantity | "decimate-target-triangles" "=" INT | "smoothing-iterations" "=" INT | "texture-enabled" "=" BOOL | "texture-size" "=" INT | "guarantee-watertight" "=" BOOL | "hole-fill-max-boundary-verts" "=" INT | "self-intersection-check" "=" BOOL
+motion-field = "enabled" "=" BOOL | "max-tracks" "=" INT | "track-window-px" "=" INT | "min-track-quality" "=" num | "min-track-length-frames" "=" INT
+geo-param-field = "enabled" "=" BOOL | "origin-lon" "=" num | "origin-lat" "=" num | "origin-alt" "=" num | "gsd-m" "=" quantity | "dsm-cell-m" "=" quantity | "dtm-filter-radius-m" "=" quantity | "ortho-max-px" "=" INT
+
+job-block = "{" job-part* "}"
+job-part = "id" "=" name | "stage" "=" stage | "progress-0-1" "=" num | "cancel-requested" "=" BOOL | "stage-cursor" "=" INT | "started-at-ms" "=" num | "error" "=" name | "sparse-point-cloud-preview" "=" name | poses-table
+poses-table = "camera-poses-preview" poses-header "{" pose-row* "}"
+poses-header = "[" "camera-id" ":" "TEXT" "rotation-wxyz" ":" "TUPLE" "translation" ":" "CRD" "]"
+pose-row = name quad coord3
+sparse-block = "{" sparse-field+ "}"
+sparse-field = "points" "=" name | "colors" "=" name
+dense-cloud-block = "{" dense-cloud-field+ "}"
+dense-cloud-field = "positions" "=" name | "colors" "=" name | "confidence" "=" name | "classification" "=" name
+trajectory-block = "{" trajectory-poses-table "}"
+trajectory-poses-table = "poses" poses-header "{" pose-row* "}"
+mesh-result-block = "{" mesh-result-part* "}"
+mesh-result-part = "source" "=" mesh-source | "texture-asset-id" "=" name | mesh-child-block | watertight-block
+mesh-child-block = "mesh" "{" child-handle "}"
+child-handle = "child_id" "=" name "target" "=" TEXT
+watertight-block = "watertight" "{" watertight-field* "}"
+watertight-field = "vertex-count" "=" INT | "triangle-count" "=" INT | "boundary-edge-count" "=" INT | "boundary-loop-count" "=" INT | "non-manifold-edge-count" "=" INT | "non-manifold-vertex-count" "=" INT | "connected-components" "=" INT | "consistently-oriented" "=" BOOL | "euler-characteristic" "=" INT | "genus" "=" INT | "signed-volume" "=" num | "self-intersection-pairs" "=" INT | "closed-fallback-used" "=" BOOL | "is-closed" "=" BOOL | "is-two-manifold" "=" BOOL | "is-watertight" "=" BOOL
+geo-products-block = "{" geo-product-field+ "}"
+geo-product-field = "dsm-asset-id" "=" name | "dtm-asset-id" "=" name | "ortho-asset-id" "=" name
+qc-block = "{" qc-part* "}"
+qc-part = "reprojection-rms-px" "=" num | "gcp-checkpoint-rmse" "=" num | "mean-track-length" "=" num | "registered-frame-ratio" "=" num | "dense-coverage-ratio" "=" num | watertight-block | "warnings" "=" text-list
+track-record = "id" "=" name "length" "=" INT "class" "=" track-class "mean-speed-m-s" "=" quantity
+asset-commit-header = "[" "id" ":" "TEXT" "asset" ":" "BLOCK" "]"
+asset-commit-row = name image-asset-block

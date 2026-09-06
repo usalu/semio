@@ -6,7 +6,7 @@
 
 use crate::artifacts::model::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -23,7 +23,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `EnergyModelSnapshot -> UiNode` read: `name`/`version` plus one leaf per collection on
 /// `crate::model::Model`, each labeled with its live element count — a real overview, no mutation.
-pub fn render(document: &EnergyModelSnapshot) -> BuiltNode {
+pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
     let model = crate::artifacts::model::energy_model(document);
     fn leaf(id: &str, label: String) -> TreeNodeView {
         TreeNodeView { id: id.into(), label, children: Vec::new() }
@@ -91,7 +91,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_lists_name_version_and_every_collection_count() {
         let document = EnergyModelSnapshot::default();
-        let tree = render(&document);
+        let tree = render(&document).expect("the tree window assembles");
         assert_eq!(tree.key, WINDOW_KIND_ID);
         let root = &tree.children[0].children[0];
         assert!(root.children.iter().any(|item| item.key == "name"));

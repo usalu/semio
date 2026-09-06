@@ -53,6 +53,7 @@ semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/�
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 # 🌱️ Test-only: every production/`#[cfg(test)]`-adjacent call site now runs on `ToValue`/`FromValue`
 # (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`). What remains is the
 # `🧪️tests/<case>/🦀️.rs` per-mutation fixture-comparison suite, which deliberately keeps

@@ -1,0 +1,42 @@
+create-stream stream={ id=stream-1 name=front kind=video camera-id=cam-1 sync-offset-ms=12.5 fps-hint=30 source={ name="front.mp4" container=mp4 codec=avc duration-ms=6633.3 frame-count=199 width=1920 height=1080 } frames [index:UINT timestamp-ms:NUM asset-id:TEXT] { 0 0 asset-1 } }
+delete-stream id=stream-1
+change-stream-sync id=stream-1 new-sync-offset-ms=25
+add-stream-frame id=stream-1 kind=video frame={ index=1 timestamp-ms=33.3 asset-id=asset-2 }
+remove-stream-frame id=stream-1 frame-index=1
+replace-stream-source id=stream-1 source={ name="front.mp4" container=mp4 codec=avc duration-ms=6633.3 frame-count=199 width=1920 height=1080 }
+replace-stream-source id=stream-1
+create-asset key=asset-1 asset={ mime="image/jpeg" data=abcd width=4 height=4 }
+delete-asset key=asset-1
+create-camera-calibration camera={ id=cam-1 label=Front model=brownConrady fx=1000 fy=1000 cx=512 cy=384 skew=0 distortion=0.01,-0.02,0,0,0 rms-reprojection-px=0.4 locked=false }
+update-camera-calibration camera={ id=cam-1 label=Front model=brownConrady fx=1000 fy=1000 cx=512 cy=384 skew=0 distortion=0.01,-0.02,0,0,0 locked=true }
+delete-camera-calibration camera-id=cam-1
+create-rig-extrinsic extrinsic={ camera-id=cam-1 rotation-wxyz=1,0,0,0 translation-m=@0,0,0 }
+delete-rig-extrinsic camera-id=cam-1
+update-rig-extrinsic extrinsic={ camera-id=cam-1 rotation-wxyz=1,0,0,0 translation-m=@0.5,0,0 }
+create-gcp gcp={ id=gcp-1 name=Corner world-position=@1,2,3 observations [stream-id:TEXT frame-index:UINT pixel:TUPLE] { stream-1 0 10,20 } }
+delete-gcp id=gcp-1
+add-gcp-observation id=gcp-1 observation={ stream-id=stream-1 frame-index=0 pixel=10,20 }
+remove-gcp-observation id=gcp-1 observation-index=0
+update-ingest-params params={ frame-sample-stride=5 max-frames=200 downscale-long-edge-px=1600 min-sharpness=0.4 }
+update-feature-params params={ detector=orb target-count=4000 octaves=4 edge-threshold=10 }
+update-match-params params={ matcher=brute-force ratio-test=0.8 cross-check=true sequential-window=8 max-pairs-per-frame=16 loop-closure=true }
+update-sfm-params params={ ransac-iterations=1000 ransac-threshold-px=2 min-track-length=3 ba-max-iterations=50 robust-loss=huber huber-delta-px=1.5 }
+update-dense-params params={ resolution=medium window-radius-px=3 min-view-consistency=3 confidence-threshold=0.5 max-points=500000 }
+update-mesh-params params={ tsdf-voxel-size-mm=5mm tsdf-truncation-mm=20mm decimate-target-triangles=200000 smoothing-iterations=2 texture-enabled=true texture-size=2048 guarantee-watertight=true hole-fill-max-boundary-verts=512 self-intersection-check=false }
+update-motion-params params={ enabled=false max-tracks=64 track-window-px=21 min-track-quality=0.3 min-track-length-frames=5 }
+update-geo-params params={ enabled=false gsd-m=0.05m dsm-cell-m=0.1m dtm-filter-radius-m=2m ortho-max-px=4096 }
+replace-job job={ id="" stage=idle progress-0-1=0 cancel-requested=false stage-cursor=0 sparse-point-cloud-preview="" camera-poses-preview [camera-id:TEXT rotation-wxyz:TUPLE translation:CRD] { } }
+replace-sparse sparse={ points="AAAA" colors="/wAA" }
+replace-sparse
+replace-dense dense={ positions="AAAA" colors="AAD/" confidence="ZmZmPw==" classification="Ag==" }
+replace-dense
+replace-mesh-result mesh={ source=reconstructed texture-asset-id=tex-1 mesh { child_id=remodeling-mesh-901ccade3f60f8f1 target="remodeling-mesh!s.stdio.semio@v1/mesh" } }
+replace-trajectory trajectory={ poses [camera-id:TEXT rotation-wxyz:TUPLE translation:CRD] { cam-1 1,0,0,0 @0,0,0 } }
+replace-trajectory
+replace-tracks tracks=[ id=track-1 length=42 class=moving mean-speed-m-s=1.2m/s ]
+replace-geo-products geo={ dsm-asset-id=asset-dsm dtm-asset-id=asset-dtm ortho-asset-id=asset-ortho }
+replace-geo-products
+replace-qc qc={ reprojection-rms-px=0.5 gcp-checkpoint-rmse=0.02 mean-track-length=6 registered-frame-ratio=1 dense-coverage-ratio=0.95 warnings=[ "low overlap on frame 12" ] }
+replace-qc
+commit-reconstruction job={ id=run-1 stage=done progress-0-1=1 cancel-requested=false stage-cursor=17 sparse-point-cloud-preview="" camera-poses-preview [camera-id:TEXT rotation-wxyz:TUPLE translation:CRD] { } } sparse={ points="AAAA" } mesh={ source=reconstructed mesh { child_id=remodeling-mesh-901ccade3f60f8f1 target="remodeling-mesh!s.stdio.semio@v1/mesh" } } assets [id:TEXT asset:BLOCK] { asset-1 { mime="image/png" data=abcd width=4 height=4 } }
+replace-mesh-result mesh={ source=imported texture-asset-id=tex-2 mesh { child_id=remodeling-mesh-901ccade3f60f8f1 target="remodeling-mesh!s.stdio.semio@v1/mesh" } watertight { vertex-count=512 triangle-count=1020 boundary-edge-count=0 boundary-loop-count=0 non-manifold-edge-count=0 non-manifold-vertex-count=0 connected-components=1 consistently-oriented=true euler-characteristic=2 genus=0 signed-volume=12.5 self-intersection-pairs=0 closed-fallback-used=false is-closed=true is-two-manifold=true is-watertight=true } }

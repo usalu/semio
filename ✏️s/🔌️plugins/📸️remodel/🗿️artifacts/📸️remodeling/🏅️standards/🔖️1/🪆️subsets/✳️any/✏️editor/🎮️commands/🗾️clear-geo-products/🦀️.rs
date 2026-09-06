@@ -11,6 +11,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "clear-geo-products")]
 pub struct ClearGeoProducts {}
 
-pub async fn handle(_payload: &ClearGeoProducts, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &ClearGeoProducts, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![replace_geo_products(None)]))
 }

@@ -7,5 +7,6 @@ message EnergyModelArtifact {
   bytes structure = 3;
   bytes zones = 4;
   bytes referenced_model = 5;
-  string results_json = 6;
+  bytes weather_link = 6;
+  string results_json = 7;
 }

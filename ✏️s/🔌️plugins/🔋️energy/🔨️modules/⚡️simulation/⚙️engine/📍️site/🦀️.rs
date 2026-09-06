@@ -198,15 +198,19 @@ pub struct SolarPosition {
 }
 
 /// ☀️ Compute solar altitude and azimuth (simplified SPA).
-pub fn solar_position(latitude_deg: f64, longitude_deg: f64, day_of_year: u16, hour_solar: f64) -> SolarPosition {
+pub fn solar_position(latitude_deg: f64, longitude_deg: f64, time_zone_hours: f64, day_of_year: u16, hour_local: f64) -> SolarPosition {
     let lat = deg_to_rad(latitude_deg);
-    let decl = deg_to_rad(23.45 * (360.0 * (day_of_year as f64 - 81.0) / 365.0).to_radians().sin());
+    let decl = deg_to_rad(23.45 * (360.0 * (day_of_year as f64 + 284.0) / 365.0).to_radians().sin());
+    let b = (360.0 * (day_of_year as f64 - 81.0) / 364.0).to_radians();
+    let equation_of_time_min = 9.87 * (2.0 * b).sin() - 7.53 * b.cos() - 1.5 * b.sin();
+    let hour_solar = hour_local + (longitude_deg - 15.0 * time_zone_hours) / 15.0 + equation_of_time_min / 60.0;
     let ha = deg_to_rad(15.0 * (hour_solar - 12.0));
     let sin_alt = lat.sin() * decl.sin() + lat.cos() * decl.cos() * ha.cos();
     let altitude_deg = rad_to_deg(sin_alt.clamp(-1.0, 1.0).asin());
-    let cos_az = (decl.sin() - lat.sin() * sin_alt) / (lat.cos() * sin_alt.clamp(0.001, 1.0).acos().cos().max(1e-6));
-    let azimuth_deg = rad_to_deg(cos_az.clamp(-1.0, 1.0).acos());
-    let equation_of_time_min = 4.0 * (longitude_deg - 15.0 * (hour_solar / 24.0 * 24.0).round());
+    let cos_alt = (1.0 - sin_alt * sin_alt).max(0.0).sqrt();
+    let cos_az = if cos_alt < 1e-6 || lat.cos().abs() < 1e-6 { 1.0 } else { (decl.sin() - lat.sin() * sin_alt) / (lat.cos() * cos_alt) };
+    let azimuth_from_north = rad_to_deg(cos_az.clamp(-1.0, 1.0).acos());
+    let azimuth_deg = if ha > 0.0 { 360.0 - azimuth_from_north } else { azimuth_from_north };
     SolarPosition { altitude_deg, azimuth_deg, equation_of_time_min }
 }
 
@@ -304,7 +308,21 @@ DATA PERIODS,1,1,Data,Sunday,1/1,1/1\n\
 
     #[test]
     fn solar_noon_altitude_positive() {
-        let pos = solar_position(45.0, 0.0, 172, 12.0);
+        let pos = solar_position(45.0, 0.0, 0.0, 172, 12.0);
         assert!(pos.altitude_deg > 0.0);
+    }
+
+    /// 🧪️ Summer-solstice noon at 45 °N must land within a degree of the closed-form
+    /// `90 − latitude + declination` and point due south; the afternoon sun must swing WEST of
+    /// south (azimuth > 180°), which the previous `acos`-only azimuth could never express.
+    #[test]
+    fn solar_azimuth_sweeps_east_through_south_to_west() {
+        let noon = solar_position(45.0, 0.0, 0.0, 172, 12.0);
+        assert!((noon.altitude_deg - 68.4).abs() < 1.5, "solstice noon altitude was {}", noon.altitude_deg);
+        assert!((noon.azimuth_deg - 180.0).abs() < 3.0, "solstice noon azimuth was {}", noon.azimuth_deg);
+        let morning = solar_position(45.0, 0.0, 0.0, 172, 8.0);
+        let afternoon = solar_position(45.0, 0.0, 0.0, 172, 16.0);
+        assert!(morning.azimuth_deg < 180.0, "08:00 azimuth was {}", morning.azimuth_deg);
+        assert!(afternoon.azimuth_deg > 180.0, "16:00 azimuth was {}", afternoon.azimuth_deg);
     }
 }

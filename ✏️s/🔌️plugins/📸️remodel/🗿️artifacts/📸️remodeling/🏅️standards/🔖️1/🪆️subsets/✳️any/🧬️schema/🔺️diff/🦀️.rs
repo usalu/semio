@@ -3,15 +3,14 @@
 use crate::artifacts::remodeling::schema::{RemodelingArtifact, RemodelingUiCamera, RemodelingUiFrameCursor, RemodelingUiLayers, RemodelingUiSelection};
 use crate::artifacts::remodeling::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the remodeling artifact; persistent entries apply via MutationDiff.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
-#[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.remodeling.remodeling")]
 pub struct RemodelingDiff {
     #[state(artifact)]

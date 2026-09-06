@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateGroundTemperature",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buildingSurfaceC",
+    "shallowC",
+    "deepC"
+  ],
+  "properties": {
+    "buildingSurfaceC": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "shallowC": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "deepC": {
+      "type": "number"
+    }
+  }
+}

@@ -1,7 +1,7 @@
-# 🧬️ Remodeling mutation schema — one type per handcrafted semantic mutation kind.
+# 🧬️ Remodeling mutation vocabulary — one type per semantic kind, tagged by `mutation`.
 
 union RemodelingMutation =
-  CreateStream
+    CreateStream
   | DeleteStream
   | ChangeStreamSync
   | AddStreamFrame
@@ -35,181 +35,504 @@ union RemodelingMutation =
   | ReplaceTracks
   | ReplaceGeoProducts
   | ReplaceQc
+  | CommitReconstruction
 
 type CreateStream {
-  mutation: String! # "create-stream"
+  mutation: String!
   stream: MediaStream!
 }
 
 type DeleteStream {
-  mutation: String! # "delete-stream"
+  mutation: String!
   id: String!
 }
 
 type ChangeStreamSync {
-  mutation: String! # "change-stream-sync"
+  mutation: String!
   id: String!
   newSyncOffsetMs: Float!
 }
 
 type AddStreamFrame {
-  mutation: String! # "add-stream-frame"
+  mutation: String!
   id: String!
   frame: FrameRef!
-  kind: String!
+  kind: MediaKind!
 }
 
 type RemoveStreamFrame {
-  mutation: String! # "remove-stream-frame"
+  mutation: String!
   id: String!
   frameIndex: Int!
 }
 
 type ReplaceStreamSource {
-  mutation: String! # "replace-stream-source"
+  mutation: String!
   id: String!
   source: VideoSource
 }
 
 type CreateAsset {
-  mutation: String! # "create-asset"
+  mutation: String!
   key: String!
   asset: ImageAsset!
 }
 
 type DeleteAsset {
-  mutation: String! # "delete-asset"
+  mutation: String!
   key: String!
 }
 
 type CreateCameraCalibration {
-  mutation: String! # "create-camera-calibration"
+  mutation: String!
   camera: CameraCalibration!
 }
 
 type UpdateCameraCalibration {
-  mutation: String! # "update-camera-calibration"
+  mutation: String!
   camera: CameraCalibration!
 }
 
 type DeleteCameraCalibration {
-  mutation: String! # "delete-camera-calibration"
+  mutation: String!
   cameraId: String!
 }
 
 type CreateRigExtrinsic {
-  mutation: String! # "create-rig-extrinsic"
+  mutation: String!
   extrinsic: RigExtrinsic!
 }
 
 type DeleteRigExtrinsic {
-  mutation: String! # "delete-rig-extrinsic"
+  mutation: String!
   cameraId: String!
 }
 
 type UpdateRigExtrinsic {
-  mutation: String! # "update-rig-extrinsic"
+  mutation: String!
   extrinsic: RigExtrinsic!
 }
 
 type CreateGcp {
-  mutation: String! # "create-gcp"
+  mutation: String!
   gcp: GroundControlPoint!
 }
 
 type DeleteGcp {
-  mutation: String! # "delete-gcp"
+  mutation: String!
   id: String!
 }
 
 type AddGcpObservation {
-  mutation: String! # "add-gcp-observation"
+  mutation: String!
   id: String!
   observation: GcpObservation!
 }
 
 type RemoveGcpObservation {
-  mutation: String! # "remove-gcp-observation"
+  mutation: String!
   id: String!
   observationIndex: Int!
 }
 
 type UpdateIngestParams {
-  mutation: String! # "update-ingest-params"
+  mutation: String!
   params: IngestParams!
 }
 
 type UpdateFeatureParams {
-  mutation: String! # "update-feature-params"
+  mutation: String!
   params: FeatureParams!
 }
 
 type UpdateMatchParams {
-  mutation: String! # "update-match-params"
+  mutation: String!
   params: MatchParams!
 }
 
 type UpdateSfmParams {
-  mutation: String! # "update-sfm-params"
+  mutation: String!
   params: SfmParams!
 }
 
 type UpdateDenseParams {
-  mutation: String! # "update-dense-params"
+  mutation: String!
   params: DenseParams!
 }
 
 type UpdateMeshParams {
-  mutation: String! # "update-mesh-params"
+  mutation: String!
   params: MeshParams!
 }
 
 type UpdateMotionParams {
-  mutation: String! # "update-motion-params"
+  mutation: String!
   params: MotionParams!
 }
 
 type UpdateGeoParams {
-  mutation: String! # "update-geo-params"
+  mutation: String!
   params: GeoParams!
 }
 
 type ReplaceJob {
-  mutation: String! # "replace-job"
+  mutation: String!
   job: ReconstructionJob!
 }
 
 type ReplaceSparse {
-  mutation: String! # "replace-sparse"
+  mutation: String!
   sparse: SparseCloud
 }
 
 type ReplaceDense {
-  mutation: String! # "replace-dense"
+  mutation: String!
   dense: DenseCloud
 }
 
 type ReplaceMeshResult {
-  mutation: String! # "replace-mesh-result"
+  mutation: String!
   mesh: RemodelingMesh!
 }
 
 type ReplaceTrajectory {
-  mutation: String! # "replace-trajectory"
+  mutation: String!
   trajectory: CameraTrajectory
 }
 
 type ReplaceTracks {
-  mutation: String! # "replace-tracks"
+  mutation: String!
   tracks: [MotionTrackSummary!]!
 }
 
 type ReplaceGeoProducts {
-  mutation: String! # "replace-geo-products"
+  mutation: String!
   geo: GeoProducts
 }
 
 type ReplaceQc {
-  mutation: String! # "replace-qc"
+  mutation: String!
   qc: QcReportSnapshot
+}
+
+type CommitReconstruction {
+  mutation: String!
+  job: ReconstructionJob!
+  sparse: SparseCloud
+  trajectory: CameraTrajectory
+  mesh: RemodelingMesh
+  geo: GeoProducts
+  qc: QcReportSnapshot
+  assets: [ReconstructionAssetCommit!]!
+}
+
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type ArtifactRef {
+  artifactId: String!
+  dialect: ArtifactDialect!
+}
+
+type CameraCalibration {
+  id: String!
+  label: String!
+  model: String!
+  fx: Float!
+  fy: Float!
+  cx: Float!
+  cy: Float!
+  skew: Float!
+  distortion: [Float!]!
+  rmsReprojectionPx: Float
+  locked: Boolean!
+}
+
+type CameraPosePreview {
+  cameraId: String!
+  rotationWxyz: [Float!]!
+  translation: [Float!]!
+}
+
+type CameraTrajectory {
+  poses: [CameraPosePreview!]!
+}
+
+type DenseCloud {
+  positions: String!
+  colors: String
+  confidence: String
+  classification: String
+}
+
+type DenseParams {
+  resolution: DenseResolution!
+  windowRadiusPx: Int!
+  minViewConsistency: Int!
+  confidenceThreshold: Float!
+  maxPoints: Int!
+}
+
+enum DenseResolution {
+  Low
+  Medium
+  High
+}
+
+enum FeatureDetector {
+  Orb
+  Akaze
+  Harris
+}
+
+type FeatureParams {
+  detector: FeatureDetector!
+  targetCount: Int!
+  octaves: Int!
+  edgeThreshold: Float!
+}
+
+type FrameRef {
+  index: Int!
+  timestampMs: Float!
+  assetId: String!
+}
+
+type GcpObservation {
+  streamId: String!
+  frameIndex: Int!
+  pixel: [Float!]!
+}
+
+type GeoParams {
+  enabled: Boolean!
+  originLon: Float
+  originLat: Float
+  originAlt: Float
+  gsdM: Float!
+  dsmCellM: Float!
+  dtmFilterRadiusM: Float!
+  orthoMaxPx: Int!
+}
+
+type GeoProducts {
+  dsmAssetId: String
+  dtmAssetId: String
+  orthoAssetId: String
+}
+
+type GroundControlPoint {
+  id: String!
+  name: String!
+  worldPosition: [Float!]!
+  observations: [GcpObservation!]!
+}
+
+type ImageAsset {
+  mime: String!
+  data: String!
+  width: Int!
+  height: Int!
+}
+
+type IngestParams {
+  frameSampleStride: Int!
+  maxFrames: Int!
+  downscaleLongEdgePx: Int!
+  minSharpness: Float!
+}
+
+type MatchParams {
+  matcher: MatcherKind!
+  ratioTest: Float!
+  crossCheck: Boolean!
+  sequentialWindow: Int!
+  maxPairsPerFrame: Int!
+  loopClosure: Boolean!
+}
+
+enum MatcherKind {
+  BruteForce
+  KdTree
+}
+
+enum MediaKind {
+  ImageSequence
+  Video
+}
+
+type MediaStream {
+  id: String!
+  name: String!
+  kind: MediaKind!
+  cameraId: String
+  syncOffsetMs: Float!
+  fpsHint: Float!
+  frames: [FrameRef!]!
+  source: VideoSource
+}
+
+type MeshParams {
+  tsdfVoxelSizeMm: Float!
+  tsdfTruncationMm: Float!
+  decimateTargetTriangles: Int!
+  smoothingIterations: Int!
+  textureEnabled: Boolean!
+  textureSize: Int!
+  guaranteeWatertight: Boolean!
+  holeFillMaxBoundaryVerts: Int!
+  selfIntersectionCheck: Boolean!
+}
+
+enum MeshSource {
+  Placeholder
+  Reconstructed
+  Imported
+}
+
+type MotionParams {
+  enabled: Boolean!
+  maxTracks: Int!
+  trackWindowPx: Int!
+  minTrackQuality: Float!
+  minTrackLengthFrames: Int!
+}
+
+type MotionTrackSummary {
+  id: String!
+  length: Int!
+  class: TrackClass!
+  meanSpeedMS: Float!
+}
+
+type QcReportSnapshot {
+  reprojectionRmsPx: Float!
+  gcpCheckpointRmse: Float
+  watertight: WatertightReportSnapshot
+  meanTrackLength: Float!
+  registeredFrameRatio: Float!
+  denseCoverageRatio: Float!
+  warnings: [String!]!
+}
+
+type ReconstructionAssetCommit {
+  id: String!
+  asset: ImageAsset!
+}
+
+type ReconstructionJob {
+  id: String!
+  stage: ReconstructionStage!
+  progress01: Float!
+  cancelRequested: Boolean!
+  stageCursor: Int!
+  startedAtMs: Float
+  error: String
+  cameraPosesPreview: [CameraPosePreview!]!
+  sparsePointCloudPreview: String!
+}
+
+enum ReconstructionStage {
+  Idle
+  Ingesting
+  Calibrating
+  ExtractingFeatures
+  MatchingFeatures
+  EstimatingPoses
+  BundleAdjusting
+  Georeferencing
+  DenseStereo
+  FusingVolume
+  ExtractingSurface
+  CleaningMesh
+  Texturing
+  TrackingMotion
+  DerivingGeoProducts
+  ReportingQc
+  Done
+  Failed
+}
+
+type RemodelingMesh {
+  mesh: RemodelingMeshChild!
+  source: MeshSource!
+  textureAssetId: String
+  watertight: WatertightReportSnapshot
+}
+
+type RemodelingMeshChild {
+  childId: String!
+  target: ArtifactRef!
+}
+
+type RigExtrinsic {
+  cameraId: String!
+  rotationWxyz: [Float!]!
+  translationM: [Float!]!
+}
+
+enum RobustLossKind {
+  L2
+  Huber
+  Cauchy
+}
+
+type SfmParams {
+  ransacIterations: Int!
+  ransacThresholdPx: Float!
+  minTrackLength: Int!
+  baMaxIterations: Int!
+  robustLoss: RobustLossKind!
+  huberDeltaPx: Float!
+}
+
+type SparseCloud {
+  points: String!
+  colors: String
+}
+
+enum TrackClass {
+  Static
+  Moving
+}
+
+enum VideoCodec {
+  Avc
+  Hevc
+  Vp9
+  Av1
+  Mjpeg
+  Unknown
+}
+
+type VideoSource {
+  name: String!
+  container: String!
+  codec: VideoCodec!
+  durationMs: Float!
+  frameCount: Int!
+  width: Int!
+  height: Int!
+}
+
+type WatertightReportSnapshot {
+  vertexCount: Int!
+  triangleCount: Int!
+  boundaryEdgeCount: Int!
+  boundaryLoopCount: Int!
+  nonManifoldEdgeCount: Int!
+  nonManifoldVertexCount: Int!
+  connectedComponents: Int!
+  consistentlyOriented: Boolean!
+  eulerCharacteristic: Int!
+  genus: Int
+  signedVolume: Float!
+  selfIntersectionPairs: Int
+  closedFallbackUsed: Boolean!
+  isClosed: Boolean!
+  isTwoManifold: Boolean!
+  isWatertight: Boolean!
 }

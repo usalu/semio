@@ -1,8 +1,7 @@
 {
   "activationEvents": [
     {
-      "kind": "onArtifactKind",
-      "value": {
+      "onArtifactKind": {
         "kind": "catalogue.sourcing"
       }
     }
@@ -60,9 +59,9 @@
   "descriptorVersion": 1,
   "execution": "isolated",
   "hashes": {
-    "coreWasmSha256": "81b04b6396cf37bd2fee9119cd802592bbf51a40ceef05c7af4c710801bc9045",
-    "descriptorSha256": "fa7ea0be8379f959e0e9b7bbf2c5ae4168a3b29104e8d9d2015c27847632ac28",
-    "wasmSha256": "c27638455e4eba364a044826adb2e5ad2b679c88601d80757f40e354c4c12298"
+    "coreWasmSha256": "01ef146fa55af081bb5b50a109a646b07c4e5c0eb612e94af49b8d47705d5444",
+    "descriptorSha256": "ff253fb9bfd6349457740879ab6579454011490cb0aa634c1f1ff3d9e72978ca",
+    "wasmSha256": "f16af641ac3393adb76296b7008ef8a9f7f52bf536aa5b00ecee9c6288a47584"
   },
   "manifest": {
     "apps": [
@@ -604,7 +603,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -648,7 +647,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -692,7 +691,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -736,7 +735,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -780,7 +779,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -824,7 +823,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -868,7 +867,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -957,7 +956,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -2661,7 +2660,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -2705,7 +2704,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -2749,7 +2748,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -2793,7 +2792,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -2837,7 +2836,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -2881,7 +2880,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -2925,7 +2924,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -3014,7 +3013,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -4718,7 +4717,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4762,7 +4761,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4806,7 +4805,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4850,7 +4849,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4894,7 +4893,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4938,7 +4937,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -4982,7 +4981,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -5071,7 +5070,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -6773,7 +6772,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6817,7 +6816,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6861,7 +6860,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6905,7 +6904,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6949,7 +6948,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -6993,7 +6992,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -7037,7 +7036,7 @@
                     "class": "interactive",
                     "expectedRevision": true,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "diff",
                     "undo": {
                       "kind": "inverse"
@@ -7126,7 +7125,7 @@
                     "class": "interactive",
                     "expectedRevision": false,
                     "idempotency": "none",
-                    "interactiveJob": "batchOnlyPendingRewrite",
+                    "interactiveJob": "migrated",
                     "preview": "none",
                     "undo": {
                       "kind": "none"
@@ -9735,6 +9734,7 @@
     "topicContributions": [],
     "version": "0.1.0"
   },
+  "packageId": "semio:sourcing",
   "quotas": {},
   "role": "plugin"
 }

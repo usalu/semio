@@ -5,7 +5,6 @@ use semio_framework_os::workflow::{MoveNode, RemoveNode};
 use semio_framework_os::{apply_flow_fixture_to_os_workflow, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
-
 /// 🚧️ TEMP(Wave 3): `operations_json` stays an opaque JSON-array string, mirroring
 /// `apply_flow_fixture_to_os_workflow`'s still-JSON `fixture_json` bridge — typed once the flow
 /// bridge itself is typed.
@@ -36,9 +35,12 @@ async fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnaps
                 }
             }
             "connect" => {
-                if let (Some(source_node_id), Some(source_port_id), Some(target_node_id), Some(target_port_id)) =
-                    (edit.get("sourceNodeId").and_then(pack::JsonValue::as_str), edit.get("sourcePortId").and_then(pack::JsonValue::as_str), edit.get("targetNodeId").and_then(pack::JsonValue::as_str), edit.get("targetPortId").and_then(pack::JsonValue::as_str))
-                {
+                if let (Some(source_node_id), Some(source_port_id), Some(target_node_id), Some(target_port_id)) = (
+                    edit.get("sourceNodeId").and_then(pack::JsonValue::as_str),
+                    edit.get("sourcePortId").and_then(pack::JsonValue::as_str),
+                    edit.get("targetNodeId").and_then(pack::JsonValue::as_str),
+                    edit.get("targetPortId").and_then(pack::JsonValue::as_str),
+                ) {
                     match crate::engine::space::negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id).await {
                         Ok(contract) => artifact_mutations.push(crate::engine::space::connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract).await),
                         Err(effect) => effects.push(effect),
@@ -92,11 +94,11 @@ mod tests {
         let node = projection.graph.nodes.first().expect("node").clone();
         let camera = OsWorkflowCamera { x: 40.0, y: -20.0, zoom: 2.0 };
         let mut fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
-        if let Some(layout) = fixture.get_mut("layout").and_then(pack::JsonValue::as_object_mut) {
-            let mut position = Object::new();
-            position.insert("x", pack::JsonValue::from(500.0 + node.width / 2.0));
-            position.insert("y", pack::JsonValue::from(300.0 + node.height / 2.0));
-            layout.insert(node.id.clone(), pack::JsonValue::Object(position));
+        if let Some(layout) = fixture.get_mut("layout").and_then(serde_json::Value::as_object_mut) {
+            let mut position = serde_json::Map::new();
+            position.insert("x".into(), serde_json::Value::from(500.0 + node.width / 2.0));
+            position.insert("y".into(), serde_json::Value::from(300.0 + node.height / 2.0));
+            layout.insert(node.id.clone(), serde_json::Value::Object(position));
         }
         let mut operations_entry = Object::new();
         operations_entry.insert("operation", pack::JsonValue::from("setFixture"));

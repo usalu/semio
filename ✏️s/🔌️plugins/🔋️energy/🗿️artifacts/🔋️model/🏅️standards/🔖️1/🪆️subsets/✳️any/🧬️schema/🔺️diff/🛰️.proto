@@ -7,8 +7,15 @@ message EnergyModelDiff {
   optional bytes model = 3;
   optional bytes structure = 4;
   optional bytes zones = 5;
-  optional bytes referenced_model = 6;
-  optional string results_json = 7;
+  optional EnergyLinkSlotDelta referenced_model = 6;
+  optional EnergyLinkSlotDelta weather_link = 7;
+  optional string results_json = 8;
+}
+
+// 🔗️ A link slot delta; an absent field means the slot did not change at all.
+message EnergyLinkSlotDelta {
+  string kind = 1;
+  bytes link = 2;
 }
 
 message EnergyModelArtifact {
@@ -17,5 +24,6 @@ message EnergyModelArtifact {
   bytes structure = 3;
   bytes zones = 4;
   bytes referenced_model = 5;
-  string results_json = 6;
+  bytes weather_link = 6;
+  string results_json = 7;
 }

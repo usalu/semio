@@ -1,9 +1,27 @@
 dialect grammar
-grammar remodeling.remodeling.inference
-extension remodeling.inference
-start document
+grammar remodeling.inference
+extension remodeling
+start inference
 
-document = header body
-header = "schema" SP "remodeling.remodeling.inference" NL
-body = payload NL?
-payload = OCTET+
+# 💡️ The inference text form. `RemodelingInference` is computed from a snapshot, never authored,
+# and — like `RemodelingDiff` — carries `ToValue`/`FromValue` only (no `dsl::DslRecord`), so its
+# single text rendering is the value bridge (`store::to_dsl_value` -> `dsl::print_dsl_value`):
+# `{ key=value … }`, keys sorted. Both derived lanes are pinned below with their real inner shape
+# (`RemodelingBounds` / `BTreeMap<String, RemodelingPoseDelta>`); `#[value(rename_all = "camelCase")]`
+# gives the camelCase keys.
+
+inference = "{" inference-lane* "}"
+inference-lane = bounds-lane | relative-camera-poses-lane
+bounds-lane = "bounds" "=" bounds-object
+relative-camera-poses-lane = "relativeCameraPoses" "=" pose-map
+bounds-object = "{" bounds-field* "}"
+bounds-field = "boundingBox" "=" bounding-box | "vertexCount" "=" number | "faceCount" "=" number
+bounding-box = "{" box-field* "}"
+box-field = "max" "=" triple | "min" "=" triple
+triple = "[" number number number "]"
+pose-map = "{" pose-entry* "}"
+pose-entry = key "=" pose-object
+pose-object = "{" pose-field* "}"
+pose-field = "rotationAngleRad" "=" number | "translationDelta" "=" triple
+number = INT | FLOAT
+key = IDENT | TEXT

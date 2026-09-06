@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateSite",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "latitudeDeg",
+    "longitudeDeg",
+    "elevationM",
+    "timeZoneHours",
+    "northAxisDeg"
+  ],
+  "properties": {
+    "latitudeDeg": {
+      "type": "number"
+    },
+    "longitudeDeg": {
+      "type": "number"
+    },
+    "elevationM": {
+      "type": "number"
+    },
+    "timeZoneHours": {
+      "type": "number"
+    },
+    "northAxisDeg": {
+      "type": "number"
+    }
+  }
+}

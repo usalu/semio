@@ -35,6 +35,13 @@ pub struct EnergyModelSnapshot {
     #[link_slot(roles("model"))]
     #[serde(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
+    /// 🌦️ Forward link to the `🌦️epw` stdio artifact this model is simulated against — a link slot
+    /// exactly like `referenced_model`, never an inlined `EpwWeather` (ticket
+    /// 26/09/06/ENERGY-PLUGIN-END-TO-END).
+    #[state(artifact)]
+    #[link_slot(roles("weather"))]
+    #[serde(rename = "weatherLink", default, skip_serializing_if = "Option::is_none")]
+    pub weather_link: Option<store::ArtifactLink>,
 }
 
 impl Default for EnergyModelSnapshot {
@@ -56,6 +63,7 @@ impl ToValue for EnergyModelSnapshot {
             ("structure".to_string(), to_dsl_value(&self.structure).unwrap_or(DslValue::Null)),
             ("zones".to_string(), to_dsl_value(&self.zones).unwrap_or(DslValue::Null)),
             ("referencedModel".to_string(), to_dsl_value(&self.referenced_model).unwrap_or(DslValue::Null)),
+            ("weatherLink".to_string(), to_dsl_value(&self.weather_link).unwrap_or(DslValue::Null)),
         ])
     }
 }
@@ -69,6 +77,7 @@ impl FromValue for EnergyModelSnapshot {
             structure: from_dsl_value(field("structure")).map_err(ValueError::new)?,
             zones: from_dsl_value(field("zones")).map_err(ValueError::new)?,
             referenced_model: from_dsl_value(field("referencedModel")).map_err(ValueError::new)?,
+            weather_link: from_dsl_value(field("weatherLink")).map_err(ValueError::new)?,
         })
     }
 }
@@ -142,7 +151,7 @@ fn dec_dsl_json<T: FromValue>(s: &str) -> Result<T, String> {
 
 //#region 🔖️TextPrimitives
 fn print_energy_model_snapshot_body(s: &EnergyModelSnapshot) -> String {
-    format!("schema={}\nmodel={}\nstructure={}\nzones={}\nreferencedModel={}", enc_str(&s.schema), enc_dsl_json(&s.model), enc_child(&s.structure), enc_child(&s.zones), enc_json(&s.referenced_model),)
+    format!("schema={}\nmodel={}\nstructure={}\nzones={}\nreferencedModel={}\nweatherLink={}", enc_str(&s.schema), enc_dsl_json(&s.model), enc_child(&s.structure), enc_child(&s.zones), enc_dsl_json(&s.referenced_model), enc_dsl_json(&s.weather_link),)
 }
 fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, String> {
     let mut schema = None;
@@ -150,6 +159,7 @@ fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, S
     let mut structure = None;
     let mut zones = None;
     let mut referenced_model = None;
+    let mut weather_link = None;
     for line in body.lines() {
         let line = line.trim();
         if line.is_empty() {
@@ -164,7 +174,9 @@ fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, S
         } else if let Some(rest) = line.strip_prefix("zones=") {
             zones = Some(dec_child(rest)?);
         } else if let Some(rest) = line.strip_prefix("referencedModel=") {
-            referenced_model = Some(dec_json(rest)?);
+            referenced_model = Some(dec_dsl_json(rest)?);
+        } else if let Some(rest) = line.strip_prefix("weatherLink=") {
+            weather_link = Some(dec_dsl_json(rest)?);
         } else {
             return Err(format!("energy model snapshot: unknown line {line:?}"));
         }
@@ -175,6 +187,7 @@ fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, S
         structure: structure.ok_or_else(|| "energy model snapshot: missing structure line".to_string())?,
         zones: zones.ok_or_else(|| "energy model snapshot: missing zones line".to_string())?,
         referenced_model: referenced_model.ok_or_else(|| "energy model snapshot: missing referencedModel line".to_string())?,
+        weather_link: weather_link.ok_or_else(|| "energy model snapshot: missing weatherLink line".to_string())?,
     })
 }
 //#endregion 🔖️TextPrimitives
@@ -229,7 +242,8 @@ fn encode_energy_model_snapshot_binary(s: &EnergyModelSnapshot) -> Vec<u8> {
     write_dsl_json(&mut out, &s.model);
     write_child(&mut out, &s.structure);
     write_child(&mut out, &s.zones);
-    write_json(&mut out, &s.referenced_model);
+    write_dsl_json(&mut out, &s.referenced_model);
+    write_dsl_json(&mut out, &s.weather_link);
     out
 }
 fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapshot, String> {
@@ -239,7 +253,7 @@ fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapsh
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    Ok(EnergyModelSnapshot { schema: read_str_lp(&mut reader)?, model: read_dsl_json(&mut reader)?, structure: read_child(&mut reader)?, zones: read_child(&mut reader)?, referenced_model: read_json(&mut reader)? })
+    Ok(EnergyModelSnapshot { schema: read_str_lp(&mut reader)?, model: read_dsl_json(&mut reader)?, structure: read_child(&mut reader)?, zones: read_child(&mut reader)?, referenced_model: read_dsl_json(&mut reader)?, weather_link: read_dsl_json(&mut reader)? })
 }
 //#endregion 🔖️BinaryPrimitives
 

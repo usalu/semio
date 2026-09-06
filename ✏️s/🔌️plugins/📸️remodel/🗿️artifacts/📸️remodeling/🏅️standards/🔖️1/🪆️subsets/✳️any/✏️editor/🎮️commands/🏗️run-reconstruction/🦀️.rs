@@ -11,11 +11,11 @@ use crate::editor::remodeling::engine::images::{BoundedDecodeProgress, BoundedSt
 use crate::editor::remodeling::engine::{build_engine_params, camera_pose_preview, reconstruction as remodeling_engine, watertight_snapshot, RasterPngPreparation, RasterPngProgress};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, RequestId};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 pub const ADVANCE_RECONSTRUCTION_ACTION_ID: &str = "advanceReconstruction";
@@ -1022,11 +1022,11 @@ pub struct AdvanceReconstruction {
 }
 //#endregion 🔖️Payloads
 
-pub async fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &RunReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     begin_reconstruction(doc)
 }
 
-pub async fn handle_advance(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle_advance(payload: &AdvanceReconstruction, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     advance_reconstruction(payload, doc)
 }
 
@@ -1066,31 +1066,31 @@ mod tests {
         crate::artifacts::remodeling::forget_all_remodeling_content_for_test();
     }
 
-    async fn dispatch_public_action(app: &mut RemodelingApp, action: &str, args: Option<serde_json::Value>) -> InvocationResult {
-        let command = <RemodelingPlayApp as ArtifactEditor>::command_from_action(action, args.as_ref()).await.expect("public Remodeling action bridge");
-        app.dispatch_typed(command, &meta("local")).await.expect("public ActionBus worker dispatch")
+    fn dispatch_public_action(app: &mut RemodelingApp, action: &str, args: Option<serde_json::Value>) -> InvocationResult {
+        let command = <RemodelingPlayApp as ArtifactEditor>::command_from_action(action, args.as_ref()).expect("public Remodeling action bridge");
+        app.dispatch_typed(command, &meta("local")).expect("public ActionBus worker dispatch")
     }
 
-    async fn dispatch_continuation(app: &mut RemodelingApp, effect: Effect) -> InvocationResult {
+    fn dispatch_continuation(app: &mut RemodelingApp, effect: Effect) -> InvocationResult {
         let Effect::DispatchAction { action, args, .. } = effect else { panic!("reconstruction continuation action") };
         assert_eq!(action, ADVANCE_RECONSTRUCTION_ACTION_ID);
         let args = args.map(|value| semio_framework::from_dsl_value::<serde_json::Value>(value).expect("continuation args"));
-        dispatch_public_action(app, &action, args).await
+        dispatch_public_action(app, &action, args)
     }
 
-    async fn drive_public_reconstruction(app: &mut RemodelingApp, start_action: &str) -> (RemodelingSnapshot, Vec<ReconstructionStage>) {
+    fn drive_public_reconstruction(app: &mut RemodelingApp, start_action: &str) -> (RemodelingSnapshot, Vec<ReconstructionStage>) {
         let start_args = matches!(start_action, "runStage" | "retryStage").then(|| json!({ "stage": "texturing" }));
-        let mut result = dispatch_public_action(app, start_action, start_args).await;
+        let mut result = dispatch_public_action(app, start_action, start_args);
         let mut stages = Vec::new();
         for _ in 0..MAX_RECONSTRUCTION_TICKS {
             assert_eq!(result.mutations.len(), 1, "every active reconstruction handler turn emits exactly one durable mutation");
-            let snapshot = app.snapshot().await.expect("worker-applied Remodeling snapshot");
+            let snapshot = app.snapshot().expect("worker-applied Remodeling snapshot");
             if !stages.contains(&snapshot.job.stage) {
                 stages.push(snapshot.job.stage);
             }
             let next = result.requested_effects.into_iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == ADVANCE_RECONSTRUCTION_ACTION_ID));
             let Some(next) = next else { return (snapshot, stages) };
-            result = dispatch_continuation(app, next).await;
+            result = dispatch_continuation(app, next);
         }
         panic!("public reconstruction did not reach a terminal stage")
     }
@@ -1120,11 +1120,11 @@ mod tests {
             .collect()
     }
 
-    async fn public_app_with_inputs(document: &str) -> RemodelingApp {
+    fn public_app_with_inputs(document: &str) -> RemodelingApp {
         let mut app = app_with_registry().await;
         for index in 0..4 {
-            let payload = crate::editor::remodeling::commands::import_frame_payload::checker_data_url(24, 24, 3).await;
-            dispatch_public_action(&mut app, "importFramePayload", Some(json!({ "payload": payload, "name": format!("{document}-frame-{index}.png"), "index": index }))).await;
+            let payload = crate::editor::remodeling::commands::import_frame_payload::checker_data_url(24, 24, 3);
+            dispatch_public_action(&mut app, "importFramePayload", Some(json!({ "payload": payload, "name": format!("{document}-frame-{index}.png"), "index": index })));
         }
         app
     }
@@ -1148,8 +1148,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_frame_ingestion_decodes_owned_leaves_without_whole_asset_reassembly() {
-        let app = public_app_with_inputs("snapshot-leaves").await;
-        let snapshot = app.snapshot().await.expect("snapshot with durable input");
+        let app = public_app_with_inputs("snapshot-leaves");
+        let snapshot = app.snapshot().expect("snapshot with durable input");
         let frame = snapshot.streams.first().and_then(|stream| stream.frames.first()).expect("durable frame");
         let expected_identity = snapshot.assets.get(&frame.asset_id).expect("durable asset handle").child_id.clone();
         let mut ingestion = frame_ingestion(&snapshot, frame).expect("active snapshot-to-ingestion path");
@@ -1203,9 +1203,9 @@ mod tests {
     async fn public_action_bus_workers_replay_every_start_action_from_genesis_after_total_process_loss() {
         for start_action in ["runReconstruction", "runStage", "retryStage"] {
             forget_all_remodeling_process_state();
-            let mut app = public_app_with_inputs(start_action).await;
+            let mut app = public_app_with_inputs(start_action);
 
-            let (terminal, stages) = drive_public_reconstruction(&mut app, start_action).await;
+            let (terminal, stages) = drive_public_reconstruction(&mut app, start_action);
             assert_eq!(terminal.job.stage, ReconstructionStage::Done, "{start_action} reaches the real terminal commit");
             for required in [
                 ReconstructionStage::Ingesting,
@@ -1245,7 +1245,7 @@ mod tests {
             let rows = typed_rows(&files.ops);
             assert!(!rows.is_empty());
             for row in &rows {
-                let mutation: RemodelingMutation = protocol::OpText::parse_op(row).await.expect("typed Remodeling OpText row");
+                let mutation: RemodelingMutation = protocol::OpText::parse_op(row).expect("typed Remodeling OpText row");
                 assert_durable_chunk_ceiling(&mutation);
             }
 
@@ -1256,7 +1256,7 @@ mod tests {
             for row in &rows {
                 replayed.ingest_operations_text(row).await.expect("one typed row replayed from genesis");
             }
-            let replayed_snapshot = replayed.snapshot().await.expect("replayed snapshot");
+            let replayed_snapshot = replayed.snapshot().expect("replayed snapshot");
             assert_eq!(replayed_snapshot.results.mesh.mesh, terminal_handle);
             assert_eq!(replayed_snapshot.results.sparse.as_ref().expect("replayed sparse").points.to_f32_vec_from(&replayed_snapshot.durable_artifacts), terminal_sparse);
             assert_eq!(durable_input_assets(&replayed_snapshot), terminal_inputs);
@@ -1267,7 +1267,7 @@ mod tests {
             forget_all_remodeling_process_state();
             let mut restored = app_with_registry().await;
             restored.load_document_pack(&checkpoint).await.expect("restore checkpointed terminal document");
-            let restored_snapshot = restored.snapshot().await.expect("restored terminal snapshot");
+            let restored_snapshot = restored.snapshot().expect("restored terminal snapshot");
             assert_eq!(restored_snapshot.results.mesh.mesh, terminal_handle);
             assert_eq!(restored_snapshot.results.sparse.as_ref().expect("restored sparse").points.to_f32_vec_from(&restored_snapshot.durable_artifacts), terminal_sparse);
             assert_eq!(durable_input_assets(&restored_snapshot), terminal_inputs);
@@ -1278,32 +1278,32 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn public_workers_isolate_two_documents_and_reject_cancelled_stale_aba_continuations() {
         forget_all_remodeling_process_state();
-        let mut document_a = public_app_with_inputs("document-a").await;
-        let mut document_b = public_app_with_inputs("document-b").await;
+        let mut document_a = public_app_with_inputs("document-a");
+        let mut document_b = public_app_with_inputs("document-b");
 
-        let start_a = dispatch_public_action(&mut document_a, "runReconstruction", None).await;
+        let start_a = dispatch_public_action(&mut document_a, "runReconstruction", None);
         let old_a = start_a.requested_effects.into_iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == ADVANCE_RECONSTRUCTION_ACTION_ID)).expect("document A continuation");
         let (old_generation, old_job) = continuation_identity(&old_a);
 
-        let (terminal_b, _) = drive_public_reconstruction(&mut document_b, "runReconstruction").await;
+        let (terminal_b, _) = drive_public_reconstruction(&mut document_b, "runReconstruction");
         assert_eq!(terminal_b.job.stage, ReconstructionStage::Done, "document B completes while document A remains admitted");
 
-        dispatch_public_action(&mut document_a, "cancelReconstruction", None).await;
-        let cancelled_a = document_a.snapshot().await.expect("cancelled document A");
+        dispatch_public_action(&mut document_a, "cancelReconstruction", None);
+        let cancelled_a = document_a.snapshot().expect("cancelled document A");
         assert!(cancelled_a.job.cancel_requested);
-        let restart_a = dispatch_public_action(&mut document_a, "runReconstruction", None).await;
+        let restart_a = dispatch_public_action(&mut document_a, "runReconstruction", None);
         let new_a = restart_a.requested_effects.into_iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == ADVANCE_RECONSTRUCTION_ACTION_ID)).expect("document A replacement continuation");
         let (new_generation, new_job) = continuation_identity(&new_a);
         assert_ne!(new_generation, old_generation, "generation identity is never reused after cancellation");
         assert_ne!(new_job, old_job, "job identity is never reused after cancellation");
 
-        let stale = dispatch_continuation(&mut document_a, old_a).await;
+        let stale = dispatch_continuation(&mut document_a, old_a);
         assert!(stale.mutations.is_empty());
         assert!(stale.requested_effects.is_empty());
-        let live_a = document_a.snapshot().await.expect("live document A replacement");
+        let live_a = document_a.snapshot().expect("live document A replacement");
         assert_eq!(live_a.job.id, new_job, "stale ABA delivery cannot overwrite the replacement job");
-        assert_eq!(terminal_b, document_b.snapshot().await.expect("document B remains terminal"));
-        dispatch_public_action(&mut document_a, "cancelReconstruction", None).await;
+        assert_eq!(terminal_b, document_b.snapshot().expect("document B remains terminal"));
+        dispatch_public_action(&mut document_a, "cancelReconstruction", None);
     }
 
     #[test]
@@ -1402,8 +1402,8 @@ mod tests {
         store_session(42, test_session("live", RequestedStage::DenseStereo));
         let mut scene = crate::artifacts::remodeling::default_remodeling_scene();
         scene.job.id = "live".into();
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let view = ArtifactView::new(&scene, &history).await;
+        let history = semio_framework_plugin::HistoryView::empty();
+        let view = ArtifactView::new(&scene, &history);
         let stale =
             advance_reconstruction(&AdvanceReconstruction { generation: 41, job_id: "old".into(), requested_stage: "matching-features".into(), phase: "terminal-sparse".into(), stream_index: 0, frame_index: 0, terminal_cursor: 0, tick: 0 }, &view)
                 .expect("stale step");
@@ -1460,10 +1460,10 @@ mod tests {
         let retained_b = take_session(generation_b).expect("cancelling document A preserves document B");
         put_session(generation_b, retained_b);
 
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let view_a = ArtifactView::new(&scene_a, &history).await;
+        let history = semio_framework_plugin::HistoryView::empty();
+        let view_a = ArtifactView::new(&scene_a, &history);
         let config = RemodelingConfig::default();
-        let stale = handle_advance(&stale_payload_a, &view_a, &ConfigView { snapshot: &config }).await.expect("stale handler delivery");
+        let stale = handle_advance(&stale_payload_a, &view_a, &ConfigView { snapshot: &config }).expect("stale handler delivery");
         assert!(stale.artifact_mutations.is_empty());
         assert!(stale.effects.is_empty());
         assert!(take_session(generation_b).is_some(), "stale document A delivery cannot cancel document B");

@@ -3,7 +3,8 @@
 use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::raster_scene;
-use semio_framework_plugin::{build_paint_2d_scene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_WINDOW_NAVIGATOR: &str = "raster-navigator";
@@ -35,8 +36,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &RasterDocument, config: &RasterConfig) -> UiNode {
-    build_paint_2d_scene(RASTER_PLAY_SURFACE_NAVIGATOR, crate::editor::raster::RASTER_PLAY_CONTROLLER_ID, raster_scene(document, config, config.active_utility_id.as_str(), "navigator"))
+/// 🎬️ Same `Paint2dScene` payload as the composite window under this window's own surface id — encoded
+/// behind the semantic surface contract (see the composite window's note on the dropped controller id).
+pub fn render(document: &RasterDocument, config: &RasterConfig) -> UiAssemblyResult<BuiltNode> {
+    scene_surface(RASTER_PLAY_SURFACE_NAVIGATOR, ContractSurfaceKind::Paint2d, &raster_scene(document, config, config.active_utility_id.as_str(), "navigator"))
 }
 //#endregion 🔖️Render
 

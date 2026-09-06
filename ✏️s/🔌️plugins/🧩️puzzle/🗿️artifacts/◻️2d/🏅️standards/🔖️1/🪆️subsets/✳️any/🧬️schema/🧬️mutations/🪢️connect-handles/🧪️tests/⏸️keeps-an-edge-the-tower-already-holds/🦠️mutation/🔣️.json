@@ -1,0 +1,17 @@
+{
+  "mutation": "connectHandles",
+  "id": "feba8972-394f-4ecc-923c-9f1701881fd0",
+  "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d0",
+  "target": "14507529-de04-4eaa-bf7d-beddca7d46e9:link",
+  "edgeKind": null,
+  "gap": 0.0,
+  "shift": 0.0,
+  "rise": 0.0,
+  "rotation": 0.0,
+  "turn": 0.0,
+  "tilt": 0.0,
+  "x": 0.0,
+  "y": 0.0,
+  "sourceTip": null,
+  "targetTip": null
+}

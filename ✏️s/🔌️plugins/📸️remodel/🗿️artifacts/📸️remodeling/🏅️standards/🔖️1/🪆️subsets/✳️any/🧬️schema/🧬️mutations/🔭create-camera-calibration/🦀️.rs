@@ -1,11 +1,11 @@
 //! 🔭 Remodeling mutation — `CreateCameraCalibration`: brings a new id-keyed camera calibration record
 //! into existence (used when `EditCalibration`/`CalibrateCameras` targets a camera id not yet present).
 
-use crate::artifacts::remodeling::{CameraCalibration, RemodelingSnapshot};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{CameraCalibration, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔭 `create-camera-calibration` payload — full initial `CameraCalibration` record (the properties

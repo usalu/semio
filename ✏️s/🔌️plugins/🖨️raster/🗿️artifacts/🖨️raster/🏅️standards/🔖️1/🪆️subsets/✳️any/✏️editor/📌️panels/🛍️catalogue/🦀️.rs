@@ -1,6 +1,7 @@
 //! 🛍️ Raster play app panel — the layer-kind catalogue.
 
 use crate::editor::raster::terminology::RasterPlayLabels;
+use crate::editor::raster::ui_label;
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
@@ -22,10 +23,10 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub fn render(labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let rows = crate::editor::raster::ui_node_list([
-        tree_item_desc("raster-catalogue.pixel", labels.catalogue_pixel, None)?,
-        tree_item_desc("raster-catalogue.group", labels.catalogue_group, None)?,
-        tree_item_desc("raster-catalogue.adjustment", labels.catalogue_adjustment, None)?,
+        tree_item_desc("raster-catalogue.pixel", ui_label(labels.catalogue_pixel.as_str())?, None),
+        tree_item_desc("raster-catalogue.group", ui_label(labels.catalogue_group.as_str())?, None),
+        tree_item_desc("raster-catalogue.adjustment", ui_label(labels.catalogue_adjustment.as_str())?, None),
     ])?;
-    PanelTreeBuilder::new("raster-catalogue")?.section("raster-catalogue.layer-kinds", Some(labels.layer_kinds.into()), true, rows)?.build()
+    PanelTreeBuilder::new("raster-catalogue")?.section("raster-catalogue.layer-kinds", Some(ui_label(labels.layer_kinds.as_str())?), true, rows)?.build()
 }
 //#endregion 🔖️Render

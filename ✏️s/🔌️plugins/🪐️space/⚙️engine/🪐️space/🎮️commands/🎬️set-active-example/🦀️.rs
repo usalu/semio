@@ -5,7 +5,6 @@ use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "set-active-example")]
 pub struct SetActiveExample {
@@ -40,16 +39,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn open_studio_loads_created_empty_catalog_studio() {
-        use semio_framework_os::{create_os_space, MemoryBackbonePort, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
+        use semio_framework_os::{create_os_space, MemoryBackbonePort, OsBackbonePorts, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
         use std::sync::Arc;
-        // 🧬️ O1 — concrete `store::BackbonePorts`, not `dyn OsBackbonePort`: `create_os_space` and
-        // `register_studio_port_for_test` both take `Arc<dyn OsBackbonePort>` BY VALUE, so
-        // `Arc<BackbonePorts>` unsizes at each call site.
-        let port: Arc<store::BackbonePorts> = Arc::new(store::BackbonePorts::Memory(MemoryBackbonePort::default()));
+        let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::Memory(MemoryBackbonePort::default())));
         let owner = SpaceUser { id: "tester".into(), name: "Tester".into(), avatar: None, role: SpaceRole::Author };
         let entry = create_os_space("Opened Empty", SpaceKind::Atelier, SpaceVisibility::Private, owner, port.clone()).expect("create");
-        crate::register_studio_port_for_test(&entry.id, port);
-        let empty = empty_workflow_snapshot();
+        crate::register_studio_port_for_test(&entry.id, port).await;
+        let empty = empty_workflow_snapshot().await;
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: entry.id.clone() })).await.expect("handle");
         assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId { space_id: Some(entry.id) }));
@@ -60,7 +56,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn open_studio_unknown_id_returns_not_found() {
-        let empty = empty_workflow_snapshot();
+        let empty = empty_workflow_snapshot().await;
         let config = SpaceConfig::default();
         let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "unknown-studio-id".into() })).await.err().expect("not found");
         assert_eq!(err.code.0, "s.space.not-found");
@@ -75,14 +71,14 @@ mod tests {
                 _ => None,
             })
             .expect("load document");
-        let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(pack, spr).expect("parse document pack");
+        let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(pack, spr).await.expect("parse document pack");
         let id = parsed.envelope.id.clone();
         (parsed.snapshot, id)
     }
 
     #[semio_framework_async_macros::async_test]
     async fn open_studio_demo_explicit_loads_demo_fixture() {
-        let empty = empty_workflow_snapshot();
+        let empty = empty_workflow_snapshot().await;
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "demo".into() })).await.expect("handle");
         let (projection, id) = load_document_snapshot(&emit);
@@ -109,7 +105,7 @@ mod tests {
                 _ => None,
             })
             .expect("navigate");
-        let empty = empty_workflow_snapshot();
+        let empty = empty_workflow_snapshot().await;
         let config = SpaceConfig::default();
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: space_id.clone() })).await.expect("handle");
         let (projection, id) = load_document_snapshot(&emit);
@@ -141,12 +137,12 @@ mod tests {
         assert!(uri.starts_with("/spaces/"), "uri={uri}");
         assert!(!uri.ends_with("/demo") && !uri.ends_with("/default"), "uri={uri}");
         let space_id = uri.trim_start_matches("/spaces/");
-        let document = crate::resolve_studio_document(space_id).expect("created studio");
+        let document = crate::resolve_studio_document(space_id).await.expect("created studio");
         assert_eq!(document.name, "Fresh Studio");
         assert!(document.backbone.is_none(), "ephemeral studio must not attach backbone");
         assert!(document.vcs.initial_snapshot.collections.is_empty());
 
-        let empty = empty_workflow_snapshot();
+        let empty = empty_workflow_snapshot().await;
         let studio_doc = ArtifactView::new(&empty, &history);
         let studio_config = SpaceConfig::default();
         let studio_cfg = ConfigView { snapshot: &studio_config };

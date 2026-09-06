@@ -21,7 +21,7 @@ pub struct SetMeshParams {
     pub self_intersection_check: bool,
 }
 
-pub async fn handle(payload: &SetMeshParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetMeshParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_mesh_params(MeshParams {
         tsdf_voxel_size_mm: payload.tsdf_voxel_size_mm,
         tsdf_truncation_mm: payload.tsdf_truncation_mm,

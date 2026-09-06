@@ -8,20 +8,21 @@
   ],
   "properties": {
     "camera": {
-      "title": "CameraCalibration",
       "type": "object",
+      "title": "CameraCalibration",
       "additionalProperties": false,
       "required": [
-        "cx",
-        "cy",
-        "distortion",
-        "fx",
-        "fy",
         "id",
         "label",
-        "locked",
         "model",
-        "skew"
+        "fx",
+        "fy",
+        "cx",
+        "cy",
+        "skew",
+        "distortion",
+        "rmsReprojectionPx",
+        "locked"
       ],
       "properties": {
         "id": {
@@ -34,30 +35,40 @@
           "type": "string"
         },
         "fx": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "fy": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "cx": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "cy": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "skew": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "distortion": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "number",
+            "format": "float"
           },
           "minItems": 5,
           "maxItems": 5
         },
         "rmsReprojectionPx": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float"
         },
         "locked": {
           "type": "boolean"

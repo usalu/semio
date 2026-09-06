@@ -39,6 +39,6 @@ fn empty_result() -> RemodelingMesh {
 #[dsl(keyword = "clear-mesh-result")]
 pub struct ClearMeshResult {}
 
-pub async fn handle(_payload: &ClearMeshResult, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &ClearMeshResult, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![replace_mesh_result(Box::new(empty_result()))]))
 }

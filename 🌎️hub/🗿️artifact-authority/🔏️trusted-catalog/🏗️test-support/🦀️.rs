@@ -6,7 +6,7 @@
 //! [`VerifiedGisMapArtifactBindingV1`] the hub inference runtime requires. It goes through the exact
 //! production loader — no second, divergent trust check exists — and it binds real
 //! `semio_s_plugin_gis` descriptor, service and native-codec metadata. Only the component bytes are
-//! synthetic: this profile never executes a wasm component, and it must never be offered as evidence
+//! synthetic, as are the browser actor bytes: this profile never executes either, and must never be offered as evidence
 //! that one was executed.
 
 use std::path::{Path, PathBuf};
@@ -88,9 +88,7 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
     descriptor.hashes.wasm_sha256 = component_sha256.clone();
     descriptor.hashes.core_wasm_sha256 = component_sha256.clone();
     descriptor.hashes.descriptor_sha256.clear();
-    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(
-        &to_dsl_value(&descriptor).map_err(|error| AuthorityError::Catalog(format!("GIS descriptor self-hash projection failed: {error}")))?,
-    )));
+    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(|error| AuthorityError::Catalog(format!("GIS descriptor self-hash projection failed: {error}")))?)));
     let descriptor_bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(|error| AuthorityError::Catalog(format!("GIS descriptor projection failed: {error}")))?);
     let native_codecs: Vec<_> = semio_s_plugin_gis::native_codecs::native_codec_factory_receipts()
         .map_err(|error| AuthorityError::Catalog(format!("GIS native codec receipts unavailable: {error:?}")))?
@@ -100,17 +98,9 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
             serde_json::json!({ "artifactKind": identity.artifact_kind, "artifactSchema": identity.schema, "packSchemaHash": hex_lower(&identity.pack_schema_hash) })
         })
         .collect();
-    let map_pack_schema_hash = native_codecs
-        .iter()
-        .find(|codec| codec["artifactKind"] == "s.gis.gismap")
-        .ok_or_else(|| AuthorityError::Catalog("GIS receipts declare no s.gis.gismap codec".to_owned()))?["packSchemaHash"]
-        .clone();
-    let editor = descriptor
-        .manifest
-        .apps
-        .iter()
-        .find(|app| app.role == semio_framework::AppRole::Editor && app.dialect.artifact_kind == "s.gis.gismap")
-        .ok_or_else(|| AuthorityError::Catalog("GIS assembly declares no s.gis.gismap editor".to_owned()))?;
+    let map_pack_schema_hash = native_codecs.iter().find(|codec| codec["artifactKind"] == "s.gis.gismap").ok_or_else(|| AuthorityError::Catalog("GIS receipts declare no s.gis.gismap codec".to_owned()))?["packSchemaHash"].clone();
+    let editor =
+        descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor && app.dialect.artifact_kind == "s.gis.gismap").ok_or_else(|| AuthorityError::Catalog("GIS assembly declares no s.gis.gismap editor".to_owned()))?;
     let window_kind = editor.window_kinds.first().ok_or_else(|| AuthorityError::Catalog("GIS Map editor declares no window kind".to_owned()))?;
     let package = serde_json::json!({ "pluginId": descriptor.manifest.plugin_id, "packageId": descriptor.package_id, "version": descriptor.manifest.version });
     let target = serde_json::json!({
@@ -128,6 +118,7 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
     std::fs::create_dir_all(root).map_err(|error| AuthorityError::Catalog(format!("test-support profile directory unavailable: {error}")))?;
     std::fs::write(root.join("component.wasm"), SYNTHETIC_COMPONENT).map_err(|error| AuthorityError::Catalog(format!("component write failed: {error}")))?;
     std::fs::write(root.join("descriptor.semio"), &descriptor_bytes).map_err(|error| AuthorityError::Catalog(format!("descriptor write failed: {error}")))?;
+    std::fs::write(root.join("closed-actor.mjs"), SYNTHETIC_COMPONENT).map_err(|error| AuthorityError::Catalog(format!("synthetic actor write failed: {error}")))?;
     let mut bundle = serde_json::json!({
         "schemaVersion": 2,
         "profiles": [{
@@ -141,6 +132,11 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
             "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [],
             "component": { "path": "component.wasm", "byteLength": SYNTHETIC_COMPONENT.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
             "descriptor": { "path": "descriptor.semio", "byteLength": descriptor_bytes.len(), "sha256": hex_lower(&Sha256::digest(&descriptor_bytes)) },
+            "browserActor": {
+                "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.27.0-jspi.v1",
+                "path":"closed-actor.mjs", "byteLength":SYNTHETIC_COMPONENT.len(), "sha256":component_sha256,
+                "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":hex_lower(&Sha256::digest(&descriptor_bytes)), "policySha256":"41".repeat(32), "importInterfaces":[]
+            },
             "nativeCodecs": native_codecs, "openTargets": [target]
         }]
     });
@@ -149,8 +145,7 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
     let regenerated: super::Bundle = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("test-support bundle shape invalid: {error}")))?;
     bundle["profiles"][0]["generationId"] = super::trusted_profile_generation(&regenerated, &regenerated.profiles[0])?.into();
     let bundle_path = root.join("trusted-catalog.json");
-    std::fs::write(&bundle_path, serde_json::to_vec_pretty(&bundle).map_err(|error| AuthorityError::Catalog(format!("bundle encode failed: {error}")))?)
-        .map_err(|error| AuthorityError::Catalog(format!("bundle write failed: {error}")))?;
+    std::fs::write(&bundle_path, serde_json::to_vec_pretty(&bundle).map_err(|error| AuthorityError::Catalog(format!("bundle encode failed: {error}")))?).map_err(|error| AuthorityError::Catalog(format!("bundle write failed: {error}")))?;
     let control = BuilderControl;
     let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
     let catalog = Arc::new(TrustedCatalogLoader::load(&bundle_path, GIS_MAP_TEST_PROFILE_ID, &NativeCodecProviderSetV1::linked(), &context).await?);
@@ -164,7 +159,5 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
 pub fn unique_profile_root(label: &str) -> PathBuf {
     static SEQUENCE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let sequence = SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    std::env::var_os("SEMIO_TEST_ARTIFACT_DIR")
-        .map_or_else(std::env::temp_dir, PathBuf::from)
-        .join(format!("semio-hub-gis-map-{label}-{}-{sequence}", std::process::id()))
+    std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map_or_else(std::env::temp_dir, PathBuf::from).join(format!("semio-hub-gis-map-{label}-{}-{sequence}", std::process::id()))
 }

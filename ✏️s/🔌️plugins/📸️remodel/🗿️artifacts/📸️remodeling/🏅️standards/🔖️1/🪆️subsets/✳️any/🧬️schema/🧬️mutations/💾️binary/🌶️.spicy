@@ -1,4 +1,21 @@
-module Stdio_json_mutations;
-type Document = unit {
-    payload: bytes &eod;
+module Remodeling_op;
+
+# ⚡️ One encoded RemodelingMutation (dsl::variants_binary::encode_op): format byte, LEB128 variant
+# ordinal, then os_pack::encode_record_body of that variant's payload record.
+
+public type Frame = unit {
+    format:  uint8;
+    ordinal: bytes &until_including=b"\x00" &convert=$$;   # LEB128, high bit clear ends it
+    body:    RecordBody;
+};
+
+type RecordBody = unit {
+    symbol_count: uint64 &convert=$$;
+    symbols:      Symbol[self.symbol_count];
+    fields:       bytes &eod;
+};
+
+type Symbol = unit {
+    len:  uint64 &convert=$$;
+    text: bytes &size=self.len;
 };

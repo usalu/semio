@@ -3,8 +3,8 @@
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
-use crate::editor::raster::{mask_row_id, RASTER_TREE_PREFIX};
-use semio_framework_plugin::{tree_item_desc, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText};
+use crate::editor::raster::{mask_row_id, ui_label, RASTER_TREE_PREFIX};
+use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText};
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_BODY_MASKS: &str = "raster.play.masks";
@@ -21,7 +21,7 @@ pub fn definition() -> PanelTabDefinition {
 fn collect_masks(layer: &RasterLayerNode, items: &mut UiFixedList<BuiltNode>, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<()> {
     if let RasterLayerNode::Pixel { id, name, mask, .. } | RasterLayerNode::Group { id, name, mask, .. } = layer {
         if mask.as_ref().is_some_and(|mask| mask.enabled) {
-            let mut item = tree_item_desc(mask_row_id(id), Label::data(format!("{name} {}", labels.mask_suffix.as_str())), Some("mask".into()))?;
+            let mut item = tree_item_desc(mask_row_id(id), ui_label(format!("{name} {}", labels.mask_suffix.as_str()))?, Some("mask".into()))?;
             if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
                 props.icon = Some(UiText::try_from_str("scan").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "raster mask icon admission failed"))?);
             }
@@ -47,6 +47,6 @@ pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &Raste
     for layer in &document.layers {
         collect_masks(layer, &mut items, labels)?;
     }
-    PanelTreeBuilder::new(RASTER_TREE_PREFIX)?.section_or_placeholder("raster-play-masks", Some(labels.masks.into()), true, items, labels.no_masks)?.build()
+    PanelTreeBuilder::new(RASTER_TREE_PREFIX)?.section_or_placeholder("raster-play-masks", Some(ui_label(labels.masks.as_str())?), true, items, ui_label(labels.no_masks.as_str())?)?.build()
 }
 //#endregion 🔖️Render

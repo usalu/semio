@@ -291,6 +291,12 @@ pub use engine::{SurfaceLane, Ui, UiFrameStep, UiLayoutStep};
 pub use gpu::schedule_frame;
 #[cfg(feature = "wgpu-engine")]
 pub use gpu::GpuContext;
+/// 🧹️ `PreparedGpuPresentCursor` is the abandonment-owner handle the OS renderer's own presenter
+/// holds (`🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs:14178`) and drains (`:15054`,
+/// `close_abandoned_step`) — it was reachable only as `gpu::PreparedGpuPresentCursor`, so both call
+/// sites failed `E0425`/`E0433` on every target. Same feature gate as `mod gpu` itself.
+#[cfg(feature = "wgpu-engine")]
+pub use gpu::PreparedGpuPresentCursor;
 #[cfg(all(feature = "wgpu-engine", target_arch = "wasm32", not(target_os = "wasi")))]
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]
@@ -301,8 +307,9 @@ pub use paint::{paint_retained_glyph_step, RetainedGlyphCursor, RetainedGlyphSte
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use prepared::OffscreenPresentToken;
 pub use prepared::{
-    PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected, PreparedRasterReservation, PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput,
-    PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload, PreparedRenderUsage, RenderDirective, UiPresentToken, PREPARED_RASTER_PAGE_BYTES,
+    PreparedAtlasPages, PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected, PreparedRasterReservation, PreparedRenderEviction, PreparedRenderGate,
+    PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload,
+    PreparedRenderUsage, RenderDirective, UiPresentToken, PREPARED_RASTER_PAGE_BYTES,
 };
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket
 // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`; previously relocated

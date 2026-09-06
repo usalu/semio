@@ -1,15 +1,26 @@
-//! remodeling -> stl
-use crate::artifacts::remodeling::schema::snapshot::RemodelingSnapshot;
-use semio_s_plugin_stdio::artifacts::stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
+use crate::artifacts::remodeling::standards::v1::subsets::any::io as io_root;
+use crate::artifacts::remodeling::RemodelingSnapshot;
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{resolve_ready, ArtifactSerializer};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_ascii;
 
-pub async fn register() {}
+/// 🎯️ The foreign dialect this leaf writes.
+pub const STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
 
-pub async fn serialize(snapshot: &RemodelingSnapshot) -> Result<StlSnapshot, store::TextError> {
-    let _ = STDIO_STL_DOCUMENT_SCHEMA;
-    let bytes = <RemodelingSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <StlSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
-}
+/// 🧵️ `s.remodel.remodeling@1/*` → `s.stdio.stl@ascii/*` — `results.mesh` as an ASCII triangle soup
+/// through stdio's real `SemioMeshToStl` serializer + `stl::engine::encode_stl_ascii`. STL carries no
+/// vertex sharing, colors, uvs or names, so this is `IoFidelity::Lossy` even for the mesh alone.
+pub struct RemodelingIntoStl;
 
-pub async fn serialize_bytes(snapshot: &RemodelingSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<StlSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+impl Serializer<RemodelingSnapshot> for RemodelingIntoStl {
+    const INTO: Dialect = STL_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    async fn serialize(from: &RemodelingSnapshot) -> IoResult<IoPayload> {
+        let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError { message: format!("remodeling→stl: nothing to export: {reason}"), diagnostics: Vec::new() })?;
+        let stl = resolve_ready(SemioMeshToStl::serialize(&semio)).map_err(|error| IoError { message: format!("remodeling→stl: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(IoPayload::Text(encode_stl_ascii(&stl))))
+    }
 }

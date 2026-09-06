@@ -3,7 +3,11 @@
 
 use crate::artifacts::remodeling::RemodelingSnapshot;
 use crate::editor::remodeling::config::RemodelingConfig;
-use semio_framework_plugin::{build_table_scene, LocalizedLabel, SurfaceKind, TableScene, UiNode, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TableScene, UiAssemblyResult, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+// 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
+// (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
+// different types, so both are imported explicitly.
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -13,7 +17,7 @@ const REMODELING_PLAY_SURFACE_REPORT: &str = "remodeling.play.report";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: REMODELING_PLAY_WINDOW_REPORT.into(),
         label: LocalizedLabel::native("Report", "Bericht"),
@@ -36,7 +40,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Scene
 /// 📊️ The `(columns_json, rows_json)` pair for one dataset name; any unknown name falls back to the
 /// frame list.
-async fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String) {
+fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String) {
     let (columns, rows): (Vec<Value>, Vec<Value>) = match table {
         "cameras" => (
             vec![json!({ "id": "id", "label": "Id" }), json!({ "id": "model", "label": "Model" }), json!({ "id": "fx", "label": "fx" }), json!({ "id": "fy", "label": "fy" }), json!({ "id": "rms", "label": "RMS (px)" })],
@@ -67,9 +71,9 @@ async fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, 
     (serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()))
 }
 
-pub async fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> UiNode {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> UiAssemblyResult<BuiltNode> {
     let (columns_json, rows_json) = report_table_json(scene, &config.report_table);
-    build_table_scene(REMODELING_PLAY_SURFACE_REPORT, crate::editor::remodeling::REMODELING_PLAY_APP_ID, TableScene::base(columns_json, rows_json))
+    semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_REPORT, ContractSurfaceKind::Table, &TableScene::base(columns_json, rows_json))
 }
 //#endregion 🔖️Scene
 
@@ -93,9 +97,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn switching_the_selected_table_changes_the_rendered_columns() {
-        let mut app = app();
-        dispatch(&mut app, RemodelingCommand::SetReportTable(SetReportTable { table: "gcps".into() }));
-        assert!(render_body(&mut app, REMODELING_PLAY_BODY_REPORT).contains("Observations"));
+        let mut app = app().await;
+        dispatch(&mut app, RemodelingCommand::SetReportTable(SetReportTable { table: "gcps".into() })).await;
+        assert!(render_body(&mut app, REMODELING_PLAY_BODY_REPORT).await.contains("Observations"));
     }
 }
 //#endregion 🧪️Tests

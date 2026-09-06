@@ -13,11 +13,12 @@ pub fn definition() -> ModeDefinition {
     ModeDefinition { id: ENERGY_MODEL_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-/// 🪟️ One column of the split layout: a stack holding a single window kind.
+/// 🪟️ One column of the split layout: a stack holding a single window kind. `size` is the column's
+/// share of the row — three equal thirds, not three halves.
 fn model_window_stack(window_kind_id: &str, title: &str) -> WindowLayoutChild {
     WindowLayoutChild::Stack(WindowLayoutStackNode {
         kind: "stack".into(),
-        size: Some(0.5),
+        size: Some(1.0 / 3.0),
         active_window_kind_id: None,
         children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
     })

@@ -24,21 +24,28 @@ pub(crate) struct WalWriterKey {
 }
 
 impl WalWriterPermit {
-    pub(crate) fn key(&self) -> WalWriterKey { self.key }
-    pub(crate) fn document(&self) -> &DbIoText { &self.document }
+    pub(crate) fn key(&self) -> WalWriterKey {
+        self.key
+    }
+    pub(crate) fn document(&self) -> &DbIoText {
+        &self.document
+    }
 
     pub fn release(mut self) -> release::WalWriterRelease {
-        self.request_release();
         self.release.take().expect("only a backend-bound writer exposes retained release")
     }
 
     fn request_release(&self) {
-        if self.release.is_some() && release::request(self.key) { release::request_controller(self.key.backend); }
+        if self.release.is_some() && release::request(self.key) {
+            release::request_controller(self.key.backend);
+        }
     }
 }
 
 impl Drop for WalWriterPermit {
-    fn drop(&mut self) { self.request_release(); }
+    fn drop(&mut self) {
+        self.request_release();
+    }
 }
 
 struct WalWriterEntry<G> {
@@ -56,8 +63,12 @@ pub(crate) trait WalWriterGuard {
 }
 
 impl WalWriterGuard for () {
-    fn close_step(&mut self) -> Result<bool, DbError> { Ok(false) }
-    fn terminal_is_empty(&self) -> bool { true }
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        Ok(false)
+    }
+    fn terminal_is_empty(&self) -> bool {
+        true
+    }
 }
 
 /// 🗃️ Executor-owned bounded slots; a guard remains retained until explicit release.
@@ -78,27 +89,53 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
     }
 
     pub(crate) fn for_backend(backend: DbIoBackendControl) -> Self {
-        Self { backend: Some(backend), signalled: true, next_generation: 1, close_cursor: 0, entries: std::array::from_fn(|_| None), #[cfg(test)] release_failures: 0 }
+        Self {
+            backend: Some(backend),
+            signalled: true,
+            next_generation: 1,
+            close_cursor: 0,
+            entries: std::array::from_fn(|_| None),
+            #[cfg(test)]
+            release_failures: 0,
+        }
     }
 
     pub(crate) fn unbound() -> Self {
-        Self { backend: None, signalled: true, next_generation: 1, close_cursor: 0, entries: std::array::from_fn(|_| None), #[cfg(test)] release_failures: 0 }
+        Self {
+            backend: None,
+            signalled: true,
+            next_generation: 1,
+            close_cursor: 0,
+            entries: std::array::from_fn(|_| None),
+            #[cfg(test)]
+            release_failures: 0,
+        }
     }
 
     pub(crate) fn bind(&mut self, backend: DbIoBackendControl) -> Result<(), DbError> {
-        if self.backend.is_some() { return Err(DbError::Internal("WAL writer table bound twice".to_string())); }
+        if self.backend.is_some() {
+            return Err(DbError::Internal("WAL writer table bound twice".to_string()));
+        }
         self.backend = Some(backend);
         Ok(())
     }
 
-    fn backend(&self) -> DbIoBackendControl { self.backend.expect("writer admission requires a bound backend") }
+    fn backend(&self) -> DbIoBackendControl {
+        self.backend.expect("writer admission requires a bound backend")
+    }
 
     #[cfg(test)]
-    pub(crate) fn fail_next_release(&mut self) { self.release_failures = self.release_failures.saturating_add(1); }
+    pub(crate) fn fail_next_release(&mut self) {
+        self.release_failures = self.release_failures.saturating_add(1);
+    }
 
     pub(crate) fn acquire_with(&mut self, document: &DbIoText, guard: impl FnOnce() -> Result<G, DbError>) -> Result<WalWriterPermit, DbError> {
-        if document.as_str().is_empty() { return Err(DbError::InvalidArgument("empty WAL writer document".to_string())); }
-        if self.entries.iter().flatten().any(|entry| entry.document == *document) { return Err(DbError::Conflict("WAL document already has a writer".to_string())); }
+        if document.as_str().is_empty() {
+            return Err(DbError::InvalidArgument("empty WAL writer document".to_string()));
+        }
+        if self.entries.iter().flatten().any(|entry| entry.document == *document) {
+            return Err(DbError::Conflict("WAL document already has a writer".to_string()));
+        }
         let slot = self.entries.iter().position(Option::is_none).ok_or(DbError::LimitExceeded("WAL writer capacity"))?;
         let next = self.next_generation.checked_add(1).ok_or(DbError::LimitExceeded("WAL writer generation"))?;
         let generation = self.next_generation;
@@ -112,10 +149,18 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
 
     #[cfg(test)]
     pub(crate) fn acquire(&mut self, document: &DbIoText, guard: G) -> Result<WalWriterPermit, (DbError, G)> {
-        if document.as_str().is_empty() { return Err((DbError::InvalidArgument("empty WAL writer document".to_string()), guard)); }
-        if self.entries.iter().flatten().any(|entry| entry.document == *document) { return Err((DbError::Conflict("WAL document already has a writer".to_string()), guard)); }
-        let Some(slot) = self.entries.iter().position(Option::is_none) else { return Err((DbError::LimitExceeded("WAL writer capacity"), guard)); };
-        let Some(next) = self.next_generation.checked_add(1) else { return Err((DbError::LimitExceeded("WAL writer generation"), guard)); };
+        if document.as_str().is_empty() {
+            return Err((DbError::InvalidArgument("empty WAL writer document".to_string()), guard));
+        }
+        if self.entries.iter().flatten().any(|entry| entry.document == *document) {
+            return Err((DbError::Conflict("WAL document already has a writer".to_string()), guard));
+        }
+        let Some(slot) = self.entries.iter().position(Option::is_none) else {
+            return Err((DbError::LimitExceeded("WAL writer capacity"), guard));
+        };
+        let Some(next) = self.next_generation.checked_add(1) else {
+            return Err((DbError::LimitExceeded("WAL writer generation"), guard));
+        };
         let generation = self.next_generation;
         self.entries[slot] = Some(WalWriterEntry { document: document.clone(), generation, active_operation: None, releasing: false, guard });
         self.next_generation = next;
@@ -132,16 +177,24 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
 
     pub(crate) fn validate(&self, key: WalWriterKey, backend: DbIoBackendControl, document: &DbIoText) -> Result<&G, DbError> {
         let entry = self.matching_entry(key, backend, document)?;
-        if entry.releasing || self.signalled && release::requested(key) { return Err(DbError::Closed); }
+        if entry.releasing || self.signalled && release::requested(key) {
+            return Err(DbError::Closed);
+        }
         Ok(&entry.guard)
     }
 
     pub(crate) fn pin_operation(&mut self, key: WalWriterKey, backend: DbIoBackendControl, document: &DbIoText, operation: u64) -> Result<&G, DbError> {
         self.matching_entry(key, backend, document)?;
-        if operation == 0 { return Err(DbError::InvalidArgument("zero WAL writer operation".to_string())); }
+        if operation == 0 {
+            return Err(DbError::InvalidArgument("zero WAL writer operation".to_string()));
+        }
         let entry = self.entries[usize::from(key.slot)].as_mut().expect("validated writer slot");
-        if (entry.releasing || self.signalled && release::requested(key)) && entry.active_operation != Some(operation) { return Err(DbError::Closed); }
-        if entry.active_operation.is_some_and(|active| active != operation) { return Err(DbError::Conflict("WAL writer operation already admitted".to_string())); }
+        if (entry.releasing || self.signalled && release::requested(key)) && entry.active_operation != Some(operation) {
+            return Err(DbError::Closed);
+        }
+        if entry.active_operation.is_some_and(|active| active != operation) {
+            return Err(DbError::Conflict("WAL writer operation already admitted".to_string()));
+        }
         entry.active_operation = Some(operation);
         Ok(&entry.guard)
     }
@@ -149,14 +202,20 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
     pub(crate) fn finish_operation(&mut self, key: WalWriterKey, backend: DbIoBackendControl, document: &DbIoText, operation: u64) -> Result<(), DbError> {
         self.matching_entry(key, backend, document)?;
         let entry = self.entries[usize::from(key.slot)].as_mut().expect("validated writer slot");
-        if entry.active_operation != Some(operation) { return Err(DbError::Fenced { expected: entry.active_operation.unwrap_or(0), actual: operation }); }
+        if entry.active_operation != Some(operation) {
+            return Err(DbError::Fenced { expected: entry.active_operation.unwrap_or(0), actual: operation });
+        }
         entry.active_operation = None;
-        if self.signalled && release::requested(key) { release::request_controller(self.backend()); }
+        if self.signalled && release::requested(key) {
+            release::request_controller(self.backend());
+        }
         Ok(())
     }
 
     pub(crate) fn finish_operation_if_pinned(&mut self, key: WalWriterKey, backend: DbIoBackendControl, document: &DbIoText, operation: u64) -> Result<(), DbError> {
-        if self.matching_entry(key, backend, document).is_ok_and(|entry| entry.active_operation == Some(operation)) { self.finish_operation(key, backend, document, operation)?; }
+        if self.matching_entry(key, backend, document).is_ok_and(|entry| entry.active_operation == Some(operation)) {
+            self.finish_operation(key, backend, document, operation)?;
+        }
         Ok(())
     }
 
@@ -169,9 +228,15 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
             self.release_failures -= 1;
             return Err(DbError::Io("injected WAL writer unlock failure".to_string()));
         }
-        if entry.active_operation.is_some() || entry.guard.close_step()? { return Ok(true); }
-        if !entry.guard.terminal_is_empty() { return Err(DbError::Internal("WAL writer guard returned a false terminal witness".to_string())); }
-        if self.signalled { release::finish(key); }
+        if entry.active_operation.is_some() || entry.guard.close_step()? {
+            return Ok(true);
+        }
+        if !entry.guard.terminal_is_empty() {
+            return Err(DbError::Internal("WAL writer guard returned a false terminal witness".to_string()));
+        }
+        if self.signalled {
+            release::finish(key);
+        }
         self.entries[usize::from(key.slot)] = None;
         Ok(false)
     }
@@ -186,10 +251,20 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         Ok(true)
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.entries.iter().all(Option::is_none) }
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.entries.iter().all(Option::is_none)
+    }
 
     pub(crate) fn release_requested_step(&mut self) -> Result<super::DbIoWriterReleaseStep, DbError> {
-        let Some(slot) = (0..WAL_WRITER_CAPACITY).map(|offset| (self.close_cursor + offset) % WAL_WRITER_CAPACITY).find(|slot| self.entries[*slot].as_ref().is_some_and(|entry| entry.active_operation.is_none() && (entry.releasing || self.signalled && release::requested(WalWriterKey { backend: self.backend(), slot: *slot as u8, generation: entry.generation })) && (!self.signalled || !release::faulted(WalWriterKey { backend: self.backend(), slot: *slot as u8, generation: entry.generation })))) else { return Ok(super::DbIoWriterReleaseStep::Idle) };
+        let Some(slot) = (0..WAL_WRITER_CAPACITY).map(|offset| (self.close_cursor + offset) % WAL_WRITER_CAPACITY).find(|slot| {
+            self.entries[*slot].as_ref().is_some_and(|entry| {
+                entry.active_operation.is_none()
+                    && (entry.releasing || self.signalled && release::requested(WalWriterKey { backend: self.backend(), slot: *slot as u8, generation: entry.generation }))
+                    && (!self.signalled || !release::faulted(WalWriterKey { backend: self.backend(), slot: *slot as u8, generation: entry.generation }))
+            })
+        }) else {
+            return Ok(super::DbIoWriterReleaseStep::Idle);
+        };
         self.close_cursor = (slot + 1) % WAL_WRITER_CAPACITY;
         let entry = self.entries[slot].as_ref().expect("selected exact requested writer");
         let key = WalWriterKey { backend: self.backend(), slot: slot as u8, generation: entry.generation };
@@ -197,7 +272,10 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.release_step(key, self.backend(), &document))) {
             Ok(Ok(_)) => {}
             result => {
-                let error = match result { Ok(Err(error)) => error, _ => DbError::Internal("WAL writer guard release panicked; exact guard remains retained".to_string()) };
+                let error = match result {
+                    Ok(Err(error)) => error,
+                    _ => DbError::Internal("WAL writer guard release panicked; exact guard remains retained".to_string()),
+                };
                 if self.signalled {
                     release::fault(key, &error);
                     return Ok(super::DbIoWriterReleaseStep::Faulted);
@@ -233,13 +311,19 @@ impl WalFileWriterGuard {
         Ok(true)
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.file.is_none() }
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.file.is_none()
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl WalWriterGuard for WalFileWriterGuard {
-    fn close_step(&mut self) -> Result<bool, DbError> { WalFileWriterGuard::close_step(self) }
-    fn terminal_is_empty(&self) -> bool { WalFileWriterGuard::terminal_is_empty(self) }
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        WalFileWriterGuard::close_step(self)
+    }
+    fn terminal_is_empty(&self) -> bool {
+        WalFileWriterGuard::terminal_is_empty(self)
+    }
 }
 
 #[cfg(test)]
@@ -248,15 +332,23 @@ mod tests {
 
     impl WalWriterGuard for usize {
         fn close_step(&mut self) -> Result<bool, DbError> {
-            if *self == usize::MAX { return Ok(false); }
+            if *self == usize::MAX {
+                return Ok(false);
+            }
             *self = usize::MAX;
             Ok(true)
         }
-        fn terminal_is_empty(&self) -> bool { *self == usize::MAX }
+        fn terminal_is_empty(&self) -> bool {
+            *self == usize::MAX
+        }
     }
 
-    fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).unwrap() }
-    fn backend(slot: u16) -> DbIoBackendControl { DbIoBackendControl::Memory { slot, generation: 1 } }
+    fn fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).unwrap()
+    }
+    fn backend(slot: u16) -> DbIoBackendControl {
+        DbIoBackendControl::Memory { slot, generation: 1 }
+    }
     fn disposition(result: Result<(), DbError>) -> &'static str {
         match result {
             Ok(()) => "ok",
@@ -280,7 +372,11 @@ mod tests {
                 let selected = backend(step["backend"].as_u64().unwrap() as u16);
                 let result = match step["action"].as_str().unwrap() {
                     "acquire" => match table.acquire(&document, ()) {
-                        Ok(permit) => { assert!(permit.document() == &document); owners.insert(owner.into(), permit); Ok(()) }
+                        Ok(permit) => {
+                            assert!(permit.document() == &document);
+                            owners.insert(owner.into(), permit);
+                            Ok(())
+                        }
                         Err((error, ())) => Err(error),
                     },
                     "validate" => {
@@ -320,7 +416,9 @@ mod tests {
         assert!(matches!(table.validate(old.key(), backend(0), old.document()), Err(DbError::Fenced { .. })));
         assert_eq!(*table.validate(fresh.key(), backend(0), fresh.document()).unwrap(), 100);
         let mut retired = 0;
-        while table.close_step().unwrap() { retired += 1; }
+        while table.close_step().unwrap() {
+            retired += 1;
+        }
         assert_eq!(retired, WAL_WRITER_CAPACITY * 2);
         assert!(table.terminal_is_empty());
         assert!(matches!(table.validate(fresh.key(), backend(0), fresh.document()), Err(DbError::Fenced { .. })));
@@ -328,16 +426,26 @@ mod tests {
     }
 
     #[derive(Debug)]
-    struct FaultGuard { fail: bool, closed: bool }
+    struct FaultGuard {
+        fail: bool,
+        closed: bool,
+    }
 
     impl WalWriterGuard for FaultGuard {
         fn close_step(&mut self) -> Result<bool, DbError> {
-            if self.fail { self.fail = false; return Err(DbError::Io("injected writer unlock failure".to_string())); }
-            if self.closed { return Ok(false); }
+            if self.fail {
+                self.fail = false;
+                return Err(DbError::Io("injected writer unlock failure".to_string()));
+            }
+            if self.closed {
+                return Ok(false);
+            }
             self.closed = true;
             Ok(true)
         }
-        fn terminal_is_empty(&self) -> bool { self.closed }
+        fn terminal_is_empty(&self) -> bool {
+            self.closed
+        }
     }
 
     #[test]
@@ -380,13 +488,17 @@ mod tests {
         assert_eq!(usize::from(releasing.key().slot), row["releasingSlot"].as_u64().unwrap() as usize);
         table.pin_operation(pinned.key(), backend(0), pinned.document(), 7).unwrap();
         assert!(table.release_step(releasing.key(), backend(0), releasing.document()).unwrap());
-        for _ in 0..row["maximumOpportunities"].as_u64().unwrap() { assert!(table.close_step().unwrap()); }
+        for _ in 0..row["maximumOpportunities"].as_u64().unwrap() {
+            assert!(table.close_step().unwrap());
+        }
         assert_eq!(table.entries[usize::from(pinned.key().slot)].is_some(), row["pinnedRetained"].as_bool().unwrap());
         assert_eq!(table.entries[usize::from(releasing.key().slot)].is_none(), row["releasingRetired"].as_bool().unwrap());
         assert!(matches!(table.pin_operation(pinned.key(), backend(0), pinned.document(), 8), Err(DbError::Closed)));
         assert!(matches!(table.pin_operation(releasing.key(), backend(0), releasing.document(), 8), Err(DbError::Fenced { .. })));
         table.finish_operation(pinned.key(), backend(0), pinned.document(), 7).unwrap();
-        for _ in 0..WAL_WRITER_CAPACITY * 2 { let _ = table.close_step().unwrap(); }
+        for _ in 0..WAL_WRITER_CAPACITY * 2 {
+            let _ = table.close_step().unwrap();
+        }
         assert!(table.terminal_is_empty());
         eprintln!("[DEBUG] bounded WAL writer close retired the later guard while the first operation stayed pinned, then retired the final owner");
     }
@@ -411,15 +523,29 @@ mod tests {
         assert!(matches!(WalFileWriterGuard::try_acquire(&path), Err(DbError::Conflict(_))));
         let mut child = std::process::Command::new(std::env::current_exe().unwrap())
             .args(["db_storage::writer::tests::wal_writer_file_lock_excludes_independent_instances_and_processes", "--exact", "--test-threads=1"])
-            .env("SEMIO_WAL_WRITER_CHILD_PATH", &path).env("SEMIO_WAL_WRITER_CHILD_SENTINEL", &sentinel).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn().unwrap();
+            .env("SEMIO_WAL_WRITER_CHILD_PATH", &path)
+            .env("SEMIO_WAL_WRITER_CHILD_SENTINEL", &sentinel)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .unwrap();
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         loop {
-            if let Some(status) = child.try_wait().unwrap() { assert!(status.success(), "independent writer process did not reject the held lock"); break; }
-            if std::time::Instant::now() >= deadline { child.kill().unwrap(); child.wait().unwrap(); panic!("independent writer process deadline"); }
+            if let Some(status) = child.try_wait().unwrap() {
+                assert!(status.success(), "independent writer process did not reject the held lock");
+                break;
+            }
+            if std::time::Instant::now() >= deadline {
+                child.kill().unwrap();
+                child.wait().unwrap();
+                panic!("independent writer process deadline");
+            }
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
         assert_eq!(std::fs::read_to_string(&sentinel).unwrap(), format!("{}:conflict", child.id()));
-        for flag in ["independentInstancesConflict", "independentProcessesConflict", "reacquireAfterClose"] { assert_eq!(fixture["filesystem"][flag], true); }
+        for flag in ["independentInstancesConflict", "independentProcessesConflict", "reacquireAfterClose"] {
+            assert_eq!(fixture["filesystem"][flag], true);
+        }
         assert_eq!(fixture["filesystem"]["unlinkOnClose"], false);
         while first.close_step().unwrap() {}
         assert!(first.terminal_is_empty());

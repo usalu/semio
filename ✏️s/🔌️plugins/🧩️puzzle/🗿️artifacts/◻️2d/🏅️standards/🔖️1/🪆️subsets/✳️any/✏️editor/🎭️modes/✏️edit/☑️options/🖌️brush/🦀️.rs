@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn brush_params_are_tagged_utility_options_not_engagement_controls() {
-        let labels = puzzle2d_labels(&Puzzle2dConfig::default());
+        let labels = puzzle2d_labels(&Puzzle2dConfig::default()).expect("default puzzle2d locale and terminology axes are explicit");
         let host = puzzle_board_host();
         let group_tag = |measures: &[WindowMeasure], id: &str| {
             measures.iter().find_map(|measure| match measure {

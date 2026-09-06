@@ -564,10 +564,14 @@ class BrowserWorkerTestScript extends BundleScript {
   }
 }
 
-/** @emoji 🧾️ Runs the deterministic in-memory frame-worker owner contract. */
+/** @emoji 🧾️ Runs the deterministic in-memory frame-worker owner contract at `long` or above — importing
+ * its four independent oracles (the TypeScript compiler, Ajv, emoji-regex and the discovery taxonomy)
+ * costs ~14 s on an idle machine before a single case runs, and the cases themselves render two full
+ * browser bundles, so the suite cannot honestly sit at the fundamental or quick budget. */
 class PreviewGeneratedTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️tests/🧩️package-integration.ts", ...segments], "🟦️typescript/🧪️test/🟦️s.ts");
+    const { rest } = resolveTestLevel(segments, "long");
+    await runVitest(this.root, ["🧪️tests/🧩️package-integration.ts", ...rest], "🟦️typescript/🧪️test/🟦️s.ts");
   }
 }
 

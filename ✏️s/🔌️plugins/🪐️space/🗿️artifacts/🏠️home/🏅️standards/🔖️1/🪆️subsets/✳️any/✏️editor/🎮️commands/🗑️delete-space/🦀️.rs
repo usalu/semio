@@ -47,7 +47,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn unconfirmed_delete_emits_the_confirm_dialog_and_never_the_command() {
-        let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: false });
+        let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: false }).await;
         assert_eq!(emit.effects.len(), 1);
         let (dialog_id, args) = match &emit.effects[0] {
             Effect::OpenDialog { dialog_id, args, .. } => (dialog_id.clone(), args.clone()),
@@ -62,7 +62,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn confirmed_delete_emits_the_replay_shell_command() {
-        let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: true });
+        let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: true }).await;
         let (action_id, args) = emit
             .effects
             .iter()

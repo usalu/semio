@@ -1535,6 +1535,36 @@ export function packUIntSafeOrNull(value: PackValue): number | null {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 
+/** @emoji 🔍️ Renders one raw wasm-boundary value for a fault message, `bigint`s included, bounded so a
+ * whole decoded node never lands in a log line. */
+export function describePackWireValue(raw: unknown): string {
+  if (typeof raw === "bigint") return `${raw}n`;
+  try {
+    return JSON.stringify(raw, (_key, value) => (typeof value === "bigint" ? `${value}n` : value))?.slice(0, 400) ?? String(raw);
+  } catch {
+    return String(raw);
+  }
+}
+
+/** @emoji 🔢️ One natural number off an actor WIT/pack boundary: a WIT `u64` arrives as a `bigint`, a
+ * pack-decoded integer as a lossless integer carrier, an absent value means zero. Anything not exactly
+ * representable as a safe non-negative JS integer is a fault naming the field and the value, never a
+ * rounding. Every renderer's wire decoder shares this one implementation. */
+export function packWireNatural(raw: unknown, field = "natural"): number {
+  if (raw === undefined || raw === null) return 0;
+  const value = typeof raw === "bigint" ? (raw >= 0n && raw <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(raw) : Number.NaN) : typeof raw === "number" ? raw : packUIntSafeOrNull(raw as PackValue) ?? Number.NaN;
+  if (!Number.isSafeInteger(value) || value < 0) throw new Error(`actor WIT natural "${field}" is not a safe non-negative integer: ${describePackWireValue(raw)}`);
+  return value;
+}
+
+/** @emoji 📦️ Decodes one pack-encoded wasm-boundary byte payload and projects its lossless integer
+ * carriers onto exact JSON numbers — the only shape the UI/effect contract twins declare. The one
+ * decoder every renderer injects wherever a `pack`-typed WIT field crosses into TypeScript; decoding
+ * without this projection leaks `{kind, value}` carriers into node ids, revisions and effect params. */
+export function decodePackWire(bytes: Uint8Array, path = "$"): unknown {
+  return packValueToExactJson(decodePackValue(bytes) as PackValue, path);
+}
+
 /** @emoji 🔢️ Throwing form of {@link packUIntSafeOrNull} for a required schema field. */
 export function asPackUIntSafe(value: PackValue, name: string): number {
   const parsed = packUIntSafeOrNull(value);

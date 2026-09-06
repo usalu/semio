@@ -1,0 +1,17 @@
+{
+  "schema": "semio.value.exact-integer-codec.v1",
+  "integerTokensOnly": true,
+  "targets": [
+    { "name": "u8", "bits": 8, "signed": false }, { "name": "i8", "bits": 8, "signed": true },
+    { "name": "u16", "bits": 16, "signed": false }, { "name": "i16", "bits": 16, "signed": true },
+    { "name": "u32", "bits": 32, "signed": false }, { "name": "i32", "bits": 32, "signed": true },
+    { "name": "u64", "bits": 64, "signed": false }, { "name": "i64", "bits": 64, "signed": true }
+  ],
+  "raw": [
+    "-9223372036854775809", "-9223372036854775808", "-2147483649", "-2147483648", "-32769", "-32768", "-129", "-128", "-1",
+    "0", "1", "127", "128", "255", "256", "32767", "32768", "65535", "65536", "2147483647", "2147483648", "4294967295", "4294967296", "4294967297",
+    "9007199254740993", "9223372036854775807", "9223372036854775808", "18446744073709551615", "18446744073709551616",
+    "1.5", "-1.5", "1.0", "1e0", "1e300", "-1e300", "null", "true", "\"1\""
+  ],
+  "directFloatDenied": ["nan", "positive-infinity", "negative-infinity", "positive-zero", "negative-zero", "whole-one"]
+}

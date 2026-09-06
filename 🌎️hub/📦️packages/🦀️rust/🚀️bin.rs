@@ -615,7 +615,7 @@ impl DocumentOpenCatalogAuthorityV1 for TestDocumentOpenCatalog {
             return None;
         }
         let selection = DocumentOpenCatalogAuthorityV1::resolve_document_open(self, descriptor, requested_surface_id, writable)?;
-        Some(VerifiedExecutionTargetAssets { selection, component: std::sync::Arc::clone(&self.component), descriptor: std::sync::Arc::clone(&self.descriptor) })
+        Some(VerifiedExecutionTargetAssets { selection, component: std::sync::Arc::clone(&self.component), descriptor: std::sync::Arc::clone(&self.descriptor), browser_actor: None })
     }
 
     fn resolve_document_open(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool) -> Option<VerifiedDocumentOpenSelectionV1> {
@@ -6930,6 +6930,12 @@ mod tests {
                 "openTargets": [target]
             }]
         });
+        bundle["packages"][0]["browserActor"] = serde_json::json!({
+            "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.27.0-jspi.v1",
+            "path":"closed-actor.mjs", "byteLength":component.len(), "sha256":component_sha256,
+            "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":descriptor_sha256, "policySha256":"41".repeat(32), "importInterfaces":[]
+        });
+        std::fs::write(root.join("closed-actor.mjs"), component).expect("synthetic actor, never executed");
         let carried = serde_json::to_vec(&bundle).expect("provisional stdio bundle");
         let (selected_closure_sha256, generation_id) = semio_hub::artifact_authority::trusted_catalog::trusted_profile_digests_json(&carried, "stdio-native-openable-v1").expect("stdio profile digests");
         bundle["profiles"][0]["selectedClosureSha256"] = selected_closure_sha256.into();
@@ -8205,6 +8211,7 @@ mod tests {
                         renderer_target: os_directory::DocumentOpenRendererTargetV1::React,
                     },
                     grant: DocumentOpenGrantV1 { read: true, write: true, observe: true },
+                    browser_actor: os_directory::schema::DocumentOpenBrowserActorV1::None,
                 },
                 VerifiedDocumentOpenSelectionV1 {
                     package,
@@ -8218,6 +8225,7 @@ mod tests {
                         renderer_target: os_directory::DocumentOpenRendererTargetV1::React,
                     },
                     grant: DocumentOpenGrantV1 { read: true, write: false, observe: true },
+                    browser_actor: os_directory::schema::DocumentOpenBrowserActorV1::None,
                 },
             ]
             .into_boxed_slice(),

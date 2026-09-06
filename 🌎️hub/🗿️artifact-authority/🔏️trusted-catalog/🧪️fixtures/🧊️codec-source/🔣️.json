@@ -1,0 +1,22 @@
+{
+  "schema": "semio.hub.codec-source.v1",
+  "maximumSourceBytes": 65536,
+  "maximumTotalBytes": 131072,
+  "cases": [
+    { "change": "none", "accepted": true, "schemaAccepted": true },
+    { "change": "permuted", "accepted": true, "schemaAccepted": true },
+    { "change": "replaced-source", "accepted": true, "schemaAccepted": true },
+    { "change": "invalid-hash", "accepted": false, "schemaAccepted": false },
+    { "change": "zero-hash", "accepted": false, "schemaAccepted": true },
+    { "change": "duplicate-stdio", "accepted": false, "schemaAccepted": true },
+    { "change": "duplicate-gis", "accepted": false, "schemaAccepted": false },
+    { "change": "unknown-root", "accepted": false, "schemaAccepted": false },
+    { "change": "unknown-row", "accepted": false, "schemaAccepted": false },
+    { "change": "foreign-package", "accepted": false, "schemaAccepted": false },
+    { "change": "crossed-gis-schema", "accepted": false, "schemaAccepted": true },
+    { "change": "foreign-version", "accepted": false, "schemaAccepted": false },
+    { "change": "invalid-utf8", "accepted": false, "schemaAccepted": true },
+    { "change": "oversize", "accepted": false, "schemaAccepted": true },
+    { "change": "cancelled", "accepted": false, "schemaAccepted": true }
+  ]
+}

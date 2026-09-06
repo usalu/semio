@@ -18,7 +18,7 @@ pub struct SetSfmParams {
     pub huber_delta_px: f32,
 }
 
-pub async fn handle(payload: &SetSfmParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(payload: &SetSfmParams, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![update_sfm_params(SfmParams {
         ransac_iterations: payload.ransac_iterations,
         ransac_threshold_px: payload.ransac_threshold_px,

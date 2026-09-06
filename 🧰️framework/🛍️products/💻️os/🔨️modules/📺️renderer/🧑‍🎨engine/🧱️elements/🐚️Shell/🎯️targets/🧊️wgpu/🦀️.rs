@@ -7899,7 +7899,10 @@ mod shell_input_tests {
 }
 //#endregion ShellInput
 
-#[cfg(test)]
+/// ✍️ Immediate-mode Shell chrome text — the non-retained sibling of {@link chrome_text_step}, used by
+/// the eleven overlay/dropdown/status painters below that draw a whole scalar in one pass. It was
+/// `#[cfg(test)]`-gated, which made every one of those production call sites `E0425` on every target
+/// (the reason this crate compiled on neither `wasm32-unknown-unknown` nor natively).
 fn chrome_text(target: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();

@@ -23,7 +23,11 @@
 //! subset's own codec can establish: the committed diff's collection arms record removals as bare
 //! ids, so a removed record is not reconstructable from the diff alone and the full law
 //! `apply(inverse(m), apply(m, base)) == base` stays with the production `inverse()` implementation
-//! and the per-leaf fixture tests that already exercise it.
+//! and the per-leaf fixture tests that already exercise it. `spec-vector-<id>` carries every vector
+//! the two exhaustive tables cannot: the refusals, whose declared code and contract-D6
+//! `🔺️diff/🚫️.absent` sentinel it checks and which have no diff to measure a footprint against, and
+//! the second and third vectors of a kind, which cannot ride a `mutate-<kind>` id because the
+//! completeness gate reads that id as a claim about the KIND itself.
 //!
 //! @see ../../../../../../../../../🗄️stdio/🧪️oracle/⚖️law/🦀️.rs — the shared law helpers.
 
@@ -79,6 +83,63 @@ const KINDS: &[&str] = &[
     "replace-kind-catalogs",
 ];
 
+/// 🧾️ The row ids of the third Examples table, in its own order. They are NOT kinds: the completeness
+/// gate reads a `mutate-<kind>` scenario id as a claim about that kind's vocabulary entry, so a second
+/// row per kind has to carry its own identity. `<kind>-alpha` is a synthetic two-node-board vector kept
+/// from before this corpus was rebuilt on the shipped examples, `<kind>-refused` a contract-D6 refusal,
+/// `<kind>-duplicate`/`<kind>-cleared` the two warning-level branches.
+const SPEC_VECTORS: &[&str] = &[
+    "create-node-alpha",
+    "create-node-refused",
+    "delete-node-alpha",
+    "delete-node-refused",
+    "move-node-alpha",
+    "move-node-refused",
+    "replace-node-geometry-alpha",
+    "replace-node-geometry-refused",
+    "change-node-kind-alpha",
+    "change-node-kind-refused",
+    "edit-node-text-alpha",
+    "edit-node-text-refused",
+    "change-node-icon-alpha",
+    "change-node-icon-refused",
+    "scale-node-alpha",
+    "scale-node-refused",
+    "change-node-visible-alpha",
+    "change-node-visible-refused",
+    "change-node-locked-alpha",
+    "change-node-locked-refused",
+    "change-node-root-alpha",
+    "change-node-root-refused",
+    "change-node-anchor-alpha",
+    "change-node-anchor-refused",
+    "add-node-handle-alpha",
+    "add-node-handle-refused",
+    "remove-node-handle-alpha",
+    "remove-node-handle-refused",
+    "replace-node-handle-refused",
+    "connect-handles-alpha",
+    "connect-handles-duplicate",
+    "disconnect-handles-alpha",
+    "disconnect-handles-refused",
+    "replace-edge-geometry-alpha",
+    "replace-edge-geometry-refused",
+    "change-edge-kind-alpha",
+    "change-edge-kind-refused",
+    "change-edge-tips-alpha",
+    "change-edge-tips-refused",
+    "change-edge-visible-alpha",
+    "change-edge-visible-refused",
+    "change-edge-locked-alpha",
+    "change-edge-locked-refused",
+    "change-manifest-id-alpha",
+    "connect-kind-compatibility-alpha",
+    "disconnect-kind-compatibility-alpha",
+    "disconnect-kind-compatibility-refused",
+    "replace-kind-catalogs-alpha",
+    "replace-kind-catalogs-cleared",
+];
+
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle2dDiff` mirrors `Puzzle2dSnapshot` name for name, so the table is empty and every field is matched by its own name; the sibling `🧩️assembly` and `🧱️block` subsets, whose diffs split, rename or fold their fields, carry real rows here.
 const DIFF_ALIASES: &[(&str, &[&str])] = &[];
 
@@ -106,7 +167,14 @@ fn vector(ctx: &Context) -> Result<Vector, String> {
     if !KINDS.contains(&kind.as_str()) {
         return Err(format!("scenario doc string names {kind:?}, which is not a declared Puzzle2dMutation kind"));
     }
-    Ok(Vector { kind, before: ctx.fixture_json(&spec.str("before"))?, mutation: ctx.fixture_json(&spec.str("mutation"))?, diff: ctx.fixture_json(&spec.str("diff"))?, after: ctx.fixture_json(&spec.str("after"))?, outcome: ctx.fixture_json(&spec.str("outcome"))? })
+    Ok(Vector {
+        kind,
+        before: ctx.fixture_json(&spec.str("before"))?,
+        mutation: ctx.fixture_json(&spec.str("mutation"))?,
+        diff: ctx.fixture_json(&spec.str("diff"))?,
+        after: ctx.fixture_json(&spec.str("after"))?,
+        outcome: ctx.fixture_json(&spec.str("outcome"))?,
+    })
 }
 
 /// 🐫️ `create-node` → `createNode`, the discriminant this subset's
@@ -259,12 +327,68 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(vector.before.to_string().into_bytes(), vector.before))
 }
 
-/// 🔁️ Decode and re-encode the two-node, one-edge puzzle drawing, through the platform's own dependency-free JSON reader and writer: the
-/// document must survive unchanged, and the re-serialized bytes must NOT be the committed bytes —
-/// the committed file is pretty-printed and the writer is compact, so a handler that returned the
-/// input unread would be caught here.
+/// 🧾️ Every vector the two exhaustive tables do NOT carry: the synthetic alpha-board vectors kept
+/// from before this corpus was rebuilt on the shipped examples, the twenty-two refusals, and the two
+/// warning-level branches. They cannot ride the `mutate`/`inverse` tables because the completeness
+/// gate reads a `mutate-<kind>` id as a claim about the KIND, so a second row per kind would report
+/// an undeclared kind; and because a refusal has no diff to measure a footprint against.
+fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
+    let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
+    if !KINDS.contains(&kind.as_str()) {
+        return Err(format!("scenario doc string names {kind:?}, which is not a declared Puzzle2dMutation kind"));
+    }
+    let verdict = spec.str("verdict");
+    let before = ctx.fixture_json(&spec.str("before"))?;
+    let after = ctx.fixture_json(&spec.str("after"))?;
+    let outcome = ctx.fixture_json(&spec.str("outcome"))?;
+    let mutation = ctx.fixture_json(&spec.str("mutation"))?;
+    let declared = declared_kind(&mutation);
+    if declared != discriminant(&kind) {
+        return Err(format!("the committed mutation payload filed under {kind:?} declares {declared:?} — the vector does not exercise the kind this row claims"));
+    }
+    let status = outcome.str("status");
+    match verdict.as_str() {
+        "refused" => {
+            if status != "rejected" {
+                return Err(format!("the {kind:?} refusal vector declares status {status:?}, not \"rejected\""));
+            }
+            if outcome.str("code").is_empty() {
+                return Err(format!("the {kind:?} refusal vector declares no machine-readable code, so nothing states WHICH refusal it pins"));
+            }
+            if !spec.str("diff").ends_with("🚫️.absent") || !ctx.fixture_bytes(&spec.str("diff"))?.is_empty() {
+                return Err(format!("contract D6: the {kind:?} refusal vector must commit an EMPTY 🔺️diff/🚫️.absent sentinel instead of an invented empty patch"));
+            }
+            if !changed_fields(&before, &after).is_empty() {
+                return Err(format!("the {kind:?} refusal vector moved the document, so it did not refuse"));
+            }
+        }
+        "noop" => {
+            if status != "applied" || !declares_no_op(&outcome) {
+                return Err(format!("the {kind:?} no-op vector must declare an applied outcome carrying mutation.no-op, got {status:?}"));
+            }
+            no_op_law(&Vector { kind: kind.clone(), before: before.clone(), mutation, diff: ctx.fixture_json(&spec.str("diff"))?, after: after.clone(), outcome })?;
+        }
+        "applied" => {
+            if status != "applied" || declares_no_op(&outcome) {
+                return Err(format!("the {kind:?} applied vector must declare an applied outcome with no mutation.no-op, got {status:?}"));
+            }
+            let vector = Vector { kind: kind.clone(), before: before.clone(), mutation, diff: ctx.fixture_json(&spec.str("diff"))?, after: after.clone(), outcome };
+            law::mutation_is_observable(&vector.kind, &vector.after, &vector.before, &[])?;
+            footprint_law(&vector)?;
+        }
+        other => return Err(format!("unknown verdict {other:?}; this table declares applied, noop or refused")),
+    }
+    Ok(Outcome::with_raw(after.to_string().into_bytes(), after))
+}
+
+/// 🔁️ Decode and re-encode the real First-Storey-Tambour subgraph of the Nakagin Capsule Tower,
+/// through the platform's own dependency-free JSON reader and writer: the document must survive
+/// unchanged, and the re-serialized bytes must NOT be the committed bytes — the committed file is
+/// pretty-printed and the writer is compact, so a handler that returned the input unread would be
+/// caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "asset://🧬️schema/🧬️mutations/🌱create-node/🧪️tests/appends-node-c/📸️snapshot/⬅️before/🔣️.json";
+    const SNAPSHOT: &str = "asset://🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends-a-capsule-to-the-tower/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.fixture_bytes(SNAPSHOT)?;
     let parsed = ctx.fixture_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();
@@ -272,7 +396,7 @@ fn round_trip(ctx: &Context) -> Result<Outcome, String> {
     let reparsed = semio_repo_test_host::parse_json(&reserialized)?;
     law::round_trip_preserves(&reparsed, &parsed)?;
     if reparsed.array("nodes").len() < 2 || reparsed.array("edges").is_empty() || reparsed.get("meta").map(|meta| meta.array("kindCompatibility").len()).unwrap_or(0) == 0 {
-        return Err("the committed round-trip snapshot is the two-node, one-edge, compatibility-carrying drawing this scenario describes, but it does not carry all three".to_string());
+        return Err("the committed round-trip snapshot is the real tower subgraph this scenario describes — nodes, edges and a kind-compatibility relation — but it does not carry all three".to_string());
     }
     Ok(Outcome::with_raw(reserialized.into_bytes(), reparsed))
 }
@@ -286,6 +410,9 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     for kind in KINDS {
         built = built.subject(&format!("mutate-{kind}"), conformance).subject(&format!("inverse-{kind}"), footprint);
+    }
+    for vector in SPEC_VECTORS {
+        built = built.subject(&format!("spec-vector-{vector}"), spec_vector);
     }
     built.subject("identity-round-trip", round_trip)
 }

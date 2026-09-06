@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. `s.energy.model` persists no content model of its own — its body is two composed child handles regenerated together from one `Model` — so its single mutation kind is a paired-child overwrite. Semio-NATIVE, no third party. [D3 2026-09-02] The no-oracle decision that used to sit here is gone: `🐍️component.py` beside `../../../🧪️tests/mutate-energy-model-1/🥒️.feature` is now a real, independently-written, EXECUTED second implementation (verified standalone against the committed vector via the repository's own python test host — see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d3-native-second-implementations.md). It only proves the documented no-op degrade path — the subset's one committed specification vector is a no-op — which remains a real, stated gap rather than a passing test dressed up as full coverage.",
+  "_comment": "🧩️ This subset's own contribution. `s.energy.model` persists a typed `Model` document plus two composed child handles regenerated together from it, so every mutation kind below is a real field-granular semantic edit — the whole-model `replace-model` this file used to record is GONE (📓️derivation-rules.md rule 6: whole-document load goes through `ArtifactStore::reset`, outside history). Semio-NATIVE, no third party. The Python second implementation beside `../../../🧪️tests/🏛️mutate-energy-model-1/🥒️.feature` covers every kind with a happy and a refusal vector, so nothing here is UNOBSERVABLE any more.",
   "oracles": [
     {
       "id": "energy-model-1-python-independent",
@@ -39,14 +39,74 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; .dsl.semio; ../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/♻️replace-model/🧬️.schema.json; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md",
+        "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️derivation-rules.md; ../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; ../🧬️schema/🧬️mutations/<kind>/🧬️.schema.json",
         "fixtureCoverage": {
-          "vectors": 1,
+          "vectors": 34,
           "capabilitiesCovered": [
             "energy-model-1-mutate"
           ]
         }
       }
+    },
+    {
+      "id": "energyplus-25-2-0-via-honeybee-openstudio",
+      "kind": "standards-reference-tool",
+      "ecosystem": "python",
+      "package": "honeybee-openstudio",
+      "version": "0.7.2",
+      "packages": [
+        {
+          "package": "openstudio",
+          "version": "3.11.0",
+          "license": "BSD-3-Clause",
+          "homepage": "https://github.com/NREL/OpenStudio",
+          "role": "compiled OpenStudio SDK bindings; carries the EnergyPlus 25.2.0 binary the reference actually runs"
+        },
+        {
+          "package": "honeybee-energy",
+          "version": "1.123.32",
+          "license": "AGPL-3.0-only",
+          "homepage": "https://github.com/ladybug-tools/honeybee-energy",
+          "role": "building-energy model assembly and the EnergyPlus run driver"
+        },
+        {
+          "package": "ladybug-core",
+          "version": "0.44.59",
+          "license": "AGPL-3.0-only",
+          "homepage": "https://github.com/ladybug-tools/ladybug",
+          "role": "reads the hourly and annual series back out of the EnergyPlus SQLite output"
+        }
+      ],
+      "source": {
+        "repository": "https://github.com/NREL/EnergyPlus",
+        "commit": "cf7368216c",
+        "license": "BSD-3-Clause"
+      },
+      "engine": {
+        "family": "energyplus",
+        "implementation": "EnergyPlus, bundled in the OpenStudio SDK 3.11.0+241b8abb4d archive",
+        "version": "25.2.0"
+      },
+      "capabilities": [
+        "energy-model-1-simulate"
+      ],
+      "comparisonProfiles": [
+        "energy-model-1-bestest-compare-v1"
+      ],
+      "license": "BSD-3-Clause AND AGPL-3.0-only",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-arm64",
+        "linux-x64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/NREL/EnergyPlus",
+      "hostPath": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
+      "rationale": "🏛️ EnergyPlus is the heat-balance solver ANSI/ASHRAE Standard 140 is itself written around, which is what makes it a QUALIFYING reference for this subset's SIMULATION capability rather than a second opinion: the standard's §5.2 building-envelope cases are the acceptance instrument for exactly the physics `🔨️modules/⚡️simulation/⚙️engine` implements. The reference runs out of process — `✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python/🧪️oracle/🐍️.py` reads the same `🔋️model.json` the engine reads, translates it through honeybee to an OpenStudio model and an IDF, runs the EnergyPlus binary, and reads the SQLite output back. It imports nothing from the Rust it judges. The toolchain is provisioned zero-touch by that package's `📜️script.ts setup` into `.🧬semio/🦑️repo/⚡️cache/oracles/openstudio-3.11.0-<platform>/` from the pinned, sha256-verified release archive recorded in `../../../../../../../🧪️oracle/📦️packages/🐍️python/🔣️.json`, so no network access happens during a test run.\n\nINDEPENDENCE. Accounted at the engine-family level: `honeybee-energy`, `honeybee-openstudio` and the `openstudio` bindings are three packages over ONE kernel (EnergyPlus 25.2.0), so this registration is one oracle, not three. It is independent of the sibling `energy-model-1-python-independent` entry, which judges the mutation vocabulary and shares no code with it.\n\n[2026-09-06, W-B — 26/09/06/ENERGY-PLUGIN-END-TO-END] HISTORY, REVERSING THE EARLIER DECLINE. The sibling entry above records, verbatim, a survey that NAMED AND DECLINED EnergyPlus and OpenStudio. That decision is correct for the capability it was made about and is NOT overturned: no third party reads or writes `s.energy.model`'s own `.dsl.semio` carrier, so the MUTATION capability `energy-model-1-mutate` still has no qualifying third-party reference and still rests on the in-repository second implementation. What the decline did not consider is that this subset carries a second, physically-typed capability — simulating the `Model` it persists — and for THAT capability EnergyPlus is not merely available but canonical. This entry therefore reverses the decline for `energy-model-1-simulate` only, and leaves `energy-model-1-mutate`'s standing debt exactly where it was.\n\nEVIDENCE THIS REFERENCE IS ITSELF CORRECT. The runner's `native` mode rebuilds ASHRAE 140 §5.2 cases from the standard's own geometry and layer tables, independently of any semio input. Those results were compared against NREL's own published BESTEST-GSR run (`results/workflow_results.csv`, OpenStudio 3.11.0 / EnergyPlus 25.2.0): case 600 annual heating 4324.74 kWh vs NREL 4325, cooling 6044.06 vs 6041.67; case 900 1661.14 / 2498.16 vs 1661.11 / 2491.67; case 600FF free-float −12.5606 °C … 63.92 °C vs −12.5606 … 63.92; case 900FF 1.2467 … 44.2992 vs 1.24666 … 44.2992. Ten cases agree within 0.4 %. Numbers and method: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w2-oracle-toolchain.md`."
     }
   ],
   "noOracleDecisions": [],
@@ -58,19 +118,279 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "replace-model",
-          "sourceMutationDirectoryName": "♻️replace-model",
-          "mutationDirectoryName": "♻️replace-model",
+          "mutationId": "rename-model",
+          "sourceMutationDirectoryName": "🏷️rename-model",
+          "mutationDirectoryName": "🏷️rename-model",
           "scenarios": [
             {
-              "id": "degrades-an-empty-model-payload-to-a-no-op",
-              "directoryName": "🧪️degrades-an-empty-model-payload-to-a-no-op"
+              "id": "rename-model-renames-the-model",
+              "directoryName": "✅️renames-the-model"
+            },
+            {
+              "id": "rename-model-refuses-a-blank-name",
+              "directoryName": "⛔️refuses-a-blank-name"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-model-version",
+          "sourceMutationDirectoryName": "🔢️change-model-version",
+          "mutationDirectoryName": "🔢️change-model-version",
+          "scenarios": [
+            {
+              "id": "change-model-version-bumps-the-version",
+              "directoryName": "✅️bumps-the-version"
+            },
+            {
+              "id": "change-model-version-refuses-a-blank-version",
+              "directoryName": "⛔️refuses-a-blank-version"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-site",
+          "sourceMutationDirectoryName": "🌍️update-site",
+          "mutationDirectoryName": "🌍️update-site",
+          "scenarios": [
+            {
+              "id": "update-site-relocates-to-denver",
+              "directoryName": "✅️relocates-to-denver"
+            },
+            {
+              "id": "update-site-refuses-a-bad-latitude",
+              "directoryName": "⛔️refuses-a-bad-latitude"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-ground-temperature",
+          "sourceMutationDirectoryName": "🌡️update-ground-temperature",
+          "mutationDirectoryName": "🌡️update-ground-temperature",
+          "scenarios": [
+            {
+              "id": "update-ground-temperature-sets-denver-ground",
+              "directoryName": "✅️sets-denver-ground"
+            },
+            {
+              "id": "update-ground-temperature-refuses-a-short-year",
+              "directoryName": "⛔️refuses-a-short-year"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-run-period",
+          "sourceMutationDirectoryName": "📅️update-run-period",
+          "mutationDirectoryName": "📅️update-run-period",
+          "scenarios": [
+            {
+              "id": "update-run-period-shortens-to-january",
+              "directoryName": "✅️shortens-to-january"
+            },
+            {
+              "id": "update-run-period-refuses-month-13",
+              "directoryName": "⛔️refuses-month-13"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-airflow-network",
+          "sourceMutationDirectoryName": "🫧️replace-airflow-network",
+          "mutationDirectoryName": "🫧️replace-airflow-network",
+          "scenarios": [
+            {
+              "id": "replace-airflow-network-attaches-a-network",
+              "directoryName": "✅️attaches-a-network"
+            },
+            {
+              "id": "replace-airflow-network-refuses-unpaired-nodes",
+              "directoryName": "⛔️refuses-unpaired-nodes"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-output-variable",
+          "sourceMutationDirectoryName": "📊️add-output-variable",
+          "mutationDirectoryName": "📊️add-output-variable",
+          "scenarios": [
+            {
+              "id": "add-output-variable-adds-zone-air-temp",
+              "directoryName": "✅️adds-zone-air-temp"
+            },
+            {
+              "id": "add-output-variable-refuses-a-duplicate",
+              "directoryName": "⛔️refuses-a-duplicate"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-output-variable",
+          "sourceMutationDirectoryName": "📉️remove-output-variable",
+          "mutationDirectoryName": "📉️remove-output-variable",
+          "scenarios": [
+            {
+              "id": "remove-output-variable-drops-zone-air-temp",
+              "directoryName": "✅️drops-zone-air-temp"
+            },
+            {
+              "id": "remove-output-variable-refuses-an-absent-one",
+              "directoryName": "⛔️refuses-an-absent-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-weather-file",
+          "sourceMutationDirectoryName": "🌦️bind-weather-file",
+          "mutationDirectoryName": "🌦️bind-weather-file",
+          "scenarios": [
+            {
+              "id": "bind-weather-file-binds-hannover-epw",
+              "directoryName": "✅️binds-hannover-epw"
+            },
+            {
+              "id": "bind-weather-file-refuses-a-bad-uri",
+              "directoryName": "⛔️refuses-a-bad-uri"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-weather-file",
+          "sourceMutationDirectoryName": "🌤️unbind-weather-file",
+          "mutationDirectoryName": "🌤️unbind-weather-file",
+          "scenarios": [
+            {
+              "id": "unbind-weather-file-unbinds-the-weather",
+              "directoryName": "✅️unbinds-the-weather"
+            },
+            {
+              "id": "unbind-weather-file-refuses-when-unbound",
+              "directoryName": "⛔️refuses-when-unbound"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-referenced-model",
+          "sourceMutationDirectoryName": "🪢️connect-referenced-model",
+          "mutationDirectoryName": "🪢️connect-referenced-model",
+          "scenarios": [
+            {
+              "id": "connect-referenced-model-connects-the-geometry",
+              "directoryName": "✅️connects-the-geometry"
+            },
+            {
+              "id": "connect-referenced-model-refuses-a-bad-uri",
+              "directoryName": "⛔️refuses-a-bad-uri"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-referenced-model",
+          "sourceMutationDirectoryName": "✂️disconnect-referenced-model",
+          "mutationDirectoryName": "✂️disconnect-referenced-model",
+          "scenarios": [
+            {
+              "id": "disconnect-referenced-model-disconnects-the-geometry",
+              "directoryName": "✅️disconnects-the-geometry"
+            },
+            {
+              "id": "disconnect-referenced-model-refuses-when-absent",
+              "directoryName": "⛔️refuses-when-absent"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-zone",
+          "sourceMutationDirectoryName": "🏠️rename-zone",
+          "mutationDirectoryName": "🏠️rename-zone",
+          "scenarios": [
+            {
+              "id": "rename-zone-renames-zone-one",
+              "directoryName": "✅️renames-zone-one"
+            },
+            {
+              "id": "rename-zone-refuses-a-missing-zone",
+              "directoryName": "⛔️refuses-a-missing-zone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-volume",
+          "sourceMutationDirectoryName": "📦️change-zone-volume",
+          "mutationDirectoryName": "📦️change-zone-volume",
+          "scenarios": [
+            {
+              "id": "change-zone-volume-resizes-zone-one",
+              "directoryName": "✅️resizes-zone-one"
+            },
+            {
+              "id": "change-zone-volume-refuses-zero-volume",
+              "directoryName": "⛔️refuses-zero-volume"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-multiplier",
+          "sourceMutationDirectoryName": "✖️change-zone-multiplier",
+          "mutationDirectoryName": "✖️change-zone-multiplier",
+          "scenarios": [
+            {
+              "id": "change-zone-multiplier-stacks-four-storeys",
+              "directoryName": "✅️stacks-four-storeys"
+            },
+            {
+              "id": "change-zone-multiplier-refuses-zero-instances",
+              "directoryName": "⛔️refuses-zero-instances"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-conditioned",
+          "sourceMutationDirectoryName": "🌬️change-zone-conditioned",
+          "mutationDirectoryName": "🌬️change-zone-conditioned",
+          "scenarios": [
+            {
+              "id": "change-zone-conditioned-frees-the-zone",
+              "directoryName": "✅️frees-the-zone"
+            },
+            {
+              "id": "change-zone-conditioned-refuses-a-missing-zone",
+              "directoryName": "⛔️refuses-a-missing-zone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-floor-area-participation",
+          "sourceMutationDirectoryName": "📐️change-zone-floor-area-participation",
+          "mutationDirectoryName": "📐️change-zone-floor-area-participation",
+          "scenarios": [
+            {
+              "id": "change-zone-floor-area-participation-excludes-the-zone",
+              "directoryName": "✅️excludes-the-zone"
+            },
+            {
+              "id": "change-zone-floor-area-participation-refuses-a-missing-zone",
+              "directoryName": "⛔️refuses-a-missing-zone"
             }
           ]
         }
       ],
       "kinds": [
-        "replace-model"
+        "rename-model",
+        "change-model-version",
+        "update-site",
+        "update-ground-temperature",
+        "update-run-period",
+        "replace-airflow-network",
+        "add-output-variable",
+        "remove-output-variable",
+        "bind-weather-file",
+        "unbind-weather-file",
+        "connect-referenced-model",
+        "disconnect-referenced-model",
+        "rename-zone",
+        "change-zone-volume",
+        "change-zone-multiplier",
+        "change-zone-conditioned",
+        "change-zone-floor-area-participation"
       ]
     }
   ],
@@ -84,16 +404,337 @@
       "subsetDirectoryName": "✳️any",
       "mutations": [
         {
-          "id": "replace-model",
+          "id": "rename-model",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
-            "operation": "replace-model",
+            "operation": "rename-model",
             "bridgeVersion": 1,
-            "variant": "ReplaceModel"
+            "variant": "RenameModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-model-version",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-model-version",
+            "bridgeVersion": 1,
+            "variant": "ChangeModelVersion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-site",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-site",
+            "bridgeVersion": 1,
+            "variant": "UpdateSite"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-ground-temperature",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-ground-temperature",
+            "bridgeVersion": 1,
+            "variant": "UpdateGroundTemperature"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-run-period",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-run-period",
+            "bridgeVersion": 1,
+            "variant": "UpdateRunPeriod"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-airflow-network",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-airflow-network",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAirflowNetwork"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "add-output-variable",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "add-output-variable",
+            "bridgeVersion": 1,
+            "variant": "AddOutputVariable"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-output-variable",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-output-variable",
+            "bridgeVersion": 1,
+            "variant": "RemoveOutputVariable"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "bind-weather-file",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "bind-weather-file",
+            "bridgeVersion": 1,
+            "variant": "BindWeatherFile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "unbind-weather-file",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "unbind-weather-file",
+            "bridgeVersion": 1,
+            "variant": "UnbindWeatherFile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "connect-referenced-model",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "connect-referenced-model",
+            "bridgeVersion": 1,
+            "variant": "ConnectReferencedModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-referenced-model",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-referenced-model",
+            "bridgeVersion": 1,
+            "variant": "DisconnectReferencedModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-zone",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-zone",
+            "bridgeVersion": 1,
+            "variant": "RenameZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-volume",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-volume",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-multiplier",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-multiplier",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneMultiplier"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-conditioned",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-conditioned",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneConditioned"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-floor-area-participation",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-floor-area-participation",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneFloorAreaParticipation"
           },
           "oracleRequirements": [
             {

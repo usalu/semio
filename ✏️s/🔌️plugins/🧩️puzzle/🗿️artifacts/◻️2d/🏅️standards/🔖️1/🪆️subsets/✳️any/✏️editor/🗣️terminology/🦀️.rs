@@ -3,7 +3,7 @@
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
 use crate::editor::puzzle2d::config::Puzzle2dConfig;
-use semio_framework_plugin::{AppLabels, Locale, Terminology};
+use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel, Terminology};
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale
@@ -52,23 +52,82 @@ semio_framework_plugin::app_labels! {
         fill_result: native_en "Fill result", native_de "Füllergebnis", reuse_en "Fill result", reuse_de "Füllergebnis";
         // example picker
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
+        // locale/terminology switches — the two actions that carry the axes themselves, so their own
+        // wording is terminology-invariant on purpose (same text in the `reuse` cells).
+        set_locale: native_en "Set Locale", native_de "Sprache festlegen", reuse_en "Set Locale", reuse_de "Sprache festlegen";
+        set_terminology: native_en "Set Terminology", native_de "Terminologie festlegen", reuse_en "Set Terminology", reuse_de "Terminologie festlegen";
     }
-}
-
-/// 🗣️ Resolves the active label set from `Puzzle2dConfig`'s own persisted locale/terminology
-/// strings (B1: was `view_state.locale`/`view_state.terminology`) through the generated
-/// `Puzzle2dLabels::labels` (`AppLabels`) exhaustive resolver.
-pub fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels {
-    let locale = if is_de_locale(config) { Locale::De } else { Locale::En };
-    let terminology = if config.terminology.as_str() == "reuse" { Terminology::Reuse } else { Terminology::Native };
-    Puzzle2dLabels::labels(locale, terminology)
 }
 
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
-pub fn is_de_locale(config: &Puzzle2dConfig) -> bool {
-    config.locale.starts_with("de")
+fn puzzle2d_locale(value: &str) -> Option<Locale> {
+    match value {
+        "en" | "en-US" => Some(Locale::En),
+        "de" | "de-DE" => Some(Locale::De),
+        _ => None,
+    }
+}
+
+/// 🗣️ Resolves the locale `Puzzle2dConfig` persists, through the explicit EN/DE BCP-47 tags only —
+/// the one seam a caller that needs the axis itself (rather than a label) reads; an unsupported or
+/// unset tag yields `None` so the caller fails closed instead of speaking English by accident.
+pub fn puzzle2d_config_locale(config: &Puzzle2dConfig) -> Option<Locale> {
+    puzzle2d_locale(config.locale.as_str())
+}
+
+/// 🗣️ Resolves the active label set from `Puzzle2dConfig`'s own persisted locale/terminology strings
+/// through the explicit EN/DE BCP-47 tags and generated terminology axis; unsupported values fail closed.
+pub fn puzzle2d_labels(config: &Puzzle2dConfig) -> Option<&'static Puzzle2dLabels> {
+    let locale = puzzle2d_locale(config.locale.as_str())?;
+    let terminology = Terminology::parse(config.terminology.as_str())?;
+    Some(Puzzle2dLabels::labels(locale, terminology))
+}
+
+/// 🗺️ Builds the full locale×terminology `LocalizedLabel` matrix from one `Puzzle2dLabels` field —
+/// for the static manifest, which must carry every (terminology, locale) cell up front rather than a
+/// single resolved-at-render-time `LabelText` (e.g. the "Overview"/"Assembly" window title, or the
+/// "Concrete Forest"/"Abbau Aufbau" example name).
+pub fn puzzle2d_localized(field: impl Fn(&Puzzle2dLabels) -> LabelText) -> LocalizedLabel {
+    LocalizedLabel::from_fn(move |terminology, locale| field(Puzzle2dLabels::labels(locale, terminology)).as_str().to_string())
+}
+
+/// 🗺️ Builds a full locale×terminology `LocalizedLabel` whose English/German manifest phrasing wraps
+/// one terminology-aware `Puzzle2dLabels` word (e.g. "Add {node}" / "{node} hinzufügen").
+pub fn puzzle2d_localized_phrase(field: impl Fn(&Puzzle2dLabels) -> LabelText, en: impl Fn(&str) -> String + 'static, de: impl Fn(&str) -> String + 'static) -> LocalizedLabel {
+    LocalizedLabel::from_fn(move |terminology, locale| {
+        let word = field(Puzzle2dLabels::labels(locale, terminology)).as_str();
+        match locale {
+            Locale::En => en(word),
+            Locale::De => de(word),
+        }
+    })
 }
 //#endregion 🔖️Locale
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn label_resolution_has_no_locale_or_terminology_default() {
+        for (locale, terminology) in [("en-US", "native"), ("en", "reuse"), ("de-DE", "native"), ("de", "reuse")] {
+            let mut config = Puzzle2dConfig::default();
+            config.locale = locale.into();
+            config.terminology = terminology.into();
+            assert!(puzzle2d_labels(&config).is_some());
+        }
+        for locale in ["", "fr", "de-AT", "en-GB"] {
+            let mut unsupported_locale = Puzzle2dConfig::default();
+            unsupported_locale.locale = locale.into();
+            assert!(puzzle2d_labels(&unsupported_locale).is_none());
+            assert!(puzzle2d_config_locale(&unsupported_locale).is_none());
+        }
+        let mut unsupported_terminology = Puzzle2dConfig::default();
+        unsupported_terminology.terminology = "legacy".into();
+        assert!(puzzle2d_labels(&unsupported_terminology).is_none());
+    }
+}
+//#endregion 🧪️Tests

@@ -479,13 +479,33 @@ function parseAssetsForCrate(manifestPath: string, repoRoot: string, view?: Regi
   return rows;
 }
 
+/** @emoji ✂️ The variation selector that closes an emoji identity in `exampleSlugPattern` — everything after it is the example id. */
+const EXAMPLE_SLUG_IDENTITY_SEPARATOR = "\uFE0F";
+
+/** @emoji 🪪️ The example ids one owner descriptor declares for a playground's app — every `manifest.examples` row when the playground names no app. */
+function declaredExampleIdsForPlayground(descriptor: Record<string, unknown> | undefined, app?: string): ReadonlySet<string> {
+  const manifest = descriptor?.manifest as { examples?: unknown } | undefined;
+  const rows = Array.isArray(manifest?.examples) ? (manifest.examples as unknown[]) : [];
+  return new Set(
+    rows
+      .filter((row) => app === undefined || (row as { appId?: unknown }).appId === app)
+      .map((row) => (row as { id?: unknown }).id)
+      .filter((id): id is string => typeof id === "string"),
+  );
+}
+
 /**
  * @emoji 🖼️ Example ids for one playground row: emoji-slug dirs under `🗿️artifacts/<a>/📚️examples/` and
- * every `👁️viewer`/`✏️editor` surface's `📚️examples/` that carry a definition leaf. Falls back to the
- * variant-suffix surface (matched by its subset name) when artifact/surface scans are empty.
+ * every `👁️viewer`/`✏️editor` surface's `📚️examples/` that carry a definition leaf, narrowed to the
+ * examples this playground's own app declares. One crate serves several apps (`puzzle` ships 2d/3d/5d
+ * from one crate), so the membership scan alone advertises a sibling app's examples and test-only
+ * surface fixtures; the owner descriptor is the app's own declaration, so it decides whenever it
+ * carries one. The id of an example slug is its `exampleSlugPattern` tail — everything after the
+ * emoji identity's `U+FE0F`.
  */
-function discoverExamplesForPlayground(repoRoot: string, cratePath: string, _pluginId: string, _variant: string, view?: RegistryCatalogInputView): string[] {
-  return registryExampleCatalog(repoRoot, cratePath, TAXONOMY, view);
+function discoverExamplesForPlayground(repoRoot: string, cratePath: string, declared: ReadonlySet<string>, view?: RegistryCatalogInputView): string[] {
+  const slugs = registryExampleCatalog(repoRoot, cratePath, TAXONOMY, view);
+  return declared.size === 0 ? slugs : slugs.filter((slug) => declared.has(slug.slice(slug.lastIndexOf(EXAMPLE_SLUG_IDENTITY_SEPARATOR) + 1)));
 }
 
 
@@ -507,9 +527,11 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
   for (const entry of entries) {
     const manifestPath = join(repoRoot, entry.cratePath, "Cargo.toml");
     const crateAssets = parseAssetsForCrate(manifestPath, repoRoot, options.view);
+    const descriptor = readDescriptorJson(repoRoot, entry.cratePath, options.view);
     for (const playground of parsePlaygroundsForCrate(manifestPath, entry.pluginId, entry.cratePath, repoRoot, options.view)) {
       const assets = crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app);
-      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant, options.view), assets });
+      const declared = declaredExampleIdsForPlayground(descriptor, playground.app);
+      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, declared, options.view), assets });
     }
   }
   for (let i = 0; i < playgrounds.length; i++) {

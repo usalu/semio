@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "bodyHex", "encodingSha256", "noneEncodingSha256", "closed", "cases", "loadCases", "rawLengths"],
+  "properties": {
+    "schema": { "const": "semio.hub.trusted-browser-actor-fixture.v1" },
+    "bodyHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+    "encodingSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "noneEncodingSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "closed": { "$ref": "https://semio.tech/schemas/hub/trusted-catalog-bundle-v2.json#/$defs/browserActor" },
+    "rawLengths": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["token", "accepted"],
+        "properties": { "token": { "type": "string", "minLength": 1 }, "accepted": { "type": "boolean" } }
+      }
+    },
+    "loadCases": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "bodyHex", "byteLength", "cancelAfterDescriptor", "accepted"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "bodyHex": { "type": ["string", "null"], "pattern": "^(?:[0-9a-f]{2})*$" },
+          "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+          "cancelAfterDescriptor": { "type": "boolean" },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    },
+    "cases": {
+      "type": "array", "minItems": 26, "maxItems": 26,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "kind", "renderer", "set", "shape", "accepted"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["none", "closed-browser-actor"] },
+          "renderer": { "enum": ["react", "wgpu", "wasm"] },
+          "set": { "type": "object" },
+          "remove": { "type": "string" },
+          "shape": { "type": "boolean" },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

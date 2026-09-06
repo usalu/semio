@@ -3,11 +3,11 @@
 //! are only ever appended, so this only round-trips exactly when `observation_index` addresses the
 //! LAST observation — the only way this mutation is ever emitted.
 
-use crate::artifacts::remodeling::RemodelingSnapshot;
 use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingGcpList};
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🚷 `remove-gcp-observation` payload — `observation_index` is a BASE-state position.

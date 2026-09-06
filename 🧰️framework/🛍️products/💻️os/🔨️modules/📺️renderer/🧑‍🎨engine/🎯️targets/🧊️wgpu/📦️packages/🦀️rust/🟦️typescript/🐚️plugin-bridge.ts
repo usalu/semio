@@ -68,7 +68,7 @@ import {
   SemioFaultError,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodePackValue, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import { rendererResidentLedger } from "../../../../../💾️resident/🟦️.ts";
@@ -124,11 +124,19 @@ function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], comm
 //#region 🔖️RetainedWindow
 const retainedWindowByActor = new Map<string, RetainedSurface>();
 
+/** 🖼️ One wire `UiPatch` reconciled onto `previous`: every `pack`-typed op payload is projected through
+ * {@link decodePackWire} and the two WIT `u64` revisions narrowed through {@link packWireNatural}, so a
+ * lossless integer carrier never reaches the retained tree as a `{kind, value}` object and a `bigint`
+ * revision never fails the `baseRevision` identity check as a permanent desync. */
+export function reconcileRetainedWindowPatch(previous: RetainedSurface | null, patch: WireUiPatch): { readonly surface: RetainedSurface | null; readonly desynced: boolean } {
+  const ops = decodeWirePatchOps(patch.ops ?? [], decodePackWire);
+  return applyUiPatchToRetained(previous, { revision: packWireNatural(patch.revision, "uiPatch.revision"), baseRevision: packWireNatural(patch.baseRevision, "uiPatch.baseRevision"), ops });
+}
+
 function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiPatch[]): void {
   for (const patch of uiPatches) {
-    const ops = decodeWirePatchOps(patch.ops ?? [], decodePackValue);
     const previous = retainedWindowByActor.get(actorId) ?? null;
-    const { surface, desynced } = applyUiPatchToRetained(previous, { revision: patch.revision ?? 0, baseRevision: patch.baseRevision ?? 0, ops });
+    const { surface, desynced } = reconcileRetainedWindowPatch(previous, patch);
     if (desynced) {
       console.warn(`[DEBUG] plugin-bridge: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — keeping the previously retained body`);
       continue;
@@ -160,6 +168,21 @@ const pendingTurnEffects = new Map<number, WireVariant[]>();
  * single global `next_instance_id`. */
 let nextGlobalInstanceId = 1;
 
+/** 📥️ Projects the four `pack`-typed payloads of one `Invocation` reply frame onto exact JSON. The wire
+ * codec returns lossless integer carriers, so a raw decode would hand the shell `{kind, value}` objects
+ * wherever a plugin returned a `u64` — the `render`/`handleAction` output, the diagnostics list, the UI
+ * scope and the history patch all cross this one boundary. */
+export function decodeInvocationPayloads(frame: { readonly output: ArrayLike<number>; readonly diagnostics: ArrayLike<number>; readonly ui_scope: ArrayLike<number>; readonly history_patch: ArrayLike<number> }): Pick<InvocationResponse, "output" | "diagnostics" | "uiScope" | "historyPatch"> {
+  const diagnostics = decodePackWire(new Uint8Array(frame.diagnostics), "invocation.diagnostics");
+  const historyPatch = decodePackWire(new Uint8Array(frame.history_patch), "invocation.historyPatch");
+  return {
+    output: decodePackWire(new Uint8Array(frame.output), "invocation.output"),
+    diagnostics: Array.isArray(diagnostics) ? (diagnostics as InvocationResponse["diagnostics"]) : [],
+    uiScope: decodePackWire(new Uint8Array(frame.ui_scope), "invocation.uiScope") as InvocationResponse["uiScope"],
+    historyPatch: historyPatch && typeof historyPatch === "object" ? (historyPatch as InvocationResponse["historyPatch"]) : undefined,
+  };
+}
+
 async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, viewState: unknown): Promise<InvocationResponse> {
   const frames = await client.command(encodePackValue(invocation), viewState);
   let output: unknown = null;
@@ -168,12 +191,7 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   let historyPatch: InvocationResponse["historyPatch"];
   for (const frame of frames) {
     if ("Invocation" in frame) {
-      output = decodePackValue(new Uint8Array(frame.Invocation.output));
-      const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
-      diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
-      uiScope = decodePackValue(new Uint8Array(frame.Invocation.ui_scope)) as InvocationResponse["uiScope"];
-      const decodedHistoryPatch = decodePackValue(new Uint8Array(frame.Invocation.history_patch));
-      historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
+      ({ output, diagnostics, uiScope, historyPatch } = decodeInvocationPayloads(frame.Invocation));
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault) throw new SemioFaultError(fault);
@@ -182,7 +200,7 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   }
   const leftover = pendingTurnEffects.get(instanceId) ?? [];
   pendingTurnEffects.delete(instanceId);
-  const requestedEffects = leftover.map((effect) => wireEffectToFriendly(effect, decodePackValue)).filter((effect): effect is Effect => effect !== null);
+  const requestedEffects = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
   return { output, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
 }
 //#endregion 🔖️Invocation

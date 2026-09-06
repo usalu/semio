@@ -8,7 +8,9 @@
 // 🏃️ `motion` is deliberately absent: the pipeline accepts `EngineParams::motion_enabled` but does not
 // yet drive the motion topic file from `advance()` — a documented gap carried over verbatim from the
 // pre-merge crate, which declared the same dependency without ever using it.
-use crate::editor::remodeling::engine::{camera as remodeling_camera, dense as remodeling_dense, feature as remodeling_feature, geo as remodeling_geo, images as remodeling_image, mesh as remodeling_mesh, sfm as remodeling_sfm, video as remodeling_video};
+use crate::editor::remodeling::engine::{
+    camera as remodeling_camera, dense as remodeling_dense, feature as remodeling_feature, geo as remodeling_geo, images as remodeling_image, mesh as remodeling_mesh, sfm as remodeling_sfm, video as remodeling_video,
+};
 
 // #region 🔖️Input
 use std::collections::VecDeque;

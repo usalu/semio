@@ -1,0 +1,8 @@
+{
+  "schema": "semio.raster.io.bmp-parity.v1",
+  "note": "A 5x3 gradient composite — width 5 forces a 15-byte scanline padded to 16, so the row-padding rule is exercised and not just the aligned case. Asserted from BOTH languages: bun `🚪️io/🧪️tests/🟦️.ts` and Rust `🚪️io/🦀️.rs::bmp_export_matches_the_typescript_parity_fixture`.",
+  "width": 5,
+  "height": 3,
+  "rgba8": [0, 0, 0, 255, 40, 0, 7, 255, 80, 0, 14, 255, 120, 0, 21, 255, 160, 0, 28, 255, 0, 60, 11, 255, 40, 60, 18, 255, 80, 60, 25, 255, 120, 60, 32, 255, 160, 60, 39, 255, 0, 120, 22, 255, 40, 120, 29, 255, 80, 120, 36, 255, 120, 120, 43, 255, 160, 120, 50, 255],
+  "bmpHex": "424d660000000000000036000000280000000500000003000000010018000000000030000000000000000000000000000000000000001678001d78282478502b78783278a0000b3c00123c28193c50203c78273ca0000000000700280e00501500781c00a000"
+}

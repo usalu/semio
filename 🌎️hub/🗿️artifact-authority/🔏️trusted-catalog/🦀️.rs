@@ -13,6 +13,11 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::AsyncReadExt;
 
+#[path = "🌐️browser-actor/🦀️.rs"]
+mod browser_actor;
+use browser_actor::BundleBrowserActor;
+use directory::os_directory::schema::{DocumentBrowserActorSourceV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES};
+
 /// 🧯️ Maximum accepted serialized bundle bytes.
 pub const TRUSTED_BUNDLE_MAX_BYTES: u64 = 4 * 1024 * 1024;
 /// 🧯️ Maximum accepted committed package-descriptor bytes.
@@ -23,6 +28,8 @@ pub const TRUSTED_COMPONENT_MAX_BYTES: u64 = 64 * 1024 * 1024;
 pub const TRUSTED_COMPONENT_CLOSURE_MAX_BYTES: u64 = 512 * 1024 * 1024;
 /// 🧯️ Maximum retained descriptor bytes across one selected closure.
 pub const TRUSTED_DESCRIPTOR_CLOSURE_MAX_BYTES: u64 = 64 * 1024 * 1024;
+/// 🌐️ Maximum retained actor bodies across the selected package closure.
+pub const TRUSTED_BROWSER_ACTOR_CLOSURE_MAX_BYTES: u64 = 128 * 1024 * 1024;
 /// 🧯️ Maximum UTF-8 bytes retained for one identity or version field.
 pub const TRUSTED_IDENTITY_MAX_BYTES: usize = 256;
 /// 🧯️ Maximum UTF-8 bytes accepted for one bundle-relative path.
@@ -128,6 +135,7 @@ struct BundlePackage {
     dependencies: Vec<BundleIdentity>,
     component: BundleComponent,
     descriptor: BundleFile,
+    browser_actor: BundleBrowserActor,
     native_codecs: Vec<BundleCodec>,
     open_targets: Vec<BundleOpenTarget>,
 }
@@ -215,6 +223,8 @@ pub struct VerifiedTrustedPackage {
     descriptor_sha256: [u8; 32],
     component_bytes: Arc<[u8]>,
     descriptor_bytes: Arc<[u8]>,
+    browser_actor: DocumentOpenBrowserActorV1,
+    browser_actor_bytes: Option<Arc<[u8]>>,
     descriptor: Arc<PackageDescriptor>,
 }
 
@@ -307,6 +317,7 @@ pub struct VerifiedExecutionTargetAssets {
     pub selection: VerifiedDocumentOpenSelectionV1,
     pub component: Arc<[u8]>,
     pub descriptor: Arc<[u8]>,
+    pub browser_actor: Option<Arc<[u8]>>,
 }
 
 /// 🧬 One exact document-open choice retained only after the complete catalog verifies.
@@ -317,6 +328,7 @@ pub struct VerifiedDocumentOpenSelectionV1 {
     pub parent_dialect: semio_framework::ArtifactDialect,
     pub surface: DocumentOpenSurfaceV1,
     pub grant: DocumentOpenGrantV1,
+    pub browser_actor: DocumentOpenBrowserActorV1,
 }
 
 impl VerifiedTrustedCatalog {
@@ -365,7 +377,14 @@ impl VerifiedTrustedCatalog {
         if package.component_bytes.is_empty() || package.descriptor_bytes.is_empty() || package.component_bytes.len() as u64 > TRUSTED_COMPONENT_MAX_BYTES || package.descriptor_bytes.len() as u64 > TRUSTED_DESCRIPTOR_MAX_BYTES {
             return None;
         }
-        Some(VerifiedExecutionTargetAssets { selection, component: Arc::clone(&package.component_bytes), descriptor: Arc::clone(&package.descriptor_bytes) })
+        let browser_actor = match (&selection.browser_actor, &package.browser_actor, &package.browser_actor_bytes) {
+            (DocumentOpenBrowserActorV1::None, _, _) if !matches!(selection.surface.renderer_target, DocumentOpenRendererTargetV1::Wasm) => None,
+            (selected, retained, Some(bytes)) if selected == retained && matches!(selected, DocumentOpenBrowserActorV1::ClosedBrowserActor { .. }) && !bytes.is_empty() && bytes.len() as u64 <= DOCUMENT_BROWSER_ACTOR_MAX_BYTES => {
+                Some(Arc::clone(bytes))
+            }
+            _ => return None,
+        };
+        Some(VerifiedExecutionTargetAssets { selection, component: Arc::clone(&package.component_bytes), descriptor: Arc::clone(&package.descriptor_bytes), browser_actor })
     }
 
     /// 🎯 Resolves one exact descriptor, subject role, and optional surface preference without fallback.
@@ -420,7 +439,7 @@ impl TrustedCatalogLoader {
         let bundle: Bundle = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
         let SelectedTrustedBundleV1 { package_indices: order, profile } = validate_bundle(&bundle, profile_id)?;
         let order_len = u64::try_from(order.len()).map_err(|error| catalog_error(error))?;
-        let total_units = order_len.checked_mul(3).and_then(|units| units.checked_add(1)).ok_or_else(|| catalog("catalog progress total overflow"))?;
+        let total_units = order_len.checked_mul(4).and_then(|units| units.checked_add(1)).ok_or_else(|| catalog("catalog progress total overflow"))?;
         let requirements = order
             .iter()
             .flat_map(|index| {
@@ -437,6 +456,7 @@ impl TrustedCatalogLoader {
         drop(requirements);
         let mut retained_component_bytes = 0u64;
         let mut retained_descriptor_bytes = 0u64;
+        let mut retained_browser_actor_bytes = 0u64;
         let mut packages = Vec::with_capacity(order.len());
         let mut codecs = Vec::new();
         let mut open_targets = Vec::new();
@@ -476,6 +496,23 @@ impl TrustedCatalogLoader {
             let descriptor = decode_package_descriptor(&descriptor_bytes)?;
             validate_descriptor(record, &descriptor, &bundle.packages)?;
             report_package_progress(context, position, 2, total_units)?;
+
+            let browser_actor = record.browser_actor.identity();
+            record.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &hex_lower(&component_sha256), descriptor_byte_sha256: &hex_lower(&descriptor_sha256) }, package_actor_renderer(record))?;
+            let browser_actor_bytes = if let Some(file) = record.browser_actor.file() {
+                retained_browser_actor_bytes = retained_browser_actor_bytes.checked_add(file.byte_length).filter(|bytes| *bytes <= TRUSTED_BROWSER_ACTOR_CLOSURE_MAX_BYTES).ok_or(AuthorityError::ResourceLimit("trusted browser actor closure byte"))?;
+                let actor_path = contained_path(&root, &file.path).await?;
+                if !resolved_paths.insert(actor_path.clone()) {
+                    return Err(catalog("trusted browser actor path is already used by the selected closure"));
+                }
+                let bytes = read_bounded(&actor_path, file.byte_length, context).await?;
+                verify_length(file.byte_length, bytes.len())?;
+                verify_digest(&file.sha256, sha256(&bytes, context).await?, "browser actor sha256")?;
+                Some(Arc::<[u8]>::from(bytes))
+            } else {
+                None
+            };
+            report_package_progress(context, position, 3, total_units)?;
 
             context.checkpoint()?;
             let native_bindings = providers.preview(NativeCodecProviderPackageV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version }, &descriptor, context)?;
@@ -546,13 +583,14 @@ impl TrustedCatalogLoader {
                     artifact: DocumentOpenArtifactV1 { kind: target.artifact_kind.clone(), schema: target.artifact_schema.clone(), pack_schema_hash: target.pack_schema_hash.clone() },
                     surface: DocumentOpenSurfaceV1 { surface_id: target.surface_id.clone(), app_id: target.app_id.clone(), window_kind_id: target.window_kind_id.clone(), role, renderer_target },
                     grant: DocumentOpenGrantV1 { read: target.grant.read, write: target.grant.write, observe: target.grant.observe },
+                    browser_actor: if matches!(renderer_target, DocumentOpenRendererTargetV1::Wasm) { browser_actor.clone() } else { DocumentOpenBrowserActorV1::None },
                 };
                 if open_targets.iter().any(|existing| document_open_target_sort_key(existing) == document_open_target_sort_key(&selection)) {
                     return Err(catalog("document-open target identity is duplicated"));
                 }
                 open_targets.push(selection);
             }
-            report_package_progress(context, position, 3, total_units)?;
+            report_package_progress(context, position, 4, total_units)?;
             packages.push(VerifiedTrustedPackage {
                 plugin_id: record.plugin_id.clone(),
                 package: PackageRef { package: PackageId(record.package_id.clone()), hash: PackageHash(component_blake3) },
@@ -561,6 +599,8 @@ impl TrustedCatalogLoader {
                 descriptor_sha256,
                 component_bytes: component_bytes.into(),
                 descriptor_bytes: descriptor_bytes.into(),
+                browser_actor,
+                browser_actor_bytes,
                 descriptor: Arc::new(descriptor),
             });
         }
@@ -691,6 +731,14 @@ fn selected_closure_digest(identities: &[BundleIdentity]) -> Result<[u8; 32], Au
     Ok(Sha256::digest(&encoded))
 }
 
+fn package_actor_renderer(package: &BundlePackage) -> &'static str {
+    if package.open_targets.iter().any(|target| matches!(target.renderer_target, BundleRendererTarget::Wasm)) {
+        "wasm"
+    } else {
+        "react"
+    }
+}
+
 fn trusted_profile_generation(bundle: &Bundle, profile: &BundleProfile) -> Result<String, AuthorityError> {
     let mut encoded = Vec::new();
     encoded.extend_from_slice(b"semio/hub/trusted-profile-generation/v1\0");
@@ -717,6 +765,8 @@ fn trusted_profile_generation(bundle: &Bundle, profile: &BundleProfile) -> Resul
         ] {
             append_document_open_catalog_field(&mut encoded, value)?;
         }
+        package.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &package.component.sha256, descriptor_byte_sha256: &package.descriptor.sha256 }, package_actor_renderer(package))?;
+        package.browser_actor.append_generation(&mut encoded)?;
         let mut dependencies = package.dependencies.iter().collect::<Vec<_>>();
         dependencies.sort();
         encoded.extend_from_slice(&u32::try_from(dependencies.len()).map_err(catalog_error)?.to_be_bytes());
@@ -829,8 +879,14 @@ fn validate_bundle(bundle: &Bundle, profile_id: &str) -> Result<SelectedTrustedB
         validate_file(&BundleFile { path: package.component.path.clone(), byte_length: package.component.byte_length, sha256: package.component.sha256.clone() }, TRUSTED_COMPONENT_MAX_BYTES)?;
         decode_digest(&package.component.blake3, "component blake3")?;
         validate_file(&package.descriptor, TRUSTED_DESCRIPTOR_MAX_BYTES)?;
-        if !paths.insert(package.component.path.as_str()) || !paths.insert(package.descriptor.path.as_str()) {
+        if !paths.insert(package.component.path.clone()) || !paths.insert(package.descriptor.path.clone()) {
             return Err(catalog("trusted file path is reused across package records"));
+        }
+        package.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &package.component.sha256, descriptor_byte_sha256: &package.descriptor.sha256 }, package_actor_renderer(package))?;
+        if let Some(file) = package.browser_actor.file() {
+            if !paths.insert(file.path) {
+                return Err(catalog("trusted browser actor path is reused across package records"));
+            }
         }
         let mut dependencies = BTreeSet::new();
         for dependency in &package.dependencies {
@@ -1165,7 +1221,7 @@ fn decode_digest(value: &str, label: &str) -> Result<[u8; 32], AuthorityError> {
 
 fn report_package_progress(context: &OperationContext<'_>, package_position: usize, package_phase: u64, total_units: u64) -> Result<(), AuthorityError> {
     let position = u64::try_from(package_position).map_err(catalog_error)?;
-    let completed_units = position.checked_mul(3).and_then(|units| units.checked_add(package_phase)).ok_or_else(|| catalog("catalog progress overflow"))?;
+    let completed_units = position.checked_mul(4).and_then(|units| units.checked_add(package_phase)).ok_or_else(|| catalog("catalog progress overflow"))?;
     context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogLoading, completed_units, total_units })
 }
 
@@ -1313,6 +1369,7 @@ mod tests {
             );
             record["descriptor"]["byteLength"] = bytes.len().into();
             record["descriptor"]["sha256"] = hex_lower(&Sha256::digest(&bytes)).into();
+            if record["browserActor"]["kind"] == "closed-browser-actor" { record["browserActor"]["sourceDescriptorByteSha256"] = record["descriptor"]["sha256"].clone(); }
             std::fs::write(self.root.join(record["descriptor"]["path"].as_str().expect("descriptor path")), bytes).expect("replace descriptor");
             self.refresh_profile_generation();
             self.persist_bundle();
@@ -1334,6 +1391,15 @@ mod tests {
 
     fn fixture_json() -> serde_json::Value {
         serde_json::from_str(include_str!("🧪️fixtures/👥️two-package/🔣️.json")).expect("trusted-catalog fixture")
+    }
+
+    fn synthetic_browser_actor(component: &str, descriptor: &str, path: &str) -> serde_json::Value {
+        let mut fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+        let mut actor = fixture["closed"].take();
+        actor["sourceComponentSha256"] = component.into();
+        actor["sourceDescriptorByteSha256"] = descriptor.into();
+        actor["path"] = path.into();
+        actor
     }
 
     fn local_stdio_gis_profile_bundle() -> Bundle {
@@ -1363,6 +1429,7 @@ mod tests {
                 dependencies: vec![],
                 component: BundleComponent { path: "packages/gis/component.wasm".into(), byte_length: 1, sha256: "11".repeat(32), blake3: "12".repeat(32) },
                 descriptor: BundleFile { path: "packages/gis/descriptor.semio".into(), byte_length: 1, sha256: "13".repeat(32) },
+                browser_actor: serde_json::from_value(synthetic_browser_actor(&"11".repeat(32), &"13".repeat(32), "packages/gis/browser/closed-actor.mjs")).unwrap(),
                 native_codecs: vec![
                     BundleCodec { artifact_kind: "s.gis.gismap".into(), artifact_schema: "gis.map".into(), pack_schema_hash: map_hash },
                     BundleCodec { artifact_kind: "s.gis.gisterrain".into(), artifact_schema: "gis.terrain".into(), pack_schema_hash: "a2".repeat(32) },
@@ -1377,6 +1444,7 @@ mod tests {
                 dependencies: vec![],
                 component: BundleComponent { path: "packages/stdio/component.wasm".into(), byte_length: 1, sha256: "21".repeat(32), blake3: "22".repeat(32) },
                 descriptor: BundleFile { path: "packages/stdio/descriptor.semio".into(), byte_length: 1, sha256: "23".repeat(32) },
+                browser_actor: BundleBrowserActor::None,
                 native_codecs: stdio_codecs,
                 open_targets: vec![],
             },
@@ -1450,9 +1518,11 @@ mod tests {
     fn prepared_fixture() -> FixtureDirectory {
         let sequence = FIXTURE_SEQUENCE.fetch_add(1, Ordering::SeqCst);
         let schema = format!("fixture.document.catalog.{}.{}@1", std::process::id(), sequence);
-        let root = std::env::temp_dir().join(format!("semio-hub-trusted-catalog-{}-{sequence}", std::process::id()));
+        let root = PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned catalog fixture root")).join(format!("semio-hub-trusted-catalog-{}-{sequence}", std::process::id()));
         std::fs::create_dir_all(root.join("components")).expect("component directory");
         std::fs::create_dir_all(root.join("descriptors")).expect("descriptor directory");
+        std::fs::create_dir_all(root.join("browser")).expect("actor directory");
+        std::fs::write(root.join("browser/closed-actor.mjs"), b"abc").expect("synthetic actor, never executed");
         let mut fixture = fixture_json();
         let mut bundle = fixture["bundle"].take();
         bundle["packages"][0]["nativeCodecs"][0]["artifactSchema"] = schema.clone().into();
@@ -1470,6 +1540,7 @@ mod tests {
         for (index, bytes) in [(0, root_descriptor), (1, base_descriptor)] {
             bundle["packages"][index]["descriptor"]["byteLength"] = bytes.len().into();
             bundle["packages"][index]["descriptor"]["sha256"] = hex_lower(&Sha256::digest(&bytes)).into();
+            if index == 0 { bundle["packages"][index]["browserActor"]["sourceDescriptorByteSha256"] = bundle["packages"][index]["descriptor"]["sha256"].clone(); }
             let path = root.join(bundle["packages"][index]["descriptor"]["path"].as_str().expect("descriptor path"));
             std::fs::write(path, bytes).expect("write descriptor");
         }
@@ -1531,6 +1602,7 @@ mod tests {
         std::fs::create_dir(&root).expect("exclusive GIS binding fixture directory");
         std::fs::write(root.join("component.wasm"), component).expect("write synthetic GIS component");
         std::fs::write(root.join("descriptor.semio"), &bytes).expect("write actual GIS descriptor");
+        std::fs::write(root.join("closed-actor.mjs"), b"abc").expect("synthetic actor, never executed");
         let bundle = serde_json::json!({
             "schemaVersion": 2,
             "profiles": [{ "id": "frozen-gis-test", "selectedClosure": [package.clone()], "selectedClosureSha256": "01".repeat(32),
@@ -1538,6 +1610,7 @@ mod tests {
             "packages": [{ "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [],
                 "component": { "path": "component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
                 "descriptor": { "path": "descriptor.semio", "byteLength": bytes.len(), "sha256": hex_lower(&Sha256::digest(&bytes)) },
+                "browserActor": synthetic_browser_actor(&component_sha256, &hex_lower(&Sha256::digest(&bytes)), "closed-actor.mjs"),
                 "nativeCodecs": native_codecs, "openTargets": [target] }]
         });
         let mut fixture = FixtureDirectory { bundle_path: root.join("trusted-catalog.json"), root, bundle, schema: "gis.map".into() };
@@ -1833,6 +1906,11 @@ mod tests {
         assert_eq!(hex_lower(&Sha256::digest(&assets.component)), assets.selection.package.component_sha256);
         assert_eq!(semio_framework_hash::hash_bytes(&assets.component), assets.selection.package.component_blake3);
         assert_eq!(hex_lower(&Sha256::digest(&assets.descriptor)), assets.selection.package.descriptor_byte_sha256);
+        let actor = assets.browser_actor.as_ref().expect("Wasm selection retains its actor");
+        let retained = catalog.packages.iter().find(|package| package.plugin_id == selection.package.plugin_id).unwrap();
+        assert!(Arc::ptr_eq(actor, retained.browser_actor_bytes.as_ref().unwrap()));
+        assert_eq!(actor.as_ref(), b"abc");
+        assert_eq!(assets.selection.browser_actor, retained.browser_actor);
         assert!(assets.component.len() as u64 <= TRUSTED_COMPONENT_MAX_BYTES && assets.descriptor.len() as u64 <= TRUSTED_DESCRIPTOR_MAX_BYTES);
         // 🔁 A rotated (or merely guessed) generation is never served, and no role, surface or
         // descriptor substitution reaches bytes.
@@ -1915,6 +1993,63 @@ mod tests {
             assert_eq!(catalog.resolve(&TrustedArtifactIdentity::from_descriptor(&candidate)).await.is_ok(), case["codec"].as_bool().unwrap(), "codec {}", case["change"]);
             assert_eq!(catalog.resolve_document_open(&candidate, Some(&surface), true).is_some(), case["open"].as_bool().unwrap(), "open {}", case["change"]);
         }
+    }
+
+    #[tokio::test]
+    async fn trusted_browser_actor_loader_verifies_retains_and_cancels_before_publication() {
+        struct ActorControl {
+            control: TestControl,
+            cancel_after_descriptor: bool,
+        }
+        impl AuthorityOperationControl for ActorControl {
+            fn now_ms(&self) -> u64 { 0 }
+            fn is_cancelled(&self) -> bool { self.control.is_cancelled() }
+            fn report(&self, progress: AuthorityProgress) {
+                if self.cancel_after_descriptor && progress.stage == AuthorityProgressStage::CatalogLoading && progress.completed_units == 6 {
+                    self.control.cancelled.store(true, Ordering::SeqCst);
+                }
+                self.control.report(progress);
+            }
+        }
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+        for law in corpus["loadCases"].as_array().unwrap() {
+            let mut fixture = prepared_fixture();
+            let path = fixture.root.join(fixture.bundle["packages"][0]["browserActor"]["path"].as_str().unwrap());
+            if let Some(hex) = law["bodyHex"].as_str() {
+                let bytes: Vec<u8> = hex.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+                std::fs::write(&path, bytes).unwrap();
+            } else {
+                std::fs::remove_file(&path).unwrap();
+            }
+            fixture.bundle["packages"][0]["browserActor"]["byteLength"] = law["byteLength"].clone();
+            fixture.refresh_profile_generation();
+            fixture.persist_bundle();
+            let control = ActorControl { control: TestControl::new(), cancel_after_descriptor: law["cancelAfterDescriptor"].as_bool().unwrap() };
+            let provider = FixtureProviderSource::new(vec![fixture.binding()]);
+            let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
+            let result = TrustedCatalogLoader::load(&fixture.bundle_path, "fixture", &provider, &context).await;
+            let accepted = law["accepted"].as_bool().unwrap();
+            assert_eq!(result.is_ok(), accepted, "{}", law["id"]);
+            assert_eq!(document_codec(&fixture.schema).await.unwrap().is_some(), accepted, "{} codec publication", law["id"]);
+            let calls = provider.calls.lock().unwrap();
+            assert_eq!(calls.iter().any(|package| package == "semio:fixture-editor"), accepted, "{} provider preview", law["id"]);
+            if let Ok(catalog) = result {
+                let package = catalog.packages.iter().find(|package| package.plugin_id == "fixture.editor").unwrap();
+                let bytes = package.browser_actor_bytes.as_ref().unwrap();
+                assert_eq!(bytes.as_ref(), b"abc");
+                let selected = catalog.selected_document_open().unwrap();
+                assert_eq!(selected.browser_actor, package.browser_actor);
+                std::fs::write(&path, b"untrusted replacement").unwrap();
+                assert_eq!(bytes.as_ref(), b"abc");
+                let DocumentOpenBrowserActorV1::ClosedBrowserActor { sha256, source_component_sha256, source_descriptor_byte_sha256, .. } = &selected.browser_actor else { panic!("required actor") };
+                assert_eq!(*sha256, hex_lower(&Sha256::digest(bytes)));
+                assert_eq!(*source_component_sha256, selected.package.component_sha256);
+                assert_eq!(*source_descriptor_byte_sha256, selected.package.descriptor_byte_sha256);
+            } else if control.cancel_after_descriptor {
+                assert!(matches!(result, Err(AuthorityError::Cancelled)));
+            }
+        }
+        eprintln!("[DEBUG] trusted browser actor loader:8 neutral body/cancellation vectors; retained synthetic bytes never executed");
     }
 
     #[test]

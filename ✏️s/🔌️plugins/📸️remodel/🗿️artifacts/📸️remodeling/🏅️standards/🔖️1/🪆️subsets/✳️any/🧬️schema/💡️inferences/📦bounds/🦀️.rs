@@ -9,8 +9,8 @@
 //! `impl protocol::Inference<RemodelingSnapshot>` calls it directly.
 
 use crate::artifacts::remodeling::{resolve_bounded_remodeling_mesh, RemodelingSnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box, `[x, y, z]` corners.
@@ -43,7 +43,11 @@ pub fn compute_remodeling_bounds(snapshot: &RemodelingSnapshot) -> RemodelingBou
         return RemodelingBounds { bounding_box: RemodelingBoundingBox::default(), vertex_count: 0, face_count: 0 };
     }
     let (min, max) = mesh.aabb();
-    RemodelingBounds { bounding_box: RemodelingBoundingBox { min: [min[0] as f64, min[1] as f64, min[2] as f64], max: [max[0] as f64, max[1] as f64, max[2] as f64] }, vertex_count: mesh.vertex_count() as u32, face_count: mesh.triangle_count() as u32 }
+    RemodelingBounds {
+        bounding_box: RemodelingBoundingBox { min: [min[0] as f64, min[1] as f64, min[2] as f64], max: [max[0] as f64, max[1] as f64, max[2] as f64] },
+        vertex_count: mesh.vertex_count() as u32,
+        face_count: mesh.triangle_count() as u32,
+    }
 }
 //#endregion 🔖️Bounds
 

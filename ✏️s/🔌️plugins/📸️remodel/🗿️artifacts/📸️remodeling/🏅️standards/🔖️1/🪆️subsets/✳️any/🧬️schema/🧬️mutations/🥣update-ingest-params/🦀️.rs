@@ -1,11 +1,11 @@
 //! ⚙️ Remodeling mutation — `UpdateIngestParams`: full-record replace of `ReconstructionParams.ingest` (always
 //! set wholesale from the palette form's flat field list — genuinely inseparable).
 
-use crate::artifacts::remodeling::{IngestParams, RemodelingSnapshot};
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use serde::{Deserialize, Serialize};
+use crate::artifacts::remodeling::{IngestParams, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ⚙️ `update-ingest-params` payload — full FINAL-state `IngestParams`.

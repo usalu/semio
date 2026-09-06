@@ -8,19 +8,20 @@
   ],
   "properties": {
     "params": {
-      "title": "DenseParams",
       "type": "object",
+      "title": "DenseParams",
       "additionalProperties": false,
       "required": [
-        "confidenceThreshold",
-        "maxPoints",
-        "minViewConsistency",
         "resolution",
-        "windowRadiusPx"
+        "windowRadiusPx",
+        "minViewConsistency",
+        "confidenceThreshold",
+        "maxPoints"
       ],
       "properties": {
         "resolution": {
           "type": "string",
+          "title": "DenseResolution",
           "enum": [
             "low",
             "medium",
@@ -29,17 +30,21 @@
         },
         "windowRadiusPx": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "minViewConsistency": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         },
         "confidenceThreshold": {
-          "type": "number"
+          "type": "number",
+          "format": "float"
         },
         "maxPoints": {
           "type": "integer",
+          "format": "uint32",
           "minimum": 0
         }
       }

@@ -20,6 +20,6 @@ pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<JsonSnapshot, store::
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub async fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

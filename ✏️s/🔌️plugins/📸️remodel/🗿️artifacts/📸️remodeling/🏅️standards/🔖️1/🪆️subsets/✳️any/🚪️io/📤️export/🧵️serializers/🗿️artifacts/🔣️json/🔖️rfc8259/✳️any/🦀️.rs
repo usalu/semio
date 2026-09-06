@@ -1,26 +1,24 @@
-//! remodeling -> json
-//!
-//! 🩹️ `stdio_gap`/foreign-lag fix (not part of this wave's video/image codec-extraction scope):
-//! `JsonSnapshot.value` was retyped from `serde_json::Value` to stdio's own lexeme-preserving
-//! `JsonValue` (`#[serde(tag = "kind")]`, NOT structurally plain JSON by design) by a concurrent
-//! stdio wave, breaking this pre-existing placeholder leaf's compile. Fixed as a minimal
-//! lagging-call-site update, mirroring the same pattern animate/fem/architect used for the
-//! identical gap: a real, honest structural `pack::JsonValue -> JsonValue` converter (stdio's
-//! `impl From<pack::JsonValue> for JsonValue` — first-party, no `serde_json` involved) plus
-//! stdio's own real `write_json_pretty` text codec for `serialize_bytes`.
 use crate::artifacts::remodeling::RemodelingSnapshot;
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_os_kernel::ToValue;
+use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 
-pub async fn register() {}
+/// 🎯️ The foreign dialect this leaf writes.
+pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub async fn serialize(snapshot: &RemodelingSnapshot) -> Result<JsonSnapshot, store::TextError> {
-    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = pack::json::from_dsl_value(&snapshot.to_value());
-    Ok(JsonSnapshot::from_value(value))
-}
+/// 🧵️ `s.remodel.remodeling@1/*` → `s.stdio.json@rfc8259/*`. The scene is a pure record tree, so its
+/// `dsl::ToValue` projection is total: every field survives, and the sibling import leaf reverses it
+/// exactly — the one `IoFidelity::Exact` binary-free hop this subset owns.
+pub struct RemodelingIntoJson;
 
-pub async fn serialize_bytes(snapshot: &RemodelingSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
+impl Serializer<RemodelingSnapshot> for RemodelingIntoJson {
+    const INTO: Dialect = JSON_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    async fn serialize(from: &RemodelingSnapshot) -> IoResult<IoPayload> {
+        let value = pack::json::from_dsl_value(&from.to_value());
+        Ok(IoOutcome::clean(IoPayload::Text(write_json_pretty(&JsonSnapshot::from_value(value).value))))
+    }
 }

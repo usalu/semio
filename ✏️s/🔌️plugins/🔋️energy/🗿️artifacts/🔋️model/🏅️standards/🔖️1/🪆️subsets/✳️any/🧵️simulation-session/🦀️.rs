@@ -4,7 +4,7 @@ use crate::artifacts::model::{EnergyModelReadLease, EnergyModelSnapshot};
 use crate::{
     EnergyAdmissionRejected, EnergyCheckpointRejected, EnergyJob, EnergyJobPreview, EnergyJobStage, EnergyModelCloseCursor, EnergyNumericalBounds, EnergyQualityTier, EnergyRestoreJob, EnergyWireLease, EnergyWirePacket, Model, SimulationConfig,
 };
-use semio_framework::kernel::{Effect, JobPlacement};
+use semio_framework_plugin::kernel::{Effect, JobPlacement};
 use semio_framework_job::{CancelToken, Generation, InteractiveJob, Operation, OperationId, RevisionId, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
@@ -26,6 +26,9 @@ const INPUT_BYTES: usize = 95;
 const JOB_TAG: u64 = 0xe7c3_0000_0000_0000;
 const JOB_COUNTER_MAXIMUM: u64 = 0x0000_ffff_ffff_ffff;
 
+/// ⚙️ Per-run session parameters that are NOT model data. The run period and the schedule tables
+/// are persisted `Model` fields (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END) and are read out of the
+/// admitted model by [`EnergySimulationConfigProjection::build`], never carried here.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive)]
 pub struct EnergySimulationConfigProjection {
     pub locale_de: bool,
@@ -33,49 +36,41 @@ pub struct EnergySimulationConfigProjection {
     pub zone_timestep_minutes: u32,
     pub system_timestep_minutes: u32,
     pub warmup_days: u32,
-    pub run_period_start_month: u8,
-    pub run_period_start_day: u8,
-    pub run_period_end_month: u8,
-    pub run_period_end_day: u8,
 }
 
 impl Default for EnergySimulationConfigProjection {
     fn default() -> Self {
-        let config = SimulationConfig::default();
-        Self {
-            locale_de: false,
-            checkpoint_token: 0,
-            zone_timestep_minutes: config.zone_timestep_minutes,
-            system_timestep_minutes: config.system_timestep_minutes,
-            warmup_days: config.warmup_days,
-            run_period_start_month: config.run_period_start_month,
-            run_period_start_day: config.run_period_start_day,
-            run_period_end_month: config.run_period_end_month,
-            run_period_end_day: config.run_period_end_day,
-        }
+        Self::DEFAULT
     }
 }
 
 impl EnergySimulationConfigProjection {
-    fn validate(self) -> bool {
-        (1..=60).contains(&self.zone_timestep_minutes)
-            && (1..=60).contains(&self.system_timestep_minutes)
-            && self.warmup_days <= 365
-            && (1..=12).contains(&self.run_period_start_month)
-            && (1..=31).contains(&self.run_period_start_day)
-            && (1..=12).contains(&self.run_period_end_month)
-            && (1..=31).contains(&self.run_period_end_day)
+    /// 🎛️ Const twin of [`SimulationConfig::default`]'s three session fields — the fixed arena needs
+    /// a `const` initializer, which `Default::default()` cannot be while it reads a non-const
+    /// `SimulationConfig`. `settings_match_engine_defaults` keeps the two literally in lockstep.
+    pub const DEFAULT: Self = Self { locale_de: false, checkpoint_token: 0, zone_timestep_minutes: 60, system_timestep_minutes: 60, warmup_days: 7 };
+
+    /// 🎛️ Accepts an edited projection only inside the engine's own admissible ranges.
+    pub fn is_valid(self) -> bool {
+        self.validate()
     }
 
-    fn build(self) -> SimulationConfig {
+    fn validate(self) -> bool {
+        (1..=60).contains(&self.zone_timestep_minutes) && (1..=60).contains(&self.system_timestep_minutes) && self.warmup_days <= 365
+    }
+
+    /// ⚙️ Folds the session parameters together with the admitted model's own persisted run period
+    /// and schedule tables into one engine input.
+    fn build(self, model: &Model) -> SimulationConfig {
         SimulationConfig {
             zone_timestep_minutes: self.zone_timestep_minutes,
             system_timestep_minutes: self.system_timestep_minutes,
             warmup_days: self.warmup_days,
-            run_period_start_month: self.run_period_start_month,
-            run_period_start_day: self.run_period_start_day,
-            run_period_end_month: self.run_period_end_month,
-            run_period_end_day: self.run_period_end_day,
+            run_period_start_month: model.run_period.start_month,
+            run_period_start_day: model.run_period.start_day,
+            run_period_end_month: model.run_period.end_month,
+            run_period_end_day: model.run_period.end_day,
+            schedules: model.schedules.clone(),
             ..SimulationConfig::default()
         }
     }
@@ -86,10 +81,6 @@ impl EnergySimulationConfigProjection {
             self.zone_timestep_minutes.to_le_bytes().as_slice(),
             self.system_timestep_minutes.to_le_bytes().as_slice(),
             self.warmup_days.to_le_bytes().as_slice(),
-            &[self.run_period_start_month],
-            &[self.run_period_start_day],
-            &[self.run_period_end_month],
-            &[self.run_period_end_day],
         ]
         .into_iter()
         .flatten()
@@ -117,6 +108,10 @@ impl EnergySimulationRequestIdentity {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EnergySimulationEventKind {
     Start { request: u64, config: EnergySimulationConfigProjection },
+    /// 🎛️ Ephemeral local-only run settings for the addressed app instance — timesteps, warmup and
+    /// UI locale are NOT model data (`Model` owns the run period and the schedules instead), so they
+    /// are event-sourced into this session's fixed arena rather than into the document.
+    Configure { config: EnergySimulationConfigProjection },
     Cancel(EnergySimulationRequestIdentity),
     Retry(EnergySimulationRequestIdentity),
     Discard(EnergySimulationRequestIdentity),
@@ -445,20 +440,20 @@ impl ModelCapture {
             }};
         }
         macro_rules! dynamic {
-            ($field:ident, $empty:expr, $body:block) => {{
+            ($field:ident, $source_item:ident, $target_item:ident, $empty:expr, $body:block) => {{
                 if self.model.$field.capacity() == 0 && source.$field.capacity() != 0 {
                     self.model.$field.try_reserve_exact(source.$field.capacity()).map_err(|_| "energy.session.capture-vector-reserve")?;
                     return Ok(false);
                 }
-                let Some(source_item) = source.$field.get(self.index) else {
+                let Some($source_item) = source.$field.get(self.index) else {
                     self.next_lane();
                     return Ok(false);
                 };
                 if self.model.$field.len() == self.index {
-                    self.model.$field.push($empty(source_item));
+                    self.model.$field.push($empty($source_item));
                     return Ok(false);
                 }
-                let target_item = self.model.$field.get_mut(self.index).ok_or("energy.session.capture-record-missing")?;
+                let $target_item = self.model.$field.get_mut(self.index).ok_or("energy.session.capture-record-missing")?;
                 $body
                 return Ok(false);
             }};
@@ -500,7 +495,7 @@ impl ModelCapture {
                 self.next_lane();
             }
             3 => dynamic!(
-                zones,
+                zones, source_item, target_item,
                 |item: &crate::model::Zone| crate::model::Zone { id: item.id, name: String::new(), volume_m3: item.volume_m3, multiplier: item.multiplier, conditioned: item.conditioned, part_of_total_floor_area: item.part_of_total_floor_area },
                 {
                     match self.substage {
@@ -509,14 +504,14 @@ impl ModelCapture {
                     }
                 }
             ),
-            4 => dynamic!(spaces, |item: &crate::model::Space| crate::model::Space { id: item.id, name: String::new(), zone_id: item.zone_id, floor_area_m2: item.floor_area_m2 }, {
+            4 => dynamic!(spaces, source_item, target_item, |item: &crate::model::Space| crate::model::Space { id: item.id, name: String::new(), zone_id: item.zone_id, floor_area_m2: item.floor_area_m2 }, {
                 match self.substage {
                     0 => text!(&mut target_item.name, &source_item.name),
                     _ => finish_record!(),
                 }
             }),
             5 => dynamic!(
-                surfaces,
+                surfaces, source_item, target_item,
                 |item: &crate::model::Surface| crate::model::Surface {
                     id: item.id,
                     name: String::new(),
@@ -538,7 +533,7 @@ impl ModelCapture {
                 }
             ),
             6 => dynamic!(
-                fenestrations,
+                fenestrations, source_item, target_item,
                 |item: &crate::model::Fenestration| crate::model::Fenestration {
                     id: item.id,
                     name: String::new(),
@@ -547,8 +542,14 @@ impl ModelCapture {
                     shgc: item.shgc,
                     vlt: item.vlt,
                     area_m2: item.area_m2,
+                    height_m: item.height_m,
+                    sill_height_m: item.sill_height_m,
                     frame_conductance_w_k: item.frame_conductance_w_k,
                     divider_conductance_w_k: item.divider_conductance_w_k,
+                    overhang_depth_m: item.overhang_depth_m,
+                    overhang_offset_m: item.overhang_offset_m,
+                    fin_depth_m: item.fin_depth_m,
+                    fin_offset_m: item.fin_offset_m,
                 },
                 {
                     match self.substage {
@@ -558,7 +559,7 @@ impl ModelCapture {
                 }
             ),
             7 => dynamic!(
-                materials,
+                materials, source_item, target_item,
                 |item: &crate::model::Material| crate::model::Material {
                     id: item.id,
                     name: String::new(),
@@ -577,7 +578,7 @@ impl ModelCapture {
                     }
                 }
             ),
-            8 => dynamic!(constructions, |item: &crate::model::Construction| crate::model::Construction { id: item.id, name: String::new(), layer_material_ids: Vec::new() }, {
+            8 => dynamic!(constructions, source_item, target_item, |item: &crate::model::Construction| crate::model::Construction { id: item.id, name: String::new(), layer_material_ids: Vec::new() }, {
                 match self.substage {
                     0 => text!(&mut target_item.name, &source_item.name),
                     1 => items!(&mut target_item.layer_material_ids, &source_item.layer_material_ids),
@@ -628,7 +629,7 @@ impl ModelCapture {
                 dehumidifying_throttle_range: item.dehumidifying_throttle_range,
             }),
             14 => dynamic!(
-                setpoint_managers,
+                setpoint_managers, source_item, target_item,
                 |item: &crate::model::SetpointManager| crate::model::SetpointManager {
                     id: item.id,
                     name: String::new(),
@@ -676,7 +677,7 @@ impl ModelCapture {
                 cooling_capacity_w: item.cooling_capacity_w,
             }),
             17 => dynamic!(
-                air_loops,
+                air_loops, source_item, target_item,
                 |item: &crate::model::ModelAirLoop| crate::model::ModelAirLoop {
                     id: item.id,
                     name: String::new(),
@@ -694,7 +695,7 @@ impl ModelCapture {
                 }
             ),
             18 => dynamic!(
-                plant_loops,
+                plant_loops, source_item, target_item,
                 |item: &crate::model::PlantLoopConfig| crate::model::PlantLoopConfig {
                     id: item.id,
                     name: String::new(),
@@ -719,7 +720,12 @@ impl ModelCapture {
                 id: item.id,
                 zone_id: item.zone_id,
                 schedule_id: item.schedule_id,
+                method: item.method,
+                design_flow_ach: item.design_flow_ach,
                 flow_per_exterior_area_m3_s_m2: item.flow_per_exterior_area_m3_s_m2,
+                effective_leakage_area_m2: item.effective_leakage_area_m2,
+                discharge_coefficient: item.discharge_coefficient,
+                stack_height_m: item.stack_height_m,
                 constant_term_coefficient: item.constant_term_coefficient,
                 temperature_term_coefficient: item.temperature_term_coefficient,
                 velocity_term_coefficient: item.velocity_term_coefficient,
@@ -733,21 +739,21 @@ impl ModelCapture {
                 fan_total_efficiency: item.fan_total_efficiency,
                 fan_delta_pressure_pa: item.fan_delta_pressure_pa
             }),
-            22 => dynamic!(shading_surfaces, |item: &crate::model::ShadingSurface| crate::model::ShadingSurface { id: item.id, name: String::new(), vertices_m: Vec::new(), transmittance_schedule_id: item.transmittance_schedule_id }, {
+            22 => dynamic!(shading_surfaces, source_item, target_item, |item: &crate::model::ShadingSurface| crate::model::ShadingSurface { id: item.id, name: String::new(), vertices_m: Vec::new(), transmittance_schedule_id: item.transmittance_schedule_id }, {
                 match self.substage {
                     0 => text!(&mut target_item.name, &source_item.name),
                     1 => items!(&mut target_item.vertices_m, &source_item.vertices_m),
                     _ => finish_record!(),
                 }
             }),
-            23 => dynamic!(space_lists, |item: &crate::model::SpaceList| crate::model::SpaceList { id: item.id, name: String::new(), space_ids: Vec::new() }, {
+            23 => dynamic!(space_lists, source_item, target_item, |item: &crate::model::SpaceList| crate::model::SpaceList { id: item.id, name: String::new(), space_ids: Vec::new() }, {
                 match self.substage {
                     0 => text!(&mut target_item.name, &source_item.name),
                     1 => items!(&mut target_item.space_ids, &source_item.space_ids),
                     _ => finish_record!(),
                 }
             }),
-            24 => dynamic!(thermal_enclosures, |item: &crate::model::ThermalEnclosure| crate::model::ThermalEnclosure { id: item.id, name: String::new(), zone_ids: Vec::new() }, {
+            24 => dynamic!(thermal_enclosures, source_item, target_item, |item: &crate::model::ThermalEnclosure| crate::model::ThermalEnclosure { id: item.id, name: String::new(), zone_ids: Vec::new() }, {
                 match self.substage {
                     0 => text!(&mut target_item.name, &source_item.name),
                     1 => items!(&mut target_item.zone_ids, &source_item.zone_ids),
@@ -771,7 +777,7 @@ impl ModelCapture {
                     _ => self.next_lane(),
                 }
             }
-            27 => dynamic!(electrical_load_centers, |item: &crate::model::ElectricalLoadCenter| crate::model::ElectricalLoadCenter { id: item.id, name: String::new(), generator_ids: Vec::new(), pv_ids: Vec::new(), battery_ids: Vec::new() }, {
+            27 => dynamic!(electrical_load_centers, source_item, target_item, |item: &crate::model::ElectricalLoadCenter| crate::model::ElectricalLoadCenter { id: item.id, name: String::new(), generator_ids: Vec::new(), pv_ids: Vec::new(), battery_ids: Vec::new() }, {
                 match self.substage {
                     0 => text!(&mut target_item.name, &source_item.name),
                     1 => items!(&mut target_item.generator_ids, &source_item.generator_ids),
@@ -822,7 +828,7 @@ impl ModelCapture {
                 severity: item.severity,
                 start_schedule_id: item.start_schedule_id
             }),
-            35 => dynamic!(output_variables, |item: &crate::model::OutputVariableSpec| crate::model::OutputVariableSpec { name: String::new(), key: String::new(), reporting_frequency: item.reporting_frequency }, {
+            35 => dynamic!(output_variables, source_item, target_item, |item: &crate::model::OutputVariableSpec| crate::model::OutputVariableSpec { name: String::new(), key: String::new(), reporting_frequency: item.reporting_frequency }, {
                 match self.substage {
                     0 => text!(&mut target_item.name, &source_item.name),
                     1 => text!(&mut target_item.key, &source_item.key),
@@ -965,13 +971,13 @@ impl MountedState {
             self.projection.status = EnergySimulationStatus::Faulted;
             return Err(MountedAdmissionError::Rejected("energy.session.checkpoint-token-not-found"));
         }
-        let config = self.config.build();
         let snapshot_fresh = self.snapshot_is_fresh();
         let cancelled = self.cancel.is_cancelled_now();
         let model = match take_captured_model_for_admission(&mut self.capture, self.identity, expected, render, live_request, self.config.digest(), snapshot_fresh, cancelled) {
             Ok(model) => model,
             Err(_) => return Err(MountedAdmissionError::Stale { checkpoint }),
         };
+        let config = self.config.build(&model);
         if self.config.checkpoint_token != 0 {
             let packet = checkpoint.expect("checkpoint presence was retained before owner move");
             return match EnergyRestoreJob::admit(self.identity.operation(), model, config, packet, EnergyNumericalBounds::default()) {
@@ -1536,6 +1542,7 @@ struct Registry {
     shells: [Rc<RefCell<Option<MountedState>>>; SHELL_SLOTS],
     apps: [Option<u32>; ACTIVE_SLOTS],
     last_request: [u64; ACTIVE_SLOTS],
+    settings: [EnergySimulationConfigProjection; ACTIVE_SLOTS],
     current: [Option<CurrentSession>; ACTIVE_SLOTS],
     adopted: [Option<AdoptedProjectionAuthority>; ACTIVE_SLOTS],
     pending: [Option<u16>; ACTIVE_SLOTS],
@@ -1561,6 +1568,7 @@ impl Registry {
             shells: std::array::from_fn(|_| Rc::new(RefCell::new(None))),
             apps: [None; ACTIVE_SLOTS],
             last_request: [0; ACTIVE_SLOTS],
+            settings: [EnergySimulationConfigProjection::DEFAULT; ACTIVE_SLOTS],
             current: [None; ACTIVE_SLOTS],
             adopted: [None; ACTIVE_SLOTS],
             pending: [None; ACTIVE_SLOTS],
@@ -1823,12 +1831,15 @@ pub fn initialize() {
 
 //#region 🎛️ProductSession
 pub fn record_event(render: AppRenderOperationContext, kind: EnergySimulationEventKind) -> Result<(), &'static str> {
-    if matches!(kind, EnergySimulationEventKind::Start { request: 0, .. }) || matches!(kind, EnergySimulationEventKind::Start { config, .. } if !config.validate()) {
+    if matches!(kind, EnergySimulationEventKind::Start { request: 0, .. })
+        || matches!(kind, EnergySimulationEventKind::Start { config, .. } if !config.validate())
+        || matches!(kind, EnergySimulationEventKind::Configure { config } if !config.validate())
+    {
         return Err("energy.session.config-invalid");
     }
     if match kind {
         EnergySimulationEventKind::Cancel(identity) | EnergySimulationEventKind::Retry(identity) | EnergySimulationEventKind::Discard(identity) | EnergySimulationEventKind::Adopt(identity) => !identity.valid(),
-        EnergySimulationEventKind::Start { .. } => false,
+        EnergySimulationEventKind::Start { .. } | EnergySimulationEventKind::Configure { .. } => false,
     } {
         return Err("energy.session.request-identity-invalid");
     }
@@ -1840,6 +1851,9 @@ fn apply_event_one(registry: &mut Registry) {
     let _ = event.sequence;
     let Some(slot) = registry.slot_for(event.render.app_instance_id) else { return };
     match event.kind {
+        EnergySimulationEventKind::Configure { config } => {
+            registry.settings[slot] = config;
+        }
         EnergySimulationEventKind::Start { request, config } => {
             if request == 0 || request <= registry.last_request[slot] {
                 return;
@@ -2174,6 +2188,34 @@ pub fn with_adopted_projection<R>(render: Option<AppRenderOperationContext>, rea
     })
 }
 
+/// 🎛️ The addressed app instance's live run settings — the projection a `Configure` event last
+/// admitted, or [`EnergySimulationConfigProjection::DEFAULT`] for an instance that never configured
+/// one. Read by the simulation window (to render the editable settings) and by `start-energy-simulation`
+/// (to build the run), so the UI never has to carry them back through the action payload.
+pub fn session_settings(render: Option<AppRenderOperationContext>) -> EnergySimulationConfigProjection {
+    let Some(render) = render else { return EnergySimulationConfigProjection::DEFAULT };
+    REGISTRY.with(|registry| {
+        let registry = registry.borrow();
+        registry.slot_for(render.app_instance_id).map_or(EnergySimulationConfigProjection::DEFAULT, |slot| registry.settings[slot])
+    })
+}
+
+/// 🪪️ Rebuilds the renderer-observed identity from a dispatched command's own operation authority.
+/// `ArtifactView::render_operation()` is `None` on the dispatch path (the framework only binds it on
+/// the render path), so a command that records a session event must derive the same identity the
+/// render pass would have produced: `base_revision` is the first eight big-endian bytes of the
+/// canonical revision and `generation` is the store generation the operation was admitted against
+/// (`VcsArtifactApp`'s own `AppRenderOperationContext` construction).
+pub fn render_identity_of(operation: &semio_framework_plugin::app::AppOperationContext) -> Option<AppRenderOperationContext> {
+    let lane = operation.canonical_base_revision.get(..8).and_then(|bytes| <[u8; 8]>::try_from(bytes).ok())?;
+    Some(AppRenderOperationContext {
+        app_instance_id: operation.app_instance_id,
+        base_revision: RevisionId(u64::from_be_bytes(lane)),
+        generation: Generation(operation.generation),
+        canonical_base_revision: operation.canonical_base_revision,
+    })
+}
+
 fn retire_one(app_instance_id: u32, maximum_bytes: usize) -> PluginCloseStep {
     REGISTRY.with(|registry| {
         let mut registry = registry.borrow_mut();
@@ -2301,6 +2343,7 @@ pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usi
             if let Some(slot) = registry.slot_for(app_instance_id).filter(|slot| registry.app_terminal_is_empty(*slot, app_instance_id)) {
                 registry.apps[slot] = None;
                 registry.last_request[slot] = 0;
+                registry.settings[slot] = EnergySimulationConfigProjection::DEFAULT;
                 registry.adopted[slot] = None;
             }
         });

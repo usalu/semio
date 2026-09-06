@@ -3,7 +3,7 @@
  * `🦀️.rs`'s `create_remodeling_app()` stitching every window/mode module together. Three
  * modes (`capture`/`analyze`/`model`), three windows (`frames`/`report`/`model`), one each. */
 
-export const REMODELING_EDITOR_DIALECT = { artifactKind: "s.remodeling.remodeling", standard: "1", subset: "*" } as const;
+export const REMODELING_EDITOR_DIALECT = { artifactKind: "s.remodel.remodeling", standard: "1", subset: "*" } as const;
 
 export const REMODELING_PLAY_MODE_CAPTURE = "capture" as const;
 export const REMODELING_PLAY_MODE_ANALYZE = "analyze" as const;

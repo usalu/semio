@@ -1,9 +1,42 @@
 dialect grammar
 grammar remodeling.diff
 extension remodeling
-start document
+start diff
 
-document = header body
-header = "schema" SP "remodeling.remodeling.diff" NL
-body = payload NL?
-payload = OCTET+
+# 🔺️ The sparse-delta text form. `RemodelingDiff` carries `ToValue`/`FromValue` only — it has NO
+# `dsl::DslRecord`/`dsl::DslDiff` derive, so it owns no `RecordSpec` and no dedicated printer; its
+# only text rendering is the value bridge (`store::to_dsl_value` -> `dsl::print_dsl_value`), which
+# emits an object as `{ key=value … }` with keys sorted and every lane present as an explicit
+# `null` when unset. This grammar therefore pins the 17 real lane keys (camelCase, per
+# `#[value(rename_all = "camelCase")]`) at the top level and models each lane payload as the
+# generic value notation the bridge emits, rather than inventing a hand-written syntax the code
+# does not print. See 📓️w10-grammars.md for the follow-up that would make this a real `DslDiff`.
+
+diff = "{" lane* "}"
+lane = artifact-lane | schema-lane | id-lane | streams-lane | assets-lane | durable-artifacts-lane | calibration-lane | params-lane | gcps-lane | job-lane | results-lane | selection-lane | active-utility-id-lane | report-table-lane | frame-cursor-lane | camera-lane | layers-lane | locale-lane
+
+artifact-lane = "artifact" "=" value
+schema-lane = "schema" "=" value
+id-lane = "id" "=" value
+streams-lane = "streams" "=" value
+assets-lane = "assets" "=" value
+durable-artifacts-lane = "durableArtifacts" "=" value
+calibration-lane = "calibration" "=" value
+params-lane = "params" "=" value
+gcps-lane = "gcps" "=" value
+job-lane = "job" "=" value
+results-lane = "results" "=" value
+selection-lane = "selection" "=" value
+active-utility-id-lane = "activeUtilityId" "=" value
+report-table-lane = "reportTable" "=" value
+frame-cursor-lane = "frameCursor" "=" value
+camera-lane = "camera" "=" value
+layers-lane = "layers" "=" value
+locale-lane = "locale" "=" value
+
+value = "null" | "true" | "false" | number | TEXT | array | object
+number = INT | FLOAT
+array = "[" value* "]"
+object = "{" member* "}"
+member = key "=" value
+key = IDENT | TEXT

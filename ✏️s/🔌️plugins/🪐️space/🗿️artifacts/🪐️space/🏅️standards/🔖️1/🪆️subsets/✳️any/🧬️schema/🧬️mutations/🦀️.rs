@@ -29,6 +29,10 @@ pub enum SSpaceMutation {
 mod structural_correspondence_tests {
     use super::*;
 
+    fn outcome_classes(outcomes: &[&str]) -> pack::JsonValue {
+        pack::JsonValue::Array(outcomes.iter().map(|outcome| pack::JsonValue::from(*outcome)).collect())
+    }
+
     #[test]
     fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
@@ -55,7 +59,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
-            assert_eq!(descriptor["outcomeClasses"], pack::json!(outcomes));
+            assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
             let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);
@@ -89,7 +93,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
-            assert_eq!(descriptor["outcomeClasses"], pack::json!(outcomes));
+            assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
             let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);
@@ -123,7 +127,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
-            assert_eq!(descriptor["outcomeClasses"], pack::json!(outcomes));
+            assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
             let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);
@@ -157,7 +161,7 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["payloadSchema"], "🧬️.schema.json");
             assert_eq!(descriptor["textOpcode"], kind);
             assert_eq!(descriptor["binaryTag"], tag);
-            assert_eq!(descriptor["outcomeClasses"], pack::json!(outcomes));
+            assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
             assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
             let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);

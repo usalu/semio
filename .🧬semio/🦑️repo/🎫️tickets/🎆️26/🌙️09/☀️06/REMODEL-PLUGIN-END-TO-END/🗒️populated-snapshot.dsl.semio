@@ -1,0 +1,91 @@
+semio remodeling.remodeling.dsl v1
+schema=remodeling.scene id=remodeling assets={
+  asset-1=child_id=remodeling-image-3f60f8f1901ccade target="remodeling-image!s.stdio.semio@v1/image"
+}
+durable-artifacts={
+  remodeling-mesh-901ccade3f60f8f1=kind=mesh mime="model/mesh" width=0 height=0 chunks=[ "9f1c20aa" "20aa9f1c" ]
+}
+calibration {
+  cameras [id:TEXT label:TEXT model:TEXT fx:NUM fy:NUM cx:NUM cy:NUM skew:NUM distortion:TUPLE rms-reprojection-px:NUM locked:BOOL] {
+    cam-1 Front brownConrady 1000 1000 512 384 0 0.009999999776482582,-0.019999999552965164,0,0,0 0.4000000059604645 false
+    cam-2 "Rear Left" pinhole 900 900 480 270 0 0,0,0,0,0 _ true
+  }
+  rig [camera-id:TEXT rotation-wxyz:TUPLE translation-m:CRD] {
+    "" 0,0,0,0 @0,0,0
+  }
+}
+params {
+  ingest {
+    frame-sample-stride=5 max-frames=200 downscale-long-edge-px=1600 min-sharpness=0.4000000059604645
+  }
+  feature {
+    detector=akaze target-count=4000 octaves=4 edge-threshold=10
+  }
+  matching {
+    matcher=kd-tree ratio-test=0.800000011920929 cross-check=true sequential-window=8 max-pairs-per-frame=16 loop-closure=true
+  }
+  sfm {
+    ransac-iterations=1000 ransac-threshold-px=2 min-track-length=3 ba-max-iterations=50 robust-loss=cauchy huber-delta-px=1.5
+  }
+  dense {
+    resolution=high window-radius-px=3 min-view-consistency=3 confidence-threshold=0.5 max-points=500000
+  }
+  mesh {
+    tsdf-voxel-size-mm=5mm tsdf-truncation-mm=20mm decimate-target-triangles=200000 smoothing-iterations=2 texture-enabled=true texture-size=4096 guarantee-watertight=true hole-fill-max-boundary-verts=512 self-intersection-check=false
+  }
+  motion {
+    enabled=false max-tracks=64 track-window-px=21 min-track-quality=0.30000001192092896 min-track-length-frames=5
+  }
+  geo {
+    enabled=true origin-lon=8.5 origin-lat=47.4 origin-alt=408.5 gsd-m=0.05000000074505806m dsm-cell-m=0.10000000149011612m dtm-filter-radius-m=2m ortho-max-px=4096
+  }
+}
+job {
+  id="" stage=bundle-adjusting progress-0-1=0.41999998688697815 cancel-requested=false stage-cursor=0 started-at-ms=1000 error="retry needed" sparse-point-cloud-preview="zczMPc3MTD2amZk+"
+  camera-poses-preview [camera-id:TEXT rotation-wxyz:TUPLE translation:CRD] {
+    cam-1 0,0,0,0 @0,0,0
+  }
+}
+results {
+  sparse {
+    points="AAAAAAAAAAAAAAAAAACAPwAAgD8AAIA/" colors="/wAAAP8A"
+  }
+  dense {
+    positions="AAAAAAAAAAAAAAAA" colors="AAD/" confidence="ZmZmPw==" classification="Ag=="
+  }
+  mesh {
+    source=reconstructed texture-asset-id=tex-1
+    mesh {
+      child_id=remodeling-mesh-901ccade3f60f8f1 target="remodeling-mesh!s.stdio.semio@v1/mesh"
+    }
+    watertight {
+      vertex-count=512 triangle-count=1020 boundary-edge-count=0 boundary-loop-count=0 non-manifold-edge-count=0 non-manifold-vertex-count=0 connected-components=1 consistently-oriented=true euler-characteristic=2 genus=0 signed-volume=12.5 self-intersection-pairs=0 closed-fallback-used=false is-closed=true is-two-manifold=true is-watertight=true
+    }
+  }
+  trajectory {
+    poses [camera-id:TEXT rotation-wxyz:TUPLE translation:CRD] {
+      cam-1 1,0,0,0 @0,0,0
+      cam-1 0.9990000128746033,0.0010000000474974513,0,0 @0.10000000149011612,0,0
+    }
+  }
+  geo {
+    dsm-asset-id=asset-dsm dtm-asset-id=asset-dtm ortho-asset-id=asset-ortho
+  }
+  qc {
+    reprojection-rms-px=0.5 gcp-checkpoint-rmse=0.02 mean-track-length=6 registered-frame-ratio=1 dense-coverage-ratio=0.949999988079071
+    watertight {
+      vertex-count=512 triangle-count=1020 boundary-edge-count=0 boundary-loop-count=0 non-manifold-edge-count=0 non-manifold-vertex-count=0 connected-components=1 consistently-oriented=true euler-characteristic=2 genus=0 signed-volume=12.5 self-intersection-pairs=0 closed-fallback-used=false is-closed=true is-two-manifold=true is-watertight=true
+    }
+    warnings=[ "low overlap on frame 12" ]
+  }
+  tracks [id:TEXT length:UINT class:ENUM mean-speed-m-s:QTY] {
+    track-1 42 moving 1.2000000476837158m/s
+  }
+}
+streams [id:TEXT name:TEXT kind:ENUM camera-id:TEXT sync-offset-ms:NUM fps-hint:NUM frames:TABLE source:BLOCK] {
+  stream-1 front video cam-1 12.5 30 [ {index=0 timestamp-ms=0 asset-id=asset-1} ] { name="front.mp4" container=mp4 codec=avc duration-ms=6633.3 frame-count=199 width=1920 height=1080 }
+  stream-2 rear image-sequence _ 0 0 [ ] _
+}
+gcps [id:TEXT name:TEXT world-position:CRD observations:TABLE] {
+  gcp-1 Corner @1,2,3 [ {stream-id=stream-1 frame-index=0 pixel=10,20} ]
+}

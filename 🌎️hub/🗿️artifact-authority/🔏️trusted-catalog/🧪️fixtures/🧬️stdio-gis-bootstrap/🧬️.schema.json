@@ -84,8 +84,33 @@
     "rotation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["initialGenerationId", "failedCandidateGenerationId", "currentAfterFailedCandidate", "nextGenerationId", "stalePlan", "freshPlan"],
+      "required": ["initialGenerationId", "failedCandidateGenerationId", "currentAfterFailedCandidate", "nextGenerationId", "stalePlan", "freshPlan", "sourceCases", "writeCases"],
       "properties": {
+        "writeCases": {
+          "type": "array", "minItems": 7, "maxItems": 7,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "byteLength", "cancelCheck", "existing", "accepted", "retained"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+              "cancelCheck": { "type": ["integer", "null"], "minimum": 1 },
+              "existing": { "type": "boolean" },
+              "accepted": { "type": "boolean" },
+              "retained": { "enum": ["new", "old", "absent"] }
+            }
+          }
+        },
+        "sourceCases": {
+          "type": "array", "minItems": 6, "maxItems": 6,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["change", "accepted"],
+            "properties": {
+              "change": { "enum": ["none", "replaced-bundle", "wrong-generation", "wrong-profile", "leaf-replaced-during-read", "cancel-before-read"] },
+              "accepted": { "type": "boolean" }
+            }
+          }
+        },
         "initialGenerationId": { "$ref": "#/$defs/digest" },
         "failedCandidateGenerationId": { "$ref": "#/$defs/digest" },
         "currentAfterFailedCandidate": { "$ref": "#/$defs/digest" },
@@ -123,7 +148,7 @@
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "role", "componentSha256", "componentBlake3", "descriptorSha256", "codecCount", "targetCount"],
+      "required": ["pluginId", "packageId", "version", "role", "componentSha256", "componentBlake3", "descriptorSha256", "browserActor", "codecCount", "targetCount"],
       "properties": {
         "pluginId": { "enum": ["gis", "stdio"] },
         "packageId": { "enum": ["semio:gis", "semio:stdio"] },
@@ -132,6 +157,7 @@
         "componentSha256": { "$ref": "#/$defs/digest" },
         "componentBlake3": { "$ref": "#/$defs/digest" },
         "descriptorSha256": { "$ref": "#/$defs/digest" },
+        "browserActor": { "$ref": "https://semio.tech/schemas/hub/trusted-catalog-bundle-v2.json#/$defs/browserActor" },
         "codecCount": { "enum": [2, 26] },
         "targetCount": { "enum": [0, 1] }
       }

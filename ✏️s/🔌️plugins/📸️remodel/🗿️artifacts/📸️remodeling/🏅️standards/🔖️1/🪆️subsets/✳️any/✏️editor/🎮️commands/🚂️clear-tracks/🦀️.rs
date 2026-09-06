@@ -11,6 +11,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "clear-tracks")]
 pub struct ClearTracks {}
 
-pub async fn handle(_payload: &ClearTracks, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+pub fn handle(_payload: &ClearTracks, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![replace_tracks(Vec::new())]))
 }

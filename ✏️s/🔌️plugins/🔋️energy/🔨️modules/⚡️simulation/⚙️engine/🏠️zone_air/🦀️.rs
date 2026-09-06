@@ -103,7 +103,18 @@ fn zone_moisture_capacitance_kg_per_k(volume_m3: f64, temp_c: f64, w: f64, p_atm
 // #region 🔖️Bdf3
 fn bdf3_next_value(history: [f64; 4], dt_s: f64, rate: f64) -> f64 {
     let coeff = 6.0 * dt_s * rate;
-    (coeff + 18.0 * history[1] - 9.0 * history[2] + 2.0 * history[3]) / 11.0
+    (coeff + 18.0 * history[0] - 9.0 * history[1] + 2.0 * history[2]) / 11.0
+}
+
+/// 🎯️ Rate [K/s or kg/kg/s] the BDF3 step needs in order to land exactly on `target`.
+///
+/// Inverts [`bdf3_next_value`] — the ideal-loads predictor's whole job. `history[0]` is the
+/// current value, so the three history terms are the ones the forward step consumes.
+fn bdf3_rate_for_target(history: [f64; 4], dt_s: f64, target: f64) -> f64 {
+    if dt_s <= 0.0 {
+        return 0.0;
+    }
+    (11.0 * target - 18.0 * history[0] + 9.0 * history[1] - 2.0 * history[2]) / (6.0 * dt_s)
 }
 
 #[allow(dead_code, reason = "BDF3 rate-recovery counterpart to bdf3_next_value, validated by its own unit test but not yet wired into a production call site — in-flight energy BEM zone-air numerics")]
@@ -161,6 +172,29 @@ fn compute_unmet_loads(balance: &ZoneAirBalance, temp_c: f64, humidity_ratio: f6
 // #endregion 🔖️UnmetLoad
 
 // #region 🔖️Advance
+/// 🎯️ Sensible system power [W] that lands the zone exactly on `target_c` this timestep — the
+/// ideal-loads predictor. Positive is heating, negative is cooling; the caller applies its own
+/// capacity limits. Returned relative to the balance's CURRENT `system_sensible_w`, so calling it
+/// with a system-free balance yields the full required load.
+///
+/// Mirrors [`advance_zone_air`]'s own two integration paths so the predictor and the corrector
+/// can never disagree about what a given power does to the zone.
+pub fn required_system_sensible_w(state: &ZoneAirState, balance: &ZoneAirBalance, dt_s: f64, target_c: f64, p_atm: f64) -> f64 {
+    let c_sens = zone_sensible_capacitance_j_per_k(balance.volume_m3, state.temp_c, state.humidity_ratio, p_atm);
+    if c_sens <= 0.0 {
+        return 0.0;
+    }
+    if balance.conditioned {
+        if dt_s <= 0.0 {
+            return 0.0;
+        }
+        c_sens * bdf3_rate_for_target(state.temp_history_c, dt_s, target_c) - balance.net_sensible_w()
+    } else {
+        let ua = (c_sens / 3600.0).max(1.0);
+        ua * (target_c - state.temp_c) - balance.net_sensible_w()
+    }
+}
+
 /// ⏩️ Advance zone air state one timestep.
 pub fn advance_zone_air(state: &ZoneAirState, balance: &ZoneAirBalance, dt_s: f64, method: HumiditySolutionMethod, p_atm: f64) -> ZoneAirResult {
     let c_sens = zone_sensible_capacitance_j_per_k(balance.volume_m3, state.temp_c, state.humidity_ratio, p_atm);

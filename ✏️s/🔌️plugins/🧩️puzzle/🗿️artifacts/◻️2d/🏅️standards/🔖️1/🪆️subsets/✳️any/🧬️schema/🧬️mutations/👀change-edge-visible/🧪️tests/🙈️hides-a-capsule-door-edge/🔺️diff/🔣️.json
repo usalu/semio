@@ -1,0 +1,55 @@
+{
+  "artifact": null,
+  "schema": null,
+  "camera": null,
+  "nodes": null,
+  "edges": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "5bf74e9f-c6f9-4e2b-bf76-d823f6946f24",
+        "patch": {
+          "replacement": {
+            "id": "5bf74e9f-c6f9-4e2b-bf76-d823f6946f24",
+            "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d0",
+            "target": "81fe9985-4791-4e70-8b81-012e13eab8e2:link",
+            "gap": 0.0,
+            "shift": 0.0,
+            "rise": 0.0,
+            "rotation": 0.0,
+            "turn": 0.0,
+            "tilt": 0.0,
+            "x": 0.0,
+            "y": 0.0,
+            "visible": false
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "meta": null,
+  "selectedIds": null,
+  "activeUtilityId": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "selectionMethod": null,
+  "gridSnapEnabled": null,
+  "gridFactor": null,
+  "suggestionOffset": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "brushCandidateSourceHandleId": null,
+  "locale": null,
+  "terminology": null,
+  "lodModeByPaneJson": null,
+  "engagementInputByPaneJson": null,
+  "brushCandidatesJson": null,
+  "nodeKindWeightsJson": null,
+  "handleKindWeightsJson": null,
+  "activeUtilityByWindowIdJson": null,
+  "hoveredNodeId": null,
+  "previewSeq": null
+}

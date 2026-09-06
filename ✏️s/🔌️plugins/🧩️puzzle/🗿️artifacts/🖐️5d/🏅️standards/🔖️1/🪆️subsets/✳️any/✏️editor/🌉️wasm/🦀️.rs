@@ -121,7 +121,7 @@ impl Puzzle5dArtifactVcs {
     pub fn close_step(&self) -> Result<bool, JsValue> {
         match self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(dsl::fault_to_js)? {
             semio_framework_plugin::PluginCloseStep::Complete => Ok(true),
-            semio_framework_plugin::PluginCloseStep::Pending { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. } => Ok(false),
+            semio_framework_plugin::PluginCloseStep::Pending { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. } => Ok(false),
         }
     }
 }
@@ -135,6 +135,6 @@ impl Puzzle5dArtifactVcs {
 pub fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, wasm_bindgen::JsValue> {
     use store::ArtifactDsl;
     let projection = crate::artifacts::puzzle5d::Puzzle5dSnapshot::parse_dsl(dsl_text).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))?;
-    serde_json::to_string(&projection).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))
+    Ok(dsl::json::to_json_string(&projection))
 }
 //#endregion 🔖️WasmBridge

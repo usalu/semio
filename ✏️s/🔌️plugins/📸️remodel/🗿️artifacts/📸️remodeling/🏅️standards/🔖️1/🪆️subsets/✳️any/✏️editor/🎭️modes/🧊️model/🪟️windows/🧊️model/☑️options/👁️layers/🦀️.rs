@@ -4,20 +4,19 @@
 //! reflect a toggle the user just flipped).
 
 use crate::editor::remodeling::config::RemodelingLayerVisibility;
-use crate::editor::remodeling::remodeling_action;
+use crate::editor::remodeling::remodeling_window_action;
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use semio_framework_plugin::{LabelText, WindowMeasure};
-use serde_json::json;
 
 //#region 🔖️Measure
-pub async fn measure(layers: &RemodelingLayerVisibility, labels: &RemodelingLabels) -> WindowMeasure {
+pub fn measure(layers: &RemodelingLayerVisibility, labels: &RemodelingLabels) -> WindowMeasure {
     let toggle = |id: &str, icon: &str, label: LabelText, pressed: bool, layer: &str| WindowMeasure::Toggle {
         id: format!("remodeling-measure-layer-{id}"),
         icon_id: icon.into(),
         label: Some(label.into()),
         pressed,
         text: None,
-        on_change: remodeling_action("setLayerVisibility", Some(json!({ "layer": layer, "visible": !pressed }))),
+        on_change: remodeling_window_action("setLayerVisibility", Some(dsl::DslValue::object([("layer".to_string(), dsl::DslValue::String(layer.to_string())), ("visible".to_string(), dsl::DslValue::Bool(!pressed))]))),
     };
     WindowMeasure::Group {
         id: "remodeling-measure-layers".into(),

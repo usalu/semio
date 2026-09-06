@@ -5,9 +5,11 @@ use crate::artifacts::remodeling::{PackedF32, RemodelingSnapshot};
 use crate::editor::remodeling::config::RemodelingConfig;
 use crate::editor::remodeling::modes::model::windows::model::options::layers;
 use crate::editor::remodeling::terminology::RemodelingLabels;
-use semio_framework_plugin::{
-    build_world_3d_scene, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
-};
+use semio_framework_plugin::{world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig};
+// 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
+// (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
+// different types, so both are imported explicitly.
+use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -18,7 +20,7 @@ const REMODELING_MESH_ID: &str = "remodeling-result";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: REMODELING_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Model", "Modell"),
@@ -39,7 +41,7 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// ☑️ The live chrome measures for this window, collected from its own `☑️options/*`.
-pub async fn window_measures(config: &RemodelingConfig, labels: &RemodelingLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &RemodelingConfig, labels: &RemodelingLabels) -> Vec<WindowMeasure> {
     vec![layers::measure(&config.layers, labels)]
 }
 //#endregion 🔖️Definition
@@ -49,14 +51,27 @@ pub async fn window_measures(config: &RemodelingConfig, labels: &RemodelingLabel
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) — resolves only fixed constants or committed
 /// reconstruction content inside the production 512/512 mesh envelope; unavailable content renders
 /// no mesh entity rather than treating the handle's opaque address as geometry.
-async fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
+fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
     let Some(mesh) = crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
         return "[]".into();
     };
-    serde_json::to_string(&vec![json!({ "id": REMODELING_MESH_ID, "data": mesh })]).unwrap_or_else(|_| "[]".into())
+    serde_json::to_string(&vec![json!({ "id": REMODELING_MESH_ID, "data": mesh_data_json(&mesh) })]).unwrap_or_else(|_| "[]".into())
 }
 
-async fn world_instances_json(config: &RemodelingConfig) -> String {
+/// 🧊️ The World3d wire shape of one mesh. `semio_framework::MeshData` derives `Serialize` only under
+/// `cfg(test)`, so the buffers are named here rather than through a derive that does not exist in a
+/// production build.
+fn mesh_data_json(mesh: &semio_framework::MeshData) -> Value {
+    json!({
+        "positions": mesh.positions,
+        "normals": mesh.normals,
+        "colors": mesh.colors,
+        "indices": mesh.indices,
+        "uvs": mesh.uvs,
+    })
+}
+
+fn world_instances_json(config: &RemodelingConfig) -> String {
     if !config.layers.mesh {
         return "[]".into();
     }
@@ -79,7 +94,7 @@ async fn world_instances_json(config: &RemodelingConfig) -> String {
 /// layer: a synchronous run only ever publishes the FINAL sparse cloud, never an interior one.
 /// `PackedF32`/`PackedU8`'s inner string is already a base64 little-endian buffer, matching
 /// `positionsB64`/`colorsB64`'s wire shape byte-for-byte — no decode/re-encode round trip needed.
-async fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> Option<String> {
+fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> Option<String> {
     let mut layers: Vec<Value> = Vec::new();
     if config.layers.sparse {
         if let Some(sparse) = &scene.results.sparse {
@@ -134,7 +149,7 @@ async fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingConfig
     }
 }
 
-pub async fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     // 🕹️ The "assets" selection now lives in the framework-owned interaction domain (ticket
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactEditor::render` carries no
     // `InteractionView`, so this scene payload can no longer embed a live selection; every
@@ -143,7 +158,7 @@ pub async fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> se
     let mut world_scene =
         world3d_scene(world3d_camera_json(config.camera.position, config.camera.target, config.camera.fov), world_meshes_json(scene), world_instances_json(config), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     world_scene.points_json = world_points_json(scene, config);
-    build_world_3d_scene(REMODELING_PLAY_SURFACE_MAIN, crate::editor::remodeling::REMODELING_PLAY_APP_ID, world_scene)
+    semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_MAIN, ContractSurfaceKind::World3d, &world_scene)
 }
 //#endregion 🔖️Scene
 
@@ -171,8 +186,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_a_world_3d_surface() {
-        let mut app = app();
-        assert!(render_body(&mut app, REMODELING_PLAY_BODY_MAIN).contains("world-3d"));
+        let mut app = app().await;
+        assert!(render_body(&mut app, REMODELING_PLAY_BODY_MAIN).await.contains("world-3d"));
     }
 }
 //#endregion 🧪️Tests

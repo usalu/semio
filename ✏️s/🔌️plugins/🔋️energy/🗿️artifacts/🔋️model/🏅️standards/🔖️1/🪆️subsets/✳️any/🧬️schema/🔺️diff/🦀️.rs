@@ -5,6 +5,20 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
+//#region 🔖️LinkSlotDelta
+/// 🔗️ A link slot's delta. The field is `Option<EnergyLinkSlotDelta>`, and ABSENT means the slot did
+/// not change at all — a typed three-state instead of the `Option<Option<ArtifactLink>>` double
+/// option, whose JSON form collapsed "unchanged" and "now detached" onto the same `null` and made a
+/// detach undecodable (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum EnergyLinkSlotDelta {
+    Detached,
+    Attached { link: store::ArtifactLink },
+}
+//#endregion 🔖️LinkSlotDelta
+
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the energy-model artifact. `structure`/`zones` are always-present
 /// slots (never absent, only ever replaced) — single-`Option`, matching `mathematical`'s/`forms`'s
@@ -26,7 +40,9 @@ pub struct EnergyModelDiff {
     #[state(artifact)]
     pub zones: Option<EnergyZonesChild>,
     #[state(artifact)]
-    pub referenced_model: Option<Option<store::ArtifactLink>>,
+    pub referenced_model: Option<EnergyLinkSlotDelta>,
+    #[state(artifact)]
+    pub weather_link: Option<EnergyLinkSlotDelta>,
     #[state(artifact)]
     pub results_json: Option<String>,
 }
@@ -45,7 +61,8 @@ impl ToValue for EnergyModelDiff {
             ("model".to_string(), self.model.to_value()),
             ("structure".to_string(), to_dsl_value(&self.structure).unwrap_or(DslValue::Null)),
             ("zones".to_string(), to_dsl_value(&self.zones).unwrap_or(DslValue::Null)),
-            ("referencedModel".to_string(), to_dsl_value(&self.referenced_model).unwrap_or(DslValue::Null)),
+            ("referencedModel".to_string(), self.referenced_model.to_value()),
+            ("weatherLink".to_string(), self.weather_link.to_value()),
             ("resultsJson".to_string(), self.results_json.to_value()),
         ])
     }
@@ -60,7 +77,8 @@ impl FromValue for EnergyModelDiff {
             model: Option::from_value(field("model"))?,
             structure: from_dsl_value(field("structure")).map_err(ValueError::new)?,
             zones: from_dsl_value(field("zones")).map_err(ValueError::new)?,
-            referenced_model: from_dsl_value(field("referencedModel")).map_err(ValueError::new)?,
+            referenced_model: Option::from_value(field("referencedModel"))?,
+            weather_link: Option::from_value(field("weatherLink"))?,
             results_json: Option::from_value(field("resultsJson"))?,
         })
     }
