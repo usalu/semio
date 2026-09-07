@@ -27,12 +27,42 @@ from manim_visuals import Clause
 
 _DEFAULT_NOWI_ROOT = Path("/Users/niloufarghandehariyoon/Nowgetit/NowIGetIt")
 _GEMINI_MODEL = "google/gemini-3.1-flash-tts-preview"
-_CLAUSE_WORKERS = 4
+_ENV_FILE = Path(__file__).resolve().parent / ".env"  # tutorial/.env — gitignored
+
+
+def _clause_workers() -> int:
+    """🧵 Parallel clause requests. Keep low for OpenAI TTS (RPM caps); override with TTS_CLAUSE_WORKERS."""
+    try:
+        return max(1, int(os.getenv("TTS_CLAUSE_WORKERS", "2")))
+    except ValueError:
+        return 2
 
 
 #region Configuration
+def _load_dotenv_file(path: Path) -> None:
+    """🔑 Minimal ``KEY=VALUE`` loader for ``tutorial/.env`` — no python-dotenv dependency.
+
+    Blank lines and ``#`` comments are skipped; surrounding quotes are stripped;
+    a real shell environment variable always wins (``setdefault``).
+    """
+    if not path.is_file():
+        return
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        if key.startswith("export "):
+            key = key[len("export "):].strip()
+        value = value.strip().strip('"').strip("'")
+        if key and value:
+            os.environ.setdefault(key, value)
+
+
 def configure_tutorial_tts() -> None:
-    """⚙️ Point TTS at Gemini on OpenRouter, reusing NowIGetIt credentials when present."""
+    """⚙️ Load ``tutorial/.env``, then point TTS at the configured model/endpoint."""
+    _load_dotenv_file(_ENV_FILE)
     if _DEFAULT_NOWI_ROOT.is_dir():
         try:
             from dotenv import dotenv_values, load_dotenv  # noqa: PLC0415
@@ -173,11 +203,20 @@ class _OpenRouterGeminiBackend:
         self._voice = os.getenv("TTS_VOICE") or "Kore"
         self._referer = os.getenv("OPENROUTER_SITE_URL", "https://nowigetit.app")
         self._title = os.getenv("OPENROUTER_APP_NAME", "semio-tutorial")
+        # Natural-voice steering for OpenAI's gpt-4o(-mini)-tts: a plain-language
+        # delivery brief and an optional playback speed. Ignored by other models.
+        self._instructions = (os.getenv("TTS_INSTRUCTIONS") or "").strip()
+        try:
+            self._speed = float(os.getenv("TTS_SPEED", "").strip() or "0") or None
+        except ValueError:
+            self._speed = None
 
     def synthesize(self, text: str, output_path: Path, *, voice: str | None = None) -> tuple[Optional[str], bool]:
         if not self.api_key or not text.strip():
             return None, True
-        use_pcm = "gemini" in self._model.lower() and "tts" in self._model.lower()
+        model = self._model.lower()
+        use_pcm = "gemini" in model and "tts" in model
+        is_openai_tts = "gpt-4o" in model and "tts" in model
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -190,10 +229,29 @@ class _OpenRouterGeminiBackend:
             "voice": voice or self._voice,
             "response_format": "pcm" if use_pcm else "mp3",
         }
-        with self._httpx.Client(timeout=self._httpx.Timeout(120.0, connect=30.0)) as client:
-            resp = client.post(f"{self._base}/audio/speech", headers=headers, json=payload)
-        if resp.status_code != 200:
-            raise RuntimeError(f"TTS failed {resp.status_code}: {resp.text[:300]}")
+        if is_openai_tts and self._instructions:
+            payload["instructions"] = self._instructions
+        if self._speed:
+            payload["speed"] = self._speed
+        # Retry 429 (rate limit) and 5xx with backoff — OpenAI TTS RPM caps are low.
+        import time as _time
+
+        resp = None
+        for attempt in range(6):
+            with self._httpx.Client(timeout=self._httpx.Timeout(120.0, connect=30.0)) as client:
+                resp = client.post(f"{self._base}/audio/speech", headers=headers, json=payload)
+            if resp.status_code == 200:
+                break
+            if resp.status_code == 429 or resp.status_code >= 500:
+                wait = resp.headers.get("retry-after")
+                delay = float(wait) if wait and wait.replace(".", "", 1).isdigit() else 2.0 * (attempt + 1)
+                _time.sleep(min(delay, 30.0))
+                continue
+            break
+        if resp is None or resp.status_code != 200:
+            code = resp.status_code if resp is not None else "no-response"
+            body = resp.text[:300] if resp is not None else ""
+            raise RuntimeError(f"TTS failed {code}: {body}")
         if use_pcm:
             out = output_path.with_suffix(".wav")
             rate, channels = 24000, 1
@@ -218,13 +276,19 @@ class _OpenRouterGeminiBackend:
 
 
 def resolve_backends() -> list[_TtsBackend]:
-    """🔌 Gemini first, NowIGetIt as the fallback when its key is the working one."""
+    """🔌 Configured OpenAI/OpenRouter endpoint first; NowIGetIt only when nothing else is set.
+
+    ``_NowIGetItBackend`` imports the external NowIGetIt package, which rewrites
+    ``os.environ`` TTS keys as a side effect — so it is added only when no
+    ``tutorial/.env`` / shell key exists, never as a fallback that could poison
+    a working key on the next beat.
+    """
     configure_tutorial_tts()
     backends: list[_TtsBackend] = []
     gemini = _OpenRouterGeminiBackend()
     if gemini.api_key:
         backends.append(gemini)
-    if _DEFAULT_NOWI_ROOT.is_dir():
+    elif _DEFAULT_NOWI_ROOT.is_dir():
         try:
             backends.append(_NowIGetItBackend())
         except Exception:  # noqa: BLE001
@@ -264,7 +328,7 @@ def synthesize_clause_audio(
         return index, None
 
     spoken = [(i, t) for i, t in enumerate(texts) if t]
-    with ThreadPoolExecutor(max_workers=_CLAUSE_WORKERS) as pool:
+    with ThreadPoolExecutor(max_workers=_clause_workers()) as pool:
         rendered = dict(pool.map(_render, spoken))
 
     results: list[tuple[str, Optional[Path], float]] = []

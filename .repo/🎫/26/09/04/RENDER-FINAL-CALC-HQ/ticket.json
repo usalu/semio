@@ -1,0 +1,21 @@
+{
+  "title": "Render Final Calc Hq",
+  "slug": "RENDER-FINAL-CALC-HQ",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Render Heating final_calculation merged_scenes beats at 1080p60.",
+  "goal": "tutorial/energy",
+  "dates": { "due": "2026-09-04", "started": "2026-09-04", "completed": "2026-09-04" },
+  "client": "cursor-chat",
+  "llm": "composer",
+  "summary": "Rendered ReviewingHeatLosses, Scene2, ReviewingHeatGains, Scene4, UltimateEnergyBalance at -qh (1080p60) and copied into rendered/.",
+  "files": {
+    "created": [
+      "tutorial/energy/demand/Heating/final_calculation/rendered/ReviewingHeatLosses_1080p60.mp4",
+      "tutorial/energy/demand/Heating/final_calculation/rendered/Scene2_1080p60.mp4",
+      "tutorial/energy/demand/Heating/final_calculation/rendered/ReviewingHeatGains_1080p60.mp4",
+      "tutorial/energy/demand/Heating/final_calculation/rendered/Scene4_1080p60.mp4",
+      "tutorial/energy/demand/Heating/final_calculation/rendered/UltimateEnergyBalance_1080p60.mp4"
+    ]
+  }
+}

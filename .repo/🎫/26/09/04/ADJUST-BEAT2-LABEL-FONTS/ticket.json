@@ -1,0 +1,26 @@
+{
+  "title": "Adjust Beat2 Label Fonts",
+  "slug": "ADJUST-BEAT2-LABEL-FONTS",
+  "emoji": "🔤",
+  "status": "closed",
+  "description": "Adjust Cooling heating-vs-cooling Beat2/Beat3 label fonts, lower the shared house scaffold, and move the thermometer right so Lüftung plumes clear the title and thermometer.",
+  "goal": "tutorial/energy",
+  "dates": {
+    "due": "2026-09-04",
+    "started": "2026-09-04",
+    "completed": "2026-09-04"
+  },
+  "client": "cursor-chat",
+  "llm": "composer",
+  "summary": "Beat2/Beat3 Raumtemperatur and Solare Gewinne (Exzessiv) use LABEL_FONT_SIZE. Shared HOUSE_CENTER lowered to DOWN*0.75 for all beats; THERM_OFFSET moved to RIGHT*3.55; Beat3 roof exhaust plumes shortened slightly so they clear the topic title.",
+  "files": {
+    "updated": [
+      "tutorial/energy/demand/Cooling/1_heating_vs_cooling/scene_1.py",
+      ".repo/💬/Niloufar.md"
+    ],
+    "created": [
+      ".repo/🎫/26/09/04/ADJUST-BEAT2-LABEL-FONTS/ticket.json",
+      ".repo/🎫/26/09/04/ADJUST-BEAT2-LABEL-FONTS/notes.md"
+    ]
+  }
+}

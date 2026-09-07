@@ -1,0 +1,13 @@
+{
+  "title": "Clean Tutorial Media",
+  "slug": "CLEAN-TUTORIAL-MEDIA",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Delete all .mp4 and .mp3 under tutorial/ only.",
+  "goal": "tutorial/energy",
+  "dates": { "due": "2026-09-06", "started": "2026-09-06", "completed": "2026-09-06" },
+  "client": "cursor-chat",
+  "llm": "composer",
+  "summary": "Removed ~12006 mp4/mp3 files under tutorial/ (final renders, audio, manim partial caches). No other directories touched.",
+  "files": { "removed": ["tutorial/**/*.mp4", "tutorial/**/*.mp3"] }
+}

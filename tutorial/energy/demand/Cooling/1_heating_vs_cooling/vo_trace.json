@@ -1,0 +1,22 @@
+{
+  "beats": {
+    "Beat1_WinterGains": {
+      "intro": {
+        "start": 0.0,
+        "window": 7.008
+      },
+      "solar": {
+        "start": 9.017,
+        "window": 6.504
+      },
+      "internal": {
+        "start": 15.533,
+        "window": 8.064
+      },
+      "outro": {
+        "start": 23.6,
+        "window": 6.312
+      }
+    }
+  }
+}

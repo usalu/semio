@@ -659,3 +659,62 @@ In Beat 8, we have a problem with the animated texts. The size of the text at th
 In the final calculation for heat losses, add the topic in the same position and font size as the 'reviewing heat gains' section
 ---
 
+---
+in beat 2 @tutorial/energy/demand/Cooling/1_heating_vs_cooling/scene_1.py , adjust the font size of the Raumtemperatur and Solar Gewinne labels
+---
+---
+also in beat 3, make the font size of the Raumtemperatur smaller, shift the building a little lower so blue heat Luftung does not collide with the topic name, keep house position consistent across previous beats, and move thermometer further right to avoid blue lines colliding with it
+---
+---
+render this beat in highest quality Beat3_ShadingFactor
+---
+---
+also render Heating/final_calculation/merged_scenes.py section with highest quality
+---
+---
+merge ReviewingHeatLosses Scene2 ReviewingHeatGains Scene4 UltimateEnergyBalance HQ into one video in correct order
+---
+---
+render the highest quality of beat 3 of Cooling/4_solar_radiation/scene_4.py
+---
+In beat 2, do a revision. The animations for Strahlung, Konvektion, Atmung, and the other elements are overlapping and messy. I want the animation objects to be cleaner, clearer, and better separated. Keep in mind that you can also use transparent colors.
+---
+Also, at the end of the video in beat 2, the rectangle is overlapping with the subtitles. Please fix that as well.---
+why i have no access to beat 5 Beat5_SensibleVsLatent in Cooling/2_internal_gains/scene_2.py
+---
+In beat 1, scene 3, the transparent color animation makes no sense. revise it and make the animation more appropriate for this scene
+---
+At the end of beat 2, delete the lines around the animated transparent color. Instead, just reduce the color's opacity to show the building getting warmer and warmer.
+---
+At the same time, animate the watch movement to show that as time passes, it gets warmer and warmer.
+---
+In beat 3, delete the transparent color inside the house. Also, when the texts animate from the house to the formula, they should sync better, and their size in the formula should stay the same as their original size.
+---
+in beat 4, make the texes 'Misst Luf...' and 'Misst Wasser...' smaler and give a little distance to the formula and the text on top of that that indicate the units with the  texes 'Misst Luf...' and 'Misst Wasser...'. and also the wasser points in Latente side having verlap with the text, fix that too
+---
+like what we had in heating video, about adding dins in top right side of the animation slides, we need that for all scenes in cooling videos, the size and the position of the din indicator should be exact same of the heating videos, add related dins to each scene that we need, specially where we have formulas
+---
+The object positions in beat 1 are a disaster. First, I want you to change the sun's radiation, making it a transparent color instead of these wavy lines. Additionally, the rectangle at the bottom of the window should align with the center of the window and be shifted slightly lower. Finally, please make the formula in the middle a little smaller, as it overlaps with the text 'Sonnenzeit'.
+---
+in beat 2 also delete the units in top of the formula
+---
+In beat 2, where the rectangles show up on the right side, align them better with the position of the room on the left. They currently overlap with the room. As a solution, do not make the text smaller, but make the rectangles smaller instead.
+---
+---
+clean tutorial folder: delete all mp4 and mp3 only under tutorial/
+---
+---
+also delete wav files under tutorial/ and list what was deleted
+---
+---
+render all cooling and heating scenes HQ with intros, merge into two full videos
+---
+---
+some scenes has issue with timing, the timing is not correct suddenly it goes to next beat
+---
+---
+In some scenes, there is not sufficient time to read the subtitles. Please check all scenes to find these instances and fix the timing so that every subtitle can be read
+---
+---
+re render the scenes and give me the merg scenes with sufficiant timing in between in highest quality
+---

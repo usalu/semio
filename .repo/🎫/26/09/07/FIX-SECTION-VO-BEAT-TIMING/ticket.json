@@ -1,0 +1,13 @@
+{
+  "id": "2026/09/07/FIX-SECTION-VO-BEAT-TIMING",
+  "title": "Fix Section Vo Beat Timing",
+  "status": "closed",
+  "summary": "Section hosts in full heating/cooling videos reuse one Scene across beats without begin_vo_beat, so hold_for spent budgets leak across beats that share clause keys (intro/outro/label) and later beats collapse to min_wait (~0.3s).",
+  "goal": "tutorial/energy-demand",
+  "closed_summary": "Section hosts now call begin_vo_beat(host, beat_cls.__name__) before each construct so hold_for spent budgets reset per beat. load_vo_timing merges manifests so multi-module imports keep all beat timings. Re-render full Heating/Cooling HQ videos for the fix to appear in the mp4s.",
+  "files": [
+    "tutorial/energy/demand/Cooling/full_cooling_video.py",
+    "tutorial/energy/demand/Heating/full_heating_video.py",
+    "tutorial/manim_visuals.py"
+  ]
+}

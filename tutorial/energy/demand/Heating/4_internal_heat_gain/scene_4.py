@@ -31,8 +31,11 @@ from manim_visuals import (
     P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
-    watt_anchor,
+    watt_anchor, set_vo_language,
 )
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
 
 # 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
 TITLE_DE = "Modul 4: Interne Wärmegewinne"

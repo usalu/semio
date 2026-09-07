@@ -1,7 +1,9 @@
 # Heating Demand — Full Video
 
-Plays the **Heating demand series** in curriculum order (no institute intro card):
+Plays the **Heating demand series** in curriculum order, prepended with the
+series intro card ``Demo_Intro_Heizlast`` from ``tutorial/intro/intro_scene.py``:
 
+0. Intro — Heizlast
 1. Modul 1 — Einführung
 2. Modul 2 — Transmission / Leitung
 3. Modul 3 — Konvektion / Lüftung

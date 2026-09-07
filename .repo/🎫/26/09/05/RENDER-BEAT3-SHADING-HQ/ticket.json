@@ -1,0 +1,19 @@
+{
+  "title": "Render Beat3 Shading Hq",
+  "slug": "RENDER-BEAT3-SHADING-HQ",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Render Cooling solar radiation Beat3_ShadingFactor at 1080p60.",
+  "goal": "tutorial/energy",
+  "dates": { "due": "2026-09-05", "started": "2026-09-05", "completed": "2026-09-05" },
+  "client": "cursor-chat",
+  "llm": "composer",
+  "summary": "Rendered Beat3_ShadingFactor at -qh (1080p60) and copied to rendered/Beat3_ShadingFactor_1080p60.mp4.",
+  "files": {
+    "created": [
+      "tutorial/energy/demand/Cooling/4_solar_radiation/rendered/Beat3_ShadingFactor_1080p60.mp4",
+      ".repo/🎫/26/09/05/RENDER-BEAT3-SHADING-HQ/render.log",
+      ".repo/🎫/26/09/05/RENDER-BEAT3-SHADING-HQ/ticket.json"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+clauses=391 shortfalls=0
+SUBTITLE_READING_WPS=1.6
+SUBTITLE_MIN_SECONDS=1.5
+
+Top 15 largest read budgets:
+  read= 22.50s budget= 22.50s  Beat4_Kilowattstunde:fill
+  read= 20.00s budget= 20.00s  Beat4_Kilowattstunde:analogy
+  read= 20.00s budget= 20.00s  Beat3_IsolateAirflow:substitute
+  read= 15.00s budget= 15.00s  Beat6_Energieerhaltung:law
+  read= 14.38s budget= 14.38s  Beat5_CalculateRadius:vm
+  read= 14.38s budget= 14.38s  Beat1_DreiWegeDerWaerme:setup
+  read= 14.38s budget= 14.38s  Beat5_Zusammenfassung:standard
+  read= 13.75s budget= 13.75s  Beat8_Ausblick:both
+  read= 13.75s budget= 13.75s  Beat8_Waermerueckgewinnung:transfer
+  read= 13.75s budget= 13.75s  Beat3_Konvektion:carrier
+  read= 13.75s budget= 13.75s  Beat4_Strahlung:vacuum
+  read= 13.12s budget= 13.12s  Beat7_Waermepumpe:shift
+  read= 13.12s budget= 13.12s  Beat7_Waermepumpe:conserve
+  read= 13.12s budget= 13.12s  Beat7_Waermepumpe:contrast
+  read= 13.12s budget= 13.12s  Beat8_Ausblick:recap

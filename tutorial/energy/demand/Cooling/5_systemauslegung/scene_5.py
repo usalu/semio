@@ -21,13 +21,36 @@ from manim_visuals import (
     convection_stream, symbol_token, watt_anchor,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    set_vo_language, load_vo_timing,
 )
+
+# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
+set_vo_language("de")
+_VO_TIMING = _Path(__file__).resolve().parent / "vo_timing.json"
+if _VO_TIMING.is_file():
+    load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Mechanische Wohnungslüftung: Auslegung"
 
 # Mid-screen anchor for rooms / ducts (clear of title + formula/caption).
 CONTENT_CENTER = UP * 0.1
+
+
+#region DIN citation
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
+    series (``Heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    that never competes with the diagram. The formula panel sits on the
+    bottom edge, so this corner is clear in every beat.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
 
 
 #region Shared visual motifs
@@ -164,13 +187,13 @@ class Beat1_MechanicalVentilation(Scene):
     NARRATION = [
         ("intro",
          "The room is already saturated with heat. To actively remove that cooling load, we rely on a mechanical supply and exhaust system—a Zu-Abluftsystem.",
-         "Der Raum ist wärmegesättigt — ein mechanisches Zu-/Abluftsystem muss die Last abführen."),
+         "Der Raum ist wärmegesättigt — ein mechanisches Zu- und Abluftsystem muss die Last abführen."),
         ("flow",
          "Cool outdoor air is pushed in through a supply grille, while warm indoor air is drawn out through an exhaust grille at the same time.",
-         "Kühle Zuluft kommt rein, warme Abluft wird gleichzeitig abgeführt."),
+         "Kühle Zuluft strömt herein, warme Abluft wird gleichzeitig abgeführt."),
         ("question",
          "Watch the airflow cool the room. The engineering question that follows is precise: what volumetric flow rate do we need to neutralize this heat load?",
-         "Welche Volumenstromrate braucht es, um diese Wärmelast zu neutralisieren?"),
+         "Welchen Volumenstrom braucht es, um diese Wärmelast auszugleichen?"),
     ]
 
     def construct(self):
@@ -179,7 +202,8 @@ class Beat1_MechanicalVentilation(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Zu-/Abluftsystem", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 16798-3")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -277,19 +301,19 @@ class Beat2_VolumeFlowEquation(Scene):
          "Die konvektive Kühlleistung der Zuluft folgt einem thermodynamischen Produkt."),
         ("formula",
          "Q-dot V equals air density times specific heat capacity times the temperature difference between cool supply air and the warm room, times q v R—the required room airflow volume.",
-         "Q-Punkt-V = ρ_a · c_p,a · Δθ · q_v,R."),
+         "Q Punkt V ist gleich Rho a mal c p a mal Delta Theta mal q v R."),
         ("rho",
          "Density is a material property of air — about 1.29 kilograms per cubic metre.",
-         "ρ_a ist die Luftdichte — etwa 1,29 kg/m³."),
+         "Rho a ist die Luftdichte — etwa eins Komma zwei neun Kilogramm pro Kubikmeter."),
         ("cp",
          "Specific heat capacity is likewise a material property — about 1.0 kilojoule per kilogram-kelvin.",
-         "c_p,a ist die spez. Wärmekapazität — etwa 1,0 kJ/(kg·K)."),
+         "c p a ist die spezifische Wärmekapazität — etwa eins Komma null Kilojoule pro Kilogramm und Kelvin."),
         ("dth",
          "Delta theta is the designed temperature lift we allow — here 25 minus 18 equals 7 kelvin.",
-         "Δθ ist der Temperaturhub — hier 25 − 18 = 7 K."),
+         "Delta Theta ist der Temperaturhub — hier fünfundzwanzig minus achtzehn, also sieben Kelvin."),
         ("qvr",
          "And q v R is the free design variable: how much air we must move every second to carry the heat away.",
-         "q_v,R ist die Entwurfsgröße — wie viel Luft pro Sekunde bewegt werden muss."),
+         "q v R ist die Entwurfsgröße — wie viel Luft pro Sekunde bewegt werden muss."),
     ]
 
     def construct(self):
@@ -298,7 +322,8 @@ class Beat2_VolumeFlowEquation(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Konvektive Kühlleistung der Zuluft", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -378,9 +403,10 @@ class Beat2_VolumeFlowEquation(Scene):
                 Text("q_v,R  [m³/s]", font_size=BODY_FONT_SIZE, color=P_YELLOW),
             ).arrange(DOWN, buff=0.06),
         ]
-        # Same-size frames so the 2×2 grid lines up (a bit larger than the widest label).
-        card_w = max(b.width for b in card_bodies) + 0.55
-        card_h = max(b.height for b in card_bodies) + 0.42
+        # Same-size frames so the 2×2 grid lines up. Tight padding keeps the grid
+        # narrow enough to clear the room on the left without shrinking the text.
+        card_w = max(b.width for b in card_bodies) + 0.32
+        card_h = max(b.height for b in card_bodies) + 0.28
         cards = VGroup()
         for body in card_bodies:
             frame = RoundedRectangle(
@@ -389,8 +415,9 @@ class Beat2_VolumeFlowEquation(Scene):
             )
             body.move_to(frame.get_center())
             cards.add(VGroup(frame, body))
-        cards.arrange_in_grid(rows=2, cols=2, buff=(0.28, 0.28))
-        cards.move_to(RIGHT * 3.15 + UP * 0.55)
+        cards.arrange_in_grid(rows=2, cols=2, buff=(0.20, 0.20))
+        # Right of the room, vertically centred on it (room right edge ≈ -0.2).
+        cards.move_to(np.array([3.4, room_c[1], 0.0]))
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -439,16 +466,16 @@ class Beat3_IsolateAirflow(Scene):
     NARRATION = [
         ("intro",
          "Thermal equilibrium demands that cooling capacity equals the solar transmission load we calculated earlier.",
-         "Im Gleichgewicht muss die Kühlleistung der solaren Kühllast gleichen."),
+         "Im Gleichgewicht muss die Kühlleistung der solaren Kühllast entsprechen."),
         ("substitute",
          "Because Q-dot V equals Q-dot S,tr, we replace the left side and rearrange: q v R moves alone to the left, and the load sits over density, heat capacity and Delta theta.",
-         "Wegen Q-Punkt-V = Q-Punkt-S,tr stellen wir um: q_v,R links, die Last über ρ_a · c_p,a · Δθ."),
+         "Weil Q Punkt V gleich Q Punkt S t r ist, stellen wir um: q v R nach links, die Last geteilt durch Rho a mal c p a mal Delta Theta."),
         ("qvr",
          "On the left stands the unknown we are solving for: the required volume flow, in cubic metres per second — the same q v R that sat on the right of the first equation.",
-         "Links die gesuchte Größe q_v,R — dieselbe wie rechts in der ersten Formel."),
+         "Links steht die gesuchte Größe q v R — dieselbe wie rechts in der ersten Formel."),
         ("qstr",
          "In the numerator sits Q-dot S,tr — it replaces Q-dot V because equilibrium made them equal.",
-         "Im Zähler: Q-Punkt-S,tr ersetzt Q-Punkt-V — im Gleichgewicht sind sie gleich."),
+         "Im Zähler ersetzt Q Punkt S t r das Q Punkt V — im Gleichgewicht sind sie gleich."),
         ("rho",
          "The denominator keeps the air properties from the first formula — density and specific heat capacity.",
          "Im Nenner bleiben die Luftkennwerte der ersten Formel: Dichte und Wärmekapazität."),
@@ -466,7 +493,8 @@ class Beat3_IsolateAirflow(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Gleichgewicht: Kühlleistung = Kühllast", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -567,28 +595,28 @@ class Beat4_DuctCrossSection(Scene):
          "Mit bekanntem Volumenstrom dimensionieren wir den Kanal über die Kontinuität."),
         ("continuity",
          "Volumetric flow equals mean air velocity times cross-sectional area: q v R equals v m times A.",
-         "Volumenstrom: q_v,R = v_m · A."),
+         "Der Volumenstrom q v R ist gleich der mittleren Geschwindigkeit v m mal der Fläche A."),
         ("qvr",
          "q v R is the required volume flow we just sized — cubic metres of air per second.",
-         "q_v,R ist der benötigte Volumenstrom — Luft in m³/s."),
+         "q v R ist der benötigte Volumenstrom — Luft in Kubikmeter pro Sekunde."),
         ("vm",
          "v m is the mean duct velocity. To limit noise, engineers often cap it around two point five meters per second.",
-         "v_m ist die mittlere Kanalgeschwindigkeit — oft begrenzt auf etwa 2,5 m/s."),
+         "v m ist die mittlere Kanalgeschwindigkeit — oft begrenzt auf etwa zwei Komma fünf Meter pro Sekunde."),
         ("A_cont",
          "A is the free cross-sectional area of the duct that must carry that flow.",
          "A ist die freie Querschnittsfläche, die diesen Strom tragen muss."),
         ("area",
          "With velocity fixed, rearrange: A equals q v R over v m — that is the required duct area in square metres.",
-         "Bei fester Geschwindigkeit: A = q_v,R / v_m — die nötige Kanalfläche in m²."),
+         "Bei fester Geschwindigkeit ist A gleich q v R geteilt durch v m — die nötige Kanalfläche in Quadratmetern."),
         ("A",
          "A on the left is the duct area we must provide.",
-         "A links ist die bereitzustellende Kanalfläche."),
+         "A auf der linken Seite ist die bereitzustellende Kanalfläche."),
         ("qvr_num",
          "In the numerator sits the required volume flow again — more air needs more area.",
          "Im Zähler steht wieder der Volumenstrom — mehr Luft braucht mehr Fläche."),
         ("vm_den",
          "In the denominator sits velocity — a lower speed limit forces a larger duct.",
-         "Im Nenner steht die Geschwindigkeit — niedrigere v_m erzwingt einen größeren Kanal."),
+         "Im Nenner steht die Geschwindigkeit — ein niedrigeres v m erzwingt einen größeren Kanal."),
     ]
 
     def construct(self):
@@ -597,7 +625,8 @@ class Beat4_DuctCrossSection(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Vom Volumenstrom zum Kanalquerschnitt", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2087")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -714,37 +743,37 @@ class Beat5_CalculateRadius(Scene):
     NARRATION = [
         ("intro",
          "Now we close the sizing chain: every quantity we derived feeds the next — from cooling load to volume flow, to duct area, to radius.",
-         "Jetzt die Auslegungskette: Kühllast → Volumenstrom → Fläche → Radius."),
+         "Jetzt die Auslegungskette: von der Kühllast zum Volumenstrom, zur Fläche, zum Radius."),
         ("flow",
          "First, volume flow q v R equals the solar cooling load Q-dot S,tr divided by density, heat capacity and Delta theta.",
-         "q_v,R = Q-Punkt-S,tr / (ρ_a · c_p,a · Δθ)."),
+         "q v R ist gleich Q Punkt S t r geteilt durch Rho a mal c p a mal Delta Theta."),
         ("qstr",
          "Q-dot S,tr is the heat we must remove — it sits in the numerator.",
-         "Q-Punkt-S,tr ist die abzuführende Wärme — sie steht im Zähler."),
+         "Q Punkt S t r ist die abzuführende Wärme — sie steht im Zähler."),
         ("qvr",
          "That fixes q v R — the airflow the duct must carry every second.",
-         "Daraus folgt q_v,R — der Luftstrom, den der Kanal tragen muss."),
+         "Daraus folgt q v R — der Luftstrom, den der Kanal tragen muss."),
         ("area",
          "Next, continuity: area A equals that volume flow divided by the mean velocity v m.",
-         "Als Nächstes Kontinuität: A = q_v,R / v_m."),
+         "Als Nächstes die Kontinuität: A ist gleich q v R geteilt durch v m."),
         ("qvr_a",
          "The same q v R now sits in the numerator of the area formula.",
-         "Dasselbe q_v,R steht jetzt im Zähler der Flächenformel."),
+         "Dasselbe q v R steht jetzt im Zähler der Flächenformel."),
         ("vm",
          "v m is not calculated from the heat load — it is a design limit we choose. To keep the duct quiet, engineers usually cap mean velocity around two point five meters per second.",
-         "v_m kommt nicht aus der Last — es ist ein Entwurfslimit. Für leise Kanäle oft etwa 2,5 m/s."),
+         "v m kommt nicht aus der Last — es ist ein Entwurfslimit. Für leise Kanäle oft etwa zwei Komma fünf Meter pro Sekunde."),
         ("A",
          "With v m fixed, A follows — the free cross-section the duct needs.",
-         "Mit festem v_m folgt A — die nötige Querschnittsfläche."),
+         "Mit festem v m folgt A — die nötige Querschnittsfläche."),
         ("radius",
          "Finally the round duct: radius r equals the square root of A over pi.",
-         "Zuletzt der runde Kanal: r = √(A / π)."),
+         "Zuletzt der runde Kanal: r ist gleich die Wurzel aus A geteilt durch Pi."),
         ("A_r",
          "That same A feeds the root — geometry turns area into a length.",
          "Dieselbe Fläche A steckt unter der Wurzel — Geometrie macht Länge daraus."),
         ("r",
          "r is the duct radius we install. Load to flow to area to radius — the system is fully sized.",
-         "r ist der Kanalradius. Last → Strom → Fläche → Radius — die Anlage ist ausgelegt."),
+         "r ist der Kanalradius. Von der Last über den Strom und die Fläche zum Radius — die Anlage ist ausgelegt."),
     ]
 
     def construct(self):
@@ -753,7 +782,8 @@ class Beat5_CalculateRadius(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Auslegungskette: Last → Strom → Fläche → Radius", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2087")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)

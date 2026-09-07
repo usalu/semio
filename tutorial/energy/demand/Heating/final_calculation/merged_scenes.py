@@ -14,7 +14,10 @@ if str(_TUTORIAL_ROOT) not in _sys.path:
     _sys.path.insert(0, str(_TUTORIAL_ROOT))
 
 from manim_fonts import apply_scene_style, BODY_FONT
-from manim_visuals import caption_bar, swap_caption, hold_for, subtitle_text
+from manim_visuals import caption_bar, swap_caption, hold_for, subtitle_text, set_vo_language
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
 
 
 class ReviewingHeatLosses(Scene):

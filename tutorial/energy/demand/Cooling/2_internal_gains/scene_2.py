@@ -21,10 +21,30 @@ from manim_visuals import (
     convection_stream, radiation_waves, respiration_parts, symbol_token, watt_anchor,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    SAFE_BOTTOM, set_vo_language,
 )
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Interne Wärmegewinne"
+
+
+#region DIN citation
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
+    series (``Heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    that never competes with the diagram. The formula panel sits on the
+    bottom edge, so this corner is clear in every beat.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
 
 
 #region Shared helpers
@@ -95,7 +115,8 @@ class Beat1_OfficeRoom(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Die umschlossene Umgebung", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-10")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -193,7 +214,8 @@ class Beat2_HumanFactor(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Menschliche Stoffwechselwärme", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-10")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -223,18 +245,32 @@ class Beat2_HumanFactor(Scene):
 
         self.play(Create(ceiling_line), Create(floor_line), Create(office_setup), run_time=1.8)
 
-        rad_origin = torso.get_center() + UP * 0.15
-        rad_waves = radiation_waves(rad_origin, n=4, color=P_ORANGE, height=1.0, x_spread=0.42)
-        lbl_rad = Text("Strahlung", font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to(torso_center + UP * 1.55 + LEFT * 1.55)
-        conv_stream = convection_stream(
-            torso.get_center() + RIGHT * 0.35,
-            torso.get_center() + UP * 1.35 + RIGHT * 0.9,
-            color=P_CYAN, bend=0.45, n_ribbons=3, spread=0.22,
-        )
-        lbl_conv = Text("Konvektion", font_size=BODY_FONT_SIZE, color=P_CYAN).move_to(torso_center + UP * 1.85 + RIGHT * 0.55)
-        mouth = head.get_center() + RIGHT * 0.22 + DOWN * 0.05
-        breath = respiration_parts(mouth, scale=1.0)
-        lbl_resp = Text("Atmung", font_size=BODY_FONT_SIZE, color=P_RED).move_to(torso_center + UP * 1.25 + RIGHT * 2.0)
+        # 🌡️ Three heat-loss lanes fan out from the body so none crosses another:
+        # Strahlung leans up-left off the torso, Konvektion rises straight up
+        # off the head, Atmung breathes out to the right from the mouth. Each
+        # lane also carries reduced stroke opacity so a near lane never reads
+        # as tangled with whatever sits behind it.
+        rad_origin = torso.get_left() + LEFT * 0.35 + UP * 0.2
+        rad_waves = radiation_waves(rad_origin, n=4, color=P_ORANGE, height=0.8, x_spread=0.24, stroke_width=2.2)
+        rad_waves.set_stroke(opacity=0.85)
+        rad_waves.rotate(28 * DEGREES, about_point=rad_origin)
+        lbl_rad = Text("Strahlung", font_size=BODY_FONT_SIZE, color=P_ORANGE)
+        lbl_rad.next_to(rad_waves, LEFT, buff=0.25)
+
+        conv_start = head.get_top() + UP * 0.12
+        conv_end = conv_start + UP * 0.75
+        conv_stream = convection_stream(conv_start, conv_end, color=P_CYAN, bend=0.12, n_ribbons=3, spread=0.14)
+        conv_stream.set_stroke(opacity=0.8)
+        lbl_conv = Text("Konvektion", font_size=BODY_FONT_SIZE, color=P_CYAN)
+        lbl_conv.next_to(conv_stream, LEFT, buff=0.25)
+
+        mouth = head.get_center() + RIGHT * 0.55 + DOWN * 0.04
+        breath = respiration_parts(mouth, scale=0.85)
+        breath["sensible"].set_stroke(opacity=0.85)
+        breath["latent"].shift(RIGHT * 0.35 + UP * 0.05)
+        breath["latent_label"].next_to(breath["latent"], RIGHT, buff=0.12)
+        lbl_resp = Text("Atmung", font_size=BODY_FONT_SIZE, color=P_RED)
+        lbl_resp.next_to(breath["group"], UP, buff=0.15)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "modes"))
         self.play(
@@ -296,11 +332,15 @@ class Beat2_HumanFactor(Scene):
         single_label.next_to(single, DOWN, buff=0.28)
         self.play(FadeIn(single), FadeIn(single_label), run_time=0.9)
 
+        # 📐 Shift the whole hall block up (keeping its internal spacing
+        # untouched) so the anchor badge below it has real room before the
+        # caption band, instead of the badge crowding into the subtitle.
+        hall_shift = UP * 0.4
         hall_outline = Rectangle(
             width=9.6, height=3.0, stroke_color="#2C3545", stroke_width=2,
             fill_color=P_DEEP_DARK, fill_opacity=0.85,
-        ).move_to(UP * 0.15)
-        tier_y = np.linspace(-1.15, 0.95, 5)
+        ).move_to(UP * 0.15 + hall_shift)
+        tier_y = np.linspace(-1.15, 0.95, 5) + hall_shift[1]
         tier_lines = VGroup(*[
             Line(start=[-4.5, y, 0], end=[4.5, y, 0], stroke_color="#2C3545", stroke_width=1, stroke_opacity=0.6)
             for y in tier_y
@@ -319,9 +359,14 @@ class Beat2_HumanFactor(Scene):
             run_time=2.6,
         )
         hall_anchor = watt_anchor(5000, compare="toaster", title="Gesamtwärme")
-        hall_anchor.scale(0.7).next_to(hall_outline, DOWN, buff=0.55)
-        # Keep clear of caption bar
-        hall_anchor.shift(UP * 0.15)
+        hall_anchor.scale(0.5)
+        hall_anchor.next_to(hall_outline, DOWN, buff=0.35)
+        # Clamp above the caption band explicitly — measured against the
+        # actual rendered badge, never a hand-tuned shift that silently goes
+        # stale (that gap is exactly what let this badge overlap the caption).
+        clearance = (SAFE_BOTTOM + 0.15) - hall_anchor.get_bottom()[1]
+        if clearance > 0:
+            hall_anchor.shift(UP * clearance)
         thermal_waves = VGroup(*[
             Circle(radius=0.18, stroke_color=P_ORANGE, stroke_width=1.1, stroke_opacity=0.75).move_to(icon.get_center())
             for icon in grid_icons
@@ -376,7 +421,8 @@ class Beat3_DevicesLighting(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Geräte, Steckerlasten und Beleuchtung", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-10")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -559,7 +605,8 @@ class Beat4_CumulativeLoad(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Summe der internen Gewinne", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1364,7 +1411,8 @@ class Beat8_Mitigation(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Minderung & intelligentes Design", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)

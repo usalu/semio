@@ -24,7 +24,14 @@ _HEATING_ROOT = Path(__file__).resolve().parent
 _SEMIO_ROOT = next(
     p for p in _HEATING_ROOT.parents if (p / ".venv").is_dir() or (p / "package.json").is_file()
 )
+_TUTORIAL_ROOT = _SEMIO_ROOT / "tutorial"
+if str(_TUTORIAL_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TUTORIAL_ROOT))
+_INTRO_SCRIPT = _TUTORIAL_ROOT / "intro" / "intro_scene.py"
+SERIES_INTRO_SCENE = "Demo_Intro_Heizlast"
 # endregion
+
+from manim_visuals import begin_vo_beat  # noqa: E402
 
 
 # region Module Loader
@@ -138,10 +145,15 @@ _BIND_ATTRS = (
 
 
 def _bind_scene_attrs(host: Scene, scene_cls: type[Scene]) -> None:
-    """🔗 Copy scene class attrs onto the host (needed for ``scene_cls.construct(host)``)."""
+    """🔗 Copy scene class attrs onto the host (needed for ``scene_cls.construct(host)``).
+
+    Also reset VO spend per beat — section hosts reuse one ``Scene``, and shared
+    clause keys would otherwise deplete ``hold_for`` budgets across beats.
+    """
     for name in _BIND_ATTRS:
         if hasattr(scene_cls, name):
             setattr(host, name, getattr(scene_cls, name))
+    begin_vo_beat(host, scene_cls.__name__)
 # endregion
 
 
@@ -239,12 +251,16 @@ def _quality_folder(quality_flag: str) -> str:
     return {"-ql": "480p15", "-qm": "720p30", "-qh": "1080p60"}.get(quality_flag, "480p15")
 
 
-def _find_section_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Path:
-    """🔎 Locate a rendered section mp4 under media_dir."""
+def _find_named_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Path:
+    """🔎 Locate any rendered mp4 named ``scene_name`` under media_dir."""
     folder = _quality_folder(quality_flag)
-    direct = media_dir / "videos" / "full_heating_video" / folder / f"{scene_name}.mp4"
-    if direct.is_file() and direct.stat().st_size > 1000:
-        return direct
+    preferred = [
+        media_dir / "videos" / "full_heating_video" / folder / f"{scene_name}.mp4",
+        media_dir / "videos" / "intro_scene" / folder / f"{scene_name}.mp4",
+    ]
+    for path in preferred:
+        if path.is_file() and path.stat().st_size > 1000:
+            return path
     matches = sorted(
         (media_dir / "videos").rglob(f"{scene_name}.mp4"),
         key=lambda p: p.stat().st_mtime,
@@ -254,6 +270,11 @@ def _find_section_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Pa
         if match.stat().st_size > 1000:
             return match
     raise FileNotFoundError(f"Rendered mp4 not found for {scene_name} under {media_dir}")
+
+
+def _find_section_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Path:
+    """🔎 Locate a rendered section mp4 under media_dir."""
+    return _find_named_mp4(media_dir, scene_name, quality_flag)
 
 
 def _ffmpeg_concat(clips: list[Path], output: Path, list_path: Path) -> None:
@@ -280,14 +301,71 @@ def compose_full_heating_video(
     quality_flag: str = "-ql",
     play: bool = True,
     media_dir: Path | None = None,
+    force: bool = False,
+    concat_only: bool = False,
 ) -> Path:
-    """🎬 Render each section with Manim, ffmpeg-concat, optionally open the result."""
+    """🎬 Render series intro + each section with Manim, ffmpeg-concat, optionally open."""
     media_dir = media_dir or (_HEATING_ROOT / "media")
     manim = _manim_bin()
     clips: list[Path] = []
 
+    # region Series Intro
+    intro_existing: Path | None = None
+    if not force:
+        try:
+            intro_existing = _find_named_mp4(media_dir, SERIES_INTRO_SCENE, quality_flag)
+        except FileNotFoundError:
+            intro_existing = None
+
+    if concat_only:
+        if intro_existing is None:
+            raise FileNotFoundError(
+                f"Missing intro mp4 for {SERIES_INTRO_SCENE} (cannot --concat-only).",
+            )
+        print(f"\n=== Reusing intro {SERIES_INTRO_SCENE} → {intro_existing.name} ===")
+        clips.append(intro_existing)
+    elif intro_existing is not None and not force:
+        print(f"\n=== Skipping intro {SERIES_INTRO_SCENE} (already rendered) ===")
+        clips.append(intro_existing)
+    else:
+        print(f"\n=== Rendering intro {SERIES_INTRO_SCENE} ===")
+        subprocess.run(
+            [
+                str(manim),
+                quality_flag,
+                "--media_dir", str(media_dir),
+                str(_INTRO_SCRIPT),
+                SERIES_INTRO_SCENE,
+            ],
+            check=True,
+            cwd=str(_SEMIO_ROOT),
+        )
+        clips.append(_find_named_mp4(media_dir, SERIES_INTRO_SCENE, quality_flag))
+    # endregion
+
     for scene_cls in SECTION_SCENES:
         name = scene_cls.__name__
+        existing: Path | None = None
+        if not force:
+            try:
+                existing = _find_section_mp4(media_dir, name, quality_flag)
+            except FileNotFoundError:
+                existing = None
+
+        if concat_only:
+            if existing is None:
+                raise FileNotFoundError(
+                    f"Missing section mp4 for {name} (cannot --concat-only).",
+                )
+            print(f"\n=== Reusing {name} → {existing.name} ===")
+            clips.append(existing)
+            continue
+
+        if existing is not None and not force:
+            print(f"\n=== Skipping {name} (already rendered) ===")
+            clips.append(existing)
+            continue
+
         print(f"\n=== Rendering {name} ===")
         cmd = [
             str(manim),
@@ -300,25 +378,30 @@ def compose_full_heating_video(
         clips.append(_find_section_mp4(media_dir, name, quality_flag))
 
     folder = _quality_folder(quality_flag)
-    output = media_dir / "videos" / "full_heating_video" / folder / "FullHeatingDemandVideo.mp4"
-    list_path = media_dir / "videos" / "full_heating_video" / folder / "section_concat_list.txt"
-    print(f"\n=== Concatenating {len(clips)} sections → {output} ===")
+    out_dir = media_dir / "videos" / "full_heating_video" / folder
+    output = out_dir / "FullHeatingDemandVideo.mp4"
+    list_path = out_dir / "section_concat_list.txt"
+    rendered_copy = _HEATING_ROOT / "rendered" / f"Full_Heating_Demand_{folder}.mp4"
+    print(f"\n=== Concatenating {len(clips)} clips (intro + sections) → {output} ===")
     _ffmpeg_concat(clips, output, list_path)
+    rendered_copy.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(output, rendered_copy)
     print(f"\n✅ Ready: {output}")
+    print(f"✅ Copy:  {rendered_copy}")
 
     if play:
         opener = {"darwin": "open", "win32": "start"}.get(sys.platform, "xdg-open")
         if sys.platform == "win32":
-            subprocess.run(["cmd", "/c", "start", "", str(output)], check=False)
+            subprocess.run(["cmd", "/c", "start", "", str(rendered_copy)], check=False)
         else:
-            subprocess.run([opener, str(output)], check=False)
-    return output
+            subprocess.run([opener, str(rendered_copy)], check=False)
+    return rendered_copy
 
 
 def main(argv: list[str] | None = None) -> int:
-    """▶️ CLI: section renders + ffmpeg concat (recommended full-series path)."""
+    """▶️ CLI: series intro + section renders + ffmpeg concat (recommended full-series path)."""
     parser = argparse.ArgumentParser(
-        description="Render the full Heating series (sections + ffmpeg concat).",
+        description="Render the full Heating series (intro + sections + ffmpeg concat).",
     )
     parser.add_argument(
         "-q",
@@ -331,9 +414,24 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Do not open the finished mp4",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-render intro and every section even if mp4s already exist",
+    )
+    parser.add_argument(
+        "--concat-only",
+        action="store_true",
+        help="Only merge existing intro + section mp4s (no Manim render)",
+    )
     args = parser.parse_args(argv)
     quality_flag = {"l": "-ql", "m": "-qm", "h": "-qh"}[args.q]
-    compose_full_heating_video(quality_flag=quality_flag, play=not args.no_play)
+    compose_full_heating_video(
+        quality_flag=quality_flag,
+        play=not args.no_play,
+        force=args.force,
+        concat_only=args.concat_only,
+    )
     return 0
 
 

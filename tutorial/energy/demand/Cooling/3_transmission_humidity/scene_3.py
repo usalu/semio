@@ -21,7 +21,11 @@ from manim_visuals import (
     solar_wave_ray, symbol_token,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    set_vo_language,
 )
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
 
 # 🏔️ Persistent module titles — animated once, self.add()'ed on later beats.
 TITLE_OPAQUE_DE = "Transmissionswärme: Opake Bauteile"
@@ -30,6 +34,22 @@ TITLE_SPLIT_DE = "Sensible vs. Latente Kühlung"
 
 # Mid-screen anchor for house/diagram content (clear of title + formula/caption).
 CONTENT_CENTER = UP * 0.25
+
+
+#region DIN citation
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
+    series (``Heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    that never competes with the diagram. The formula panel sits on the
+    bottom edge, so this corner is clear in every beat.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
 
 
 #region Shared visual motifs
@@ -149,7 +169,8 @@ class Beat1_TransmissionOpaque(Scene):
         title = scene_title(TITLE_OPAQUE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Opake Bauteile unter Sommerstrahlung", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -205,17 +226,35 @@ class Beat1_TransmissionOpaque(Scene):
         u_token = symbol_token("U", color=P_ORANGE, font_size=FORMULA_FONT_SIZE)
         u_token.move_to(opaque_borders.get_center())
         a_token = symbol_token("A", color=P_CYAN, font_size=FORMULA_FONT_SIZE)
-        area_proxy = Rectangle(
-            width=2.2, height=1.6, color=P_ORANGE, stroke_width=3,
-            fill_opacity=0.08, fill_color=P_ORANGE,
-        ).move_to(h["house"].get_center() + DOWN * 0.15)
-        a_token.move_to(area_proxy.get_center())
+
+        # A is the opaque envelope itself — shade the two walls and both roof
+        # slopes as bands, not a floating box in the room.
+        area_band = 0.18
+        area_fill = VGroup(
+            Polygon(
+                h["bl"], h["tl"], h["tl"] + RIGHT * area_band, h["bl"] + RIGHT * area_band,
+                fill_color=P_CYAN, fill_opacity=0.3, stroke_width=0,
+            ),
+            Polygon(
+                h["br"], h["tr"], h["tr"] + LEFT * area_band, h["br"] + LEFT * area_band,
+                fill_color=P_CYAN, fill_opacity=0.3, stroke_width=0,
+            ),
+            Polygon(
+                h["tl"], h["roof_peak"], h["roof_peak"] + DOWN * area_band, h["tl"] + DOWN * area_band,
+                fill_color=P_CYAN, fill_opacity=0.3, stroke_width=0,
+            ),
+            Polygon(
+                h["tr"], h["roof_peak"], h["roof_peak"] + DOWN * area_band, h["tr"] + DOWN * area_band,
+                fill_color=P_CYAN, fill_opacity=0.3, stroke_width=0,
+            ),
+        )
+        a_token.move_to(area_fill.get_center())
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        self.play(FadeIn(area_proxy), run_time=0.6)
+        self.play(LaggedStart(*[FadeIn(p) for p in area_fill], lag_ratio=0.12), run_time=0.8)
         self.play(
             ReplacementTransform(opaque_borders.copy(), u_token),
-            ReplacementTransform(area_proxy, a_token),
+            ReplacementTransform(area_fill, a_token),
             run_time=1.4,
         )
         self.play(
@@ -225,7 +264,7 @@ class Beat1_TransmissionOpaque(Scene):
             run_time=1.4,
         )
         self.play(FadeOut(u_token), FadeOut(a_token), run_time=0.4)
-        hold_for(self, self.NARRATION, "formula", used=0.6 + 1.4 + 1.4 + 0.4 + 0.35)
+        hold_for(self, self.NARRATION, "formula", used=0.8 + 1.4 + 1.4 + 0.4 + 0.35)
 
         for key, color in (("u", P_ORANGE), ("a", P_CYAN), ("dt", P_BLUE)):
             ring = highlight_param(items, key, color=color)
@@ -261,7 +300,8 @@ class Beat2_TimeLag(Scene):
         title = scene_title(TITLE_OPAQUE_DE)
         self.add(title)
         subtitle = beat_subtitle("Phasenverschiebung (Time Lag)", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 13786")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -340,25 +380,21 @@ class Beat2_TimeLag(Scene):
         interior_heat_glow = Polygon(
             *house_interior_points, fill_color=P_RED, fill_opacity=0.0, stroke_width=0,
         )
-        heat_wave_1 = Polygon(*house_interior_points, color=P_ORANGE, stroke_width=2, stroke_opacity=0.0)
-        heat_wave_2 = Polygon(*house_interior_points, color=P_RED, stroke_width=1.5, stroke_opacity=0.0)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "peak"))
-        self.add(interior_heat_glow, heat_wave_1, heat_wave_2)
+        self.add(interior_heat_glow)
         self.play(
             dt_ring.animate.set_stroke(width=4),
-            interior_heat_glow.animate.set_fill(opacity=0.35),
-            heat_wave_1.animate.set_stroke(opacity=0.7).scale(0.92),
-            run_time=2.0,
+            interior_heat_glow.animate.set_fill(opacity=0.25),
+            run_time=1.4,
         )
+        self.play(interior_heat_glow.animate.set_fill(opacity=0.45), run_time=1.3)
         self.play(
-            interior_heat_glow.animate.set_fill(opacity=0.55, color=P_RED),
-            heat_wave_1.animate.scale(0.9).set_stroke(color=P_RED, opacity=0.9),
-            heat_wave_2.animate.set_stroke(opacity=0.8).scale(0.85),
+            interior_heat_glow.animate.set_fill(opacity=0.65),
             dt_ring.animate.set_stroke(width=5, color=P_RED),
-            run_time=2.0,
+            run_time=1.3,
         )
-        hold_for(self, self.NARRATION, "peak", used=2.0 + 2.0 + 0.35)
+        hold_for(self, self.NARRATION, "peak", used=1.4 + 1.3 + 1.3 + 0.35)
 
         self.play(FadeOut(dt_ring), FadeOut(caption), run_time=0.4)
         self.wait(0.5)
@@ -393,7 +429,8 @@ class Beat3_VentilationHeat(Scene):
         title = scene_title(TITLE_VENT_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Luftwechsel und Feuchtigkeit", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -458,34 +495,40 @@ class Beat3_VentilationHeat(Scene):
             color=P_BLUE, stroke_width=3, max_tip_length_to_length_ratio=0.2,
         ).move_to(win_center + DOWN * 0.2)
 
-        interior_fill = Polygon(
-            h["bl"] + RIGHT * h["wall_thickness"],
-            h["br"] + LEFT * h["wall_thickness"],
-            h["tr"] + LEFT * h["wall_thickness"],
-            h["roof_peak"] + DOWN * 0.2,
-            h["tl"] + RIGHT * h["wall_thickness"],
-            fill_color=P_RED, fill_opacity=0.0, stroke_width=0,
-        )
-
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flow"))
-        self.add(interior_fill)
         self.play(
             LaggedStart(*[Create(w) for w in heat_waves_in], lag_ratio=0.1),
             LaggedStart(*[Create(w) for w in cold_waves_out], lag_ratio=0.1),
             LaggedStart(*[FadeIn(d, scale=0.5) for d in droplets], lag_ratio=0.05),
             GrowArrow(flow_arrow_in), GrowArrow(flow_arrow_out),
-            run_time=3.0,
+            run_time=2.4,
         )
-        self.play(interior_fill.animate.set_fill(opacity=0.35), run_time=1.5)
-        hold_for(self, self.NARRATION, "flow", used=3.0 + 1.5 + 0.35)
+        # Directional drift: humid air pushes inward while conditioned air slips out.
+        self.play(
+            heat_waves_in.animate.shift(RIGHT * 0.6),
+            droplets.animate.shift(RIGHT * 0.6 + DOWN * 0.08),
+            cold_waves_out.animate.shift(LEFT * 0.6),
+            run_time=1.7,
+        )
+        self.play(
+            heat_waves_in.animate.shift(RIGHT * 0.25),
+            droplets.animate.shift(RIGHT * 0.25),
+            cold_waves_out.animate.shift(LEFT * 0.25),
+            run_time=0.9,
+        )
+        hold_for(self, self.NARRATION, "flow", used=2.4 + 1.7 + 0.9 + 0.35)
 
         row, items = equation_row([
             ("ql", "Q̇_L", P_WHITE), (None, "=", P_WHITE),
             ("sens", "Q̇_sens", P_RED), (None, "+", P_WHITE),
             ("lat", "Q̇_lat", P_BLUE),
             (None, "  [W]", P_WHITE),
-        ])
+        ], font_size=BODY_FONT_SIZE)
         row, box = formula_panel(row)
+        rest = VGroup(*[
+            m for m in row.submobjects
+            if m is not items["sens"] and m is not items["lat"]
+        ])
 
         sens_tok = symbol_token("Q̇_sens", color=P_RED, font_size=BODY_FONT_SIZE)
         sens_tok.move_to(heat_waves_in.get_center())
@@ -496,16 +539,20 @@ class Beat3_VentilationHeat(Scene):
         self.play(
             ReplacementTransform(heat_waves_in.copy(), sens_tok),
             ReplacementTransform(droplets.copy(), lat_tok),
+            Create(box), FadeIn(rest),
             run_time=1.2,
         )
         self.play(
-            sens_tok.animate.move_to(items["sens"].get_center()),
-            lat_tok.animate.move_to(items["lat"].get_center()),
-            Create(box), FadeIn(row),
-            run_time=1.2,
+            sens_tok.animate.move_to(items["sens"]),
+            lat_tok.animate.move_to(items["lat"]),
+            run_time=1.0,
         )
-        self.play(FadeOut(sens_tok), FadeOut(lat_tok), run_time=0.35)
-        hold_for(self, self.NARRATION, "formula", used=1.2 + 1.2 + 0.35 + 0.35)
+        self.play(
+            ReplacementTransform(sens_tok, items["sens"]),
+            ReplacementTransform(lat_tok, items["lat"]),
+            run_time=0.3,
+        )
+        hold_for(self, self.NARRATION, "formula", used=1.2 + 1.0 + 0.3 + 0.35)
 
         for key, color, group in (
             ("sens", P_RED, heat_waves_in),
@@ -558,7 +605,8 @@ class Beat4_SensibleVsLatent(Scene):
         title = scene_title(TITLE_SPLIT_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Zwei Anteile der Lüftungslast", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -605,8 +653,8 @@ class Beat4_SensibleVsLatent(Scene):
             Line([lx - 0.28, y, 0], [lx - 0.12, y, 0], color=P_TEAL, stroke_width=2)
             for y in np.linspace(mid_y - 0.55, mid_y + 0.95, 6)
         ])
-        sensible_tag = Text("Misst Lufttemperatur", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        sensible_tag.move_to(np.array([lx, mid_y - 1.55, 0]))
+        sensible_tag = Text("Misst Lufttemperatur", font_size=LABEL_FONT_SIZE - 4, color=P_ORANGE)
+        sensible_tag.move_to(np.array([lx, mid_y - 1.58, 0]))
 
         # Start hot (≈30 °C), then fall to 20 °C for ΔΘ.
         temp_tracker = ValueTracker(1.7)
@@ -635,9 +683,9 @@ class Beat4_SensibleVsLatent(Scene):
         sens_row, sens_box = formula_panel(sens_row)
         unit_sens = Text(
             "ρ_a [kg/m³] · c_p,a [kJ/(kg·K)] · ΔΘ [K] · q_v,R [m³/s]",
-            font_size=LABEL_FONT_SIZE, color=P_TEAL,
+            font_size=LABEL_FONT_SIZE - 4, color=P_TEAL,
         )
-        unit_sens.next_to(sens_box, UP, buff=0.12)
+        unit_sens.next_to(sens_box, UP, buff=0.05)
         unit_sens.set_x(0)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sens_eq"))
@@ -671,12 +719,12 @@ class Beat4_SensibleVsLatent(Scene):
             Line([rx - 0.72, y, 0], [rx - 0.58, y, 0], color=P_TEAL, stroke_width=2)
             for y in np.linspace(mid_y - 0.85, mid_y + 0.85, 5)
         ])
-        latent_tag = Text("Misst Wasserdampf", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        latent_tag.move_to(np.array([rx, mid_y - 1.55, 0]))
+        latent_tag = Text("Misst Wasserdampf", font_size=LABEL_FONT_SIZE - 4, color=P_CYAN)
+        latent_tag.move_to(np.array([rx, mid_y - 1.58, 0]))
         droplet_group = VGroup(*[
             Circle(radius=0.07, color=P_CYAN, fill_color=P_CYAN, fill_opacity=0.85, stroke_width=1)
-            .move_to(np.array([rx + dx, mid_y + 1.05 + dy, 0]))
-            for dx, dy in [(-0.3, 0.08), (-0.08, 0.35), (0.18, 0.15), (0.35, -0.08)]
+            .move_to(np.array([rx + dx, mid_y + 0.88 + dy, 0]))
+            for dx, dy in [(-0.28, 0.0), (-0.06, 0.14), (0.14, 0.06), (0.30, -0.06)]
         ])
         moist_tracker = ValueTracker(0.25)
         water_fill = always_redraw(lambda: Rectangle(
@@ -704,9 +752,9 @@ class Beat4_SensibleVsLatent(Scene):
         lat_row, lat_box = formula_panel(lat_row)
         unit_lat = Text(
             "ρ_a [kg/m³] · r [kJ/kg] · Δx [kg/kg] · q_v,R [m³/s]",
-            font_size=LABEL_FONT_SIZE, color=P_TEAL,
+            font_size=LABEL_FONT_SIZE - 4, color=P_TEAL,
         )
-        unit_lat.next_to(lat_box, UP, buff=0.12)
+        unit_lat.next_to(lat_box, UP, buff=0.05)
         unit_lat.set_x(0)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lat_eq"))

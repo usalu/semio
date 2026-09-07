@@ -1,7 +1,9 @@
 # Cooling Demand — Full Video
 
-Plays the **Cooling demand series** in curriculum order:
+Plays the **Cooling demand series** in curriculum order, prepended with the
+series intro card ``Demo_Intro_Kuehllast`` from ``tutorial/intro/intro_scene.py``:
 
+0. Intro — Kühllast
 1. Teil 1 — Heizen vs. Kühlen
 2. Teil 2 — Interne Wärmegewinne
 3. Teil 3 — Transmission & Feuchte

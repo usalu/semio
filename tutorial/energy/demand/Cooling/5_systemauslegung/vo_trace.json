@@ -1,0 +1,158 @@
+{
+  "beats": {
+    "Beat1_MechanicalVentilation": {
+      "intro": {
+        "start": 0.0,
+        "window": 8.4
+      },
+      "flow": {
+        "start": 8.417,
+        "window": 7.608
+      },
+      "question": {
+        "start": 16.033,
+        "window": 5.568
+      }
+    },
+    "Beat2_VolumeFlowEquation": {
+      "intro": {
+        "start": 0.0,
+        "window": 6.36
+      },
+      "formula": {
+        "start": 6.367,
+        "window": 8.4
+      },
+      "rho": {
+        "start": 14.783,
+        "window": 7.368
+      },
+      "cp": {
+        "start": 22.417,
+        "window": 10.152
+      },
+      "dth": {
+        "start": 32.833,
+        "window": 8.448
+      },
+      "qvr": {
+        "start": 41.533,
+        "window": 6.864
+      }
+    },
+    "Beat3_IsolateAirflow": {
+      "intro": {
+        "start": 0.0,
+        "window": 5.616
+      },
+      "substitute": {
+        "start": 10.617,
+        "window": 15.72
+      },
+      "qvr": {
+        "start": 26.35,
+        "window": 7.608
+      },
+      "qstr": {
+        "start": 34.217,
+        "window": 8.808
+      },
+      "rho": {
+        "start": 43.283,
+        "window": 7.704
+      },
+      "dth": {
+        "start": 51.25,
+        "window": 5.952
+      },
+      "result": {
+        "start": 57.467,
+        "window": 4.656
+      }
+    },
+    "Beat4_DuctCrossSection": {
+      "intro": {
+        "start": 0.0,
+        "window": 7.656
+      },
+      "continuity": {
+        "start": 13.967,
+        "window": 9.408
+      },
+      "qvr": {
+        "start": 23.383,
+        "window": 7.968
+      },
+      "vm": {
+        "start": 31.617,
+        "window": 9.0
+      },
+      "A_cont": {
+        "start": 40.867,
+        "window": 5.52
+      },
+      "area": {
+        "start": 47.05,
+        "window": 10.92
+      },
+      "A": {
+        "start": 63.483,
+        "window": 5.112
+      },
+      "qvr_num": {
+        "start": 68.85,
+        "window": 7.464
+      },
+      "vm_den": {
+        "start": 76.567,
+        "window": 7.656
+      }
+    },
+    "Beat5_CalculateRadius": {
+      "intro": {
+        "start": 0.0,
+        "window": 8.616
+      },
+      "flow": {
+        "start": 9.817,
+        "window": 10.104
+      },
+      "qstr": {
+        "start": 19.933,
+        "window": 8.4
+      },
+      "qvr": {
+        "start": 28.6,
+        "window": 7.368
+      },
+      "area": {
+        "start": 36.233,
+        "window": 7.464
+      },
+      "qvr_a": {
+        "start": 43.7,
+        "window": 5.304
+      },
+      "vm": {
+        "start": 49.267,
+        "window": 10.56
+      },
+      "A": {
+        "start": 60.083,
+        "window": 6.048
+      },
+      "radius": {
+        "start": 66.383,
+        "window": 6.96
+      },
+      "A_r": {
+        "start": 73.35,
+        "window": 6.768
+      },
+      "r": {
+        "start": 80.383,
+        "window": 9.0
+      }
+    }
+  }
+}

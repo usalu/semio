@@ -17,16 +17,36 @@ from manim_fonts import (
 )
 from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
-    solar_wave_ray, symbol_token, watt_anchor,
+    symbol_token, watt_anchor,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    set_vo_language,
 )
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Kühllast mit Sonnenschutz"
 
 # Mid-screen anchor for facade / charts / sections.
 CONTENT_CENTER = UP * 0.25
+
+
+#region DIN citation
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
+    series (``Heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    that never competes with the diagram. The formula panel sits on the
+    bottom edge, so this corner is clear in every beat.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
 
 
 #region Shared visual motifs
@@ -158,7 +178,8 @@ class Beat1_SolarIrradiance(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Direkte Sonnenstrahlung", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -179,22 +200,22 @@ class Beat1_SolarIrradiance(Scene):
         # content ceiling (2.62): radius 0.26 -> outer ring spans y 1.25-2.55.
         sun_pos = LEFT * 5.9 + UP * 1.9
         sun = _sun(sun_pos, radius=0.26)
-        ray_targets = [
-            win.get_center() + UP * 0.45 + LEFT * 0.7,
-            win.get_center() + UP * 0.12,
-            win.get_center() + DOWN * 0.4 + LEFT * 0.4,
-            win.get_center() + UP * 0.35 + RIGHT * 0.6,
-            win.get_center() + DOWN * 0.25 + RIGHT * 0.7,
-        ]
-        rays = VGroup(*[
-            solar_wave_ray(sun_pos + (t - sun_pos) * 0.22, t, color=P_YELLOW, stroke_width=2.5, amp=0.08)
-            for t in ray_targets
-        ])
+        # Sunlight as a soft transparent wedge from the sun onto the window —
+        # not wavy line-rays.
+        beam_apex = sun_pos + (win.get_center() - sun_pos) * 0.16
+        light_beam = Polygon(
+            beam_apex + UP * 0.22,
+            win.get_corner(UR) + UP * 0.14,
+            win.get_corner(DR) + DOWN * 0.14,
+            beam_apex + DOWN * 0.22,
+            fill_color=P_YELLOW, fill_opacity=0.2, stroke_width=0,
+        )
+        light_beam.set_z_index(-1)
 
         irr_anchor = watt_anchor(800, compare="vacuum", title="I_S,max ≈ 800 W/m²")
-        # Bottom-left: the old upper-left corner placement sat on top of the sun.
-        # x≈-4.8 stays clear of the centred formula panel, y≈-2.0 of the caption.
-        irr_anchor.scale(0.6).move_to(LEFT * 4.8 + DOWN * 2.0)
+        # Centred under the window (facade centre x) and dropped just below the
+        # facade — still clear of the centred formula panel and the caption bar.
+        irr_anchor.scale(0.6).move_to(np.array([float(fac_c[0]), -2.18, 0.0]))
 
         axes = Axes(
             x_range=[6, 18, 3],
@@ -239,14 +260,14 @@ class Beat1_SolarIrradiance(Scene):
         eq_row, eq_items = equation_row([
             ("i", "I_S,max", P_YELLOW), (None, "=", P_WHITE),
             (None, "≈ 400–800", P_YELLOW), (None, "[W/m²]", P_TEAL),
-        ])
+        ], font_size=BODY_FONT_SIZE)
         eq_row, eq_box = formula_panel(eq_row, color=P_YELLOW)
 
         hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
 
         self.play(Create(building), run_time=1.6)
         self.play(FadeIn(sun, scale=0.7), run_time=1.0)
-        self.play(LaggedStart(*[Create(r) for r in rays], lag_ratio=0.12), run_time=1.4)
+        self.play(GrowFromPoint(light_beam, sun_pos), run_time=1.4)
         self.play(FadeIn(irr_anchor, shift=DOWN * 0.1), run_time=0.9)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "irradiance"))
         hold_for(self, self.NARRATION, "irradiance", used=4.9 + 0.35)
@@ -266,7 +287,7 @@ class Beat1_SolarIrradiance(Scene):
         )
 
         self.play(Create(eq_box), FadeIn(eq_row), run_time=1.2)
-        i_tok = symbol_token("I_S,max", color=P_YELLOW, font_size=FORMULA_FONT_SIZE)
+        i_tok = symbol_token("I_S,max", color=P_YELLOW, font_size=BODY_FONT_SIZE)
         i_tok.move_to(sun.get_center())
         self.play(ReplacementTransform(sun.copy(), i_tok), run_time=1.0)
         self.play(i_tok.animate.move_to(eq_items["i"].get_center()), run_time=0.9)
@@ -315,7 +336,8 @@ class Beat2_FrameFactor(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Fensterfläche und Rahmenfaktor", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 52016-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -367,9 +389,6 @@ class Beat2_FrameFactor(Scene):
         ])
         eq_row, panel_box = formula_panel(eq_row, color=P_TEAL)
 
-        unit_a = Text("[m²]", font_size=LABEL_FONT_SIZE, color=P_BLUE).next_to(eq_items["a"], UP, buff=0.12)
-        unit_ff = Text("[-]", font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(eq_items["ff"], UP, buff=0.12)
-
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         self.play(Create(w["opening"]), FadeIn(area_label, shift=UP * 0.15), run_time=1.4)
@@ -378,7 +397,7 @@ class Beat2_FrameFactor(Scene):
         self.play(FadeIn(w["frame"], scale=0.9), run_time=1.3)
         self.play(FadeIn(w["panes"]), run_time=0.7)
 
-        self.play(FadeOut(area_label), Create(panel_box), FadeIn(eq_row), FadeIn(unit_a), FadeIn(unit_ff), run_time=1.4)
+        self.play(FadeOut(area_label), Create(panel_box), FadeIn(eq_row), run_time=1.4)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "frame"))
 
         self.play(
@@ -392,9 +411,25 @@ class Beat2_FrameFactor(Scene):
         )
 
         ring = highlight_param(eq_items, "ff", color=P_ORANGE)
-        self.play(Create(ring), eq_items["ff"].animate.set_color(P_ORANGE), run_time=0.7)
+        ff_note = VGroup(
+            Text("Rahmenfaktor F_F", font_size=LABEL_FONT_SIZE - 1, color=P_ORANGE),
+            Text("Standardwert ≈ 0,7", font_size=LABEL_FONT_SIZE - 1, color=P_WHITE),
+            Text("DIN V 18599-2", font_size=LABEL_FONT_SIZE - 3, color=P_TEAL),
+        ).arrange(DOWN, buff=0.12, aligned_edge=LEFT)
+        ff_note.move_to(RIGHT * 2.2 + CONTENT_CENTER + UP * 0.3)
+        self.play(
+            Create(ring),
+            eq_items["ff"].animate.set_color(P_ORANGE),
+            w["frame"].animate.set_fill(color=P_ORANGE, opacity=1.0).set_stroke(color=P_ORANGE),
+            FadeIn(ff_note, shift=UP * 0.1),
+            run_time=0.7,
+        )
         hold_for(self, self.NARRATION, "frame", used=6.8 + 0.35)
-        self.play(FadeOut(ring), run_time=0.3)
+        self.play(
+            FadeOut(ring),
+            w["frame"].animate.set_fill(color=P_WHITE, opacity=1.0).set_stroke(color=P_WHITE),
+            run_time=0.3,
+        )
 
         ring = highlight_param(eq_items, "aeff", color=P_CYAN)
         self.play(
@@ -404,7 +439,7 @@ class Beat2_FrameFactor(Scene):
         )
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "aeff"))
         hold_for(self, self.NARRATION, "aeff", used=0.8 + 0.35)
-        self.play(FadeOut(ring), FadeOut(caption), FadeOut(unit_a), FadeOut(unit_ff), run_time=0.3)
+        self.play(FadeOut(ring), FadeOut(caption), FadeOut(ff_note), run_time=0.3)
         self.wait(0.5)
 #endregion
 
@@ -437,7 +472,8 @@ class Beat3_ShadingFactor(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Verschattungsfaktor", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN 4108-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -463,17 +499,20 @@ class Beat3_ShadingFactor(Scene):
             for x in (glass_out, glass_in)
         ]).set_z_index(3)
 
-        ceiling = Line(np.array([-3.15, 2.45, 0.0]), np.array([-0.7, 2.45, 0.0]),
+        slab_left, room_end_x = lintel.get_right()[0], -0.7
+        ceiling_y, floor_y = lintel.get_top()[1], sill.get_bottom()[1]
+
+        ceiling = Line(np.array([slab_left, ceiling_y, 0.0]), np.array([room_end_x, ceiling_y, 0.0]),
                        color=P_WHITE, stroke_width=2.5)
-        floor = Line(np.array([-3.15, -1.45, 0.0]), np.array([-0.7, -1.45, 0.0]),
+        floor = Line(np.array([slab_left, floor_y, 0.0]), np.array([room_end_x, floor_y, 0.0]),
                      color=P_TEAL, stroke_width=4)
-        inner_wall = Line(np.array([-0.7, -1.45, 0.0]), np.array([-0.7, 2.45, 0.0]),
+        inner_wall = Line(np.array([room_end_x, floor_y, 0.0]), np.array([room_end_x, ceiling_y, 0.0]),
                           color=P_WHITE, stroke_width=2.5)
         section = VGroup(masonry, glazing, ceiling, floor, inner_wall)
 
-        lbl_out = Text("Außen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(np.array([-6.2, -0.7, 0.0]))
+        lbl_out = Text("Außen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(
+            np.array([-6.2, (wall_top + wall_bottom) / 2, 0.0]))
         lbl_in = Text("Innen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(np.array([-1.5, 1.85, 0.0]))
-        lbl_glass = Text("Verglasung", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(np.array([-2.6, -1.65, 0.0]))
 
         d = np.array([0.75, -0.661, 0.0])
         sun = _sun(np.array([-6.3, 1.85, 0.0]), radius=0.26)
@@ -495,8 +534,6 @@ class Beat3_ShadingFactor(Scene):
                  stroke_width=2.6, stroke_opacity=0.9).shift(-d * 1.316).set_z_index(1)
             for y in glass_ys
         ])
-
-        room_end_x, floor_y = -0.7, -1.45
 
         def _through_end(start):
             t_floor = (floor_y - start[1]) / d[1]
@@ -542,18 +579,16 @@ class Beat3_ShadingFactor(Scene):
             ).set_z_index(5)
             for y in aimed_ys
         ])
-        def _floor_end(start):
-            return start + d * ((floor_y - start[1]) / d[1])
-
         residual = VGroup(*[
             Line(
                 np.array([-4.226, y + 0.193, 0.0]),
-                _floor_end(np.array([-4.226, y + 0.193, 0.0])),
+                _through_end(np.array([-4.226, y + 0.193, 0.0])),
                 color=P_YELLOW, stroke_width=1.4, stroke_opacity=0.32,
             ).set_z_index(1)
             for y in aimed_ys[:5]
         ])
-        lbl_rest = Text("Restanteil", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([-1.25, -0.15, 0.0]))
+        lbl_rest = Text("Restanteil", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(
+            np.array([(slab_left + room_end_x) / 2, -0.15, 0.0]))
 
         eq_row, eq_items = equation_row([
             ("ired", "I_reduziert", P_TEAL), (None, "=", P_WHITE), ("i", "I_S,max", P_YELLOW),
@@ -587,7 +622,7 @@ class Beat3_ShadingFactor(Scene):
 
         self.play(Create(section), run_time=1.8)
         self.play(
-            LaggedStart(FadeIn(lbl_out), FadeIn(lbl_in), FadeIn(lbl_glass), lag_ratio=0.2),
+            LaggedStart(FadeIn(lbl_out), FadeIn(lbl_in), lag_ratio=0.2),
             run_time=1.0,
         )
         self.play(Create(eq_box), FadeIn(eq_row), run_time=1.2)
@@ -617,13 +652,13 @@ class Beat3_ShadingFactor(Scene):
         self.play(
             *[Transform(ray, cut) for ray, cut in zip(direct, blocked)],
             LaggedStart(*[GrowArrow(a) for a in reflected], lag_ratio=0.08),
+            FadeOut(interior),
             run_time=1.8,
         )
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "raffstore"))
         hold_for(self, self.NARRATION, "raffstore", used=3.8 + 0.35)
 
         self.play(
-            FadeOut(interior),
             LaggedStart(*[Create(ray) for ray in residual], lag_ratio=0.1),
             FadeIn(lbl_rest),
             run_time=1.6,
@@ -666,31 +701,76 @@ class Beat4_GlassTransmittance(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Gesamtenergiedurchlassgrad", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 410")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
         pane_x, pane_top, pane_bottom = -1.5, 2.15, -0.95
-        pane_w = 0.36
-        pane = Rectangle(
-            width=pane_w, height=pane_top - pane_bottom, color=P_CYAN, stroke_width=3,
-            fill_color=P_CYAN, fill_opacity=0.18,
-        ).move_to(np.array([pane_x, (pane_top + pane_bottom) / 2, 0.0]))
-        pane_label = Text("Verglasung im Schnitt", font_size=BODY_FONT_SIZE, color=P_CYAN)
-        pane_label.move_to(np.array([pane_x, 2.35, 0.0]))
+        pane_w = 0.54
+        leaf_w = 0.11
+        cav_w = pane_w - 2 * leaf_w
+        pane_cy = (pane_top + pane_bottom) / 2
+        pane_h = pane_top - pane_bottom
+
+        def _leaf(cx):
+            return Rectangle(
+                width=leaf_w, height=pane_h, color=P_CYAN, stroke_width=2.5,
+                fill_color=P_CYAN, fill_opacity=0.20,
+            ).move_to(np.array([cx, pane_cy, 0.0]))
+
+        outer_leaf = _leaf(pane_x - pane_w / 2 + leaf_w / 2)
+        inner_leaf = _leaf(pane_x + pane_w / 2 - leaf_w / 2)
+        leaves = VGroup(outer_leaf, inner_leaf)
+        cavity = Rectangle(
+            width=cav_w, height=pane_h, color=P_TEAL, stroke_width=1,
+            fill_color=P_TEAL, fill_opacity=0.06,
+        ).move_to(np.array([pane_x, pane_cy, 0.0]))
+        spacer_h = 0.16
+        spacer_top = Rectangle(
+            width=cav_w, height=spacer_h, color=P_WHITE, stroke_width=1,
+            fill_color="#8892A0", fill_opacity=1.0,
+        ).move_to(np.array([pane_x, pane_top - spacer_h / 2, 0.0]))
+        spacer_bot = Rectangle(
+            width=cav_w, height=spacer_h, color=P_WHITE, stroke_width=1,
+            fill_color="#8892A0", fill_opacity=1.0,
+        ).move_to(np.array([pane_x, pane_bottom + spacer_h / 2, 0.0]))
+        lowe_x = pane_x + pane_w / 2 - leaf_w
+        lowe = Line(
+            np.array([lowe_x, pane_bottom + spacer_h + 0.05, 0.0]),
+            np.array([lowe_x, pane_top - spacer_h - 0.05, 0.0]),
+            color=P_ORANGE, stroke_width=3, stroke_opacity=0.55,
+        )
+        glazing = VGroup(cavity, spacer_top, spacer_bot, outer_leaf, inner_leaf, lowe)
+
+        pane_label = Text("2-fach Isolierglas im Schnitt", font_size=BODY_FONT_SIZE, color=P_CYAN)
+        pane_label.move_to(np.array([pane_x, 2.4, 0.0]))
+        detail = VGroup(
+            Text("Aufbau: Glas · Argon-SZR · Glas", font_size=LABEL_FONT_SIZE - 3, color=P_WHITE),
+            Text("Low-E · Randverbund (warme Kante)", font_size=LABEL_FONT_SIZE - 4, color=P_TEAL),
+        ).arrange(DOWN, buff=0.10)
+        detail.move_to(np.array([pane_x, -1.42, 0.0]))
 
         outside = Text("Außen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(LEFT * 5.6 + UP * 1.6)
         inside = Text("Innen", font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(RIGHT * 4.8 + UP * 1.6)
 
-        hit_out = np.array([pane_x - pane_w / 2, 1.45, 0.0])
-        hit_in = np.array([pane_x + pane_w / 2, 1.45, 0.0])
         d_in = np.array([3.52, -1.5, 0.0])
         d_in = d_in / np.linalg.norm(d_in)
         d_ref = np.array([-d_in[0], d_in[1], 0.0])
+        d_glass = np.array([3.52, -0.85, 0.0])
+        d_glass = d_glass / np.linalg.norm(d_glass)
 
+        hit_out = np.array([pane_x - pane_w / 2, 1.45, 0.0])
+        hit_in = hit_out + d_glass * (pane_w / d_glass[0])
+
+        normal_line = DashedLine(
+            hit_out + LEFT * 0.95, hit_out + RIGHT * 0.95,
+            color=P_WHITE, stroke_width=1.2, dash_length=0.08, stroke_opacity=0.4,
+        )
         incoming = Line(hit_out - d_in * 3.83, hit_out, color=P_YELLOW, stroke_width=3)
         reflected = Line(hit_out, hit_out + d_ref * 2.8, color=P_WHITE, stroke_width=2.5, stroke_opacity=0.7)
+        glass_seg = Line(hit_out, hit_in, color=P_YELLOW, stroke_width=2, stroke_opacity=0.5)
         transmitted = Line(hit_in, hit_in + d_in * 4.0, color=P_YELLOW, stroke_width=3)
 
         lbl_refl = Text("Reflexion", font_size=BODY_FONT_SIZE, color=P_WHITE).move_to(LEFT * 4.55 + UP * 0.15)
@@ -714,30 +794,47 @@ class Beat4_GlassTransmittance(Scene):
             (None, "+", P_WHITE), ("qi", "q_i", P_RED),
             (None, "  [-]", P_TEAL),
         ])
-        eq_row, eq_box = formula_panel(eq_row, color=P_RED)
+        eq_row, eq_box = formula_panel(eq_row, color=P_RED, edge_buff=1.45)
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
-        self.play(Create(pane), FadeIn(pane_label), run_time=1.2)
-        self.play(FadeIn(outside), FadeIn(inside), run_time=0.6)
-
-        self.play(Create(incoming), run_time=1.0)
-        self.play(Create(reflected), FadeIn(lbl_refl), run_time=1.0)
-        self.play(Create(transmitted), FadeIn(lbl_tau), run_time=1.2)
-
         self.play(
-            pane.animate.set_fill(color=P_RED, opacity=0.45).set_stroke(color=P_RED),
-            run_time=1.4,
+            Create(glazing), FadeIn(pane_label), FadeIn(detail),
+            FadeIn(outside), FadeIn(inside),
+            run_time=1.5,
         )
+
+        # Beam arrives — draw it with a bright passing pulse for a real ray feel.
         self.play(
+            Create(incoming, rate_func=linear),
+            ShowPassingFlash(incoming.copy().set_stroke(P_WHITE, 6), time_width=0.5),
+            Create(normal_line),
+            run_time=1.1,
+        )
+        # Impact: reflection and the refracted path split at the same instant, the
+        # glass starts to absorb, and both ray labels appear together.
+        self.play(
+            Flash(hit_out, color=P_YELLOW, line_length=0.16, num_lines=12, flash_radius=0.34),
+            Create(reflected, rate_func=linear),
+            Create(glass_seg, rate_func=linear),
+            Create(transmitted, rate_func=linear),
+            leaves.animate.set_fill(color=P_ORANGE, opacity=0.28),
+            FadeIn(lbl_refl), FadeIn(lbl_tau),
+            run_time=1.3,
+        )
+        # Absorbed share re-radiates inward — q_i waves emit in sync with the
+        # glass deepening to red and a second pulse leaving the inner face.
+        self.play(
+            leaves.animate.set_fill(color=P_RED, opacity=0.42).set_stroke(color=P_RED),
             LaggedStart(*[Create(wv) for wv in waves], lag_ratio=0.15),
+            ShowPassingFlash(transmitted.copy().set_stroke(P_WHITE, 6), time_width=0.5),
             FadeIn(lbl_qi),
-            run_time=1.8,
+            run_time=1.7,
         )
 
         self.play(Create(eq_box), FadeIn(eq_row), run_time=1.2)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gtot"))
-        hold_for(self, self.NARRATION, "gtot", used=9.4 + 0.35)
+        hold_for(self, self.NARRATION, "gtot", used=6.8 + 0.35)
 
         tau_copy = lbl_tau.copy()
         qi_copy = lbl_qi.copy()
@@ -789,7 +886,8 @@ class Beat5_SolarCoolingLoad(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Solare Kühllast", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)

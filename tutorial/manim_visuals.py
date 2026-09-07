@@ -723,6 +723,11 @@ def swap_caption(scene, old, text_de: str, *, run_time: float = 0.35, **kwargs):
 # subtitle file that can drift out of sync with what's spoken.
 NARRATION_WPS: float = 2.5  # spoken words per second, English VO
 SUBTITLE_WPS: float = 2.2  # German subtitle VO (Gemini TTS)
+# Educational on-screen reading is slower than TTS speech — full-series
+# renders are often watched without muxed audio, so hold budgets must leave
+# enough time to finish the German caption, not only to hear it.
+SUBTITLE_READING_WPS: float = 1.6
+SUBTITLE_MIN_SECONDS: float = 1.5  # floor for any non-empty caption
 
 Clause = tuple[str, str, str]  # (section_key, narration_en, subtitle_de)
 _VO_LANGUAGE: str = "en"  # "en" | "de" — which clause field estimates timing when no manifest
@@ -738,7 +743,11 @@ def set_vo_language(lang: str) -> None:
 
 
 def load_vo_timing(manifest_path) -> None:
-    """📋 Load measured per-clause durations from ``generate_audio.py`` (``vo_timing.json``)."""
+    """📋 Load measured per-clause durations from ``generate_audio.py`` (``vo_timing.json``).
+
+    Merges into the global table so a full-series import of many scene modules
+    keeps every beat's timings instead of the last file winning.
+    """
     global _VO_TIMING
     from pathlib import Path
     import json
@@ -748,12 +757,14 @@ def load_vo_timing(manifest_path) -> None:
         return
     data = json.loads(path.read_text(encoding="utf-8"))
     beats = data.get("beats") if isinstance(data, dict) else None
-    if isinstance(beats, dict):
-        _VO_TIMING = {
-            beat: {str(k): float(v) for k, v in timings.items()}
-            for beat, timings in beats.items()
-            if isinstance(timings, dict)
-        }
+    if not isinstance(beats, dict):
+        return
+    for beat, timings in beats.items():
+        if not isinstance(timings, dict):
+            continue
+        bucket = _VO_TIMING.setdefault(str(beat), {})
+        for k, v in timings.items():
+            bucket[str(k)] = float(v)
 
 
 def narration_seconds(narration: list[Clause], key: str | None = None) -> float:
@@ -789,14 +800,27 @@ def subtitle_text(narration: list[Clause], key: str) -> str:
     raise KeyError(key)
 
 
+def subtitle_read_seconds(narration: list[Clause], key: str | None = None) -> float:
+    """📖 Minimum on-screen seconds to comfortably read the German subtitle(s)."""
+    words = sum(
+        len(text_de.split()) for section, _, text_de in narration
+        if text_de.strip() and (key is None or section == key)
+    )
+    if words <= 0:
+        return 0.0
+    return round(max(words / SUBTITLE_READING_WPS, SUBTITLE_MIN_SECONDS), 2)
+
+
 def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min_wait: float = 0.3) -> float:
-    """⏸️ Wait exactly as long as this clause's narration needs, minus animation time already spent.
+    """⏸️ Wait as long as this clause needs on screen, minus animation time already spent.
 
     ``used`` is the sum of ``run_time`` already spent animating this clause's
     visuals (e.g. ``Create``ing the highlight ring) — only the remainder is
-    idle wait, so the beat never runs shorter or longer than its own VO.
-    When ``vo_timing.json`` exists, the budget is the measured TTS length of
-    that clause instead of a words-per-second estimate.
+    idle wait. The budget is the maximum of measured TTS length (when
+    ``vo_timing.json`` is loaded), the language WPS estimate, and a German
+    subtitle reading floor — so captions stay readable even when English VO
+    estimates are shorter than the on-screen German text, and even when the
+    series is watched without muxed audio.
 
     A clause may be held more than once when its visuals arrive in stages. The
     budget is spent across those calls rather than granted again each time —
@@ -805,7 +829,9 @@ def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min
     """
     beat_id = vo_beat_id(scene)
     measured = _VO_TIMING.get(beat_id, {}).get(key)
-    budget = measured if measured is not None else narration_seconds(narration, key)
+    estimated = narration_seconds(narration, key)
+    read_need = subtitle_read_seconds(narration, key)
+    budget = max(measured or 0.0, estimated, read_need)
     spent = getattr(scene, "_vo_spent", {})
     remaining = max(min_wait, budget - spent.get(key, 0.0) - used)
     spent[key] = spent.get(key, 0.0) + used + remaining

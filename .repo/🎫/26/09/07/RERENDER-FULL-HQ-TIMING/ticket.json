@@ -1,0 +1,7 @@
+{
+  "id": "2026/09/07/RERENDER-FULL-HQ-TIMING",
+  "title": "Rerender Full Hq Timing",
+  "status": "open",
+  "summary": "Re-render full Heating and Cooling series at 1080p60 after subtitle timing / begin_vo_beat fixes; write merged finals to rendered/.",
+  "goal": "tutorial/energy-demand"
+}

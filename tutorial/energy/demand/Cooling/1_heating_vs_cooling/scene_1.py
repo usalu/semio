@@ -20,20 +20,47 @@ from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_GREEN,
     convection_stream, solar_wave_ray, watt_anchor,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    set_vo_language, load_vo_timing,
 )
+
+# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
+set_vo_language("de")
+_VO_TIMING = _Path(__file__).resolve().parent / "vo_timing.json"
+if _VO_TIMING.is_file():
+    load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Heizlast vs. Kühllast"
 
+# Shared layout anchors — one house height + thermometer slot for every beat so
+# winter / summer / cooling stay visually continuous when the scaffold moves.
+HOUSE_CENTER = ORIGIN + DOWN * 0.75
+THERM_OFFSET = RIGHT * 3.55 + UP * 0.1
+
+
+#region DIN citation
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
+    series (``Heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    that never competes with the diagram. The formula panel sits on the
+    bottom edge, so this corner is clear in every beat.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
 
 #region Shared visual motifs
 
-def _build_cross_section_house(center=ORIGIN + DOWN * 0.45):
+def _build_cross_section_house(center=HOUSE_CENTER):
     """🏠 Two-storey line-art house — mid-screen anchor for winter/summer beats.
 
-    Sits low enough that the roof peak (center + 2.3) stays under the content
-    ceiling (~2.62) and never crowds the title / beat subtitle, while leaving
-    room above for sun / solar labels.
+    Dropped to ``HOUSE_CENTER`` so Beat 3's upward exhaust plumes clear the
+    topic title / beat subtitle, while sun labels still fit above the roof.
     """
     w_width, w_height = 3.6, 2.4
     bottom_left = center + LEFT * (w_width / 2) + DOWN * (w_height / 2)
@@ -201,7 +228,8 @@ class Beat1_WinterGains(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Im Winter: Erwünschte kostenlose Wärme", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -277,7 +305,8 @@ class Beat2_SummerOverheat(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Im Sommer: Überhitzung (Treibhauseffekt)", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN 4108-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -288,7 +317,7 @@ class Beat2_SummerOverheat(Scene):
 
         sun_pos = house["center"] + LEFT * 3.6 + UP * 1.35
         sun_group = _build_sun(sun_pos, color=P_RED, glow_opacity=0.45, burst_width=3)
-        solar_label = Text("Solare Gewinne (Exzessiv)", font_size=BODY_FONT_SIZE, color=P_RED)
+        solar_label = Text("Solare Gewinne (Exzessiv)", font_size=LABEL_FONT_SIZE, color=P_RED)
         solar_label.next_to(sun_group, DOWN, buff=0.7)
         gains = _build_internal_gains(house, color_device=P_RED, color_person=P_RED)
         gains["sources"].set_color(P_RED)
@@ -305,9 +334,9 @@ class Beat2_SummerOverheat(Scene):
             fill_color=P_RED, fill_opacity=0.45, stroke_width=0,
         )
 
-        therm_pos = house["center"] + RIGHT * 2.9 + UP * 0.1
+        therm_pos = house["center"] + THERM_OFFSET
         therm_frame, therm_bulb, therm_fluid, therm_base_y = _create_thermometer(therm_pos)
-        temp_title = Text("Raumtemperatur", font_size=BODY_FONT_SIZE, color=P_WHITE)
+        temp_title = Text("Raumtemperatur", font_size=LABEL_FONT_SIZE, color=P_WHITE)
         temp_title.next_to(therm_frame, UP, buff=0.15)
         temp_text = Text("20°C", font_size=SUBTITLE_FONT_SIZE, color=P_WHITE)
         temp_text.next_to(therm_frame, RIGHT, buff=0.2)
@@ -381,7 +410,8 @@ class Beat3_CoolingSystem(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Wärme aktiv abführen (Mechanische Lüftung)", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -400,9 +430,9 @@ class Beat3_CoolingSystem(Scene):
         )
         self.add(heat_block)
 
-        therm_pos = house["center"] + RIGHT * 2.9 + UP * 0.1
+        therm_pos = house["center"] + THERM_OFFSET
         therm_frame, therm_bulb, therm_fluid, therm_base_y = _create_thermometer(therm_pos)
-        temp_title = Text("Raumtemperatur", font_size=BODY_FONT_SIZE, color=P_WHITE)
+        temp_title = Text("Raumtemperatur", font_size=LABEL_FONT_SIZE, color=P_WHITE)
         temp_title.next_to(therm_frame, UP, buff=0.15)
         temp_text = Text("35°C", font_size=SUBTITLE_FONT_SIZE, color=P_RED)
         temp_text.next_to(therm_frame, RIGHT, buff=0.2)
@@ -432,10 +462,10 @@ class Beat3_CoolingSystem(Scene):
         self.add(therm_group, temp_title)
 
         exhaust_streams = VGroup(
-            convection_stream(house["roof_peak"] + LEFT * 0.3, house["roof_peak"] + LEFT * 1.1 + UP * 1.1, color=P_CYAN, bend=0.25, n_ribbons=2),
-            convection_stream(house["roof_peak"] + RIGHT * 0.3, house["roof_peak"] + RIGHT * 1.1 + UP * 1.1, color=P_CYAN, bend=0.25, n_ribbons=2),
+            convection_stream(house["roof_peak"] + LEFT * 0.3, house["roof_peak"] + LEFT * 1.0 + UP * 0.85, color=P_CYAN, bend=0.25, n_ribbons=2),
+            convection_stream(house["roof_peak"] + RIGHT * 0.3, house["roof_peak"] + RIGHT * 1.0 + UP * 0.85, color=P_CYAN, bend=0.25, n_ribbons=2),
             convection_stream(house["top_left"] + DOWN * 0.8, house["top_left"] + LEFT * 1.2 + DOWN * 0.8, color=P_CYAN, bend=0.15, n_ribbons=2),
-            convection_stream(house["top_right"] + DOWN * 0.8, house["top_right"] + RIGHT * 1.2 + DOWN * 0.8, color=P_CYAN, bend=-0.15, n_ribbons=2),
+            convection_stream(house["top_right"] + DOWN * 0.8, house["top_right"] + RIGHT * 1.05 + DOWN * 0.8, color=P_CYAN, bend=-0.15, n_ribbons=2),
         )
         exhaust_label = Text("Mechanische Lüftung / Kühlung", font_size=LABEL_FONT_SIZE, color=P_CYAN)
         exhaust_label.next_to(house["roof_peak"], LEFT, buff=1.1)

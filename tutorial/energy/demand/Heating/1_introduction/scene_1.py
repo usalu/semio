@@ -24,7 +24,11 @@ from manim_visuals import (
     meter, bind_meter, chip, cross_mark, dim_chip, dim_arrow,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    set_vo_language,
 )
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Modul 1: Die Grundlagen der Bauphysik"

@@ -1,0 +1,11 @@
+{
+  "source": "subtitle",
+  "beats": {
+    "Beat1_WinterGains": {
+      "intro": 7.008,
+      "solar": 6.504,
+      "internal": 8.064,
+      "outro": 6.312
+    }
+  }
+}

@@ -921,7 +921,7 @@
       "name": "🛠️dev🎬manim heating full",
       "type": "node-terminal",
       "request": "launch",
-      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/Heating/full_heating_video.py -q l",
+      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/Heating/full_heating_video.py -q h --no-play --force",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -932,7 +932,7 @@
       "name": "🛠️dev🎬manim cooling full",
       "type": "node-terminal",
       "request": "launch",
-      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/Cooling/full_cooling_video.py -q l",
+      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/Cooling/full_cooling_video.py -q h --no-play --force",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1163,6 +1163,61 @@
       }
     },
     {
+      "name": "📦build📽️heatingvscooling🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/1_heating_vs_cooling/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 122
+      }
+    },
+    {
+      "name": "📦build📽️heatingvscooling📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/1_heating_vs_cooling/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 123
+      }
+    },
+    {
+      "name": "📦build📽️heatingvscooling🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/1_heating_vs_cooling/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 124
+      }
+    },
+    {
+      "name": "📦build📽️heatingvscooling🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/1_heating_vs_cooling/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 125
+      }
+    },
+    {
+      "name": "📦build📽️heatingvscooling🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/1_heating_vs_cooling/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 126
+      }
+    },
+    {
       "name": "📦build📽️solarradiation🔊audio",
       "type": "node-terminal",
       "request": "launch",
@@ -1196,6 +1251,39 @@
       }
     },
     {
+      "name": "📦build📽️systemauslegung📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/5_systemauslegung/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 133
+      }
+    },
+    {
+      "name": "📦build📽️systemauslegung🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/5_systemauslegung/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 134
+      }
+    },
+    {
+      "name": "📦build📽️systemauslegung🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/5_systemauslegung/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 135
+      }
+    },
+    {
       "name": "📦build📽️systemauslegung🎬video",
       "type": "node-terminal",
       "request": "launch",
@@ -1203,7 +1291,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 133
+        "order": 136
       }
     },
     {
@@ -1214,7 +1302,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 134
+        "order": 137
       }
     },
     {
@@ -1225,7 +1313,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 135
+        "order": 138
       }
     },
     {
@@ -1236,7 +1324,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 136
+        "order": 139
       }
     },
     {
@@ -1247,7 +1335,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 137
+        "order": 140
       }
     },
     {
@@ -1258,7 +1346,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 138
+        "order": 141
       }
     },
     {
@@ -1269,7 +1357,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 139
+        "order": 142
       }
     },
     {
@@ -1280,7 +1368,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 140
+        "order": 143
       }
     },
     // #endregion

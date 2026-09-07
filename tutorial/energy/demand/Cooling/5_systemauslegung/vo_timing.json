@@ -1,0 +1,51 @@
+{
+  "source": "subtitle",
+  "beats": {
+    "Beat1_MechanicalVentilation": {
+      "intro": 8.4,
+      "flow": 7.608,
+      "question": 5.568
+    },
+    "Beat2_VolumeFlowEquation": {
+      "intro": 6.36,
+      "formula": 8.4,
+      "rho": 7.368,
+      "cp": 10.152,
+      "dth": 8.448,
+      "qvr": 6.864
+    },
+    "Beat3_IsolateAirflow": {
+      "intro": 5.616,
+      "substitute": 15.72,
+      "qvr": 7.608,
+      "qstr": 8.808,
+      "rho": 7.704,
+      "dth": 5.952,
+      "result": 4.656
+    },
+    "Beat4_DuctCrossSection": {
+      "intro": 7.656,
+      "continuity": 9.408,
+      "qvr": 7.968,
+      "vm": 9.0,
+      "A_cont": 5.52,
+      "area": 10.92,
+      "A": 5.112,
+      "qvr_num": 7.464,
+      "vm_den": 7.656
+    },
+    "Beat5_CalculateRadius": {
+      "intro": 8.616,
+      "flow": 10.104,
+      "qstr": 8.4,
+      "qvr": 7.368,
+      "area": 7.464,
+      "qvr_a": 5.304,
+      "vm": 10.56,
+      "A": 6.048,
+      "radius": 6.96,
+      "A_r": 6.768,
+      "r": 9.0
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "2026/09/07/FIX-SUBTITLE-READ-TIME",
+  "title": "Fix Subtitle Read Time",
+  "status": "closed",
+  "summary": "Audit hold_for / narration budgets so every German subtitle stays readable; fix root timing and any collapsed clause holds.",
+  "goal": "tutorial/energy-demand",
+  "closed_summary": "Added German subtitle reading floor (1.6 wps) to hold_for so every caption stays on screen long enough to read; enabled set_vo_language(de) on all Heating/Cooling captioned scenes. 391 clauses audited, 0 shortfalls. Re-render full series for mp4s to pick up longer holds.",
+  "files": [
+    "tutorial/manim_visuals.py",
+    "tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py",
+    "tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py",
+    "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py",
+    "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py",
+    "tutorial/energy/demand/Heating/1_introduction/scene_1.py",
+    "tutorial/energy/demand/Heating/2_conduction/scene_2.py",
+    "tutorial/energy/demand/Heating/3_convection/scene_3.py",
+    "tutorial/energy/demand/Heating/4_internal_heat_gain/scene_4.py",
+    "tutorial/energy/demand/Heating/5_solar_heat_gain/scene_5.py",
+    "tutorial/energy/demand/Heating/final_calculation/merged_scenes.py"
+  ]
+}

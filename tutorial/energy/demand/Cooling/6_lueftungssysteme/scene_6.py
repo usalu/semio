@@ -24,10 +24,30 @@ from manim_visuals import (
     meter, bind_meter, chip, cross_mark, dim_chip, dim_arrow,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    set_vo_language,
 )
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Natürliche Lüftung im Passivhaus"
+
+
+#region DIN citation
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
+    series (``Heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    that never competes with the diagram. The formula panel sits on the
+    bottom edge, so this corner is clear in every beat.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
 
 
 #region Shared visual motifs
@@ -119,7 +139,8 @@ class Beat1_PassivhausIdee(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Erst die Last senken, dann lüften", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN 4108-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -249,7 +270,8 @@ class Beat2_Fensterregeln(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Das Fenster ist ein Regler", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN 1946-6")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -444,7 +466,8 @@ class Beat3_Querlueftung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Querlüftung: beide Öffnungen zählen", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 16798-7")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -493,6 +516,17 @@ class Beat3_Querlueftung(Scene):
             ])
             for dy in (-0.30, 0.15, 0.60)
         ])
+        # Same three inlet streams, but funnelled through the throttled outlet
+        # (≈0.30 m tall, centred on the room axis) instead of running into the wall.
+        cross_thin = VGroup(*[
+            smooth_path([
+                room.get_left() + UP * dy,
+                room_c + LEFT * 1.5 + UP * (dy * 0.7),
+                room_c + RIGHT * 1.2 + UP * (dy * 0.18),
+                room.get_right() + UP * sy,
+            ])
+            for dy, sy in ((-0.30, -0.09), (0.15, 0.0), (0.60, 0.09))
+        ])
 
         eq, items = equation_row([
             ("aeff", "A_eff", P_CYAN), (None, "=", P_WHITE),
@@ -515,22 +549,23 @@ class Beat3_Querlueftung(Scene):
             FadeIn(wind_lbl), FadeIn(luv), FadeIn(lee),
             run_time=1.5,
         )
-        self.play(Create(flow_guides(cross, P_GREEN)), run_time=0.7)
+        guides = flow_guides(cross, P_GREEN)
+        self.play(Create(guides), run_time=0.7)
         animate_flow(self, cross, P_GREEN, run_time=2.8, waves=4, cycles=2.4)
         hold_for(self, self.NARRATION, "pressure", used=1.5 + 0.7 + 2.8 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        tok1 = symbol_token("A_1", color=P_GREEN, font_size=FORMULA_FONT_SIZE)
-        tok1.move_to(items["a1"].get_center())
-        tok2 = symbol_token("A_2", color=P_ORANGE, font_size=FORMULA_FONT_SIZE)
-        tok2.move_to(items["a2"].get_center())
+        rest = VGroup(*[
+            m for m in eq.submobjects
+            if m is not items["a1"] and m is not items["a2"]
+        ])
+        self.play(Create(eq_box), FadeIn(rest), FadeIn(aeff_wide), run_time=0.9)
         self.play(
-            ReplacementTransform(a1_lbl.copy(), tok1),
-            ReplacementTransform(a2_lbl.copy(), tok2),
-            run_time=1.3,
+            ReplacementTransform(a1_lbl.copy(), items["a1"]),
+            ReplacementTransform(a2_lbl.copy(), items["a2"]),
+            run_time=1.2,
         )
-        self.play(FadeIn(eq), Create(eq_box), FadeOut(tok1), FadeOut(tok2), FadeIn(aeff_wide), run_time=1.0)
-        hold_for(self, self.NARRATION, "formula", used=1.3 + 1.0 + 0.35)
+        hold_for(self, self.NARRATION, "formula", used=0.9 + 1.2 + 0.35)
 
         for key, win, color in (("a1", left_win, P_GREEN), ("a2", right_win, P_ORANGE)):
             ring = highlight_param(items, key, color=color)
@@ -541,16 +576,20 @@ class Beat3_Querlueftung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "limit"))
         a2_ring = highlight_param(items, "a2", color=P_RED)
+        guides_thin = flow_guides(cross_thin, P_RED)
         self.play(
             right_win.animate.stretch_to_fit_height(0.30),
             ReplacementTransform(aeff_wide, aeff_thin),
+            ReplacementTransform(guides, guides_thin),
             Create(a2_ring),
             run_time=1.3,
         )
-        animate_flow(self, cross, P_RED, run_time=2.6, waves=2, cycles=0.8)
+        animate_flow(self, cross_thin, P_RED, run_time=2.6, waves=2, cycles=0.8)
+        guides = flow_guides(cross, P_GREEN)
         self.play(
             right_win.animate.stretch_to_fit_height(1.15),
             ReplacementTransform(aeff_thin, aeff_wide),
+            ReplacementTransform(guides_thin, guides),
             FadeOut(a2_ring),
             run_time=1.1,
         )
@@ -614,7 +653,8 @@ class Beat4_Auftrieb(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Auftrieb: Höhe erzeugt Druck", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 16798-7")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -717,7 +757,7 @@ class Beat4_Auftrieb(Scene):
             color=P_CYAN,
         )
         h_tok = symbol_token("h", color=P_CYAN, font_size=FORMULA_FONT_SIZE)
-        h_tok.next_to(h_dim, LEFT, buff=0.14)
+        h_tok.next_to(h_dim, LEFT, buff=0.14).shift(RIGHT * 0.16)
         ring_h = highlight_param(items, "h", color=P_CYAN)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "h"))
         self.play(Create(h_dim), FadeIn(h_tok), Create(ring_h), run_time=1.0)
@@ -818,7 +858,8 @@ class Beat5_Nachtlueftung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Nachtlüftung: den Speicher entladen", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN 4108-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -889,6 +930,8 @@ class Beat5_Nachtlueftung(Scene):
             _window(icon.get_left() + UP * 0.28, height=0.45, width=0.16),
             _window(icon.get_right() + UP * 0.28, height=0.45, width=0.16),
         )
+        # Sky object sits outside the room icon, above its top-left corner.
+        sky_pos = icon.get_corner(UL) + LEFT * 0.42 + UP * 0.44
         sun = VGroup(
             Circle(radius=0.16, color=P_YELLOW, stroke_width=2.5,
                    fill_color=P_YELLOW, fill_opacity=0.35),
@@ -897,7 +940,18 @@ class Beat5_Nachtlueftung(Scene):
                 .rotate(a, about_point=ORIGIN).shift(RIGHT * 0.22 * np.cos(a) + UP * 0.22 * np.sin(a))
                 for a in np.linspace(0, 2 * np.pi, 8, endpoint=False)
             ],
-        ).move_to(icon.get_corner(UL) + RIGHT * 0.30 + DOWN * 0.32)
+        ).move_to(sky_pos)
+        moon = VGroup(
+            Difference(
+                Circle(radius=0.20),
+                Circle(radius=0.20).shift(RIGHT * 0.12 + UP * 0.04),
+                color=P_WHITE, fill_color=P_WHITE, fill_opacity=0.9, stroke_width=1.4,
+            ),
+            *[
+                Dot(radius=0.03, color=P_WHITE, fill_opacity=0.85).shift(RIGHT * dx + UP * dy)
+                for dx, dy in ((0.52, 0.16), (-0.34, 0.42), (0.28, -0.40))
+            ],
+        ).move_to(sky_pos)
 
         schedule = VGroup(
             _badge("Nacht", "weit öffnen", P_BLUE),
@@ -927,7 +981,11 @@ class Beat5_Nachtlueftung(Scene):
         hold_for(self, self.NARRATION, "without", used=2.2 + 1.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "night"))
-        self.play(FadeIn(nights), FadeIn(night_lbl), FadeOut(sun), FadeOut(warn), run_time=1.0)
+        self.play(
+            FadeIn(nights), FadeIn(night_lbl), FadeOut(warn),
+            FadeOut(sun, shift=UP * 0.3), FadeIn(moon, shift=DOWN * 0.3),
+            run_time=1.0,
+        )
         sweep = VGroup(
             smooth_path([
                 icon.get_left() + UP * 0.28,
@@ -995,7 +1053,8 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Grenzen der freien Lüftung", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 16798-7")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1145,7 +1204,8 @@ class Beat7_MechanischeGrundtypen(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Drei mechanische Grundtypen", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 16798-3")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1315,7 +1375,8 @@ class Beat8_Waermerueckgewinnung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Wärmerückgewinnung — im Sommer Kälterückgewinnung", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 308")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1448,7 +1509,8 @@ class Beat9_KomfortStrategie(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Strategie: natürlich zuerst", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 16798-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
