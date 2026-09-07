@@ -1,4 +1,6 @@
-//! ↩️ Inverse for `DeleteStream` — reconstructs a `create-stream` of the captured BASE stream.
+//! ↩️ Inverse for `DeleteStream` — a single `create-stream` of the captured BASE stream, which is
+//! exact: the delete refuses whenever a GCP observation still names the stream, so it never severs a
+//! record it does not own, and `create-stream` reinserts at the stream's canonical `id` position.
 //! Missing target ⇒ `Vec::new()`.
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::RemodelingSnapshot;

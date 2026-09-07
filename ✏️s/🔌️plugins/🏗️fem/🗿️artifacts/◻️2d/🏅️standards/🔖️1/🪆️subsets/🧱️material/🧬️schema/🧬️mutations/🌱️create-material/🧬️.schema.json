@@ -1,20 +1,26 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CreateMaterial",
+  "description": "The `create-material` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"createMaterial\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "material"
   ],
   "properties": {
+    "mutation": {
+      "const": "createMaterial",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+    },
     "material": {
       "title": "FemMaterial",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "e",
         "id",
         "name",
+        "e",
         "nu",
         "rho"
       ],
@@ -26,13 +32,16 @@
           "type": "string"
         },
         "e": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "nu": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "rho": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         }
       }
     }

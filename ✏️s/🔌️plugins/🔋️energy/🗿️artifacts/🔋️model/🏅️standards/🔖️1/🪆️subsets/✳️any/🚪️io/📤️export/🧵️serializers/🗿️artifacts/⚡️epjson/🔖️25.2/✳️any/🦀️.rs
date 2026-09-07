@@ -763,12 +763,20 @@ fn encode_outputs(model: &Model, document: &mut Object) {
 // 🚫️async: E1 pure codec registration hook, no io — see R9.
 pub fn register() {}
 
+/// 🚨️ The diagnostics that make a document unusable rather than merely lossy: a refusal is
+/// something EnergyPlus would have had to be told and this subset cannot say, so the export stops.
+/// A lossy-but-runnable note (a dropped surface multiplier, a dropped frame conductance) is
+/// reported and the document is still written.
+pub fn refusals(diagnostics: &[EpJsonDiagnostic]) -> Vec<&EpJsonDiagnostic> {
+    diagnostics.iter().filter(|diagnostic| diagnostic.code.ends_with("-unsupported") || diagnostic.code.ends_with("dangling-zone")).collect()
+}
+
 /// 📤️ The io-leaf entry point: this artifact's snapshot as an epJSON document tree.
 pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<Value, store::TextError> {
     let (document, diagnostics) = encode_model_with_diagnostics(&snapshot.model);
-    let refusals: Vec<&EpJsonDiagnostic> = diagnostics.iter().filter(|diagnostic| diagnostic.code.ends_with("-unsupported") || diagnostic.code.ends_with("dangling-zone")).collect();
-    if !refusals.is_empty() {
-        let detail = refusals.iter().map(|diagnostic| format!("{} ({})", diagnostic.message, diagnostic.subject)).collect::<Vec<_>>().join("; ");
+    let refused = refusals(&diagnostics);
+    if !refused.is_empty() {
+        let detail = refused.iter().map(|diagnostic| format!("{} ({})", diagnostic.message, diagnostic.subject)).collect::<Vec<_>>().join("; ");
         return Err(store::TextError::new(format!("model -> epJSON: {detail}"), dsl::TextSpan::at(1, 1)));
     }
     Ok(document)
@@ -779,6 +787,31 @@ pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store:
     Ok(format!("{}\n", pack::json::to_string_pretty(&serialize(snapshot)?)).into_bytes())
 }
 //#endregion 🔖️Leaf
+
+//#region 🌉️Bridge
+/// 🌉️ Text in, text out. The out-of-crate test adapter for
+/// `🧪️tests/🏛️export-epjson-runs-in-energyplus` cannot name [`Model`], [`EnergyModelSnapshot`] or
+/// [`Value`], so the case's one committed input — `🧫️fixtures/🏛️bestest-<case>/🔋️model.json` — goes
+/// in as its own canonical JSON and the epJSON comes back as the exact bytes EnergyPlus is handed.
+/// Same shape and same reason as `bestest::model_json`.
+pub fn epjson_from_model_json(model_json: &str) -> Result<String, String> {
+    let model: Model = pack::json::from_json_str(model_json).map_err(|error| format!("the committed model does not decode: {error}"))?;
+    let (document, diagnostics) = encode_model_with_diagnostics(&model);
+    let refused = refusals(&diagnostics);
+    if !refused.is_empty() {
+        return Err(format!("model -> epJSON refused: {}", refused.iter().map(|diagnostic| format!("{} ({})", diagnostic.message, diagnostic.subject)).collect::<Vec<_>>().join("; ")));
+    }
+    Ok(format!("{}\n", pack::json::to_string_pretty(&document)))
+}
+
+/// 🌉️ The same export's full diagnostic list as a JSON array, so a scenario can assert that a
+/// document carrying no refusals also dropped nothing quietly.
+pub fn epjson_diagnostics_json(model_json: &str) -> Result<String, String> {
+    let model: Model = pack::json::from_json_str(model_json).map_err(|error| format!("the committed model does not decode: {error}"))?;
+    let (_, diagnostics) = encode_model_with_diagnostics(&model);
+    Ok(pack::json::to_string(&Value::Array(diagnostics.iter().map(EpJsonDiagnostic::to_json).collect())))
+}
+//#endregion 🌉️Bridge
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -853,6 +886,46 @@ mod tests {
             assert!(!root.contains_key(absent), "600FF must not carry {absent}");
         }
     }
+
+    //#region 🧫️Fixtures
+    /// 🧫️ The cases whose exported document is COMMITTED, so `oracle-epjson` and the
+    /// `🔮️oracle🔋️energy⚡️epjson` launch entry have a real file to hand EnergyPlus without first
+    /// running a Rust test, and so a reviewer can read the document the codec actually writes.
+    /// Exactly the four the `🏛️export-epjson-runs-in-energyplus` case simulates.
+    const COMMITTED_EPJSON_CASES: [&str; 4] = ["600", "600FF", "900", "900FF"];
+
+    fn epjson_fixture_path(case: &str) -> std::path::PathBuf {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures").join(format!("🏛️bestest-{case}")).join("⚡️model.epJSON")
+    }
+
+    fn exported(name: &str) -> String {
+        format!("{}\n", pack::json::to_string_pretty(&encode_model(&case(name))))
+    }
+
+    /// 🧫️ THE generator, inert unless `SEMIO_ENERGY_EPJSON_REGENERATE` is set, so a normal
+    /// `cargo test` can never make the guard below pass by rewriting what it checks.
+    #[test]
+    fn regenerate_committed_epjson_fixtures() {
+        if std::env::var_os("SEMIO_ENERGY_EPJSON_REGENERATE").is_none() {
+            return;
+        }
+        for name in COMMITTED_EPJSON_CASES {
+            let path = epjson_fixture_path(name);
+            std::fs::create_dir_all(path.parent().expect("fixture directory")).expect("fixture directory is writable");
+            std::fs::write(&path, exported(name)).expect("fixture is writable");
+        }
+    }
+
+    /// 🧫️ Every committed document must be byte-identical to what the codec writes today.
+    #[test]
+    fn committed_epjson_fixtures_match_the_codec() {
+        for name in COMMITTED_EPJSON_CASES {
+            let path = epjson_fixture_path(name);
+            let committed = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("committed epJSON {} is missing: {error} — rerun with SEMIO_ENERGY_EPJSON_REGENERATE=1", path.display()));
+            assert_eq!(committed, exported(name), "committed epJSON for case {name} is stale — rerun with SEMIO_ENERGY_EPJSON_REGENERATE=1");
+        }
+    }
+    //#endregion 🧫️Fixtures
 
     #[semio_framework_async_macros::async_test]
     async fn a_time_series_schedule_is_reported_rather_than_dropped() {

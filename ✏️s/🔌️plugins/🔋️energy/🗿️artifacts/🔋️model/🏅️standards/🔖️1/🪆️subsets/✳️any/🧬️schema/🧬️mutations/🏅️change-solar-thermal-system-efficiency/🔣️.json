@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal-system-efficiency",
+  "semanticKind": "change-solar-thermal-system-efficiency",
+  "displayName": "Change Solar Thermal System Efficiency",
+  "emoji": "🏅️",
+  "aggregateVariant": "ChangeSolarThermalSystemEfficiency",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-solar-thermal-system-efficiency",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

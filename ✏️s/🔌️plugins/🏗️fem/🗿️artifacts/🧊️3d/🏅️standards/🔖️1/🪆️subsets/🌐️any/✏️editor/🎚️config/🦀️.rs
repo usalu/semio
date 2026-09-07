@@ -171,6 +171,25 @@ impl protocol::OpBinary for Fem3dConfigMutation {
 impl Mutation<Fem3dConfig> for Fem3dConfigMutation {
     type Diff = Fem3dConfig;
 
+    /// 🧷️ Hand-written (this enum's `diff`/`inverse` dispatch is a plain `match`, not
+    /// `#[derive(dsl::Mutations)]`'s per-leaf `MutationKind` shape), one entry per variant in
+    /// declaration order. ⚠️ PROVISIONAL: no config variant has an authored mutation-leaf directory on
+    /// disk, so every `owner` below names a path that does not exist yet — the same shape block3d's
+    /// `Block3dConfigMutation` and puzzle3d's `Puzzle3dConfigMutation` already carry.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🟤️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/👁️set-result-display", semantic_kind: "set-result-display", display_name: "Set Result Display", emoji: "👁️", aggregate_variant: "SetResultDisplay", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🎥️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Fem3dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Fem3dConfigMutation::SetResultDisplay { .. } => &Self::DESCRIPTORS[1],
+            Fem3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[2],
+        }
+    }
+
     fn diff(&self, base: &Fem3dConfig) -> protocol::MutationOutcome<Fem3dConfig> {
         let mut next = base.clone();
         match self {

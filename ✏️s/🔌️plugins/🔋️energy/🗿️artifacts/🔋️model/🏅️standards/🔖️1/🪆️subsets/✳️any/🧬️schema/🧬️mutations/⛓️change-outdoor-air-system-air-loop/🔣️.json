@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system-air-loop",
+  "semanticKind": "change-outdoor-air-system-air-loop",
+  "displayName": "Change Outdoor Air System Air Loop",
+  "emoji": "⛓️",
+  "aggregateVariant": "ChangeOutdoorAirSystemAirLoop",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-outdoor-air-system-air-loop",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

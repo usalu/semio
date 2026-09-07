@@ -1994,7 +1994,9 @@ impl EnergyJob {
         let EnergyAbandonmentSlot::Abandoned(_, authority) = std::mem::replace(&mut registry[index], EnergyAbandonmentSlot::Reserved(operation)) else { unreachable!("matched abandoned Energy authority") };
         Some(Self { authority: Some(authority), abandonment_slot: index })
     }
+}
 
+impl EnergyJobAuthority {
     pub fn stage(&self) -> EnergyJobStage {
         self.stage
     }
@@ -2988,7 +2990,8 @@ impl EnergyJob {
                     CommitCensusStage::FaultChannel => &self.publication.faults,
                     _ => unreachable!("channel stage matched"),
                 };
-                add_resident(&mut work, queue.retained_totals_at(work.channel_slot))?;
+                let totals = queue.retained_totals_at(work.channel_slot);
+                add_resident(&mut work, totals)?;
                 work.channel_slot += 1;
                 if work.channel_slot > ENERGY_WIRE_QUEUE_SLOTS {
                     work.channel_slot = 0;
@@ -3160,9 +3163,7 @@ impl EnergyJob {
         }
         Ok(false)
     }
-}
 
-impl InteractiveJob for EnergyJob {
     fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return Self::fault(&Error::severe("energy job operation or generation mismatch"));
@@ -3885,6 +3886,24 @@ impl InteractiveJob for EnergyJob {
 
     fn terminal_is_empty(&self) -> bool {
         authority_is_terminal_empty(self)
+    }
+}
+
+impl InteractiveJob for EnergyJob {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        EnergyJobAuthority::step(self, context)
+    }
+
+    fn begin_close(&mut self) {
+        EnergyJobAuthority::begin_close(self);
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        EnergyJobAuthority::close_step(self, maximum_items, maximum_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        EnergyJobAuthority::terminal_is_empty(self)
     }
 }
 

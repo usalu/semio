@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceSection",
+  "id": "sec_tie",
+  "newSection": {
+    "id": "sec_tie",
+    "name": "M24 Tie Rod",
+    "area": 0.000353,
+    "iy": -1.03e-08,
+    "iz": 1.03e-08,
+    "j": 2.06e-08
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "mutation": "addGcpObservation",
+  "id": "gcp-north-pier",
+  "observation": {
+    "streamId": "orbit-primary",
+    "frameIndex": 4,
+    "pixel": [
+      140.75,
+      101.5
+    ]
+  }
+}

@@ -55,11 +55,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "update-analysis-settings" => Vector {
-            before: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-analysis: no committed specification vector is registered for kind {other:?}"),
     }

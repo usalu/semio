@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone-window-transmittance",
+  "semanticKind": "change-daylight-zone-window-transmittance",
+  "displayName": "Change Daylight Zone Window Transmittance",
+  "emoji": "🥃️",
+  "aggregateVariant": "ChangeDaylightZoneWindowTransmittance",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-daylight-zone-window-transmittance",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -572,7 +572,7 @@ def _south_solar(sql, honeybee_model):
     return None if total is None else [value * 1000.0 for value in total]
 
 
-def _results_document(case, sql_path, honeybee_model, epw, free_float):
+def _results_document(case, sql_path, honeybee_model, epw, free_float, via=PRODUCER_VIA, south_apertures=None):
     from ladybug.sql import SQLiteResult
 
     sql = SQLiteResult(str(sql_path))
@@ -586,7 +586,7 @@ def _results_document(case, sql_path, honeybee_model, epw, free_float):
     document = {
         "schema": RESULT_SCHEMA,
         "case": case,
-        "producer": {"name": "energyplus", "version": ENERGYPLUS_VERSION, "via": PRODUCER_VIA},
+        "producer": {"name": "energyplus", "version": ENERGYPLUS_VERSION, "via": via},
         "weather": {"file": _weather_label(epw), "sha256": _sha256(epw)},
         "timestepMinutes": 60,
         "annual": None,
@@ -606,7 +606,7 @@ def _results_document(case, sql_path, honeybee_model, epw, free_float):
         document["peak"] = {"heatingKw": round(peak_heating, 4), "heatingHour": peak_heating_hour, "coolingKw": round(peak_cooling, 4), "coolingHour": peak_cooling_hour}
         document["hourly"]["heatingW"] = [round(value * 1000.0, 3) for value in heating]
         document["hourly"]["coolingW"] = [round(value * 1000.0, 3) for value in cooling]
-    solar = _south_solar(sql, honeybee_model)
+    solar = _named_solar(sql, south_apertures) if honeybee_model is None else _south_solar(sql, honeybee_model)
     if solar is not None:
         document["hourly"]["transmittedSolarSouthWh"] = [round(value, 3) for value in solar]
     return document
@@ -628,6 +628,97 @@ def _simulate(case, honeybee_model, epw, out_path, work_dir, keep, free_float):
     finally:
         if temporary and not keep:
             shutil.rmtree(directory, ignore_errors=True)
+
+
+# ── the second, honeybee-free route: a semio-written epJSON straight into EnergyPlus ──
+
+
+def _epjson_schema_path():
+    """📐️ EnergyPlus's OWN `Energy+.schema.epJSON`, shipped inside the verified OpenStudio tree."""
+    path = _oracle_root() / "EnergyPlus" / "Energy+.schema.epJSON"
+    if not path.exists():
+        raise SystemExit(f"no {path} — run the oracle-setup target first")
+    return path
+
+
+def _validate_epjson(document):
+    """🧾️ Every schema violation, from the third-party `jsonschema` validator.
+
+    The validator is chosen by the schema's own `$schema` (draft-07 for 25.2), and the errors are
+    sorted and rendered as JSON paths so a failure names the offending object and field rather than
+    just saying no.
+    """
+    from jsonschema import validators
+
+    schema = json.loads(_epjson_schema_path().read_text(encoding="utf-8"))
+    validator = validators.validator_for(schema)(schema)
+    return [f"{'/'.join(str(part) for part in error.absolute_path) or '<root>'}: {error.message}" for error in sorted(validator.iter_errors(document), key=lambda error: list(error.absolute_path))]
+
+
+def _epjson_free_float(document):
+    """🌡️ A document with no ideal-loads system is a free-float case, exactly as the codec writes it."""
+    return not document.get("ZoneHVAC:IdealLoadsAirSystem")
+
+
+def _epjson_surface_normal(vertices):
+    """📐️ Newell normal of one `BuildingSurface:Detailed` vertex list."""
+    accumulated = [0.0, 0.0, 0.0]
+    for index, current in enumerate(vertices):
+        following = vertices[(index + 1) % len(vertices)]
+        accumulated[0] += (current[1] - following[1]) * (current[2] + following[2])
+        accumulated[1] += (current[2] - following[2]) * (current[0] + following[0])
+        accumulated[2] += (current[0] - following[0]) * (current[1] + following[1])
+    length = sum(component * component for component in accumulated) ** 0.5
+    return None if length <= 1e-12 else [component / length for component in accumulated]
+
+
+def _epjson_south_apertures(document):
+    """☀️ Names of the apertures whose host wall faces within 45° of south, read from the document.
+
+    The honeybee route asks its own model object the same question (`_south_solar`); this route has
+    only the epJSON, so the answer comes out of the geometry the codec wrote.
+    """
+    south = set()
+    for name, surface in (document.get("BuildingSurface:Detailed") or {}).items():
+        vertices = [[vertex.get("vertex_x_coordinate", 0.0), vertex.get("vertex_y_coordinate", 0.0), vertex.get("vertex_z_coordinate", 0.0)] for vertex in surface.get("vertices", [])]
+        normal = _epjson_surface_normal(vertices) if len(vertices) >= 3 else None
+        if normal is None or normal[1] > -0.7071:
+            continue
+        for aperture, fields in (document.get("FenestrationSurface:Detailed") or {}).items():
+            if fields.get("building_surface_name") == name:
+                south.add(aperture.upper())
+    return south
+
+
+def _named_solar(sql, names):
+    """☀️ Transmitted solar through a named aperture set, in Wh per hour."""
+    if not names:
+        return None
+    collections = sql.data_collections_by_output_name(_SOLAR_OUTPUT)
+    picked = [list(collection) for collection in collections if str(collection.header.metadata.get("Surface", "")).upper() in names]
+    total = _summed(picked)
+    return None if total is None else [value * 1000.0 for value in total]
+
+
+def _run_energyplus_epjson(epjson_path, epw, work_dir):
+    """▶️ `energyplus -a -w <epw> -d <work_dir> <file.epJSON>` — no honeybee, no OpenStudio, no IDF.
+
+    ⚠️ `-r` (ReadVarsESO) is deliberately not passed: the OpenStudio bundle ships no `ReadVarsESO`
+    binary, so it always fails (`📓️w2-oracle-toolchain.md` §7). The results are read from
+    `Output:SQLite` instead, which the codec always writes.
+    """
+    import subprocess
+
+    binary = _oracle_root() / "EnergyPlus" / "energyplus"
+    shutil.rmtree(work_dir, ignore_errors=True)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    completed = subprocess.run([str(binary), "-a", "-w", str(epw), "-d", str(work_dir), str(epjson_path)], capture_output=True, text=True)
+    errors = work_dir / "eplusout.err"
+    sql = work_dir / "eplusout.sql"
+    if completed.returncode != 0 or not sql.exists():
+        tail = errors.read_text(errors="replace")[-4000:] if errors.exists() else "(no eplusout.err)"
+        raise SystemExit(f"energyplus exited {completed.returncode} without a usable eplusout.sql\n{completed.stdout[-2000:]}\n{completed.stderr[-2000:]}\n{tail}")
+    return sql
 
 
 # ── commands ──
@@ -763,6 +854,43 @@ def _round_trip_document():
     return _semio_case_document("600")
 
 
+def _command_epjson(args):
+    """⚡️ Validate a semio-written epJSON against EnergyPlus's own schema, then run EnergyPlus on it.
+
+    This is the SECOND oracle route and it shares nothing above `_results_document` with the
+    honeybee one: no honeybee, no OpenStudio, no IDF translation. If the two routes agree, the
+    residual disagreement between semio and EnergyPlus is physics; if they disagree, it is the
+    honeybee translation.
+    """
+    path = Path(args.document)
+    document = json.loads(path.read_text(encoding="utf-8"))
+    errors = _validate_epjson(document)
+    if errors:
+        listed = "\n".join(f"  {error}" for error in errors[:40])
+        raise SystemExit(f"{path} fails EnergyPlus's own Energy+.schema.epJSON in {len(errors)} place(s):\n{listed}")
+    print(f"[oracle] {path.name} validates against {_epjson_schema_path()} ({len(document)} object types)", flush=True)
+    if args.validate_only:
+        return 0
+    case = args.case or path.stem.removeprefix("bestest-")
+    epw = Path(args.weather)
+    temporary = args.work is None
+    directory = Path(tempfile.mkdtemp(prefix=f"semio-energy-epjson-{case}-")) if temporary else Path(args.work)
+    try:
+        print(f"[oracle] running EnergyPlus {ENERGYPLUS_VERSION} directly on {path.name} in {directory}", flush=True)
+        sql = _run_energyplus_epjson(path, epw, directory)
+        document_out = _results_document(case, sql, None, epw, _epjson_free_float(document), via="semio epJSON codec → EnergyPlus (no translator)", south_apertures=_epjson_south_apertures(document))
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(document_out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        annual = document_out["annual"] or {}
+        free = document_out["freeFloat"] or {}
+        print(f"[oracle] {case}: heating {annual.get('heatingKwh', '-')} kWh, cooling {annual.get('coolingKwh', '-')} kWh, free-float {free.get('minC', '-')}..{free.get('maxC', '-')} °C -> {out}", flush=True)
+        return 0
+    finally:
+        if temporary and not args.keep:
+            shutil.rmtree(directory, ignore_errors=True)
+
+
 def _command_emit(args):
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -794,6 +922,16 @@ def main(argv):
     emit.add_argument("case")
     emit.add_argument("out")
     emit.set_defaults(handler=_command_emit)
+
+    epjson = sub.add_parser("epjson")
+    epjson.add_argument("document")
+    epjson.add_argument("weather", nargs="?", default=None)
+    epjson.add_argument("out", nargs="?", default=None)
+    epjson.add_argument("--case", default=None)
+    epjson.add_argument("--work", default=None)
+    epjson.add_argument("--keep", action="store_true")
+    epjson.add_argument("--validate-only", action="store_true", dest="validate_only")
+    epjson.set_defaults(handler=_command_epjson)
 
     native = sub.add_parser("native")
     native.add_argument("case")

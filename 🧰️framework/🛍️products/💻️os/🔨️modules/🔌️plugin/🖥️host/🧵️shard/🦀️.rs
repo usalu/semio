@@ -28,6 +28,11 @@
 #[path = "🧵️executor/🦀️.rs"]
 pub mod executor;
 
+#[path = "🔁️lifecycle/🦀️.rs"]
+mod lifecycle;
+pub use lifecycle::{ShardActorAllocation, ShardRegistrationReason, ShardRegistrationRejected};
+use lifecycle::AdmittedAuthority;
+
 use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
 #[cfg(test)]
 use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
@@ -328,6 +333,8 @@ pub struct ShardLoop {
     runtime: Arc<GuestRuntimes>,
     transport: ShardTransports,
     instances: HashMap<u64, GuestInstance>,
+    allocations: HashMap<u64, ShardActorAllocation>,
+    next_registration: u64,
     /// 💼️ `(actor, job)` pairs admitted from an `Effect::SpawnJob` and not yet `Done`/`Failed` —
     /// MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME J1, the generic host-side executor
     /// `📓️terra-M5-report.md` §4(a) found missing entirely: nothing previously read a
@@ -378,8 +385,8 @@ pub struct ShardLoop {
     /// field was added). Read by [`Self::actor_lane`]; an actor with no entry (never seen an
     /// envelope) falls back to Maintenance — same fallback convention as [`Self::granted_budget`].
     actor_lanes: HashMap<u64, semio_framework_actor::Lane>,
-    pending_interactive: FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
-    pending_background: FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
+    pending_interactive: FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>,
+    pending_background: FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>,
     rejected_frame: Option<(u64, Vec<u8>)>,
     terminal_frames: FixedOwnerRing<Vec<u8>, SHARD_DEFERRED_ITEMS>,
     terminal_frame_overflow: FixedOwnerRing<TerminalFrameOverflow, 1>,
@@ -889,10 +896,11 @@ struct TerminalFrameOverflow {
 }
 
 fn defer_completion(
-    interactive: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
-    background: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
+    interactive: &mut FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>,
+    background: &mut FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>,
     terminal: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
     lane: semio_framework_actor::Lane,
+    allocation: Option<ShardActorAllocation>,
     actor: u64,
     event: Event,
 ) -> Result<(), PluginHostError> {
@@ -902,10 +910,11 @@ fn defer_completion(
             _ => unreachable!("ShardLoop: only job completions use generated authority admission"),
         };
     let ring = if ShardLoop::is_high_priority_lane(lane) { interactive } else { background };
-    match ring.try_push(DeferredAuthority::Event { actor, event }, bytes) {
+    let owner = AdmittedAuthority::new(allocation, semio_framework_actor::lane_defaults::budget_for(lane), DeferredAuthority::Event { actor, event }, lane, bytes);
+    match ring.try_push(owner, bytes) {
         Ok(_) => Ok(()),
         Err(rejected) => {
-            let _ = terminal.try_push(rejected.owner, bytes).expect("ShardLoop: terminal completion ring owns every rejected completion");
+            let _ = terminal.try_push(rejected.owner.authority, bytes).expect("ShardLoop: terminal completion ring owns every rejected completion");
             Err(PluginHostError::Plugin(format!("ShardLoop: completion {:?} capacity retained one terminal event for actor {actor}", rejected.limit)))
         }
     }
@@ -918,6 +927,8 @@ impl ShardLoop {
             runtime,
             transport,
             instances: HashMap::new(),
+            allocations: HashMap::new(),
+            next_registration: 1,
             running_jobs: BTreeSet::new(),
             job_turns: HashMap::new(),
             job_authorities: HashMap::new(),
@@ -1044,7 +1055,7 @@ impl ShardLoop {
                 refusal.phase = ReplaySpawnRefusalPhase::RetireShell;
                 if publish {
                     let lane = self.actor_lane(actor);
-                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, lane, actor, Event::JobCompleted { job, result: RequestOutcome::Err(reason) })?;
+                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, lane, self.allocations.get(&actor).copied(), actor, Event::JobCompleted { job, result: RequestOutcome::Err(reason) })?;
                 }
             }
             ReplaySpawnRefusalPhase::RetireShell => {
@@ -1470,9 +1481,6 @@ impl ShardLoop {
     /// `Kernel::activate` that lands on this shard. `actor.0` (the bit-packed `u64`) is the map key
     /// throughout this type: `Envelope.to`/`ShardOutcome`'s tag both carry the SAME raw id, so no
     /// `RuntimeActorId` round-trip is needed at the boundary.
-    pub fn register(&mut self, actor: ActorId, instance: GuestInstance) {
-        self.instances.insert(actor.0, instance);
-    }
 
     pub async fn is_registered(&self, actor: ActorId) -> bool {
         self.instances.contains_key(&actor.0)
@@ -1482,6 +1490,8 @@ impl ShardLoop {
     /// [`super::GuestRuntime::drop_instance`] so the pooling allocator reclaims its slab.
     pub async fn unregister(&mut self, actor: ActorId) {
         self.retire_actor_replay_owners(actor.0);
+        self.allocations.remove(&actor.0);
+        self.granted_budgets.remove(&actor.0);
         if let Some(instance) = self.instances.remove(&actor.0) {
             self.runtime.drop_instance(instance).await;
         }
@@ -1521,7 +1531,7 @@ impl ShardLoop {
     }
 
     pub(super) fn can_accept_primed_frame(&self) -> bool {
-        !self.has_pending_work()
+        !self.has_pending_work() || self.has_lifecycle_retry()
     }
 
     pub fn has_pending_work(&self) -> bool {
@@ -1589,7 +1599,7 @@ impl ShardLoop {
                 frame = Some((self.claim_frame_epoch(), bytes));
             }
         }
-        if frame.is_none() && !has_deferred {
+        if frame.is_none() && (!has_deferred || self.has_lifecycle_retry()) {
             if let Some(bytes) = self.transport.recv().await {
                 frame = Some((self.claim_frame_epoch(), bytes));
             }
@@ -1616,25 +1626,25 @@ impl ShardLoop {
         if self.drive_replay_refusal().await? {
             return Ok(1);
         }
-        let authority = if let Some((_, authority)) = Self::pop_next_authority(&mut self.pending_interactive, &self.job_placement) {
-            Some((semio_framework_actor::Lane::Interactive, authority))
-        } else {
-            Self::pop_next_authority(&mut self.pending_background, &self.job_placement).map(|(_, authority)| (semio_framework_actor::Lane::Maintenance, authority))
-        };
         let mut selected_step = None;
-        if let Some((lane, authority)) = authority {
-            match authority {
-                DeferredAuthority::Register { actor: _ } => return Ok(1),
-                DeferredAuthority::Unregister { actor } => {
-                    if self.actor_generation_is_current(actor) {
-                        self.unregister(actor).await;
-                    }
-                    return Ok(1);
+        if let Some(owner) = self.select_pending_authority() {
+            if matches!(owner.authority, DeferredAuthority::Register { .. }) {
+                return Ok(1);
+            }
+            if !self.allocation_is_current(owner.allocation) {
+                return Ok(1);
+            }
+            let lane = owner.lane;
+            if let DeferredAuthority::Event { actor, event } = &owner.authority {
+                if self.execute_turn_for(*actor, event, owner.budget, lane).await? {
+                    self.retain_lifecycle_retry(owner)?;
                 }
-                DeferredAuthority::Event { actor, event } => {
-                    if self.actor_generation_is_current(ActorId(actor)) {
-                        self.execute_turn_for(actor, event).await?;
-                    }
+                return Ok(1);
+            }
+            match owner.authority {
+                DeferredAuthority::Register { .. } | DeferredAuthority::Event { .. } => unreachable!("selected non-event authority"),
+                DeferredAuthority::Unregister { actor } => {
+                    self.unregister(actor).await;
                     return Ok(1);
                 }
                 DeferredAuthority::JobStep { actor, turn } => selected_step = Some((actor, turn)),
@@ -1715,19 +1725,19 @@ impl ShardLoop {
                         JobStep::Done { output } => match self.runtime.checkpoint(instance).await {
                             Ok(state) => {
                                 self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Completed);
-                                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) })?;
+                                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, self.allocations.get(&actor_id).copied(), actor_id, Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) })?;
                                 JobStepOutcome::Complete { candidate: JobCommitCandidate { state, output } }
                             }
                             Err(fault) => {
                                 self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Fault { stage: "terminal-checkpoint", detail: fault.to_string() });
                                 let detail = start_job_fault_bytes(&TurnFault::from(fault));
-                                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(detail.clone()) })?;
+                                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, self.allocations.get(&actor_id).copied(), actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(detail.clone()) })?;
                                 JobStepOutcome::Fault { detail }
                             }
                         },
                         JobStep::Failed { error } => {
                             self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Fault { stage: "guest-failed", detail: String::from_utf8_lossy(&error).into_owned() });
-                            defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) })?;
+                            defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, self.allocations.get(&actor_id).copied(), actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) })?;
                             JobStepOutcome::Fault { detail: error }
                         }
                     };
@@ -1742,7 +1752,7 @@ impl ShardLoop {
                 }
                 Err(fault) => {
                     self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Fault { stage: "step-job", detail: turn_fault_message(&fault) });
-                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) })?;
+                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, self.allocations.get(&actor_id).copied(), actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) })?;
                     ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) }
                 }
             };
@@ -1756,17 +1766,16 @@ impl ShardLoop {
     /// 🚦 One actor's turn: takes its collected `events` out of `events_by_actor`, runs
     /// [`super::GuestRuntime::execute_turn`], admits `SpawnJob`/`CancelJob` effects, and sends the
     /// resulting [`ShardOutcome`]. A failed guest cancellation retires the actor before reuse.
-    async fn execute_turn_for(&mut self, actor_id: u64, event: Event) -> Result<(), PluginHostError> {
-        let events = [event];
+    async fn execute_turn_for(&mut self, actor_id: u64, event: &Event, granted: semio_framework_actor::Budget, actor_lane: semio_framework_actor::Lane) -> Result<bool, PluginHostError> {
+        let events = std::slice::from_ref(event);
         // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)`/`self.actor_lane(..)`
         // need `&self` (the whole struct), which conflicts with the `&mut self.instances` borrow
         // `instance` holds for the rest of this call (E0502).
-        let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id));
-        let actor_lane = self.actor_lane(actor_id);
+        let turn_budget = turn_budget_from_grant(granted);
         let watchdog_stage = interactive_stage_for(actor_lane);
         let Some(instance) = self.instances.get_mut(&actor_id) else {
             self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
-            return Ok(());
+            return Ok(false);
         };
         // 👶️ host-dedyn: `GuestRuntime::execute_turn` is plain AFIT now (double-future collapsed)
         // — `.await`ed directly. `ShardLoop` is driven by a `WorkerPool` job now (P1c) rather than a
@@ -1808,6 +1817,7 @@ impl ShardLoop {
                                     &mut self.pending_background,
                                     &mut self.terminal_authorities,
                                     actor_lane,
+                                    self.allocations.get(&actor_id).copied(),
                                     actor_id,
                                     Event::JobCompleted { job, result: RequestOutcome::Err(b"checked replay operation identity exhausted".to_vec()) },
                                 )?;
@@ -1867,7 +1877,7 @@ impl ShardLoop {
                                         let message = format!("ShardLoop::pump: cancel-job {job} failed; actor {actor_id} retired: {}", turn_fault_message(&fault));
                                         self.unregister(ActorId(actor_id)).await;
                                         self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
-                                        return Ok(());
+                                        return Ok(false);
                                     }
                                 }
                             }
@@ -1913,10 +1923,11 @@ impl ShardLoop {
                     Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
             }
+            Err(fault) if super::retryable_lifecycle_turn(&fault, &events) => return Ok(true),
             Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) },
         };
         self.send_outcome(&outcome).await?;
-        Ok(())
+        Ok(false)
     }
 
     /// 📨️ Decodes one [`ShardFrame`] and dispatches it — the drain loop's per-frame body, factored
@@ -2026,9 +2037,10 @@ impl ShardLoop {
     }
 
     fn enqueue_authority(&mut self, lane: semio_framework_actor::Lane, authority: DeferredAuthority, owner_bytes: usize) -> Result<(), PluginHostError> {
+        let authority = AdmittedAuthority::new(self.current_allocation(authority.actor()), self.granted_budget(authority.actor()), authority, lane, owner_bytes);
         let result = if Self::is_high_priority_lane(lane) { self.pending_interactive.try_push(authority, owner_bytes) } else { self.pending_background.try_push(authority, owner_bytes) };
         if let Err(rejected) = result {
-            let _ = self.terminal_authorities.try_push(rejected.owner, owner_bytes).expect("ShardLoop: terminal authority ring owns every rejected authority");
+            let _ = self.terminal_authorities.try_push(rejected.owner.authority, owner_bytes).expect("ShardLoop: terminal authority ring owns every rejected authority");
             return Err(PluginHostError::Plugin(format!("ShardLoop: release admission rejected a preflighted {lane:?} authority at {:?}", rejected.limit)));
         }
         Ok(())
@@ -2137,9 +2149,10 @@ impl ShardLoop {
                 self.job_placement.remove(&(actor_id, job));
             }
             let authority = DeferredAuthority::Cancel(CancelCursor { actor: actor_id, after_job: Some(job), owner_bytes: cursor.owner_bytes });
+            let authority = AdmittedAuthority::new(self.current_allocation(actor_id), self.granted_budget(actor_id), authority, lane, cursor.owner_bytes);
             let result = if Self::is_high_priority_lane(lane) { self.pending_interactive.try_push(authority, cursor.owner_bytes) } else { self.pending_background.try_push(authority, cursor.owner_bytes) };
             if let Err(rejected) = result {
-                let _ = self.terminal_authorities.try_push(rejected.owner, cursor.owner_bytes).expect("ShardLoop: terminal authority ring owns every rejected close cursor");
+                let _ = self.terminal_authorities.try_push(rejected.owner.authority, cursor.owner_bytes).expect("ShardLoop: terminal authority ring owns every rejected close cursor");
                 return Err(PluginHostError::Plugin(format!("ShardLoop: interrupted close handback rejected at {:?}; exact cursor retained", rejected.limit)));
             }
             return Ok(());

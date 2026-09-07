@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔺️replace-surface-vertices",
+  "semanticKind": "replace-surface-vertices",
+  "displayName": "Replace Surface Vertices",
+  "emoji": "🔺️",
+  "aggregateVariant": "ReplaceSurfaceVertices",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "replace-surface-vertices",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

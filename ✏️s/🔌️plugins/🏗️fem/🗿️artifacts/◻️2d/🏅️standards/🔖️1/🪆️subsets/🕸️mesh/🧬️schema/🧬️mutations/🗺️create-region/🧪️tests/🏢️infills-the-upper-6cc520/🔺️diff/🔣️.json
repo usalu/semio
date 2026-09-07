@@ -1,0 +1,51 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": {
+    "added": [
+      {
+        "id": "panel_l2",
+        "name": "Upper Infill Panel",
+        "outline": [
+          [
+            0.0,
+            3.5
+          ],
+          [
+            6.0,
+            3.5
+          ],
+          [
+            6.0,
+            7.0
+          ],
+          [
+            0.0,
+            7.0
+          ]
+        ],
+        "holes": [],
+        "thickness": 0.2,
+        "materialId": "concrete_c30",
+        "meshSize": 0.5
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

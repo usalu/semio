@@ -1,0 +1,11 @@
+{
+  "mutation": "addLoad",
+  "caseId": "seismic",
+  "load": {
+    "kind": "nodal",
+    "id": "lse1",
+    "nodeId": "n5",
+    "dof": "Tx",
+    "value": 9000.0
+  }
+}

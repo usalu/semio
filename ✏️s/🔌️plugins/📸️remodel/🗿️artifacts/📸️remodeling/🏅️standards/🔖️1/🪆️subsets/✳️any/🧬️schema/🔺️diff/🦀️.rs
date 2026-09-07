@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 /// 🔺️ Sparse field delta for the remodeling artifact; persistent entries apply via MutationDiff.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
-#[artifact_schema(id = "s.remodeling.remodeling")]
+#[artifact_schema(id = "s.remodel.remodeling")]
 pub struct RemodelingDiff {
     #[state(artifact)]
     pub artifact: Option<Box<RemodelingArtifact>>,

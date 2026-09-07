@@ -13,16 +13,28 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-/// 📚️ `"default"` loads the bundled `.fem3d` fixture; any other id resets to an empty document —
-/// fem3d only ships the one example (mirrors the pre-migration `handle_action` behavior). Also
-/// resets the whole config back to its default (camera, result display) via a `Snapshot`.
+/// 📚️ `examples::demo::ID` (the id the shell switcher dispatches) loads the bundled `.fem3d` fixture; any other id resets to an empty document —
+/// fem3d only ships the one example (mirrors the pre-migration `handle_action` behavior). Also resets
+/// the view config back to its defaults, expressed as the two granular field mutations that together
+/// cover every `Fem3dConfig` field: `Fem3dConfigPreparationFactory` refuses a whole-config `Snapshot`
+/// row on the Config publication lane (unbounded envelope), so a `Snapshot` here would fault this tool
+/// at publication now that it runs as a retained job.
 ///
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem3d::reset_document_effect`
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
-    let document = if payload.example_id == "default" { <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_default() } else { Fem3dSnapshot::default() };
-    Ok(Emit { effects: vec![crate::editor::fem3d::reset_document_effect(&document)], config_mutations: vec![Fem3dConfigMutation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() })
+    let document = if payload.example_id == crate::artifacts::fem3d::examples::demo::ID { <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_default() } else { Fem3dSnapshot::default() };
+    eprintln!("[DEBUG] fem3d setActiveExample id={} nodes={} elements={} solids={}", payload.example_id, document.nodes.len(), document.elements.len(), document.solids.len());
+    let defaults = Fem3dConfig::default();
+    Ok(Emit {
+        effects: vec![crate::editor::fem3d::reset_document_effect(&document)],
+        config_mutations: vec![
+            Fem3dConfigMutation::SetResultDisplay { source_id: defaults.result_source_id.clone(), mode: defaults.result_mode.clone(), mode_index: defaults.result_mode_index },
+            Fem3dConfigMutation::SetCamera { camera: defaults.camera },
+        ],
+        ..Default::default()
+    })
 }
 
 #[cfg(test)]
@@ -32,7 +44,7 @@ mod tests {
     use semio_framework_plugin::ActionKind;
 
     fn empty_view() -> (Fem3dSnapshot, semio_framework_plugin::HistoryView) {
-        (Fem3dSnapshot::default(), semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty()))
+        (Fem3dSnapshot::default(), semio_framework_plugin::HistoryView::empty())
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
@@ -44,10 +56,10 @@ mod tests {
     #[test]
     fn set_active_example_loads_default_fixture_3d() {
         let (snapshot, history) = empty_view();
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let emit = handle(&SetActiveExample { example_id: "default".into() }, &doc, &cfg).expect("handle");
+        let emit = handle(&SetActiveExample { example_id: crate::artifacts::fem3d::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
         let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
@@ -66,10 +78,32 @@ mod tests {
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     }
 
+    /// 📬️ LAW: the config reset must stay granular and must cover every `Fem3dConfig` field.
+    /// `Fem3dConfigPreparationFactory::preflight` rejects `Fem3dConfigMutation::Snapshot` on the Config
+    /// publication lane, so a whole-config row here would fault `setActiveExample` the moment it
+    /// publishes as a retained job (the admissibility half of this law is asserted in the editor's own
+    /// `retained_command_fixture_matches_exact_routes_and_value_codec_boundaries` neighbourhood, where
+    /// the private factory type is in scope).
+    #[test]
+    fn set_active_example_resets_config_without_a_whole_snapshot_row() {
+        let (snapshot, history) = empty_view();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let cfg_snapshot = Fem3dConfig::default();
+        let cfg = ConfigView { snapshot: &cfg_snapshot };
+        let emit = handle(&SetActiveExample { example_id: crate::artifacts::fem3d::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
+        assert_eq!(emit.config_mutations.len(), 2);
+        assert!(!emit.config_mutations.iter().any(|mutation| matches!(mutation, Fem3dConfigMutation::Snapshot { .. })));
+        let mut applied = Fem3dConfig { result_source_id: Some("dead".into()), result_mode: "modal".into(), result_mode_index: 3, camera: crate::artifacts::fem3d::FemCamera { json: "{\"x\":9}".into() } };
+        for mutation in &emit.config_mutations {
+            applied = protocol::Mutation::diff(mutation, &applied).diff().clone();
+        }
+        assert_eq!(applied, Fem3dConfig::default(), "the two granular rows together restore every config field");
+    }
+
     #[test]
     fn set_active_example_unknown_id_resets_to_empty_document() {
         let (snapshot, history) = empty_view();
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = handle(&SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");

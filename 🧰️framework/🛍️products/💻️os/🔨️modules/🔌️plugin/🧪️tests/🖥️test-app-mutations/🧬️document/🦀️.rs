@@ -1,8 +1,8 @@
 //#region 🧬️TestDocumentMutationRoot
 //! 🧪️ Shared document state and direct mutation fixtures for the Plugin contract.
 
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🧫️Snapshot

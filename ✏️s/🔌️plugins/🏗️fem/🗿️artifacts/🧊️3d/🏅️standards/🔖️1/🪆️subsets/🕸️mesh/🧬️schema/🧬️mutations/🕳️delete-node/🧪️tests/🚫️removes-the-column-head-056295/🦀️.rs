@@ -1,4 +1,4 @@
-//! 🧪️ `delete-node` fixture — `🚫️removes-the-column-head-node-under-a-live-frame`.
+//! 🧪️ `delete-node` fixture — `🚫️removes-the-column-head-056295`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("delete-node applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "delete-node/removes-the-column-head-node-under-a-live-frame: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.nodes.len(), 2, "delete-node/removes-the-column-head-node-under-a-live-frame: n3 must be gone from the node table");
-    assert_eq!(snapshot.elements, before().elements, "delete-node/removes-the-column-head-node-under-a-live-frame: delete-node has no cascade — f1 must survive still naming n3");
-    assert_eq!(snapshot.sections, before().sections, "delete-node/removes-the-column-head-node-under-a-live-frame: the section table is untouched by a node deletion");
+    assert_eq!(snapshot, expected_after(), "delete-node/removes-the-column-head-056295: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.nodes.len(), 2, "delete-node/removes-the-column-head-056295: n3 must be gone from the node table");
+    assert_eq!(snapshot.elements, before().elements, "delete-node/removes-the-column-head-056295: delete-node has no cascade — f1 must survive still naming n3");
+    assert_eq!(snapshot.sections, before().sections, "delete-node/removes-the-column-head-056295: the section table is untouched by a node deletion");
 }
 
 /// ↩️ The inverse is a `create-node` that re-appends `n3` at the tail, restoring the original order.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "delete-node/removes-the-column-head-node-under-a-live-frame: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "delete-node/removes-the-column-head-056295: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,28 +59,35 @@ fn committed_json_is_canonical() {
         let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "delete-node/removes-the-column-head-node-under-a-live-frame: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "delete-node/removes-the-column-head-056295: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "delete-node/removes-the-column-head-node-under-a-live-frame: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-node/removes-the-column-head-056295: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "delete-node/removes-the-column-head-node-under-a-live-frame: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "delete-node/removes-the-column-head-056295: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "delete-node/removes-the-column-head-node-under-a-live-frame: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "delete-node/removes-the-column-head-node-under-a-live-frame: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "delete-node/removes-the-column-head-056295: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "delete-node/removes-the-column-head-056295: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "delete-node/removes-the-column-head-056295: a refused mutation must leave the snapshot untouched");
         }
-        other => panic!("delete-node/removes-the-column-head-node-under-a-live-frame: unknown outcome status {other:?}"),
+        other => panic!("delete-node/removes-the-column-head-056295: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +96,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().nodes.as_ref().expect("nodes delta").removed, vec!["n3".to_string()], "delete-node/removes-the-column-head-node-under-a-live-frame: exactly n3 may be removed");
-    assert!(outcome.diff().elements.is_none(), "delete-node/removes-the-column-head-node-under-a-live-frame: no element delta may be opened by a node deletion");
+    assert_eq!(outcome.diff().nodes.as_ref().expect("nodes delta").removed, vec!["n3".to_string()], "delete-node/removes-the-column-head-056295: exactly n3 may be removed");
+    assert!(outcome.diff().elements.is_none(), "delete-node/removes-the-column-head-056295: no element delta may be opened by a node deletion");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "delete-node/removes-the-column-head-node-under-a-live-frame: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "delete-node/removes-the-column-head-056295: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +109,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "delete-node/removes-the-column-head-node-under-a-live-frame: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-node/removes-the-column-head-056295: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `nodes.removed` id on `before` must leave `f1` dangling but intact.
@@ -110,5 +117,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "delete-node/removes-the-column-head-node-under-a-live-frame: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "delete-node/removes-the-column-head-056295: committed diff did not carry before to after");
 }

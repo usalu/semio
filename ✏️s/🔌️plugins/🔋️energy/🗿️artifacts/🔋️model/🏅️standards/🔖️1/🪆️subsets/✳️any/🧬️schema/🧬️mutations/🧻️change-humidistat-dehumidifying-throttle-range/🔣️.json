@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle-range",
+  "semanticKind": "change-humidistat-dehumidifying-throttle-range",
+  "displayName": "Change Humidistat Dehumidifying Throttle Range",
+  "emoji": "🧻️",
+  "aggregateVariant": "ChangeHumidistatDehumidifyingThrottleRange",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-humidistat-dehumidifying-throttle-range",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

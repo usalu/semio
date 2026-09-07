@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "mutation.referenced",
+  "path": [
+    "results.geo.dsmAssetId"
+  ]
+}

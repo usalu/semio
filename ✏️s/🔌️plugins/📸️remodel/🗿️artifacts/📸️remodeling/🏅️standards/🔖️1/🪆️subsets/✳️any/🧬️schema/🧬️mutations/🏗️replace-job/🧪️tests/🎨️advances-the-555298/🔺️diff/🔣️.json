@@ -1,0 +1,59 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "job": {
+    "id": "orbit-run-7",
+    "stage": "texturing",
+    "progress01": 0.8125,
+    "cancelRequested": false,
+    "stageCursor": 12,
+    "startedAtMs": 1738368000000.0,
+    "error": null,
+    "cameraPosesPreview": [
+      {
+        "cameraId": "orbit-cam-primary",
+        "rotationWxyz": [
+          0.52734375,
+          -0.1953125,
+          0.7734375,
+          -0.28515625
+        ],
+        "translation": [
+          2.4453125,
+          2.234375,
+          0.953125
+        ]
+      },
+      {
+        "cameraId": "orbit-cam-primary",
+        "rotationWxyz": [
+          0.3125,
+          -0.11328125,
+          0.88671875,
+          -0.3203125
+        ],
+        "translation": [
+          1.609375,
+          2.140625,
+          2.0078125
+        ]
+      }
+    ],
+    "sparsePointCloudPreview": "AACAPwAA4D0AAMi9AACAPwAA1L4AAM4+AACAPwAAjL4AAES/AACAPwAAYL0AAES+AACAPwAAOL8AALw+AACAPwAAJb8AAB+/AACAPwAAWD4AAMK+AACAPwAANj8AAJy9"
+  },
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

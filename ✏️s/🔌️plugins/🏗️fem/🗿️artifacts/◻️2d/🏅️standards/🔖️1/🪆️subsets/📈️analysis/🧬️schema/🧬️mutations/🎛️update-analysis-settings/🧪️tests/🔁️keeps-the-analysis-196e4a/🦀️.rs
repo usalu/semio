@@ -1,0 +1,134 @@
+//! 🧪️ `update-analysis-settings` fixture — `🔁️keeps-the-analysis-196e4a`.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+//!
+//! 🏢️ The model is the two-storey braced steel frame (6.0 m bay, 3.5 m storeys, HEB 200 columns,
+//! IPE 270/IPE 240 beams, a CHS 88.9x4.0 brace, an RC infill panel with a window opening), the
+//! SECOND real-world fem2d model — the first is the timber portal frame the subset-level
+//! differential cases share. Every value is in SI base units.
+//!
+//! 🔁️ `update-analysis-settings` is the ONE kind in this vocabulary with no rejection branch whatsoever: its only guard is the equality no-op pinned here. Nothing validates the counts or the scale, so absurd-but-decodable settings are accepted.
+
+use crate::artifacts::fem2d::mutations::Fem2dMutation;
+use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::artifacts::fem2d::Fem2dSnapshot;
+
+const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+
+fn before() -> Fem2dSnapshot {
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+}
+fn expected_after() -> Fem2dSnapshot {
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+}
+fn mutation() -> Fem2dMutation {
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+}
+
+/// ▶️ A no-op `update-analysis-settings` is APPLIED, not rejected — it simply changes nothing, so the document comes
+/// out byte-identical to the committed `after`, which is the committed `before`.
+#[test]
+fn no_op_leaves_the_document_untouched() {
+    let base = before();
+    let mut snapshot = base.clone();
+    apply_fem2d_mutation(&mut snapshot, &mutation()).expect("update-analysis-settings's no-op diff still applies cleanly");
+    assert_eq!(snapshot, expected_after(), "update-analysis-settings/keeps-the-analysis-196e4a: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot, base, "update-analysis-settings/keeps-the-analysis-196e4a: an APPLIED no-op still leaves the document exactly where it was");
+}
+
+/// ⚠️ A value that is already what the payload asks for is a Warning-level `mutation.no-op`, never
+/// an Error and never a Fatal — the mutation applies, it just carries no change.
+#[test]
+fn the_no_op_is_a_warning_not_a_rejection() {
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    assert_eq!(produced.diff(), &crate::artifacts::fem2d::diff::Fem2dDiff::default(), "update-analysis-settings/keeps-the-analysis-196e4a: a no-op update-analysis-settings must carry the empty diff");
+    let messages = produced.messages();
+    assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
+    assert_eq!(messages[0].code.0, "mutation.no-op", "update-analysis-settings/keeps-the-analysis-196e4a: an unchanged value is reported as no-op");
+    assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — the mutation still APPLIES, it simply changes nothing");
+    assert!(messages[0].target.is_empty(), "update-analysis-settings raises its no-op through the 2-arg `warn` builder, which attaches no target address");
+}
+
+/// ↩️ `update-analysis-settings` always emits an inverse carrying `base.analysis` — for a no-op that step is the identity, and it must still be exactly one step.
+#[test]
+fn inverse_restores_before() {
+    let base = before();
+    let mutation = mutation();
+    let inverse = inverse_fem2d_mutation(&base, &mutation);
+    assert_eq!(inverse.len(), 1, "update-analysis-settings/keeps-the-analysis-196e4a: update-analysis-settings always emits exactly one inverse step, even for a no-op, got {inverse:?}");
+    let mut snapshot = base.clone();
+    apply_fem2d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    for step in &inverse {
+        apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
+    }
+    assert_eq!(snapshot, base, "update-analysis-settings/keeps-the-analysis-196e4a: inverse did not restore the before-snapshot");
+}
+
+/// 🎯️ The declared outcome — applied, with exactly one `warn`-level `mutation.no-op` — is what this
+/// kind really emits here.
+#[test]
+fn declared_outcome_holds() {
+    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("applied"), "update-analysis-settings/keeps-the-analysis-196e4a declares an applied outcome");
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    let declared = outcome.get("messages").and_then(dsl::DslValue::as_array).expect("a no-op outcome declares its diagnostics");
+    assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");
+    assert_eq!(declared[0].get("level").and_then(dsl::DslValue::as_str), Some("warn"), "update-analysis-settings's no-op is declared at warn level");
+    assert_eq!(declared[0].get("code").and_then(dsl::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "the declared code must match the emitted one");
+}
+
+/// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
+#[test]
+fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = dsl::ToValue::to_value(&decoded);
+        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "update-analysis-settings/keeps-the-analysis-196e4a: committed {label} JSON is not canonical");
+    }
+    assert_eq!(BEFORE, AFTER, "update-analysis-settings/keeps-the-analysis-196e4a changes nothing: the two committed snapshots must be byte-identical");
+    let decoded_mutation = mutation();
+    let reencoded = dsl::ToValue::to_value(&decoded_mutation);
+    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "update-analysis-settings/keeps-the-analysis-196e4a: committed mutation JSON is not canonical");
+}
+
+/// 🔺️ A no-op produces the artifact's `Default` diff — all seventeen sparse slots left `None`.
+#[test]
+fn produces_committed_diff() {
+    let base = before();
+    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
+    let produced = dsl::ToValue::to_value(outcome.diff());
+    let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "update-analysis-settings/keeps-the-analysis-196e4a: produced diff differs from the committed 🔺️diff/🔣️.json");
+    let typed: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into Fem2dDiff");
+    assert_eq!(typed, crate::artifacts::fem2d::diff::Fem2dDiff::default(), "update-analysis-settings/keeps-the-analysis-196e4a: a no-op delta is the artifact's Default diff");
+}
+
+/// 🔣️ The committed diff is itself canonical. `Fem2dDiff` carries a container-level `default` and no
+/// per-field skip, so all seventeen sparse slots must be present as `null`.
+#[test]
+fn committed_diff_is_canonical() {
+    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = dsl::ToValue::to_value(&decoded);
+    let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "update-analysis-settings/keeps-the-analysis-196e4a: committed diff JSON is not canonical");
+    let slots = original.as_object().expect("the committed diff is a JSON object");
+    assert_eq!(slots.len(), 17, "Fem2dDiff emits all seventeen sparse slots, got {slots:?}");
+}
+
+/// 🩹 Applying the committed diff directly to `before` yields the committed `after`. For a no-op that
+/// is the identity — and still a real assertion: `apply` must leave every other member alone too.
+#[test]
+fn committed_diff_applies_to_after() {
+    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "update-analysis-settings/keeps-the-analysis-196e4a: committed diff did not carry before to after");
+}

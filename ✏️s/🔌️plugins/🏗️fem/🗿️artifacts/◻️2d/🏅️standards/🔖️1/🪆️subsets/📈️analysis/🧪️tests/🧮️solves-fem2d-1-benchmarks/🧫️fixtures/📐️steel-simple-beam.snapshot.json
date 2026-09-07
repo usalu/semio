@@ -1,0 +1,101 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "m",
+      "x": 4.0,
+      "y": 0.0
+    },
+    {
+      "id": "b",
+      "x": 8.0,
+      "y": 0.0
+    }
+  ],
+  "elements": [
+    {
+      "kind": "beam",
+      "id": "e1",
+      "start": "a",
+      "end": "m",
+      "materialId": "steel",
+      "sectionId": "ipe400"
+    },
+    {
+      "kind": "beam",
+      "id": "e2",
+      "start": "m",
+      "end": "b",
+      "materialId": "steel",
+      "sectionId": "ipe400"
+    }
+  ],
+  "regions": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel S355",
+      "e": 210000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "ipe400",
+      "name": "IPE 400",
+      "area": 0.00845,
+      "iy": 0.0002313
+    }
+  ],
+  "supports": [
+    {
+      "id": "sup_a",
+      "nodeId": "a",
+      "fixed": [
+        "Tx",
+        "Ty"
+      ]
+    },
+    {
+      "id": "sup_b",
+      "nodeId": "b",
+      "fixed": [
+        "Ty"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "udl",
+      "name": "Uniform load",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "l_1",
+          "elementId": "e1",
+          "wx": 0.0,
+          "wy": -12000.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "l_2",
+          "elementId": "e2",
+          "wx": 0.0,
+          "wy": -12000.0
+        }
+      ],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 100.0
+  }
+}

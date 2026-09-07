@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.referenced",
+  "path": [
+    "orbit-primary",
+    "orbit-secondary"
+  ]
+}

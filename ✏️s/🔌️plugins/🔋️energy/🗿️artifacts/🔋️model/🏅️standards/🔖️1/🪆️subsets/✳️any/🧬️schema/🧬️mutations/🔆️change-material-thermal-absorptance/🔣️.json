@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal-absorptance",
+  "semanticKind": "change-material-thermal-absorptance",
+  "displayName": "Change Material Thermal Absorptance",
+  "emoji": "🔆️",
+  "aggregateVariant": "ChangeMaterialThermalAbsorptance",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-material-thermal-absorptance",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

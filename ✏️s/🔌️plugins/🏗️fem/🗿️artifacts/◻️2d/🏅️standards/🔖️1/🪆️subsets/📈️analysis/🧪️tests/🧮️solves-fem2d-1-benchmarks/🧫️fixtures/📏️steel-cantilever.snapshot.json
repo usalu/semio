@@ -1,0 +1,166 @@
+{
+  "nodes": [
+    {
+      "id": "c0",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "c1",
+      "x": 0.75,
+      "y": 0.0
+    },
+    {
+      "id": "c2",
+      "x": 1.5,
+      "y": 0.0
+    },
+    {
+      "id": "c3",
+      "x": 2.25,
+      "y": 0.0
+    },
+    {
+      "id": "c4",
+      "x": 3.0,
+      "y": 0.0
+    },
+    {
+      "id": "c5",
+      "x": 3.75,
+      "y": 0.0
+    },
+    {
+      "id": "c6",
+      "x": 4.5,
+      "y": 0.0
+    },
+    {
+      "id": "c7",
+      "x": 5.25,
+      "y": 0.0
+    },
+    {
+      "id": "c8",
+      "x": 6.0,
+      "y": 0.0
+    }
+  ],
+  "elements": [
+    {
+      "kind": "beam",
+      "id": "e1",
+      "start": "c0",
+      "end": "c1",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e2",
+      "start": "c1",
+      "end": "c2",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e3",
+      "start": "c2",
+      "end": "c3",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e4",
+      "start": "c3",
+      "end": "c4",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e5",
+      "start": "c4",
+      "end": "c5",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e6",
+      "start": "c5",
+      "end": "c6",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e7",
+      "start": "c6",
+      "end": "c7",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e8",
+      "start": "c7",
+      "end": "c8",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    }
+  ],
+  "regions": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel S355",
+      "e": 210000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "ipe300",
+      "name": "IPE 300",
+      "area": 0.005381,
+      "iy": 8.356e-05
+    }
+  ],
+  "supports": [
+    {
+      "id": "sup_a",
+      "nodeId": "c0",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Rz"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "tip",
+      "name": "Tip load",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "l_tip",
+          "nodeId": "c8",
+          "dof": "Ty",
+          "value": -10000.0
+        }
+      ],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 100.0
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "mutation": "addLoad",
+  "caseId": "wind_x",
+  "load": {
+    "kind": "nodal",
+    "id": "ld_wx_0",
+    "nodeId": "el_0",
+    "dof": "Tx",
+    "value": 5400.0
+  }
+}

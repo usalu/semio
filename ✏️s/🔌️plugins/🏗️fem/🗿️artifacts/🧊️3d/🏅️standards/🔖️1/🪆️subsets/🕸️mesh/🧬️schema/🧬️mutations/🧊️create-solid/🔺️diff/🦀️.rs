@@ -1,6 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateSolid`.
 use super::CreateSolid;
 use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSolidsDelta};
+use crate::artifacts::fem3d::mutations::{invariant, solid_breach};
 use crate::artifacts::fem3d::Fem3dSnapshot;
 
 //#region 🔖️Diff
@@ -10,6 +11,9 @@ pub fn diff(payload: &CreateSolid, base: &Fem3dSnapshot) -> protocol::MutationOu
     }
     if !base.materials.iter().any(|material| material.id == payload.solid.material_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.solid.material_id), [payload.solid.material_id.clone()]);
+    }
+    if let Some(breach) = solid_breach(&payload.solid) {
+        return invariant(breach, vec![payload.solid.id.clone()]);
     }
     protocol::MutationOutcome::new(Fem3dDiff { solids: Some(Fem3dSolidsDelta { added: vec![payload.solid.clone()], ..Default::default() }), ..Default::default() })
 }

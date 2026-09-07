@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.duplicate-id",
+  "path": [
+    "sec_col"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.duplicate-id"
+    }
+  ]
+}

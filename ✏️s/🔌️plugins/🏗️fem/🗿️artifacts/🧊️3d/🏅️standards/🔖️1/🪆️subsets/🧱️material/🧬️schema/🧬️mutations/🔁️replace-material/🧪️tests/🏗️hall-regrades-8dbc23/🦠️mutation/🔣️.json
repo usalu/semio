@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceMaterial",
+  "id": "gl24h",
+  "newMaterial": {
+    "id": "gl24h",
+    "name": "GL24h Glulam (5-percentile)",
+    "e": 9600000000.0,
+    "g": 650000000.0,
+    "nu": 0.3,
+    "rho": 385.0
+  }
+}

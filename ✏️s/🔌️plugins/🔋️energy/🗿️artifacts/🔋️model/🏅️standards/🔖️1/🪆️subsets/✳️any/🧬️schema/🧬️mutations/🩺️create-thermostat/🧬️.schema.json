@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateThermostat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "zoneId",
+    "heatingSetpointScheduleId",
+    "coolingSetpointScheduleId",
+    "heatingThrottleRangeK",
+    "coolingThrottleRangeK"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "heatingSetpointScheduleId": {
+      "type": "integer"
+    },
+    "coolingSetpointScheduleId": {
+      "type": "integer"
+    },
+    "heatingThrottleRangeK": {
+      "type": "number"
+    },
+    "coolingThrottleRangeK": {
+      "type": "number"
+    }
+  }
+}

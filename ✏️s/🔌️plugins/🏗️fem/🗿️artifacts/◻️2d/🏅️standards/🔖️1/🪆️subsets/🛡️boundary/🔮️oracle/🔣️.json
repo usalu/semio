@@ -15,8 +15,16 @@
           "mutationDirectoryName": "🛡️create-support",
           "scenarios": [
             {
-              "id": "adds-a-vertical-roller-at-node-n2",
-              "directoryName": "🛞️adds-a-vertical-roller-at-node-n2"
+              "id": "adds-a-vertical-6161a1",
+              "directoryName": "🛞️adds-a-vertical-6161a1"
+            },
+            {
+              "id": "props-the-canopy-b9d719",
+              "directoryName": "🔻️props-the-canopy-b9d719"
+            },
+            {
+              "id": "rejects-a-dangling-b0d60b",
+              "directoryName": "🚫️rejects-a-dangling-b0d60b"
             }
           ]
         },
@@ -26,8 +34,16 @@
           "mutationDirectoryName": "🗑️delete-support",
           "scenarios": [
             {
-              "id": "releases-the-roller-at-node-n2",
-              "directoryName": "🔓️releases-the-roller-at-node-n2"
+              "id": "releases-the-82b34f",
+              "directoryName": "🔓️releases-the-82b34f"
+            },
+            {
+              "id": "frees-the-roof-tie-44562b",
+              "directoryName": "🕊️frees-the-roof-tie-44562b"
+            },
+            {
+              "id": "rejects-a-missing-23f3c3",
+              "directoryName": "⛔️rejects-a-missing-23f3c3"
             }
           ]
         },
@@ -37,8 +53,24 @@
           "mutationDirectoryName": "🔁️replace-support",
           "scenarios": [
             {
-              "id": "upgrades-the-roller-at-n2-to-a-full-fixity",
-              "directoryName": "🔒️upgrades-the-roller-at-n2-to-a-full-fixity"
+              "id": "upgrades-the-834e4a",
+              "directoryName": "🔒️upgrades-the-834e4a"
+            },
+            {
+              "id": "pins-the-left-base-7891ec",
+              "directoryName": "🔩️pins-the-left-base-7891ec"
+            },
+            {
+              "id": "rejects-a-missing-afbf6d",
+              "directoryName": "⛔️rejects-a-missing-afbf6d"
+            },
+            {
+              "id": "denies-rename-63ec90",
+              "directoryName": "🪪️denies-rename-63ec90"
+            },
+            {
+              "id": "dangling-node-98d979",
+              "directoryName": "👻️dangling-node-98d979"
             }
           ]
         }

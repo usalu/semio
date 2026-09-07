@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "issued": {
+    "activation": 41,
+    "instance": 7,
+    "guest": 3,
+    "sequence": 8,
+    "surface": "7:window",
+    "revision": 2
+  },
+  "cases": [
+    {
+      "id": "exact",
+      "ack": {
+        "activation": 41,
+        "instance": 7,
+        "guest": 3,
+        "sequence": 8,
+        "surface": "7:window",
+        "revision": 2
+      },
+      "committed": true,
+      "pending": true,
+      "live": true,
+      "accepted": true
+    },
+    {
+      "id": "foreign-activation",
+      "ack": {
+        "activation": 42,
+        "instance": 7,
+        "guest": 3,
+        "sequence": 8,
+        "surface": "7:window",
+        "revision": 2
+      },
+      "committed": true,
+      "pending": true,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "id": "foreign-instance",
+      "ack": {
+        "activation": 41,
+        "instance": 8,
+        "guest": 3,
+        "sequence": 8,
+        "surface": "7:window",
+        "revision": 2
+      },
+      "committed": true,
+      "pending": true,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "id": "reopened-guest",
+      "ack": {
+        "activation": 41,
+        "instance": 7,
+        "guest": 4,
+        "sequence": 8,
+        "surface": "7:window",
+        "revision": 2
+      },
+      "committed": true,
+      "pending": true,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "id": "foreign-sequence",
+      "ack": {
+        "activation": 41,
+        "instance": 7,
+        "guest": 3,
+        "sequence": 9,
+        "surface": "7:window",
+        "revision": 2
+      },
+      "committed": true,
+      "pending": true,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "id": "cross-surface",
+      "ack": {
+        "activation": 41,
+        "instance": 7,
+        "guest": 3,
+        "sequence": 8,
+        "surface": "7:panel",
+        "revision": 2
+      },
+      "committed": true,
+      "pending": true,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "id": "cross-revision",
+      "ack": {
+        "activation": 41,
+        "instance": 7,
+        "guest": 3,
+        "sequence": 8,
+        "surface": "7:window",
+        "revision": 3
+      },
+      "committed": true,
+      "pending": true,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "id": "uncommitted-output",
+      "ack": {
+        "activation": 41,
+        "instance": 7,
+        "guest": 3,
+        "sequence": 8,
+        "surface": "7:window",
+        "revision": 2
+      },
+      "committed": false,
+      "pending": true,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "id": "already-consumed",
+      "ack": {
+        "activation": 41,
+        "instance": 7,
+        "guest": 3,
+        "sequence": 8,
+        "surface": "7:window",
+        "revision": 2
+      },
+      "committed": true,
+      "pending": false,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "id": "closing-owner",
+      "ack": {
+        "activation": 41,
+        "instance": 7,
+        "guest": 3,
+        "sequence": 8,
+        "surface": "7:window",
+        "revision": 2
+      },
+      "committed": true,
+      "pending": true,
+      "live": false,
+      "accepted": false
+    }
+  ],
+  "retirementCycles": 65
+}

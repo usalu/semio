@@ -1,0 +1,24 @@
+//! 🔺️ Sparse diff builder for `ChangeDaylightZoneGlareLimit` — the artifact's delta is built straight from the
+//! payload and BASE, never by applying and capturing.
+
+use crate::artifacts::model::EnergyModelSnapshot;
+use crate::artifacts::model::diff::EnergyModelDiff;
+
+//#region 🔖️Diff
+pub fn diff(payload: &super::ChangeDaylightZoneGlareLimit, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+    let Some(existing) = base.model.daylight_zones.iter().find(|item| item.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Daylight zone {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
+    };
+    if !payload.new_glare_limit.is_finite() || payload.new_glare_limit <= 0.0 {
+        return protocol::MutationOutcome::error("mutation.invariant", format!("A glare limit must be a positive finite number, got {}.", payload.new_glare_limit), [payload.id.0.to_string()]);
+    }
+    if existing.glare_limit == payload.new_glare_limit {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Daylight zone {} already has that glare limit.", payload.id.0));
+    }
+    let mut model = base.model.clone();
+    if let Some(item) = model.daylight_zones.iter_mut().find(|item| item.id == payload.id) {
+        item.glare_limit = payload.new_glare_limit;
+    }
+    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+}
+//#endregion 🔖️Diff

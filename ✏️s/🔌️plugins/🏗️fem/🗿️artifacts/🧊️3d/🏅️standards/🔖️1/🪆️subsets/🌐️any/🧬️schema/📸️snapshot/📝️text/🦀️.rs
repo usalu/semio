@@ -23,6 +23,16 @@ pub fn print_dsl(document: &Fem3dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
+/// 🚀️ The document every `fem3d` surface boots with — the bundled `default` example, the only built-in
+/// fixture that carries nodes/elements/solids, so the `World3d` Model window meshes real geometry on
+/// first paint instead of an empty scene. Shared by `Fem3dPlayApp::initial_snapshot` and
+/// `Fem3dViewer::initial_snapshot` (the viewer must never import through the sibling editor module, so
+/// the shared boot document lives here, beside the fixture text itself). Falls back to the empty
+/// document if the embedded fixture ever stops parsing — a boot must never fault on a fixture.
+pub fn fem3d_boot_snapshot() -> Fem3dSnapshot {
+    parse_dsl(FEM3D_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::fem3d::schema::empty_fem3d_snapshot())
+}
+
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {

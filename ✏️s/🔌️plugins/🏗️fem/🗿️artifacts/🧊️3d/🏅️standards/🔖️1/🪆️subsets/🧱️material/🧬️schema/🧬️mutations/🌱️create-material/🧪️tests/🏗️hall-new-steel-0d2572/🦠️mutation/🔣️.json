@@ -1,0 +1,11 @@
+{
+  "mutation": "createMaterial",
+  "material": {
+    "id": "s235",
+    "name": "Steel S235",
+    "e": 210000000000.0,
+    "g": 81000000000.0,
+    "nu": 0.3,
+    "rho": 7850.0
+  }
+}

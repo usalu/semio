@@ -601,6 +601,7 @@ pub enum JobStep {
 #[derive(Debug)]
 pub enum TurnFault {
     Host(PluginHostError),
+    Guest(semio_framework::Fault),
     Exhausted,
     Trapped(String),
     DeadlineExceeded,
@@ -611,6 +612,7 @@ impl std::fmt::Display for TurnFault {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Host(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Guest(fault) => write!(formatter, "guest fault {}: {}", fault.code.0, fault.message),
             Self::Exhausted => formatter.write_str("guest instance has no more scripted/actual turns"),
             Self::Trapped(message) => write!(formatter, "guest trapped: {message}"),
             Self::DeadlineExceeded => formatter.write_str("epoch deadline exceeded"),
@@ -627,6 +629,30 @@ impl std::error::Error for TurnFault {
         }
     }
 }
+
+
+const GUEST_FAULT_MAXIMUM_BYTES: usize = 65_536;
+
+fn decode_guest_fault_bytes(bytes: &[u8]) -> TurnFault {
+    if bytes.len() > GUEST_FAULT_MAXIMUM_BYTES {
+        return TurnFault::Host(PluginHostError::Plugin("guest fault exceeds bounded wire capacity".into()));
+    }
+    TurnFault::Guest(crate::dsl::decode_fault_bytes(bytes))
+}
+
+fn decode_guest_plugin_error(error: wit_types::PluginError) -> TurnFault {
+    match error { wit_types::PluginError::Fault(bytes) => decode_guest_fault_bytes(&bytes) }
+}
+
+fn retryable_lifecycle_turn(fault: &TurnFault, events: &[Event]) -> bool {
+    matches!(fault, TurnFault::Guest(fault) if fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable)
+        && events.len() <= 1
+        && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)))
+}
+
+#[cfg(test)]
+#[path = "🔁️lifecycle/🧪️tests/🦀️.rs"]
+mod guest_fault_tests;
 
 impl From<PluginHostError> for TurnFault {
     fn from(error: PluginHostError) -> Self {
@@ -687,6 +713,7 @@ enum ScriptedOutcome {
         step: JobStep,
     },
     Fault(String),
+    GuestFault(semio_framework::Fault),
     /// 🛑️ terra-shard-lane piece 2: distinct from `Fault(String)` (which always becomes
     /// `TurnFault::Trapped`) — this scripts the SPECIFIC `TurnFault::DeadlineExceeded` variant a
     /// real `WasmtimeRuntime::execute_turn` raises when an epoch deadline armed from
@@ -764,6 +791,7 @@ pub struct MockGuestRuntime {
     /// `step_job` returned `Done`) needs to see the synthesized `Event::JobCompleted` really was
     /// handed to a later `execute_turn` call, which this makes assertable without a real guest.
     observed_events: Mutex<HashMap<u64, Vec<Event>>>,
+    observed_turns: Mutex<Vec<(u64, Vec<Event>, Budget)>>,
 }
 
 #[cfg(test)]
@@ -784,6 +812,7 @@ impl Default for MockGuestRuntime {
             relay_step_failure_release: Mutex::new(None),
             relay_cancel_release: Mutex::new(None),
             observed_events: Mutex::new(HashMap::new()),
+            observed_turns: Mutex::new(Vec::new()),
         }
     }
 }
@@ -814,6 +843,10 @@ impl MockGuestRuntime {
 
     pub async fn script_turn(&self, actor: RuntimeActorId, result: TurnResult) {
         self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Turn(result));
+    }
+
+    pub async fn script_guest_fault(&self, actor: RuntimeActorId, fault: semio_framework::Fault) {
+        self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::GuestFault(fault));
     }
 
     pub async fn script_job_step(&self, actor: RuntimeActorId, step: JobStep) {
@@ -922,6 +955,7 @@ impl GuestRuntime for MockGuestRuntime {
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget) -> Result<TurnResult, TurnFault> {
         // 👶️ host-dedyn: identical body to before this packet — no suspension point, so this
         // resolves on its very first poll, same contract `GuestRuntime`'s own doc comment names.
+        self.observed_turns.lock().expect("mock turn trace").push((inst.actor.0, events.to_vec(), _budget));
         self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
         let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
         let queue = scripts.entry(inst.actor.0).or_default();
@@ -930,6 +964,7 @@ impl GuestRuntime for MockGuestRuntime {
             Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
             Some(ScriptedOutcome::PendingJob { .. }) => Err(TurnFault::Trapped("scripted outcome was a pending job step, not a turn".to_string())),
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+            Some(ScriptedOutcome::GuestFault(fault)) => Err(TurnFault::Guest(fault)),
             Some(ScriptedOutcome::DeadlineExceeded) => Err(TurnFault::DeadlineExceeded),
             None => Err(TurnFault::Exhausted),
         }
@@ -964,6 +999,7 @@ impl GuestRuntime for MockGuestRuntime {
             }
             Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+            Some(ScriptedOutcome::GuestFault(fault)) => Err(TurnFault::Guest(fault)),
             Some(ScriptedOutcome::DeadlineExceeded) => Err(TurnFault::DeadlineExceeded),
             None => Err(TurnFault::Exhausted),
         }
@@ -1604,7 +1640,7 @@ fn write_owned_memory(actor: &mut OwnedSemioInstance, pointer: i32, bytes: &[u8]
 
 fn decode_owned_result<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, TurnFault> {
     let result: Result<T, Vec<u8>> = serde_json::from_slice(bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
-    result.map_err(|error| TurnFault::Trapped(String::from_utf8_lossy(&error).into_owned()))
+    result.map_err(|error| decode_guest_fault_bytes(&error))
 }
 
 fn turn_fault_host(fault: TurnFault) -> PluginHostError {
@@ -2081,7 +2117,7 @@ impl GuestRuntime for WasmtimeRuntime {
                 });
             }
         };
-        let wit_turn_result = poll_result.map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        let wit_turn_result = poll_result.map_err(decode_guest_plugin_error)?;
         // 🚪️ B1 world-collapse: everything the guest pushed through `host-async.emit` during THIS
         // turn is delivered on the same `turn-result` as the effects it returned — one merged list,
         // emitted-first (they happened earlier in the turn, by construction).

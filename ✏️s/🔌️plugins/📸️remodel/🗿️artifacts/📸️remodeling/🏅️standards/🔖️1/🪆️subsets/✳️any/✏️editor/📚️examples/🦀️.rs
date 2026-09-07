@@ -36,7 +36,21 @@ pub const REMODELING_EXAMPLES: &[RemodelingExample] = &[
         label_en: "Demo Session",
         label_de: "Demo-Sitzung",
     },
+    RemodelingExample {
+        id: crate::artifacts::remodeling::examples::synthetic_orbit::ID,
+        text: crate::artifacts::remodeling::examples::synthetic_orbit::PRIMARY_TEXT,
+        icon: crate::artifacts::remodeling::examples::synthetic_orbit::ICON,
+        label_en: "Synthetic Orbit",
+        label_de: "Synthetischer Orbit",
+    },
 ];
+
+/// 📚️ Every registered example as a `&'static [ExampleSource]` — the exact borrow
+/// `SubsetDeclaration.examples` takes, built once because `ExampleSource` owns `String`s.
+pub fn example_source_slice() -> &'static [ExampleSource] {
+    static SOURCES: std::sync::OnceLock<Vec<ExampleSource>> = std::sync::OnceLock::new();
+    SOURCES.get_or_init(example_sources).as_slice()
+}
 
 /// 🚀️ The example the editor boots on when its committed text parses — otherwise
 /// `default_remodeling_scene()` stands in, exactly the fallback shape `🧱️block`'s

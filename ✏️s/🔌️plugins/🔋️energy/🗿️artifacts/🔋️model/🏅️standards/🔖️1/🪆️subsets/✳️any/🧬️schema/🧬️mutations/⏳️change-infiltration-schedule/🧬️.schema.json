@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeInfiltrationSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newScheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newScheduleId": {
+      "type": "integer"
+    }
+  }
+}

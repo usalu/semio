@@ -13,7 +13,7 @@ mod tests {
         let store =
             semio_framework_plugin::resolve_ready(crate::artifacts::fem2d::mutations::Fem2dStore::new(store::create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)))
                 .expect("valid store");
-        assert!(semio_framework_plugin::resolve_ready(store.snapshot()).expect("snapshot").nodes.is_empty());
+        assert!(store.snapshot().expect("snapshot").nodes.is_empty());
     }
 }
 // #endregion 🧪️Tests

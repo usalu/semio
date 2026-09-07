@@ -1,7 +1,9 @@
 //#region 🧪️ReturnSourceEntries
 use super::return_source_entries::{ReturnSourceEntries, ReturnSourceEntry};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
+}
 
 fn release_entry<T>(entry: &mut Option<ReturnSourceEntry<T>>) -> Option<T> {
     let mut value = None;
@@ -56,7 +58,9 @@ fn return_source_entries_incremental_freeze_preserves_exact_fifo_and_handoff() {
     for _ in 0..expected.len() + 1 {
         let step = entries.freeze_step(1, 4096).unwrap();
         assert!(step.advanced_items <= 1 && step.copied_bytes <= 4096);
-        if step.complete { break; }
+        if step.complete {
+            break;
+        }
     }
     let mut actual = Vec::new();
     let mut entry = None;
@@ -89,8 +93,12 @@ fn return_source_entries_cancel_keeps_empty_reservation_and_both_freeze_roots() 
         entries.reserve_step(ReturnSourceEntries::<Payload>::required_allocation_bytes()).unwrap();
         let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             assert!(entries.try_push_reserved(&mut source, ReturnSourceEntries::<Payload>::required_placement_bytes()).unwrap() > 0);
-            if reverse_count == 0 { entries.reserve_step(ReturnSourceEntries::<Payload>::required_allocation_bytes()).unwrap(); }
-            for _ in 0..reverse_count { entries.freeze_step(1, 4096).unwrap(); }
+            if reverse_count == 0 {
+                entries.reserve_step(ReturnSourceEntries::<Payload>::required_allocation_bytes()).unwrap();
+            }
+            for _ in 0..reverse_count {
+                entries.freeze_step(1, 4096).unwrap();
+            }
             panic!("fixture producer failed after owned placement");
         }));
         assert!(caught.is_err());
@@ -99,7 +107,9 @@ fn return_source_entries_cancel_keeps_empty_reservation_and_both_freeze_roots() 
         let mut actual = Vec::new();
         let mut entry = None;
         while entries.take_close_entry_into(&mut entry, 4096).unwrap() {
-            if let Some((value, bytes)) = release_entry(&mut entry) { actual.push((value, bytes.as_ptr() as usize, bytes.len())); }
+            if let Some((value, bytes)) = release_entry(&mut entry) {
+                actual.push((value, bytes.as_ptr() as usize, bytes.len()));
+            }
         }
         actual.sort_unstable();
         expected.sort_unstable();

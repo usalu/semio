@@ -15,8 +15,20 @@
           "mutationDirectoryName": "🎛️update-analysis-settings",
           "scenarios": [
             {
-              "id": "doubles-the-modal-count-and-halves-the-deformation-scale",
-              "directoryName": "🔢️doubles-the-modal-count-and-halves-the-deformation-scale"
+              "id": "doubles-the-modal-3fbb1a",
+              "directoryName": "🔢️doubles-the-modal-3fbb1a"
+            },
+            {
+              "id": "keeps-the-analysis-196e4a",
+              "directoryName": "🔁️keeps-the-analysis-196e4a"
+            },
+            {
+              "id": "raises-the-mode-908c2b",
+              "directoryName": "🎚️raises-the-mode-908c2b"
+            },
+            {
+              "id": "denies-zero-modes-babc1d",
+              "directoryName": "🚫️denies-zero-modes-babc1d"
             }
           ]
         }

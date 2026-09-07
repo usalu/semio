@@ -1,12 +1,10 @@
-//! ↩️ Inverse for `CreateAsset` — an overwrite's inverse is "recreate the OLD value" (same verb);
-//! a fresh key's inverse is `delete-asset`. The OLD value is now a composed CHILD handle on
-//! `base.assets`, so reconstructing the payload's real `ImageAsset` bytes reads through
-//! `remodeling_asset`'s working-scene cache (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) —
-//! a `thread_local!`, reachable from this pure `base: &RemodelingSnapshot` function without threading any
-//! session context through the signature. **Staleness gap, documented honestly** (matches every prior
-//! exemplar): a cold cache (the old asset was never minted in THIS process — e.g. loaded fresh from a
-//! persisted document) makes this inverse honestly `Vec::new()` rather than fabricate replacement
-//! bytes, mirroring `💠️lowpoly`'s own `CreateMesh`/`DeleteMesh` inverse precedent for the identical gap.
+//! ↩️ Inverse for `CreateAsset` — an overwrite's inverse is "recreate the OLD value" (same verb, which
+//! re-mints the old durable leaf and drops the one this step minted); a fresh key's inverse is
+//! `delete-asset`, which removes the `assets` entry AND the durable leaf the forward step minted, so
+//! the pair is symmetric in both lanes. The OLD payload is reconstituted from the DOCUMENT's own
+//! durable leaf for the overwritten handle (`remodeling_asset`, `🦀️.rs:258`), so this inverse is a
+//! pure function of `base`. A document that carries the handle but not its leaf ⇒ `Vec::new()`, never
+//! fabricated bytes.
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::{remodeling_asset, RemodelingSnapshot};
 

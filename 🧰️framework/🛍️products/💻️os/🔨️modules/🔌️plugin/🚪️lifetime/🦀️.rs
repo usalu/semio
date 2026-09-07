@@ -42,7 +42,12 @@ impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
     pub fn is_retired(&self) -> Result<bool, Fault> {
         let Some(state) = self.admitted.as_ref() else { return Ok(false) };
         match RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)) {
-            RuntimeCloseStatus::Fault(cause) => return Err(runtime_cleanup_fault("close", cause, self.instance_id, state.last_callback_elapsed_us.load(Ordering::SeqCst))),
+            RuntimeCloseStatus::Fault(cause) => {
+                let fault = runtime_cleanup_fault("close", cause, self.instance_id, state.last_callback_elapsed_us.load(Ordering::SeqCst));
+                #[cfg(test)]
+                eprintln!("[DEBUG] exact native close fault={fault:?} origin={} phases={:?} detail={:?}", state.last_fault_origin.load(Ordering::SeqCst), state.callback_phase_us.iter().map(|phase| phase.load(Ordering::SeqCst)).collect::<Vec<_>>(), *state.last_fault.lock().unwrap());
+                return Err(fault);
+            },
             RuntimeCloseStatus::Complete => {},
             _ => return Ok(false),
         }

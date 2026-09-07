@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "volumeM3",
+    "multiplier",
+    "conditioned",
+    "partOfTotalFloorArea"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "volumeM3": {
+      "type": "number"
+    },
+    "multiplier": {
+      "type": "integer"
+    },
+    "conditioned": {
+      "type": "boolean"
+    },
+    "partOfTotalFloorArea": {
+      "type": "boolean"
+    }
+  }
+}

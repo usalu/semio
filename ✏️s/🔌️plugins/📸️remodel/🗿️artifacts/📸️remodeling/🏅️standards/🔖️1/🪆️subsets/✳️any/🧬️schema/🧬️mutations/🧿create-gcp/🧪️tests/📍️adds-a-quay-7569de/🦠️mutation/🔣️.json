@@ -1,0 +1,30 @@
+{
+  "mutation": "createGcp",
+  "gcp": {
+    "id": "gcp-quay-bollard",
+    "name": "Quay Bollard",
+    "worldPosition": [
+      -0.75,
+      0.875,
+      -1.0
+    ],
+    "observations": [
+      {
+        "streamId": "orbit-primary",
+        "frameIndex": 1,
+        "pixel": [
+          96.5,
+          178.25
+        ]
+      },
+      {
+        "streamId": "orbit-secondary",
+        "frameIndex": 8,
+        "pixel": [
+          214.75,
+          169.0
+        ]
+      }
+    ]
+  }
+}

@@ -11,9 +11,10 @@
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
+    "applied",
+    "warning",
     "error",
-    "info",
-    "applied"
+    "fatal"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

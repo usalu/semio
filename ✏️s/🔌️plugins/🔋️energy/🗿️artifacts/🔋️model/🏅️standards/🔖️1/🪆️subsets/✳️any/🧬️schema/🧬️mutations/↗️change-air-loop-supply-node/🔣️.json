@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply-node",
+  "semanticKind": "change-air-loop-supply-node",
+  "displayName": "Change Air Loop Supply Node",
+  "emoji": "↗️",
+  "aggregateVariant": "ChangeAirLoopSupplyNode",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-air-loop-supply-node",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

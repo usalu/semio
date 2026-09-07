@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeAirLoopSupplyNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSupplyNodeId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newSupplyNodeId": {
+      "type": "integer"
+    }
+  }
+}

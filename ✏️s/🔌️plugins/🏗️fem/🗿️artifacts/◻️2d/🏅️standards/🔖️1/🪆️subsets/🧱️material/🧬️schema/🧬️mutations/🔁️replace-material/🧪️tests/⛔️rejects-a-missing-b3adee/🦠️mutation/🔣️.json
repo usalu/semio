@@ -1,0 +1,11 @@
+{
+  "mutation": "replaceMaterial",
+  "id": "aluminium",
+  "newMaterial": {
+    "id": "aluminium",
+    "name": "EN AW-6082 T6",
+    "e": 70000000000.0,
+    "nu": 0.33,
+    "rho": 2700.0
+  }
+}

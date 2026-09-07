@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 // #region 🔖️ScheduleType
 /// 📆️ Schedule interpolation mode.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum ScheduleInterpolation {
     Continuous,
     Discrete,
@@ -83,6 +83,17 @@ pub struct ScheduleSet {
 }
 
 impl ScheduleSet {
+    /// 🔎️ Whether any of the five schedule families defines this id — the referential-integrity
+    /// question every `ScheduleId`-carrying mutation asks before it admits a payload, and the same
+    /// set [`crate::model::Model::validate`] builds for its own reference check.
+    pub fn contains(&self, id: ScheduleId) -> bool {
+        self.constants.iter().any(|schedule| schedule.id == id)
+            || self.daily.iter().any(|schedule| schedule.id == id)
+            || self.weekly.iter().any(|schedule| schedule.id == id)
+            || self.annual.iter().any(|schedule| schedule.id == id)
+            || self.time_series.iter().any(|schedule| schedule.id == id)
+    }
+
     pub fn constant_value(&self, id: ScheduleId) -> Option<f64> {
         self.constants.iter().find(|c| c.id == id).map(|c| c.value)
     }

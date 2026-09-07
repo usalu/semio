@@ -1,6 +1,6 @@
 use crate::artifacts::remodeling::RemodelingSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
-use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_os_kernel::ToValue;
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;

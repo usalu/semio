@@ -1,0 +1,9 @@
+{
+  "mutation": "createSection",
+  "section": {
+    "id": "ipe100",
+    "name": "IPE 100",
+    "area": 0.0,
+    "iy": 0.00000171
+  }
+}

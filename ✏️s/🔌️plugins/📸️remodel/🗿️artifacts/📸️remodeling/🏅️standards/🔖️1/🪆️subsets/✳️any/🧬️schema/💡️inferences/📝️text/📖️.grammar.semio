@@ -5,8 +5,10 @@ start inference
 
 # 💡️ The inference text form. `RemodelingInference` is computed from a snapshot, never authored,
 # and — like `RemodelingDiff` — carries `ToValue`/`FromValue` only (no `dsl::DslRecord`), so its
-# single text rendering is the value bridge (`store::to_dsl_value` -> `dsl::print_dsl_value`):
-# `{ key=value … }`, keys sorted. Both derived lanes are pinned below with their real inner shape
+# single text rendering is the value bridge: `store::to_dsl_value` then the framework's DslValue
+# notation — `{ key=value … }` with bare keys sorted by name. That notation is
+# `🗣️dsl/🧬️schema/🦀️.rs`'s PRIVATE `print_dsl_value`, reachable only as the payload of a printed
+# record field of `Shape::Value`; there is no standalone `DslValue -> String` entry point. Both derived lanes are pinned below with their real inner shape
 # (`RemodelingBounds` / `BTreeMap<String, RemodelingPoseDelta>`); `#[value(rename_all = "camelCase")]`
 # gives the camelCase keys.
 

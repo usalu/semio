@@ -1,0 +1,39 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": {
+    "added": [
+      {
+        "id": "uls2",
+        "name": "ULS 6.10a",
+        "terms": [
+          {
+            "caseId": "dead",
+            "factor": 1.35
+          },
+          {
+            "caseId": "snow_spare",
+            "factor": 1.5
+          }
+        ]
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

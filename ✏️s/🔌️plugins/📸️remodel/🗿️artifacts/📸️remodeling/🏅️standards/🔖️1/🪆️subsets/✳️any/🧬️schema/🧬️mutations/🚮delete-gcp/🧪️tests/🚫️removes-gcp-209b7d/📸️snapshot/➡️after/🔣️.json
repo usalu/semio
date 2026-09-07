@@ -27,8 +27,8 @@
         "codec": "avc",
         "durationMs": 6400.0,
         "frameCount": 160,
-        "width": 1920,
-        "height": 1080
+        "width": 1024,
+        "height": 768
       }
     },
     {
@@ -59,6 +59,57 @@
           "subset": "image"
         }
       }
+    },
+    "asset-dsm": {
+      "childId": "remodeling-asset-a462ec9257d3fccf",
+      "target": {
+        "artifactId": "asset-dsm-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "asset-spare": {
+      "childId": "remodeling-asset-84ec1bd76bb83a25",
+      "target": {
+        "artifactId": "asset-spare-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  },
+  "durableArtifacts": {
+    "remodeling-asset-45070beb0101de64": {
+      "kind": "image",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 480,
+      "chunks": [
+        "ZnJhbWUtYQ=="
+      ]
+    },
+    "remodeling-asset-84ec1bd76bb83a25": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 64,
+      "height": 64,
+      "chunks": [
+        "c3BhcmUtcmFzdGVy"
+      ]
+    },
+    "remodeling-asset-a462ec9257d3fccf": {
+      "kind": "image",
+      "mime": "image/tiff",
+      "width": 128,
+      "height": 128,
+      "chunks": [
+        "dG95LWRzbS10aWxl"
+      ]
     }
   },
   "calibration": {

@@ -21,6 +21,9 @@ mutation moved exactly the one member it was meant to and left the other eight u
   shapes are actually written down, including the one only they state: an `element` is a `frame`
   carrying a `roll` about its own axis OR a `bar` carrying none.
 * ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — this subset's own verbs.
+* the committed `🎯️outcome` vectors — where the REFUSALS are written down: an identity that is
+  already taken, a target that does not resolve, a `replace-` that would rename its target, a
+  `delete-` whose target still has referrers, and a value or footprint no solver could assemble.
 
 **No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half only.
 """
@@ -64,6 +67,14 @@ def tag_of(kind):
 
 
 TAGS = {kind: tag_of(kind) for kind in KINDS}
+
+REJECT_VECTORS = (
+    "same-settings-fdb832",
+    "zero-modes-a27c74",
+)
+"""🚫️ The committed vectors of this subset that claim the model does NOT move — every refusal this
+vocabulary can raise plus every declared no-op, named by the scenario id the feature's `@id-reject`
+rows carry."""
 
 RECORDS = {
     "nodes": {"id", "x", "y", "z"},
@@ -146,6 +157,129 @@ def noun_of(kind):
 # endregion 🔖️Document
 
 
+# region 🔖️Integrity
+CASCADE_EXEMPT = ("delete-node",)
+"""🕳️ The one verb whose committed vector states that it removes a node under a live element and
+leaves the element naming it. Every other `delete-` refuses while a referrer is alive; this one is
+specified permissive, so the reference is permissive with it too."""
+
+
+def every_load(document):
+    """🏋️ Every load in the model, case by case, in document order."""
+    for case in document["loadCases"]:
+        for load in case["loads"]:
+            yield load
+
+
+def referrers(document, collection, identifier):
+    """🔗️ Every record id that would be left naming nothing if `identifier` left `collection`.
+
+    Read straight off the record shapes the vectors state: an element names two nodes, a material
+    and a section; a support names a node; a solid names a material; the three load variants name a
+    node, an element and a solid respectively; a combination weights load cases by id.
+    """
+    found = []
+    if collection == "nodes":
+        found += [item["id"] for item in document["elements"] if identifier in (item["start"], item["end"])]
+        found += [item["id"] for item in document["supports"] if item["nodeId"] == identifier]
+        found += [load["id"] for load in every_load(document) if load["kind"] == "nodal" and load["nodeId"] == identifier]
+    elif collection == "elements":
+        found += [load["id"] for load in every_load(document) if load["kind"] == "memberUdl" and load["elementId"] == identifier]
+    elif collection == "sections":
+        found += [item["id"] for item in document["elements"] if item["sectionId"] == identifier]
+    elif collection == "solids":
+        found += [load["id"] for load in every_load(document) if load["kind"] == "area" and load["solidId"] == identifier]
+    elif collection == "materials":
+        found += [item["id"] for item in document["elements"] if item["materialId"] == identifier]
+        found += [item["id"] for item in document["solids"] if item["materialId"] == identifier]
+    elif collection == "loadCases":
+        found += [item["id"] for item in document["combinations"] if identifier in item["terms"]]
+    return found
+
+
+def resolves(document, collection, identifier, kind):
+    """🔎️ A foreign key the model must already carry — the same demand every verb makes of the same
+    reference, whichever verb carries it."""
+    if find(document[collection], identifier) is None:
+        raise AssertionError("%s: %r is not in %s" % (kind, identifier, collection))
+
+
+def resolve_element(document, element, kind):
+    """🔩️ An element's four foreign keys, in the order the vectors report them."""
+    resolves(document, "nodes", element["start"], kind)
+    resolves(document, "nodes", element["end"], kind)
+    resolves(document, "materials", element["materialId"], kind)
+    resolves(document, "sections", element["sectionId"], kind)
+
+
+def resolve_load(document, load, kind):
+    """🎯️ The one thing a load hangs on, per variant."""
+    if load["kind"] == "nodal":
+        resolves(document, "nodes", load["nodeId"], kind)
+    elif load["kind"] == "memberUdl":
+        resolves(document, "elements", load["elementId"], kind)
+    else:
+        resolves(document, "solids", load["solidId"], kind)
+
+
+def finite(*values):
+    """🔢️ JSON cannot spell a non-finite literal, so this only ever fires on a computed value — it is
+    stated because the rule is about the model, not about the carrier."""
+    return all(isinstance(value, (int, float)) and value == value and abs(value) != float("inf") for value in values)
+
+
+def ring_area(ring):
+    """📏️ Twice the shoelace sum, halved — the signed area of a closed ring."""
+    return sum(ring[at][0] * ring[(at + 1) % len(ring)][1] - ring[(at + 1) % len(ring)][0] * ring[at][1] for at in range(len(ring))) / 2.0
+
+
+def encloses(ring, point):
+    """🎯️ Crossing-count containment; a point exactly on an edge is undefined and never authored."""
+    inside = False
+    for at, corner in enumerate(ring):
+        other = ring[(at + 1) % len(ring)]
+        if (corner[1] > point[1]) != (other[1] > point[1]) and point[0] < corner[0] + (point[1] - corner[1]) / (other[1] - corner[1]) * (other[0] - corner[0]):
+            inside = not inside
+    return inside
+
+
+def admissible(collection, record, kind):
+    """🧨️ The values a record must carry to describe something a solver could assemble at all — a
+    positive stiffness, a Poisson ratio strictly inside (-1, 0.5), a footprint with area, a positive
+    extrusion through at least one layer, and holes that stay inside their outline."""
+    if collection == "nodes":
+        if not finite(record["x"], record["y"], record["z"]):
+            raise AssertionError("%s: node %r must sit at a finite position" % (kind, record["id"]))
+    elif collection == "materials":
+        if not finite(record["e"], record["g"], record["nu"], record["rho"]) or min(record["e"], record["g"], record["rho"]) <= 0.0:
+            raise AssertionError("%s: material %r must carry a positive finite e, g and rho" % (kind, record["id"]))
+        if not -1.0 < record["nu"] < 0.5:
+            raise AssertionError("%s: material %r must carry a Poisson ratio in (-1, 0.5), not %r" % (kind, record["id"], record["nu"]))
+    elif collection == "sections":
+        if not finite(record["area"], record["iy"], record["iz"], record["j"]) or min(record["area"], record["iy"], record["iz"], record["j"]) <= 0.0:
+            raise AssertionError("%s: section %r must carry a positive finite area, iy, iz and j" % (kind, record["id"]))
+    elif collection == "solids":
+        if len(record["outline"]) < 3 or not all(finite(point[0], point[1]) for point in record["outline"]) or ring_area(record["outline"]) == 0.0:
+            raise AssertionError("%s: solid %r needs a closed outline of at least three points and non-zero area" % (kind, record["id"]))
+        if not finite(record["baseZ"], record["height"], record["meshSize"]) or record["height"] <= 0.0 or record["meshSize"] <= 0.0 or record["layers"] < 1:
+            raise AssertionError("%s: solid %r needs a positive height, mesh size and layer count" % (kind, record["id"]))
+        for hole in record["holes"]:
+            if len(hole) < 3 or ring_area(hole) == 0.0 or not all(finite(point[0], point[1]) and encloses(record["outline"], point) for point in hole):
+                raise AssertionError("%s: solid %r carries a hole that is degenerate or leaves its outline" % (kind, record["id"]))
+
+
+def bounded(settings, kind):
+    """⚙️ An eigen solve for fewer than one mode returns nothing, and a non-positive display scale
+    collapses or mirrors the results view."""
+    if settings["modalCount"] < 1 or settings["bucklingCount"] < 1:
+        raise AssertionError("%s: at least one modal and one buckling factor are needed, not %r and %r" % (kind, settings["modalCount"], settings["bucklingCount"]))
+    if not finite(settings["deformationScale"]) or settings["deformationScale"] <= 0.0:
+        raise AssertionError("%s: the deformation scale must be finite and positive, not %r" % (kind, settings["deformationScale"]))
+
+
+# endregion 🔖️Integrity
+
+
 # region 🔖️Mutations
 def kind_of(mutation):
     """🏷️ The kind an internally tagged mutation payload names."""
@@ -166,17 +300,25 @@ def case_of(document, identifier, kind):
 
 
 def apply_mutation(document, mutation):
-    """🧬️ Applies one typed mutation, returning the resulting model."""
+    """🧬️ Applies one typed mutation, returning the resulting model — or raising when the request is
+    one the vocabulary refuses.
+
+    Two verbs are IDEMPOTENT rather than refusing, and their committed vectors say so by declaring a
+    no-op warning under an `applied` status: `add-load` with a load id the case already carries, and
+    every `replace-`/`change-`/`update-` whose new value is the value already there. Both leave the
+    model exactly as it was, which is what a caller asked for either way.
+    """
     kind = kind_of(mutation)
     result = copy.deepcopy(document)
     if kind == "update-analysis-settings":
+        bounded(mutation["settings"], kind)
         result["analysis"] = copy.deepcopy(mutation["settings"])
     elif kind == "add-load":
         case = case_of(result, mutation["caseId"], kind)
         load = copy.deepcopy(mutation["load"])
-        if find(case["loads"], load["id"]) is not None:
-            raise AssertionError("%s: case %r already carries a load %r" % (kind, case["id"], load["id"]))
-        case["loads"].append(load)
+        if find(case["loads"], load["id"]) is None:
+            resolve_load(result, load, kind)
+            case["loads"].append(load)
     elif kind == "remove-load":
         case = case_of(result, mutation["caseId"], kind)
         at = find(case["loads"], mutation["loadId"])
@@ -193,19 +335,47 @@ def apply_mutation(document, mutation):
             record = copy.deepcopy(mutation[create_argument])
             if find(items, record["id"]) is not None:
                 raise AssertionError("%s: %r is already in %s" % (kind, record["id"], collection))
+            carried(result, collection, record, kind)
             items.append(record)
         elif kind.startswith("delete-"):
             at = find(items, mutation["id"])
             if at is None:
                 raise AssertionError("%s: %r is not in %s" % (kind, mutation["id"], collection))
+            blockers = [] if kind in CASCADE_EXEMPT else referrers(result, collection, mutation["id"])
+            if blockers:
+                raise AssertionError("%s: %r in %s is still referenced by %r" % (kind, mutation["id"], collection, blockers))
             items.pop(at)
         else:
             at = find(items, mutation["id"])
             if at is None:
                 raise AssertionError("%s: %r is not in %s" % (kind, mutation["id"], collection))
-            items[at] = copy.deepcopy(mutation[replace_argument])
+            record = copy.deepcopy(mutation[replace_argument])
+            if record["id"] != mutation["id"]:
+                raise AssertionError("%s: a replace selects %r and may not rename it to %r" % (kind, mutation["id"], record["id"]))
+            if items[at] != record:
+                carried(result, collection, record, kind)
+            items[at] = record
     validate(result)
     return result
+
+
+
+def carried(document, collection, record, kind):
+    """🚚️ Everything a record brings with it — the foreign keys it names and the values it must be
+    admissible under — demanded identically of the `create-` and the `replace-` of one noun."""
+    if collection == "elements":
+        resolve_element(document, record, kind)
+    elif collection == "supports":
+        resolves(document, "nodes", record["nodeId"], kind)
+    elif collection == "solids":
+        resolves(document, "materials", record["materialId"], kind)
+    elif collection == "loadCases":
+        for load in record["loads"]:
+            resolve_load(document, load, kind)
+    elif collection == "combinations":
+        for case_id in sorted(record["terms"]):
+            resolves(document, "loadCases", case_id, kind)
+    admissible(collection, record, kind)
 
 
 def inverse_mutation(document, mutation):
@@ -245,11 +415,15 @@ def inverse_mutation(document, mutation):
 
 
 # region 🔖️Laws
-def observable(scenario, before, after):
-    """👁️ Every row below moves the model, so a forward application must move it. A mutation that
-    quietly did nothing would otherwise agree with an unchanged model and report a pass."""
-    if before == after:
+def observable(scenario, before, after, moves=True):
+    """👁️ A forward row moves the model, so a forward application must move it — a mutation that
+    quietly did nothing would otherwise agree with an unchanged model and report a pass. The law is
+    two-sided: pass `moves=False` for a row whose whole claim is that NOTHING happens (a refusal or
+    a declared no-op), where a model that moved is the failure."""
+    if moves and before == after:
         raise AssertionError("%s: the forward mutation left the model untouched, so nothing was proved" % scenario)
+    if not moves and before != after:
+        raise AssertionError("%s: the vector claims nothing happens, but the model moved" % scenario)
 
 
 def touches_one(scenario, kind, before, after):
@@ -384,6 +558,33 @@ def spec_vector_handler(kind):
     return handler
 
 
+
+def reject_handler():
+    """🚫️ Replays a committed vector whose whole claim is that the model does NOT move — either the
+    request is refused outright, or it is a declared no-op. Both implementations project the same
+    two facts: whether the request was refused, and the model it left behind.
+
+    The refusal REASON is deliberately not projected. Each implementation words it in its own
+    language; what the differential can hold them to is the verdict and the document.
+    """
+
+    def handler(ctx):
+        before = document_of(json_fixture(ctx, "⬅️before"))
+        after = document_of(json_fixture(ctx, "➡️after"))
+        mutation = json_fixture(ctx, "🦠️mutation")
+        kind = kind_of(mutation)
+        if kind not in KINDS:
+            raise AssertionError("reject: %s is not one of this subset's kinds" % kind)
+        equals_committed(kind, before, after)
+        try:
+            applied = apply_mutation(before, mutation)
+        except AssertionError:
+            return outcome_of({"refused": True, "model": before})
+        observable("reject-%s" % kind, before, applied, moves=False)
+        return outcome_of({"refused": False, "model": applied})
+
+    return handler
+
 # endregion 🔖️Handlers
 
 
@@ -397,6 +598,9 @@ def adapter():
         built = built.oracle("mutate-%s" % kind, mutate_handler(kind))
         built = built.oracle("inverse-%s" % kind, inverse_handler(kind))
         built = built.oracle("spec-vector-%s" % kind, spec_vector_handler(kind))
+        built = built.oracle("hall-vector-%s" % kind, spec_vector_handler(kind))
+    for identifier in REJECT_VECTORS:
+        built = built.oracle("reject-%s" % identifier, reject_handler())
     return built
 
 

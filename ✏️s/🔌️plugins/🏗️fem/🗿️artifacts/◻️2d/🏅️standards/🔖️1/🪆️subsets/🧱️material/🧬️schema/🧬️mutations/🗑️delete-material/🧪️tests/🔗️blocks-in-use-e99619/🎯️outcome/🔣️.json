@@ -1,0 +1,14 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-referenced",
+  "path": [
+    "steel_s355",
+    "c1",
+    "c2",
+    "c3",
+    "c4",
+    "b1",
+    "b2",
+    "br1"
+  ]
+}

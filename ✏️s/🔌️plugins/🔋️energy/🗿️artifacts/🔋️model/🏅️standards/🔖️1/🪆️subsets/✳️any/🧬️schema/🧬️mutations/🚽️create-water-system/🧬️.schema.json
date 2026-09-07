@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateWaterSystem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "id",
+    "fixtureCount",
+    "peakFlowLS",
+    "scheduleId"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "id": {
+      "type": "integer"
+    },
+    "fixtureCount": {
+      "type": "integer"
+    },
+    "peakFlowLS": {
+      "type": "number"
+    },
+    "scheduleId": {
+      "type": "integer"
+    }
+  }
+}

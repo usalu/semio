@@ -250,6 +250,7 @@ void rustHostPromise.then((host) => {
 //#region 🔖️Constants
 /** 🛰️ Must match `framework/os/core/js/index.ts`'s `BACKBONE_ENDPOINT_PATH`. */
 const FOLDER_ENDPOINT_PATH = "/semio-backbone";
+const CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH = `${FOLDER_ENDPOINT_PATH}/canonical-bootstrap`;
 /** 🛟️ Sanity-fallback poll cadence (finding 1): SSE is the primary wake signal now, so this only
  * ever fires while {@link ArtifactState.sseHealthy} is `false` — a slow, jittered self-heal for
  * "the SSE stream looks fine but nothing has arrived in a while", not the primary path. Jittered
@@ -368,6 +369,7 @@ type ArtifactState = {
   artifactBootstrapOwner: DocumentArtifactBootstrapOwner | null;
   artifactBootstrapDeadlineMs: number | null;
   artifactBootstrapProgress: ArtifactBootstrapProgress[];
+  canonicalFolderMirror: FolderCanonicalBootstrapMirrorOwner | null;
   currentPack: Uint8Array | null;
   currentSpr: Uint8Array | null;
   hubFrameChain: Promise<void>;
@@ -987,6 +989,9 @@ async function installDocumentExecutionTargetLease(state: ArtifactState, binding
 }
 
 function dropDocumentExecutionTargetLease(state: ArtifactState): void {
+  const mirror = state.canonicalFolderMirror;
+  state.canonicalFolderMirror = null;
+  if (mirror) void retireFolderCanonicalBootstrapMirror(mirror);
   state.browserActorReservation?.close();
   state.executionTargetLease?.drop();
   state.executionTargetLease = null;
@@ -1541,6 +1546,89 @@ function folderEnvelopeUrl(binding: Extract<PersistenceBinding, { kind: "folder"
   return `${FOLDER_ENDPOINT_PATH}?uri=${encodeURIComponent(`folder://${binding.path}`)}&documentId=${encodeURIComponent(documentId)}`;
 }
 
+type FolderCanonicalBootstrapMirrorOwner = Readonly<{
+  binding: Extract<PersistenceBinding, { kind: "folder" }>;
+  documentId: string;
+  epoch: number;
+  capability: string;
+}>;
+
+function folderCanonicalBootstrapMirrorUrl(owner: Pick<FolderCanonicalBootstrapMirrorOwner, "binding" | "documentId">, action: "reserve" | "stage" | "publish" | "retire"): string {
+  return `${CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH}/${action}?uri=${encodeURIComponent(`folder://${owner.binding.path}`)}&documentId=${encodeURIComponent(owner.documentId)}`;
+}
+
+function folderCanonicalBootstrapMirrorHeaders(owner: FolderCanonicalBootstrapMirrorOwner): Record<string, string> {
+  return { authorization: `SemioFolderBootstrap ${owner.capability}`, "x-semio-canonical-bootstrap-epoch": String(owner.epoch) };
+}
+
+async function reserveFolderCanonicalBootstrapMirror(
+  state: ArtifactState,
+  binding: Extract<PersistenceBinding, { kind: "folder" }>,
+  bootstrap: WireArtifactBootstrap,
+): Promise<FolderCanonicalBootstrapMirrorOwner> {
+  const identity = { binding, documentId: state.config.documentId };
+  const source = JSON.stringify({
+    schema: "semio.backbone.canonical-bootstrap-folder-mirror-reserve/v1",
+    artifactSchema: bootstrap.artifact_schema,
+    descriptorDigestV1: executionTargetHex(new Uint8Array(bootstrap.descriptor_hash)),
+    aggregateSha256: executionTargetHex(new Uint8Array(bootstrap.aggregate_hash)),
+    baselineFrontier: {
+      documentId: bootstrap.baseline_frontier.document_id,
+      headEditOrdinal: bootstrap.baseline_frontier.head_edit_ordinal,
+      headEditId: bootstrap.baseline_frontier.head_edit_id,
+      lastCommitSeq: bootstrap.baseline_frontier.last_commit_seq,
+      chainSha256: executionTargetHex(new Uint8Array(bootstrap.baseline_frontier.chain_hash)),
+    },
+  });
+  const response = await fetchWithTimeout(
+    folderCanonicalBootstrapMirrorUrl(identity, "reserve"),
+    { method: "POST", headers: { "content-type": "application/json" }, body: source },
+    { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal },
+  );
+  const receipt = response.ok ? ((await response.json()) as Record<string, unknown>) : null;
+  if (
+    !response.ok ||
+    receipt?.schema !== "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1" ||
+    typeof receipt.epoch !== "number" ||
+    !Number.isSafeInteger(receipt.epoch) ||
+    Number(receipt.epoch) < 1 ||
+    typeof receipt.capability !== "string" ||
+    !/^[0-9a-f]{64}$/u.test(receipt.capability)
+  )
+    throw new Error(`folder canonical bootstrap reserve failed (${response.status})`);
+  return { ...identity, epoch: Number(receipt.epoch), capability: receipt.capability };
+}
+
+async function stageFolderCanonicalBootstrapMirror(state: ArtifactState, owner: FolderCanonicalBootstrapMirrorOwner, pack: Uint8Array, spr: Uint8Array): Promise<void> {
+  const response = await fetchWithTimeout(
+    folderCanonicalBootstrapMirrorUrl(owner, "stage"),
+    { method: "PUT", headers: { ...folderCanonicalBootstrapMirrorHeaders(owner), "content-type": "application/octet-stream" }, body: encodeDocumentPackBytes(pack, spr) },
+    { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal },
+  );
+  if (!response.ok) throw new Error(`folder canonical bootstrap stage failed (${response.status})`);
+}
+
+async function publishFolderCanonicalBootstrapMirror(state: ArtifactState, owner: FolderCanonicalBootstrapMirrorOwner): Promise<void> {
+  const response = await fetchWithTimeout(folderCanonicalBootstrapMirrorUrl(owner, "publish"), { method: "POST", headers: folderCanonicalBootstrapMirrorHeaders(owner) }, { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal });
+  if (!response.ok) throw new Error(`folder canonical bootstrap publish failed (${response.status})`);
+}
+
+async function retireFolderCanonicalBootstrapMirror(owner: FolderCanonicalBootstrapMirrorOwner): Promise<boolean> {
+  try {
+    const response = await fetchWithTimeout(folderCanonicalBootstrapMirrorUrl(owner, "retire"), { method: "POST", headers: folderCanonicalBootstrapMirrorHeaders(owner) }, { timeoutMs: FOLDER_FETCH_TIMEOUT_MS });
+    return response.ok || response.status === 409;
+  } catch {
+    return false;
+  }
+}
+
+async function retireCurrentFolderCanonicalBootstrapMirror(state: ArtifactState): Promise<void> {
+  const owner = state.canonicalFolderMirror;
+  if (!owner) return;
+  if (!(await retireFolderCanonicalBootstrapMirror(owner))) throw new Error("folder canonical bootstrap retirement failed");
+  if (state.canonicalFolderMirror === owner) state.canonicalFolderMirror = null;
+}
+
 /** 📥️ One folder read — always routed through {@link ArtifactState.revalidateFolder}'s
  * `latestWins` wrapper by every caller (SSE wake, sanity-poll tick, `externalChanged`), never
  * called directly, so it can never overlap itself (finding 1). Aborts with the document
@@ -1646,6 +1734,7 @@ function watchFolder(state: ArtifactState, binding: Extract<PersistenceBinding, 
 }
 
 async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>, pack: readonly number[], spr: readonly number[]): Promise<void> {
+  await retireCurrentFolderCanonicalBootstrapMirror(state);
   const bundle = encodeDocumentPackBytes(new Uint8Array(pack), new Uint8Array(spr));
   const response = await fetchWithTimeout(
     folderEnvelopeUrl(binding, state.config.documentId),
@@ -1920,7 +2009,7 @@ function emitBootstrapProgress(state: ArtifactState, progress: ArtifactBootstrap
   });
 }
 
-type DocumentArtifactBootstrapOwner = { assembler: ArtifactBootstrapAssembler | null; readonly socket: WebSocket | null; assertCurrent(): void };
+type DocumentArtifactBootstrapOwner = { assembler: ArtifactBootstrapAssembler | null; folderMirror: FolderCanonicalBootstrapMirrorOwner | null; readonly socket: WebSocket | null; assertCurrent(): void };
 
 /** 🧷️ Retains the document and transport selection that admitted one canonical pair transfer. */
 function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBootstrapOwner {
@@ -1941,6 +2030,7 @@ function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBo
     folder = folderBinding(config)?.path;
   const owner: DocumentArtifactBootstrapOwner = {
     assembler: null,
+    folderMirror: null,
     socket,
     assertCurrent() {
       const current = hubBinding(state.config);
@@ -1994,12 +2084,14 @@ function bootstrapControl(state: ArtifactState, owner = state.artifactBootstrapO
 }
 
 function abortArtifactBootstrap(state: ArtifactState): void {
+  const owner = state.artifactBootstrapOwner;
   state.artifactBootstrap?.abort();
   state.artifactBootstrap = null;
   state.artifactBootstrapOwner = null;
   state.artifactBootstrapDeadlineMs = null;
   state.pendingResumeToken = null;
   state.requiredTailFrontier = null;
+  if (owner?.folderMirror && state.canonicalFolderMirror !== owner.folderMirror) void retireFolderCanonicalBootstrapMirror(owner.folderMirror);
 }
 
 function boundedBootstrapDiagnostic(error: unknown): string {
@@ -2044,7 +2136,8 @@ function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = s
   socket?.close();
 }
 
-function requireArtifactRebootstrap(state: ArtifactState): void {
+async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
+  await retireCurrentFolderCanonicalBootstrapMirror(state);
   abortArtifactBootstrap(state);
   state.currentPack = null;
   state.currentSpr = null;
@@ -2112,8 +2205,19 @@ async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArt
     owner.assertCurrent();
     const folder = folderBinding(state.config);
     if (folder) {
-      await writeFolder(state, folder, Array.from(pair.pack), Array.from(pair.spr));
-      owner.assertCurrent();
+      const mirror = owner.folderMirror;
+      if (!mirror) throw new Error("folder canonical bootstrap reservation missing");
+      try {
+        await stageFolderCanonicalBootstrapMirror(state, mirror, pair.pack, pair.spr);
+        owner.assertCurrent();
+        await publishFolderCanonicalBootstrapMirror(state, mirror);
+        owner.assertCurrent();
+        state.canonicalFolderMirror = mirror;
+      } catch (error) {
+        await retireFolderCanonicalBootstrapMirror(mirror);
+        if (owner.folderMirror === mirror) owner.folderMirror = null;
+        throw error;
+      }
     }
     state.currentPack = Uint8Array.from(pair.pack);
     state.currentSpr = Uint8Array.from(pair.spr);
@@ -2148,6 +2252,11 @@ async function startArtifactBootstrap(state: ArtifactState, bootstrap: WireArtif
     owner.assertCurrent();
     owner.assembler = assembler;
     state.artifactBootstrap = assembler;
+    const folder = folderBinding(state.config);
+    if (folder) {
+      owner.folderMirror = await reserveFolderCanonicalBootstrapMirror(state, folder, bootstrap);
+      owner.assertCurrent();
+    }
     if (bootstrap.inline !== null) await installArtifactBootstrap(state, owner, null);
   } catch (error) {
     assembler?.abort();
@@ -2162,6 +2271,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame, presence
     requeuePendingBatches(state);
     const bootstrap = frame.Welcome.bootstrap;
     if (bootstrap === "None") {
+      await retireCurrentFolderCanonicalBootstrapMirror(state);
       abortArtifactBootstrap(state);
       state.resumeToken = frame.Welcome.resume_token;
       state.frontier = frame.Welcome.server_frontier;
@@ -2170,6 +2280,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame, presence
       return;
     }
     if (bootstrap === "Tail") {
+      await retireCurrentFolderCanonicalBootstrapMirror(state);
       abortArtifactBootstrap(state);
       state.pendingResumeToken = frame.Welcome.resume_token;
       state.requiredTailFrontier = frame.Welcome.server_frontier;
@@ -2197,7 +2308,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame, presence
     if (!binding || control.space_id !== binding.spaceId || control.document_id !== state.config.documentId || control.baseline_frontier.document_id !== state.config.documentId) {
       rejectArtifactBootstrap(state, new Error("rebootstrap control scope mismatch"));
     } else {
-      requireArtifactRebootstrap(state);
+      await requireArtifactRebootstrap(state);
     }
     return;
   }
@@ -3455,6 +3566,7 @@ function openArtifact(config: ArtifactActorConfig): void {
     artifactBootstrapOwner: null,
     artifactBootstrapDeadlineMs: null,
     artifactBootstrapProgress: [],
+    canonicalFolderMirror: null,
     currentPack: null,
     currentSpr: null,
     hubFrameChain: Promise.resolve(),
@@ -4211,7 +4323,10 @@ if (import.meta.vitest) {
       state.frontier = priorFrontier;
       const originalFetch = globalThis.fetch;
       let puts = 0;
-      globalThis.fetch = (async (_input: string | URL | Request, init?: RequestInit) => {
+      globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+        if (String(input).includes("/reserve")) {
+          return { ok: true, status: 201, headers: { get: () => "application/json" }, json: async () => ({ schema: "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1", epoch: 1, capability: "a".repeat(64) }), text: async () => "" } as unknown as Response;
+        }
         if (init?.method === "PUT") puts += 1;
         return { ok: false, status: 500, statusText: "fixture failure", headers: { get: () => null }, json: async () => ({}), text: async () => "" } as unknown as Response;
       }) as typeof fetch;
@@ -4225,6 +4340,57 @@ if (import.meta.vitest) {
       } finally {
         globalThis.fetch = originalFetch;
         closeArtifact(state.config.documentId);
+      }
+    });
+
+    it("retires the exact durable folder epoch when the client owner becomes stale during stage or after publish", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const corpus = JSON.parse(await readFile(new URL("./🔨️modules/🧑‍💻dev/🧫️fixtures/📇️folder/📣️canonical-bootstrap-folder-mirror-v1/🔣️.json", import.meta.url), "utf8"));
+      expect(corpus.hostile.filter((row: { name: string }) => row.name.startsWith("client-stale-")).map((row: { name: string }) => row.name)).toEqual(["client-stale-stage", "client-stale-publish"]);
+      const fixture = await artifactBootstrapFixture();
+      const frame = decodeFixtureFrame(fixture.wire.inlineWelcomeHex);
+      const originalFetch = globalThis.fetch;
+      try {
+        for (const phase of ["stage", "publish"] as const) {
+          const config = fixtureConfig(fixture);
+          openArtifact(config);
+          const state = artifactState(config.documentId)!;
+          state.config = { ...state.config, bindings: [{ kind: "folder", path: `/tmp/bootstrap-stale-${phase}` }] };
+          state.currentPack = Uint8Array.of(1);
+          state.currentSpr = Uint8Array.of(2);
+          let publishes = 0,
+            retires = 0;
+          globalThis.fetch = (async (input: string | URL | Request) => {
+            const url = String(input);
+            if (url.includes("/reserve")) return { ok: true, status: 201, json: async () => ({ schema: "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1", epoch: 7, capability: "b".repeat(64) }) } as unknown as Response;
+            if (url.includes("/stage")) {
+              if (phase === "stage") state.openClientInstanceId = "stale-after-stage";
+              return { ok: true, status: 204 } as unknown as Response;
+            }
+            if (url.includes("/publish")) {
+              publishes += 1;
+              if (phase === "publish") state.openClientInstanceId = "stale-after-publish";
+              return { ok: true, status: 204 } as unknown as Response;
+            }
+            if (url.includes("/retire")) {
+              retires += 1;
+              return { ok: true, status: 204 } as unknown as Response;
+            }
+            throw new Error(`unexpected folder mirror request ${url}`);
+          }) as typeof fetch;
+          try {
+            await handleHubFrame(state, structuredClone(frame));
+            expect(retires, phase).toBe(1);
+            expect(publishes, phase).toBe(phase === "publish" ? 1 : 0);
+            expect(state.currentPack).toEqual(Uint8Array.of(1));
+            expect(state.currentSpr).toEqual(Uint8Array.of(2));
+            expect(state.canonicalFolderMirror).toBeNull();
+          } finally {
+            closeArtifactRuntime(state.runtimeKey);
+          }
+        }
+      } finally {
+        globalThis.fetch = originalFetch;
       }
     });
   });

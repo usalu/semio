@@ -1,4 +1,6 @@
-//! ↩️ Inverse for `DeleteGcp` — recreates the captured BASE record. Missing target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `DeleteGcp` — recreates the captured BASE record, observations included (the GCP
+//! OWNS them, so they travel inside the record), at its canonical `id` position.
+//! Missing target ⇒ `Vec::new()`.
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::RemodelingSnapshot;
 

@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "code": "mutation.referenced",
+  "path": [
+    "gcp-north-pier",
+    "gcp-roof-vent",
+    "gcp-south-pier"
+  ]
+}

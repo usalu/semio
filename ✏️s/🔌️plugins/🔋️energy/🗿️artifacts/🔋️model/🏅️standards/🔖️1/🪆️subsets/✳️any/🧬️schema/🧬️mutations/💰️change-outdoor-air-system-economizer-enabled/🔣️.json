@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system-economizer-enabled",
+  "semanticKind": "change-outdoor-air-system-economizer-enabled",
+  "displayName": "Change Outdoor Air System Economizer Enabled",
+  "emoji": "💰️",
+  "aggregateVariant": "ChangeOutdoorAirSystemEconomizerEnabled",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-outdoor-air-system-economizer-enabled",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

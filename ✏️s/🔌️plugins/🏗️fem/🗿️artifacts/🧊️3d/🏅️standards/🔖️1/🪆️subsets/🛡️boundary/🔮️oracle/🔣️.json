@@ -15,8 +15,16 @@
           "mutationDirectoryName": "🛡️create-support",
           "scenarios": [
             {
-              "id": "clamps-the-column-base-in-all-six-dofs",
-              "directoryName": "🔒️clamps-the-column-base-in-all-six-dofs"
+              "id": "dangling-node-af37e2",
+              "directoryName": "🚨️dangling-node-af37e2"
+            },
+            {
+              "id": "hall-new-pin-c033f2",
+              "directoryName": "🏗️hall-new-pin-c033f2"
+            },
+            {
+              "id": "clamps-the-column-f801c9",
+              "directoryName": "🔒️clamps-the-column-f801c9"
             }
           ]
         },
@@ -26,8 +34,16 @@
           "mutationDirectoryName": "🗑️delete-support",
           "scenarios": [
             {
-              "id": "releases-the-pinned-node-n2",
-              "directoryName": "🔓️releases-the-pinned-node-n2"
+              "id": "no-such-support-edd22a",
+              "directoryName": "🚨️no-such-support-edd22a"
+            },
+            {
+              "id": "hall-cut-pin-66d795",
+              "directoryName": "🏗️hall-cut-pin-66d795"
+            },
+            {
+              "id": "releases-the-b3ebb0",
+              "directoryName": "🔓️releases-the-b3ebb0"
             }
           ]
         },
@@ -37,8 +53,24 @@
           "mutationDirectoryName": "🔁️replace-support",
           "scenarios": [
             {
-              "id": "frees-the-three-rotations-at-the-column-base",
-              "directoryName": "🔄️frees-the-three-rotations-at-the-column-base"
+              "id": "dangling-node-d44469",
+              "directoryName": "🚨️dangling-node-d44469"
+            },
+            {
+              "id": "renames-pin-29f41a",
+              "directoryName": "🪪️renames-pin-29f41a"
+            },
+            {
+              "id": "same-support-bff8b3",
+              "directoryName": "⏸️same-support-bff8b3"
+            },
+            {
+              "id": "hall-fixes-base-b5aa1b",
+              "directoryName": "🏗️hall-fixes-base-b5aa1b"
+            },
+            {
+              "id": "frees-the-three-7783c9",
+              "directoryName": "🔄️frees-the-three-7783c9"
             }
           ]
         }

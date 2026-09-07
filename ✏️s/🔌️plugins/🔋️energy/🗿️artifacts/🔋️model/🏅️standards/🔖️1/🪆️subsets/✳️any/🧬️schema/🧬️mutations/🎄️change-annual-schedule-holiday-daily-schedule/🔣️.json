@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule-holiday-daily-schedule",
+  "semanticKind": "change-annual-schedule-holiday-daily-schedule",
+  "displayName": "Change Annual Schedule Holiday Daily Schedule",
+  "emoji": "🎄️",
+  "aggregateVariant": "ChangeAnnualScheduleHolidayDailySchedule",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-annual-schedule-holiday-daily-schedule",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

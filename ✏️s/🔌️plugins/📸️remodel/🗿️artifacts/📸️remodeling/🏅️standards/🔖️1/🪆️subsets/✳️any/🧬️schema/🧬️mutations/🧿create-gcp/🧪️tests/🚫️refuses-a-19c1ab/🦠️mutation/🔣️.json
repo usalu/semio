@@ -1,0 +1,38 @@
+{
+  "mutation": "createGcp",
+  "gcp": {
+    "id": "gcp-north-pier",
+    "name": "North Pier",
+    "worldPosition": [
+      1.0,
+      0.5,
+      -0.25
+    ],
+    "observations": [
+      {
+        "streamId": "orbit-primary",
+        "frameIndex": 0,
+        "pixel": [
+          184.5,
+          96.25
+        ]
+      },
+      {
+        "streamId": "orbit-primary",
+        "frameIndex": 4,
+        "pixel": [
+          140.75,
+          101.5
+        ]
+      },
+      {
+        "streamId": "orbit-secondary",
+        "frameIndex": 4,
+        "pixel": [
+          151.0,
+          104.75
+        ]
+      }
+    ]
+  }
+}

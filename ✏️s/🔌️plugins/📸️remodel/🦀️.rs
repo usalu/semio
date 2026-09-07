@@ -15,21 +15,22 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 }
 //#endregion 🗃️Apps
 
-/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
-/// escape hatch; `.setup()` itself is gone (W1c) — `RemodelingPlayApp::app_schema()` now answers the
-/// one thing it used to survive for, registered automatically below. Ticket
-/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the former single `.document_app(...)` call
-/// split into an independent `.editor()` + `.viewer()` pair, one surface per role.
+/// 🔌️ Builds the plugin surface for host registration. `.declare_artifact(…)` (ticket
+/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §2) replaces `.artifact(declaration())`
+/// + `.editor::<>()` + `.viewer::<>()` outright — a second parallel registration channel is the
+/// compatibility layer this ticket forbids, so the old calls are gone rather than kept alongside.
+/// That cutover is also what finally reaches ShellHost's example picker: `manifest.apps[].examples`
+/// is fed from `SubsetDeclaration.examples`, a field the bare `AppDefinition` the old `.editor::<>()`
+/// took never had. `.editor_mutation_roster()`/`.viewer_mutation_roster()` stay — an orthogonal
+/// `contributor.list-artifact-mutations` opt-in the declaration tree's `SurfaceDeclaration.mutation_roster`
+/// does not yet wire live, not a second registration of the artifact/schema/io itself.
 pub fn plugin() -> Result<Plugin<RemodelApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<RemodelApps>::builder("remodel")
         .label("Remodel")
         .version("0.1.0")
         .package_id("semio:remodel")
-        .artifact(crate::artifacts::remodeling::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::remodeling::RemodelingPlayApp>(crate::editor::remodeling::create_remodeling_app())
+        .declare_artifact(crate::artifacts::remodeling::artifact())
         .editor_mutation_roster::<crate::editor::remodeling::RemodelingPlayApp>()
-        .viewer::<crate::viewer::remodeling::RemodelingViewer>(crate::viewer::remodeling::create_remodeling_viewer())
         .viewer_mutation_roster::<crate::viewer::remodeling::RemodelingViewer>()
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
         // `.requests(…)` (`📓️design-abi.md` §3/§6). See `📓️terra-M5-report.md` for why

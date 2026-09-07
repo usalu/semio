@@ -1,0 +1,11 @@
+{
+  "mutation": "addLoad",
+  "caseId": "wind",
+  "load": {
+    "kind": "nodal",
+    "id": "lw4",
+    "nodeId": "n42",
+    "dof": "Tx",
+    "value": 7500.0
+  }
+}

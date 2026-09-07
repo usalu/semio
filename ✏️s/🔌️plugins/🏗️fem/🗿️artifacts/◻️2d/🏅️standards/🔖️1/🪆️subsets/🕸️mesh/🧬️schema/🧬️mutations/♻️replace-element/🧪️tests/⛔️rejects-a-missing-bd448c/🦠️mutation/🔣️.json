@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceElement",
+  "id": "e42",
+  "newElement": {
+    "kind": "bar",
+    "id": "e42",
+    "start": "n1",
+    "end": "n2",
+    "materialId": "steel_s355",
+    "sectionId": "chs889"
+  }
+}

@@ -1,0 +1,327 @@
+{
+  "analysis": {
+    "bucklingCount": 3,
+    "deformationScale": 60.0,
+    "modalCount": 3
+  },
+  "combinations": [
+    {
+      "id": "uls",
+      "name": "ULS",
+      "terms": {
+        "roof": 1.35,
+        "snow": 1.5
+      }
+    }
+  ],
+  "elements": [
+    {
+      "end": "b1",
+      "id": "bc0",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b0"
+    },
+    {
+      "end": "b2",
+      "id": "bc1",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b1"
+    },
+    {
+      "end": "b3",
+      "id": "bc2",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b2"
+    },
+    {
+      "end": "b4",
+      "id": "bc3",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b3"
+    },
+    {
+      "end": "t1",
+      "id": "rf0",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b0"
+    },
+    {
+      "end": "t2",
+      "id": "rf1",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "t1"
+    },
+    {
+      "end": "t3",
+      "id": "rf2",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "t2"
+    },
+    {
+      "end": "b4",
+      "id": "rf3",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "t3"
+    },
+    {
+      "end": "t1",
+      "id": "vt1",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b1"
+    },
+    {
+      "end": "t2",
+      "id": "vt2",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b2"
+    },
+    {
+      "end": "t3",
+      "id": "vt3",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b3"
+    },
+    {
+      "end": "t2",
+      "id": "dg1",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b1"
+    },
+    {
+      "end": "t2",
+      "id": "dg2",
+      "kind": "bar",
+      "materialId": "timber",
+      "sectionId": "tim100x200",
+      "start": "b3"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "roof",
+      "loads": [
+        {
+          "dof": "Tz",
+          "id": "r1",
+          "kind": "nodal",
+          "nodeId": "t1",
+          "value": -3600.0
+        },
+        {
+          "dof": "Tz",
+          "id": "r2",
+          "kind": "nodal",
+          "nodeId": "t2",
+          "value": -4800.0
+        },
+        {
+          "dof": "Tz",
+          "id": "r3",
+          "kind": "nodal",
+          "nodeId": "t3",
+          "value": -3600.0
+        }
+      ],
+      "name": "Roof Build-Up",
+      "selfWeight": false
+    },
+    {
+      "id": "snow",
+      "loads": [
+        {
+          "dof": "Tz",
+          "id": "s1",
+          "kind": "nodal",
+          "nodeId": "t1",
+          "value": -9000.0
+        },
+        {
+          "dof": "Tz",
+          "id": "s2",
+          "kind": "nodal",
+          "nodeId": "t2",
+          "value": -12000.0
+        },
+        {
+          "dof": "Tz",
+          "id": "s3",
+          "kind": "nodal",
+          "nodeId": "t3",
+          "value": -9000.0
+        },
+        {
+          "dof": "Tz",
+          "id": "s0",
+          "kind": "nodal",
+          "nodeId": "b0",
+          "value": -4500.0
+        },
+        {
+          "dof": "Tz",
+          "id": "s4",
+          "kind": "nodal",
+          "nodeId": "b4",
+          "value": -4500.0
+        }
+      ],
+      "name": "Snow",
+      "selfWeight": false
+    }
+  ],
+  "materials": [
+    {
+      "e": 11000000000.0,
+      "g": 690000000.0,
+      "id": "timber",
+      "name": "C24 Timber",
+      "nu": 0.3,
+      "rho": 420.0
+    }
+  ],
+  "nodes": [
+    {
+      "id": "b0",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "b1",
+      "x": 3.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "b2",
+      "x": 6.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "b3",
+      "x": 9.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "b4",
+      "x": 12.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "t1",
+      "x": 3.0,
+      "y": 0.0,
+      "z": 1.2
+    },
+    {
+      "id": "t2",
+      "x": 6.0,
+      "y": 0.0,
+      "z": 2.4
+    },
+    {
+      "id": "t3",
+      "x": 9.0,
+      "y": 0.0,
+      "z": 1.2
+    }
+  ],
+  "sections": [
+    {
+      "area": 0.02,
+      "id": "tim100x200",
+      "iy": 6.6667e-05,
+      "iz": 1.6667e-05,
+      "j": 4.5776e-05,
+      "name": "Timber 100x200"
+    }
+  ],
+  "solids": [],
+  "supports": [
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ],
+      "id": "shoe_l",
+      "nodeId": "b0"
+    },
+    {
+      "fixed": [
+        "Ty",
+        "Tz"
+      ],
+      "id": "shoe_r",
+      "nodeId": "b4"
+    },
+    {
+      "fixed": [
+        "Ty"
+      ],
+      "id": "brace_b1",
+      "nodeId": "b1"
+    },
+    {
+      "fixed": [
+        "Ty"
+      ],
+      "id": "brace_b2",
+      "nodeId": "b2"
+    },
+    {
+      "fixed": [
+        "Ty"
+      ],
+      "id": "brace_b3",
+      "nodeId": "b3"
+    },
+    {
+      "fixed": [
+        "Ty"
+      ],
+      "id": "brace_t1",
+      "nodeId": "t1"
+    },
+    {
+      "fixed": [
+        "Ty"
+      ],
+      "id": "brace_t2",
+      "nodeId": "t2"
+    },
+    {
+      "fixed": [
+        "Ty"
+      ],
+      "id": "brace_t3",
+      "nodeId": "t3"
+    }
+  ]
+}

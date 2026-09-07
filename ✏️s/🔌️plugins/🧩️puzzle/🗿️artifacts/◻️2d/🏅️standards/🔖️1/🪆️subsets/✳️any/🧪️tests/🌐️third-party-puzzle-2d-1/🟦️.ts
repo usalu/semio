@@ -107,7 +107,7 @@ function vectors(ctx: AdapterContext): Vector[] {
   return found;
 }
 
-/** 🦠️ The committed payload with its discriminator removed — what the leaf schema describes. */
+/** 🦠️ The committed payload's arguments — the discriminator removed, what the handlers consume. */
 function payloadOf(vector: Vector): Json {
   return Object.fromEntries(Object.entries(vector.mutation ?? {}).filter(([key]) => key !== "mutation"));
 }
@@ -342,12 +342,12 @@ function payloadSchemas(ctx: AdapterContext): AdapterOutcome {
       continue;
     }
     checks += 1;
-    for (const error of validator.validate(payloadOf(vector), vector.schema).errors) failures.push(`${vector.id}: jsonschema rejects the committed payload at ${error.property} — ${error.message}`);
+    for (const error of validator.validate(vector.mutation, vector.schema).errors) failures.push(`${vector.id}: jsonschema rejects the committed payload at ${error.property} — ${error.message}`);
     // 🧪️A validator that accepts everything would accept the payload too. The probe proves the
     // opposite by handing it a member the schema does not declare.
     if (vector.schema.additionalProperties === false) {
       checks += 1;
-      if (validator.validate({ ...payloadOf(vector), semioThirdPartyOracleProbe: true }, vector.schema).valid) failures.push(`${vector.id}: the leaf schema declares additionalProperties false yet jsonschema accepted an undeclared member`);
+      if (validator.validate({ ...(vector.mutation as Record<string, Json>), semioThirdPartyOracleProbe: true }, vector.schema).valid) failures.push(`${vector.id}: the leaf schema declares additionalProperties false yet jsonschema accepted an undeclared member`);
     }
     rows.push({ id: vector.id, kind: vector.kind, checks, draft: vector.schema.$schema ?? "", title: vector.schema.title ?? "" });
   }

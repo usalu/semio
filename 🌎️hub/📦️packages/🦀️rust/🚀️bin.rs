@@ -6802,11 +6802,13 @@ fn inference_error_response(error: semio_hub::inference::runtime::InferenceRoute
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str, token: &'a Option<String>) -> Result<semio_hub::inference::runtime::InferenceRouteContextV1<'a>, Response> {
     let runtime = state.inference_runtime.as_ref().ok_or_else(|| inference_error_response(semio_hub::inference::runtime::InferenceRouteErrorV1::Unavailable))?;
+    let scope = DocumentScope::new(space_id, document_id);
     Ok(semio_hub::inference::runtime::InferenceRouteContextV1 {
         runtime,
         directory: &state.directory,
         rebootstrap: &state.rebootstrap,
-        scope: DocumentScope::new(space_id, document_id),
+        document_write: state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())),
+        scope,
         token: token.as_deref(),
         now_ms: u64::try_from(now_ms()).unwrap_or(0),
     })

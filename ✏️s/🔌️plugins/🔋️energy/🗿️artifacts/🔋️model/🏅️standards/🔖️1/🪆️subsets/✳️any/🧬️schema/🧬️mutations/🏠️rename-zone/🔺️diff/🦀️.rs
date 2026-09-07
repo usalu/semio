@@ -13,7 +13,7 @@ pub fn diff(payload: &super::RenameZone, base: &EnergyModelSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.invariant", "A zone name must not be blank.", [payload.id.0.to_string()]);
     }
     if base.model.zones.iter().any(|zone| zone.id != payload.id && zone.name == payload.new_name) {
-        return protocol::MutationOutcome::error("mutation.duplicate", format!("Another zone is already named \"{}\".", payload.new_name), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Another zone is already named \"{}\".", payload.new_name), [payload.id.0.to_string()]);
     }
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Zone {} is already named \"{}\".", payload.id.0, payload.new_name));

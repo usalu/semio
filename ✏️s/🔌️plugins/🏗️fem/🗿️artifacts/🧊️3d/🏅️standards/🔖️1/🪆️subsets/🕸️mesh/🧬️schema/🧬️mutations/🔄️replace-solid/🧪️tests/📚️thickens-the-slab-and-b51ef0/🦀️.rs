@@ -1,4 +1,4 @@
-//! 🧪️ `replace-solid` fixture — `📚️thickens-the-slab-and-adds-a-mesh-layer`.
+//! 🧪️ `replace-solid` fixture — `📚️thickens-the-slab-and-b51ef0`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("replace-solid applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.solids.len(), 1, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: a replacement must not change the solid count");
-    assert_eq!(snapshot.solids[0].height, 0.375, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: the new thickness must survive the round trip exactly");
-    assert_eq!(snapshot.solids[0].outline, before().solids[0].outline, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: the footprint must be re-stated unchanged by the whole-value swap");
+    assert_eq!(snapshot, expected_after(), "replace-solid/thickens-the-slab-and-b51ef0: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.solids.len(), 1, "replace-solid/thickens-the-slab-and-b51ef0: a replacement must not change the solid count");
+    assert_eq!(snapshot.solids[0].height, 0.375, "replace-solid/thickens-the-slab-and-b51ef0: the new thickness must survive the round trip exactly");
+    assert_eq!(snapshot.solids[0].outline, before().solids[0].outline, "replace-solid/thickens-the-slab-and-b51ef0: the footprint must be re-stated unchanged by the whole-value swap");
 }
 
 /// ↩️ The inverse is a `replace-solid` carrying the thin two-layer slab recovered from `base`.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "replace-solid/thickens-the-slab-and-b51ef0: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,28 +59,35 @@ fn committed_json_is_canonical() {
         let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "replace-solid/thickens-the-slab-and-b51ef0: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "replace-solid/thickens-the-slab-and-b51ef0: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "replace-solid/thickens-the-slab-and-b51ef0: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "replace-solid/thickens-the-slab-and-b51ef0: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "replace-solid/thickens-the-slab-and-b51ef0: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "replace-solid/thickens-the-slab-and-b51ef0: a refused mutation must leave the snapshot untouched");
         }
-        other => panic!("replace-solid/thickens-the-slab-and-adds-a-mesh-layer: unknown outcome status {other:?}"),
+        other => panic!("replace-solid/thickens-the-slab-and-b51ef0: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +96,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().solids.as_ref().expect("solids delta").patched.len(), 1, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: exactly one solid may be patched");
-    assert!(outcome.diff().solids.as_ref().expect("solids delta").added.is_empty(), "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: a replacement is never an addition");
+    assert_eq!(outcome.diff().solids.as_ref().expect("solids delta").patched.len(), 1, "replace-solid/thickens-the-slab-and-b51ef0: exactly one solid may be patched");
+    assert!(outcome.diff().solids.as_ref().expect("solids delta").added.is_empty(), "replace-solid/thickens-the-slab-and-b51ef0: a replacement is never an addition");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "replace-solid/thickens-the-slab-and-b51ef0: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +109,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "replace-solid/thickens-the-slab-and-b51ef0: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `solids.patched` entry on `before` must thicken the slab in its own slot.
@@ -110,5 +117,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "replace-solid/thickens-the-slab-and-adds-a-mesh-layer: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "replace-solid/thickens-the-slab-and-b51ef0: committed diff did not carry before to after");
 }

@@ -1,0 +1,30 @@
+{
+  "artifact": null,
+  "nodes": {
+    "added": [
+      {
+        "id": "n8",
+        "x": 8.0,
+        "y": 3.5
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

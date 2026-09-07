@@ -128,9 +128,12 @@ for case in sorted((SCHEMA / "🧬️mutations").glob("*/🧪️tests/*")):
     targets.append((case / "📸️snapshot/⬅️before/🔣️.json", SNAPSHOT, "snapshot"))
     targets.append((case / "📸️snapshot/➡️after/🔣️.json", SNAPSHOT, "snapshot"))
     targets.append((case / "🦠️mutation/🔣️.json", MUTATION, "mutation"))
-    targets.append((case / "🔺️diff/🔣️.json", DIFF, "diff"))
+    # 🚫️ A refused vector commits `🔺️diff/🚫️.absent` instead of a delta — the repository-wide marker
+    # for "this file is deliberately not here" (93 uses under ✏️s/), so its absence is not a gap.
+    if not (case / "🔺️diff/🚫️.absent").exists():
+        targets.append((case / "🔺️diff/🔣️.json", DIFF, "diff"))
 for extra in sorted((SUBSET / "🧫️fixtures").rglob("*.json")):
-    targets.append((extra, SNAPSHOT, "snapshot"))
+    targets.append((extra, MUTATION if extra.name.startswith("🦠️") else SNAPSHOT, "mutation" if extra.name.startswith("🦠️") else "snapshot"))
 
 total = 0
 bad: dict[str, list[str]] = {}

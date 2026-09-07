@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️add-plant-loop-equipment",
+  "semanticKind": "add-plant-loop-equipment",
+  "displayName": "Add Plant Loop Equipment",
+  "emoji": "🔩️",
+  "aggregateVariant": "AddPlantLoopEquipment",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "add-plant-loop-equipment",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

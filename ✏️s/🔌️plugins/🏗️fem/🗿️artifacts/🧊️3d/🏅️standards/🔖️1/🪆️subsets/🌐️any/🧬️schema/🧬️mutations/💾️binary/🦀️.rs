@@ -71,7 +71,7 @@ mod tests {
             Fem3dMutation::CreateLoadCase(crate::artifacts::fem3d::schema::mutations::create_load_case::mutation::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
         ];
         store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await.expect("apply");
-        assert_eq!(semio_framework_plugin::resolve_ready(store.snapshot()).expect("snapshot"), fixture);
+        assert_eq!(store.snapshot().expect("snapshot"), fixture);
         semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
         semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-zone-equipment-type",
+  "semanticKind": "change-zone-equipment-type",
+  "displayName": "Change Zone Equipment Type",
+  "emoji": "🔧️",
+  "aggregateVariant": "ChangeZoneEquipmentType",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-zone-equipment-type",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

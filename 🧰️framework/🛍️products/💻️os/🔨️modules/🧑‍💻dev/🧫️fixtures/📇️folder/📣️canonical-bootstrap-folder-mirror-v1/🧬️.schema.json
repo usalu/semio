@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.backbone.canonical-bootstrap-folder-mirror-corpus/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "documentId", "artifactSchema", "descriptorDigestV1", "baselineFrontier", "pairs", "hostile"],
+  "properties": {
+    "schema": { "const": "semio.backbone.canonical-bootstrap-folder-mirror-corpus/v1" },
+    "documentId": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "artifactSchema": { "type": "string", "minLength": 1 },
+    "descriptorDigestV1": { "$ref": "#/$defs/hash" },
+    "baselineFrontier": { "$ref": "#/$defs/frontier" },
+    "pairs": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/pair" }
+    },
+    "hostile": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "expected"],
+        "properties": {
+          "name": { "enum": ["wrong-capability", "wrong-epoch", "mismatching-aggregate", "malformed-bundle", "max-plus-one", "stale-publish", "client-stale-stage", "client-stale-publish"] },
+          "expected": { "enum": ["invalid", "conflict", "too-large"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "frontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"],
+      "properties": {
+        "documentId": { "type": "string", "minLength": 1 },
+        "headEditOrdinal": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "headEditId": { "type": "string", "minLength": 1 },
+        "lastCommitSeq": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "chainSha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "pair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "packHex", "sprHex", "aggregateSha256"],
+      "properties": {
+        "name": { "enum": ["a", "b"] },
+        "packHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+        "sprHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+        "aggregateSha256": { "$ref": "#/$defs/hash" }
+      }
+    }
+  }
+}

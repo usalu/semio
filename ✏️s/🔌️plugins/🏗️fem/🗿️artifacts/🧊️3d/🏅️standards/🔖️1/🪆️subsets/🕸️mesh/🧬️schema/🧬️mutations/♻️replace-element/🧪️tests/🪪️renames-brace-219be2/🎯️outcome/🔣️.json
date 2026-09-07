@@ -1,0 +1,14 @@
+{
+  "status": "rejected",
+  "code": "mutation.id-mismatch",
+  "path": [
+    "brc_0",
+    "brc_9"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.id-mismatch"
+    }
+  ]
+}

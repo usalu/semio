@@ -136,6 +136,15 @@ class NativeScript extends BundleScript {
   }
 }
 
+/** ⚡️ `epjson <file.epJSON> [<weather.epw> <out.json>] [--validate-only]` — the second, honeybee-free
+ * oracle route: validate a semio-written epJSON against EnergyPlus's own `Energy+.schema.epJSON`
+ * with the third-party `jsonschema` validator, then run EnergyPlus 25.2.0 directly on it. */
+class EpJsonScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runOraclePython(this.repoRoot, ["epjson", ...segments], 4 * 60 * 60 * 1000);
+  }
+}
+
 /** 🧫️ `emit <case> <out.json>` — the oracle's own reading of an ASHRAE 140 case as a semio `Model`. */
 class EmitScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -151,6 +160,6 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(PACKAGE_DIR).register("setup", SetupScript).register("status", StatusScript).register("run", RunScript).register("native", NativeScript).register("emit", EmitScript).register("test", TestScript);
+const router = new ScriptRouter(PACKAGE_DIR).register("setup", SetupScript).register("status", StatusScript).register("run", RunScript).register("native", NativeScript).register("epjson", EpJsonScript).register("emit", EmitScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "status" });

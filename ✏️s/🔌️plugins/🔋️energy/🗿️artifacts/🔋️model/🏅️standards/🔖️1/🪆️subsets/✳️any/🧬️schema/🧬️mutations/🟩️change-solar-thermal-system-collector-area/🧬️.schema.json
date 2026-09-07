@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSolarThermalSystemCollectorArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCollectorAreaM2"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newCollectorAreaM2": {
+      "type": "number"
+    }
+  }
+}

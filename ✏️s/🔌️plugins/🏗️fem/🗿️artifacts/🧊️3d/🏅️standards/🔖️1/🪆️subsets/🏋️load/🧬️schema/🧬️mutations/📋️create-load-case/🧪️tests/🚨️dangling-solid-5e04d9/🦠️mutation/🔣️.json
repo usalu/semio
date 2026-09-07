@@ -1,0 +1,16 @@
+{
+  "mutation": "createLoadCase",
+  "loadCase": {
+    "id": "flood",
+    "name": "Flood",
+    "loads": [
+      {
+        "kind": "area",
+        "id": "ld_flood",
+        "solidId": "slab_x",
+        "pressure": 4000.0
+      }
+    ],
+    "selfWeight": false
+  }
+}

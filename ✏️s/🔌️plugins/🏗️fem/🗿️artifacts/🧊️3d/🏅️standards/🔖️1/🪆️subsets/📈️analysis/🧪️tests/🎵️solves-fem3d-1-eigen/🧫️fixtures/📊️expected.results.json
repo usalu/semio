@@ -1,0 +1,105 @@
+{
+  "producedBy": [
+    "scipy-fem3d-eigen"
+  ],
+  "scenarios": {
+    "buckling-column-fixed-fixed": {
+      "projection": {
+        "closedFormN": "3.22668e+6",
+        "factorCount": 2,
+        "model": "buckling-column-fixed-fixed",
+        "withinTolerance": true
+      },
+      "reference": {
+        "closedFormN": 3226683.189510129,
+        "factors": [
+          3228335.704789196,
+          4842453.78890227
+        ],
+        "model": "buckling-column-fixed-fixed"
+      }
+    },
+    "buckling-column-fixed-free": {
+      "projection": {
+        "closedFormN": "2.01668e+5",
+        "factorCount": 2,
+        "model": "buckling-column-fixed-free",
+        "withinTolerance": true
+      },
+      "reference": {
+        "closedFormN": 201667.69934438306,
+        "factors": [
+          201668.11482244823,
+          302499.063301782
+        ],
+        "model": "buckling-column-fixed-free"
+      }
+    },
+    "buckling-column-fixed-pinned": {
+      "projection": {
+        "closedFormN": "1.64627e+6",
+        "factorCount": 2,
+        "model": "buckling-column-fixed-pinned",
+        "withinTolerance": true
+      },
+      "reference": {
+        "closedFormN": 1646266.9334235352,
+        "factors": [
+          1650469.4670261752,
+          2475678.756769885
+        ],
+        "model": "buckling-column-fixed-pinned"
+      }
+    },
+    "buckling-column-pinned-pinned": {
+      "projection": {
+        "closedFormN": "8.06671e+5",
+        "factorCount": 2,
+        "model": "buckling-column-pinned-pinned",
+        "withinTolerance": true
+      },
+      "reference": {
+        "closedFormN": 806670.7973775322,
+        "factors": [
+          806697.2288219226,
+          1210033.407123845
+        ],
+        "model": "buckling-column-pinned-pinned"
+      }
+    },
+    "modal-cantilever": {
+      "projection": {
+        "closedFormHz": [
+          "9.01442e+0",
+          "1.49853e+1",
+          "5.64924e+1",
+          "9.39113e+1"
+        ],
+        "modeCount": 4,
+        "model": "modal-cantilever",
+        "withinTolerance": [
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "reference": {
+        "closedFormHz": [
+          9.01442047126215,
+          14.985299547793502,
+          56.49240878405941,
+          93.91126922738285
+        ],
+        "frequenciesHz": [
+          9.01443924856847,
+          14.98533076253927,
+          56.49692585422391,
+          93.91877826787592
+        ],
+        "model": "modal-cantilever"
+      }
+    }
+  },
+  "schema": "semio.fem3d.analysis-reference/v1"
+}

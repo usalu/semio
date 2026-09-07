@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeMaterialThermalAbsorptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newThermalAbsorptance"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newThermalAbsorptance": {
+      "type": "number"
+    }
+  }
+}

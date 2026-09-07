@@ -15,8 +15,20 @@
           "mutationDirectoryName": "🎛️update-analysis-settings",
           "scenarios": [
             {
-              "id": "doubles-the-buckling-mode-count",
-              "directoryName": "🔢️doubles-the-buckling-mode-count"
+              "id": "zero-modes-a27c74",
+              "directoryName": "🧨️zero-modes-a27c74"
+            },
+            {
+              "id": "same-settings-fdb832",
+              "directoryName": "⏸️same-settings-fdb832"
+            },
+            {
+              "id": "hall-more-modes-ecbb5c",
+              "directoryName": "🏗️hall-more-modes-ecbb5c"
+            },
+            {
+              "id": "doubles-the-7b5381",
+              "directoryName": "🔢️doubles-the-7b5381"
             }
           ]
         }

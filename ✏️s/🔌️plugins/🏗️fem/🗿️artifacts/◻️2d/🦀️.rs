@@ -292,8 +292,8 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "computation.fem2d".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
-        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
+        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.obj", "stdio.stl", "stdio.txt"],
+        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.obj", "stdio.stl", "stdio.txt"],
     }
 }
 // #endregion 🔖️ArtifactKind
@@ -314,14 +314,14 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.fem.fem2d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.fem.fem2d.schema.artifact", "schema", "s.fem.fem2d", &[("schema", "s.fem.fem2d")], None),
         ("s.fem.fem2d.inference.artifact", "inference", "s.fem.fem2d.inference", &[("schema", "s.fem.fem2d.inference")], None),
-        // 🐛️ D2-capability-claim-repairs: `io_registry::entries()` registers SEVEN composer rows, not
-        // five — the six below plus `composer_entry_of::<Fem2dAnyComposer>()` (`🚪️io/🦀️.rs`),
-        // whose `writes` is this artifact's own native dialect (`FEM2D_DIALECT`, `s.fem2d@1/*`), the
-        // same gap class `🗒️note` hit first (see that file's own `definition()` doc comment).
+        // 🚪️ One composer claim per dialect `🚪️io/🦀️.rs::io()` registers on the io mechanism: the
+        // native `s.fem.fem2d@1/*` plus the six stdio carriers (txt/json/csv/md both ways, stl/obj
+        // export), the same shape `🗒️note` and `🧱️block` claim.
         ("s.fem.fem2d.composer.fem2d", "composer", "s.fem.fem2d@1/*", &[("dialect", "s.fem.fem2d@1/*")], None),
         ("s.fem.fem2d.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
         ("s.fem.fem2d.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
         ("s.fem.fem2d.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.fem.fem2d.composer.txt", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
         ("s.fem.fem2d.composer.stl", "composer", "s.stdio.stl@ascii/*", &[("dialect", "s.stdio.stl@ascii/*")], None),
         ("s.fem.fem2d.composer.obj", "composer", "s.stdio.obj@3.0/*", &[("dialect", "s.stdio.obj@3.0/*")], None),
         ("s.fem.fem2d.grammar.document", "grammar", "fem.fem2d", &[("grammar", "fem.fem2d")], None),

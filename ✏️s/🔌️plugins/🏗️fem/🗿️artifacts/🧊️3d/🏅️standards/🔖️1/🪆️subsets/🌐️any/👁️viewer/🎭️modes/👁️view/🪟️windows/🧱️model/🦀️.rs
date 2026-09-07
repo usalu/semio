@@ -40,6 +40,7 @@ pub fn render(visual: Option<&crate::artifacts::fem3d::live_visual::Fem3dPageVis
     let camera = FemCamera::default();
     let mut scene = world3d_scene(fem3d_camera_json(&camera), "[]".into(), "[]".into(), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     scene.snapshot = visual.map(crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease::snapshot);
+    eprintln!("[DEBUG] fem3d viewer model window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
     crate::app_surface::world_3d_surface(BODY_KEY, scene)
 }
 //#endregion 🔖️Render

@@ -1,0 +1,181 @@
+{
+  "analysis": {
+    "bucklingCount": 1,
+    "deformationScale": 1.0,
+    "modalCount": 4
+  },
+  "combinations": [],
+  "elements": [
+    {
+      "end": "n1",
+      "id": "e0",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "n0"
+    },
+    {
+      "end": "n2",
+      "id": "e1",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "n1"
+    },
+    {
+      "end": "n3",
+      "id": "e2",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "n2"
+    },
+    {
+      "end": "n4",
+      "id": "e3",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "n3"
+    },
+    {
+      "end": "n5",
+      "id": "e4",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "n4"
+    },
+    {
+      "end": "n6",
+      "id": "e5",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "n5"
+    },
+    {
+      "end": "n7",
+      "id": "e6",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "n6"
+    },
+    {
+      "end": "n8",
+      "id": "e7",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "n7"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "idle",
+      "loads": [],
+      "name": "No Load",
+      "selfWeight": false
+    }
+  ],
+  "materials": [
+    {
+      "e": 210000000000.0,
+      "g": 80769230769.0,
+      "id": "steel",
+      "name": "Steel S355",
+      "nu": 0.3,
+      "rho": 7850.0
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n0",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n1",
+      "x": 0.5,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n2",
+      "x": 1.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n3",
+      "x": 1.5,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n4",
+      "x": 2.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n5",
+      "x": 2.5,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n6",
+      "x": 3.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n7",
+      "x": 3.5,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n8",
+      "x": 4.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  ],
+  "sections": [
+    {
+      "area": 0.00538,
+      "id": "hea200",
+      "iy": 3.692e-05,
+      "iz": 1.336e-05,
+      "j": 2.098e-07,
+      "name": "HEA 200"
+    }
+  ],
+  "solids": [],
+  "supports": [
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "id": "fixity",
+      "nodeId": "n0"
+    }
+  ]
+}

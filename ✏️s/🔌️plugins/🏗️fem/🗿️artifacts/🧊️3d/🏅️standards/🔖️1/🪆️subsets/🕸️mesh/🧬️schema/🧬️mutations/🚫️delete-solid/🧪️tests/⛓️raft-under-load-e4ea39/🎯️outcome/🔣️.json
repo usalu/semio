@@ -1,0 +1,14 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-referenced",
+  "path": [
+    "slab_raft",
+    "ld_floor"
+  ],
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-referenced"
+    }
+  ]
+}

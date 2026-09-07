@@ -1,4 +1,4 @@
-//! 🧪️ `delete-element` fixture — `🚫️removes-the-bracing-bar-and-leaves-the-frame`.
+//! 🧪️ `delete-element` fixture — `🚫️removes-the-bracing-be89d2`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("delete-element applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "delete-element/removes-the-bracing-bar-and-leaves-the-frame: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.elements.len(), 1, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: only the frame may remain");
-    assert_eq!(crate::artifacts::fem3d::element_id(&snapshot.elements[0]), "f1", "delete-element/removes-the-bracing-bar-and-leaves-the-frame: the frame is the survivor");
-    assert_eq!(snapshot.nodes.len(), 3, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: no node may be swept up with the brace");
+    assert_eq!(snapshot, expected_after(), "delete-element/removes-the-bracing-be89d2: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.elements.len(), 1, "delete-element/removes-the-bracing-be89d2: only the frame may remain");
+    assert_eq!(crate::artifacts::fem3d::element_id(&snapshot.elements[0]), "f1", "delete-element/removes-the-bracing-be89d2: the frame is the survivor");
+    assert_eq!(snapshot.nodes.len(), 3, "delete-element/removes-the-bracing-be89d2: no node may be swept up with the brace");
 }
 
 /// ↩️ The inverse is a `create-element` rebuilt from `base`, re-appending the bar with its variant intact.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "delete-element/removes-the-bracing-be89d2: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,28 +59,35 @@ fn committed_json_is_canonical() {
         let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "delete-element/removes-the-bracing-be89d2: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-element/removes-the-bracing-be89d2: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "delete-element/removes-the-bracing-be89d2: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "delete-element/removes-the-bracing-bar-and-leaves-the-frame: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "delete-element/removes-the-bracing-be89d2: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "delete-element/removes-the-bracing-be89d2: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "delete-element/removes-the-bracing-be89d2: a refused mutation must leave the snapshot untouched");
         }
-        other => panic!("delete-element/removes-the-bracing-bar-and-leaves-the-frame: unknown outcome status {other:?}"),
+        other => panic!("delete-element/removes-the-bracing-be89d2: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +96,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().elements.as_ref().expect("elements delta").removed, vec!["b1".to_string()], "delete-element/removes-the-bracing-bar-and-leaves-the-frame: exactly b1 may be removed");
-    assert!(outcome.diff().nodes.is_none(), "delete-element/removes-the-bracing-bar-and-leaves-the-frame: no node delta may be opened");
+    assert_eq!(outcome.diff().elements.as_ref().expect("elements delta").removed, vec!["b1".to_string()], "delete-element/removes-the-bracing-be89d2: exactly b1 may be removed");
+    assert!(outcome.diff().nodes.is_none(), "delete-element/removes-the-bracing-be89d2: no node delta may be opened");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "delete-element/removes-the-bracing-be89d2: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +109,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "delete-element/removes-the-bracing-bar-and-leaves-the-frame: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-element/removes-the-bracing-be89d2: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `elements.removed` id on `before` must leave only the frame.
@@ -110,5 +117,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "delete-element/removes-the-bracing-bar-and-leaves-the-frame: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "delete-element/removes-the-bracing-be89d2: committed diff did not carry before to after");
 }

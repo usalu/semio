@@ -82,5 +82,32 @@ Feature: Apply every typed fem3d analysis mutation twice — once in Rust, once 
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id                       | dir                       | fixture                         |
-    | update-analysis-settings | 🎛️update-analysis-settings | 🔢️doubles-the-buckling-mode-count |
+    | id                       | dir                        | fixture              |
+    | update-analysis-settings | 🎛️update-analysis-settings | 🔢️doubles-the-7b5381 |
+
+  @id-hall-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> glulam-hall vector through both implementations
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
+    Examples:
+    | id                       | dir                        | fixture                  |
+    | update-analysis-settings | 🎛️update-analysis-settings | 🏗️hall-more-modes-ecbb5c |
+
+  @id-reject
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Refuse the committed <id> vector in both implementations and leave the model where it was
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
+    Examples:
+    | id                   | dir                        | fixture                |
+    | same-settings-fdb832 | 🎛️update-analysis-settings | ⏸️same-settings-fdb832 |
+    | zero-modes-a27c74    | 🎛️update-analysis-settings | 🧨️zero-modes-a27c74    |

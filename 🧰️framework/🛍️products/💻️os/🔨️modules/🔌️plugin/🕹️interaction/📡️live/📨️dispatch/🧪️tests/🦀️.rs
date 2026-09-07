@@ -31,9 +31,9 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sy
     std::sync::Arc::new(RuntimeCloseWorkerState {
         instance_id: 7, generation: semio_framework_job::Generation(1),
         cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(None)), pump: std::sync::Mutex::new(pump),
-        status: std::sync::atomic::AtomicU8::new(RuntimeCloseStatus::Queued.repr()), stalled_steps: std::sync::atomic::AtomicU8::new(0),
+        status: std::sync::atomic::AtomicU8::new(RuntimeCloseStatus::Queued.repr()), deadline_resume: AtomicU8::new(u8::MAX), deadline_elapsed_us: AtomicU64::new(0), stalled_steps: std::sync::atomic::AtomicU8::new(0),
         preview_sequence: std::sync::atomic::AtomicU64::new(0), last_callback_elapsed_us: std::sync::atomic::AtomicU64::new(0),
-        last_fault: std::sync::Mutex::new([0; 256]), last_fault_origin: std::sync::atomic::AtomicU8::new(0),
+        last_fault: std::sync::Mutex::new([0; 256]), last_fault_origin: std::sync::atomic::AtomicU8::new(0), physical_close_calls: AtomicU64::new(0),
         callback_phase_started_us: std::sync::atomic::AtomicU64::new(0), callback_phase_us: std::array::from_fn(|_| std::sync::atomic::AtomicU64::new(0)),
     })
 }
@@ -46,14 +46,105 @@ fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
     let _ = run_runtime_close_turn_inner(&state);
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)) == RuntimeCloseStatus::Complete, fixture["owners"]["terminalVisibleBeforeWatchdog"].as_bool().unwrap());
     for row in fixture["callbacks"].as_array().unwrap() {
-        let named = |name: &str| match name { "ready" => RuntimeCloseStatus::Ready, "complete" => RuntimeCloseStatus::Complete, "external-wait" => RuntimeCloseStatus::ExternalWait, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), _ => unreachable!() };
+        let named = |name: &str| match name { "ready" => RuntimeCloseStatus::Ready, "complete" => RuntimeCloseStatus::Complete, "external-wait" => RuntimeCloseStatus::ExternalWait, "deadline-yield" => RuntimeCloseStatus::DeadlineYield, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), _ => unreachable!() };
         let elapsed_us = row["elapsedUs"].as_u64().unwrap();
         state.status.store(RuntimeCloseStatus::Running.repr(), std::sync::atomic::Ordering::SeqCst);
         runtime_close_publish_turn(&state, named(row["candidate"].as_str().unwrap()), elapsed_us);
-        let expected = if elapsed_us >= semio_framework_trace::INTERACTIVE_STEP_CEILING_US { RuntimeCloseStatus::Fault(RuntimeCleanupFault::InteractiveCeiling) } else { named(row["published"].as_str().unwrap()) };
+        let expected = named(row["published"].as_str().unwrap());
         assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)), expected, "{row}");
         assert_eq!(state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), elapsed_us);
     }
+}
+
+
+#[test]
+fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
+    use super::super::*;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    for row in fixture["callbacks"].as_array().unwrap().iter().filter(|row| row["published"] == "deadline-yield") {
+        let state = terminal_close_state(true, false, false);
+        let first = run_runtime_close_turn_inner(&state).unwrap();
+        assert_eq!(first, RuntimeCloseStatus::Complete);
+        assert!(state.pump.lock().unwrap().session.is_none());
+        let candidate = match row["candidate"].as_str().unwrap() { "complete" => RuntimeCloseStatus::Complete, "ready" => RuntimeCloseStatus::Ready, "external-wait" => RuntimeCloseStatus::ExternalWait, _ => unreachable!() };
+        runtime_close_publish_turn(&state, candidate, row["elapsedUs"].as_u64().unwrap());
+        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::DeadlineYield);
+        assert_eq!(state.deadline_resume.load(Ordering::SeqCst), candidate.repr());
+        let owner = state.pump.lock().unwrap();
+        for elapsed in [8000, 1] {
+            state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+            let mut readings = [Some(0), Some(0), Some(elapsed)].into_iter();
+            run_runtime_close_turn_with_clock(&state, || readings.next().flatten());
+            assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), if elapsed == 8000 { RuntimeCloseStatus::DeadlineYield } else { candidate });
+            assert!(owner.session.is_none() && owner.outcome.is_none());
+        }
+        assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
+        assert_eq!(state.deadline_elapsed_us.load(Ordering::SeqCst), row["elapsedUs"].as_u64().unwrap());
+    }
+    eprintln!("[DEBUG] native close deadline retains exact candidate through repeated late publication without pump reentry");
+}
+
+
+#[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() {
+    use super::super::*;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let state = terminal_close_state(false, false, false);
+    *state.pump.lock().unwrap() = RuntimeCloseCleanupPump::new();
+    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(crate::app::AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) })));
+    let limit = fixture["callbackLimitUs"].as_u64().unwrap();
+    for _ in 0..4096 {
+        state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+        let mut sample = 0;
+        run_runtime_close_turn_with_clock(&state, || {
+            sample += 1;
+            Some(if sample == 3 && state.physical_close_calls.load(Ordering::SeqCst) > 0 { limit } else { 0 })
+        });
+        if state.physical_close_calls.load(Ordering::SeqCst) > 0 { break; }
+    }
+    assert_eq!(state.physical_close_calls.load(Ordering::SeqCst), 1);
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::DeadlineYield);
+    {
+        let pump = state.pump.lock().unwrap();
+        assert!(pump.outcome.is_some());
+        let outcome = pump.outcome.as_ref().unwrap() as *const _;
+        state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+        run_runtime_close_turn_with_clock(&state, || Some(0));
+        assert_eq!(pump.outcome.as_ref().unwrap() as *const _, outcome);
+        assert_eq!(state.physical_close_calls.load(Ordering::SeqCst) > 1, fixture["owners"]["lateResumeRepeatsPhysicalClose"].as_bool().unwrap());
+    }
+    for _ in 0..200_000 {
+        let status = RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst));
+        if status == RuntimeCloseStatus::Complete { break; }
+        assert!(!matches!(status, RuntimeCloseStatus::Fault(_)), "retained real close faulted: {status:?}");
+        state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+        run_runtime_close_turn_with_clock(&state, || Some(0));
+    }
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
+    assert!(state.cell.lock().unwrap().is_none());
+    eprintln!("[DEBUG] native close physical-step-once retained-outcome late_us={} total_distinct_steps={}", state.deadline_elapsed_us.load(Ordering::SeqCst), state.physical_close_calls.load(Ordering::SeqCst));
+}
+
+
+#[test]
+fn instance_lifetime_close_deadline_submit_refusal_preserves_candidate() {
+    use super::super::*;
+    let state = terminal_close_state(true, false, false);
+    assert_eq!(run_runtime_close_turn_inner(&state), Some(RuntimeCloseStatus::Complete));
+    runtime_close_publish_turn(&state, RuntimeCloseStatus::Complete, 8000);
+    state.status.compare_exchange(RuntimeCloseStatus::DeadlineYield.repr(), RuntimeCloseStatus::Ready.repr(), Ordering::SeqCst, Ordering::SeqCst).unwrap();
+    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+    pool.shutdown().expect("isolated empty test pool shutdown");
+    assert!(!try_schedule_runtime_close(&pool, &state));
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Ready);
+    assert_eq!(state.deadline_resume.load(Ordering::SeqCst), RuntimeCloseStatus::Complete.repr());
+    let pump = state.pump.lock().unwrap();
+    state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+    run_runtime_close_turn_with_clock(&state, || Some(0));
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
+    assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
+    assert!(pump.session.is_none() && pump.outcome.is_none());
+    eprintln!("[DEBUG] native close refused submission retained exact candidate until later successful publication");
 }
 
 #[test]
@@ -77,7 +168,7 @@ fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward
         let readings: Vec<Option<u64>> = row["samples"].as_array().unwrap().iter().map(serde_json::Value::as_u64).collect();
         let mut samples = readings.clone().into_iter();
         run_runtime_close_turn_with_clock(&state, || samples.next().flatten());
-        let expected = if row["published"] == "complete" { RuntimeCloseStatus::Complete } else { RuntimeCloseStatus::Fault(expected_clock_cause(&readings)) };
+        let expected = if row["published"] == "complete" { RuntimeCloseStatus::Complete } else if row["published"] == "deadline-yield" { RuntimeCloseStatus::DeadlineYield } else { RuntimeCloseStatus::Fault(expected_clock_cause(&readings)) };
         assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)), expected, "{row}");
         assert_eq!(state.pump.lock().unwrap().session.is_none(), row["workEntered"].as_bool().unwrap(), "{row}");
         if !row["workEntered"].as_bool().unwrap() {

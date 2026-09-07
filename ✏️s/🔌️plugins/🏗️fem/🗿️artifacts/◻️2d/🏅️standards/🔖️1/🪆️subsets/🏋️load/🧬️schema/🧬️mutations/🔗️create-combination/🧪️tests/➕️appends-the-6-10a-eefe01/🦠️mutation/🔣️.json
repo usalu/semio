@@ -1,0 +1,17 @@
+{
+  "mutation": "createCombination",
+  "combination": {
+    "id": "uls2",
+    "name": "ULS 6.10a",
+    "terms": [
+      {
+        "caseId": "dead",
+        "factor": 1.35
+      },
+      {
+        "caseId": "snow_spare",
+        "factor": 1.5
+      }
+    ]
+  }
+}

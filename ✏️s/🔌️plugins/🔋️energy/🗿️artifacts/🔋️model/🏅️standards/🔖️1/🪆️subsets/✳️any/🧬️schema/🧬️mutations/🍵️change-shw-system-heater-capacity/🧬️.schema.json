@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeShwSystemHeaterCapacity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHeaterCapacityW"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newHeaterCapacityW": {
+      "type": "number"
+    }
+  }
+}

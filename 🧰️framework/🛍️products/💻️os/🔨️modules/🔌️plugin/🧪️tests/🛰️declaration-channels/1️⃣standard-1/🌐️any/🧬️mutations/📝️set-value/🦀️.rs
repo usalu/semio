@@ -1,14 +1,16 @@
 //#region 📝️Std1AnySetValue
 //! 📝️ Replaces the Std1Any fixture's value with an authored i32.
-use super::{Std1AnySnapshot, Std1AnyDiff, Std1AnyMutation};
-use serde::{Deserialize, Serialize};
+use super::{Std1AnyDiff, Std1AnyMutation, Std1AnySnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct SetValue { pub value: i32 }
+pub(crate) struct SetValue {
+    pub value: i32,
+}
 
 impl protocol::MutationKind<Std1AnySnapshot, Std1AnyMutation> for SetValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "value", kind: "set-value", record: "SetValue" };
@@ -18,16 +20,22 @@ impl protocol::MutationKind<Std1AnySnapshot, Std1AnyMutation> for SetValue {
     fn inverse(&self, base: &Std1AnySnapshot) -> Vec<Std1AnyMutation> {
         vec![Std1AnyMutation::SetValue(Self { value: base.value })]
     }
-    fn label(&self) -> String { format!("Set value to {}", self.value) }
-    fn target(&self) -> Vec<String> { vec!["value".into()] }
+    fn label(&self) -> String {
+        format!("Set value to {}", self.value)
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["value".into()]
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::super::tests::{assert_codecs, assert_laws, assert_metadata};
+    use super::*;
 
-    fn operation(value: i32) -> Std1AnyMutation { Std1AnyMutation::SetValue(SetValue { value }) }
+    fn operation(value: i32) -> Std1AnyMutation {
+        Std1AnyMutation::SetValue(SetValue { value })
+    }
 
     #[test]
     fn actual_leaf_descriptor_and_provenance() {

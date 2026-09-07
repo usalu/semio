@@ -13,9 +13,26 @@ export const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES = 44;
 /** 📤️ Encodes fixed lifecycle authority and exact receipt ACKs in canonical unsigned LEB128. */
 export function encodeActorInstanceLifecycle(value: ActorInstanceLifecycleWire): Uint8Array {
   const body = value.kind === "ack" ? value.receipt : value;
-  const tag = value.kind === "ack"
-    ? body.kind === "captured" ? 5 : body.kind === "accepted" ? 6 : body.kind === "retired" ? 7 : -1
-    : body.kind === "open" ? 0 : body.kind === "captured" ? 1 : body.kind === "close" ? 2 : body.kind === "accepted" ? 3 : body.kind === "retired" ? 4 : -1;
+  const tag =
+    value.kind === "ack"
+      ? body.kind === "captured"
+        ? 5
+        : body.kind === "accepted"
+          ? 6
+          : body.kind === "retired"
+            ? 7
+            : -1
+      : body.kind === "open"
+        ? 0
+        : body.kind === "captured"
+          ? 1
+          : body.kind === "close"
+            ? 2
+            : body.kind === "accepted"
+              ? 3
+              : body.kind === "retired"
+                ? 4
+                : -1;
   if (tag === -1) throw new Error("actor-lifecycle.tag");
   const generation = body.kind === "open" ? body.activationGeneration : body.lifetime.activationGeneration;
   const instance = body.kind === "open" ? body.instanceId : body.lifetime.instanceId;
@@ -34,7 +51,8 @@ export function encodeActorInstanceLifecycle(value: ActorInstanceLifecycleWire):
     } while (rest !== 0n);
   };
   output[length++] = tag;
-  put(generation); put(BigInt(instance));
+  put(generation);
+  put(BigInt(instance));
   if (body.kind !== "open") put(body.lifetime.guestLifetime);
   put(BigInt(body.requestSequence));
   if (body.kind === "accepted" || body.kind === "retired") put(body.closeGeneration);
@@ -70,9 +88,8 @@ export function decodeActorInstanceLifecycle(bytes: Uint8Array): ActorInstanceLi
     const lifetime = { activationGeneration, instanceId, guestLifetime };
     if (kind === 2) value = { kind: "close", lifetime, requestSequence };
     else {
-      const receipt: ActorInstanceLifecycleReceipt = kind === 1 || kind === 5
-        ? { kind: "captured", lifetime, requestSequence }
-        : { kind: kind === 3 || kind === 6 ? "accepted" : "retired", lifetime, requestSequence, closeGeneration: get(0xffffffffffffffffn, true) };
+      const receipt: ActorInstanceLifecycleReceipt =
+        kind === 1 || kind === 5 ? { kind: "captured", lifetime, requestSequence } : { kind: kind === 3 || kind === 6 ? "accepted" : "retired", lifetime, requestSequence, closeGeneration: get(0xffffffffffffffffn, true) };
       value = kind >= 5 ? { kind: "ack", receipt } : receipt;
     }
   }
@@ -87,7 +104,12 @@ export function actorInstanceLifetimeEquals(left: ActorInstanceLifetime, right: 
 
 /** 🪞️ Requires ACK identity to equal the original receipt, including its phase and generation. */
 export function actorInstanceLifecycleReceiptEquals(left: ActorInstanceLifecycleReceipt, right: ActorInstanceLifecycleReceipt): boolean {
-  return left.kind === right.kind && actorInstanceLifetimeEquals(left.lifetime, right.lifetime) && left.requestSequence === right.requestSequence && (left.kind === "captured" || right.kind !== "captured" && left.closeGeneration === right.closeGeneration);
+  return (
+    left.kind === right.kind &&
+    actorInstanceLifetimeEquals(left.lifetime, right.lifetime) &&
+    left.requestSequence === right.requestSequence &&
+    (left.kind === "captured" || (right.kind !== "captured" && left.closeGeneration === right.closeGeneration))
+  );
 }
 
 /** 🔓️ Correlates guest-issued capture with the exact pending open request. */
@@ -97,7 +119,14 @@ export function actorInstanceCapturedReceiptMatches(request: ActorInstanceOpenRe
 
 /** 📨️ Binds the receipt's wire identity only; native descendant terminal authority is not manufactured here. */
 export function actorInstanceCloseReceiptMatches(request: ActorInstanceCloseRequest, accepted: ActorInstanceLifecycleReceipt | null, receipt: ActorInstanceLifecycleReceipt): boolean {
-  return receipt.kind !== "captured" && actorInstanceLifetimeEquals(request.lifetime, receipt.lifetime) && request.requestSequence === receipt.requestSequence && (accepted === null ? receipt.kind === "accepted" : accepted.kind === "accepted" && actorInstanceLifetimeEquals(accepted.lifetime, receipt.lifetime) && accepted.requestSequence === receipt.requestSequence && accepted.closeGeneration === receipt.closeGeneration);
+  return (
+    receipt.kind !== "captured" &&
+    actorInstanceLifetimeEquals(request.lifetime, receipt.lifetime) &&
+    request.requestSequence === receipt.requestSequence &&
+    (accepted === null
+      ? receipt.kind === "accepted"
+      : accepted.kind === "accepted" && actorInstanceLifetimeEquals(accepted.lifetime, receipt.lifetime) && accepted.requestSequence === receipt.requestSequence && accepted.closeGeneration === receipt.closeGeneration)
+  );
 }
 
 //#region 🧪️WireLaws
@@ -117,12 +146,12 @@ if (import.meta.vitest) {
     const module: unknown = await import(name);
     const greater: unknown = module && typeof module === "object" ? Reflect.get(module, "default") : null;
     if (typeof greater !== "function") throw new Error("invalid independent elapsed comparison oracle");
-    for (const row of fixture.callbacks) expect(greater(row.elapsedUs, fixture.callbackLimitUs) ? "fault" : row.candidate).toBe(row.published);
+    for (const row of fixture.callbacks) expect(row.candidate !== "fault" && greater(row.elapsedUs, fixture.callbackLimitUs) ? "deadline-yield" : row.candidate).toBe(row.published);
     for (const row of fixture.clocks) {
       const [start, preflight, finish] = row.samples;
       const entered = typeof start === "number" && typeof preflight === "number" && preflight >= start;
       expect(entered).toBe(row.workEntered);
-      expect(!entered || typeof finish !== "number" || finish < preflight || greater(finish - start, fixture.callbackLimitUs) ? "fault" : "complete").toBe(row.published);
+      expect(!entered || typeof finish !== "number" || finish < preflight ? "fault" : greater(finish - start, fixture.callbackLimitUs) ? "deadline-yield" : "complete").toBe(row.published);
     }
     for (const row of fixture.terminalPump) expect(row.faulted ? "fault" : row.blocked ? "external-wait" : row.complete ? "complete" : "ready").toBe(row.status);
   });
@@ -211,7 +240,14 @@ if (import.meta.vitest) {
     expect(validate({ ...fixture, ownership: { ...fixture.ownership, arenaContentionAdvances: true } })).toBe(false);
     expect(validate({ ...fixture, document: { ...fixture.document, terminalDescendantsRetired: false } })).toBe(false);
     const encode = new TextEncoder();
-    const bytes = (value: unknown): number => typeof value === "string" ? encode.encode(value).length : Array.isArray(value) ? value.reduce((sum, child) => sum + bytes(child), 0) : value && typeof value === "object" ? Object.entries(value).reduce((sum, [key, child]) => sum + encode.encode(key).length + bytes(child), 0) : 0;
+    const bytes = (value: unknown): number =>
+      typeof value === "string"
+        ? encode.encode(value).length
+        : Array.isArray(value)
+          ? value.reduce((sum, child) => sum + bytes(child), 0)
+          : value && typeof value === "object"
+            ? Object.entries(value).reduce((sum, [key, child]) => sum + encode.encode(key).length + bytes(child), 0)
+            : 0;
     const moduleName = "lodash-es/toPairs.js";
     const module: unknown = await import(moduleName);
     const pairs: unknown = module && typeof module === "object" ? Reflect.get(module, "default") : null;
@@ -239,7 +275,7 @@ if (import.meta.vitest) {
     const validateComponents = new Ajv({ strict: true }).compile(componentSchema);
     expect(validateComponents(components)).toBe(true);
     expect(validateComponents({ ...components, cases: components.cases.slice(1) })).toBe(false);
-    expect(validateComponents({ ...components, cases: components.cases.map((row: { component: object }, index: number) => index ? row : { ...row, component: { ...row.component, extra: 1 } }) })).toBe(false);
+    expect(validateComponents({ ...components, cases: components.cases.map((row: { component: object }, index: number) => (index ? row : { ...row, component: { ...row.component, extra: 1 } })) })).toBe(false);
     expect(components.cases.map((row: { component: { type: string } }) => row.component.type)).toEqual(fixture.componentVariants);
     const enumFields = new Set(["type", "role", "kind", "trigger", "placement"]);
     const valueFields = new Set(["props", "args", "input", "dragData", "dataAttributes"]);
@@ -298,9 +334,10 @@ if (import.meta.vitest) {
     let cursor = fixture.start;
     while (counts.size) {
       const slots = [...counts.keys()].sort((a, b) => a - b);
-      const slot = slots.find(slot => slot >= cursor) ?? slots[0];
+      const slot = slots.find((slot) => slot >= cursor) ?? slots[0];
       const count = counts.get(slot)!;
-      if (count === 1) counts.delete(slot); else counts.set(slot, count - 1);
+      if (count === 1) counts.delete(slot);
+      else counts.set(slot, count - 1);
       order.push(slot);
       cursor = (slot + 1) % fixture.slots;
     }
@@ -321,19 +358,25 @@ if (import.meta.vitest) {
       { ...fixture, emptyPageStillCharged: false },
       { ...fixture, cancelMovesPayload: true },
       { ...fixture, unplaced: { ...fixture.unplaced, allocationBytes: fixture.native64.operationBytes } },
-    ]) expect(validate(invalid)).toBe(false);
+    ])
+      expect(validate(invalid)).toBe(false);
     const chunkModule = "lodash-es/chunk.js";
     const module: unknown = await import(chunkModule);
     const chunk: unknown = module && typeof module === "object" ? Reflect.get(module, "default") : null;
     if (typeof chunk !== "function") throw new Error("invalid independent patch paging oracle");
     const pages: unknown = chunk(fixture.operations, 1);
     if (!Array.isArray(pages) || !pages.every(Array.isArray)) throw new Error("invalid independent patch pages");
-    expect(pages.map(page => page.length)).toEqual(fixture.pageLengths);
-    expect(pages.slice().reverse().map(page => page[0].id)).toEqual(fixture.retirementOrder);
+    expect(pages.map((page) => page.length)).toEqual(fixture.pageLengths);
+    expect(
+      pages
+        .slice()
+        .reverse()
+        .map((page) => page[0].id),
+    ).toEqual(fixture.retirementOrder);
     const native = fixture.native64;
     expect(fixture.logicalCapacity * native.descriptorBytes).toBe(native.directoryBytes);
     expect(native.directoryBytes + native.operationBytes).toBe(native.firstBackingBytes);
-    expect(fixture.placementGrants.map((grant: number) => grant >= native.operationBytes ? native.operationBytes : 0)).toEqual(fixture.placedBytes);
+    expect(fixture.placementGrants.map((grant: number) => (grant >= native.operationBytes ? native.operationBytes : 0))).toEqual(fixture.placedBytes);
     expect(native.directoryBytes).toBeLessThanOrEqual(fixture.physicalGrant);
     expect(native.firstPayloadBytes).toBeLessThanOrEqual(fixture.physicalGrant);
     expect(native.operationBytes).toBeGreaterThan(Math.max(...fixture.semanticGrants));
@@ -371,19 +414,21 @@ if (import.meta.vitest) {
     const encoder: unknown = Reflect.get(oracle, "encodeUIntBuffer");
     if (typeof encoder !== "function") throw new Error("missing LEB128 oracle encoder");
     const u64 = (value: bigint): number[] => {
-      const input = Buffer.alloc(8); input.writeBigUInt64LE(value);
+      const input = Buffer.alloc(8);
+      input.writeBigUInt64LE(value);
       const output: unknown = encoder(input);
       if (!(output instanceof Uint8Array)) throw new Error("invalid LEB128 oracle bytes");
       return Array.from(output);
     };
     for (const row of fixture.vectors) {
-      const value: ActorInstanceLifecycleWire = JSON.parse(JSON.stringify(row.value), (key, field) => ["activationGeneration", "guestLifetime", "closeGeneration"].includes(key) ? BigInt(field) : field);
+      const value: ActorInstanceLifecycleWire = JSON.parse(JSON.stringify(row.value), (key, field) => (["activationGeneration", "guestLifetime", "closeGeneration"].includes(key) ? BigInt(field) : field));
       const bytes = encodeActorInstanceLifecycle(value);
       const body = value.kind === "ack" ? value.receipt : value;
       const tag = value.kind === "ack" ? { captured: 5, accepted: 6, retired: 7 }[value.receipt.kind] : { open: 0, captured: 1, close: 2, accepted: 3, retired: 4 }[value.kind];
-      const expected = body.kind === "open"
-        ? [tag, ...u64(body.activationGeneration), ...u64(BigInt(body.instanceId)), ...u64(BigInt(body.requestSequence))]
-        : [tag, ...u64(body.lifetime.activationGeneration), ...u64(BigInt(body.lifetime.instanceId)), ...u64(body.lifetime.guestLifetime), ...u64(BigInt(body.requestSequence)), ...("closeGeneration" in body ? u64(body.closeGeneration) : [])];
+      const expected =
+        body.kind === "open"
+          ? [tag, ...u64(body.activationGeneration), ...u64(BigInt(body.instanceId)), ...u64(BigInt(body.requestSequence))]
+          : [tag, ...u64(body.lifetime.activationGeneration), ...u64(BigInt(body.lifetime.instanceId)), ...u64(body.lifetime.guestLifetime), ...u64(BigInt(body.requestSequence)), ...("closeGeneration" in body ? u64(body.closeGeneration) : [])];
       expect(Array.from(bytes)).toEqual(expected);
       expect(Buffer.from(bytes).toString("hex")).toBe(row.hex);
       expect(bytes.length).toBeLessThanOrEqual(ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES);
@@ -391,9 +436,20 @@ if (import.meta.vitest) {
       expect(() => decodeActorInstanceLifecycle(Uint8Array.from([...bytes, 0]))).toThrow();
       for (let length = 0; length < bytes.length; length += 1) expect(() => decodeActorInstanceLifecycle(bytes.subarray(0, length))).toThrow();
     }
-    for (const bytes of [[8, 1, 7, 9], [0, 0, 7, 9], [0, 0x81, 0, 7, 9], [0, ...Array(10).fill(255), 7, 9], [0, 1, 7, 0], [1, 1, 7, 0, 9], [3, 1, 7, 13, 9, 0], [0, 1, 7, ...u64(9007199254740992n)]]) expect(() => decodeActorInstanceLifecycle(Uint8Array.from(bytes))).toThrow();
+    for (const bytes of [
+      [8, 1, 7, 9],
+      [0, 0, 7, 9],
+      [0, 0x81, 0, 7, 9],
+      [0, ...Array(10).fill(255), 7, 9],
+      [0, 1, 7, 0],
+      [1, 1, 7, 0, 9],
+      [3, 1, 7, 13, 9, 0],
+      [0, 1, 7, ...u64(9007199254740992n)],
+    ])
+      expect(() => decodeActorInstanceLifecycle(Uint8Array.from(bytes))).toThrow();
     for (const activationGeneration of [0n, -1n, 18446744073709551616n, 1, "1"]) expect(() => encodeActorInstanceLifecycle({ kind: "open", activationGeneration, instanceId: 7, requestSequence: 8 } as ActorInstanceOpenRequest)).toThrow();
-    for (const guestLifetime of [0n, -1n, 18446744073709551616n, 13, "13"]) expect(() => encodeActorInstanceLifecycle({ kind: "captured", lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime }, requestSequence: 8 } as ActorInstanceLifecycleReceipt)).toThrow();
+    for (const guestLifetime of [0n, -1n, 18446744073709551616n, 13, "13"])
+      expect(() => encodeActorInstanceLifecycle({ kind: "captured", lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime }, requestSequence: 8 } as ActorInstanceLifecycleReceipt)).toThrow();
     expect(() => encodeActorInstanceLifecycle({ kind: "ack", receipt: { kind: "open", activationGeneration: 1n, instanceId: 7, requestSequence: 8 } } as unknown as ActorInstanceLifecycleWire)).toThrow();
   });
 
@@ -440,15 +496,29 @@ if (import.meta.vitest) {
     const { Worker } = await import("node:worker_threads");
     type Message = { readonly kind: string; readonly requestId?: string; readonly ok?: boolean; readonly value?: unknown; readonly error?: string };
     const pending = new Map<string, { resolve: (value: Message) => void; reject: (error: Error) => void }>();
-    const worker = new Worker("const { parentPort } = require('node:worker_threads'); const self = { postMessage: value => parentPort.postMessage(value), addEventListener: (_, callback) => parentPort.on('message', data => callback({ data })) }; const WebAssembly = { Suspending: function(){}, promising: function(){} };\n" + shardWorkerSource(), { eval: true });
+    const worker = new Worker(
+      "const { parentPort } = require('node:worker_threads'); const self = { postMessage: value => parentPort.postMessage(value), addEventListener: (_, callback) => parentPort.on('message', data => callback({ data })) }; const WebAssembly = { Suspending: function(){}, promising: function(){} };\n" +
+        shardWorkerSource(),
+      { eval: true },
+    );
     worker.on("message", (message: Message) => {
       if (message.kind !== "result" || !message.requestId) return;
       const waiting = pending.get(message.requestId);
-      if (waiting) { pending.delete(message.requestId); waiting.resolve(message); }
+      if (waiting) {
+        pending.delete(message.requestId);
+        waiting.resolve(message);
+      }
     });
-    worker.on("error", (error) => { for (const waiting of pending.values()) waiting.reject(error); pending.clear(); });
+    worker.on("error", (error) => {
+      for (const waiting of pending.values()) waiting.reject(error);
+      pending.clear();
+    });
     const moduleUrl = "data:text/javascript," + encodeURIComponent("export async function createActorApi(actorId, activationGeneration) { return { poll: async () => ({ actorId, activationGeneration }) }; }");
-    const send = (data: unknown, requestId: string): Promise<Message> => new Promise((resolve, reject) => { pending.set(requestId, { resolve, reject }); worker.postMessage(data); });
+    const send = (data: unknown, requestId: string): Promise<Message> =>
+      new Promise((resolve, reject) => {
+        pending.set(requestId, { resolve, reject });
+        worker.postMessage(data);
+      });
     try {
       expect(await send({ kind: "activate", requestId: "a1", actorId: "same", activationGeneration: prior, moduleUrl, assets: [] }, "a1")).toMatchObject({ ok: true });
       expect((await send({ kind: "turn", requestId: "t1", actorId: "same", activationGeneration: prior, events: [], budget: {} }, "t1")).value).toEqual({ actorId: "same", activationGeneration: prior });

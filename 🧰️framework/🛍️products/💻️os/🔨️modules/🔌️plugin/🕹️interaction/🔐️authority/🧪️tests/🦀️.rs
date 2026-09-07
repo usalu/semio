@@ -17,7 +17,9 @@ fn local_interaction_topology_overflow_rejects_before_cache_mutation() {
     let mut authority = LocalInteractionTopologyAuthority { ui_generation: u64::MAX, closed: false };
     let before = authority.revision([1; 32], [2; 32]).unwrap();
     let mut cache = Some("unchanged");
-    if authority.before_cache_mutation().is_ok() { cache = None; }
+    if authority.before_cache_mutation().is_ok() {
+        cache = None;
+    }
     assert_eq!(cache, Some("unchanged"));
     assert_eq!(authority.ui_generation, u64::MAX);
     assert_eq!(authority.revision([1; 32], [2; 32]).unwrap(), before);

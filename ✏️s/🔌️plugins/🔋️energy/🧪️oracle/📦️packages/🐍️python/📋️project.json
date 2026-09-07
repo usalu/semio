@@ -34,6 +34,14 @@
         "forwardAllArgs": true
       }
     },
+    "oracle-epjson": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
+        "command": "bun ./📜️script.ts epjson",
+        "forwardAllArgs": true
+      }
+    },
     "oracle-emit": {
       "executor": "nx:run-commands",
       "options": {

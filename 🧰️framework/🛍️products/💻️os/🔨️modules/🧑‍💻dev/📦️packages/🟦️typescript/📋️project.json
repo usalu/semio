@@ -9,6 +9,22 @@
     ]
   },
   "targets": {
+    "canonical-bootstrap-folder-mirror-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-bootstrap-folder-mirror-check source"
+      }
+    },
+    "canonical-bootstrap-folder-mirror-process-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts canonical-bootstrap-folder-mirror-check process"
+      }
+    },
     "closed-browser-component-factory-check": {
       "executor": "nx:run-commands",
       "cache": false,

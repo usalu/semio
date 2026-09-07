@@ -1,18 +1,46 @@
-//! fem3d -> md. `stdio.md`'s real `MdSnapshot` shape (`blocks: Vec<MdBlock>`, real CommonMark
-//! block tree) landed after this leaf was first written — lagging call site fixed to match
-//! (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a): the
-//! DSL text is wrapped in one `CodeBlock` (verbatim `literal`, no markdown-escaping risk to the
-//! payload), same single-blob-payload shape as before.
+//! 🚪️ fem3d → md — foreign `Serializer<Fem3dSnapshot>` on the framework's `io_mechanism` channel.
+//! CommonMark has no schema of its own to project eight heterogeneous fem tables onto, so this is an
+//! ENVELOPE like the `📊️csv` sibling: one fenced code block whose `literal` is this subset's own
+//! `.semio` DSL text, tagged with the `fem3d` info string. A code block's literal is carried
+//! verbatim by stdio's own real renderer/parser pair, so nothing about the snapshot is lost and the
+//! sibling `📥️import` leaf reconstructs it exactly: `IoFidelity::Exact`.
+//!
+//! 🐛️ Repaired here (ticket 26/09/06/FEM-PLUGIN-END-TO-END, W4): the previous leaf built the same
+//! `MdSnapshot` but its `serialize_bytes` threw it away and wrote BARE `print_dsl` bytes under the
+//! `s.stdio.md` name — DSL text mislabelled as CommonMark, which no markdown reader could open.
+//! The info string is new too: the old envelope wrote `info: None`, so nothing on the wire said what
+//! the fenced block contained.
+
 use crate::artifacts::fem3d::Fem3dSnapshot;
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::md::schema::snapshot::MdBlock;
 use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
-pub fn register() {}
+/// 🎯️ The foreign dialect this leaf writes.
+pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
-pub fn serialize(snapshot: &Fem3dSnapshot) -> Result<MdSnapshot, store::TextError> {
-    Ok(MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::CodeBlock { info: None, literal: <Fem3dSnapshot as store::ArtifactDsl>::print_dsl(snapshot) }] })
+/// 🏷️ The fenced block's info string — what the sibling importer looks for first.
+pub const FENCE_INFO: &str = "fem3d";
+
+/// 📝️ The envelope as an `MdSnapshot`: exactly one fenced code block carrying the DSL text.
+pub fn md_snapshot(from: &Fem3dSnapshot) -> MdSnapshot {
+    MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::CodeBlock { info: Some(FENCE_INFO.to_string()), literal: <Fem3dSnapshot as store::ArtifactDsl>::print_dsl(from) }] }
 }
 
-pub fn serialize_bytes(snapshot: &Fem3dSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<Fem3dSnapshot as store::ArtifactDsl>::print_dsl(snapshot).into_bytes())
+/// 📝️ The envelope as real CommonMark text.
+pub fn md_text(from: &Fem3dSnapshot) -> String {
+    md_snapshot(from).to_text()
+}
+
+/// 🧵️ `s.fem.fem3d@1/*` → `s.stdio.md@commonmark/*`.
+pub struct Fem3dIntoMd;
+
+impl Serializer<Fem3dSnapshot> for Fem3dIntoMd {
+    const INTO: Dialect = MD_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    async fn serialize(from: &Fem3dSnapshot) -> IoResult<IoPayload> {
+        Ok(IoOutcome::clean(IoPayload::Text(md_text(from))))
+    }
 }

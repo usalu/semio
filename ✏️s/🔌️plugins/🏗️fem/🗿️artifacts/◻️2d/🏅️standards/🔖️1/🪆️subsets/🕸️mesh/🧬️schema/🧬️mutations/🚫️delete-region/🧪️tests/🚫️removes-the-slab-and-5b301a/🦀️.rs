@@ -1,4 +1,4 @@
-//! 🧪️ `delete-region` fixture — `🚫️removes-the-slab-and-keeps-its-material`.
+//! 🧪️ `delete-region` fixture — `🚫️removes-the-slab-and-5b301a`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,9 +32,9 @@ fn mutation() -> Fem2dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("delete-region applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "delete-region/removes-the-slab-and-keeps-its-material: applied state differs from committed after-snapshot");
-    assert!(snapshot.regions.is_empty(), "delete-region/removes-the-slab-and-keeps-its-material: the region list must be empty afterwards");
-    assert_eq!(snapshot.materials, before().materials, "delete-region/removes-the-slab-and-keeps-its-material: c30 stays even though it lost its only consumer");
+    assert_eq!(snapshot, expected_after(), "delete-region/removes-the-slab-and-5b301a: applied state differs from committed after-snapshot");
+    assert!(snapshot.regions.is_empty(), "delete-region/removes-the-slab-and-5b301a: the region list must be empty afterwards");
+    assert_eq!(snapshot.materials, before().materials, "delete-region/removes-the-slab-and-5b301a: c30 stays even though it lost its only consumer");
 }
 
 /// ↩️ The inverse is a `create-region` rebuilt from `base`, restoring the outline verbatim.
@@ -48,7 +48,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "delete-region/removes-the-slab-and-keeps-its-material: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "delete-region/removes-the-slab-and-5b301a: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -58,12 +58,12 @@ fn committed_json_is_canonical() {
         let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "delete-region/removes-the-slab-and-keeps-its-material: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "delete-region/removes-the-slab-and-5b301a: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "delete-region/removes-the-slab-and-keeps-its-material: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-region/removes-the-slab-and-5b301a: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
@@ -74,12 +74,12 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "delete-region/removes-the-slab-and-keeps-its-material: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "delete-region/removes-the-slab-and-5b301a: declared applied but the mutation was rejected"),
         "rejected" => {
-            assert!(!applied, "delete-region/removes-the-slab-and-keeps-its-material: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "delete-region/removes-the-slab-and-keeps-its-material: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "delete-region/removes-the-slab-and-5b301a: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "delete-region/removes-the-slab-and-5b301a: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("delete-region/removes-the-slab-and-keeps-its-material: unknown outcome status {other:?}"),
+        other => panic!("delete-region/removes-the-slab-and-5b301a: unknown outcome status {other:?}"),
     }
 }
 
@@ -88,11 +88,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().regions.as_ref().expect("regions delta").removed, vec!["slab".to_string()], "delete-region/removes-the-slab-and-keeps-its-material: exactly the slab may be removed");
-    assert!(outcome.diff().materials.is_none(), "delete-region/removes-the-slab-and-keeps-its-material: no material delta may be opened");
+    assert_eq!(outcome.diff().regions.as_ref().expect("regions delta").removed, vec!["slab".to_string()], "delete-region/removes-the-slab-and-5b301a: exactly the slab may be removed");
+    assert!(outcome.diff().materials.is_none(), "delete-region/removes-the-slab-and-5b301a: no material delta may be opened");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "delete-region/removes-the-slab-and-keeps-its-material: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "delete-region/removes-the-slab-and-5b301a: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -101,7 +101,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "delete-region/removes-the-slab-and-keeps-its-material: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-region/removes-the-slab-and-5b301a: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `regions.removed` id on `before` must leave an empty region list.
@@ -109,5 +109,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "delete-region/removes-the-slab-and-keeps-its-material: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "delete-region/removes-the-slab-and-5b301a: committed diff did not carry before to after");
 }

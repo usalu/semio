@@ -1,19 +1,29 @@
 //#region 🧪️GuestLifecycleOwnership
 use super::*;
 
-struct Owner { remaining: usize }
+struct Owner {
+    remaining: usize,
+}
 impl terminal_owner::Sealed for Owner {}
 impl GuestLifetimeOwner for Owner {
-    fn terminal_is_empty(&self) -> Result<bool, &'static str> { Ok(self.remaining == 0) }
+    fn terminal_is_empty(&self) -> Result<bool, &'static str> {
+        Ok(self.remaining == 0)
+    }
     fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, &'static str> {
-        if maximum_items == 0 { return Ok(GuestTerminalRelease::Pending); }
-        if owner.as_ref().is_some_and(|owner| owner.remaining != 0) { return Err("live test owner"); }
+        if maximum_items == 0 {
+            return Ok(GuestTerminalRelease::Pending);
+        }
+        if owner.as_ref().is_some_and(|owner| owner.remaining != 0) {
+            return Err("live test owner");
+        }
         drop(owner.take());
         Ok(GuestTerminalRelease::Released)
     }
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
+}
 
 fn open() -> ActorInstanceOpenRequest {
     let fixture = fixture();
@@ -37,18 +47,29 @@ fn ack(cell: &mut GuestLifecycleCell<Owner>) {
 
 #[test]
 fn guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated_after_late_clock() {
-    struct DropOwner { clock: std::rc::Rc<std::cell::Cell<u64>>, drops: std::rc::Rc<std::cell::Cell<usize>>, work_us: u64 }
+    struct DropOwner {
+        clock: std::rc::Rc<std::cell::Cell<u64>>,
+        drops: std::rc::Rc<std::cell::Cell<usize>>,
+        work_us: u64,
+    }
     impl terminal_owner::Sealed for DropOwner {}
     impl GuestLifetimeOwner for DropOwner {
-        fn terminal_is_empty(&self) -> Result<bool, &'static str> { Ok(true) }
+        fn terminal_is_empty(&self) -> Result<bool, &'static str> {
+            Ok(true)
+        }
         fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, &'static str> {
-            if maximum_items == 0 { return Ok(GuestTerminalRelease::Pending); }
+            if maximum_items == 0 {
+                return Ok(GuestTerminalRelease::Pending);
+            }
             drop(owner.take());
             Ok(GuestTerminalRelease::Released)
         }
     }
     impl Drop for DropOwner {
-        fn drop(&mut self) { self.clock.set(self.clock.get() + self.work_us); self.drops.set(self.drops.get() + 1); }
+        fn drop(&mut self) {
+            self.clock.set(self.clock.get() + self.work_us);
+            self.drops.set(self.drops.get() + 1);
+        }
     }
     let fixture = fixture();
     let law = &fixture["terminalRelease"];

@@ -5,111 +5,145 @@
   "documentSchema": "fem.3d",
   "factory": "Fem3dRetainedCommandJobFactory",
   "limits": {
-    "rawBytes": 8192,
+    "rawBytes": 65536,
     "checkpointBytes": 512,
     "configValueBytes": 512,
     "configBaseBytes": 512,
-    "commandStepBytes": 65536,
+    "commandStepBytes": 262144,
     "storeStepBytes": 4096,
-    "workItems": 1,
+    "artifactStoreBytes": 65536,
+    "workItems": 4096,
+    "decodedItems": 4096,
     "preparationPhases": 3
   },
   "routes": [
     {
       "id": "addNode",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Fresh-ID discovery scans nodes and artifact publication clones the whole FEM model."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addBar",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Node/material/section validation and fresh-ID discovery scan model collections before whole-root preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addFrame",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Node/material/section validation and fresh-ID discovery scan model collections before whole-root preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addMaterial",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Fresh-ID discovery scans materials and artifact publication clones the whole FEM model."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addSection",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Fresh-ID discovery scans sections and artifact publication clones the whole FEM model."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addSupport",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Node/support lookup scans model collections and whole-root preparation is not resumable."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addNodalLoad",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Load-case and load lookup clone/scan collections before whole-root artifact preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addMemberUdl",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Member/load-case lookup clones or scans collections before whole-root artifact preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addAreaLoad",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Area/load-case lookup clones or scans collections before whole-root artifact preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addSolid",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Solid construction and fresh-ID discovery scan/allocate model collections before whole-root preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addLoadCase",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Fresh-ID discovery scans load cases and artifact publication clones the whole FEM model."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addCombination",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Combination term parsing and ID discovery scan/allocate collections before whole-root preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "setSelfWeight",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Load-case lookup scans the case collection and artifact publication clones the whole FEM model."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "setAnalysisSettings",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "The reducer is scalar but artifact publication clones the complete FEM model; no bounded root-scalar preparation exists."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "removeSelection",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Nested selection/model scans assemble an unbounded removal batch and whole-model inverse/root state."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "setActiveExample",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "Builds and serializes an entire replacement FEM document into a host effect without a retained encoder owner."
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
     },
     {
       "id": "setCamera",

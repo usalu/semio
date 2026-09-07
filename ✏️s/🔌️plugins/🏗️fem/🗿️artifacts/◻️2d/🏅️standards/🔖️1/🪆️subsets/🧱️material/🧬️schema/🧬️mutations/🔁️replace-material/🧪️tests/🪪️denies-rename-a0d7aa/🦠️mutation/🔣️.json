@@ -1,0 +1,11 @@
+{
+  "mutation": "replaceMaterial",
+  "id": "concrete_c30",
+  "newMaterial": {
+    "id": "concrete_c35",
+    "name": "Concrete C35/45",
+    "e": 34000000000.0,
+    "nu": 0.2,
+    "rho": 2500.0
+  }
+}

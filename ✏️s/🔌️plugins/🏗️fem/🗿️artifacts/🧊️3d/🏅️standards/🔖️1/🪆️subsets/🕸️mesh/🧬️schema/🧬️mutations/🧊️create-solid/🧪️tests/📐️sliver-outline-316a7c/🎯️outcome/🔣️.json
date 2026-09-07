@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "slab_sliver"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.invariant"
+    }
+  ]
+}

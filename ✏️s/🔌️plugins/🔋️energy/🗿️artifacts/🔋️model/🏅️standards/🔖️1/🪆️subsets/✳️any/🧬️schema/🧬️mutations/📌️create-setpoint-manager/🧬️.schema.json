@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateSetpointManager",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "kind",
+    "lowOutdoorC",
+    "highOutdoorC",
+    "lowSetpointC",
+    "highSetpointC",
+    "schedulePresent",
+    "scheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "lowOutdoorC": {
+      "type": "number"
+    },
+    "highOutdoorC": {
+      "type": "number"
+    },
+    "lowSetpointC": {
+      "type": "number"
+    },
+    "highSetpointC": {
+      "type": "number"
+    },
+    "schedulePresent": {
+      "type": "boolean"
+    },
+    "scheduleId": {
+      "type": "integer"
+    }
+  }
+}

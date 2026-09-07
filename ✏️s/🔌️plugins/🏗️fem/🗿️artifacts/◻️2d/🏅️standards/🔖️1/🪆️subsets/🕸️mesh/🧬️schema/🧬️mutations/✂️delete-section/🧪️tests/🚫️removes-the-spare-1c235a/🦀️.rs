@@ -1,4 +1,4 @@
-//! 🧪️ `delete-section` fixture — `🚫️removes-the-spare-hollow-section`.
+//! 🧪️ `delete-section` fixture — `🚫️removes-the-spare-1c235a`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem2dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("delete-section applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "delete-section/removes-the-spare-hollow-section: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.sections.len(), 1, "delete-section/removes-the-spare-hollow-section: only the IPE 200 profile may remain");
-    assert_eq!(snapshot.sections[0].id, "ipe200", "delete-section/removes-the-spare-hollow-section: the profile e1 references must be the survivor");
-    assert_eq!(snapshot.elements, before().elements, "delete-section/removes-the-spare-hollow-section: element section references are never rewritten by a section deletion");
+    assert_eq!(snapshot, expected_after(), "delete-section/removes-the-spare-1c235a: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.sections.len(), 1, "delete-section/removes-the-spare-1c235a: only the IPE 200 profile may remain");
+    assert_eq!(snapshot.sections[0].id, "ipe200", "delete-section/removes-the-spare-1c235a: the profile e1 references must be the survivor");
+    assert_eq!(snapshot.elements, before().elements, "delete-section/removes-the-spare-1c235a: element section references are never rewritten by a section deletion");
 }
 
 /// ↩️ The inverse is a `create-section` rebuilt from `base`, re-appending the hollow profile.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "delete-section/removes-the-spare-hollow-section: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "delete-section/removes-the-spare-1c235a: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,12 +59,12 @@ fn committed_json_is_canonical() {
         let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "delete-section/removes-the-spare-hollow-section: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "delete-section/removes-the-spare-1c235a: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "delete-section/removes-the-spare-hollow-section: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-section/removes-the-spare-1c235a: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
@@ -75,12 +75,12 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "delete-section/removes-the-spare-hollow-section: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "delete-section/removes-the-spare-1c235a: declared applied but the mutation was rejected"),
         "rejected" => {
-            assert!(!applied, "delete-section/removes-the-spare-hollow-section: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "delete-section/removes-the-spare-hollow-section: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "delete-section/removes-the-spare-1c235a: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "delete-section/removes-the-spare-1c235a: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("delete-section/removes-the-spare-hollow-section: unknown outcome status {other:?}"),
+        other => panic!("delete-section/removes-the-spare-1c235a: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +89,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().sections.as_ref().expect("sections delta").removed, vec!["shs100".to_string()], "delete-section/removes-the-spare-hollow-section: exactly shs100 may be removed");
-    assert!(outcome.diff().elements.is_none(), "delete-section/removes-the-spare-hollow-section: no element delta may be opened");
+    assert_eq!(outcome.diff().sections.as_ref().expect("sections delta").removed, vec!["shs100".to_string()], "delete-section/removes-the-spare-1c235a: exactly shs100 may be removed");
+    assert!(outcome.diff().elements.is_none(), "delete-section/removes-the-spare-1c235a: no element delta may be opened");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "delete-section/removes-the-spare-hollow-section: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "delete-section/removes-the-spare-1c235a: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +102,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "delete-section/removes-the-spare-hollow-section: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-section/removes-the-spare-1c235a: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `sections.removed` id on `before` must leave only the IPE 200 row.
@@ -110,5 +110,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "delete-section/removes-the-spare-hollow-section: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "delete-section/removes-the-spare-1c235a: committed diff did not carry before to after");
 }

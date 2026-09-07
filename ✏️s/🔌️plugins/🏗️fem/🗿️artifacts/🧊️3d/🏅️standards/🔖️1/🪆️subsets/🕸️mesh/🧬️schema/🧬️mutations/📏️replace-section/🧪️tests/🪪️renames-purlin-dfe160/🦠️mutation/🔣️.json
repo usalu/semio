@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceSection",
+  "id": "sec_pur",
+  "newSection": {
+    "id": "sec_pur_v2",
+    "name": "C24 Purlin 100x200",
+    "area": 0.02,
+    "iy": 6.667e-05,
+    "iz": 1.667e-05,
+    "j": 4.58e-05
+  }
+}

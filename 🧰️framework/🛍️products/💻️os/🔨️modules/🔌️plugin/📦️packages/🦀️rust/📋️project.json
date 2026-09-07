@@ -3,12 +3,18 @@
   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
   "projectType": "library",
-  "tags": [
-    "lang:rust",
-    "role:framework",
-    "family:os-plugin"
-  ],
+  "tags": ["lang:rust", "role:framework", "family:os-plugin"],
   "targets": {
+    "cold-document-pair-ingress-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts cold-document-pair-ingress-check", "cwd": "{projectRoot}" }
+    },
+    "cold-document-pair-ingress-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts cold-document-pair-ingress-check --native", "cwd": "{projectRoot}" }
+    },
     "artifact-admission-check": {
       "executor": "nx:run-commands",
       "cache": false,

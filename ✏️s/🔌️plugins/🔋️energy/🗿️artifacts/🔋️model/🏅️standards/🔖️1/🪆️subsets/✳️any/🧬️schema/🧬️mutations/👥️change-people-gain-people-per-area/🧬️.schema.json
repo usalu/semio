@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangePeopleGainPeoplePerArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPeoplePerArea"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newPeoplePerArea": {
+      "type": "number"
+    }
+  }
+}

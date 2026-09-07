@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeInfiltrationMethod",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMethod"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newMethod": {
+      "enum": [
+        "ScheduledAch",
+        "PerExteriorArea",
+        "EffectiveLeakageArea",
+        "WindAndStack"
+      ]
+    }
+  }
+}

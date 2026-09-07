@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHumidistatHumidifyingThrottleRange",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHumidifyingThrottleRange"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newHumidifyingThrottleRange": {
+      "type": "number"
+    }
+  }
+}

@@ -7,7 +7,9 @@
 //! raw asset, is what lands in the document's `assets` map. Deliberately NOT `mutation.duplicate-id`
 //! on an existing key: this is the only asset write path in the app and import handlers rely on
 //! upsert-on-retry (see the mutation leaf's own docstring) — rejecting an existing key would break a
-//! retried import.
+//! retried import. An upsert also DROPS the durable leaf the overwritten handle owned, so the store
+//! never accumulates a leaf nothing addresses and `delete-asset` (which drops the leaf it minted) is
+//! this verb's exact inverse in both directions.
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::{durable_remodeling_asset, store_remodeling_asset, RemodelingSnapshot};
 
@@ -42,6 +44,9 @@ pub fn diff(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "The asset payload is malformed or exceeds its exact bounded envelope.", [payload.key.clone()]);
     };
     let mut durable_artifacts = base.durable_artifacts.clone();
+    if let Some(previous) = base.assets.get(&payload.key) {
+        durable_artifacts.remove(&previous.child_id);
+    }
     durable_artifacts.insert(handle.child_id.clone(), artifact);
     assets.insert(payload.key.clone(), handle);
     protocol::MutationOutcome::new(RemodelingDiff { assets: Some(assets), durable_artifacts: Some(durable_artifacts), ..Default::default() })

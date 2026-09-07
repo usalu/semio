@@ -1,0 +1,13 @@
+{
+  "mutation": "replaceStreamSource",
+  "id": "orbit-secondary",
+  "source": {
+    "name": "orbit-secondary.mkv",
+    "container": "mkv",
+    "codec": "avc",
+    "durationMs": 5000.0,
+    "frameCount": 10,
+    "width": 320,
+    "height": 240
+  }
+}

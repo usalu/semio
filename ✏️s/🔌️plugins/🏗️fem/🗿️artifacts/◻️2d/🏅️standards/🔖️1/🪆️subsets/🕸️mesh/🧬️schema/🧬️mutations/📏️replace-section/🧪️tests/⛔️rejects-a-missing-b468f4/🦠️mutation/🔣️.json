@@ -1,0 +1,10 @@
+{
+  "mutation": "replaceSection",
+  "id": "hea300",
+  "newSection": {
+    "id": "hea300",
+    "name": "HEA 300",
+    "area": 0.01125,
+    "iy": 0.0001826
+  }
+}

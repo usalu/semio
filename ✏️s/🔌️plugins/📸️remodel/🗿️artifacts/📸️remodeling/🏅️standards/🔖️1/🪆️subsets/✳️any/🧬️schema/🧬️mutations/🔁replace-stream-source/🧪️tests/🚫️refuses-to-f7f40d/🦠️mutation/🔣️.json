@@ -1,0 +1,5 @@
+{
+  "mutation": "replaceStreamSource",
+  "id": "orbit-absent",
+  "source": null
+}

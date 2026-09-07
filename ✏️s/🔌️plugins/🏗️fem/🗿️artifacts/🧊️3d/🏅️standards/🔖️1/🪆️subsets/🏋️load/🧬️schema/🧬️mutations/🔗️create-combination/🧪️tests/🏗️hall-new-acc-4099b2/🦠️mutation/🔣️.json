@@ -1,0 +1,11 @@
+{
+  "mutation": "createCombination",
+  "combination": {
+    "id": "uls_acc",
+    "name": "ULS Accidental",
+    "terms": {
+      "dead": 1.0,
+      "snow": 0.2
+    }
+  }
+}

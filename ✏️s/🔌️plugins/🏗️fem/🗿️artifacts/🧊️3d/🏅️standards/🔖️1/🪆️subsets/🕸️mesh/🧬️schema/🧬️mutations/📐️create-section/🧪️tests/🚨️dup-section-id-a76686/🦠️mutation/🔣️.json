@@ -1,0 +1,11 @@
+{
+  "mutation": "createSection",
+  "section": {
+    "id": "sec_col",
+    "name": "GL24h Column 200x400",
+    "area": 0.08,
+    "iy": 0.00106667,
+    "iz": 0.00026667,
+    "j": 0.000733
+  }
+}

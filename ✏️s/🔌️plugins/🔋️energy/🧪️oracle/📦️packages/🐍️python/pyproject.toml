@@ -27,6 +27,7 @@ dependencies = []
 test = [
     "honeybee-energy==1.123.32",
     "honeybee-openstudio==0.7.2",
+    "jsonschema==4.26.0",
     "ladybug-core==0.44.59",
     "openstudio==3.11.0",
 ]

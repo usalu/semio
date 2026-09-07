@@ -5,6 +5,14 @@ package semio.s.energy.model.mutation;
 // `oneof` field numbers are allocated by the ticket ledger's per-group ranges
 // (📓️mutation-tag-ledger.md), never sequentially, so concurrent groups never collide.
 
+// 📐️ Shared fixed-arity numeric tuple — protobuf has no nested repeated scalar, so every
+// `Vec<[f64; N]>` payload field (surface and shading polygons) repeats this instead.
+message Vertex3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
 message RenameModel {
   string new_name = 1;
 }
@@ -91,6 +99,1454 @@ message ChangeZoneFloorAreaParticipation {
   bool new_part_of_total_floor_area = 2;
 }
 
+message CreateZone {
+  uint32 id = 1;
+  string name = 2;
+  double volume_m3 = 3;
+  uint32 multiplier = 4;
+  bool conditioned = 5;
+  bool part_of_total_floor_area = 6;
+}
+
+message DeleteZone {
+  uint32 id = 1;
+}
+
+message CreateSpace {
+  uint32 id = 1;
+  string name = 2;
+  uint32 zone_id = 3;
+  double floor_area_m2 = 4;
+}
+
+message DeleteSpace {
+  uint32 id = 1;
+}
+
+message RenameSpace {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ChangeSpaceFloorArea {
+  uint32 id = 1;
+  double new_floor_area_m2 = 2;
+}
+
+message ChangeSpaceZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message CreateSurface {
+  uint32 id = 1;
+  string name = 2;
+  uint32 zone_id = 3;
+  string class = 4;
+  repeated Vertex3 vertices_m = 5;
+  uint32 construction_id = 6;
+  string boundary = 7;
+  optional uint32 interzone_surface_id = 8;
+  bool sun_exposed = 9;
+  bool wind_exposed = 10;
+  uint32 multiplier = 11;
+}
+
+message DeleteSurface {
+  uint32 id = 1;
+}
+
+message RenameSurface {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ChangeSurfaceZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeSurfaceClass {
+  uint32 id = 1;
+  string new_class = 2;
+}
+
+message ReplaceSurfaceVertices {
+  uint32 id = 1;
+  repeated Vertex3 new_vertices_m = 2;
+}
+
+message ChangeSurfaceConstruction {
+  uint32 id = 1;
+  uint32 new_construction_id = 2;
+}
+
+message ChangeSurfaceBoundaryCondition {
+  uint32 id = 1;
+  string new_boundary = 2;
+  optional uint32 new_interzone_surface_id = 3;
+}
+
+message ChangeSurfaceSunExposed {
+  uint32 id = 1;
+  bool new_sun_exposed = 2;
+}
+
+message ChangeSurfaceWindExposed {
+  uint32 id = 1;
+  bool new_wind_exposed = 2;
+}
+
+message ChangeSurfaceMultiplier {
+  uint32 id = 1;
+  uint32 new_multiplier = 2;
+}
+
+message CreateFenestration {
+  uint32 id = 1;
+  string name = 2;
+  uint32 surface_id = 3;
+  double u_value_w_m2k = 4;
+  double shgc = 5;
+  double vlt = 6;
+  double area_m2 = 7;
+  double height_m = 8;
+  double sill_height_m = 9;
+  double frame_conductance_w_k = 10;
+  double divider_conductance_w_k = 11;
+  double overhang_depth_m = 12;
+  double overhang_offset_m = 13;
+  double fin_depth_m = 14;
+  double fin_offset_m = 15;
+  optional uint32 glazing_construction_id = 16;
+}
+
+message DeleteFenestration {
+  uint32 id = 1;
+}
+
+message RenameFenestration {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ChangeFenestrationSurface {
+  uint32 id = 1;
+  uint32 new_surface_id = 2;
+}
+
+message ChangeFenestrationUValue {
+  uint32 id = 1;
+  double new_u_value_w_m2k = 2;
+}
+
+message ChangeFenestrationShgc {
+  uint32 id = 1;
+  double new_shgc = 2;
+}
+
+message ChangeFenestrationVlt {
+  uint32 id = 1;
+  double new_vlt = 2;
+}
+
+message ChangeFenestrationArea {
+  uint32 id = 1;
+  double new_area_m2 = 2;
+}
+
+message ChangeFenestrationFrameConductance {
+  uint32 id = 1;
+  double new_frame_conductance_w_k = 2;
+}
+
+message ChangeFenestrationDividerConductance {
+  uint32 id = 1;
+  double new_divider_conductance_w_k = 2;
+}
+
+message CreateShadingSurface {
+  uint32 id = 1;
+  string name = 2;
+  repeated Vertex3 vertices_m = 3;
+  optional uint32 transmittance_schedule_id = 4;
+}
+
+message DeleteShadingSurface {
+  uint32 id = 1;
+}
+
+message RenameShadingSurface {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ReplaceShadingSurfaceVertices {
+  uint32 id = 1;
+  repeated Vertex3 new_vertices_m = 2;
+}
+
+message ChangeShadingSurfaceTransmittanceSchedule {
+  uint32 id = 1;
+  optional uint32 new_transmittance_schedule_id = 2;
+}
+
+message ConnectSurfaces {
+  uint32 surface_a_id = 1;
+  uint32 surface_b_id = 2;
+}
+
+message DisconnectSurfaces {
+  uint32 surface_a_id = 1;
+  uint32 surface_b_id = 2;
+}
+
+message BindFenestrationGlazingConstruction {
+  uint32 id = 1;
+  uint32 construction_id = 2;
+}
+
+message ClearFenestrationGlazingConstruction {
+  uint32 id = 1;
+}
+
+message ChangeFenestrationHeight {
+  uint32 id = 1;
+  double new_height_m = 2;
+}
+
+message ChangeFenestrationSillHeight {
+  uint32 id = 1;
+  double new_sill_height_m = 2;
+}
+
+message ChangeFenestrationOverhangDepth {
+  uint32 id = 1;
+  double new_overhang_depth_m = 2;
+}
+
+message ChangeFenestrationOverhangOffset {
+  uint32 id = 1;
+  double new_overhang_offset_m = 2;
+}
+
+message ChangeFenestrationFinDepth {
+  uint32 id = 1;
+  double new_fin_depth_m = 2;
+}
+
+message ChangeFenestrationFinOffset {
+  uint32 id = 1;
+  double new_fin_offset_m = 2;
+}
+
+message CreateMaterial {
+  uint32 index = 1;
+  uint32 id = 2;
+  string name = 3;
+  double thickness_m = 4;
+  double conductivity_w_m_k = 5;
+  double density_kg_m3 = 6;
+  double specific_heat_j_kg_k = 7;
+  double thermal_absorptance = 8;
+  double solar_absorptance = 9;
+  double visible_absorptance = 10;
+}
+
+message DeleteMaterial {
+  uint32 id = 1;
+}
+
+message RenameMaterial {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ChangeMaterialThickness {
+  uint32 id = 1;
+  double new_thickness_m = 2;
+}
+
+message ChangeMaterialConductivity {
+  uint32 id = 1;
+  double new_conductivity_w_m_k = 2;
+}
+
+message ChangeMaterialDensity {
+  uint32 id = 1;
+  double new_density_kg_m3 = 2;
+}
+
+message ChangeMaterialSpecificHeat {
+  uint32 id = 1;
+  double new_specific_heat_j_kg_k = 2;
+}
+
+message ChangeMaterialThermalAbsorptance {
+  uint32 id = 1;
+  double new_thermal_absorptance = 2;
+}
+
+message ChangeMaterialSolarAbsorptance {
+  uint32 id = 1;
+  double new_solar_absorptance = 2;
+}
+
+message ChangeMaterialVisibleAbsorptance {
+  uint32 id = 1;
+  double new_visible_absorptance = 2;
+}
+
+message CreateConstruction {
+  uint32 index = 1;
+  uint32 id = 2;
+  string name = 3;
+  repeated uint32 layer_material_ids = 4;
+}
+
+message DeleteConstruction {
+  uint32 id = 1;
+}
+
+message RenameConstruction {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message AddConstructionLayer {
+  uint32 id = 1;
+  uint32 index = 2;
+  uint32 material_id = 3;
+}
+
+message RemoveConstructionLayer {
+  uint32 id = 1;
+  uint32 index = 2;
+}
+
+message ReorderConstructionLayers {
+  uint32 id = 1;
+  repeated uint32 new_layer_material_ids = 2;
+}
+
+message CreatePeopleGain {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 zone_id = 3;
+  uint32 schedule_id = 4;
+  uint32 activity_schedule_id = 5;
+  double people_per_area = 6;
+  double sensible_fraction = 7;
+  double latent_fraction = 8;
+  double radiant_fraction = 9;
+}
+
+message DeletePeopleGain {
+  uint32 id = 1;
+}
+
+message ChangePeopleGainZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangePeopleGainSchedule {
+  uint32 id = 1;
+  uint32 new_schedule_id = 2;
+}
+
+message ChangePeopleGainActivitySchedule {
+  uint32 id = 1;
+  uint32 new_activity_schedule_id = 2;
+}
+
+message ChangePeopleGainPeoplePerArea {
+  uint32 id = 1;
+  double new_people_per_area = 2;
+}
+
+message ChangePeopleGainSensibleFraction {
+  uint32 id = 1;
+  double new_sensible_fraction = 2;
+}
+
+message ChangePeopleGainLatentFraction {
+  uint32 id = 1;
+  double new_latent_fraction = 2;
+}
+
+message ChangePeopleGainRadiantFraction {
+  uint32 id = 1;
+  double new_radiant_fraction = 2;
+}
+
+message CreateLightingGain {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 zone_id = 3;
+  uint32 schedule_id = 4;
+  double watts_per_area = 5;
+  double radiant_fraction = 6;
+  double visible_fraction = 7;
+  double return_air_fraction = 8;
+}
+
+message DeleteLightingGain {
+  uint32 id = 1;
+}
+
+message ChangeLightingGainZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeLightingGainSchedule {
+  uint32 id = 1;
+  uint32 new_schedule_id = 2;
+}
+
+message ChangeLightingGainWattsPerArea {
+  uint32 id = 1;
+  double new_watts_per_area = 2;
+}
+
+message ChangeLightingGainRadiantFraction {
+  uint32 id = 1;
+  double new_radiant_fraction = 2;
+}
+
+message ChangeLightingGainVisibleFraction {
+  uint32 id = 1;
+  double new_visible_fraction = 2;
+}
+
+message ChangeLightingGainReturnAirFraction {
+  uint32 id = 1;
+  double new_return_air_fraction = 2;
+}
+
+message CreateEquipmentGain {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 zone_id = 3;
+  uint32 schedule_id = 4;
+  double watts_per_area = 5;
+  double radiant_fraction = 6;
+  double latent_fraction = 7;
+}
+
+message DeleteEquipmentGain {
+  uint32 id = 1;
+}
+
+message ChangeEquipmentGainZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeEquipmentGainSchedule {
+  uint32 id = 1;
+  uint32 new_schedule_id = 2;
+}
+
+message ChangeEquipmentGainWattsPerArea {
+  uint32 id = 1;
+  double new_watts_per_area = 2;
+}
+
+message ChangeEquipmentGainRadiantFraction {
+  uint32 id = 1;
+  double new_radiant_fraction = 2;
+}
+
+message ChangeEquipmentGainLatentFraction {
+  uint32 id = 1;
+  double new_latent_fraction = 2;
+}
+
+message CreateInfiltration {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 zone_id = 3;
+  uint32 schedule_id = 4;
+  string method = 5;
+  double design_flow_ach = 6;
+  double flow_per_exterior_area_m3_s_m2 = 7;
+  double effective_leakage_area_m2 = 8;
+  double discharge_coefficient = 9;
+  double stack_height_m = 10;
+  double constant_term_coefficient = 11;
+  double temperature_term_coefficient = 12;
+  double velocity_term_coefficient = 13;
+  double velocity_squared_term_coefficient = 14;
+}
+
+message DeleteInfiltration {
+  uint32 id = 1;
+}
+
+message ChangeInfiltrationZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeInfiltrationSchedule {
+  uint32 id = 1;
+  uint32 new_schedule_id = 2;
+}
+
+message ChangeInfiltrationFlowPerExteriorArea {
+  uint32 id = 1;
+  double new_flow_per_exterior_area_m3_s_m2 = 2;
+}
+
+message ChangeInfiltrationConstantTermCoefficient {
+  uint32 id = 1;
+  double new_constant_term_coefficient = 2;
+}
+
+message ChangeInfiltrationTemperatureTermCoefficient {
+  uint32 id = 1;
+  double new_temperature_term_coefficient = 2;
+}
+
+message ChangeInfiltrationVelocityTermCoefficient {
+  uint32 id = 1;
+  double new_velocity_term_coefficient = 2;
+}
+
+message ChangeInfiltrationVelocitySquaredTermCoefficient {
+  uint32 id = 1;
+  double new_velocity_squared_term_coefficient = 2;
+}
+
+message CreateMechanicalVentilation {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 zone_id = 3;
+  uint32 schedule_id = 4;
+  double design_flow_m3_s = 5;
+  double fan_total_efficiency = 6;
+  double fan_delta_pressure_pa = 7;
+}
+
+message DeleteMechanicalVentilation {
+  uint32 id = 1;
+}
+
+message ChangeMechanicalVentilationZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeMechanicalVentilationSchedule {
+  uint32 id = 1;
+  uint32 new_schedule_id = 2;
+}
+
+message ChangeMechanicalVentilationDesignFlow {
+  uint32 id = 1;
+  double new_design_flow_m3_s = 2;
+}
+
+message ChangeMechanicalVentilationFanTotalEfficiency {
+  uint32 id = 1;
+  double new_fan_total_efficiency = 2;
+}
+
+message ChangeMechanicalVentilationFanDeltaPressure {
+  uint32 id = 1;
+  double new_fan_delta_pressure_pa = 2;
+}
+
+message ChangeInfiltrationMethod {
+  uint32 id = 1;
+  string new_method = 2;
+}
+
+message ChangeInfiltrationDesignFlowAch {
+  uint32 id = 1;
+  double new_design_flow_ach = 2;
+}
+
+message ChangeInfiltrationEffectiveLeakageArea {
+  uint32 id = 1;
+  double new_effective_leakage_area_m2 = 2;
+}
+
+message ChangeInfiltrationDischargeCoefficient {
+  uint32 id = 1;
+  double new_discharge_coefficient = 2;
+}
+
+message ChangeInfiltrationStackHeight {
+  uint32 id = 1;
+  double new_stack_height_m = 2;
+}
+
+message CreateThermostat {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+  uint32 heating_setpoint_schedule_id = 3;
+  uint32 cooling_setpoint_schedule_id = 4;
+  double heating_throttle_range_k = 5;
+  double cooling_throttle_range_k = 6;
+}
+
+message DeleteThermostat {
+  uint32 id = 1;
+}
+
+message ChangeThermostatZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeThermostatHeatingSetpointSchedule {
+  uint32 id = 1;
+  uint32 new_heating_setpoint_schedule_id = 2;
+}
+
+message ChangeThermostatCoolingSetpointSchedule {
+  uint32 id = 1;
+  uint32 new_cooling_setpoint_schedule_id = 2;
+}
+
+message ChangeThermostatHeatingThrottleRange {
+  uint32 id = 1;
+  double new_heating_throttle_range_k = 2;
+}
+
+message ChangeThermostatCoolingThrottleRange {
+  uint32 id = 1;
+  double new_cooling_throttle_range_k = 2;
+}
+
+message CreateHumidistat {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+  uint32 humidifying_setpoint_schedule_id = 3;
+  uint32 dehumidifying_setpoint_schedule_id = 4;
+  double humidifying_throttle_range = 5;
+  double dehumidifying_throttle_range = 6;
+}
+
+message DeleteHumidistat {
+  uint32 id = 1;
+}
+
+message ChangeHumidistatZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeHumidistatHumidifyingSetpointSchedule {
+  uint32 id = 1;
+  uint32 new_humidifying_setpoint_schedule_id = 2;
+}
+
+message ChangeHumidistatDehumidifyingSetpointSchedule {
+  uint32 id = 1;
+  uint32 new_dehumidifying_setpoint_schedule_id = 2;
+}
+
+message ChangeHumidistatHumidifyingThrottleRange {
+  uint32 id = 1;
+  double new_humidifying_throttle_range = 2;
+}
+
+message ChangeHumidistatDehumidifyingThrottleRange {
+  uint32 id = 1;
+  double new_dehumidifying_throttle_range = 2;
+}
+
+message CreateIdealLoadsSystem {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+  double max_heating_supply_air_temp_c = 3;
+  double min_cooling_supply_air_temp_c = 4;
+  bool max_heating_capacity_present = 5;
+  double max_heating_capacity_w = 6;
+  bool max_cooling_capacity_present = 7;
+  double max_cooling_capacity_w = 8;
+  double outdoor_air_per_person_m3_s = 9;
+  double outdoor_air_per_area_m3_s_m2 = 10;
+}
+
+message DeleteIdealLoadsSystem {
+  uint32 id = 1;
+}
+
+message ChangeIdealLoadsSystemZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp {
+  uint32 id = 1;
+  double new_max_heating_supply_air_temp_c = 2;
+}
+
+message ChangeIdealLoadsSystemMinCoolingSupplyAirTemp {
+  uint32 id = 1;
+  double new_min_cooling_supply_air_temp_c = 2;
+}
+
+message ChangeIdealLoadsSystemMaxHeatingCapacity {
+  uint32 id = 1;
+  bool new_capacity_present = 2;
+  double new_max_heating_capacity_w = 3;
+}
+
+message ChangeIdealLoadsSystemMaxCoolingCapacity {
+  uint32 id = 1;
+  bool new_capacity_present = 2;
+  double new_max_cooling_capacity_w = 3;
+}
+
+message ChangeIdealLoadsSystemOutdoorAirPerPerson {
+  uint32 id = 1;
+  double new_outdoor_air_per_person_m3_s = 2;
+}
+
+message ChangeIdealLoadsSystemOutdoorAirPerArea {
+  uint32 id = 1;
+  double new_outdoor_air_per_area_m3_s_m2 = 2;
+}
+
+message CreateZoneEquipment {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+  string equipment_type = 3;
+  uint32 priority = 4;
+  double heating_capacity_w = 5;
+  double cooling_capacity_w = 6;
+}
+
+message DeleteZoneEquipment {
+  uint32 id = 1;
+}
+
+message ChangeZoneEquipmentZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeZoneEquipmentType {
+  uint32 id = 1;
+  string new_equipment_type = 2;
+}
+
+message ChangeZoneEquipmentPriority {
+  uint32 id = 1;
+  uint32 new_priority = 2;
+}
+
+message ChangeZoneEquipmentHeatingCapacity {
+  uint32 id = 1;
+  double new_heating_capacity_w = 2;
+}
+
+message ChangeZoneEquipmentCoolingCapacity {
+  uint32 id = 1;
+  double new_cooling_capacity_w = 2;
+}
+
+message CreateDaylightZone {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+  double illuminance_target_lux = 3;
+  double glare_limit = 4;
+  double window_transmittance = 5;
+}
+
+message DeleteDaylightZone {
+  uint32 id = 1;
+}
+
+message ChangeDaylightZoneZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeDaylightZoneIlluminanceTarget {
+  uint32 id = 1;
+  double new_illuminance_target_lux = 2;
+}
+
+message ChangeDaylightZoneGlareLimit {
+  uint32 id = 1;
+  double new_glare_limit = 2;
+}
+
+message ChangeDaylightZoneWindowTransmittance {
+  uint32 id = 1;
+  double new_window_transmittance = 2;
+}
+
+message CreateSizingObject {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+  string sizing_type = 3;
+  string design_day_type = 4;
+}
+
+message DeleteSizingObject {
+  uint32 id = 1;
+}
+
+message ChangeSizingObjectZone {
+  uint32 id = 1;
+  uint32 new_zone_id = 2;
+}
+
+message ChangeSizingObjectSizingType {
+  uint32 id = 1;
+  string new_sizing_type = 2;
+}
+
+message ChangeSizingObjectDesignDayType {
+  uint32 id = 1;
+  string new_design_day_type = 2;
+}
+
+message CreateRoomAirModelAssignment {
+  uint32 zone_id = 1;
+  string model = 2;
+}
+
+message DeleteRoomAirModelAssignment {
+  uint32 zone_id = 1;
+}
+
+message ChangeRoomAirModel {
+  uint32 zone_id = 1;
+  string new_model = 2;
+}
+
+message CreateSetpointManager {
+  uint32 id = 1;
+  string name = 2;
+  string kind = 3;
+  double low_outdoor_c = 4;
+  double high_outdoor_c = 5;
+  double low_setpoint_c = 6;
+  double high_setpoint_c = 7;
+  bool schedule_present = 8;
+  uint32 schedule_id = 9;
+}
+
+message DeleteSetpointManager {
+  uint32 id = 1;
+}
+
+message RenameSetpointManager {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ReplaceSetpointManagerKind {
+  uint32 id = 1;
+  string new_kind = 2;
+  double new_low_outdoor_c = 3;
+  double new_high_outdoor_c = 4;
+  double new_low_setpoint_c = 5;
+  double new_high_setpoint_c = 6;
+}
+
+message ChangeSetpointManagerSchedule {
+  uint32 id = 1;
+  bool new_schedule_present = 2;
+  uint32 new_schedule_id = 3;
+}
+
+message CreateAirLoop {
+  uint32 id = 1;
+  string name = 2;
+  uint32 supply_node_id = 3;
+  uint32 return_node_id = 4;
+  double design_supply_air_flow_m3_s = 5;
+  repeated uint32 terminal_zone_ids = 6;
+}
+
+message DeleteAirLoop {
+  uint32 id = 1;
+}
+
+message RenameAirLoop {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ChangeAirLoopSupplyNode {
+  uint32 id = 1;
+  uint32 new_supply_node_id = 2;
+}
+
+message ChangeAirLoopReturnNode {
+  uint32 id = 1;
+  uint32 new_return_node_id = 2;
+}
+
+message ChangeAirLoopDesignSupplyAirFlow {
+  uint32 id = 1;
+  double new_design_supply_air_flow_m3_s = 2;
+}
+
+message AddAirLoopTerminalZone {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+}
+
+message RemoveAirLoopTerminalZone {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+}
+
+message CreatePlantLoop {
+  uint32 id = 1;
+  string name = 2;
+  string loop_type = 3;
+  double supply_temperature_c = 4;
+  double return_temperature_c = 5;
+  double design_flow_kg_s = 6;
+  repeated uint32 equipment_ids = 7;
+}
+
+message DeletePlantLoop {
+  uint32 id = 1;
+}
+
+message RenamePlantLoop {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ChangePlantLoopType {
+  uint32 id = 1;
+  string new_loop_type = 2;
+}
+
+message ChangePlantLoopSupplyTemperature {
+  uint32 id = 1;
+  double new_supply_temperature_c = 2;
+}
+
+message ChangePlantLoopReturnTemperature {
+  uint32 id = 1;
+  double new_return_temperature_c = 2;
+}
+
+message ChangePlantLoopDesignFlow {
+  uint32 id = 1;
+  double new_design_flow_kg_s = 2;
+}
+
+message AddPlantLoopEquipment {
+  uint32 id = 1;
+  uint32 equipment_id = 2;
+}
+
+message RemovePlantLoopEquipment {
+  uint32 id = 1;
+  uint32 equipment_id = 2;
+}
+
+message CreateOutdoorAirSystem {
+  uint32 id = 1;
+  uint32 air_loop_id = 2;
+  double min_oa_flow_m3_s = 3;
+  bool economizer_enabled = 4;
+}
+
+message DeleteOutdoorAirSystem {
+  uint32 id = 1;
+}
+
+message ChangeOutdoorAirSystemAirLoop {
+  uint32 id = 1;
+  uint32 new_air_loop_id = 2;
+}
+
+message ChangeOutdoorAirSystemMinOaFlow {
+  uint32 id = 1;
+  double new_min_oa_flow_m3_s = 2;
+}
+
+message ChangeOutdoorAirSystemEconomizerEnabled {
+  uint32 id = 1;
+  bool new_economizer_enabled = 2;
+}
+
+message CreateElectricalLoadCenter {
+  uint32 index = 1;
+  uint32 id = 2;
+  string name = 3;
+  repeated uint32 generator_ids = 4;
+  repeated uint32 pv_ids = 5;
+  repeated uint32 battery_ids = 6;
+}
+
+message DeleteElectricalLoadCenter {
+  uint32 id = 1;
+}
+
+message RenameElectricalLoadCenter {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message AddElectricalLoadCenterPv {
+  uint32 id = 1;
+  uint32 index = 2;
+  uint32 pv_id = 3;
+}
+
+message RemoveElectricalLoadCenterPv {
+  uint32 id = 1;
+  uint32 pv_id = 2;
+}
+
+message AddElectricalLoadCenterBattery {
+  uint32 id = 1;
+  uint32 index = 2;
+  uint32 battery_id = 3;
+}
+
+message RemoveElectricalLoadCenterBattery {
+  uint32 id = 1;
+  uint32 battery_id = 2;
+}
+
+message CreatePvSystem {
+  uint32 index = 1;
+  uint32 id = 2;
+  double dc_capacity_w = 3;
+  double area_m2 = 4;
+  double tilt_deg = 5;
+  double azimuth_deg = 6;
+  double module_efficiency = 7;
+  double inverter_efficiency = 8;
+}
+
+message DeletePvSystem {
+  uint32 id = 1;
+}
+
+message ChangePvSystemDcCapacity {
+  uint32 id = 1;
+  double new_dc_capacity_w = 2;
+}
+
+message ChangePvSystemArea {
+  uint32 id = 1;
+  double new_area_m2 = 2;
+}
+
+message ChangePvSystemTilt {
+  uint32 id = 1;
+  double new_tilt_deg = 2;
+}
+
+message ChangePvSystemAzimuth {
+  uint32 id = 1;
+  double new_azimuth_deg = 2;
+}
+
+message ChangePvSystemModuleEfficiency {
+  uint32 id = 1;
+  double new_module_efficiency = 2;
+}
+
+message ChangePvSystemInverterEfficiency {
+  uint32 id = 1;
+  double new_inverter_efficiency = 2;
+}
+
+message CreateBattery {
+  uint32 index = 1;
+  uint32 id = 2;
+  double capacity_kwh = 3;
+  double max_charge_w = 4;
+  double max_discharge_w = 5;
+  double round_trip_efficiency = 6;
+}
+
+message DeleteBattery {
+  uint32 id = 1;
+}
+
+message ChangeBatteryCapacity {
+  uint32 id = 1;
+  double new_capacity_kwh = 2;
+}
+
+message ChangeBatteryMaxCharge {
+  uint32 id = 1;
+  double new_max_charge_w = 2;
+}
+
+message ChangeBatteryMaxDischarge {
+  uint32 id = 1;
+  double new_max_discharge_w = 2;
+}
+
+message ChangeBatteryRoundTripEfficiency {
+  uint32 id = 1;
+  double new_round_trip_efficiency = 2;
+}
+
+message CreateShwSystem {
+  uint32 index = 1;
+  uint32 id = 2;
+  double heater_capacity_w = 3;
+  double storage_volume_m3 = 4;
+  double setpoint_c = 5;
+  uint32 schedule_id = 6;
+}
+
+message DeleteShwSystem {
+  uint32 id = 1;
+}
+
+message ChangeShwSystemHeaterCapacity {
+  uint32 id = 1;
+  double new_heater_capacity_w = 2;
+}
+
+message ChangeShwSystemStorageVolume {
+  uint32 id = 1;
+  double new_storage_volume_m3 = 2;
+}
+
+message ChangeShwSystemSetpoint {
+  uint32 id = 1;
+  double new_setpoint_c = 2;
+}
+
+message ChangeShwSystemSchedule {
+  uint32 id = 1;
+  uint32 new_schedule_id = 2;
+}
+
+message CreateSolarThermalSystem {
+  uint32 index = 1;
+  uint32 id = 2;
+  double collector_area_m2 = 3;
+  double efficiency = 4;
+  double storage_volume_m3 = 5;
+  double tilt_deg = 6;
+  double azimuth_deg = 7;
+}
+
+message DeleteSolarThermalSystem {
+  uint32 id = 1;
+}
+
+message ChangeSolarThermalSystemCollectorArea {
+  uint32 id = 1;
+  double new_collector_area_m2 = 2;
+}
+
+message ChangeSolarThermalSystemEfficiency {
+  uint32 id = 1;
+  double new_efficiency = 2;
+}
+
+message ChangeSolarThermalSystemStorageVolume {
+  uint32 id = 1;
+  double new_storage_volume_m3 = 2;
+}
+
+message ChangeSolarThermalSystemTilt {
+  uint32 id = 1;
+  double new_tilt_deg = 2;
+}
+
+message ChangeSolarThermalSystemAzimuth {
+  uint32 id = 1;
+  double new_azimuth_deg = 2;
+}
+
+message CreateRefrigerationSystem {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 case_count = 3;
+  double design_load_w = 4;
+  uint32 defrost_schedule_id = 5;
+}
+
+message DeleteRefrigerationSystem {
+  uint32 id = 1;
+}
+
+message ChangeRefrigerationSystemCaseCount {
+  uint32 id = 1;
+  uint32 new_case_count = 2;
+}
+
+message ChangeRefrigerationSystemDesignLoad {
+  uint32 id = 1;
+  double new_design_load_w = 2;
+}
+
+message ChangeRefrigerationSystemDefrostSchedule {
+  uint32 id = 1;
+  uint32 new_defrost_schedule_id = 2;
+}
+
+message CreateWaterSystem {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 fixture_count = 3;
+  double peak_flow_l_s = 4;
+  uint32 schedule_id = 5;
+}
+
+message DeleteWaterSystem {
+  uint32 id = 1;
+}
+
+message ChangeWaterSystemFixtureCount {
+  uint32 id = 1;
+  uint32 new_fixture_count = 2;
+}
+
+message ChangeWaterSystemPeakFlow {
+  uint32 id = 1;
+  double new_peak_flow_l_s = 2;
+}
+
+message ChangeWaterSystemSchedule {
+  uint32 id = 1;
+  uint32 new_schedule_id = 2;
+}
+
+message CreateFault {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 target_equipment_id = 3;
+  string fault_type = 4;
+  double severity = 5;
+  uint32 start_schedule_id = 6;
+}
+
+message DeleteFault {
+  uint32 id = 1;
+}
+
+message ChangeFaultTargetEquipment {
+  uint32 id = 1;
+  uint32 new_target_equipment_id = 2;
+}
+
+message ChangeFaultType {
+  uint32 id = 1;
+  string new_fault_type = 2;
+}
+
+message ChangeFaultSeverity {
+  uint32 id = 1;
+  double new_severity = 2;
+}
+
+message ChangeFaultStartSchedule {
+  uint32 id = 1;
+  uint32 new_start_schedule_id = 2;
+}
+
+message CreateSpaceList {
+  uint32 index = 1;
+  uint32 id = 2;
+  string name = 3;
+  repeated uint32 space_ids = 4;
+}
+
+message DeleteSpaceList {
+  uint32 id = 1;
+}
+
+message RenameSpaceList {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message AddSpaceListMember {
+  uint32 id = 1;
+  uint32 index = 2;
+  uint32 space_id = 3;
+}
+
+message RemoveSpaceListMember {
+  uint32 id = 1;
+  uint32 space_id = 2;
+}
+
+message CreateThermalEnclosure {
+  uint32 index = 1;
+  uint32 id = 2;
+  string name = 3;
+  repeated uint32 zone_ids = 4;
+}
+
+message DeleteThermalEnclosure {
+  uint32 id = 1;
+}
+
+message RenameThermalEnclosure {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message AddThermalEnclosureZone {
+  uint32 id = 1;
+  uint32 index = 2;
+  uint32 zone_id = 3;
+}
+
+message RemoveThermalEnclosureZone {
+  uint32 id = 1;
+  uint32 zone_id = 2;
+}
+
+message CreateConstantSchedule {
+  uint32 index = 1;
+  uint32 id = 2;
+  double value = 3;
+}
+
+message DeleteConstantSchedule {
+  uint32 id = 1;
+}
+
+message ChangeConstantScheduleValue {
+  uint32 id = 1;
+  double new_value = 2;
+}
+
+message CreateDailySchedule {
+  uint32 index = 1;
+  uint32 id = 2;
+  repeated double hourly_values = 3;
+  string interpolation = 4;
+  optional double limits_min = 5;
+  optional double limits_max = 6;
+}
+
+message DeleteDailySchedule {
+  uint32 id = 1;
+}
+
+message ReplaceDailyScheduleHourlyValues {
+  uint32 id = 1;
+  repeated double new_hourly_values = 2;
+}
+
+message ChangeDailyScheduleInterpolation {
+  uint32 id = 1;
+  string new_interpolation = 2;
+}
+
+message ChangeDailyScheduleLimits {
+  uint32 id = 1;
+  optional double new_limits_min = 2;
+  optional double new_limits_max = 3;
+}
+
+message CreateWeeklySchedule {
+  uint32 index = 1;
+  uint32 id = 2;
+  repeated uint32 daily_schedule_ids = 3;
+}
+
+message DeleteWeeklySchedule {
+  uint32 id = 1;
+}
+
+message ChangeWeeklyScheduleDay {
+  uint32 id = 1;
+  uint32 day_index = 2;
+  uint32 new_daily_schedule_id = 3;
+}
+
+message CreateAnnualSchedule {
+  uint32 index = 1;
+  uint32 id = 2;
+  uint32 default_daily_schedule_id = 3;
+  optional uint32 holiday_daily_schedule_id = 4;
+}
+
+message DeleteAnnualSchedule {
+  uint32 id = 1;
+}
+
+message InsertAnnualScheduleRule {
+  uint32 id = 1;
+  uint32 index = 2;
+  uint32 start_month = 3;
+  uint32 start_day = 4;
+  uint32 end_month = 5;
+  uint32 end_day = 6;
+  uint32 daily_schedule_id = 7;
+}
+
+message RemoveAnnualScheduleRule {
+  uint32 id = 1;
+  uint32 index = 2;
+}
+
+message ReorderAnnualScheduleRules {
+  uint32 id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+
+message ChangeAnnualScheduleDefaultDailySchedule {
+  uint32 id = 1;
+  uint32 new_default_daily_schedule_id = 2;
+}
+
+message ChangeAnnualScheduleHolidayDailySchedule {
+  uint32 id = 1;
+  optional uint32 new_holiday_daily_schedule_id = 2;
+}
+
+message AddAnnualScheduleHoliday {
+  uint32 id = 1;
+  uint32 index = 2;
+  uint32 year = 3;
+  uint32 month = 4;
+  uint32 day = 5;
+}
+
+message RemoveAnnualScheduleHoliday {
+  uint32 id = 1;
+  uint32 year = 2;
+  uint32 month = 3;
+  uint32 day = 4;
+}
+
+message CreateTimeSeriesSchedule {
+  uint32 index = 1;
+  uint32 id = 2;
+  repeated double values = 3;
+  uint32 timestep_seconds = 4;
+}
+
+message DeleteTimeSeriesSchedule {
+  uint32 id = 1;
+}
+
+message ReplaceTimeSeriesScheduleValues {
+  uint32 id = 1;
+  repeated double new_values = 2;
+}
+
+message ChangeTimeSeriesScheduleTimestep {
+  uint32 id = 1;
+  uint32 new_timestep_seconds = 2;
+}
+
 message EnergyModelMutation {
   oneof kind {
     RenameModel rename_model = 1;
@@ -110,5 +1566,264 @@ message EnergyModelMutation {
     ChangeZoneMultiplier change_zone_multiplier = 102;
     ChangeZoneConditioned change_zone_conditioned = 103;
     ChangeZoneFloorAreaParticipation change_zone_floor_area_participation = 104;
+    CreateZone create_zone = 105;
+    DeleteZone delete_zone = 106;
+    CreateSpace create_space = 107;
+    DeleteSpace delete_space = 108;
+    RenameSpace rename_space = 109;
+    ChangeSpaceFloorArea change_space_floor_area = 110;
+    ChangeSpaceZone change_space_zone = 111;
+    CreateSurface create_surface = 200;
+    DeleteSurface delete_surface = 201;
+    RenameSurface rename_surface = 202;
+    ChangeSurfaceZone change_surface_zone = 203;
+    ChangeSurfaceClass change_surface_class = 204;
+    ReplaceSurfaceVertices replace_surface_vertices = 205;
+    ChangeSurfaceConstruction change_surface_construction = 206;
+    ChangeSurfaceBoundaryCondition change_surface_boundary_condition = 207;
+    ChangeSurfaceSunExposed change_surface_sun_exposed = 208;
+    ChangeSurfaceWindExposed change_surface_wind_exposed = 209;
+    ChangeSurfaceMultiplier change_surface_multiplier = 210;
+    CreateFenestration create_fenestration = 211;
+    DeleteFenestration delete_fenestration = 212;
+    RenameFenestration rename_fenestration = 213;
+    ChangeFenestrationSurface change_fenestration_surface = 214;
+    ChangeFenestrationUValue change_fenestration_u_value = 215;
+    ChangeFenestrationShgc change_fenestration_shgc = 216;
+    ChangeFenestrationVlt change_fenestration_vlt = 217;
+    ChangeFenestrationArea change_fenestration_area = 218;
+    ChangeFenestrationFrameConductance change_fenestration_frame_conductance = 219;
+    ChangeFenestrationDividerConductance change_fenestration_divider_conductance = 220;
+    CreateShadingSurface create_shading_surface = 221;
+    DeleteShadingSurface delete_shading_surface = 222;
+    RenameShadingSurface rename_shading_surface = 223;
+    ReplaceShadingSurfaceVertices replace_shading_surface_vertices = 224;
+    ChangeShadingSurfaceTransmittanceSchedule change_shading_surface_transmittance_schedule = 225;
+    ConnectSurfaces connect_surfaces = 226;
+    DisconnectSurfaces disconnect_surfaces = 227;
+    BindFenestrationGlazingConstruction bind_fenestration_glazing_construction = 228;
+    ClearFenestrationGlazingConstruction clear_fenestration_glazing_construction = 229;
+    ChangeFenestrationHeight change_fenestration_height = 230;
+    ChangeFenestrationSillHeight change_fenestration_sill_height = 231;
+    ChangeFenestrationOverhangDepth change_fenestration_overhang_depth = 232;
+    ChangeFenestrationOverhangOffset change_fenestration_overhang_offset = 233;
+    ChangeFenestrationFinDepth change_fenestration_fin_depth = 234;
+    ChangeFenestrationFinOffset change_fenestration_fin_offset = 235;
+    CreateMaterial create_material = 300;
+    DeleteMaterial delete_material = 301;
+    RenameMaterial rename_material = 302;
+    ChangeMaterialThickness change_material_thickness = 303;
+    ChangeMaterialConductivity change_material_conductivity = 304;
+    ChangeMaterialDensity change_material_density = 305;
+    ChangeMaterialSpecificHeat change_material_specific_heat = 306;
+    ChangeMaterialThermalAbsorptance change_material_thermal_absorptance = 307;
+    ChangeMaterialSolarAbsorptance change_material_solar_absorptance = 308;
+    ChangeMaterialVisibleAbsorptance change_material_visible_absorptance = 309;
+    CreateConstruction create_construction = 310;
+    DeleteConstruction delete_construction = 311;
+    RenameConstruction rename_construction = 312;
+    AddConstructionLayer add_construction_layer = 313;
+    RemoveConstructionLayer remove_construction_layer = 314;
+    ReorderConstructionLayers reorder_construction_layers = 315;
+    CreatePeopleGain create_people_gain = 400;
+    DeletePeopleGain delete_people_gain = 401;
+    ChangePeopleGainZone change_people_gain_zone = 402;
+    ChangePeopleGainSchedule change_people_gain_schedule = 403;
+    ChangePeopleGainActivitySchedule change_people_gain_activity_schedule = 404;
+    ChangePeopleGainPeoplePerArea change_people_gain_people_per_area = 405;
+    ChangePeopleGainSensibleFraction change_people_gain_sensible_fraction = 406;
+    ChangePeopleGainLatentFraction change_people_gain_latent_fraction = 407;
+    ChangePeopleGainRadiantFraction change_people_gain_radiant_fraction = 408;
+    CreateLightingGain create_lighting_gain = 409;
+    DeleteLightingGain delete_lighting_gain = 410;
+    ChangeLightingGainZone change_lighting_gain_zone = 411;
+    ChangeLightingGainSchedule change_lighting_gain_schedule = 412;
+    ChangeLightingGainWattsPerArea change_lighting_gain_watts_per_area = 413;
+    ChangeLightingGainRadiantFraction change_lighting_gain_radiant_fraction = 414;
+    ChangeLightingGainVisibleFraction change_lighting_gain_visible_fraction = 415;
+    ChangeLightingGainReturnAirFraction change_lighting_gain_return_air_fraction = 416;
+    CreateEquipmentGain create_equipment_gain = 417;
+    DeleteEquipmentGain delete_equipment_gain = 418;
+    ChangeEquipmentGainZone change_equipment_gain_zone = 419;
+    ChangeEquipmentGainSchedule change_equipment_gain_schedule = 420;
+    ChangeEquipmentGainWattsPerArea change_equipment_gain_watts_per_area = 421;
+    ChangeEquipmentGainRadiantFraction change_equipment_gain_radiant_fraction = 422;
+    ChangeEquipmentGainLatentFraction change_equipment_gain_latent_fraction = 423;
+    CreateInfiltration create_infiltration = 424;
+    DeleteInfiltration delete_infiltration = 425;
+    ChangeInfiltrationZone change_infiltration_zone = 426;
+    ChangeInfiltrationSchedule change_infiltration_schedule = 427;
+    ChangeInfiltrationFlowPerExteriorArea change_infiltration_flow_per_exterior_area = 428;
+    ChangeInfiltrationConstantTermCoefficient change_infiltration_constant_term_coefficient = 429;
+    ChangeInfiltrationTemperatureTermCoefficient change_infiltration_temperature_term_coefficient = 430;
+    ChangeInfiltrationVelocityTermCoefficient change_infiltration_velocity_term_coefficient = 431;
+    ChangeInfiltrationVelocitySquaredTermCoefficient change_infiltration_velocity_squared_term_coefficient = 432;
+    CreateMechanicalVentilation create_mechanical_ventilation = 433;
+    DeleteMechanicalVentilation delete_mechanical_ventilation = 434;
+    ChangeMechanicalVentilationZone change_mechanical_ventilation_zone = 435;
+    ChangeMechanicalVentilationSchedule change_mechanical_ventilation_schedule = 436;
+    ChangeMechanicalVentilationDesignFlow change_mechanical_ventilation_design_flow = 437;
+    ChangeMechanicalVentilationFanTotalEfficiency change_mechanical_ventilation_fan_total_efficiency = 438;
+    ChangeMechanicalVentilationFanDeltaPressure change_mechanical_ventilation_fan_delta_pressure = 439;
+    ChangeInfiltrationMethod change_infiltration_method = 440;
+    ChangeInfiltrationDesignFlowAch change_infiltration_design_flow_ach = 441;
+    ChangeInfiltrationEffectiveLeakageArea change_infiltration_effective_leakage_area = 442;
+    ChangeInfiltrationDischargeCoefficient change_infiltration_discharge_coefficient = 443;
+    ChangeInfiltrationStackHeight change_infiltration_stack_height = 444;
+    CreateThermostat create_thermostat = 500;
+    DeleteThermostat delete_thermostat = 501;
+    ChangeThermostatZone change_thermostat_zone = 502;
+    ChangeThermostatHeatingSetpointSchedule change_thermostat_heating_setpoint_schedule = 503;
+    ChangeThermostatCoolingSetpointSchedule change_thermostat_cooling_setpoint_schedule = 504;
+    ChangeThermostatHeatingThrottleRange change_thermostat_heating_throttle_range = 505;
+    ChangeThermostatCoolingThrottleRange change_thermostat_cooling_throttle_range = 506;
+    CreateHumidistat create_humidistat = 507;
+    DeleteHumidistat delete_humidistat = 508;
+    ChangeHumidistatZone change_humidistat_zone = 509;
+    ChangeHumidistatHumidifyingSetpointSchedule change_humidistat_humidifying_setpoint_schedule = 510;
+    ChangeHumidistatDehumidifyingSetpointSchedule change_humidistat_dehumidifying_setpoint_schedule = 511;
+    ChangeHumidistatHumidifyingThrottleRange change_humidistat_humidifying_throttle_range = 512;
+    ChangeHumidistatDehumidifyingThrottleRange change_humidistat_dehumidifying_throttle_range = 513;
+    CreateIdealLoadsSystem create_ideal_loads_system = 514;
+    DeleteIdealLoadsSystem delete_ideal_loads_system = 515;
+    ChangeIdealLoadsSystemZone change_ideal_loads_system_zone = 516;
+    ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp change_ideal_loads_system_max_heating_supply_air_temp = 517;
+    ChangeIdealLoadsSystemMinCoolingSupplyAirTemp change_ideal_loads_system_min_cooling_supply_air_temp = 518;
+    ChangeIdealLoadsSystemMaxHeatingCapacity change_ideal_loads_system_max_heating_capacity = 519;
+    ChangeIdealLoadsSystemMaxCoolingCapacity change_ideal_loads_system_max_cooling_capacity = 520;
+    ChangeIdealLoadsSystemOutdoorAirPerPerson change_ideal_loads_system_outdoor_air_per_person = 521;
+    ChangeIdealLoadsSystemOutdoorAirPerArea change_ideal_loads_system_outdoor_air_per_area = 522;
+    CreateZoneEquipment create_zone_equipment = 523;
+    DeleteZoneEquipment delete_zone_equipment = 524;
+    ChangeZoneEquipmentZone change_zone_equipment_zone = 525;
+    ChangeZoneEquipmentType change_zone_equipment_type = 526;
+    ChangeZoneEquipmentPriority change_zone_equipment_priority = 527;
+    ChangeZoneEquipmentHeatingCapacity change_zone_equipment_heating_capacity = 528;
+    ChangeZoneEquipmentCoolingCapacity change_zone_equipment_cooling_capacity = 529;
+    CreateDaylightZone create_daylight_zone = 530;
+    DeleteDaylightZone delete_daylight_zone = 531;
+    ChangeDaylightZoneZone change_daylight_zone_zone = 532;
+    ChangeDaylightZoneIlluminanceTarget change_daylight_zone_illuminance_target = 533;
+    ChangeDaylightZoneGlareLimit change_daylight_zone_glare_limit = 534;
+    ChangeDaylightZoneWindowTransmittance change_daylight_zone_window_transmittance = 535;
+    CreateSizingObject create_sizing_object = 536;
+    DeleteSizingObject delete_sizing_object = 537;
+    ChangeSizingObjectZone change_sizing_object_zone = 538;
+    ChangeSizingObjectSizingType change_sizing_object_sizing_type = 539;
+    ChangeSizingObjectDesignDayType change_sizing_object_design_day_type = 540;
+    CreateRoomAirModelAssignment create_room_air_model_assignment = 541;
+    DeleteRoomAirModelAssignment delete_room_air_model_assignment = 542;
+    ChangeRoomAirModel change_room_air_model = 543;
+    CreateSetpointManager create_setpoint_manager = 600;
+    DeleteSetpointManager delete_setpoint_manager = 601;
+    RenameSetpointManager rename_setpoint_manager = 602;
+    ReplaceSetpointManagerKind replace_setpoint_manager_kind = 603;
+    ChangeSetpointManagerSchedule change_setpoint_manager_schedule = 604;
+    CreateAirLoop create_air_loop = 605;
+    DeleteAirLoop delete_air_loop = 606;
+    RenameAirLoop rename_air_loop = 607;
+    ChangeAirLoopSupplyNode change_air_loop_supply_node = 608;
+    ChangeAirLoopReturnNode change_air_loop_return_node = 609;
+    ChangeAirLoopDesignSupplyAirFlow change_air_loop_design_supply_air_flow = 610;
+    AddAirLoopTerminalZone add_air_loop_terminal_zone = 611;
+    RemoveAirLoopTerminalZone remove_air_loop_terminal_zone = 612;
+    CreatePlantLoop create_plant_loop = 613;
+    DeletePlantLoop delete_plant_loop = 614;
+    RenamePlantLoop rename_plant_loop = 615;
+    ChangePlantLoopType change_plant_loop_type = 616;
+    ChangePlantLoopSupplyTemperature change_plant_loop_supply_temperature = 617;
+    ChangePlantLoopReturnTemperature change_plant_loop_return_temperature = 618;
+    ChangePlantLoopDesignFlow change_plant_loop_design_flow = 619;
+    AddPlantLoopEquipment add_plant_loop_equipment = 620;
+    RemovePlantLoopEquipment remove_plant_loop_equipment = 621;
+    CreateOutdoorAirSystem create_outdoor_air_system = 622;
+    DeleteOutdoorAirSystem delete_outdoor_air_system = 623;
+    ChangeOutdoorAirSystemAirLoop change_outdoor_air_system_air_loop = 624;
+    ChangeOutdoorAirSystemMinOaFlow change_outdoor_air_system_min_oa_flow = 625;
+    ChangeOutdoorAirSystemEconomizerEnabled change_outdoor_air_system_economizer_enabled = 626;
+    CreateElectricalLoadCenter create_electrical_load_center = 700;
+    DeleteElectricalLoadCenter delete_electrical_load_center = 701;
+    RenameElectricalLoadCenter rename_electrical_load_center = 702;
+    AddElectricalLoadCenterPv add_electrical_load_center_pv = 705;
+    RemoveElectricalLoadCenterPv remove_electrical_load_center_pv = 706;
+    AddElectricalLoadCenterBattery add_electrical_load_center_battery = 707;
+    RemoveElectricalLoadCenterBattery remove_electrical_load_center_battery = 708;
+    CreatePvSystem create_pv_system = 709;
+    DeletePvSystem delete_pv_system = 710;
+    ChangePvSystemDcCapacity change_pv_system_dc_capacity = 711;
+    ChangePvSystemArea change_pv_system_area = 712;
+    ChangePvSystemTilt change_pv_system_tilt = 713;
+    ChangePvSystemAzimuth change_pv_system_azimuth = 714;
+    ChangePvSystemModuleEfficiency change_pv_system_module_efficiency = 715;
+    ChangePvSystemInverterEfficiency change_pv_system_inverter_efficiency = 716;
+    CreateBattery create_battery = 717;
+    DeleteBattery delete_battery = 718;
+    ChangeBatteryCapacity change_battery_capacity = 719;
+    ChangeBatteryMaxCharge change_battery_max_charge = 720;
+    ChangeBatteryMaxDischarge change_battery_max_discharge = 721;
+    ChangeBatteryRoundTripEfficiency change_battery_round_trip_efficiency = 722;
+    CreateShwSystem create_shw_system = 723;
+    DeleteShwSystem delete_shw_system = 724;
+    ChangeShwSystemHeaterCapacity change_shw_system_heater_capacity = 725;
+    ChangeShwSystemStorageVolume change_shw_system_storage_volume = 726;
+    ChangeShwSystemSetpoint change_shw_system_setpoint = 727;
+    ChangeShwSystemSchedule change_shw_system_schedule = 728;
+    CreateSolarThermalSystem create_solar_thermal_system = 729;
+    DeleteSolarThermalSystem delete_solar_thermal_system = 730;
+    ChangeSolarThermalSystemCollectorArea change_solar_thermal_system_collector_area = 731;
+    ChangeSolarThermalSystemEfficiency change_solar_thermal_system_efficiency = 732;
+    ChangeSolarThermalSystemStorageVolume change_solar_thermal_system_storage_volume = 733;
+    ChangeSolarThermalSystemTilt change_solar_thermal_system_tilt = 734;
+    ChangeSolarThermalSystemAzimuth change_solar_thermal_system_azimuth = 735;
+    CreateRefrigerationSystem create_refrigeration_system = 736;
+    DeleteRefrigerationSystem delete_refrigeration_system = 737;
+    ChangeRefrigerationSystemCaseCount change_refrigeration_system_case_count = 738;
+    ChangeRefrigerationSystemDesignLoad change_refrigeration_system_design_load = 739;
+    ChangeRefrigerationSystemDefrostSchedule change_refrigeration_system_defrost_schedule = 740;
+    CreateWaterSystem create_water_system = 741;
+    DeleteWaterSystem delete_water_system = 742;
+    ChangeWaterSystemFixtureCount change_water_system_fixture_count = 743;
+    ChangeWaterSystemPeakFlow change_water_system_peak_flow = 744;
+    ChangeWaterSystemSchedule change_water_system_schedule = 745;
+    CreateFault create_fault = 746;
+    DeleteFault delete_fault = 747;
+    ChangeFaultTargetEquipment change_fault_target_equipment = 748;
+    ChangeFaultType change_fault_type = 749;
+    ChangeFaultSeverity change_fault_severity = 750;
+    ChangeFaultStartSchedule change_fault_start_schedule = 751;
+    CreateSpaceList create_space_list = 800;
+    DeleteSpaceList delete_space_list = 801;
+    RenameSpaceList rename_space_list = 802;
+    AddSpaceListMember add_space_list_member = 803;
+    RemoveSpaceListMember remove_space_list_member = 804;
+    CreateThermalEnclosure create_thermal_enclosure = 805;
+    DeleteThermalEnclosure delete_thermal_enclosure = 806;
+    RenameThermalEnclosure rename_thermal_enclosure = 807;
+    AddThermalEnclosureZone add_thermal_enclosure_zone = 808;
+    RemoveThermalEnclosureZone remove_thermal_enclosure_zone = 809;
+    CreateConstantSchedule create_constant_schedule = 900;
+    DeleteConstantSchedule delete_constant_schedule = 901;
+    ChangeConstantScheduleValue change_constant_schedule_value = 902;
+    CreateDailySchedule create_daily_schedule = 903;
+    DeleteDailySchedule delete_daily_schedule = 904;
+    ReplaceDailyScheduleHourlyValues replace_daily_schedule_hourly_values = 905;
+    ChangeDailyScheduleInterpolation change_daily_schedule_interpolation = 906;
+    ChangeDailyScheduleLimits change_daily_schedule_limits = 907;
+    CreateWeeklySchedule create_weekly_schedule = 908;
+    DeleteWeeklySchedule delete_weekly_schedule = 909;
+    ChangeWeeklyScheduleDay change_weekly_schedule_day = 910;
+    CreateAnnualSchedule create_annual_schedule = 911;
+    DeleteAnnualSchedule delete_annual_schedule = 912;
+    InsertAnnualScheduleRule insert_annual_schedule_rule = 913;
+    RemoveAnnualScheduleRule remove_annual_schedule_rule = 914;
+    ReorderAnnualScheduleRules reorder_annual_schedule_rules = 915;
+    ChangeAnnualScheduleDefaultDailySchedule change_annual_schedule_default_daily_schedule = 916;
+    ChangeAnnualScheduleHolidayDailySchedule change_annual_schedule_holiday_daily_schedule = 917;
+    AddAnnualScheduleHoliday add_annual_schedule_holiday = 918;
+    RemoveAnnualScheduleHoliday remove_annual_schedule_holiday = 919;
+    CreateTimeSeriesSchedule create_time_series_schedule = 920;
+    DeleteTimeSeriesSchedule delete_time_series_schedule = 921;
+    ReplaceTimeSeriesScheduleValues replace_time_series_schedule_values = 922;
+    ChangeTimeSeriesScheduleTimestep change_time_series_schedule_timestep = 923;
   }
 }

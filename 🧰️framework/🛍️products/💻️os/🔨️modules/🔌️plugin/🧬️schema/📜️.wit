@@ -1082,7 +1082,7 @@ interface reactor {
   use effects.{effect};
   use events.{event};
   use ui.{ui-patch};
-  use instance-lifetime.{receipt, ui-patch-receipt};
+  use instance-lifetime.{lifetime, receipt, ui-patch-receipt};
 
   record budget {
     fuel: u64,
@@ -1117,6 +1117,54 @@ interface reactor {
     cursor: command-page-cursor,
     fault: list<u8>,
   }
+  record cold-document-pair-frontier {
+    document-id: string,
+    head-edit-ordinal: u64,
+    head-edit-id: string,
+    last-commit-seq: u64,
+    chain-sha256: list<u8>,
+  }
+  record cold-document-pair-header {
+    lifetime: lifetime,
+    transfer-generation: u64,
+    descriptor-sha256: list<u8>,
+    baseline-frontier: cold-document-pair-frontier,
+    pack-sha256: list<u8>,
+    spr-sha256: list<u8>,
+    aggregate-sha256: list<u8>,
+    pack-length: u64,
+    spr-length: u64,
+    page-count: u32,
+  }
+  record cold-document-pair-page {
+    header: cold-document-pair-header,
+    page-index: u32,
+    bytes: list<u8>,
+  }
+  record cold-document-pair-cursor {
+    lifetime: lifetime,
+    transfer-generation: u64,
+    page-index: u32,
+    page-count: u32,
+  }
+  record cold-document-pair-applied {
+    lifetime: lifetime,
+    transfer-generation: u64,
+    baseline-frontier: cold-document-pair-frontier,
+    aggregate-sha256: list<u8>,
+  }
+  record cold-document-pair-fault {
+    cursor: cold-document-pair-cursor,
+    fault: list<u8>,
+  }
+  variant cold-pair-ingress-status {
+    idle,
+    page-accepted(cold-document-pair-cursor),
+    backpressure(cold-document-pair-cursor),
+    loading(cold-document-pair-cursor),
+    applied(cold-document-pair-applied),
+    fault(cold-document-pair-fault),
+  }
   variant turn-status {
     idle,
     more-work,
@@ -1148,10 +1196,11 @@ interface reactor {
     status: turn-status,
     fuel-used: u64,
     command-ingress: command-ingress-status,
+    cold-pair-ingress: cold-pair-ingress-status,
     lifecycle-receipt: option<receipt>,
     ui-patch-receipt: option<ui-patch-receipt>,
   }
-  poll: async func(events: list<event>, command-page: option<command-ingress-page>, budget: budget) -> result<turn-result, plugin-error>;
+  poll: async func(events: list<event>, command-page: option<command-ingress-page>, cold-pair-page: option<cold-document-pair-page>, budget: budget) -> result<turn-result, plugin-error>;
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse). `world actor`'s async import

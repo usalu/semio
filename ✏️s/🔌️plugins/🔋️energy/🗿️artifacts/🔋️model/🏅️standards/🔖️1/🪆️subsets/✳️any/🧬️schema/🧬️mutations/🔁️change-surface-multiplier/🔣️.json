@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-surface-multiplier",
+  "semanticKind": "change-surface-multiplier",
+  "displayName": "Change Surface Multiplier",
+  "emoji": "🔁️",
+  "aggregateVariant": "ChangeSurfaceMultiplier",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-surface-multiplier",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

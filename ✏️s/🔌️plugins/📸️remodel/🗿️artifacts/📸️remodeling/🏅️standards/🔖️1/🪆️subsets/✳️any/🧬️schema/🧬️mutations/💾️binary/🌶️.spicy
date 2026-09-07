@@ -12,7 +12,57 @@ public type Frame = unit {
 type RecordBody = unit {
     symbol_count: uint64 &convert=$$;
     symbols:      Symbol[self.symbol_count];
-    fields:       bytes &eod;
+    fields:       RecordFields;
+};
+
+# 🧾️ os_pack::encode_record_fields of the variant's payload RecordSpec: entries sorted by
+# ascending field id, Absent fields omitted, payload field ids = that struct's own DslRecord
+# 0-based declaration indices (keys per op in ../📝️text/📖️.grammar.semio).
+# Tag 0x0D (record) nests this same unit. Ordinal -> keyword, RemodelingMutation order:
+#    0 create-stream
+#    1 delete-stream
+#    2 change-stream-sync
+#    3 add-stream-frame
+#    4 remove-stream-frame
+#    5 replace-stream-source
+#    6 create-asset
+#    7 delete-asset
+#    8 create-camera-calibration
+#    9 update-camera-calibration
+#   10 delete-camera-calibration
+#   11 create-rig-extrinsic
+#   12 delete-rig-extrinsic
+#   13 update-rig-extrinsic
+#   14 create-gcp
+#   15 delete-gcp
+#   16 add-gcp-observation
+#   17 remove-gcp-observation
+#   18 update-ingest-params
+#   19 update-feature-params
+#   20 update-match-params
+#   21 update-sfm-params
+#   22 update-dense-params
+#   23 update-mesh-params
+#   24 update-motion-params
+#   25 update-geo-params
+#   26 replace-job
+#   27 replace-sparse
+#   28 replace-dense
+#   29 replace-mesh-result
+#   30 replace-trajectory
+#   31 replace-tracks
+#   32 replace-geo-products
+#   33 replace-qc
+#   34 commit-reconstruction
+type RecordFields = unit {
+    field_count: uint64 &convert=$$;
+    fields:      FieldEntry[self.field_count];
+};
+
+type FieldEntry = unit {
+    field_id: uint64 &convert=$$;
+    tag:      uint8;
+    value:    bytes &eod;
 };
 
 type Symbol = unit {

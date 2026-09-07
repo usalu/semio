@@ -1,0 +1,19 @@
+{
+  "mutation": "replaceMeshResult",
+  "mesh": {
+    "mesh": {
+      "childId": "remodeling-mesh-8f19c0d2a4b76e31",
+      "target": {
+        "artifactId": "mesh-stage:orbit-run-7",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "mesh"
+        }
+      }
+    },
+    "source": "reconstructed",
+    "textureAssetId": null,
+    "watertight": null
+  }
+}

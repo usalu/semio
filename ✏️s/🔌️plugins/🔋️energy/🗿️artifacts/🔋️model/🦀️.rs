@@ -238,7 +238,72 @@ pub fn energy_snapshot_with_state(schema: impl Into<String>, model: &crate::mode
     EnergyModelSnapshot { schema: schema.into(), model: model.clone(), structure, zones, referenced_model, weather_link: None }
 }
 //#endregion 🔖️RetainedArtifactState
+
 //#endregion 🔖️Composition
+
+//#region 🆔️EntityIdMinting
+/// 🆔️ Mints the next free [`crate::model::EntityId`] for one id-addressed collection — `max + 1`, so
+/// an id is never REUSED after a delete and every dangling reference elsewhere in the document stays
+/// unambiguous rather than silently re-pointing at a new entity (`📓️explore-mutation-vocabulary.md`
+/// §5.3, §5.4).
+///
+/// This is the caller's job, not the mutation's: every `create-*` kind takes the id it must use as
+/// part of its payload, because a mutation that minted its own id would not be a pure function of
+/// `(snapshot, payload)` and its inverse could not name what to delete. One helper, at the artifact
+/// root rather than in one surface, so the editor and every `create-*` group share the convention.
+///
+/// `EntityId(0)` is never minted: an empty collection starts at 1, which keeps 0 available as the
+/// "no entity" sentinel every wire form already reads it as.
+pub fn next_entity_id(existing: impl Iterator<Item = crate::model::EntityId>) -> crate::model::EntityId {
+    crate::model::EntityId(existing.map(|id| id.0).max().unwrap_or(0).saturating_add(1))
+}
+//#endregion 🆔️EntityIdMinting
+
+//#region ♻️WholeDocumentLoad
+/// 🔗️ The two link slots a whole-document load carries forward or clears. A struct rather than two
+/// positional `Option<ArtifactLink>` arguments, because both have the same type and swapping them at
+/// a call site would type-check in silence.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct EnergyModelLinkSlots {
+    pub referenced_model: Option<store::ArtifactLink>,
+    pub weather_link: Option<store::ArtifactLink>,
+}
+
+impl EnergyModelLinkSlots {
+    /// 🔗️ The slots as a snapshot currently holds them — what re-opening the same document keeps.
+    pub fn of(snapshot: &EnergyModelSnapshot) -> Self {
+        Self { referenced_model: snapshot.referenced_model.clone(), weather_link: snapshot.weather_link.clone() }
+    }
+}
+
+/// 📸️ A genesis snapshot for a whole-document load: the model plus whichever link slots the caller
+/// carries over. `energy_snapshot_with_state` cannot express the weather slot, so every whole-load
+/// site goes through this instead of setting the field back up by hand.
+pub fn energy_snapshot_with_links(model: &crate::model::Model, links: &EnergyModelLinkSlots) -> EnergyModelSnapshot {
+    let mut snapshot = energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, links.referenced_model.clone());
+    snapshot.weather_link = links.weather_link.clone();
+    snapshot
+}
+
+/// ♻️ The one sanctioned whole-document LOAD for this artifact — file open, `.energy`/epJSON import
+/// and example load all route through here, and none of them is a mutation: ticket
+/// `26/08/12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL`'s derivation rule 6 forbids a whole-document
+/// `replace` kind, which is why `♻️replace-model` is gone from this vocabulary entirely.
+///
+/// The effect carries a genesis `(pack, spr)` pair; the host loops it back as
+/// `AppCommand::LoadDocument`, which is what actually calls [`store::ArtifactStore::reset`]
+/// (`🔌️plugin/🦀️.rs`'s `load_document_pack`) — a guest plugin never holds the store itself. History
+/// therefore starts empty by construction: loading a second document is no more undoable back into
+/// the first than opening a second file is. Same shape as `📐️cad`'s `reset_document_effect` and
+/// `🔱️trinity`'s; a freshly minted, edit-free envelope makes the spr encode infallible.
+pub fn energy_model_load_document_effect(document_id: &str, model: &crate::model::Model, links: &EnergyModelLinkSlots) -> semio_framework_plugin::kernel::Effect {
+    let snapshot = energy_snapshot_with_links(model, links);
+    let pack = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+    let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, document_id, snapshot, None);
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
+}
+//#endregion ♻️WholeDocumentLoad
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.model`).
@@ -388,3 +453,74 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 //#endregion 🔖️Declaration
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod artifact_root_tests {
+    use super::*;
+    use crate::model::{EntityId, Model, Zone};
+
+    fn zone(id: u32) -> Zone {
+        Zone { id: EntityId(id), name: format!("Zone {id}"), volume_m3: 129.6, multiplier: 1, conditioned: true, part_of_total_floor_area: true }
+    }
+
+    /// 🧪️ The minting LAW, stated as the three cases that actually differ: an empty collection
+    /// starts at 1 (never 0, the "no entity" sentinel), a populated one continues past its maximum
+    /// rather than past its length, and a collection with a hole left by a delete does NOT refill
+    /// that hole — reusing a deleted id is exactly how a dangling reference silently re-points at a
+    /// different entity.
+    #[semio_framework_async_macros::async_test]
+    async fn next_entity_id_never_reuses_and_never_mints_zero() {
+        assert_eq!(next_entity_id(std::iter::empty()), EntityId(1));
+        assert_eq!(next_entity_id([EntityId(1), EntityId(2), EntityId(3)].into_iter()), EntityId(4));
+        assert_eq!(next_entity_id([EntityId(1), EntityId(7)].into_iter()), EntityId(8), "the hole at 2..=6 must stay a hole");
+        assert_eq!(next_entity_id([EntityId(9), EntityId(2)].into_iter()), EntityId(10), "order must not matter");
+        assert_eq!(next_entity_id([EntityId(u32::MAX)].into_iter()), EntityId(u32::MAX), "saturating, so exhaustion is a collision the caller can detect, not a wrap to 0");
+    }
+
+    /// 🧪️ Minting is per-COLLECTION, and repeated minting only advances once the previous id has
+    /// actually been inserted — the property every `create-*` kind's caller relies on.
+    #[semio_framework_async_macros::async_test]
+    async fn next_entity_id_advances_only_as_the_collection_grows() {
+        let mut model = Model::default();
+        for expected in 1..=4u32 {
+            let id = next_entity_id(model.zones.iter().map(|zone| zone.id));
+            assert_eq!(id, EntityId(expected));
+            assert_eq!(next_entity_id(model.zones.iter().map(|zone| zone.id)), id, "minting is pure — it does not advance until the entity lands");
+            model.zones.push(zone(id.0));
+        }
+        model.zones.retain(|zone| zone.id != EntityId(2));
+        assert_eq!(next_entity_id(model.zones.iter().map(|zone| zone.id)), EntityId(5), "deleting zone 2 must not hand 2 back out");
+    }
+
+    /// 🧪️ A whole-document load keeps both link slots when the caller carries them, and clears both
+    /// when it does not — the regression that `energy_snapshot_with_state` alone cannot express,
+    /// since it hardcodes `weather_link: None`.
+    #[semio_framework_async_macros::async_test]
+    async fn a_whole_document_load_carries_both_link_slots() {
+        let model = Model { name: "BESTEST 600".into(), version: "1".into(), ..Model::default() };
+        let links = EnergyModelLinkSlots {
+            referenced_model: Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() }),
+            weather_link: Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("denver-tmy!s.stdio.semio@v1/value").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "weather".into() }),
+        };
+        let carried = energy_snapshot_with_links(&model, &links);
+        assert_eq!(EnergyModelLinkSlots::of(&carried), links);
+        assert_eq!(EnergyModelLinkSlots::of(&energy_snapshot_with_links(&model, &EnergyModelLinkSlots::default())), EnergyModelLinkSlots::default());
+    }
+
+    /// 🧪️ The load effect is a genesis document, not an edit: its pack decodes back to exactly the
+    /// snapshot that went in, so the host's `ArtifactStore::reset` installs the loaded model itself
+    /// rather than a projection of it.
+    #[semio_framework_async_macros::async_test]
+    async fn the_load_document_effect_carries_the_model_it_was_given() {
+        let mut model = Model { name: "BESTEST 900".into(), version: "1".into(), ..Model::default() };
+        model.zones.push(zone(1));
+        let effect = energy_model_load_document_effect("model", &model, &EnergyModelLinkSlots::default());
+        let semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr } = effect else { panic!("a whole-document load must be a LoadDocument effect") };
+        assert!(!spr.is_empty(), "the genesis envelope must still print an spr");
+        let loaded = <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("the emitted pack decodes");
+        assert_eq!(loaded.model, model);
+        assert_eq!(loaded.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
+    }
+}
+//#endregion 🧪️Tests

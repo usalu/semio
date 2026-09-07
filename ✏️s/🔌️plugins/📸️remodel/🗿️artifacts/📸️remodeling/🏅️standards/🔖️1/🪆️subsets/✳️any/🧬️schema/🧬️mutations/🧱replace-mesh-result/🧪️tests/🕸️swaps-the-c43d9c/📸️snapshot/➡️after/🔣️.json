@@ -1,0 +1,906 @@
+{
+  "schema": "remodeling.scene",
+  "id": "orbit-survey",
+  "streams": [
+    {
+      "id": "orbit-primary",
+      "name": "Orbit Primary",
+      "kind": "video",
+      "cameraId": "orbit-cam-primary",
+      "syncOffsetMs": 0.0,
+      "fpsHint": 2.0,
+      "frames": [
+        {
+          "index": 0,
+          "timestampMs": 0.0,
+          "assetId": "orbit-frame-00"
+        },
+        {
+          "index": 1,
+          "timestampMs": 500.0,
+          "assetId": "orbit-frame-01"
+        },
+        {
+          "index": 2,
+          "timestampMs": 1000.0,
+          "assetId": "orbit-frame-02"
+        },
+        {
+          "index": 3,
+          "timestampMs": 1500.0,
+          "assetId": "orbit-frame-03"
+        },
+        {
+          "index": 4,
+          "timestampMs": 2000.0,
+          "assetId": "orbit-frame-04"
+        },
+        {
+          "index": 5,
+          "timestampMs": 2500.0,
+          "assetId": "orbit-frame-05"
+        },
+        {
+          "index": 6,
+          "timestampMs": 3000.0,
+          "assetId": "orbit-frame-06"
+        },
+        {
+          "index": 7,
+          "timestampMs": 3500.0,
+          "assetId": "orbit-frame-07"
+        },
+        {
+          "index": 8,
+          "timestampMs": 4000.0,
+          "assetId": "orbit-frame-08"
+        },
+        {
+          "index": 9,
+          "timestampMs": 4500.0,
+          "assetId": "orbit-frame-09"
+        }
+      ],
+      "source": {
+        "name": "orbit-primary.mp4",
+        "container": "mp4",
+        "codec": "avc",
+        "durationMs": 5000.0,
+        "frameCount": 10,
+        "width": 320,
+        "height": 240
+      }
+    },
+    {
+      "id": "orbit-secondary",
+      "name": "Orbit Secondary",
+      "kind": "image-sequence",
+      "cameraId": "orbit-cam-secondary",
+      "syncOffsetMs": 40.0,
+      "fpsHint": 2.0,
+      "frames": [
+        {
+          "index": 0,
+          "timestampMs": 40.0,
+          "assetId": "orbit-frame-00"
+        },
+        {
+          "index": 1,
+          "timestampMs": 540.0,
+          "assetId": "orbit-frame-01"
+        },
+        {
+          "index": 2,
+          "timestampMs": 1040.0,
+          "assetId": "orbit-frame-02"
+        },
+        {
+          "index": 3,
+          "timestampMs": 1540.0,
+          "assetId": "orbit-frame-03"
+        },
+        {
+          "index": 4,
+          "timestampMs": 2040.0,
+          "assetId": "orbit-frame-04"
+        },
+        {
+          "index": 5,
+          "timestampMs": 2540.0,
+          "assetId": "orbit-frame-05"
+        },
+        {
+          "index": 6,
+          "timestampMs": 3040.0,
+          "assetId": "orbit-frame-06"
+        },
+        {
+          "index": 7,
+          "timestampMs": 3540.0,
+          "assetId": "orbit-frame-07"
+        },
+        {
+          "index": 8,
+          "timestampMs": 4040.0,
+          "assetId": "orbit-frame-08"
+        },
+        {
+          "index": 9,
+          "timestampMs": 4540.0,
+          "assetId": "orbit-frame-09"
+        }
+      ],
+      "source": null
+    },
+    {
+      "id": "orbit-spare",
+      "name": "Orbit Spare Pass",
+      "kind": "image-sequence",
+      "cameraId": null,
+      "syncOffsetMs": 0.0,
+      "fpsHint": 1.0,
+      "frames": [
+        {
+          "index": 0,
+          "timestampMs": 0.0,
+          "assetId": "orbit-frame-00"
+        },
+        {
+          "index": 1,
+          "timestampMs": 500.0,
+          "assetId": "orbit-frame-01"
+        }
+      ],
+      "source": null
+    }
+  ],
+  "assets": {
+    "orbit-dsm": {
+      "childId": "remodeling-asset-e343c47d5dab64bd",
+      "target": {
+        "artifactId": "orbit-dsm-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-00": {
+      "childId": "remodeling-asset-067b2f3bbc35f9dc",
+      "target": {
+        "artifactId": "orbit-frame-00-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-01": {
+      "childId": "remodeling-asset-c9ce5074a949b814",
+      "target": {
+        "artifactId": "orbit-frame-01-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-02": {
+      "childId": "remodeling-asset-e6e19e89d3320aa7",
+      "target": {
+        "artifactId": "orbit-frame-02-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-03": {
+      "childId": "remodeling-asset-57eae0612a914a1d",
+      "target": {
+        "artifactId": "orbit-frame-03-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-04": {
+      "childId": "remodeling-asset-d4c82c1242643297",
+      "target": {
+        "artifactId": "orbit-frame-04-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-05": {
+      "childId": "remodeling-asset-05c98ef601003277",
+      "target": {
+        "artifactId": "orbit-frame-05-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-06": {
+      "childId": "remodeling-asset-46a0165861c691ec",
+      "target": {
+        "artifactId": "orbit-frame-06-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-07": {
+      "childId": "remodeling-asset-9051c89a0cde8a83",
+      "target": {
+        "artifactId": "orbit-frame-07-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-08": {
+      "childId": "remodeling-asset-6b399f4b66f9b650",
+      "target": {
+        "artifactId": "orbit-frame-08-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-09": {
+      "childId": "remodeling-asset-e504dc15dc9b8978",
+      "target": {
+        "artifactId": "orbit-frame-09-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-orphan": {
+      "childId": "remodeling-asset-20fa92c7e1b7c14b",
+      "target": {
+        "artifactId": "orbit-orphan-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  },
+  "durableArtifacts": {
+    "remodeling-asset-05c98ef601003277": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDU="
+      ]
+    },
+    "remodeling-asset-067b2f3bbc35f9dc": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDA="
+      ]
+    },
+    "remodeling-asset-20fa92c7e1b7c14b": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtY2FsaWJyYXRpb24tdGFyZ2V0"
+      ]
+    },
+    "remodeling-asset-46a0165861c691ec": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDY="
+      ]
+    },
+    "remodeling-asset-57eae0612a914a1d": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDM="
+      ]
+    },
+    "remodeling-asset-6b399f4b66f9b650": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDg="
+      ]
+    },
+    "remodeling-asset-9051c89a0cde8a83": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDc="
+      ]
+    },
+    "remodeling-asset-c9ce5074a949b814": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDE="
+      ]
+    },
+    "remodeling-asset-d4c82c1242643297": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDQ="
+      ]
+    },
+    "remodeling-asset-e343c47d5dab64bd": {
+      "kind": "image",
+      "mime": "image/tiff",
+      "width": 512,
+      "height": 512,
+      "chunks": [
+        "b3JiaXQtZHNtLXRpbGU="
+      ]
+    },
+    "remodeling-asset-e504dc15dc9b8978": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDk="
+      ]
+    },
+    "remodeling-asset-e6e19e89d3320aa7": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDI="
+      ]
+    }
+  },
+  "calibration": {
+    "cameras": [
+      {
+        "id": "orbit-cam-primary",
+        "label": "Orbit Primary",
+        "model": "brownConrady",
+        "fx": 272.0,
+        "fy": 272.0,
+        "cx": 160.0,
+        "cy": 120.0,
+        "skew": 0.0,
+        "distortion": [
+          -0.01953125,
+          0.0048828125,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rmsReprojectionPx": 0.421875,
+        "locked": false
+      },
+      {
+        "id": "orbit-cam-secondary",
+        "label": "Orbit Secondary",
+        "model": "pinhole",
+        "fx": 272.0,
+        "fy": 272.0,
+        "cx": 160.0,
+        "cy": 120.0,
+        "skew": 0.0,
+        "distortion": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rmsReprojectionPx": 0.578125,
+        "locked": false
+      },
+      {
+        "id": "orbit-cam-tertiary",
+        "label": "Orbit Tertiary",
+        "model": "pinhole",
+        "fx": 272.0,
+        "fy": 272.0,
+        "cx": 160.0,
+        "cy": 120.0,
+        "skew": 0.0,
+        "distortion": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rmsReprojectionPx": null,
+        "locked": true
+      }
+    ],
+    "rig": [
+      {
+        "cameraId": "orbit-cam-primary",
+        "rotationWxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translationM": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "cameraId": "orbit-cam-secondary",
+        "rotationWxyz": [
+          1.0,
+          0.0,
+          0.05078125,
+          0.0
+        ],
+        "translationM": [
+          0.125,
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  },
+  "params": {
+    "ingest": {
+      "frameSampleStride": 1,
+      "maxFrames": 32,
+      "downscaleLongEdgePx": 320,
+      "minSharpness": 0.125
+    },
+    "feature": {
+      "detector": "akaze",
+      "targetCount": 600,
+      "octaves": 4,
+      "edgeThreshold": 10.0
+    },
+    "matching": {
+      "matcher": "brute-force",
+      "ratioTest": 0.8515625,
+      "crossCheck": true,
+      "sequentialWindow": 6,
+      "maxPairsPerFrame": 16,
+      "loopClosure": true
+    },
+    "sfm": {
+      "ransacIterations": 1000,
+      "ransacThresholdPx": 2.0,
+      "minTrackLength": 2,
+      "baMaxIterations": 25,
+      "robustLoss": "huber",
+      "huberDeltaPx": 1.5
+    },
+    "dense": {
+      "resolution": "low",
+      "windowRadiusPx": 2,
+      "minViewConsistency": 3,
+      "confidenceThreshold": 0.5,
+      "maxPoints": 50000
+    },
+    "mesh": {
+      "tsdfVoxelSizeMm": 100.0,
+      "tsdfTruncationMm": 330.0,
+      "decimateTargetTriangles": 20000,
+      "smoothingIterations": 1,
+      "textureEnabled": false,
+      "textureSize": 256,
+      "guaranteeWatertight": true,
+      "holeFillMaxBoundaryVerts": 512,
+      "selfIntersectionCheck": false
+    },
+    "motion": {
+      "enabled": true,
+      "maxTracks": 64,
+      "trackWindowPx": 21,
+      "minTrackQuality": 0.30078125,
+      "minTrackLengthFrames": 5
+    },
+    "geo": {
+      "enabled": true,
+      "originLon": 8.5,
+      "originLat": 47.375,
+      "originAlt": 408.0,
+      "gsdM": 0.05078125,
+      "dsmCellM": 0.099609375,
+      "dtmFilterRadiusM": 2.0,
+      "orthoMaxPx": 4096
+    }
+  },
+  "gcps": [
+    {
+      "id": "gcp-north-pier",
+      "name": "North Pier",
+      "worldPosition": [
+        1.0,
+        0.5,
+        -0.25
+      ],
+      "observations": [
+        {
+          "streamId": "orbit-primary",
+          "frameIndex": 0,
+          "pixel": [
+            184.5,
+            96.25
+          ]
+        },
+        {
+          "streamId": "orbit-primary",
+          "frameIndex": 4,
+          "pixel": [
+            140.75,
+            101.5
+          ]
+        },
+        {
+          "streamId": "orbit-secondary",
+          "frameIndex": 4,
+          "pixel": [
+            151.0,
+            104.75
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gcp-roof-vent",
+      "name": "Roof Vent",
+      "worldPosition": [
+        0.25,
+        -0.75,
+        1.0
+      ],
+      "observations": [
+        {
+          "streamId": "orbit-primary",
+          "frameIndex": 6,
+          "pixel": [
+            171.5,
+            58.0
+          ]
+        },
+        {
+          "streamId": "orbit-secondary",
+          "frameIndex": 6,
+          "pixel": [
+            163.25,
+            61.75
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gcp-south-pier",
+      "name": "South Pier",
+      "worldPosition": [
+        -1.0,
+        -0.5,
+        -0.25
+      ],
+      "observations": [
+        {
+          "streamId": "orbit-primary",
+          "frameIndex": 2,
+          "pixel": [
+            122.0,
+            150.5
+          ]
+        },
+        {
+          "streamId": "orbit-secondary",
+          "frameIndex": 7,
+          "pixel": [
+            198.25,
+            143.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gcp-unsurveyed",
+      "name": "Unsurveyed Mark",
+      "worldPosition": [
+        0.0,
+        1.25,
+        0.0
+      ],
+      "observations": []
+    }
+  ],
+  "job": {
+    "id": "orbit-run-7",
+    "stage": "dense-stereo",
+    "progress01": 0.625,
+    "cancelRequested": false,
+    "stageCursor": 8,
+    "startedAtMs": 1738368000000.0,
+    "error": null,
+    "cameraPosesPreview": [
+      {
+        "cameraId": "orbit-cam-primary",
+        "rotationWxyz": [
+          0.52734375,
+          -0.1953125,
+          0.7734375,
+          -0.28515625
+        ],
+        "translation": [
+          2.4453125,
+          2.234375,
+          0.953125
+        ]
+      },
+      {
+        "cameraId": "orbit-cam-primary",
+        "rotationWxyz": [
+          0.3125,
+          -0.11328125,
+          0.88671875,
+          -0.3203125
+        ],
+        "translation": [
+          1.609375,
+          2.140625,
+          2.0078125
+        ]
+      }
+    ],
+    "sparsePointCloudPreview": "AACAPwAA4D0AAMi9AACAPwAA1L4AAM4+AACAPwAAjL4AAES/AACAPwAAYL0AAES+AACAPwAAOL8AALw+AACAPwAAJb8AAB+/AACAPwAAWD4AAMK+AACAPwAANj8AAJy9"
+  },
+  "results": {
+    "sparse": {
+      "points": "AACAPwAA4D0AAMi9AACAPwAA1L4AAM4+AACAPwAAjL4AAES/AACAPwAAYL0AAES+AACAPwAAOL8AALw+AACAPwAAJb8AAB+/AACAPwAAWD4AAMK+AACAPwAANj8AAJy9AACAPwAA/r4AAEi+AACAPwAAqr4AAA0/AACAPwAAR78AANi9AACAPwAA8D4AABA+AACAPwAAbD4AABO/AACAPwAACL0AABw/AACAPwAAAT8AAKC9AACAPwAADz8AABU/AACAPwAAMD8AAEC/AACAPwAAjL0AAMS9AACAPwAAnD4AANQ+AACAPwAAhL0AACC+AACAPwAABj8AAEe/AACAPwAANL8AACS/AACAvwAAD78AADy+AACAvwAAEj8AALA8AACAvwAAPD4AACi9AACAvwAAUL4AABo/AACAvwAAQb8AAAA/AACAvwAAgj4AAOy9AACAvwAAIz8AAEe/AACAvwAAkr4AAJS+AACAvwAA9r4AAHg+AACAvwAA4D0AAJY+AACAvwAAnj4AAJw+AACAvwAAsr4AAGi9AACAvwAAwL4AADW/AACAvwAAnj4AAJC+AACAvwAA0r4AAAM/AACAvwAAFD4AADO/AACAvwAA+L4AAHw+AACAvwAADL8AAKK+AACAvwAAP78AACi/AACAvwAAEL4AALC8AACAvwAAij4AAHA+AACAvwAAoD4AABu/AACSvgAAgD8AAPQ9AAAovwAAgD8AAEW/AACevgAAgD8AAGw+AAAtvwAAgD8AADg+AADAvgAAgD8AAC2/AAAwvQAAgD8AACA/AABMPgAAgD8AAPw9AAB0PgAAgD8AABq/AABEvwAAgD8AAGw+AACGPgAAgD8AAMI+AAD8PgAAgD8AACy/AACwvgAAgD8AAKA8AADIPgAAgD8AAL4+AABwPgAAgD8AAEy+AAAjvwAAgD8AADA/AABcvgAAgD8AAL6+AACOPgAAgD8AAAU/AADQvgAAgD8AABK/AAA0PgAAgD8AADQ+AACovgAAgD8AAMw+AAB0vgAAgD8AAFC8AAA8PwAAgD8AABu/AAAQvgAAgL8AAMw+AAARvwAAgL8AAAC9AACMPgAAgL8AABa/AACwPAAAgL8AADA/AAApvwAAgL8AAGi+AAA4PwAAgL8AANy9AAAuvwAAgL8AABm/AAC0vgAAgL8AAAy+AACQvQAAgL8AAIa+AADEvQAAgL8AADG/AAC8vQAAgL8AAAO/AABAPgAAgL8AAEE/AABAvAAAgL8AADS/AACWvgAAgL8AAEc/AAAdPwAAgL8AAIy+AABwPQAAgL8AAC4/AACSvgAAgL8AANQ+AAB4PQAAgL8AACK/AAAFPwAAgL8AAPC8AAALvwAAgL8AAHA+AAD2vgAAgL8AAEi+AAAKvwAAgL8AAEA9AADCvgAAtr4AAIA/AADSvgAAqj4AAIA/AAANvwAA9j4AAIA/AACAvgAA8r4AAIA/AAAgvwAALT8AAIA/AABQvgAA+D0AAIA/AAAYPwAACD8AAIA/AADCvgAAzL0AAIA/AADgPgAArj4AAIA/AADgPgAAsj4AAIA/AABYPQAABL4AAIA/AABUPgAAlL4AAIA/AAAlvwAAKD4AAIA/AAAXPwAAAD8AAIA/AAA/vwAA8j4AAIA/AADoPgAALL8AAIA/",
+      "colors": "ACVKb5S53gMoTXKXvOEGK1B1mr/kCS5TeJ3C5wwxVnugxeoPNFl+o8jtEjdcgabL8BU6X4SpzvMYPWKHrNH2G0Bliq/U+R5DaI2y1/whRmuQtdr/JEluk7jdAidMcZa74AUqT3SZvuMILVJ3nMHmCzBVep/E6Q4zWH2ix+wRNluApcrvFDleg6jN8hc8YYar0PUaP2SJrtP4HUJnjLHW+yBFao+02f4jSG2St9wBJktwlbrfBClOc5i94gcsUXabwOUKL1R5nsPoDTJXfKHG6xA1Wn+kye4TOF2Cp8zxFjtgharP9Bk+Y4it0vccQWaLsNX6H0RpjrPY/SJHbJG22wAlSm+Uud4DKE1yl7zhBitQdZq/5AkuU3idwucMMVZ7oMXqDzRZfqPI7RI3XIGmy/AVOl+Eqc7z"
+    },
+    "dense": {
+      "positions": "AACCPwAAAD4AAKi9AACCPwAAzL4AANY+AACCPwAAhL4AAEC/AACCPwAAIL0AADS+AACCPwAANL8AAMQ+AACCPwAAIb8AABu/AACCPwAAaD4AALq+AACCPwAAOj8AAHi9AACCPwAA9r4AADi+AACCPwAAor4AABE/AACCPwAAQ78AALi9AACCPwAA+D4AACA+AACCPwAAfD4AAA+/AACCPwAAkLwAACA/AACCPwAABT8AAIC9AACCPwAAEz8AABk/AACCPwAAND8AADy/AACCPwAAWL0AAKS9AACCPwAApD4AANw+AACCPwAASL0AABC+AACCPwAACj8AAEO/AACCPwAAML8AACC/AAB8vwAAC78AACy+AAB8vwAAFj8AABg9AAB8vwAATD4AANC8AAB8vwAAQL4AAB4/AAB8vwAAPb8AAAQ/AAB8vwAAij4AAMy9AAB8vwAAJz8AAEO/AAB8vwAAir4AAIy+AAB8vwAA7r4AAIQ+AAB8vwAAAD4AAJ4+AAB8vwAApj4AAKQ+AAB8vwAAqr4AACi9AAB8vwAAuL4AADG/AAB8vwAApj4AAIi+AAB8vwAAyr4AAAc/AAB8vwAAJD4AAC+/AAB8vwAA8L4AAIY+AAB8vwAACL8AAJq+AAB8vwAAO78AACS/AAB8vwAAAL4AAMC7AAB8vwAAkj4AAIA+AAB8vwAAqD4AABe/AACKvgAAgj8AAAw+AAAkvwAAgj8AAEG/AACWvgAAgj8AAHw+AAApvwAAgj8AAEg+AAC4vgAAgj8AACm/AADgvAAAgj8AACQ/AABcPgAAgj8AAAw+AACCPgAAgj8AABa/AABAvwAAgj8AAHw+AACOPgAAgj8AAMo+AAACPwAAgj8AACi/AACovgAAgj8AABA9AADQPgAAgj8AAMY+AACAPgAAgj8AADy+AAAfvwAAgj8AADQ/AABMvgAAgj8AALa+AACWPgAAgj8AAAk/AADIvgAAgj8AAA6/AABEPgAAgj8AAEQ+AACgvgAAgj8AANQ+",
+      "colors": "ADVqn9QJPnOo3RJHfLHmG1CFuu8kWY7D+C1il8wBNmug1Qo/dKneE0h9succUYa78CVaj8T5LmOYzQI3bKHWC0B1qt8USX6z6B1Sh7zxJluQxfovZJnOAzhtotcMQXar4BVKf7TpHlOIvfInXJHG+zBlms8EOW6j2A1Cd6zhFkuAteofVIm+8yhdksf8MWab0AU6b6TZDkN4reIXTIG26yBVir/0KV6TyP0yZ5zRBjtwpdoPRHmu4xhNgrfsIVaL",
+      "confidence": "AAAAPwAAED8AACA/AAAwPwAAQD8AAFA/AABgPwAAcD8AAAA/AAAQPwAAID8AADA/AABAPwAAUD8AAGA/AABwPwAAAD8AABA/AAAgPwAAMD8AAEA/AABQPwAAYD8AAHA/AAAAPwAAED8AACA/AAAwPwAAQD8AAFA/AABgPwAAcD8AAAA/AAAQPwAAID8AADA/AABAPwAAUD8AAGA/AABwPwAAAD8AABA/AAAgPwAAMD8AAEA/AABQPwAAYD8AAHA/AAAAPwAAED8AACA/AAAwPwAAQD8AAFA/AABgPwAAcD8AAAA/AAAQPwAAID8AADA/AABAPwAAUD8AAGA/AABwPw==",
+      "classification": "BgICAgYCAgIGAgICBgICAgYCAgIGAgICBgICAgYCAgIGAgICBgICAgYCAgIGAgICBgICAgYCAgIGAgICBgICAg=="
+    },
+    "mesh": {
+      "mesh": {
+        "childId": "remodeling-mesh-2f6c81b0d4a37e59",
+        "target": {
+          "artifactId": "orbit-survey-mesh-imported",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "mesh"
+          }
+        }
+      },
+      "source": "imported",
+      "textureAssetId": null,
+      "watertight": null
+    },
+    "trajectory": {
+      "poses": [
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.52734375,
+            -0.1953125,
+            0.7734375,
+            -0.28515625
+          ],
+          "translation": [
+            2.4453125,
+            2.234375,
+            0.953125
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.3125,
+            -0.11328125,
+            0.88671875,
+            -0.3203125
+          ],
+          "translation": [
+            1.609375,
+            2.140625,
+            2.0078125
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.0078125,
+            -0.0029296875,
+            0.93359375,
+            -0.35546875
+          ],
+          "translation": [
+            0.04296875,
+            2.265625,
+            2.5625
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            -0.31640625,
+            0.111328125,
+            0.88671875,
+            -0.31640625
+          ],
+          "translation": [
+            -1.6484375,
+            2.109375,
+            2.015625
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.53515625,
+            -0.1953125,
+            -0.7734375,
+            0.28125
+          ],
+          "translation": [
+            -2.4453125,
+            2.2109375,
+            0.9140625
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.765625,
+            -0.27734375,
+            -0.546875,
+            0.1953125
+          ],
+          "translation": [
+            -2.4375,
+            2.140625,
+            -0.84375
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.89453125,
+            -0.328125,
+            -0.28125,
+            0.103515625
+          ],
+          "translation": [
+            -1.484375,
+            2.2109375,
+            -2.140625
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.9375,
+            -0.3515625,
+            -0.00048828125,
+            0.0
+          ],
+          "translation": [
+            -0.001953125,
+            2.25,
+            -2.59375
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.890625,
+            -0.33203125,
+            0.29296875,
+            -0.109375
+          ],
+          "translation": [
+            1.5625,
+            2.296875,
+            -2.1171875
+          ]
+        },
+        {
+          "cameraId": "orbit-cam-primary",
+          "rotationWxyz": [
+            0.7578125,
+            -0.2734375,
+            0.5546875,
+            -0.19921875
+          ],
+          "translation": [
+            2.484375,
+            2.1640625,
+            -0.7890625
+          ]
+        }
+      ]
+    },
+    "tracks": [
+      {
+        "id": "orbit-track-a",
+        "length": 9,
+        "class": "static",
+        "meanSpeedMS": 0.0
+      },
+      {
+        "id": "orbit-track-b",
+        "length": 7,
+        "class": "moving",
+        "meanSpeedMS": 0.75
+      },
+      {
+        "id": "orbit-track-c",
+        "length": 4,
+        "class": "moving",
+        "meanSpeedMS": 0.125
+      }
+    ],
+    "geo": {
+      "dsmAssetId": "orbit-dsm",
+      "dtmAssetId": null,
+      "orthoAssetId": null
+    },
+    "qc": {
+      "reprojectionRmsPx": 0.421875,
+      "gcpCheckpointRmse": 0.1875,
+      "watertight": null,
+      "meanTrackLength": 6.5,
+      "registeredFrameRatio": 1.0,
+      "denseCoverageRatio": 0.625,
+      "warnings": [
+        "only two streams observe gcp-south-pier"
+      ]
+    }
+  }
+}

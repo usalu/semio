@@ -283,7 +283,7 @@ pub struct Space {
 
 // #region 🔖️Surface
 /// 🧱️ Surface boundary type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum SurfaceClass {
     ExteriorWall,
     InteriorWall,
@@ -320,6 +320,54 @@ pub enum OutsideBoundary {
     Interzone(EntityId),
 }
 
+/// 🚧️ Discriminator half of [`OutsideBoundary`]. The union's `Interzone` arm carries the partner
+/// surface, and `dsl::DslScalar` binds unit variants only, so a mutation payload names the boundary
+/// through this scalar and carries the partner in its own optional `EntityId` field — the same
+/// parallel-field shape `replace-airflow-network` uses for its `(zone, node)` pairs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum OutsideBoundaryKind {
+    OutdoorAir,
+    Ground,
+    OtherSideTemperature,
+    Adiabatic,
+    Interzone,
+}
+
+impl OutsideBoundary {
+    /// 🚧️ The union's tag, without its payload.
+    pub fn kind(self) -> OutsideBoundaryKind {
+        match self {
+            OutsideBoundary::OutdoorAir => OutsideBoundaryKind::OutdoorAir,
+            OutsideBoundary::Ground => OutsideBoundaryKind::Ground,
+            OutsideBoundary::OtherSideTemperature => OutsideBoundaryKind::OtherSideTemperature,
+            OutsideBoundary::Adiabatic => OutsideBoundaryKind::Adiabatic,
+            OutsideBoundary::Interzone(_) => OutsideBoundaryKind::Interzone,
+        }
+    }
+
+    /// 🔗️ The partner surface an `Interzone` boundary is paired with, `None` for every other arm.
+    pub fn interzone_partner(self) -> Option<EntityId> {
+        match self {
+            OutsideBoundary::Interzone(other) => Some(other),
+            _ => None,
+        }
+    }
+
+    /// 🏗️ Rebuilds the union from its two payload halves; `None` when the halves disagree — an
+    /// `Interzone` without a partner, or a partner offered to an arm that has no room for one.
+    pub fn from_parts(kind: OutsideBoundaryKind, partner: Option<EntityId>) -> Option<OutsideBoundary> {
+        match (kind, partner) {
+            (OutsideBoundaryKind::Interzone, Some(other)) => Some(OutsideBoundary::Interzone(other)),
+            (OutsideBoundaryKind::Interzone, None) => None,
+            (_, Some(_)) => None,
+            (OutsideBoundaryKind::OutdoorAir, None) => Some(OutsideBoundary::OutdoorAir),
+            (OutsideBoundaryKind::Ground, None) => Some(OutsideBoundary::Ground),
+            (OutsideBoundaryKind::OtherSideTemperature, None) => Some(OutsideBoundary::OtherSideTemperature),
+            (OutsideBoundaryKind::Adiabatic, None) => Some(OutsideBoundary::Adiabatic),
+        }
+    }
+}
+
 /// 🪟️ Fenestration (window, skylight, door) with its attached solar shading projections.
 ///
 /// `height_m`/`sill_height_m` and the four shading fields are the window-attached analogue of
@@ -327,6 +375,14 @@ pub enum OutsideBoundary {
 /// above the head and two vertical projections beside the jambs, both measured from the glazing
 /// plane. They are zero for an unshaded window, which is why every existing model keeps its
 /// behaviour. Free-standing site obstructions stay [`ShadingSurface`]'s job.
+///
+/// `glazing_construction_id` is the optional escape from the single-pane simplification the three
+/// scalar optics fields impose: when it names a [`Construction`], that layered stack IS the glazing
+/// and `u_value_w_m2k`/`shgc`/`vlt` are the fallback the kernel and every translator use only while
+/// it is `None`. Ticket 26/09/06/ENERGY-PLUGIN-END-TO-END measured what the simplification costs —
+/// a semio→EnergyPlus translation can only emit `WindowMaterial:SimpleGlazingSystem`, worth +5.7 to
+/// +8.1 % of annual cooling on ANSI/ASHRAE 140 cases 600/900 against the standard's own two-pane
+/// stack — so the slot exists to carry the real stack once a caller has one.
 ///
 /// See ANSI/ASHRAE 140 §5.2 cases 610/630/910/930, whose overhang and fins are exactly this shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
@@ -346,6 +402,7 @@ pub struct Fenestration {
     pub overhang_offset_m: f64,
     pub fin_depth_m: f64,
     pub fin_offset_m: f64,
+    pub glazing_construction_id: Option<EntityId>,
 }
 // #endregion 🔖️Surface
 
@@ -694,7 +751,7 @@ pub struct FaultDefinition {
 }
 
 /// ⚠️ Fault type catalog.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
 pub enum FaultType {
     SensorBias,
     CoilFouling,
@@ -910,6 +967,11 @@ impl Model {
         }
 
         for fen in &self.fenestrations {
+            if let Some(glazing) = fen.glazing_construction_id {
+                if !construction_ids.contains(&glazing) {
+                    diag.push(Error::severe(format!("fenestration {} references unknown glazing construction", fen.name)));
+                }
+            }
             if !surface_ids.contains(&fen.surface_id) {
                 diag.push(Error::severe(format!("fenestration {} references unknown surface", fen.name)));
             }
@@ -1153,7 +1215,7 @@ mod tests {
     #[test]
     fn fenestration_unknown_surface_fails() {
         let mut m = valid_model();
-        m.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(999), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, height_m: 1.0, sill_height_m: 0.8, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0, overhang_depth_m: 0.0, overhang_offset_m: 0.0, fin_depth_m: 0.0, fin_offset_m: 0.0 });
+        m.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(999), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, height_m: 1.0, sill_height_m: 0.8, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0, overhang_depth_m: 0.0, overhang_offset_m: 0.0, fin_depth_m: 0.0, fin_offset_m: 0.0, glazing_construction_id: None });
         assert!(m.validate().is_err());
     }
 

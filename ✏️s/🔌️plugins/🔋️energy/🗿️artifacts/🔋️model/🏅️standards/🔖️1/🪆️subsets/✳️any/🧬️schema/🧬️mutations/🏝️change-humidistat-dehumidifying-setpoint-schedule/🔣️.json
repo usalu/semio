@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule",
+  "semanticKind": "change-humidistat-dehumidifying-setpoint-schedule",
+  "displayName": "Change Humidistat Dehumidifying Setpoint Schedule",
+  "emoji": "🏝️",
+  "aggregateVariant": "ChangeHumidistatDehumidifyingSetpointSchedule",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-humidistat-dehumidifying-setpoint-schedule",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

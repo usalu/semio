@@ -1,3 +1,5 @@
+io() landed — `pub fn io() -> IoDeclaration` lives at `…/✳️any/🚪️io/🦀️.rs:456` (committed 2d2b39eb7f); W11 can wire `subset.io = crate::artifacts::remodeling::standards::v1::subsets::any::io::io()` now.
+
 # W6 — 📸️remodel io: moved onto the typed `IoDeclaration` channel, all 7 broken casts replaced
 
 Scope owned: `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/**/🦀️.rs`
@@ -143,3 +145,47 @@ Four items, none of which W6 may touch:
    `🛂️.descriptor.semio` regeneration (`describe`) in the ticket's DoD #3 must run after that edit.
 
 ## 7. Verification log
+
+## 8. W6b continuation (2026-09-06 21:00→, after W6 was killed by the Opus session limit)
+
+**Predecessor state found on disk = fully committed** (`2d2b39eb7f`, 12:08; `git diff 5e03e56997 -- 🚪️io`
+is exactly that commit, 42 files, +1453/-663). Everything §1-§4 above describes had LANDED, including
+`pub fn io()` (`🚪️io/🦀️.rs:456`), the 16 typed `IoEntry` rows, the 4 fixtures, the 19 tests and the
+dwg deletion (`grep dwg 📦️packages/🦀️rust/🦀️.rs` → 0 hits). Nothing was redone.
+
+Two things it never got to, both consequences of W9's serde elimination landing AFTER it wrote the file
+(`📓️w9-schema-engine-compile.md` §8 lists them as W6's):
+
+| site | before | after |
+|---|---|---|
+| `🚪️io/🦀️.rs:38` | `use serde_json::Value;` | removed — no `serde_json` anywhere in `🚪️io/**` now |
+| `🚪️io/🦀️.rs:117` `remodeling_mesh_from_document(&Value)` | `serde_json::from_value::<RemodelingSnapshot>` then `scene_mesh_data` | **deleted** — zero callers in the crate, and `scene_mesh_data(&scene)` is the same function without the impossible decode |
+| `🚪️io/🦀️.rs:138` `remodeling_png_export(&Value)` | decoded the doc, then `remodeling_png_asset` | signature is now `(&RemodelingSnapshot)`; `RemodelingSnapshot` left the serde type graph with `store::ArtifactChild`, so a `serde_json::Value` is no longer a carrier this crate can decode |
+| `io_tests::png_export_round_trips_a_stored_texture_asset` | `remodeling_png_export(&serde_json::to_value(&scene)…)` | `remodeling_png_export(&scene)` |
+| `📥️import/…/🔣️json/…/🦀️.rs:16` | `JsonSnapshot::from_value(v).to_serde_value().into()` | `pack::json::to_dsl_value(&JsonSnapshot::from_value(v).to_pack_value())` — stdio's own first-party analog (`🧾️json/…/📸️snapshot/🦀️.rs:619`), no `serde_json::Value` hop |
+
+The export json leaf already used `pack::json::from_dsl_value(&from.to_value())` + `From<pack::JsonValue>
+for JsonValue`, so both json directions are now `pack::json` end to end and stay `IoFidelity::Exact`.
+
+### Static verification done in place of the (blocked) compiler
+
+- every `use semio_s_plugin_stdio::…` path in `🚪️io/**` (20 distinct) resolved against
+  `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs`'s `#[path]` mount names — the mesh-subset io leaves
+  mount as `gltf`/`stl`/`obj`/`ply`/`las` (module names, not the `🎬️`/`🧊️` dir emoji) and all ten
+  `SemioMesh{To,From}*` structs exist; `decode_ply`/`encode_ply`/`decode_las`/`encode_las`/`decode_obj`/
+  `encode_obj`/`decode_stl_ascii`/`encode_stl_ascii`/`decode_glb`/`encode_glb`/`decode_png`/`encode_png`
+  all exist with the signatures the leaves call.
+- `Serializer`/`Deserializer` (`🧰️framework/🔨️modules/🚪️io/🦀️.rs:2373,2387`) are still future-returning,
+  so the leaves' `async fn serialize/deserialize/sniff` and `serializer_entry`/`deserializer_entry`
+  (`:2669,:2710`, both `S: store::ArtifactPack`) match; `IoDeclaration`/`NativeCodecs`/`LanguagePair`
+  are at `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:27872-27904`, field-for-field as `io()`
+  constructs them.
+- no crate-internal reference to the deleted `io_registry`, `remodeling_mesh_from_document` or the dwg
+  leaves survives (only prose in this file's module doc and one stale sentence at
+  `🗿️artifacts/📸️remodeling/🦀️.rs:105`, W11's file).
+
+### Still owned by other lanes
+
+- `✏️s/🔌️plugins/📸️remodel/🔣️.json` (owner-root descriptor) still names the dwg hop — it is regenerated
+  by `describe` (ticket DoD #3) after W11 edits `artifact_kind()`/`definition()`; §6 items 1-4 above are
+  unchanged and still W11's.

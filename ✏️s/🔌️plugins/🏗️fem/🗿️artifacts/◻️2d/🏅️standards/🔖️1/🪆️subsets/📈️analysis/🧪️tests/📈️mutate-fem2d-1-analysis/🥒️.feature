@@ -45,6 +45,14 @@ Feature: Apply every typed fem2d analysis mutation twice — once in Rust, once 
   that re-derived a sibling collection on every edit — renumbering ids, re-sorting sections — would
   still land on the right value for the member it meant to write.
 
+
+  THE WHOLE CORPUS, NOT ONE ROW PER KIND (ticket `26/09/06/FEM-PLUGIN-END-TO-END`). Case discovery
+  is explicit in all three languages, so until this wave the two `Scenario Outline`s below did not
+  exist and every committed vector but one per kind was Rust-only evidence. `frame-vector-<kind>`
+  replays the second happy path — the two-storey braced steel frame — and `reject-<kind>-<n>`
+  replays every refusal and no-op the kind declares, holding BOTH implementations to the same
+  diagnostic code, level and address rather than merely to an unchanged document.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -83,5 +91,33 @@ Feature: Apply every typed fem2d analysis mutation twice — once in Rust, once 
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id                       | dir                       | fixture                                                  |
-    | update-analysis-settings | 🎛️update-analysis-settings | 🔢️doubles-the-modal-count-and-halves-the-deformation-scale |
+    | id                       | dir                        | fixture                    |
+    | update-analysis-settings | 🎛️update-analysis-settings | 🔢️doubles-the-modal-3fbb1a |
+
+  @id-frame-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> steel-frame specification vector through both implementations
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
+    Examples:
+    | id                       | dir                        | fixture                  |
+    | update-analysis-settings | 🎛️update-analysis-settings | 🎚️raises-the-mode-908c2b |
+
+  @id-reject
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Refuse the committed <id> vector in both implementations, for the same reason
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then both implementations leave the document exactly where it was and report the same diagnostic code, level and address
+    Examples:
+    | id                         | dir                        | fixture                     |
+    | update-analysis-settings-1 | 🎛️update-analysis-settings | 🔁️keeps-the-analysis-196e4a |
+    | update-analysis-settings-2 | 🎛️update-analysis-settings | 🚫️denies-zero-modes-babc1d  |

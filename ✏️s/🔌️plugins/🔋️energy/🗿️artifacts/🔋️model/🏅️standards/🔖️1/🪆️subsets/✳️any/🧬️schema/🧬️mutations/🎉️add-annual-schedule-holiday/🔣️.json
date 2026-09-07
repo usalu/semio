@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule-holiday",
+  "semanticKind": "add-annual-schedule-holiday",
+  "displayName": "Add Annual Schedule Holiday",
+  "emoji": "🎉️",
+  "aggregateVariant": "AddAnnualScheduleHoliday",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "add-annual-schedule-holiday",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -71,13 +71,24 @@ mounts and drives this exact wrapper.
   returns all three exact Store owners for bounded terminal close. It compares
   every returned Store's Pack, SPR, artifact reference, owner reference,
   generation, and folded projection against its pre-admission value.
-- Native remains pending. The registered Store target is
-  `durable-owned-group-decision-native-check`, now 15 exact laws; the new law is
-  `durable_group::tests::durable_store_private_committed_record_recovers_all_three_stores_without_reappending_journal`.
-- The DB journal target remains `durable-group-journal-native-check`, now five
-  exact laws. The hostile sole-Event transaction law and
-  `db_artifact::tests::committed_durable_group_recovery_consumes_wal_witness_and_returns_exact_three_stores_on_pre_mutation_rejection`
-  postdate the GREEN3 receipt and remain native-pending.
+- The current Store native gate is GREEN15 at
+  `durable-owned-group-decision-exact/exact-cargo-laws-zMvcm3/00`, executable
+  SHA-256 `b98e404757d5f0f3e5b7ee667308e1d33cf0846e7a122b1952b132c9f767f75a`.
+  This includes the private committed-record recovery law. The first current
+  attempt exposed that the checked binary Pack vectors predated the canonical
+  encoder; all three unbound outcomes, their independent hashes, and the
+  unsigned decision digest were regenerated together. The AJV/Node/WebCrypto
+  source oracle and native decode/re-encode law both pass the new corpus.
+- The current DB journal gate is GREEN5 at
+  `durable-group-journal-exact/exact-cargo-laws-ySopjz/00`, executable SHA-256
+  `e22ac7171980ae9710b5281856fb87c0afcb8b3be0f6847c58c637b4e37ea259`.
+  It includes the hostile sole-Event transaction law and the physical
+  pre-mutation rejection handback law. An immediately preceding receipt,
+  `bpQjEL/00`, passed its first four laws but did not terminate the authority in
+  the hash-before-mailbox cleanup law. The current rerun passed all five after
+  adding an exact retained-driver failure witness; because that diagnostic did
+  not change runtime semantics, the earlier cleanup miss remains an unresolved
+  transient rather than a claimed fix.
 
 ## Nonclaims
 

@@ -2,153 +2,1182 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://semio.tech/schema/s/fem/fem3d/mutation.json",
   "title": "Fem3dMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "nodes",
-    "elements",
-    "materials",
-    "sections",
-    "solids",
-    "supports",
-    "loadCases",
-    "combinations",
-    "analysis"
-  ],
-  "properties": {
-    "nodes": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FemNode"
-      },
-      "x-semio-state": "artifact"
-    },
-    "elements": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FemElement"
-      },
-      "x-semio-state": "artifact"
-    },
-    "materials": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FemMaterial"
-      },
-      "x-semio-state": "artifact"
-    },
-    "sections": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FemSection"
-      },
-      "x-semio-state": "artifact"
-    },
-    "solids": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FemSolid"
-      },
-      "x-semio-state": "artifact"
-    },
-    "supports": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FemSupport"
-      },
-      "x-semio-state": "artifact"
-    },
-    "loadCases": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FemLoadCase"
-      },
-      "x-semio-state": "artifact"
-    },
-    "combinations": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/FemCombination"
-      },
-      "x-semio-state": "artifact"
-    },
-    "analysis": {
-      "$ref": "#/$defs/FemAnalysisSettings",
-      "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "FemCamera": {
-      "title": "FemCamera",
+  "description": "🧬️ The closed fem3d mutation vocabulary as it travels the wire: an internally tagged union discriminated by `mutation`, one variant per `🧬️mutations/<kind>/🧬️.schema.json` payload. Kept in the declaration order of the `Fem3dMutation` enum.",
+  "oneOf": [
+    {
+      "title": "CreateNode",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "json"
+        "mutation",
+        "node"
       ],
       "properties": {
-        "json": {
-          "type": "string",
-          "contentMediaType": "application/json"
+        "mutation": {
+          "const": "createNode"
+        },
+        "node": {
+          "title": "FemNode",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "x",
+            "y",
+            "z"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          }
         }
       }
     },
-    "FemAnalysisSettings": {
-      "title": "FemAnalysisSettings",
+    {
+      "title": "DeleteNode",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "modalCount",
-        "bucklingCount",
-        "deformationScale"
+        "id",
+        "mutation"
       ],
       "properties": {
-        "modalCount": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+        "mutation": {
+          "const": "deleteNode"
         },
-        "bucklingCount": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "deformationScale": {
-          "type": "number",
-          "format": "double"
+        "id": {
+          "type": "string"
         }
       }
     },
-    "FemNode": {
-      "title": "FemNode",
-      "type": "object"
+    {
+      "title": "CreateElement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "element",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createElement"
+        },
+        "element": {
+          "title": "FemElement",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "end",
+                "id",
+                "kind",
+                "materialId",
+                "sectionId",
+                "start"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "bar"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "materialId": {
+                  "type": "string"
+                },
+                "sectionId": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "end",
+                "id",
+                "kind",
+                "materialId",
+                "roll",
+                "sectionId",
+                "start"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "frame"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "materialId": {
+                  "type": "string"
+                },
+                "sectionId": {
+                  "type": "string"
+                },
+                "roll": {
+                  "type": "number"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
-    "FemElement": {
-      "title": "FemElement",
-      "type": "object"
+    {
+      "title": "DeleteElement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteElement"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
     },
-    "FemSolid": {
-      "title": "FemSolid",
-      "type": "object"
+    {
+      "title": "ReplaceElement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation",
+        "newElement"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replaceElement"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newElement": {
+          "title": "FemElement",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "end",
+                "id",
+                "kind",
+                "materialId",
+                "sectionId",
+                "start"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "bar"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "materialId": {
+                  "type": "string"
+                },
+                "sectionId": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "end",
+                "id",
+                "kind",
+                "materialId",
+                "roll",
+                "sectionId",
+                "start"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "frame"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "materialId": {
+                  "type": "string"
+                },
+                "sectionId": {
+                  "type": "string"
+                },
+                "roll": {
+                  "type": "number"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
-    "FemMaterial": {
-      "title": "FemMaterial",
-      "type": "object"
+    {
+      "title": "CreateMaterial",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "material",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createMaterial"
+        },
+        "material": {
+          "title": "FemMaterial",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "e",
+            "g",
+            "id",
+            "name",
+            "nu",
+            "rho"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "e": {
+              "type": "number"
+            },
+            "g": {
+              "type": "number"
+            },
+            "nu": {
+              "type": "number"
+            },
+            "rho": {
+              "type": "number"
+            }
+          }
+        }
+      }
     },
-    "FemSection": {
-      "title": "FemSection",
-      "type": "object"
+    {
+      "title": "DeleteMaterial",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteMaterial"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
     },
-    "FemSupport": {
-      "title": "FemSupport",
-      "type": "object"
+    {
+      "title": "ReplaceMaterial",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation",
+        "newMaterial"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replaceMaterial"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newMaterial": {
+          "title": "FemMaterial",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "e",
+            "g",
+            "id",
+            "name",
+            "nu",
+            "rho"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "e": {
+              "type": "number"
+            },
+            "g": {
+              "type": "number"
+            },
+            "nu": {
+              "type": "number"
+            },
+            "rho": {
+              "type": "number"
+            }
+          }
+        }
+      }
     },
-    "FemLoadCase": {
-      "title": "FemLoadCase",
-      "type": "object"
+    {
+      "title": "CreateSection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "section"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createSection"
+        },
+        "section": {
+          "title": "FemSection",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "area",
+            "id",
+            "iy",
+            "iz",
+            "j",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "area": {
+              "type": "number"
+            },
+            "iy": {
+              "type": "number"
+            },
+            "iz": {
+              "type": "number"
+            },
+            "j": {
+              "type": "number"
+            }
+          }
+        }
+      }
     },
-    "FemCombination": {
-      "title": "FemCombination",
-      "type": "object"
+    {
+      "title": "DeleteSection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteSection"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "title": "ReplaceSection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation",
+        "newSection"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replaceSection"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newSection": {
+          "title": "FemSection",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "area",
+            "id",
+            "iy",
+            "iz",
+            "j",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "area": {
+              "type": "number"
+            },
+            "iy": {
+              "type": "number"
+            },
+            "iz": {
+              "type": "number"
+            },
+            "j": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "CreateSupport",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "support"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createSupport"
+        },
+        "support": {
+          "title": "FemSupport",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fixed",
+            "id",
+            "nodeId"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "nodeId": {
+              "type": "string"
+            },
+            "fixed": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Tx",
+                  "Ty",
+                  "Tz",
+                  "Rx",
+                  "Ry",
+                  "Rz"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "DeleteSupport",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteSupport"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "title": "ReplaceSupport",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation",
+        "newSupport"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replaceSupport"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newSupport": {
+          "title": "FemSupport",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fixed",
+            "id",
+            "nodeId"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "nodeId": {
+              "type": "string"
+            },
+            "fixed": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Tx",
+                  "Ty",
+                  "Tz",
+                  "Rx",
+                  "Ry",
+                  "Rz"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "CreateSolid",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "solid"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createSolid"
+        },
+        "solid": {
+          "title": "FemSolid",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseZ",
+            "height",
+            "holes",
+            "id",
+            "layers",
+            "materialId",
+            "meshSize",
+            "name",
+            "outline"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "outline": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "holes": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            },
+            "baseZ": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "layers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "meshSize": {
+              "type": "number"
+            },
+            "materialId": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "DeleteSolid",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteSolid"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "title": "ReplaceSolid",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation",
+        "newSolid"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replaceSolid"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newSolid": {
+          "title": "FemSolid",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseZ",
+            "height",
+            "holes",
+            "id",
+            "layers",
+            "materialId",
+            "meshSize",
+            "name",
+            "outline"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "outline": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "holes": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            },
+            "baseZ": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "layers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "meshSize": {
+              "type": "number"
+            },
+            "materialId": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "CreateLoadCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "loadCase",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createLoadCase"
+        },
+        "loadCase": {
+          "title": "FemLoadCase",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "loads",
+            "name",
+            "selfWeight"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "loads": {
+              "type": "array",
+              "items": {
+                "title": "FemLoad",
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "dof",
+                      "id",
+                      "kind",
+                      "nodeId",
+                      "value"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "nodal"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "nodeId": {
+                        "type": "string"
+                      },
+                      "dof": {
+                        "type": "string",
+                        "enum": [
+                          "Tx",
+                          "Ty",
+                          "Tz",
+                          "Rx",
+                          "Ry",
+                          "Rz"
+                        ]
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "elementId",
+                      "id",
+                      "kind",
+                      "wx",
+                      "wy",
+                      "wz"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "memberUdl"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "elementId": {
+                        "type": "string"
+                      },
+                      "wx": {
+                        "type": "number"
+                      },
+                      "wy": {
+                        "type": "number"
+                      },
+                      "wz": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "kind",
+                      "pressure",
+                      "solidId"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "area"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "solidId": {
+                        "type": "string"
+                      },
+                      "pressure": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "selfWeight": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "DeleteLoadCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteLoadCase"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "title": "AddLoad",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "load",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "addLoad"
+        },
+        "caseId": {
+          "type": "string"
+        },
+        "load": {
+          "title": "FemLoad",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "dof",
+                "id",
+                "kind",
+                "nodeId",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "nodal"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "nodeId": {
+                  "type": "string"
+                },
+                "dof": {
+                  "type": "string",
+                  "enum": [
+                    "Tx",
+                    "Ty",
+                    "Tz",
+                    "Rx",
+                    "Ry",
+                    "Rz"
+                  ]
+                },
+                "value": {
+                  "type": "number"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "elementId",
+                "id",
+                "kind",
+                "wx",
+                "wy",
+                "wz"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "memberUdl"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "elementId": {
+                  "type": "string"
+                },
+                "wx": {
+                  "type": "number"
+                },
+                "wy": {
+                  "type": "number"
+                },
+                "wz": {
+                  "type": "number"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "pressure",
+                "solidId"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "area"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "solidId": {
+                  "type": "string"
+                },
+                "pressure": {
+                  "type": "number"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "RemoveLoad",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "loadId",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "removeLoad"
+        },
+        "caseId": {
+          "type": "string"
+        },
+        "loadId": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "title": "ChangeLoadCaseSelfWeight",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "mutation",
+        "newSelfWeight"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeLoadCaseSelfWeight"
+        },
+        "caseId": {
+          "type": "string"
+        },
+        "newSelfWeight": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "title": "CreateCombination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "combination",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "createCombination"
+        },
+        "combination": {
+          "title": "FemCombination",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name",
+            "terms"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "terms": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "DeleteCombination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "deleteCombination"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "title": "UpdateAnalysisSettings",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "settings"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "updateAnalysisSettings"
+        },
+        "settings": {
+          "title": "FemAnalysisSettings",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bucklingCount",
+            "deformationScale",
+            "modalCount"
+          ],
+          "properties": {
+            "modalCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bucklingCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "deformationScale": {
+              "type": "number"
+            }
+          }
+        }
+      }
     }
-  }
+  ]
 }

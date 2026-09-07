@@ -1,0 +1,101 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "job": null,
+  "results": {
+    "sparse": {
+      "points": "AACAPwAA4D0AAMi9AACAPwAA1L4AAM4+AACAPwAAjL4AAES/AACAPwAAYL0AAES+AACAPwAAOL8AALw+AACAPwAAJb8AAB+/AACAPwAAWD4AAMK+AACAPwAANj8AAJy9AACAPwAA/r4AAEi+AACAPwAAqr4AAA0/AACAPwAAR78AANi9AACAPwAA8D4AABA+AACAPwAAbD4AABO/AACAPwAACL0AABw/AACAPwAAAT8AAKC9AACAPwAADz8AABU/AACAPwAAMD8AAEC/AACAPwAAjL0AAMS9AACAPwAAnD4AANQ+AACAPwAAhL0AACC+AACAPwAABj8AAEe/AACAPwAANL8AACS/AACAvwAAD78AADy+AACAvwAAEj8AALA8AACAvwAAPD4AACi9AACAvwAAUL4AABo/AACAvwAAQb8AAAA/AACAvwAAgj4AAOy9AACAvwAAIz8AAEe/AACAvwAAkr4AAJS+AACAvwAA9r4AAHg+AACAvwAA4D0AAJY+AACAvwAAnj4AAJw+AACAvwAAsr4AAGi9AACAvwAAwL4AADW/AACAvwAAnj4AAJC+AACAvwAA0r4AAAM/AACAvwAAFD4AADO/AACAvwAA+L4AAHw+AACAvwAADL8AAKK+AACAvwAAP78AACi/AACAvwAAEL4AALC8AACAvwAAij4AAHA+AACAvwAAoD4AABu/AACSvgAAgD8AAPQ9AAAovwAAgD8AAEW/AACevgAAgD8AAGw+AAAtvwAAgD8AADg+AADAvgAAgD8AAC2/AAAwvQAAgD8AACA/AABMPgAAgD8AAPw9AAB0PgAAgD8AABq/AABEvwAAgD8AAGw+AACGPgAAgD8AAMI+AAD8PgAAgD8AACy/AACwvgAAgD8AAKA8AADIPgAAgD8AAL4+AABwPgAAgD8AAEy+AAAjvwAAgD8AADA/AABcvgAAgD8AAL6+AACOPgAAgD8AAAU/AADQvgAAgD8AABK/AAA0PgAAgD8AADQ+AACovgAAgD8AAMw+AAB0vgAAgD8AAFC8AAA8PwAAgD8AABu/AAAQvgAAgL8AAMw+AAARvwAAgL8AAAC9AACMPgAAgL8AABa/AACwPAAAgL8AADA/AAApvwAAgL8AAGi+AAA4PwAAgL8AANy9AAAuvwAAgL8AABm/AAC0vgAAgL8AAAy+AACQvQAAgL8AAIa+AADEvQAAgL8AADG/AAC8vQAAgL8AAAO/AABAPgAAgL8AAEE/AABAvAAAgL8AADS/AACWvgAAgL8AAEc/AAAdPwAAgL8AAIy+AABwPQAAgL8AAC4/AACSvgAAgL8AANQ+AAB4PQAAgL8AACK/AAAFPwAAgL8AAPC8AAALvwAAgL8AAHA+AAD2vgAAgL8AAEi+AAAKvwAAgL8AAEA9AADCvgAAtr4AAIA/AADSvgAAqj4AAIA/AAANvwAA9j4AAIA/AACAvgAA8r4AAIA/AAAgvwAALT8AAIA/AABQvgAA+D0AAIA/AAAYPwAACD8AAIA/AADCvgAAzL0AAIA/AADgPgAArj4AAIA/AADgPgAAsj4AAIA/AABYPQAABL4AAIA/AABUPgAAlL4AAIA/AAAlvwAAKD4AAIA/AAAXPwAAAD8AAIA/AAA/vwAA8j4AAIA/AADoPgAALL8AAIA/",
+      "colors": "ACVKb5S53gMoTXKXvOEGK1B1mr/kCS5TeJ3C5wwxVnugxeoPNFl+o8jtEjdcgabL8BU6X4SpzvMYPWKHrNH2G0Bliq/U+R5DaI2y1/whRmuQtdr/JEluk7jdAidMcZa74AUqT3SZvuMILVJ3nMHmCzBVep/E6Q4zWH2ix+wRNluApcrvFDleg6jN8hc8YYar0PUaP2SJrtP4HUJnjLHW+yBFao+02f4jSG2St9wBJktwlbrfBClOc5i94gcsUXabwOUKL1R5nsPoDTJXfKHG6xA1Wn+kye4TOF2Cp8zxFjtgharP9Bk+Y4it0vccQWaLsNX6H0RpjrPY/SJHbJG22wAlSm+Uud4DKE1yl7zhBitQdZq/5AkuU3idwucMMVZ7oMXqDzRZfqPI7RI3XIGmy/AVOl+Eqc7z"
+    },
+    "dense": {
+      "positions": "AACCPwAAAD4AAKi9AACCPwAAzL4AANY+AACCPwAAhL4AAEC/AACCPwAAIL0AADS+AACCPwAANL8AAMQ+AACCPwAAIb8AABu/AACCPwAAaD4AALq+AACCPwAAOj8AAHi9AACCPwAA9r4AADi+AACCPwAAor4AABE/AACCPwAAQ78AALi9AACCPwAA+D4AACA+AACCPwAAfD4AAA+/AACCPwAAkLwAACA/AACCPwAABT8AAIC9AACCPwAAEz8AABk/AACCPwAAND8AADy/AACCPwAAWL0AAKS9AACCPwAApD4AANw+AACCPwAASL0AABC+AACCPwAACj8AAEO/AACCPwAAML8AACC/AAB8vwAAC78AACy+AAB8vwAAFj8AABg9AAB8vwAATD4AANC8AAB8vwAAQL4AAB4/AAB8vwAAPb8AAAQ/AAB8vwAAij4AAMy9AAB8vwAAJz8AAEO/AAB8vwAAir4AAIy+AAB8vwAA7r4AAIQ+AAB8vwAAAD4AAJ4+AAB8vwAApj4AAKQ+AAB8vwAAqr4AACi9AAB8vwAAuL4AADG/AAB8vwAApj4AAIi+AAB8vwAAyr4AAAc/AAB8vwAAJD4AAC+/AAB8vwAA8L4AAIY+AAB8vwAACL8AAJq+AAB8vwAAO78AACS/AAB8vwAAAL4AAMC7AAB8vwAAkj4AAIA+AAB8vwAAqD4AABe/AACKvgAAgj8AAAw+AAAkvwAAgj8AAEG/AACWvgAAgj8AAHw+AAApvwAAgj8AAEg+AAC4vgAAgj8AACm/AADgvAAAgj8AACQ/AABcPgAAgj8AAAw+AACCPgAAgj8AABa/AABAvwAAgj8AAHw+AACOPgAAgj8AAMo+AAACPwAAgj8AACi/AACovgAAgj8AABA9AADQPgAAgj8AAMY+AACAPgAAgj8AADy+AAAfvwAAgj8AADQ/AABMvgAAgj8AALa+AACWPgAAgj8AAAk/AADIvgAAgj8AAA6/AABEPgAAgj8AAEQ+AACgvgAAgj8AANQ+",
+      "colors": "ADVqn9QJPnOo3RJHfLHmG1CFuu8kWY7D+C1il8wBNmug1Qo/dKneE0h9succUYa78CVaj8T5LmOYzQI3bKHWC0B1qt8USX6z6B1Sh7zxJluQxfovZJnOAzhtotcMQXar4BVKf7TpHlOIvfInXJHG+zBlms8EOW6j2A1Cd6zhFkuAteofVIm+8yhdksf8MWab0AU6b6TZDkN4reIXTIG26yBVir/0KV6TyP0yZ5zRBjtwpdoPRHmu4xhNgrfsIVaL",
+      "confidence": "AAAAPwAAED8AACA/AAAwPwAAQD8AAFA/AABgPwAAcD8AAAA/AAAQPwAAID8AADA/AABAPwAAUD8AAGA/AABwPwAAAD8AABA/AAAgPwAAMD8AAEA/AABQPwAAYD8AAHA/AAAAPwAAED8AACA/AAAwPwAAQD8AAFA/AABgPwAAcD8AAAA/AAAQPwAAID8AADA/AABAPwAAUD8AAGA/AABwPwAAAD8AABA/AAAgPwAAMD8AAEA/AABQPwAAYD8AAHA/AAAAPwAAED8AACA/AAAwPwAAQD8AAFA/AABgPwAAcD8AAAA/AAAQPwAAID8AADA/AABAPwAAUD8AAGA/AABwPw==",
+      "classification": "BgICAgYCAgIGAgICBgICAgYCAgIGAgICBgICAgYCAgIGAgICBgICAgYCAgIGAgICBgICAgYCAgIGAgICBgICAg=="
+    },
+    "mesh": {
+      "mesh": {
+        "childId": "remodeling-mesh-901ccade3f60f8f1",
+        "target": {
+          "artifactId": "orbit-survey-mesh",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "mesh"
+          }
+        }
+      },
+      "source": "reconstructed",
+      "textureAssetId": "orbit-frame-00",
+      "watertight": {
+        "vertexCount": 4820,
+        "triangleCount": 9636,
+        "boundaryEdgeCount": 0,
+        "boundaryLoopCount": 0,
+        "nonManifoldEdgeCount": 0,
+        "nonManifoldVertexCount": 0,
+        "connectedComponents": 1,
+        "consistentlyOriented": true,
+        "eulerCharacteristic": 2,
+        "genus": 0,
+        "signedVolume": 7.9375,
+        "selfIntersectionPairs": 0,
+        "closedFallbackUsed": false,
+        "isClosed": true,
+        "isTwoManifold": true,
+        "isWatertight": true
+      }
+    },
+    "trajectory": null,
+    "tracks": [
+      {
+        "id": "orbit-track-a",
+        "length": 9,
+        "class": "static",
+        "meanSpeedMS": 0.0
+      },
+      {
+        "id": "orbit-track-b",
+        "length": 7,
+        "class": "moving",
+        "meanSpeedMS": 0.75
+      },
+      {
+        "id": "orbit-track-c",
+        "length": 4,
+        "class": "moving",
+        "meanSpeedMS": 0.125
+      }
+    ],
+    "geo": {
+      "dsmAssetId": "orbit-dsm",
+      "dtmAssetId": null,
+      "orthoAssetId": null
+    },
+    "qc": {
+      "reprojectionRmsPx": 0.421875,
+      "gcpCheckpointRmse": 0.1875,
+      "watertight": null,
+      "meanTrackLength": 6.5,
+      "registeredFrameRatio": 1.0,
+      "denseCoverageRatio": 0.625,
+      "warnings": [
+        "only two streams observe gcp-south-pier"
+      ]
+    }
+  },
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

@@ -1,7 +1,8 @@
-//! ↩️ Inverse for `DeleteAsset` — recreates the captured BASE `ImageAsset` (real bytes, read through
-//! `remodeling_asset`'s working-scene cache — `base.assets` now holds a composed CHILD handle, not
-//! embedded bytes; see `create-asset/↩️inverse`'s doc comment for the identical staleness gap). Missing
-//! key OR cold cache ⇒ `Vec::new()`, never fabricated.
+//! ↩️ Inverse for `DeleteAsset` — recreates the captured BASE `ImageAsset`, which restores BOTH the
+//! `assets` entry and the durable leaf the delete dropped with it. The payload is reconstituted from
+//! the DOCUMENT's own durable leaf for that handle (`remodeling_asset`, `🦀️.rs:258` — the leaves this
+//! very verb removes), so this inverse is a pure function of `base` with no process state behind it.
+//! A key whose leaf the document does not carry ⇒ `Vec::new()`, never fabricated bytes.
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::{remodeling_asset, RemodelingSnapshot};
 

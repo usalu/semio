@@ -1,0 +1,10 @@
+{
+  "mutation": "createMaterial",
+  "material": {
+    "id": "bearing_rubber",
+    "name": "Elastomeric Bearing",
+    "e": 5000000.0,
+    "nu": 0.5,
+    "rho": 1100.0
+  }
+}

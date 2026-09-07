@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceMaterial",
+  "id": "c24",
+  "newMaterial": {
+    "id": "c24_v2",
+    "name": "C24 Solid Timber",
+    "e": 11000000000.0,
+    "g": 690000000.0,
+    "nu": 0.3,
+    "rho": 420.0
+  }
+}

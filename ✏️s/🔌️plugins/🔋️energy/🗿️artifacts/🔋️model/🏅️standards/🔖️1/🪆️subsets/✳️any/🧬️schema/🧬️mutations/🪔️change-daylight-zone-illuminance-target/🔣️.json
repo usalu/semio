@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone-illuminance-target",
+  "semanticKind": "change-daylight-zone-illuminance-target",
+  "displayName": "Change Daylight Zone Illuminance Target",
+  "emoji": "🪔️",
+  "aggregateVariant": "ChangeDaylightZoneIlluminanceTarget",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-daylight-zone-illuminance-target",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

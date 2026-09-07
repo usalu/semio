@@ -64,7 +64,7 @@ use crate::actor_bindings::{
     semio::framework::events as wit_events,
 };
 use crate::imports::AsyncActorHostState;
-use crate::{JobBudget, JobStep, PluginHostError, SharedEngineConfig};
+use crate::{JobBudget, JobStep, PluginHostError, SharedEngineConfig, TurnFault};
 use semio_framework::kernel::{Budget, Effect, Event, TurnResult as KernelTurnResult};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -238,7 +238,7 @@ pub enum AsyncActorCommand {
     Poll {
         events: Vec<Event>,
         budget: Budget,
-        reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, String>>,
+        reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, TurnFault>>,
     },
     StartJob {
         job: u64,
@@ -273,11 +273,11 @@ pub enum AsyncActorCommand {
 /// `emitted` is prepended (it happened earlier in the turn, via `host-async.emit`, than anything
 /// `poll` itself returns) — same ordering `WasmtimeRuntime::execute_turn` uses for its own
 /// `emit_sink.chain(wit_turn_result.effects)`.
-async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Effect>) -> Result<KernelTurnResult, String> {
+async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Effect>) -> Result<KernelTurnResult, TurnFault> {
     for effect in turn.effects {
         match super::wit_effect_to_kernel(effect).await {
             Ok(kernel_effect) => effects.push(kernel_effect),
-            Err(error) => return Err(error.to_string()),
+            Err(error) => return Err(TurnFault::Host(error)),
         }
     }
     Ok(KernelTurnResult {
@@ -373,7 +373,7 @@ impl AsyncActorTask {
                                     instance: Arc<actor_bindings::Actor>,
                                     events: Vec<wit_events::Event>,
                                     budget: wit_reactor::Budget,
-                                    reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, String>>,
+                                    reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, TurnFault>>,
                                 }
                                 impl AccessorTask<AsyncActorHostState> for PollTask {
                                     async fn run(self, accessor: &Accessor<AsyncActorHostState>) -> wasmtime::Result<()> {
@@ -393,8 +393,8 @@ impl AsyncActorTask {
                                                 });
                                                 convert_poll_success(turn, emitted).await
                                             }
-                                            Ok(Err(fault)) => Err(format!("{fault:?}")),
-                                            Err(trap) => Err(trap.to_string()),
+                                            Ok(Err(fault)) => Err(super::decode_guest_plugin_error(fault)),
+                                            Err(trap) => Err(TurnFault::Trapped(trap.to_string())),
                                         };
                                         let _ = self.reply.send(mapped);
                                         Ok(())

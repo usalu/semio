@@ -1,0 +1,10 @@
+{
+  "mutation": "createMaterial",
+  "material": {
+    "id": "steel_s355",
+    "name": "Steel S355 duplicate",
+    "e": 210000000000.0,
+    "nu": 0.3,
+    "rho": 7850.0
+  }
+}

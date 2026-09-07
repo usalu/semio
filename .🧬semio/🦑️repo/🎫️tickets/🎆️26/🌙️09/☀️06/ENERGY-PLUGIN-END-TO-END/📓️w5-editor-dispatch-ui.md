@@ -222,3 +222,113 @@ run-period rendering for the viewer's result window.
 ## 4. Command output
 
 (appended below as runs complete)
+
+---
+
+# 📓️ W-E, second shift (relaunch 20:50) — verification and two real fixes
+
+## 5. What the disk actually held (the predecessor's report was BEHIND its own work)
+
+Verified by direct read, not by trusting §1–§4 above:
+
+- The roster is **19** ids, not 18: `setActiveExample` is fully landed (command variant, `action_id`,
+  `args_bridge` row, proof row, publication contract, and an `ActionArgDef::select("exampleId", …)`
+  picker fed by `example_options()`).
+- All fifteen examples (`🎬️demo` + the fourteen `🏛️bestest-*`) are mounted in
+  `📦️packages/🦀️rust/🦀️.rs` (`#[path]` leaves + the `crate::examples` alias block), each leaf
+  exporting `ID`/`LABEL_EN`/`CASE`/`model()`.
+- The plugin root registers
+  `.editor_with_examples::<EnergyModelEditor>(create_energy_model_editor(), crate::editor::model::examples())`
+  (`📦️packages/🦀️rust/🦀️.rs:47`), so `PluginManifest.examples` is genuinely filled.
+- `🧵️simulation-session/🦀️.rs` carries `render_identity_of`, `session_settings`, `with_projection`,
+  `with_adopted_projection`, the `Configure` event and `EnergySimulationConfigProjection::DEFAULT`.
+- **Nothing had been compiled.** §4 "Command output" was empty and there was no evidence of a run.
+
+## 6. Two defects found by reading the framework, both fixed
+
+### 6.1 `set-run-period` was proved but declared on NO window — fatal at app construction
+
+`ENERGY_MODEL_RETAINED_TOOL_IDS`, `OpBinary::TOOL_JOB_IDS` and the `bounded_first_step_tool_proofs!`
+rows all carried `set-run-period`, but no `WindowKindDefinition` and no builder-level action ever
+declared it. That is not a cosmetic gap:
+
+- `AppBuilder::action_interactive_job` (`🔌️plugin/🦀️.rs:5223`) iterates
+  `self.actions ∪ window_kinds[].actions` and silently does nothing for an id it cannot find, so the
+  roster loop in `create_energy_model_editor` never classified it.
+- `AppActionRegistry::from_definition` (`:12094`) builds its `actions` map ONLY from
+  `definition.window_kinds[].actions`, so `migrated_tool_ids()` (`:12212`) could never contain it.
+- `validate_tool_job_rows` (`:12233`) then computes `expected = TOOL_JOB_IDS ∩ migrated` WITHOUT
+  `set-run-period` while `seen` (the proof rows) HAS it ⇒ `seen != expected` ⇒
+  `interactive-job.catalog-incomplete` — **the whole editor app fails to construct**, and with it
+  every one of the nineteen verbs, not just this one.
+
+Fixed by declaring it where it is actually rendered and edited: `⚡️simulation`'s `definition()` now
+carries `run_period_action()` — an `ActionKind::Mutation` (it IS document data; W-D0 moved the run
+period onto `Model`) with four `slider` args, stamped `Migrated` like its six siblings. The window's
+own test now asserts seven actions and that `set-run-period` is among them.
+
+Corollary worth recording for the other lanes: a builder-level action (`.mutation(...)` /
+`.action_with(...)`) is NOT lost — `try_build_definition` (`:5463-5487`) pushes every builder action
+that no window explicitly owns onto EVERY window kind. That is why `setActiveExample`, declared on
+the builder, is legitimately reachable while `set-run-period`, declared nowhere, was not.
+
+### 6.2 `setActiveExample` went through the mutation seam, which cannot express a whole-model swap
+
+The verb read the example's `Model` and handed it to `model_edit(...)`, whose exhaustive `probe`
+comparison refuses anything the landed vocabulary cannot name. Loading ANY example therefore faulted
+`mutation.kind-unavailable` — and it always would have, because whole-document replace has no
+mutation representative in this artifact's vocabulary on purpose (`📓️derivation-rules.md` rule 6,
+and `🧬️schema/🧬️mutations/🦀️.rs:10` routes file-open / import / load-example through
+`store::ArtifactStore::reset`).
+
+The sanctioned mechanism is the one `📐️cad` (`✏️editor/🦀️.rs:566`) and `🔱️trinity`
+(`✏️editor/🦀️.rs:68`) already use: `kernel::Effect::LoadDocument { pack, spr }`, which the host
+applies through `load_document_pack` → `ArtifactStore::reset` (`🔌️plugin/🦀️.rs:25298`), outside
+undo history. `reduce` now returns that effect and no mutation at all, via a new
+`load_document_effect(&Model)` built from `ArtifactPack::encode_pack` + `create_document_envelope` +
+`resolve_ready(print_document_spr(…))`.
+
+Consequences carried through:
+- `setActiveExample`'s publication lane moved `Artifact` → `HostOnly`, and it left
+  `ENERGY_MODEL_DOCUMENT_TOOL_IDS` (now twelve verbs). The framework's lane check
+  (`🔌️plugin/🦀️.rs:22944`) only refuses a lane you PUBLISH to without declaring; an effect-only
+  emit is `HostOnly` by definition.
+- New test `loading_an_example_swaps_the_document_through_an_effect_and_never_a_mutation`: every one
+  of the fifteen rows emits exactly one `LoadDocument`, no mutation, and the emitted pack decodes
+  back to that leaf's own `model()`; an unknown id is `mutation.target-missing`.
+- TS twins updated (`✏️editor/🟦️.ts` document-id slice 13 → 12, `⚡️simulation/🟦️.ts` gains the
+  `set-run-period` row).
+
+## 7. Build
+
+Cold `cargo check -p semio-s-plugin-energy --lib --tests` in the shared `target-energy-e2e`.
+
+## 8. The mutation groups landed — the seam is now a real round trip, not a refusal
+
+At 22:00 `🧬️schema/🧬️mutations/` held **278** kind directories (it held 17 at the start of this
+shift). Every kind the editor was blocked on now exists, so `model_edit` no longer refuses:
+
+| Editor verb | Semantic steps it now emits |
+|---|---|
+| `create-zone` / `delete-zone` | `create-zone` / `delete-zone` |
+| `create-surface` | `create-surface` (boundary tag + optional interzone partner, the parallel-field shape `OutsideBoundaryKind` forces) |
+| `delete-surface` | `delete-fenestration`* → `disconnect-surfaces`* → `delete-surface`, in that order |
+| `assign-surface-construction` | `change-surface-construction` |
+| `set-material-property` | one of the seven `change-material-*` |
+| `set-thermostat-setpoints` | up to four `change-thermostat-*` |
+
+`model_edit` grew four collection differs — `diff_zones`, `diff_surfaces`, `diff_materials`,
+`diff_thermostats` — and the exhaustive `probe` grew the five collections they own, so anything
+they do NOT name is still refused loudly. Two identity guards stay deliberately closed:
+`create-material`/`delete-material` and `create-thermostat`/`delete-thermostat` — the editor has no
+verb for either, so an identity change there is a bug, not a gap, and must not be masked by the probe.
+
+`diff_surfaces` covers ALL nine surface fields (name, zone, class, vertices, construction, boundary,
+sun/wind exposure, multiplier), not just the one `assign-surface-construction` produces, so the probe
+over `surfaces` is honest rather than a rubber stamp.
+
+The old dual-mode test `verbs_awaiting_their_semantic_kind_refuse_loudly_and_name_it` is REPLACED by
+`every_document_verb_round_trips_through_the_granular_vocabulary`, which applies the emitted steps and
+asserts the resulting `Model`. A `mutation.kind-unavailable` there is now a regression, not a pending
+group. A shared `populated_model()` fixture (one zone, two constructions, one material, two constant
+schedules, one surface, one thermostat) gives every authored verb a real target.

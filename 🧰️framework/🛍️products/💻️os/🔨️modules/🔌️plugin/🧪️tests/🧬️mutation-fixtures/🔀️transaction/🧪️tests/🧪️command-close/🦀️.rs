@@ -23,19 +23,34 @@ struct Case {
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
-enum Command { Increment, CoalescedIncrement, IncrementAndNotify }
+enum Command {
+    Increment,
+    CoalescedIncrement,
+    IncrementAndNotify,
+}
 
 #[derive(serde::Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
-enum Completion { Empty, PendingOwner, PendingExternal }
+enum Completion {
+    Empty,
+    PendingOwner,
+    PendingExternal,
+}
 
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Grant { items: usize, bytes: GrantBytes }
+struct Grant {
+    items: usize,
+    bytes: GrantBytes,
+}
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
-enum GrantBytes { Zero, CommandMinusOne, ExactCommand }
+enum GrantBytes {
+    Zero,
+    CommandMinusOne,
+    ExactCommand,
+}
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -49,7 +64,10 @@ struct Expected {
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
-enum ReleasedBytes { Zero, CommandLayout }
+enum ReleasedBytes {
+    Zero,
+    CommandLayout,
+}
 //#endregion 🧬️CommandCloseVectors
 
 //#region 🧪️CommandCloseLaws
@@ -81,7 +99,9 @@ fn check(id: &str) {
         GrantBytes::ExactCommand => command_bytes,
     };
     let mut job = TxnFixtureJob { command: Some(command), completion: Some(completion), count: 0, closing: false };
-    if case.begin_close { job.begin_close(); }
+    if case.begin_close {
+        job.begin_close();
+    }
     let (step, released_items, released_bytes) = match job.close_step(case.grant.items, grant_bytes) {
         InteractiveJobCloseStep::Blocked => ("blocked", 0, 0),
         InteractiveJobCloseStep::Pending { released_items, released_bytes } => ("pending", released_items, released_bytes),
@@ -97,9 +117,18 @@ fn check(id: &str) {
     eprintln!("[DEBUG] txn-command-close id={id} commandBytes={command_bytes} grantItems={} grantBytes={grant_bytes} step={step} releasedItems={released_items} releasedBytes={released_bytes}", case.grant.items);
     assert_eq!(step, case.expected.step, "{id}");
     assert_eq!(released_items, case.expected.released_items, "{id}");
-    assert_eq!(released_bytes, match case.expected.released_bytes { ReleasedBytes::Zero => 0, ReleasedBytes::CommandLayout => command_bytes }, "{id}");
+    assert_eq!(
+        released_bytes,
+        match case.expected.released_bytes {
+            ReleasedBytes::Zero => 0,
+            ReleasedBytes::CommandLayout => command_bytes,
+        },
+        "{id}"
+    );
     assert_eq!(if command_after.is_some() { "retained" } else { "released" }, case.expected.command, "{id}");
-    if command_after.is_some() { assert_eq!(command_after, Some(command_identity), "{id}: exact original Box must remain"); }
+    if command_after.is_some() {
+        assert_eq!(command_after, Some(command_identity), "{id}: exact original Box must remain");
+    }
     assert!(completion_retained && case.expected.completion == "retained", "{id}: command close must not take completion");
     if case.completion == Completion::Empty {
         assert!(received.is_none(), "{id}: empty completion must remain empty");
@@ -107,19 +136,33 @@ fn check(id: &str) {
         let (emit, _) = received.expect("pending output remains reachable through its exact completion consumer");
         assert_eq!(emit.expect("pending mutation output").artifact_mutations, vec![TxnMutation::from(SetTransactionCount { value: 7 })], "{id}");
     }
-    if external.is_some() { assert_eq!(external_still_shared, Some(true), "{id}: external completion clone retains its exact shared cell"); }
+    if external.is_some() {
+        assert_eq!(external_still_shared, Some(true), "{id}: external completion clone retains its exact shared cell");
+    }
 }
 
 #[test]
-fn txn_command_close_requires_begin_close() { check("before-begin-close"); }
+fn txn_command_close_requires_begin_close() {
+    check("before-begin-close");
+}
 #[test]
-fn txn_command_close_zero_items_preserves_owners() { check("zero-items"); }
+fn txn_command_close_zero_items_preserves_owners() {
+    check("zero-items");
+}
 #[test]
-fn txn_command_close_zero_bytes_preserves_owners() { check("zero-bytes"); }
+fn txn_command_close_zero_bytes_preserves_owners() {
+    check("zero-bytes");
+}
 #[test]
-fn txn_command_close_short_bytes_preserves_owners() { check("short-bytes"); }
+fn txn_command_close_short_bytes_preserves_owners() {
+    check("short-bytes");
+}
 #[test]
-fn txn_command_close_exact_grant_retains_external_completion() { check("exact-external-completion"); }
+fn txn_command_close_exact_grant_retains_external_completion() {
+    check("exact-external-completion");
+}
 #[test]
-fn txn_command_close_exact_grant_retains_pending_completion() { check("exact-pending-completion"); }
+fn txn_command_close_exact_grant_retains_pending_completion() {
+    check("exact-pending-completion");
+}
 //#endregion 🧪️CommandCloseLaws

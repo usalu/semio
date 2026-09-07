@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing-construction",
+  "semanticKind": "bind-fenestration-glazing-construction",
+  "displayName": "Bind Fenestration Glazing Construction",
+  "emoji": "🧊️",
+  "aggregateVariant": "BindFenestrationGlazingConstruction",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "bind-fenestration-glazing-construction",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

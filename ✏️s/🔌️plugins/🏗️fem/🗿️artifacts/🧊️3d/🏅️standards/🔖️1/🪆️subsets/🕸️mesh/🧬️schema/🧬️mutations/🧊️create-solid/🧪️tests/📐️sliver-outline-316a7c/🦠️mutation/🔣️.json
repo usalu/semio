@@ -1,0 +1,27 @@
+{
+  "mutation": "createSolid",
+  "solid": {
+    "id": "slab_sliver",
+    "name": "Collinear Yard Strip",
+    "outline": [
+      [
+        16.0,
+        0.0
+      ],
+      [
+        20.0,
+        0.0
+      ],
+      [
+        24.0,
+        0.0
+      ]
+    ],
+    "holes": [],
+    "baseZ": -0.2,
+    "height": 0.2,
+    "layers": 1,
+    "meshSize": 1.0,
+    "materialId": "c25_30"
+  }
+}

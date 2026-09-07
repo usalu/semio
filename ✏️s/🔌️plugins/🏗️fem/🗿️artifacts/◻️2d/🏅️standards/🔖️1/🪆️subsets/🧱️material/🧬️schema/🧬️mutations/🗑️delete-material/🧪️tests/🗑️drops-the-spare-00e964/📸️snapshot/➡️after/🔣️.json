@@ -1,0 +1,369 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "n2",
+      "x": 6.0,
+      "y": 0.0
+    },
+    {
+      "id": "n3",
+      "x": 0.0,
+      "y": 3.5
+    },
+    {
+      "id": "n4",
+      "x": 6.0,
+      "y": 3.5
+    },
+    {
+      "id": "n5",
+      "x": 0.0,
+      "y": 7.0
+    },
+    {
+      "id": "n6",
+      "x": 6.0,
+      "y": 7.0
+    },
+    {
+      "id": "n7",
+      "x": 8.0,
+      "y": 7.0
+    }
+  ],
+  "elements": [
+    {
+      "kind": "beam",
+      "id": "c1",
+      "start": "n1",
+      "end": "n3",
+      "materialId": "steel_s355",
+      "sectionId": "heb200"
+    },
+    {
+      "kind": "beam",
+      "id": "c2",
+      "start": "n2",
+      "end": "n4",
+      "materialId": "steel_s355",
+      "sectionId": "heb200"
+    },
+    {
+      "kind": "beam",
+      "id": "c3",
+      "start": "n3",
+      "end": "n5",
+      "materialId": "steel_s355",
+      "sectionId": "heb200"
+    },
+    {
+      "kind": "beam",
+      "id": "c4",
+      "start": "n4",
+      "end": "n6",
+      "materialId": "steel_s355",
+      "sectionId": "heb200"
+    },
+    {
+      "kind": "beam",
+      "id": "b1",
+      "start": "n3",
+      "end": "n4",
+      "materialId": "steel_s355",
+      "sectionId": "ipe270"
+    },
+    {
+      "kind": "beam",
+      "id": "b2",
+      "start": "n5",
+      "end": "n6",
+      "materialId": "steel_s355",
+      "sectionId": "ipe240"
+    },
+    {
+      "kind": "bar",
+      "id": "br1",
+      "start": "n2",
+      "end": "n3",
+      "materialId": "steel_s355",
+      "sectionId": "chs889"
+    }
+  ],
+  "regions": [
+    {
+      "id": "wall1",
+      "name": "Infill Wall Panel",
+      "outline": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          6.0,
+          0.0
+        ],
+        [
+          6.0,
+          3.5
+        ],
+        [
+          0.0,
+          3.5
+        ]
+      ],
+      "holes": [
+        [
+          [
+            2.4,
+            1.0
+          ],
+          [
+            3.6,
+            1.0
+          ],
+          [
+            3.6,
+            2.4
+          ],
+          [
+            2.4,
+            2.4
+          ]
+        ]
+      ],
+      "thickness": 0.2,
+      "materialId": "concrete_c30",
+      "meshSize": 0.5
+    },
+    {
+      "id": "panel_spare",
+      "name": "Spare Side Panel",
+      "outline": [
+        [
+          6.0,
+          3.5
+        ],
+        [
+          8.0,
+          3.5
+        ],
+        [
+          8.0,
+          7.0
+        ],
+        [
+          6.0,
+          7.0
+        ]
+      ],
+      "holes": [],
+      "thickness": 0.15,
+      "materialId": "concrete_c30",
+      "meshSize": 0.5
+    }
+  ],
+  "materials": [
+    {
+      "id": "steel_s355",
+      "name": "Steel S355",
+      "e": 210000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0
+    },
+    {
+      "id": "concrete_c30",
+      "name": "Concrete C30/37",
+      "e": 33000000000.0,
+      "nu": 0.2,
+      "rho": 2500.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "heb200",
+      "name": "HEB 200",
+      "area": 0.007808,
+      "iy": 0.00005696
+    },
+    {
+      "id": "ipe270",
+      "name": "IPE 270",
+      "area": 0.004595,
+      "iy": 0.0000579
+    },
+    {
+      "id": "ipe240",
+      "name": "IPE 240",
+      "area": 0.003912,
+      "iy": 0.00003892
+    },
+    {
+      "id": "chs889",
+      "name": "CHS 88.9x4.0",
+      "area": 0.0010669,
+      "iy": 0.0000009634
+    },
+    {
+      "id": "ipe200_spare",
+      "name": "IPE 200",
+      "area": 0.002848,
+      "iy": 0.00001943
+    }
+  ],
+  "supports": [
+    {
+      "id": "sup1",
+      "nodeId": "n1",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Rz"
+      ]
+    },
+    {
+      "id": "sup2",
+      "nodeId": "n2",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Rz"
+      ]
+    },
+    {
+      "id": "sup_tie",
+      "nodeId": "n6",
+      "fixed": [
+        "Tx"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "ld1",
+          "elementId": "b1",
+          "wx": 0.0,
+          "wy": -18500.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "ld2",
+          "elementId": "b2",
+          "wx": 0.0,
+          "wy": -9200.0
+        }
+      ],
+      "selfWeight": true
+    },
+    {
+      "id": "live",
+      "name": "Imposed",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "ll1",
+          "elementId": "b1",
+          "wx": 0.0,
+          "wy": -15000.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "wind",
+      "name": "Wind",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "lw1",
+          "nodeId": "n5",
+          "dof": "Tx",
+          "value": 12500.0
+        },
+        {
+          "kind": "area",
+          "id": "lw2",
+          "regionId": "wall1",
+          "pressure": 640.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "snow_spare",
+      "name": "Snow (spare)",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "ls1",
+          "elementId": "b2",
+          "wx": 0.0,
+          "wy": -4800.0
+        }
+      ],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [
+    {
+      "id": "uls1",
+      "name": "ULS 6.10b",
+      "terms": [
+        {
+          "caseId": "dead",
+          "factor": 1.35
+        },
+        {
+          "caseId": "live",
+          "factor": 1.5
+        }
+      ]
+    },
+    {
+      "id": "sls1",
+      "name": "SLS characteristic",
+      "terms": [
+        {
+          "caseId": "dead",
+          "factor": 1.0
+        },
+        {
+          "caseId": "live",
+          "factor": 1.0
+        },
+        {
+          "caseId": "wind",
+          "factor": 0.6
+        }
+      ]
+    },
+    {
+      "id": "uls_spare",
+      "name": "ULS 6.10a (spare)",
+      "terms": [
+        {
+          "caseId": "dead",
+          "factor": 1.35
+        },
+        {
+          "caseId": "wind",
+          "factor": 1.5
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "modalCount": 6,
+    "bucklingCount": 4,
+    "deformationScale": 120.0
+  }
+}

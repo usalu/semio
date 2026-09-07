@@ -1,0 +1,131 @@
+{
+  "analysis": {
+    "bucklingCount": 3,
+    "deformationScale": 100.0,
+    "modalCount": 4
+  },
+  "combinations": [],
+  "elements": [],
+  "loadCases": [
+    {
+      "id": "pressure",
+      "loads": [
+        {
+          "id": "p",
+          "kind": "area",
+          "pressure": 500000.0,
+          "solidId": "sol1"
+        }
+      ],
+      "name": "Top Pressure",
+      "selfWeight": false
+    },
+    {
+      "id": "self",
+      "loads": [],
+      "name": "Self Weight",
+      "selfWeight": true
+    }
+  ],
+  "materials": [
+    {
+      "e": 33000000000.0,
+      "g": 13750000000.0,
+      "id": "concrete",
+      "name": "C30/37 Concrete",
+      "nu": 0.2,
+      "rho": 2400.0
+    }
+  ],
+  "nodes": [
+    {
+      "id": "c00",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "c10",
+      "x": 2.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "c11",
+      "x": 2.0,
+      "y": 2.0,
+      "z": 0.0
+    },
+    {
+      "id": "c01",
+      "x": 0.0,
+      "y": 2.0,
+      "z": 0.0
+    }
+  ],
+  "sections": [],
+  "solids": [
+    {
+      "baseZ": 0.0,
+      "height": 4.0,
+      "holes": [],
+      "id": "sol1",
+      "layers": 4,
+      "materialId": "concrete",
+      "meshSize": 4.0,
+      "name": "Prismatic Column",
+      "outline": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          2.0,
+          2.0
+        ],
+        [
+          0.0,
+          2.0
+        ]
+      ]
+    }
+  ],
+  "supports": [
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ],
+      "id": "base_00",
+      "nodeId": "c00"
+    },
+    {
+      "fixed": [
+        "Ty",
+        "Tz"
+      ],
+      "id": "base_10",
+      "nodeId": "c10"
+    },
+    {
+      "fixed": [
+        "Tx",
+        "Tz"
+      ],
+      "id": "base_01",
+      "nodeId": "c01"
+    },
+    {
+      "fixed": [
+        "Tz"
+      ],
+      "id": "base_11",
+      "nodeId": "c11"
+    }
+  ]
+}

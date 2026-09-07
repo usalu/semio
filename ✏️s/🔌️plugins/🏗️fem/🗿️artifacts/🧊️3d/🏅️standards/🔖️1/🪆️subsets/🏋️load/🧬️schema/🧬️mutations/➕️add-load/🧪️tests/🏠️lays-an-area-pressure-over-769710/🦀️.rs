@@ -1,4 +1,4 @@
-//! 🧪️ `add-load` fixture — `🏠️lays-an-area-pressure-over-the-roof-slab`.
+//! 🧪️ `add-load` fixture — `🏠️lays-an-area-pressure-over-769710`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("add-load applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "add-load/lays-an-area-pressure-over-the-roof-slab: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.load_cases.len(), 1, "add-load/lays-an-area-pressure-over-the-roof-slab: adding a load must not coin a new case");
-    assert_eq!(snapshot.load_cases[0].loads.len(), 1, "add-load/lays-an-area-pressure-over-the-roof-slab: the pressure must be the case's first and only load");
-    assert!(matches!(snapshot.load_cases[0].loads[0], crate::artifacts::fem3d::FemLoad::Area { .. }), "add-load/lays-an-area-pressure-over-the-roof-slab: the load must keep its Area variant");
+    assert_eq!(snapshot, expected_after(), "add-load/lays-an-area-pressure-over-769710: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.load_cases.len(), 1, "add-load/lays-an-area-pressure-over-769710: adding a load must not coin a new case");
+    assert_eq!(snapshot.load_cases[0].loads.len(), 1, "add-load/lays-an-area-pressure-over-769710: the pressure must be the case's first and only load");
+    assert!(matches!(snapshot.load_cases[0].loads[0], crate::artifacts::fem3d::FemLoad::Area { .. }), "add-load/lays-an-area-pressure-over-769710: the load must keep its Area variant");
 }
 
 /// ↩️ The inverse is a `remove-load` of `p1` from `dead`, restoring the empty case.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "add-load/lays-an-area-pressure-over-the-roof-slab: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "add-load/lays-an-area-pressure-over-769710: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,28 +59,35 @@ fn committed_json_is_canonical() {
         let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "add-load/lays-an-area-pressure-over-the-roof-slab: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "add-load/lays-an-area-pressure-over-769710: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "add-load/lays-an-area-pressure-over-the-roof-slab: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "add-load/lays-an-area-pressure-over-769710: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "add-load/lays-an-area-pressure-over-the-roof-slab: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "add-load/lays-an-area-pressure-over-769710: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "add-load/lays-an-area-pressure-over-the-roof-slab: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "add-load/lays-an-area-pressure-over-the-roof-slab: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "add-load/lays-an-area-pressure-over-769710: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "add-load/lays-an-area-pressure-over-769710: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "add-load/lays-an-area-pressure-over-769710: a refused mutation must leave the snapshot untouched");
         }
-        other => panic!("add-load/lays-an-area-pressure-over-the-roof-slab: unknown outcome status {other:?}"),
+        other => panic!("add-load/lays-an-area-pressure-over-769710: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +96,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "add-load/lays-an-area-pressure-over-the-roof-slab: the owning case must be patched exactly once");
-    assert!(outcome.diff().solids.is_none(), "add-load/lays-an-area-pressure-over-the-roof-slab: the loaded solid is read-only for this mutation");
+    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "add-load/lays-an-area-pressure-over-769710: the owning case must be patched exactly once");
+    assert!(outcome.diff().solids.is_none(), "add-load/lays-an-area-pressure-over-769710: the loaded solid is read-only for this mutation");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "add-load/lays-an-area-pressure-over-the-roof-slab: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "add-load/lays-an-area-pressure-over-769710: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +109,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "add-load/lays-an-area-pressure-over-the-roof-slab: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "add-load/lays-an-area-pressure-over-769710: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `loadCases.patched` entry on `before` must yield the loaded case.
@@ -110,5 +117,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "add-load/lays-an-area-pressure-over-the-roof-slab: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "add-load/lays-an-area-pressure-over-769710: committed diff did not carry before to after");
 }

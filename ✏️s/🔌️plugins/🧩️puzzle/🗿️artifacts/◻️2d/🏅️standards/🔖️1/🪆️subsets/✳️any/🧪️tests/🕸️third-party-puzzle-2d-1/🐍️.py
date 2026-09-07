@@ -171,7 +171,7 @@ def vectors(ctx):
 
 
 def payload_of(vector):
-    """🦠️ The committed payload with its discriminator removed — what the leaf schema describes."""
+    """🦠️ The committed payload's arguments — the discriminator removed, what the handlers consume."""
     return {key: value for key, value in vector["mutation"].items() if key != "mutation"}
 
 
@@ -516,13 +516,13 @@ def payload_schemas(ctx):
         validator_class.check_schema(schema)
         validator = validator_class(schema)
         checks += 1
-        errors = sorted(validator.iter_errors(payload_of(vector)), key=lambda error: list(error.absolute_path))
+        errors = sorted(validator.iter_errors(vector["mutation"]), key=lambda error: list(error.absolute_path))
         for error in errors:
             failures.append("%s: %s rejects the committed payload at /%s — %s" % (vector["id"], validator_class.__name__, "/".join(str(part) for part in error.absolute_path), error.message))
         # 🧪️A validator that accepts everything would accept the payload too. The probe proves the
         # opposite by handing it a member the schema does not declare.
         if schema.get("additionalProperties") is False:
-            probe = dict(payload_of(vector))
+            probe = dict(vector["mutation"])
             probe["semioThirdPartyOracleProbe"] = True
             checks += 1
             if validator.is_valid(probe):

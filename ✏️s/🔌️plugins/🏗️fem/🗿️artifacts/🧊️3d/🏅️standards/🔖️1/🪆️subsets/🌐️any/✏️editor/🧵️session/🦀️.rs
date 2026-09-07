@@ -3594,6 +3594,15 @@ pub fn reconcile(doc: &ArtifactView<'_, Fem3dSnapshot>) -> Vec<Effect> {
             effects.push(Effect::CancelJob { job: previous.identity.job });
         }
         effects.push(Effect::SpawnJob { job, kind: FEM3D_MOUNTED_VISUAL_JOB_KIND.to_string(), input: encode_input(shell, identity), placement: JobPlacement::Isolated });
+        eprintln!(
+            "[DEBUG] fem3d live_visual reconcile spawn: instance={} revision={} generation={} shell={shell} job={job:#x} meshItems={} drawInstances={} cancelled={}",
+            render.app_instance_id,
+            render.base_revision.0,
+            render.generation.0,
+            credit.item_count,
+            credit.draw_count,
+            effects.len() - 1
+        );
         effects
     })
 }

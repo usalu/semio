@@ -86,7 +86,39 @@ Feature: Apply every typed fem3d boundary mutation twice — once in Rust, once 
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id              | dir                | fixture                                      |
-    | create-support  | 🛡️create-support  | 🔒️clamps-the-column-base-in-all-six-dofs       |
-    | delete-support  | 🗑️delete-support    | 🔓️releases-the-pinned-node-n2                  |
-    | replace-support | 🔁️replace-support | 🔄️frees-the-three-rotations-at-the-column-base |
+    | id              | dir               | fixture                    |
+    | create-support  | 🛡️create-support  | 🔒️clamps-the-column-f801c9 |
+    | delete-support  | 🗑️delete-support  | 🔓️releases-the-b3ebb0      |
+    | replace-support | 🔁️replace-support | 🔄️frees-the-three-7783c9   |
+
+  @id-hall-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> glulam-hall vector through both implementations
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
+    Examples:
+    | id              | dir               | fixture                  |
+    | replace-support | 🔁️replace-support | 🏗️hall-fixes-base-b5aa1b |
+    | delete-support  | 🗑️delete-support  | 🏗️hall-cut-pin-66d795    |
+    | create-support  | 🛡️create-support  | 🏗️hall-new-pin-c033f2    |
+
+  @id-reject
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Refuse the committed <id> vector in both implementations and leave the model where it was
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
+    Examples:
+    | id                     | dir               | fixture                  |
+    | same-support-bff8b3    | 🔁️replace-support | ⏸️same-support-bff8b3    |
+    | dangling-node-d44469   | 🔁️replace-support | 🚨️dangling-node-d44469   |
+    | renames-pin-29f41a     | 🔁️replace-support | 🪪️renames-pin-29f41a     |
+    | no-such-support-edd22a | 🗑️delete-support  | 🚨️no-such-support-edd22a |
+    | dangling-node-af37e2   | 🛡️create-support  | 🚨️dangling-node-af37e2   |

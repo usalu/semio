@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar-absorptance",
+  "semanticKind": "change-material-solar-absorptance",
+  "displayName": "Change Material Solar Absorptance",
+  "emoji": "☀️",
+  "aggregateVariant": "ChangeMaterialSolarAbsorptance",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-material-solar-absorptance",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

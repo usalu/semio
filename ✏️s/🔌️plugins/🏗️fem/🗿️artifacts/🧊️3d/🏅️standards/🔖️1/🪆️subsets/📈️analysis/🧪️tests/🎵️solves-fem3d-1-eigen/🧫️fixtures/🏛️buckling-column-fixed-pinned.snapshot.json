@@ -1,0 +1,197 @@
+{
+  "analysis": {
+    "bucklingCount": 2,
+    "deformationScale": 1.0,
+    "modalCount": 2
+  },
+  "combinations": [],
+  "elements": [
+    {
+      "end": "n1",
+      "id": "e0",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "shs150",
+      "start": "n0"
+    },
+    {
+      "end": "n2",
+      "id": "e1",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "shs150",
+      "start": "n1"
+    },
+    {
+      "end": "n3",
+      "id": "e2",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "shs150",
+      "start": "n2"
+    },
+    {
+      "end": "n4",
+      "id": "e3",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "shs150",
+      "start": "n3"
+    },
+    {
+      "end": "n5",
+      "id": "e4",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "shs150",
+      "start": "n4"
+    },
+    {
+      "end": "n6",
+      "id": "e5",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "shs150",
+      "start": "n5"
+    },
+    {
+      "end": "n7",
+      "id": "e6",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "shs150",
+      "start": "n6"
+    },
+    {
+      "end": "n8",
+      "id": "e7",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "shs150",
+      "start": "n7"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "axial",
+      "loads": [
+        {
+          "dof": "Tz",
+          "id": "p",
+          "kind": "nodal",
+          "nodeId": "n8",
+          "value": -1.0
+        }
+      ],
+      "name": "Axial Reference",
+      "selfWeight": false
+    }
+  ],
+  "materials": [
+    {
+      "e": 210000000000.0,
+      "g": 80769230769.0,
+      "id": "steel",
+      "name": "Steel S355",
+      "nu": 0.3,
+      "rho": 7850.0
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n0",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.625
+    },
+    {
+      "id": "n2",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 1.25
+    },
+    {
+      "id": "n3",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 1.875
+    },
+    {
+      "id": "n4",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 2.5
+    },
+    {
+      "id": "n5",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 3.125
+    },
+    {
+      "id": "n6",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 3.75
+    },
+    {
+      "id": "n7",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 4.375
+    },
+    {
+      "id": "n8",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 5.0
+    }
+  ],
+  "sections": [
+    {
+      "area": 0.004416,
+      "id": "shs150",
+      "iy": 1.4595e-05,
+      "iz": 9.7301e-06,
+      "j": 2.2646e-05,
+      "name": "SHS 150x150x8"
+    }
+  ],
+  "solids": [],
+  "supports": [
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "id": "base",
+      "nodeId": "n0"
+    },
+    {
+      "fixed": [
+        "Tx",
+        "Ty"
+      ],
+      "id": "head",
+      "nodeId": "n8"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "semio.plugin.cold-document-pair-ingress-corpus/v1",
+  "limits": { "pageBytes": 65536, "maximumPages": 64, "maximumPairBytes": 4194304, "childMessageBytes": 262144 },
+  "exact": {
+    "packLength": 2097152,
+    "sprLength": 2097152,
+    "pageCount": 64,
+    "packPattern": { "multiplier": 31, "addend": 7 },
+    "sprPattern": { "multiplier": 17, "addend": 11 },
+    "packSha256": "15d80ba308304e391a817479e20a3922787105dfdff12e2251e83d80f8c32195",
+    "sprSha256": "8807958a84cd0f2c56dfbbf5ce02cb84b518f03572d8f0d3452ec40f4e98cf14",
+    "aggregateSha256": "4710c01dee5a714b6cb62150df7de95abdefd2753e63e81b9f3f896412b9d422"
+  },
+  "hostile": [
+    { "name": "duplicate-page", "fault": true, "displacesOwner": false, "loadsDocument": false },
+    { "name": "reordered-page", "fault": true, "displacesOwner": false, "loadsDocument": false },
+    { "name": "foreign-lifetime", "fault": true, "displacesOwner": false, "loadsDocument": false },
+    { "name": "changed-descriptor", "fault": true, "displacesOwner": false, "loadsDocument": false },
+    { "name": "changed-length", "fault": true, "displacesOwner": false, "loadsDocument": false },
+    { "name": "short-middle-page", "fault": true, "displacesOwner": false, "loadsDocument": false },
+    { "name": "mutated-terminal", "fault": true, "displacesOwner": false, "loadsDocument": false },
+    { "name": "slot-collision", "fault": true, "displacesOwner": false, "loadsDocument": false }
+  ],
+  "lifecycle": {
+    "admissionPhase": "live",
+    "everyPageLiveFence": true,
+    "onePageOutstanding": true,
+    "incrementalHashing": true,
+    "aggregateReservedByteCapacity": 4194304,
+    "aggregateReservedPageCapacity": 64,
+    "malformedFirstPageRetainsBytes": 0,
+    "loadOwnerRetained": true,
+    "unexpectedRegistryDrop": "terminal-required",
+    "loaderCalls": 1,
+    "faultRetainsOwner": true,
+    "maximumCloseStepBytes": 65536,
+    "closeWipesBytes": true,
+    "lateClosedLifetimeLoads": 0
+  }
+}

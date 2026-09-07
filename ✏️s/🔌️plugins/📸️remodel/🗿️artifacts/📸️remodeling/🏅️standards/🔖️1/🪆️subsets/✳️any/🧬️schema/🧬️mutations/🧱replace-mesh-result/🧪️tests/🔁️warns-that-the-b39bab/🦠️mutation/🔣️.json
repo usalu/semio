@@ -1,0 +1,36 @@
+{
+  "mutation": "replaceMeshResult",
+  "mesh": {
+    "mesh": {
+      "childId": "remodeling-mesh-901ccade3f60f8f1",
+      "target": {
+        "artifactId": "orbit-survey-mesh",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "mesh"
+        }
+      }
+    },
+    "source": "reconstructed",
+    "textureAssetId": "orbit-frame-00",
+    "watertight": {
+      "vertexCount": 4820,
+      "triangleCount": 9636,
+      "boundaryEdgeCount": 0,
+      "boundaryLoopCount": 0,
+      "nonManifoldEdgeCount": 0,
+      "nonManifoldVertexCount": 0,
+      "connectedComponents": 1,
+      "consistentlyOriented": true,
+      "eulerCharacteristic": 2,
+      "genus": 0,
+      "signedVolume": 7.9375,
+      "selfIntersectionPairs": 0,
+      "closedFallbackUsed": false,
+      "isClosed": true,
+      "isTwoManifold": true,
+      "isWatertight": true
+    }
+  }
+}

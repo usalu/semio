@@ -1,0 +1,17 @@
+{
+  "mutation": "createCombination",
+  "combination": {
+    "id": "uls9",
+    "name": "ULS with seismic",
+    "terms": [
+      {
+        "caseId": "dead",
+        "factor": 1.0
+      },
+      {
+        "caseId": "seismic",
+        "factor": 1.0
+      }
+    ]
+  }
+}

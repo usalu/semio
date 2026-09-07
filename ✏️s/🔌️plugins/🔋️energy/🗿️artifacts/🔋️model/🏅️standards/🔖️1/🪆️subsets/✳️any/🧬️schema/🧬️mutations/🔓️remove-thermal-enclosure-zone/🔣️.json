@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure-zone",
+  "semanticKind": "remove-thermal-enclosure-zone",
+  "displayName": "Remove Thermal Enclosure Zone",
+  "emoji": "🔓️",
+  "aggregateVariant": "RemoveThermalEnclosureZone",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "remove-thermal-enclosure-zone",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

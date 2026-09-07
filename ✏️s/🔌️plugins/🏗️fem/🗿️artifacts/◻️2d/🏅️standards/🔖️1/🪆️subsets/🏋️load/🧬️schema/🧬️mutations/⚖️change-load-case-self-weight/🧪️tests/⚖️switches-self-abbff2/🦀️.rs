@@ -1,4 +1,4 @@
-//! 🧪️ `change-load-case-self-weight` fixture — `⚖️switches-self-weight-on-for-the-dead-case`.
+//! 🧪️ `change-load-case-self-weight` fixture — `⚖️switches-self-abbff2`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem2dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("change-load-case-self-weight applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: applied state differs from committed after-snapshot");
-    assert!(snapshot.load_cases[0].self_weight, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: the flag must be on afterwards");
-    assert_eq!(snapshot.load_cases[0].loads, before().load_cases[0].loads, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: the load list must survive the whole-case patch unchanged");
-    assert_eq!(snapshot.load_cases[0].name, "Dead", "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: the case name must not be rewritten");
+    assert_eq!(snapshot, expected_after(), "change-load-case-self-weight/switches-self-abbff2: applied state differs from committed after-snapshot");
+    assert!(snapshot.load_cases[0].self_weight, "change-load-case-self-weight/switches-self-abbff2: the flag must be on afterwards");
+    assert_eq!(snapshot.load_cases[0].loads, before().load_cases[0].loads, "change-load-case-self-weight/switches-self-abbff2: the load list must survive the whole-case patch unchanged");
+    assert_eq!(snapshot.load_cases[0].name, "Dead", "change-load-case-self-weight/switches-self-abbff2: the case name must not be rewritten");
 }
 
 /// ↩️ The inverse is the same mutation carrying the prior flag read back out of `base`.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "change-load-case-self-weight/switches-self-abbff2: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,12 +59,12 @@ fn committed_json_is_canonical() {
         let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "change-load-case-self-weight/switches-self-abbff2: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "change-load-case-self-weight/switches-self-abbff2: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
@@ -75,12 +75,12 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "change-load-case-self-weight/switches-self-abbff2: declared applied but the mutation was rejected"),
         "rejected" => {
-            assert!(!applied, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "change-load-case-self-weight/switches-self-abbff2: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "change-load-case-self-weight/switches-self-abbff2: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: unknown outcome status {other:?}"),
+        other => panic!("change-load-case-self-weight/switches-self-abbff2: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +89,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: exactly the named case may be patched");
-    assert!(outcome.diff().analysis.is_none(), "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: self-weight is a load-case flag, not an analysis setting");
+    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "change-load-case-self-weight/switches-self-abbff2: exactly the named case may be patched");
+    assert!(outcome.diff().analysis.is_none(), "change-load-case-self-weight/switches-self-abbff2: self-weight is a load-case flag, not an analysis setting");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "change-load-case-self-weight/switches-self-abbff2: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +102,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "change-load-case-self-weight/switches-self-abbff2: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `loadCases.patched` entry on `before` must flip the flag and nothing else.
@@ -110,5 +110,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "change-load-case-self-weight/switches-self-weight-on-for-the-dead-case: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "change-load-case-self-weight/switches-self-abbff2: committed diff did not carry before to after");
 }

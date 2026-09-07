@@ -15,6 +15,14 @@
           "mutationDirectoryName": "🧩️create-element",
           "scenarios": [
             {
+              "id": "dangling-start-ab4132",
+              "directoryName": "🚨️dangling-start-ab4132"
+            },
+            {
+              "id": "hall-new-tie-074a69",
+              "directoryName": "🏗️hall-new-tie-074a69"
+            },
+            {
               "id": "appends-a-diagonal-bracing-bar",
               "directoryName": "➖️appends-a-diagonal-bracing-bar"
             }
@@ -25,6 +33,14 @@
           "sourceMutationDirectoryName": "⚪️create-node",
           "mutationDirectoryName": "⚪️create-node",
           "scenarios": [
+            {
+              "id": "dup-node-id-86f2e1",
+              "directoryName": "🚨️dup-node-id-86f2e1"
+            },
+            {
+              "id": "hall-new-node-b26700",
+              "directoryName": "🏗️hall-new-node-b26700"
+            },
             {
               "id": "appends-the-column-head-node-n3",
               "directoryName": "📍️appends-the-column-head-node-n3"
@@ -37,8 +53,20 @@
           "mutationDirectoryName": "📐️create-section",
           "scenarios": [
             {
-              "id": "appends-a-square-hollow-profile",
-              "directoryName": "🔳️appends-a-square-hollow-profile"
+              "id": "zero-area-475a19",
+              "directoryName": "🧨️zero-area-475a19"
+            },
+            {
+              "id": "dup-section-id-a76686",
+              "directoryName": "🚨️dup-section-id-a76686"
+            },
+            {
+              "id": "hall-new-beam-251a92",
+              "directoryName": "🏗️hall-new-beam-251a92"
+            },
+            {
+              "id": "appends-a-square-bd0e4e",
+              "directoryName": "🔳️appends-a-square-bd0e4e"
             }
           ]
         },
@@ -47,6 +75,18 @@
           "sourceMutationDirectoryName": "🧊️create-solid",
           "mutationDirectoryName": "🧊️create-solid",
           "scenarios": [
+            {
+              "id": "sliver-outline-316a7c",
+              "directoryName": "📐️sliver-outline-316a7c"
+            },
+            {
+              "id": "dangling-mat-1ebd78",
+              "directoryName": "🚨️dangling-mat-1ebd78"
+            },
+            {
+              "id": "hall-new-slab-d79da4",
+              "directoryName": "🏗️hall-new-slab-d79da4"
+            },
             {
               "id": "appends-an-extruded-roof-slab",
               "directoryName": "🏠️appends-an-extruded-roof-slab"
@@ -59,8 +99,20 @@
           "mutationDirectoryName": "🗑️delete-element",
           "scenarios": [
             {
-              "id": "removes-the-bracing-bar-and-leaves-the-frame",
-              "directoryName": "🚫️removes-the-bracing-bar-and-leaves-the-frame"
+              "id": "rafter-under-udl-e0342d",
+              "directoryName": "⛓️rafter-under-udl-e0342d"
+            },
+            {
+              "id": "no-such-element-eb788c",
+              "directoryName": "🚨️no-such-element-eb788c"
+            },
+            {
+              "id": "hall-cut-tie-c268d4",
+              "directoryName": "🏗️hall-cut-tie-c268d4"
+            },
+            {
+              "id": "removes-the-bracing-be89d2",
+              "directoryName": "🚫️removes-the-bracing-be89d2"
             }
           ]
         },
@@ -70,8 +122,16 @@
           "mutationDirectoryName": "🕳️delete-node",
           "scenarios": [
             {
-              "id": "removes-the-column-head-node-under-a-live-frame",
-              "directoryName": "🚫️removes-the-column-head-node-under-a-live-frame"
+              "id": "no-such-node-4027a8",
+              "directoryName": "🚨️no-such-node-4027a8"
+            },
+            {
+              "id": "hall-cut-node-8350fd",
+              "directoryName": "🏗️hall-cut-node-8350fd"
+            },
+            {
+              "id": "removes-the-column-head-056295",
+              "directoryName": "🚫️removes-the-column-head-056295"
             }
           ]
         },
@@ -81,8 +141,20 @@
           "mutationDirectoryName": "✂️delete-section",
           "scenarios": [
             {
-              "id": "removes-the-spare-square-hollow-profile",
-              "directoryName": "🚫️removes-the-spare-square-hollow-profile"
+              "id": "purlin-in-use-99eb01",
+              "directoryName": "⛓️purlin-in-use-99eb01"
+            },
+            {
+              "id": "no-such-section-50d29b",
+              "directoryName": "🚨️no-such-section-50d29b"
+            },
+            {
+              "id": "hall-cut-shs-d44b9e",
+              "directoryName": "🏗️hall-cut-shs-d44b9e"
+            },
+            {
+              "id": "removes-the-spare-30ecfb",
+              "directoryName": "🚫️removes-the-spare-30ecfb"
             }
           ]
         },
@@ -92,8 +164,20 @@
           "mutationDirectoryName": "🚫️delete-solid",
           "scenarios": [
             {
-              "id": "removes-the-roof-slab-and-keeps-its-material",
-              "directoryName": "🚫️removes-the-roof-slab-and-keeps-its-material"
+              "id": "raft-under-load-e4ea39",
+              "directoryName": "⛓️raft-under-load-e4ea39"
+            },
+            {
+              "id": "no-such-solid-f08d23",
+              "directoryName": "🚨️no-such-solid-f08d23"
+            },
+            {
+              "id": "hall-cut-apron-6c79d3",
+              "directoryName": "🏗️hall-cut-apron-6c79d3"
+            },
+            {
+              "id": "removes-the-roof-slab-f0fb64",
+              "directoryName": "🚫️removes-the-roof-slab-f0fb64"
             }
           ]
         },
@@ -103,8 +187,24 @@
           "mutationDirectoryName": "♻️replace-element",
           "scenarios": [
             {
-              "id": "rolls-the-column-about-its-own-axis",
-              "directoryName": "🔄️rolls-the-column-about-its-own-axis"
+              "id": "dangling-sec-70b168",
+              "directoryName": "🚨️dangling-sec-70b168"
+            },
+            {
+              "id": "renames-brace-219be2",
+              "directoryName": "🪪️renames-brace-219be2"
+            },
+            {
+              "id": "same-element-61adb2",
+              "directoryName": "⏸️same-element-61adb2"
+            },
+            {
+              "id": "hall-strut-d0e4b7",
+              "directoryName": "🏗️hall-strut-d0e4b7"
+            },
+            {
+              "id": "rolls-the-column-50f732",
+              "directoryName": "🔄️rolls-the-column-50f732"
             }
           ]
         },
@@ -114,8 +214,24 @@
           "mutationDirectoryName": "📏️replace-section",
           "scenarios": [
             {
-              "id": "raises-the-torsion-constant-of-hea200",
-              "directoryName": "🌀️raises-the-torsion-constant-of-hea200"
+              "id": "negative-iy-d4e0a8",
+              "directoryName": "🧨️negative-iy-d4e0a8"
+            },
+            {
+              "id": "renames-purlin-dfe160",
+              "directoryName": "🪪️renames-purlin-dfe160"
+            },
+            {
+              "id": "same-section-d1d013",
+              "directoryName": "⏸️same-section-d1d013"
+            },
+            {
+              "id": "hall-deep-purlin-176fd0",
+              "directoryName": "🏗️hall-deep-purlin-176fd0"
+            },
+            {
+              "id": "raises-the-torsion-296ef0",
+              "directoryName": "🌀️raises-the-torsion-296ef0"
             }
           ]
         },
@@ -125,8 +241,28 @@
           "mutationDirectoryName": "🔄️replace-solid",
           "scenarios": [
             {
-              "id": "thickens-the-slab-and-adds-a-mesh-layer",
-              "directoryName": "📚️thickens-the-slab-and-adds-a-mesh-layer"
+              "id": "dangling-mat-9c89da",
+              "directoryName": "🚨️dangling-mat-9c89da"
+            },
+            {
+              "id": "zero-height-2b131a",
+              "directoryName": "📐️zero-height-2b131a"
+            },
+            {
+              "id": "renames-apron-7bfadd",
+              "directoryName": "🪪️renames-apron-7bfadd"
+            },
+            {
+              "id": "same-solid-8ad12c",
+              "directoryName": "⏸️same-solid-8ad12c"
+            },
+            {
+              "id": "hall-thick-raft-cddc0f",
+              "directoryName": "🏗️hall-thick-raft-cddc0f"
+            },
+            {
+              "id": "thickens-the-slab-and-b51ef0",
+              "directoryName": "📚️thickens-the-slab-and-b51ef0"
             }
           ]
         }

@@ -5,8 +5,12 @@ Leaf `#[path]` literals in this crate are written relative to the crate-entry *d
 (grouping modules use `#[path = "."]`), so every literal is resolved against
 `✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/`.
 
+`--tree` additionally resolves every `include_str!` literal of every `🦀️.rs` under the fem plugin
+against ITS OWN directory — the rule the compiler uses for a file already mounted by the entry —
+so a fixture read that survived a case-directory rename is reported instead of waiting for rustc.
+
 Usage:
-    python3 🔨️resolve-mounts.py [--suggest] [--fix] [<entry.rs> ...]
+    python3 🔨️resolve-mounts.py [--suggest] [--fix] [--tree] [<entry.rs> ...]
 
 `--suggest` lists, for each unresolved leaf, the sibling directories of its parent so the
 truncated on-disk name can be matched by leading emoji + prefix.
@@ -112,8 +116,45 @@ def audit(entry, want_suggest, want_fix=False):
     return len(unresolved)
 
 
+PLUGIN_ROOT = os.path.join(REPO, "✏️s", "🔌️plugins", "🏗️fem")
+
+
+def tree_sources():
+    """🌳 Every `🦀️.rs` under the fem plugin, in deterministic order."""
+    for root, directories, files in os.walk(PLUGIN_ROOT):
+        directories[:] = [name for name in sorted(directories) if name not in {"target", "node_modules", "🗑️generated"}]
+        for name in sorted(files):
+            if name.endswith(".rs"):
+                yield os.path.join(root, name)
+
+
+def audit_tree(want_suggest):
+    """📚️ Resolves every `include_str!` in the plugin tree against its own file's directory."""
+    checked = 0
+    unresolved = []
+    for source in tree_sources():
+        base = os.path.dirname(source)
+        with open(source, encoding="utf-8") as handle:
+            for lineno, line in enumerate(handle, 1):
+                for match in INCLUDE_RE.finditer(line):
+                    checked += 1
+                    target = os.path.normpath(os.path.join(base, match.group(1)))
+                    if not os.path.exists(target):
+                        unresolved.append((source, lineno, match.group(1), target))
+    print("── include_str! across ✏️s/🔌️plugins/🏗️fem")
+    print(f"   checked:    {checked}")
+    print(f"   resolved:   {checked - len(unresolved)}")
+    print(f"   unresolved: {len(unresolved)}")
+    for source, lineno, literal, target in unresolved:
+        print(f"   [{os.path.relpath(source, REPO)}:{lineno}] {literal}")
+        if want_suggest:
+            for name in suggest(target):
+                print(f"        · {name}")
+    return len(unresolved)
+
+
 def main():
-    flags = {"--suggest", "--fix"}
+    flags = {"--suggest", "--fix", "--tree"}
     args = [a for a in sys.argv[1:] if a not in flags]
     want_suggest = "--suggest" in sys.argv[1:]
     want_fix = "--fix" in sys.argv[1:]
@@ -121,6 +162,8 @@ def main():
     bad = 0
     for entry in entries:
         bad += audit(entry, want_suggest, want_fix)
+    if "--tree" in sys.argv[1:]:
+        bad += audit_tree(want_suggest)
     print(f"TOTAL unresolved: {bad}")
     return 1 if bad else 0
 

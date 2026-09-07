@@ -1,0 +1,132 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": {
+    "values": [
+      {
+        "id": "gcp-benchmark",
+        "name": "Levelling Benchmark",
+        "worldPosition": [
+          0.0,
+          0.0,
+          -1.25
+        ],
+        "observations": []
+      },
+      {
+        "id": "gcp-north-pier",
+        "name": "North Pier",
+        "worldPosition": [
+          1.0,
+          0.5,
+          -0.25
+        ],
+        "observations": [
+          {
+            "streamId": "orbit-primary",
+            "frameIndex": 0,
+            "pixel": [
+              184.5,
+              96.25
+            ]
+          },
+          {
+            "streamId": "orbit-primary",
+            "frameIndex": 4,
+            "pixel": [
+              140.75,
+              101.5
+            ]
+          },
+          {
+            "streamId": "orbit-secondary",
+            "frameIndex": 4,
+            "pixel": [
+              151.0,
+              104.75
+            ]
+          }
+        ]
+      },
+      {
+        "id": "gcp-roof-vent",
+        "name": "Roof Vent",
+        "worldPosition": [
+          0.25,
+          -0.75,
+          1.0
+        ],
+        "observations": [
+          {
+            "streamId": "orbit-primary",
+            "frameIndex": 6,
+            "pixel": [
+              171.5,
+              58.0
+            ]
+          },
+          {
+            "streamId": "orbit-secondary",
+            "frameIndex": 6,
+            "pixel": [
+              163.25,
+              61.75
+            ]
+          }
+        ]
+      },
+      {
+        "id": "gcp-south-pier",
+        "name": "South Pier",
+        "worldPosition": [
+          -1.0,
+          -0.5,
+          -0.25
+        ],
+        "observations": [
+          {
+            "streamId": "orbit-primary",
+            "frameIndex": 2,
+            "pixel": [
+              122.0,
+              150.5
+            ]
+          },
+          {
+            "streamId": "orbit-secondary",
+            "frameIndex": 7,
+            "pixel": [
+              198.25,
+              143.0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "gcp-unsurveyed",
+        "name": "Unsurveyed Mark",
+        "worldPosition": [
+          0.0,
+          1.25,
+          0.0
+        ],
+        "observations": []
+      }
+    ]
+  },
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

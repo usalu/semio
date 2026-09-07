@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceElement",
+  "id": "brc_0",
+  "newElement": {
+    "kind": "bar",
+    "id": "brc_0",
+    "start": "el_0",
+    "end": "ap_1",
+    "materialId": "s355",
+    "sectionId": "sec_tie"
+  }
+}

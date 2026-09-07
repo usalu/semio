@@ -1,0 +1,17 @@
+{
+  "mutation": "updateRigExtrinsic",
+  "extrinsic": {
+    "cameraId": "orbit-cam-secondary",
+    "rotationWxyz": [
+      1.0,
+      0.0,
+      0.048828125,
+      0.0
+    ],
+    "translationM": [
+      0.12890625,
+      0.0029296875,
+      0.0
+    ]
+  }
+}

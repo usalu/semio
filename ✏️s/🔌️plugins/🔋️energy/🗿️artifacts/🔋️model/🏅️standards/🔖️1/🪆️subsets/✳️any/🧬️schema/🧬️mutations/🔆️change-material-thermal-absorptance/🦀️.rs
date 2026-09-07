@@ -1,0 +1,43 @@
+//! 🔆️ Energy model mutation — `ChangeMaterialThermalAbsorptance`: Sets thermal absorptance on one material, addressed by id.
+
+use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::artifacts::model::mutations::EnergyModelMutation;
+use crate::artifacts::model::EnergyModelSnapshot;
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+
+//#region 🔖️Mutation
+/// 🔆️ `change-material-thermal-absorptance` payload. Sets thermal absorptance on one material, addressed by id.
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "change-material-thermal-absorptance")]
+pub struct ChangeMaterialThermalAbsorptance {
+    pub id: crate::model::EntityId,
+    pub new_thermal_absorptance: f64,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn change_material_thermal_absorptance(id: crate::model::EntityId, new_thermal_absorptance: f64) -> EnergyModelMutation {
+    EnergyModelMutation::ChangeMaterialThermalAbsorptance(ChangeMaterialThermalAbsorptance { id, new_thermal_absorptance })
+}
+
+impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeMaterialThermalAbsorptance {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material", kind: "change-material-thermal-absorptance", record: "ChangedMaterialThermalAbsorptance" };
+
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+        super::inverse::inverse(self, base)
+    }
+
+    fn label(&self) -> String {
+        format!("Change Material Thermal Absorptance of material {}", self.id.0)
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.id.0.to_string()]
+    }
+}
+//#endregion 🔖️Mutation

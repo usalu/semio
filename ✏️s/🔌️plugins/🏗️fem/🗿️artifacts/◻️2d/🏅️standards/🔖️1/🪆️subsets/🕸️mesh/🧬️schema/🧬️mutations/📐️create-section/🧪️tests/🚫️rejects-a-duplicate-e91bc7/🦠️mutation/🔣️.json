@@ -1,0 +1,9 @@
+{
+  "mutation": "createSection",
+  "section": {
+    "id": "heb200",
+    "name": "HEB 200 duplicate",
+    "area": 0.007808,
+    "iy": 0.00005696
+  }
+}

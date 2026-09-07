@@ -181,6 +181,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/📍️appends-node-n3/🦀️.rs"]
                                     mod tests_appends_node_n3;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/🏢️appends-the-canopy-226a20/🦀️.rs"]
+                                    mod tests_appends_the_canopy_strut_head_node_to_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/🚫️rejects-a-duplicate-eb0df0/🦀️.rs"]
+                                    mod tests_rejects_a_duplicate_node_id_on_the_steel_frame;
                                 }
                                 #[path = "."]
                                 pub mod delete_node {
@@ -194,6 +200,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/🚫️removes-node-n3-without-6eab3f/🦀️.rs"]
                                     mod tests_removes_node_n3_without_cascading_to_its_support;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/⛔️rejects-a-missing-429801/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_node_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/🗑️drops-the-spare-6c285d/🦀️.rs"]
+                                    mod tests_drops_the_spare_canopy_node_from_the_steel_frame;
                                 }
                                 #[path = "."]
                                 pub mod create_element {
@@ -207,6 +219,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/➖️appends-bar-e2-between-fc1c09/🦀️.rs"]
                                     mod tests_appends_bar_e2_between_n2_and_n3;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/📐️braces-the-upper-d96634/🦀️.rs"]
+                                    mod tests_braces_the_upper_storey_with_a_chs_diagonal;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🚫️rejects-a-dangling-b9e64c/🦀️.rs"]
+                                    mod tests_rejects_an_element_whose_start_node_is_missing;
                                 }
                                 #[path = "."]
                                 pub mod delete_element {
@@ -220,6 +238,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/🚫️removes-bar-e2-and-3c0260/🦀️.rs"]
                                     mod tests_removes_bar_e2_and_keeps_its_end_nodes;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/⛔️rejects-a-missing-611215/🦀️.rs"]
+                                    mod tests_rejects_deleting_an_element_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/✂️cuts-the-lower-e4a250/🦀️.rs"]
+                                    mod tests_cuts_the_lower_storey_bracing_diagonal;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/🔗️blocks-udl-a1df8e/🦀️.rs"]
+                                    mod tests_refuses_to_delete_the_floor_beam_two_member_udls_still_load;
                                 }
                                 #[path = "."]
                                 pub mod replace_element {
@@ -233,6 +260,18 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/♻️converts-beam-e1-into-a-5d21f5/🦀️.rs"]
                                     mod tests_converts_beam_e1_into_a_bar_in_place;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/⛔️rejects-a-missing-bd448c/🦀️.rs"]
+                                    mod tests_rejects_replacing_an_element_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🔧️regrades-the-roof-fb20eb/🦀️.rs"]
+                                    mod tests_regrades_the_roof_beam_onto_the_ipe270_profile;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🪪️denies-rename-0d46d8/🦀️.rs"]
+                                    mod tests_refuses_to_rename_the_roof_beam_through_a_replace_element;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🚫️dangling-start-cda887/🦀️.rs"]
+                                    mod tests_refuses_to_replace_the_brace_onto_a_start_node_that_does_not_exist;
                                 }
                                 #[path = "."]
                                 pub mod create_material {
@@ -246,6 +285,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧱️appends-concrete-c30/🦀️.rs"]
                                     mod tests_appends_concrete_c30;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️adds-the-c25-slab-11d8df/🦀️.rs"]
+                                    mod tests_adds_the_c25_30_material_for_the_ground_slab;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🚫️rejects-a-duplicate-f3220b/🦀️.rs"]
+                                    mod tests_rejects_a_duplicate_material_id_on_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/⚗️denies-poisson-329e35/🦀️.rs"]
+                                    mod tests_refuses_an_elastomeric_bearing_at_the_incompressible_poisson_limit;
                                 }
                                 #[path = "."]
                                 pub mod delete_material {
@@ -259,6 +307,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-30f7a2/🦀️.rs"]
                                     mod tests_removes_the_unreferenced_timber_material;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛔️rejects-a-missing-d5b18f/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_material_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🗑️drops-the-spare-00e964/🦀️.rs"]
+                                    mod tests_drops_the_unreferenced_s235_material_from_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🔗️blocks-in-use-e99619/🦀️.rs"]
+                                    mod tests_refuses_to_delete_the_s355_grade_seven_members_are_made_of;
                                 }
                                 #[path = "."]
                                 pub mod replace_material {
@@ -272,6 +329,18 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️restates-steel-7c22bc/🦀️.rs"]
                                     mod tests_restates_steel_as_s355_in_its_original_slot;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⛔️rejects-a-missing-b3adee/🦀️.rs"]
+                                    mod tests_rejects_replacing_a_material_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️cracks-the-c30-b2b220/🦀️.rs"]
+                                    mod tests_cracks_the_c30_37_stiffness_in_half_for_the_infill_panel;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️denies-rename-a0d7aa/🦀️.rs"]
+                                    mod tests_refuses_to_regrade_the_concrete_by_renaming_it_through_a_replace;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⚗️denies-zero-modulus-71e69a/🦀️.rs"]
+                                    mod tests_refuses_a_concrete_row_whose_modulus_was_left_at_zero;
                                 }
                                 #[path = "."]
                                 pub mod create_section {
@@ -285,6 +354,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/📐️appends-the-ipe300-profile/🦀️.rs"]
                                     mod tests_appends_the_ipe300_profile;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/➕️adds-the-hea220-dfdf34/🦀️.rs"]
+                                    mod tests_adds_the_hea220_profile_to_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🚫️rejects-a-duplicate-e91bc7/🦀️.rs"]
+                                    mod tests_rejects_a_duplicate_section_id_on_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/⚗️denies-zero-area-58b5ca/🦀️.rs"]
+                                    mod tests_refuses_an_ipe_100_profile_whose_area_was_left_at_zero;
                                 }
                                 #[path = "."]
                                 pub mod delete_section {
@@ -298,6 +376,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/🚫️removes-the-spare-1c235a/🦀️.rs"]
                                     mod tests_removes_the_spare_hollow_section;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/⛔️rejects-a-missing-dbd0a4/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_section_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/✂️drops-the-spare-dcf609/🦀️.rs"]
+                                    mod tests_drops_the_unreferenced_ipe200_section_from_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/🔗️blocks-in-use-0a6a3c/🦀️.rs"]
+                                    mod tests_refuses_to_delete_the_heb_200_profile_four_columns_still_carry;
                                 }
                                 #[path = "."]
                                 pub mod replace_section {
@@ -311,6 +398,18 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/💪️stiffens-ipe200-with-5e9c08/🦀️.rs"]
                                     mod tests_stiffens_ipe200_with_a_reinforced_profile;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/⛔️rejects-a-missing-b468f4/🦀️.rs"]
+                                    mod tests_rejects_replacing_a_section_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🛠️thickens-the-chs-e235a5/🦀️.rs"]
+                                    mod tests_thickens_the_chs_brace_wall_to_five_millimetres;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🪪️denies-rename-1d02dd/🦀️.rs"]
+                                    mod tests_refuses_to_rename_the_roof_beam_profile_through_a_replace_section;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/⚗️denies-zero-iy-404e31/🦀️.rs"]
+                                    mod tests_refuses_a_roof_beam_profile_whose_second_moment_was_left_at_zero;
                                 }
                                 #[path = "."]
                                 pub mod create_support {
@@ -324,6 +423,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/🦀️.rs"]
                                     mod tests_adds_a_vertical_roller_at_node_n2;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/🦀️.rs"]
+                                    mod tests_props_the_canopy_tip_on_a_vertical_roller;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/🦀️.rs"]
+                                    mod tests_rejects_a_support_on_a_node_the_steel_frame_never_had;
                                 }
                                 #[path = "."]
                                 pub mod delete_support {
@@ -337,6 +442,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🦀️.rs"]
                                     mod tests_releases_the_roller_at_node_n2;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_support_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/🦀️.rs"]
+                                    mod tests_frees_the_roof_level_lateral_tie_of_the_steel_frame;
                                 }
                                 #[path = "."]
                                 pub mod replace_support {
@@ -350,6 +461,18 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/🦀️.rs"]
                                     mod tests_upgrades_the_roller_at_n2_to_a_full_fixity;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/🦀️.rs"]
+                                    mod tests_rejects_replacing_a_support_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/🦀️.rs"]
+                                    mod tests_pins_the_left_column_base_by_releasing_its_rotation;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/🦀️.rs"]
+                                    mod tests_refuses_to_rename_the_roof_tie_support_through_a_replace_support;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/🦀️.rs"]
+                                    mod tests_refuses_to_move_the_roof_tie_onto_a_node_that_does_not_exist;
                                 }
                                 #[path = "."]
                                 pub mod create_region {
@@ -363,6 +486,18 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🧱️appends-a-solid-d78275/🦀️.rs"]
                                     mod tests_appends_a_solid_rectangular_slab;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🏢️infills-the-upper-6cc520/🦀️.rs"]
+                                    mod tests_infills_the_upper_storey_bay_with_a_concrete_panel;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🚫️rejects-a-duplicate-11ca0d/🦀️.rs"]
+                                    mod tests_rejects_a_duplicate_region_id_on_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/📐️denies-two-point-99954a/🦀️.rs"]
+                                    mod tests_refuses_a_floor_slab_region_outlined_by_only_two_points;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🕳️denies-loose-hole-d9efa1/🦀️.rs"]
+                                    mod tests_refuses_an_upper_bay_panel_whose_door_opening_lies_outside_it;
                                 }
                                 #[path = "."]
                                 pub mod delete_region {
@@ -376,6 +511,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/🚫️removes-the-slab-and-5b301a/🦀️.rs"]
                                     mod tests_removes_the_slab_and_keeps_its_material;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/⛔️rejects-a-missing-a83a6d/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_region_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/🧹️drops-the-spare-460714/🦀️.rs"]
+                                    mod tests_drops_the_spare_side_panel_region_from_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/🔗️blocks-in-use-7c7862/🦀️.rs"]
+                                    mod tests_refuses_to_delete_the_infill_panel_the_wind_case_still_presses_on;
                                 }
                                 #[path = "."]
                                 pub mod replace_region {
@@ -389,6 +533,21 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/🪜️punches-a-stair-f7b3b1/🦀️.rs"]
                                     mod tests_punches_a_stair_opening_through_the_slab;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/⛔️rejects-a-missing-6e0d70/🦀️.rs"]
+                                    mod tests_rejects_replacing_a_region_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/🪟️widens-the-window-09a8ec/🦀️.rs"]
+                                    mod tests_widens_the_window_opening_in_the_infill_wall_panel;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/🪪️denies-rename-574c91/🦀️.rs"]
+                                    mod tests_refuses_to_rename_the_infill_panel_through_a_replace_region;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/👻️dangling-mat-7ef81b/🦀️.rs"]
+                                    mod tests_refuses_to_repour_the_infill_panel_in_a_grade_the_model_lacks;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/📐️denies-zero-thick-7d805e/🦀️.rs"]
+                                    mod tests_refuses_an_infill_panel_whose_thickness_was_set_to_zero;
                                 }
                                 #[path = "."]
                                 pub mod create_load_case {
@@ -402,6 +561,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/🦀️.rs"]
                                     mod tests_appends_a_live_case_carrying_one_nodal_load;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/❄️appends-the-snow-4c007c/🦀️.rs"]
+                                    mod tests_appends_the_snow_case_over_the_roof_beam;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🚫️rejects-a-dangling-4904f4/🦀️.rs"]
+                                    mod tests_rejects_a_load_case_whose_udl_names_a_missing_element;
                                 }
                                 #[path = "."]
                                 pub mod delete_load_case {
@@ -415,6 +580,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/🦀️.rs"]
                                     mod tests_removes_the_live_case_together_with_its_loads;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/⛔️rejects-a-missing-79ed15/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_load_case_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🗑️drops-the-spare-49435f/🦀️.rs"]
+                                    mod tests_drops_the_spare_snow_case_with_its_single_load;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🔗️blocks-in-use-7cdc5f/🦀️.rs"]
+                                    mod tests_refuses_to_delete_the_dead_case_three_combinations_still_weight;
                                 }
                                 #[path = "."]
                                 pub mod add_load {
@@ -428,6 +602,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🦀️.rs"]
                                     mod tests_appends_a_member_udl_to_the_dead_case;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/💨️pushes-a-wind-load-5c3f1e/🦀️.rs"]
+                                    mod tests_pushes_a_wind_point_load_onto_the_first_floor_of_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🚫️rejects-a-missing-4271bc/🦀️.rs"]
+                                    mod tests_rejects_adding_a_load_to_a_load_case_that_does_not_exist;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/👻️dangling-node-8d113b/🦀️.rs"]
+                                    mod tests_refuses_to_push_a_wind_load_at_a_node_the_frame_does_not_have;
                                 }
                                 #[path = "."]
                                 pub mod remove_load {
@@ -441,6 +624,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/🦀️.rs"]
                                     mod tests_strips_the_trailing_member_udl_from_the_dead_case;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/⛔️rejects-a-missing-1a8a80/🦀️.rs"]
+                                    mod tests_rejects_removing_a_load_the_dead_case_never_carried;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/✂️strips-the-roof-udl-0c1b3c/🦀️.rs"]
+                                    mod tests_strips_the_trailing_roof_udl_from_the_dead_case;
                                 }
                                 #[path = "."]
                                 pub mod change_load_case_self_weight {
@@ -454,6 +643,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/🦀️.rs"]
                                     mod tests_switches_self_weight_on_for_the_dead_case;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏋️switches-self-5977a5/🦀️.rs"]
+                                    mod tests_switches_self_weight_on_for_the_imposed_case;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🔁️keeps-self-weight-ff696b/🦀️.rs"]
+                                    mod tests_keeps_self_weight_on_for_the_dead_case;
                                 }
                                 #[path = "."]
                                 pub mod create_combination {
@@ -467,6 +662,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/🦀️.rs"]
                                     mod tests_appends_an_uls_combination_over_both_cases;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends-the-6-10a-eefe01/🦀️.rs"]
+                                    mod tests_appends_the_six_ten_a_combination_over_dead_and_snow;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🚫️rejects-a-dangling-2aa3ea/🦀️.rs"]
+                                    mod tests_rejects_a_combination_term_naming_a_load_case_that_is_absent;
                                 }
                                 #[path = "."]
                                 pub mod delete_combination {
@@ -480,6 +681,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/🦀️.rs"]
                                     mod tests_removes_the_uls_combination_and_keeps_both_cases;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/⛔️rejects-a-missing-d4bc03/🦀️.rs"]
+                                    mod tests_rejects_deleting_a_combination_the_steel_frame_never_had;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops-the-spare-60fda7/🦀️.rs"]
+                                    mod tests_drops_the_spare_uls_combination_from_the_steel_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🔗️blocks-in-use-0b898b/🦀️.rs"]
+                                    mod tests_refuses_to_delete_an_uls_combination_a_design_envelope_nests;
                                 }
                                 #[path = "."]
                                 pub mod update_analysis_settings {
@@ -491,8 +701,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/t008/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-3fbb1a/🦀️.rs"]
                                     mod tests_doubles_the_modal_count_and_halves_the_deformation_scale;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🎚️raises-the-mode-908c2b/🦀️.rs"]
+                                    mod tests_raises_the_mode_counts_and_tightens_the_deformation_scale;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔁️keeps-the-analysis-196e4a/🦀️.rs"]
+                                    mod tests_keeps_the_analysis_settings_exactly_as_they_are;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🚫️denies-zero-modes-babc1d/🦀️.rs"]
+                                    mod tests_refuses_an_analysis_configured_to_extract_zero_modal_modes;
                                 }
                             }
                         }
@@ -808,6 +1027,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/📍️appends-the-column-head-node-n3/🦀️.rs"]
                                     mod tests_appends_the_column_head_node_n3;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/🚨️dup-node-id-86f2e1/🦀️.rs"]
+                                    mod tests_edge_dup_node_id;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧪️tests/🏗️hall-new-node-b26700/🦀️.rs"]
+                                    mod tests_hall_hall_new_node;
                                 }
                                 #[path = "."]
                                 pub mod delete_node {
@@ -821,6 +1046,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/🚫️removes-the-column-head-056295/🦀️.rs"]
                                     mod tests_removes_the_column_head_node_under_a_live_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/🚨️no-such-node-4027a8/🦀️.rs"]
+                                    mod tests_edge_no_such_node;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/🏗️hall-cut-node-8350fd/🦀️.rs"]
+                                    mod tests_hall_hall_cut_node;
                                 }
                                 #[path = "."]
                                 pub mod create_element {
@@ -834,6 +1065,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/➖️appends-a-diagonal-bracing-bar/🦀️.rs"]
                                     mod tests_appends_a_diagonal_bracing_bar;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🚨️dangling-start-ab4132/🦀️.rs"]
+                                    mod tests_edge_dangling_start;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🏗️hall-new-tie-074a69/🦀️.rs"]
+                                    mod tests_hall_hall_new_tie;
                                 }
                                 #[path = "."]
                                 pub mod delete_element {
@@ -845,8 +1082,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/⛓️rafter-under-udl-e0342d/🦀️.rs"]
+                                    mod tests_edge_rafter_under_udl;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/🚫️removes-the-bracing-be89d2/🦀️.rs"]
                                     mod tests_removes_the_bracing_bar_and_leaves_the_frame;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/🚨️no-such-element-eb788c/🦀️.rs"]
+                                    mod tests_edge_no_such_element;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/🏗️hall-cut-tie-c268d4/🦀️.rs"]
+                                    mod tests_hall_hall_cut_tie;
                                 }
                                 #[path = "."]
                                 pub mod replace_element {
@@ -858,8 +1104,20 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🚨️dangling-sec-70b168/🦀️.rs"]
+                                    mod tests_edge_dangling_sec;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🪪️renames-brace-219be2/🦀️.rs"]
+                                    mod tests_edge_renames_brace;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🔄️rolls-the-column-50f732/🦀️.rs"]
                                     mod tests_rolls_the_column_about_its_own_axis;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/⏸️same-element-61adb2/🦀️.rs"]
+                                    mod tests_edge_same_element;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🏗️hall-strut-d0e4b7/🦀️.rs"]
+                                    mod tests_hall_hall_strut;
                                 }
                                 #[path = "."]
                                 pub mod create_material {
@@ -871,8 +1129,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧨️nu-at-a-half-8253d2/🦀️.rs"]
+                                    mod tests_edge_nu_at_a_half;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/🦀️.rs"]
                                     mod tests_appends_an_aluminium_alloy;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🚨️dup-material-id-1c0787/🦀️.rs"]
+                                    mod tests_edge_dup_material_id;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️hall-new-steel-0d2572/🦀️.rs"]
+                                    mod tests_hall_hall_new_steel;
                                 }
                                 #[path = "."]
                                 pub mod delete_material {
@@ -884,8 +1151,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛓️glulam-in-use-1208e1/🦀️.rs"]
+                                    mod tests_edge_glulam_in_use;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/🦀️.rs"]
                                     mod tests_removes_the_unreferenced_aluminium_alloy;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚨️no-such-material-494b10/🦀️.rs"]
+                                    mod tests_edge_no_such_material;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🏗️hall-cut-gl32c-264bca/🦀️.rs"]
+                                    mod tests_hall_hall_cut_gl32c;
                                 }
                                 #[path = "."]
                                 pub mod replace_material {
@@ -897,8 +1173,20 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🧨️negative-e-84dad7/🦀️.rs"]
+                                    mod tests_edge_negative_e;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️renames-c24-b60696/🦀️.rs"]
+                                    mod tests_edge_renames_c24;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/🦀️.rs"]
                                     mod tests_softens_the_steel_shear_modulus_in_place;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⏸️same-material-950f90/🦀️.rs"]
+                                    mod tests_edge_same_material;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️hall-regrades-8dbc23/🦀️.rs"]
+                                    mod tests_hall_hall_regrades;
                                 }
                                 #[path = "."]
                                 pub mod create_section {
@@ -910,8 +1198,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🧨️zero-area-475a19/🦀️.rs"]
+                                    mod tests_edge_zero_area;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🔳️appends-a-square-bd0e4e/🦀️.rs"]
                                     mod tests_appends_a_square_hollow_profile;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🚨️dup-section-id-a76686/🦀️.rs"]
+                                    mod tests_edge_dup_section_id;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🏗️hall-new-beam-251a92/🦀️.rs"]
+                                    mod tests_hall_hall_new_beam;
                                 }
                                 #[path = "."]
                                 pub mod delete_section {
@@ -923,8 +1220,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/⛓️purlin-in-use-99eb01/🦀️.rs"]
+                                    mod tests_edge_purlin_in_use;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/🚫️removes-the-spare-30ecfb/🦀️.rs"]
                                     mod tests_removes_the_spare_square_hollow_profile;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/🚨️no-such-section-50d29b/🦀️.rs"]
+                                    mod tests_edge_no_such_section;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/🏗️hall-cut-shs-d44b9e/🦀️.rs"]
+                                    mod tests_hall_hall_cut_shs;
                                 }
                                 #[path = "."]
                                 pub mod replace_section {
@@ -936,8 +1242,20 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🧨️negative-iy-d4e0a8/🦀️.rs"]
+                                    mod tests_edge_negative_iy;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🪪️renames-purlin-dfe160/🦀️.rs"]
+                                    mod tests_edge_renames_purlin;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🌀️raises-the-torsion-296ef0/🦀️.rs"]
                                     mod tests_raises_the_torsion_constant_of_hea200;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/⏸️same-section-d1d013/🦀️.rs"]
+                                    mod tests_edge_same_section;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🏗️hall-deep-purlin-176fd0/🦀️.rs"]
+                                    mod tests_hall_hall_deep_purlin;
                                 }
                                 #[path = "."]
                                 pub mod create_support {
@@ -951,6 +1269,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔒️clamps-the-column-f801c9/🦀️.rs"]
                                     mod tests_clamps_the_column_base_in_all_six_dofs;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚨️dangling-node-af37e2/🦀️.rs"]
+                                    mod tests_edge_dangling_node;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🏗️hall-new-pin-c033f2/🦀️.rs"]
+                                    mod tests_hall_hall_new_pin;
                                 }
                                 #[path = "."]
                                 pub mod delete_support {
@@ -964,6 +1288,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-b3ebb0/🦀️.rs"]
                                     mod tests_releases_the_pinned_node_n2;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🚨️no-such-support-edd22a/🦀️.rs"]
+                                    mod tests_edge_no_such_support;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🏗️hall-cut-pin-66d795/🦀️.rs"]
+                                    mod tests_hall_hall_cut_pin;
                                 }
                                 #[path = "."]
                                 pub mod replace_support {
@@ -975,8 +1305,20 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🚨️dangling-node-d44469/🦀️.rs"]
+                                    mod tests_edge_dangling_node;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️renames-pin-29f41a/🦀️.rs"]
+                                    mod tests_edge_renames_pin;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔄️frees-the-three-7783c9/🦀️.rs"]
                                     mod tests_frees_the_three_rotations_at_the_column_base;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⏸️same-support-bff8b3/🦀️.rs"]
+                                    mod tests_edge_same_support;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🏗️hall-fixes-base-b5aa1b/🦀️.rs"]
+                                    mod tests_hall_hall_fixes_base;
                                 }
                                 #[path = "."]
                                 pub mod create_solid {
@@ -988,8 +1330,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧊️create-solid/🧪️tests/📐️sliver-outline-316a7c/🦀️.rs"]
+                                    mod tests_edge_sliver_outline;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧊️create-solid/🧪️tests/🏠️appends-an-extruded-roof-slab/🦀️.rs"]
                                     mod tests_appends_an_extruded_roof_slab;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧊️create-solid/🧪️tests/🚨️dangling-mat-1ebd78/🦀️.rs"]
+                                    mod tests_edge_dangling_mat;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧊️create-solid/🧪️tests/🏗️hall-new-slab-d79da4/🦀️.rs"]
+                                    mod tests_hall_hall_new_slab;
                                 }
                                 #[path = "."]
                                 pub mod delete_solid {
@@ -1001,8 +1352,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-solid/🧪️tests/⛓️raft-under-load-e4ea39/🦀️.rs"]
+                                    mod tests_edge_raft_under_load;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-solid/🧪️tests/🚫️removes-the-roof-slab-f0fb64/🦀️.rs"]
                                     mod tests_removes_the_roof_slab_and_keeps_its_material;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-solid/🧪️tests/🚨️no-such-solid-f08d23/🦀️.rs"]
+                                    mod tests_edge_no_such_solid;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-solid/🧪️tests/🏗️hall-cut-apron-6c79d3/🦀️.rs"]
+                                    mod tests_hall_hall_cut_apron;
                                 }
                                 #[path = "."]
                                 pub mod replace_solid {
@@ -1014,8 +1374,23 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧪️tests/🚨️dangling-mat-9c89da/🦀️.rs"]
+                                    mod tests_edge_dangling_mat;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧪️tests/📐️zero-height-2b131a/🦀️.rs"]
+                                    mod tests_edge_zero_height;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧪️tests/🪪️renames-apron-7bfadd/🦀️.rs"]
+                                    mod tests_edge_renames_apron;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧪️tests/📚️thickens-the-slab-and-b51ef0/🦀️.rs"]
                                     mod tests_thickens_the_slab_and_adds_a_mesh_layer;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧪️tests/⏸️same-solid-8ad12c/🦀️.rs"]
+                                    mod tests_edge_same_solid;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧪️tests/🏗️hall-thick-raft-cddc0f/🦀️.rs"]
+                                    mod tests_hall_hall_thick_raft;
                                 }
                                 #[path = "."]
                                 pub mod create_load_case {
@@ -1029,6 +1404,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🌬️appends-a-wind-case-a6c267/🦀️.rs"]
                                     mod tests_appends_a_wind_case_pushing_on_the_column_head;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🚨️dangling-solid-5e04d9/🦀️.rs"]
+                                    mod tests_edge_dangling_solid;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🏗️hall-snow-drift-068d9b/🦀️.rs"]
+                                    mod tests_hall_hall_snow_drift;
                                 }
                                 #[path = "."]
                                 pub mod delete_load_case {
@@ -1040,8 +1421,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/⛓️dead-in-combos-e73167/🦀️.rs"]
+                                    mod tests_edge_dead_in_combos;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-wind-caeb06/🦀️.rs"]
                                     mod tests_removes_the_wind_case_together_with_its_load;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚨️no-such-case-ef1fde/🦀️.rs"]
+                                    mod tests_edge_no_such_case;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🏗️hall-cut-crane-52270d/🦀️.rs"]
+                                    mod tests_hall_hall_cut_crane;
                                 }
                                 #[path = "."]
                                 pub mod add_load {
@@ -1053,8 +1443,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🚨️no-such-member-3fe6e9/🦀️.rs"]
+                                    mod tests_edge_no_such_member;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🏠️lays-an-area-pressure-over-769710/🦀️.rs"]
                                     mod tests_lays_an_area_pressure_over_the_roof_slab;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/⏸️dup-load-id-4f4a0a/🦀️.rs"]
+                                    mod tests_edge_dup_load_id;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🏗️hall-adds-udl-e345cb/🦀️.rs"]
+                                    mod tests_hall_hall_adds_udl;
                                 }
                                 #[path = "."]
                                 pub mod remove_load {
@@ -1068,6 +1467,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️drops-the-trailing-member-b73b25/🦀️.rs"]
                                     mod tests_drops_the_trailing_member_udl_from_the_dead_case;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/🚨️no-such-load-5bab2d/🦀️.rs"]
+                                    mod tests_edge_no_such_load;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/🏗️hall-cut-wind-6cf528/🦀️.rs"]
+                                    mod tests_hall_hall_cut_wind;
                                 }
                                 #[path = "."]
                                 pub mod change_load_case_self_weight {
@@ -1081,6 +1486,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⏸️switches-self-7e0cda/🦀️.rs"]
                                     mod tests_switches_self_weight_off_for_the_dead_case;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🚨️sw-no-such-case-bfe5bc/🦀️.rs"]
+                                    mod tests_edge_sw_no_such_case;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏗️hall-crane-sw-978370/🦀️.rs"]
+                                    mod tests_hall_hall_crane_sw;
                                 }
                                 #[path = "."]
                                 pub mod create_combination {
@@ -1094,6 +1505,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-a-8ede20/🦀️.rs"]
                                     mod tests_appends_a_serviceability_combination_keyed_by_case_id;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🚨️dangling-term-b9d144/🦀️.rs"]
+                                    mod tests_edge_dangling_term;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🏗️hall-new-acc-4099b2/🦀️.rs"]
+                                    mod tests_hall_hall_new_acc;
                                 }
                                 #[path = "."]
                                 pub mod delete_combination {
@@ -1107,6 +1524,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-182f7b/🦀️.rs"]
                                     mod tests_removes_the_serviceability_combination_and_keeps_both_cases;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🚨️no-such-combo-f42cd6/🦀️.rs"]
+                                    mod tests_edge_no_such_combo;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🏗️hall-cut-qp-ebd806/🦀️.rs"]
+                                    mod tests_hall_hall_cut_qp;
                                 }
                                 #[path = "."]
                                 pub mod update_analysis_settings {
@@ -1118,8 +1541,17 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/🦀️.rs"]
+                                    mod tests_edge_zero_modes;
+                                    #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🦀️.rs"]
                                     mod tests_doubles_the_buckling_mode_count;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/🦀️.rs"]
+                                    mod tests_edge_same_settings;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/🦀️.rs"]
+                                    mod tests_hall_hall_more_modes;
                                 }
                             }
                         }

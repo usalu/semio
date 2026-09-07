@@ -54,25 +54,25 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-material" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-aluminium-alloy/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-aluminium-alloy/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-aluminium-alloy/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-aluminium-alloy/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-aluminium-alloy/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🪙️appends-an-9fdced/🎯️outcome/🔣️.json"),
         },
         "delete-material" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-unreferenced-aluminium-alloy/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-unreferenced-aluminium-alloy/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-unreferenced-aluminium-alloy/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-unreferenced-aluminium-alloy/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-unreferenced-aluminium-alloy/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-b7b56a/🎯️outcome/🔣️.json"),
         },
         "replace-material" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-steel-shear-modulus-in-place/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-steel-shear-modulus-in-place/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-steel-shear-modulus-in-place/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-steel-shear-modulus-in-place/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-steel-shear-modulus-in-place/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️softens-the-2cd183/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-material: no committed specification vector is registered for kind {other:?}"),
     }
@@ -83,12 +83,103 @@ fn vector(kind: &str) -> Vector {
 fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("mutate-fem3d-1-material: a committed fixture must be valid JSON: {error}"))
 }
+
+/// 🏭️ One kind's committed GLULAM WORKSHOP HALL vector — the second real model this artifact
+/// carries (ticket `26/09/06/FEM-PLUGIN-END-TO-END`), a 12 m span two-bay GL24h portal hall on a
+/// C25/30 raft slab. Same five members as [`vector`], a different structural system.
+fn hall_vector_of(kind: &str) -> Vector {
+    match kind {
+        "create-material" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️hall-new-steel-0d2572/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️hall-new-steel-0d2572/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️hall-new-steel-0d2572/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️hall-new-steel-0d2572/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️hall-new-steel-0d2572/🎯️outcome/🔣️.json"),
+        },
+        "replace-material" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️hall-regrades-8dbc23/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️hall-regrades-8dbc23/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️hall-regrades-8dbc23/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️hall-regrades-8dbc23/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️hall-regrades-8dbc23/🎯️outcome/🔣️.json"),
+        },
+        "delete-material" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🏗️hall-cut-gl32c-264bca/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🏗️hall-cut-gl32c-264bca/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🏗️hall-cut-gl32c-264bca/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🏗️hall-cut-gl32c-264bca/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🏗️hall-cut-gl32c-264bca/🎯️outcome/🔣️.json"),
+        },
+        other => panic!("🧱️mutate-fem3d-1-material: no committed hall vector is registered for kind {other:?}"),
+    }
+}
+
+/// 🚫️ Every committed vector of this subset whose whole claim is that the model does NOT move — a
+/// refusal, or a declared no-op. Keyed by the scenario id, not by the kind, because a kind can
+/// refuse in several different ways. A rejection bundle carries no `🔺️diff/🔣️.json` at all, so the
+/// `diff` member is the empty object and no handler reads it.
+const REJECT_VECTORS: &[&str] = &["dup-material-id-1c0787", "nu-at-a-half-8253d2", "same-material-950f90", "negative-e-84dad7", "renames-c24-b60696", "glulam-in-use-1208e1", "no-such-material-494b10"];
+
+fn reject_vector_of(identifier: &str) -> Vector {
+    match identifier {
+        "dup-material-id-1c0787" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🚨️dup-material-id-1c0787/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🚨️dup-material-id-1c0787/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🚨️dup-material-id-1c0787/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🚨️dup-material-id-1c0787/🎯️outcome/🔣️.json"),
+        },
+        "nu-at-a-half-8253d2" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧨️nu-at-a-half-8253d2/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧨️nu-at-a-half-8253d2/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧨️nu-at-a-half-8253d2/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧨️nu-at-a-half-8253d2/🎯️outcome/🔣️.json"),
+        },
+        "same-material-950f90" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⏸️same-material-950f90/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⏸️same-material-950f90/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⏸️same-material-950f90/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⏸️same-material-950f90/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⏸️same-material-950f90/🎯️outcome/🔣️.json"),
+        },
+        "negative-e-84dad7" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🧨️negative-e-84dad7/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🧨️negative-e-84dad7/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🧨️negative-e-84dad7/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🧨️negative-e-84dad7/🎯️outcome/🔣️.json"),
+        },
+        "renames-c24-b60696" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️renames-c24-b60696/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️renames-c24-b60696/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️renames-c24-b60696/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️renames-c24-b60696/🎯️outcome/🔣️.json"),
+        },
+        "glulam-in-use-1208e1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛓️glulam-in-use-1208e1/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛓️glulam-in-use-1208e1/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛓️glulam-in-use-1208e1/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛓️glulam-in-use-1208e1/🎯️outcome/🔣️.json"),
+        },
+        "no-such-material-494b10" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚨️no-such-material-494b10/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚨️no-such-material-494b10/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚨️no-such-material-494b10/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚨️no-such-material-494b10/🎯️outcome/🔣️.json"),
+        },
+        other => panic!("🧱️mutate-fem3d-1-material: no committed rejection vector is registered for {other:?}"),
+    }
+}
 //#endregion 🔖️Fixtures
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
+    use super::{canonical, hall_vector_of, reject_vector_of, vector, DERIVED_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
     use semio_s_plugin_fem::artifacts::fem3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
@@ -282,6 +373,50 @@ mod subject {
             Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
         }
     }
+
+    /// 🏭️ Replays one committed glulam-hall vector — the same five laws [`spec_vector`] applies, on
+    /// the second real model, so no verb's evidence rests on a single structural system.
+    pub fn hall_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |_ctx: &Context| {
+            let committed = hall_vector_of(kind);
+            let report = report_of(&format!("hall-vector-{kind}"), committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
+                return Err(format!("hall-vector-{kind}: the applied model is not the committed after-snapshot — {first}"));
+            }
+            if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(committed.diff)) {
+                return Err(format!("hall-vector-{kind}: the produced delta is not the committed 🔺️diff — {first}"));
+            }
+            declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
+            law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
+            touches_one(&format!("hall-vector-{kind}"), kind, member(&report, "base")?, applied)?;
+            law::inverse_restores(kind, member(&report, "inverseSnapshot")?, member(&report, "base")?)?;
+            Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
+        }
+    }
+
+    /// 🚫️ Replays one committed vector whose claim is that NOTHING happens. The projection carries
+    /// the two facts both implementations can produce — whether the request was refused, and the
+    /// model it left behind. The refusal's wording is not projected: each implementation words it in
+    /// its own language, and what the differential holds them to is the verdict and the document.
+    pub fn reject(identifier: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |_ctx: &Context| {
+            let committed = reject_vector_of(identifier);
+            let report = report_of(&format!("reject-{identifier}"), committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            let messages = members(&report, "messages")?;
+            declared_outcome_holds(identifier, &messages, &canonical(committed.outcome))?;
+            if let Some(first) = law::divergence(applied, member(&report, "base")?) {
+                return Err(format!("reject-{identifier}: a refused or no-op mutation must leave the model exactly where it was — {first}"));
+            }
+            if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
+                return Err(format!("reject-{identifier}: the committed after-model is not the committed before-model — {first}"));
+            }
+            let refused = messages.iter().any(|message| { let level = message.str("level"); level == "error" || level == "fatal" });
+            let projection = Json::Object(vec![("refused".to_string(), Json::Bool(refused)), ("model".to_string(), applied.clone())]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+        }
+    }
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
@@ -299,12 +434,16 @@ pub fn adapter() -> Adapter {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
             built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
             built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
+            built = built.subject(&format!("hall-vector-{kind}"), subject::hall_vector(kind));
+        }
+        for identifier in REJECT_VECTORS {
+            built = built.subject(&format!("reject-{identifier}"), subject::reject(identifier));
         }
         return built;
     }
     #[cfg(not(feature = "sut"))]
     {
-        let _ = (KINDS, UNOBSERVABLE, vector as fn(&str) -> Vector);
+        let _ = (KINDS, UNOBSERVABLE, REJECT_VECTORS, vector as fn(&str) -> Vector, hall_vector_of as fn(&str) -> Vector, reject_vector_of as fn(&str) -> Vector);
         built
     }
 }

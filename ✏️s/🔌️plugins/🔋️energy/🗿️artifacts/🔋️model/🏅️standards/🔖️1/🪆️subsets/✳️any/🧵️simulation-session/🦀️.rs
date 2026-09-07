@@ -550,6 +550,7 @@ impl ModelCapture {
                     overhang_offset_m: item.overhang_offset_m,
                     fin_depth_m: item.fin_depth_m,
                     fin_offset_m: item.fin_offset_m,
+                    glazing_construction_id: item.glazing_construction_id,
                 },
                 {
                     match self.substage {

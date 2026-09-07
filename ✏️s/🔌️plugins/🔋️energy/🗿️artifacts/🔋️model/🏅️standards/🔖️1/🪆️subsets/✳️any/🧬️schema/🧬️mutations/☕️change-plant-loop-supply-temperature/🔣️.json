@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply-temperature",
+  "semanticKind": "change-plant-loop-supply-temperature",
+  "displayName": "Change Plant Loop Supply Temperature",
+  "emoji": "☕️",
+  "aggregateVariant": "ChangePlantLoopSupplyTemperature",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-plant-loop-supply-temperature",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

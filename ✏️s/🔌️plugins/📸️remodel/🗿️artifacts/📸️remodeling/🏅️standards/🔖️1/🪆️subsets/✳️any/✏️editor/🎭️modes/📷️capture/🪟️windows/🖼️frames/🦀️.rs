@@ -8,7 +8,7 @@ use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, Utility
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use serde_json::{json, Value};
+use pack::JsonValue;
 
 //#region 🔖️Constants
 pub const REMODELING_PLAY_WINDOW_FRAMES: &str = "remodeling-frames";
@@ -38,37 +38,58 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Scene
-/// 🖼️ The cursored frame image (as a data URL, decoded straight from the stored `ImageAsset`) plus every
-/// GCP observation planted on it, as point markers. Keypoint circles/match lines/track polylines are a
-/// documented gap: those live only in the reconstruction engine's in-progress runtime scratch and are
-/// never distilled into durable document state, so there is nothing to render for them.
+/// 🎯️ Half-side of a ground-control-point marker, in frame pixels. The host draws a `circle` layer
+/// from its bounds rectangle, so the marker is a square box centred on the observed pixel.
+const GCP_MARKER_RADIUS_PX: f64 = 6.0;
+
+/// 🖼️ The cursored frame image plus every GCP observation planted on it, in the exact record shape
+/// `JsonLayersCanvasSession` (`🧰️framework/…/📐️Canvas2dHost/🟦️.tsx`) reads: `kind` (never `type`),
+/// `dataUrl` for the image, and an explicit `x`/`y`/`width`/`height` bounds rectangle per layer —
+/// a record with no bounds falls through to the host's "print the label in the corner" branch and
+/// draws nothing recognizable. The frame is laid out centred on the canvas origin (the host's own
+/// camera transform centres the viewport there), and observation markers share that origin so their
+/// document pixel coordinates land on the pixels they annotate. Keypoint circles / match lines /
+/// track polylines are a documented gap: those live only in the reconstruction engine's in-progress
+/// runtime scratch and are never distilled into durable document state.
 fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor) -> String {
-    let mut layers: Vec<Value> = Vec::new();
+    let mut layers: Vec<JsonValue> = Vec::new();
     let Some(stream_id) = &cursor.stream_id else { return "[]".into() };
     let Some(stream) = scene.streams.iter().find(|stream| &stream.id == stream_id) else { return "[]".into() };
+    let mut origin = (0.0_f64, 0.0_f64);
     if let Some(frame) = stream.frames.iter().find(|frame| frame.index == cursor.frame_index) {
         if let Some(asset) = crate::artifacts::remodeling::remodeling_asset(scene, &frame.asset_id) {
-            layers.push(json!({
-                "type": "image",
-                "assetId": frame.asset_id,
-                "dataUrl": format!("data:{};base64,{}", asset.mime, asset.data),
-                "width": asset.width,
-                "height": asset.height,
-            }));
+            let width = f64::from(asset.width);
+            let height = f64::from(asset.height);
+            origin = (-width / 2.0, -height / 2.0);
+            layers.push(pack::json_object([
+                ("kind".to_string(), JsonValue::from("image")),
+                ("id".to_string(), JsonValue::from(frame.asset_id.as_str())),
+                ("name".to_string(), JsonValue::from(frame.asset_id.as_str())),
+                ("dataUrl".to_string(), JsonValue::from(format!("data:{};base64,{}", asset.mime, asset.data))),
+                ("x".to_string(), JsonValue::from(origin.0)),
+                ("y".to_string(), JsonValue::from(origin.1)),
+                ("width".to_string(), JsonValue::from(width)),
+                ("height".to_string(), JsonValue::from(height)),
+            ]));
         }
     }
-    let mut points: Vec<Value> = Vec::new();
     for gcp in &scene.gcps {
         for observation in &gcp.observations {
             if &observation.stream_id == stream_id && observation.frame_index == cursor.frame_index {
-                points.push(json!({ "x": observation.pixel[0], "y": observation.pixel[1], "label": gcp.name }));
+                layers.push(pack::json_object([
+                    ("kind".to_string(), JsonValue::from("circle")),
+                    ("id".to_string(), JsonValue::from(format!("gcp-observation-{}-{}", gcp.id, observation.frame_index))),
+                    ("name".to_string(), JsonValue::from(gcp.name.as_str())),
+                    ("role".to_string(), JsonValue::from("handle")),
+                    ("x".to_string(), JsonValue::from(origin.0 + f64::from(observation.pixel[0]) - GCP_MARKER_RADIUS_PX)),
+                    ("y".to_string(), JsonValue::from(origin.1 + f64::from(observation.pixel[1]) - GCP_MARKER_RADIUS_PX)),
+                    ("width".to_string(), JsonValue::from(GCP_MARKER_RADIUS_PX * 2.0)),
+                    ("height".to_string(), JsonValue::from(GCP_MARKER_RADIUS_PX * 2.0)),
+                ]));
             }
         }
     }
-    if !points.is_empty() {
-        layers.push(json!({ "type": "points", "id": "remodeling-gcp-observations", "points": points }));
-    }
-    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+    pack::json_to_string(&pack::json_array(layers))
 }
 
 pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

@@ -1,0 +1,13 @@
+{
+  "mutation": "replaceSupport",
+  "id": "sup_br_2",
+  "newSupport": {
+    "id": "sup_br_2",
+    "nodeId": "br_2",
+    "fixed": [
+      "Tx",
+      "Ty",
+      "Tz"
+    ]
+  }
+}

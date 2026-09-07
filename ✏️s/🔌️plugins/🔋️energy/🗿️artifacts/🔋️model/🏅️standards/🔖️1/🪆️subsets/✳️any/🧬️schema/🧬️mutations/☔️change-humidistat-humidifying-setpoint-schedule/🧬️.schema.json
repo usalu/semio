@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHumidistatHumidifyingSetpointSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHumidifyingSetpointScheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newHumidifyingSetpointScheduleId": {
+      "type": "integer"
+    }
+  }
+}

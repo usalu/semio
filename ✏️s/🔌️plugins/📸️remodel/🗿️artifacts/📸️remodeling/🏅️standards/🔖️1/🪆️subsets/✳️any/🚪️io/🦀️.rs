@@ -35,7 +35,6 @@ use semio_s_plugin_stdio::artifacts::{
         },
     },
 };
-use serde_json::Value;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"]
@@ -111,15 +110,6 @@ pub fn semio_mesh_to_las_bytes(semio: &SemioMeshSnapshot) -> Result<Vec<u8>, Str
     las_engine::encode_las(&las)
 }
 
-/// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `results.mesh.mesh` is now a composed
-/// `store::ArtifactChild<SemioMeshSnapshot>` handle, not embedded `MeshData`. Export resolves only
-/// fixed constants or committed reconstruction chunks admitted by the production 512/512 envelope;
-/// unavailable durable content returns `Err`, never a fabricated empty mesh.
-pub fn remodeling_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-    let scene: RemodelingSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-    scene_mesh_data(&scene)
-}
-
 /// 🖼️ Exports whichever raster/texture asset is available (DSM, else ortho, else DTM, else the mesh's
 /// baked texture) — `scene.assets` holds composed `s.stdio.semio.image` child handles, so this reads
 /// the real bytes back through `remodeling_asset` (working-scene cache).
@@ -135,9 +125,10 @@ pub fn remodeling_png_asset(scene: &RemodelingSnapshot) -> Result<ImageAsset, St
 }
 
 /// 🖼️ `remodeling_png_asset` in the OS media-export envelope the editor's export command speaks.
-pub fn remodeling_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExportResult, String> {
-    let scene: RemodelingSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-    let asset = remodeling_png_asset(&scene)?;
+/// Takes the typed scene: `RemodelingSnapshot` left the serde type graph with `store::ArtifactChild`
+/// (W9), so a `serde_json::Value` document is no longer a carrier this crate can decode.
+pub fn remodeling_png_export(scene: &RemodelingSnapshot) -> Result<semio_framework_os::OsMediaExportResult, String> {
+    let asset = remodeling_png_asset(scene)?;
     Ok(semio_framework_os::OsMediaExportResult { data: asset.data, mime_type: "image/png".into(), file_name: "remodeling-export.png".into(), encoding: Some("base64".into()) })
 }
 //#endregion 🔖️Exporters
@@ -777,7 +768,7 @@ mod io_tests {
         let asset = image_asset_from_semio_image_snapshot(&image).expect("real png bridge encode");
         scene.assets.insert("tex-1".into(), crate::artifacts::remodeling::store_remodeling_asset("tex-1", &asset));
         scene.results.mesh.texture_asset_id = Some("tex-1".into());
-        let result = remodeling_png_export(&serde_json::to_value(&scene).expect("serialize scene")).expect("png export");
+        let result = remodeling_png_export(&scene).expect("png export");
         assert_eq!(result.mime_type, "image/png");
         assert_eq!(result.encoding.as_deref(), Some("base64"));
         let redecoded = semio_image_from_png_bytes(&base64_codec::base64_standard_decode(result.data.as_bytes()).expect("valid base64")).expect("exported bytes are real PNG");

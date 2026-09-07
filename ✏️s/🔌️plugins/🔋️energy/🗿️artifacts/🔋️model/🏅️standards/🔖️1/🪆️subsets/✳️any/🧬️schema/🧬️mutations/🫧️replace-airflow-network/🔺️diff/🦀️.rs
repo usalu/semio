@@ -7,10 +7,10 @@ use crate::artifacts::model::diff::EnergyModelDiff;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceAirflowNetwork, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if payload.zone_ids.len() != payload.node_ids.len() {
-        return protocol::MutationOutcome::error("mutation.invalid-payload", format!("An airflow network pairs one node id per zone id, got {} zone ids and {} node ids.", payload.zone_ids.len(), payload.node_ids.len()), Vec::<String>::new());
+        return protocol::MutationOutcome::error("mutation.invariant", format!("An airflow network pairs one node id per zone id, got {} zone ids and {} node ids.", payload.zone_ids.len(), payload.node_ids.len()), Vec::<String>::new());
     }
     if !payload.present && !(payload.zone_ids.is_empty() && payload.link_ids.is_empty()) {
-        return protocol::MutationOutcome::error("mutation.invalid-payload", "A detached airflow network carries no zone nodes and no links.", Vec::<String>::new());
+        return protocol::MutationOutcome::error("mutation.invariant", "A detached airflow network carries no zone nodes and no links.", Vec::<String>::new());
     }
     let network = payload.present.then(|| crate::model::AirflowNetworkDefinition {
         zone_node_ids: payload.zone_ids.iter().copied().zip(payload.node_ids.iter().copied()).map(|(zone, node)| (crate::model::EntityId(zone), node)).collect(),

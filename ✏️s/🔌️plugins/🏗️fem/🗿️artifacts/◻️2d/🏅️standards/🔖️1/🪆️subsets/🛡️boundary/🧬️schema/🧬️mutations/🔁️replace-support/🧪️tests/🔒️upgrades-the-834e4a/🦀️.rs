@@ -1,4 +1,4 @@
-//! 🧪️ `replace-support` fixture — `🔒️upgrades-the-roller-at-n2-to-a-full-fixity`.
+//! 🧪️ `replace-support` fixture — `🔒️upgrades-the-834e4a`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem2dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("replace-support applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.supports.len(), 2, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: a replacement must not change the support count");
-    assert_eq!(snapshot.supports[1].fixed.len(), 3, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: the DOF list is swapped wholesale, from one restraint to three");
-    assert_eq!(snapshot.supports[0], before().supports[0], "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: the pin ahead of the patched row must be untouched");
+    assert_eq!(snapshot, expected_after(), "replace-support/upgrades-the-834e4a: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.supports.len(), 2, "replace-support/upgrades-the-834e4a: a replacement must not change the support count");
+    assert_eq!(snapshot.supports[1].fixed.len(), 3, "replace-support/upgrades-the-834e4a: the DOF list is swapped wholesale, from one restraint to three");
+    assert_eq!(snapshot.supports[0], before().supports[0], "replace-support/upgrades-the-834e4a: the pin ahead of the patched row must be untouched");
 }
 
 /// ↩️ The inverse is a `replace-support` carrying the single-DOF roller recovered from `base`.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "replace-support/upgrades-the-834e4a: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,12 +59,12 @@ fn committed_json_is_canonical() {
         let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "replace-support/upgrades-the-834e4a: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "replace-support/upgrades-the-834e4a: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
@@ -75,12 +75,12 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "replace-support/upgrades-the-834e4a: declared applied but the mutation was rejected"),
         "rejected" => {
-            assert!(!applied, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "replace-support/upgrades-the-834e4a: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "replace-support/upgrades-the-834e4a: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: unknown outcome status {other:?}"),
+        other => panic!("replace-support/upgrades-the-834e4a: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +89,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().supports.as_ref().expect("supports delta").patched.len(), 1, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: exactly one support may be patched");
-    assert!(outcome.diff().supports.as_ref().expect("supports delta").added.is_empty(), "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: a replacement is never an addition");
+    assert_eq!(outcome.diff().supports.as_ref().expect("supports delta").patched.len(), 1, "replace-support/upgrades-the-834e4a: exactly one support may be patched");
+    assert!(outcome.diff().supports.as_ref().expect("supports delta").added.is_empty(), "replace-support/upgrades-the-834e4a: a replacement is never an addition");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "replace-support/upgrades-the-834e4a: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +102,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "replace-support/upgrades-the-834e4a: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `supports.patched` entry on `before` must fix `n2` without moving the pin.
@@ -110,5 +110,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "replace-support/upgrades-the-roller-at-n2-to-a-full-fixity: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "replace-support/upgrades-the-834e4a: committed diff did not carry before to after");
 }

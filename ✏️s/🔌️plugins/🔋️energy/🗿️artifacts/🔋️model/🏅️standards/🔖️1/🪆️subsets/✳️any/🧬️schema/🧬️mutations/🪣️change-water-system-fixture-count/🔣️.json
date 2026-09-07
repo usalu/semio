@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system-fixture-count",
+  "semanticKind": "change-water-system-fixture-count",
+  "displayName": "Change Water System Fixture Count",
+  "emoji": "🪣️",
+  "aggregateVariant": "ChangeWaterSystemFixtureCount",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-water-system-fixture-count",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

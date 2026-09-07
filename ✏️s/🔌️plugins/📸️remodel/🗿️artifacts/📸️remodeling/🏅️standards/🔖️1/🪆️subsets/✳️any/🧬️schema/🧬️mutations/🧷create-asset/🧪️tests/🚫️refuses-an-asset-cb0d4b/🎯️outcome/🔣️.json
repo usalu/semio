@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "mutation.invalid-asset-payload",
+  "path": [
+    "orbit-frame-11"
+  ]
+}

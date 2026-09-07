@@ -1,0 +1,11 @@
+{
+  "mutation": "createCombination",
+  "combination": {
+    "id": "uls_seis",
+    "name": "ULS Seismic",
+    "terms": {
+      "dead": 1.0,
+      "seismic": 1.0
+    }
+  }
+}

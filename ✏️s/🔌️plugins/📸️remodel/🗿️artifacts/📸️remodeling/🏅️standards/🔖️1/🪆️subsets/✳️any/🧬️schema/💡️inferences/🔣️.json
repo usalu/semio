@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/remodeling/remodeling/inference.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/inference.json",
   "title": "RemodelingInference",
   "type": "object",
   "additionalProperties": false,

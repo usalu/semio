@@ -1,8 +1,8 @@
 //! 🧵️ Shared retained shell for app-owned typed command reducers.
 
 use crate::app::{AppOperationContext, ArtifactApp, ArtifactOwnedToolJobContext, ArtifactToolCompletion, Emit, EphemeralEmit, HistoryView, InteractionHoverState};
-use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::Fault;
+use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use std::sync::Arc;
 
@@ -106,11 +106,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
         Ok(0)
     }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
-        if checkpoint.is_empty() {
-            Ok(())
-        } else {
-            Err(Fault::from("retained-command-work-checkpoint-unsupported"))
-        }
+        if checkpoint.is_empty() { Ok(()) } else { Err(Fault::from("retained-command-work-checkpoint-unsupported")) }
     }
     fn begin_close(&mut self) {}
     fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
@@ -675,10 +671,32 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
         let mut raw = Vec::with_capacity(case["capacity"].as_u64().unwrap() as usize);
         raw.resize(case["initializedBytes"].as_u64().unwrap() as usize, 42);
         let mut job = ArtifactRetainedCommandJob::<A> {
-            command: None, snapshot: None, config: None, history: None, interaction_state: None, interaction_hover: None, context: None, operation: None, completion: None,
-            command_id: |_| "fixture", maximum_raw_bytes: raw.capacity(), maximum_work_items: 1, work: None, checkpoint_input: None,
-            checkpoint_bytes: [0; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES], checkpoint_byte_len: 0, checkpoint_page_cursor: 0, raw_input: None, raw, raw_page_cursor: 0,
-            emit: None, ephemeral: None, phase: ArtifactRetainedCommandPhase::Complete, checkpoint_pending: false, work_progress: 0, closing: false,
+            command: None,
+            snapshot: None,
+            config: None,
+            history: None,
+            interaction_state: None,
+            interaction_hover: None,
+            context: None,
+            operation: None,
+            completion: None,
+            command_id: |_| "fixture",
+            maximum_raw_bytes: raw.capacity(),
+            maximum_work_items: 1,
+            work: None,
+            checkpoint_input: None,
+            checkpoint_bytes: [0; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
+            checkpoint_byte_len: 0,
+            checkpoint_page_cursor: 0,
+            raw_input: None,
+            raw,
+            raw_page_cursor: 0,
+            emit: None,
+            ephemeral: None,
+            phase: ArtifactRetainedCommandPhase::Complete,
+            checkpoint_pending: false,
+            work_progress: 0,
+            closing: false,
         };
         job.begin_close();
         let mut items = 0;

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLoadCaseSelfWeight",
+  "caseId": "crane_spare",
+  "newSelfWeight": true
+}

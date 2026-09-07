@@ -45,6 +45,14 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
   that re-derived a sibling collection on every edit — renumbering ids, re-sorting sections — would
   still land on the right value for the member it meant to write.
 
+
+  THE WHOLE CORPUS, NOT ONE ROW PER KIND (ticket `26/09/06/FEM-PLUGIN-END-TO-END`). Case discovery
+  is explicit in all three languages, so until this wave the two `Scenario Outline`s below did not
+  exist and every committed vector but one per kind was Rust-only evidence. `frame-vector-<kind>`
+  replays the second happy path — the two-storey braced steel frame — and `reject-<kind>-<n>`
+  replays every refusal and no-op the kind declares, holding BOTH implementations to the same
+  diagnostic code, level and address rather than merely to an unchanged document.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -87,7 +95,42 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id               | dir                 | fixture                                     |
-    | create-material  | 🌱️create-material  | 🧱️appends-concrete-c30                        |
-    | delete-material  | 🗑️delete-material  | 🚫️removes-the-unreferenced-timber-material    |
-    | replace-material | 🔁️replace-material | 🏗️restates-steel-as-s355-in-its-original-slot |
+    | id               | dir                | fixture                 |
+    | create-material  | 🌱️create-material  | 🧱️appends-concrete-c30  |
+    | delete-material  | 🗑️delete-material  | 🚫️removes-the-30f7a2    |
+    | replace-material | 🔁️replace-material | 🏗️restates-steel-7c22bc |
+
+  @id-frame-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> steel-frame specification vector through both implementations
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
+    Examples:
+    | id               | dir                | fixture                    |
+    | create-material  | 🌱️create-material  | 🏗️adds-the-c25-slab-11d8df |
+    | delete-material  | 🗑️delete-material  | 🗑️drops-the-spare-00e964   |
+    | replace-material | 🔁️replace-material | 📉️cracks-the-c30-b2b220    |
+
+  @id-reject
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Refuse the committed <id> vector in both implementations, for the same reason
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then both implementations leave the document exactly where it was and report the same diagnostic code, level and address
+    Examples:
+    | id                 | dir                | fixture                      |
+    | create-material-1  | 🌱️create-material  | 🚫️rejects-a-duplicate-f3220b |
+    | create-material-2  | 🌱️create-material  | ⚗️denies-poisson-329e35      |
+    | delete-material-1  | 🗑️delete-material  | ⛔️rejects-a-missing-d5b18f   |
+    | delete-material-2  | 🗑️delete-material  | 🔗️blocks-in-use-e99619       |
+    | replace-material-1 | 🔁️replace-material | ⛔️rejects-a-missing-b3adee   |
+    | replace-material-2 | 🔁️replace-material | 🪪️denies-rename-a0d7aa       |
+    | replace-material-3 | 🔁️replace-material | ⚗️denies-zero-modulus-71e69a |

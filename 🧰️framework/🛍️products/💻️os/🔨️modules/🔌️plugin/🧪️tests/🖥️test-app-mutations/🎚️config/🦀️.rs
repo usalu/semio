@@ -38,15 +38,37 @@ impl store::ConfigRecord for TestConfig {}
 //#endregion 🧫️Snapshot
 
 //#region 🧬️Mutations
-#[path="🧬️mutations/🦀️.rs"] pub mod mutations;
-pub(crate) use mutations::{ChangeTestConfigSelection,TestConfigMutation};
+#[path = "🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub(crate) use mutations::{ChangeTestConfigSelection, TestConfigMutation};
 //#endregion 🧬️Mutations
 
 //#region 🔺️Diff
-#[derive(Clone,Debug,PartialEq,Serialize,Deserialize,semio_framework_value_derive::ToValue,semio_framework_value_derive::FromValue)]
-#[serde(tag="state",content="value",rename_all="camelCase")]
-#[value(tag="state",content="value",rename_all="camelCase")]
-pub(crate) enum TestConfigDiff { Identity, Clear, Set(String) }
-impl Default for TestConfigDiff { fn default()->Self{Self::Identity} }
-impl MutationDiff<TestConfig> for TestConfigDiff { fn apply(&self,base:&TestConfig)->protocol::MutationApplyResult<TestConfig>{Ok(match self{Self::Identity=>base.clone(),Self::Clear=>TestConfig{selected:None},Self::Set(value)=>TestConfig{selected:Some(value.clone())}})} fn absorb(&mut self,other:Self){if !matches!(other,Self::Identity){*self=other;}} }
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[serde(tag = "state", content = "value", rename_all = "camelCase")]
+#[value(tag = "state", content = "value", rename_all = "camelCase")]
+pub(crate) enum TestConfigDiff {
+    Identity,
+    Clear,
+    Set(String),
+}
+impl Default for TestConfigDiff {
+    fn default() -> Self {
+        Self::Identity
+    }
+}
+impl MutationDiff<TestConfig> for TestConfigDiff {
+    fn apply(&self, base: &TestConfig) -> protocol::MutationApplyResult<TestConfig> {
+        Ok(match self {
+            Self::Identity => base.clone(),
+            Self::Clear => TestConfig { selected: None },
+            Self::Set(value) => TestConfig { selected: Some(value.clone()) },
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        if !matches!(other, Self::Identity) {
+            *self = other;
+        }
+    }
+}
 //#endregion 🔺️Diff

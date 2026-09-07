@@ -2,7 +2,6 @@
 
 use crate::artifacts::model::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️DocumentHelpers
@@ -33,8 +32,7 @@ pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSna
 /// `referenced_model` field swap identically (same shape every composed exemplar's full-artifact
 /// struct mirrors its snapshot). `results_json` is UNCHANGED — a preview-only field (recomputed by
 /// the BEM engine, never persisted, never part of the snapshot), no composition applies to it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelArtifact {
     #[state(artifact)]
@@ -49,12 +47,10 @@ pub struct EnergyModelArtifact {
     pub zones: EnergyZonesChild,
     #[state(artifact)]
     #[link_slot(roles("model"))]
-    #[serde(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
     /// 🌦️ Forward link to the `🌦️epw` stdio artifact this model is simulated against.
     #[state(artifact)]
     #[link_slot(roles("weather"))]
-    #[serde(rename = "weatherLink", default, skip_serializing_if = "Option::is_none")]
     pub weather_link: Option<store::ArtifactLink>,
     /// 📋️ Opaque JSON of `crate::Results` — recomputed by the BEM engine; never persisted.
     #[state(artifact)]

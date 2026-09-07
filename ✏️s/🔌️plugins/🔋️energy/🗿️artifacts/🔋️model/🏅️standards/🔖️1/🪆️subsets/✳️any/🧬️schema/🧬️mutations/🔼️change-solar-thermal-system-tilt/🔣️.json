@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal-system-tilt",
+  "semanticKind": "change-solar-thermal-system-tilt",
+  "displayName": "Change Solar Thermal System Tilt",
+  "emoji": "🔼️",
+  "aggregateVariant": "ChangeSolarThermalSystemTilt",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-solar-thermal-system-tilt",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

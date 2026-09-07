@@ -1,7 +1,9 @@
-//! 🔺️ Sparse diff builder for `DeleteAsset`. A missing key ⇒ Error `mutation.target-missing`;
-//! stale references left dangling elsewhere (stream frames, mesh texture, geo products) ⇒ Info
-//! `mutation.cascade` (reported only — this leaf never rewrites those references, `delete-asset` has
-//! no call site that removes an in-use asset today).
+//! 🔺️ Sparse diff builder for `DeleteAsset`. A missing key ⇒ Error `mutation.target-missing`; an
+//! asset any stream frame, the mesh texture or a geo product still names ⇒ Error
+//! `mutation.referenced` — the same ownership rule `delete-stream` and `delete-camera-calibration`
+//! follow, so the document never keeps a reference to a leaf that is gone. The accepted branch drops
+//! the durable leaf the handle owned together with the `assets` entry, which is what makes
+//! `create-asset` its exact inverse.
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::RemodelingSnapshot;
 
@@ -18,20 +20,25 @@ pub fn diff(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> protocol
     if !base.assets.contains_key(&payload.key) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.key), [payload.key.clone()]);
     }
-    let mut assets = base.assets.clone();
-    assets.remove(&payload.key);
-    let mut stale_refs = base.streams.iter().flat_map(|stream| stream.frames.iter()).filter(|frame| frame.asset_id == payload.key).count();
+    let mut referencing: Vec<String> = base.streams.iter().filter(|stream| stream.frames.iter().any(|frame| frame.asset_id == payload.key)).map(|stream| stream.id.clone()).collect();
     if base.results.mesh.texture_asset_id.as_deref() == Some(payload.key.as_str()) {
-        stale_refs += 1;
+        referencing.push("results.mesh.textureAssetId".to_string());
     }
     if let Some(geo) = &base.results.geo {
-        stale_refs += [&geo.dsm_asset_id, &geo.dtm_asset_id, &geo.ortho_asset_id].into_iter().filter(|asset_id| asset_id.as_deref() == Some(payload.key.as_str())).count();
+        for (lane, asset_id) in [("dsm", &geo.dsm_asset_id), ("dtm", &geo.dtm_asset_id), ("ortho", &geo.ortho_asset_id)] {
+            if asset_id.as_deref() == Some(payload.key.as_str()) {
+                referencing.push(format!("results.geo.{lane}AssetId"));
+            }
+        }
     }
-    let outcome = protocol::MutationOutcome::new(RemodelingDiff { assets: Some(assets), ..Default::default() });
-    if stale_refs == 0 {
-        outcome
-    } else {
-        outcome.info("mutation.cascade", format!("Deleting asset \"{}\" leaves {stale_refs} stale reference(s) elsewhere in the document.", payload.key))
+    if !referencing.is_empty() {
+        return protocol::MutationOutcome::error("mutation.referenced", format!("Asset \"{}\" is still referenced by {} place(s) in the document.", payload.key, referencing.len()), referencing);
     }
+    let mut assets = base.assets.clone();
+    let mut durable_artifacts = base.durable_artifacts.clone();
+    if let Some(handle) = assets.remove(&payload.key) {
+        durable_artifacts.remove(&handle.child_id);
+    }
+    protocol::MutationOutcome::new(RemodelingDiff { assets: Some(assets), durable_artifacts: Some(durable_artifacts), ..Default::default() })
 }
 //#endregion 🔖️Diff

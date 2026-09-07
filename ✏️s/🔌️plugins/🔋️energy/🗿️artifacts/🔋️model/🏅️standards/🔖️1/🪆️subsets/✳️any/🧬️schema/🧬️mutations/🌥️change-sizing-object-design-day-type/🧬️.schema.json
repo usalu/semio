@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSizingObjectDesignDayType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDesignDayType"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newDesignDayType": {
+      "enum": [
+        "Heating",
+        "Cooling"
+      ]
+    }
+  }
+}

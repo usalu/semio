@@ -65,10 +65,13 @@ impl ArtifactViewer for Fem3dViewer {
         crate::artifacts::fem3d::live_visual::prepare_snapshot_read(operation, snapshot)
     }
 
-    /// 👁️ Real, non-empty default scene: the artifact's own bundled `default` example DSL, falling
-    /// back to the empty snapshot only if that fixture ever fails to parse.
+    /// 👁️ Real, non-empty default scene: the artifact's own shared boot document (the bundled `default`
+    /// example DSL), the very same one `Fem3dPlayApp::initial_snapshot` boots — see
+    /// `crate::artifacts::fem3d::dsl::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
-        crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::fem3d::schema::empty_fem3d_snapshot())
+        let snapshot = crate::artifacts::fem3d::dsl::fem3d_boot_snapshot();
+        eprintln!("[DEBUG] fem3d viewer boot snapshot: nodes={} elements={} solids={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len());
+        snapshot
     }
 
     /// 👁️ Structurally read-only: the sole `Fem3dViewCommand::Noop` variant never carries a config
@@ -128,7 +131,7 @@ mod tests {
 
     #[test]
     fn initial_snapshot_is_the_bundled_example_not_empty() {
-        let snapshot = semio_framework_plugin::resolve_ready(<Fem3dViewer as ArtifactViewer>::initial_snapshot());
+        let snapshot = <Fem3dViewer as ArtifactViewer>::initial_snapshot();
         assert!(!snapshot.nodes.is_empty(), "expected the bundled default example's nodes");
     }
 }

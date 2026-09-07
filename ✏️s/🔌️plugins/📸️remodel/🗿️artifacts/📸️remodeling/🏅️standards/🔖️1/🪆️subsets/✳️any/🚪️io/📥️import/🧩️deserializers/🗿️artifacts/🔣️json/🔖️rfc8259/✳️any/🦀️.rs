@@ -13,7 +13,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// `REMODELING_DOCUMENT_SCHEMA` so a hand-authored json is still accepted.
 pub fn from_json_text(text: &str) -> Result<RemodelingSnapshot, IoError> {
     let value = parse_json_text(text).map_err(|error| IoError { message: format!("json→remodeling: parse failed: {error}"), diagnostics: Vec::new() })?;
-    let raw: dsl::DslValue = JsonSnapshot::from_value(value).to_serde_value().into();
+    let raw: dsl::DslValue = pack::json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value());
     let mut snapshot: RemodelingSnapshot = dsl::FromValue::from_value(raw).map_err(|error| IoError { message: format!("json→remodeling: {error}"), diagnostics: Vec::new() })?;
     if snapshot.schema.is_empty() {
         snapshot.schema = REMODELING_DOCUMENT_SCHEMA.to_string();

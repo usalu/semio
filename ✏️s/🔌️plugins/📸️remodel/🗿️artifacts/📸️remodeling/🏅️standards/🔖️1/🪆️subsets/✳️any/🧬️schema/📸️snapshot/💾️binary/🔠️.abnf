@@ -7,7 +7,24 @@ kind          = %x00 / %x01 / %x02 / %x03 / %x04 / %x05 / %x06 / %x07 / %x08 / %
 flags         = OCTET                      ; bit0 compressed, bits1-3 codec id
 stored-len    = varint
 raw-len       = varint                     ; present only when flags bit0 is set
-payload       = *OCTET                     ; stored-len octets of encode_record_fields output
+payload       = *OCTET                     ; stored-len octets; deflate-compressed when flags bit0 is set
 crc32         = 4OCTET
 footer        = %x53.50.4B.46.4F.4F.54.31 76OCTET
+
+; ── decompressed segment payloads (os_pack) ────────────────────────────────────
+; symbols(3): os_pack::format::encode_symbols
+symbols       = varint *symbol
+symbol        = varint *OCTET              ; length-prefixed UTF-8
+
+; document(4) frames concatenated in file order: os_pack::encode_record_fields.
+; Entries sort by ascending field-id; Absent fields are never written.
+; RemodelingSnapshot::__dsl_spec() field ids (DslRecord assigns id = 0-based declaration index):
+;   0 schema Text | 1 id Text | 2 streams Table | 3 assets Map | 4 durable-artifacts Map
+;   5 calibration Block | 6 params Block | 7 gcps Table | 8 job Block | 9 results Block
+record-fields = field-count *field-entry
+field-count   = varint
+field-entry   = field-id tagged-value
+field-id      = varint
+tagged-value  = tag *OCTET                 ; tag-driven; tag %x0D (record) nests record-fields
+tag           = %x00-17
 varint        = *(%x80-FF) %x00-7F

@@ -1,8 +1,8 @@
 //#region 🧬️DependencyContributionMutationRoster
 //! 🧬️ Transparent builder contribution mutation roster.
 use super::{DependencyTestDiff, DependencyTestSnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 #[path = "➕️add-value/🦀️.rs"]
 mod add_value;
@@ -12,7 +12,9 @@ pub use add_value::AddValue;
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = DependencyTestSnapshot, diff = DependencyTestDiff, schema = "dep-target.document")]
-pub enum DependencyTestOp { AddValue(AddValue) }
+pub enum DependencyTestOp {
+    AddValue(AddValue),
+}
 
 impl protocol::OpText for DependencyTestOp {
     fn parse_op(line: &str) -> Result<Self, dsl::TextError> {
@@ -32,7 +34,11 @@ impl protocol::OpText for DependencyTestOp {
 }
 
 impl protocol::OpBinary for DependencyTestOp {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
 }
 //#endregion 🧬️DependencyContributionMutationRoster

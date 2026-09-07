@@ -1,4 +1,4 @@
-//! 🧪️ `create-support` fixture — `🛞️adds-a-vertical-roller-at-node-n2`.
+//! 🧪️ `create-support` fixture — `🛞️adds-a-vertical-6161a1`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem2dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("create-support applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "create-support/adds-a-vertical-roller-at-node-n2: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.supports.len(), 2, "create-support/adds-a-vertical-roller-at-node-n2: the roller must be appended behind the pin");
-    assert_eq!(snapshot.supports[1].fixed, vec![crate::artifacts::fem2d::FemDof::Ty], "create-support/adds-a-vertical-roller-at-node-n2: a roller restrains Ty and nothing else");
-    assert_eq!(snapshot.nodes, before().nodes, "create-support/adds-a-vertical-roller-at-node-n2: restraining n2 must not rewrite the node table");
+    assert_eq!(snapshot, expected_after(), "create-support/adds-a-vertical-6161a1: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.supports.len(), 2, "create-support/adds-a-vertical-6161a1: the roller must be appended behind the pin");
+    assert_eq!(snapshot.supports[1].fixed, vec![crate::artifacts::fem2d::FemDof::Ty], "create-support/adds-a-vertical-6161a1: a roller restrains Ty and nothing else");
+    assert_eq!(snapshot.nodes, before().nodes, "create-support/adds-a-vertical-6161a1: restraining n2 must not rewrite the node table");
 }
 
 /// ↩️ The inverse is a `delete-support` of `s2`, leaving only the pin.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "create-support/adds-a-vertical-roller-at-node-n2: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "create-support/adds-a-vertical-6161a1: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,12 +59,12 @@ fn committed_json_is_canonical() {
         let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "create-support/adds-a-vertical-roller-at-node-n2: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "create-support/adds-a-vertical-6161a1: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "create-support/adds-a-vertical-roller-at-node-n2: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "create-support/adds-a-vertical-6161a1: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
@@ -75,12 +75,12 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "create-support/adds-a-vertical-roller-at-node-n2: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "create-support/adds-a-vertical-6161a1: declared applied but the mutation was rejected"),
         "rejected" => {
-            assert!(!applied, "create-support/adds-a-vertical-roller-at-node-n2: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "create-support/adds-a-vertical-roller-at-node-n2: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "create-support/adds-a-vertical-6161a1: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "create-support/adds-a-vertical-6161a1: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("create-support/adds-a-vertical-roller-at-node-n2: unknown outcome status {other:?}"),
+        other => panic!("create-support/adds-a-vertical-6161a1: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +89,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert!(outcome.diff().supports.is_some(), "create-support/adds-a-vertical-roller-at-node-n2: the new roller must surface in the supports delta");
-    assert!(outcome.diff().nodes.is_none(), "create-support/adds-a-vertical-roller-at-node-n2: the node the support validates against is read-only");
+    assert!(outcome.diff().supports.is_some(), "create-support/adds-a-vertical-6161a1: the new roller must surface in the supports delta");
+    assert!(outcome.diff().nodes.is_none(), "create-support/adds-a-vertical-6161a1: the node the support validates against is read-only");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "create-support/adds-a-vertical-roller-at-node-n2: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "create-support/adds-a-vertical-6161a1: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +102,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "create-support/adds-a-vertical-roller-at-node-n2: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "create-support/adds-a-vertical-6161a1: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `supports.added` entry on `before` must reproduce pin-then-roller.
@@ -110,5 +110,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "create-support/adds-a-vertical-roller-at-node-n2: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "create-support/adds-a-vertical-6161a1: committed diff did not carry before to after");
 }

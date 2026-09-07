@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InsertAnnualScheduleRule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "index",
+    "startMonth",
+    "startDay",
+    "endMonth",
+    "endDay",
+    "dailyScheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "index": {
+      "type": "integer"
+    },
+    "startMonth": {
+      "type": "integer"
+    },
+    "startDay": {
+      "type": "integer"
+    },
+    "endMonth": {
+      "type": "integer"
+    },
+    "endDay": {
+      "type": "integer"
+    },
+    "dailyScheduleId": {
+      "type": "integer"
+    }
+  }
+}

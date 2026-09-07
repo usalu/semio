@@ -90,6 +90,1454 @@ type ChangeZoneFloorAreaParticipation {
   newPartOfTotalFloorArea: Boolean!
 }
 
+type CreateZone {
+  id: Int!
+  name: String!
+  volumeM3: Float!
+  multiplier: Int!
+  conditioned: Boolean!
+  partOfTotalFloorArea: Boolean!
+}
+
+type DeleteZone {
+  id: Int!
+}
+
+type CreateSpace {
+  id: Int!
+  name: String!
+  zoneId: Int!
+  floorAreaM2: Float!
+}
+
+type DeleteSpace {
+  id: Int!
+}
+
+type RenameSpace {
+  id: Int!
+  newName: String!
+}
+
+type ChangeSpaceFloorArea {
+  id: Int!
+  newFloorAreaM2: Float!
+}
+
+type ChangeSpaceZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type CreateSurface {
+  id: Int!
+  name: String!
+  zoneId: Int!
+  class: String!
+  verticesM: [[Float!]!]!
+  constructionId: Int!
+  boundary: String!
+  interzoneSurfaceId: Int
+  sunExposed: Boolean!
+  windExposed: Boolean!
+  multiplier: Int!
+}
+
+type DeleteSurface {
+  id: Int!
+}
+
+type RenameSurface {
+  id: Int!
+  newName: String!
+}
+
+type ChangeSurfaceZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeSurfaceClass {
+  id: Int!
+  newClass: String!
+}
+
+type ReplaceSurfaceVertices {
+  id: Int!
+  newVerticesM: [[Float!]!]!
+}
+
+type ChangeSurfaceConstruction {
+  id: Int!
+  newConstructionId: Int!
+}
+
+type ChangeSurfaceBoundaryCondition {
+  id: Int!
+  newBoundary: String!
+  newInterzoneSurfaceId: Int
+}
+
+type ChangeSurfaceSunExposed {
+  id: Int!
+  newSunExposed: Boolean!
+}
+
+type ChangeSurfaceWindExposed {
+  id: Int!
+  newWindExposed: Boolean!
+}
+
+type ChangeSurfaceMultiplier {
+  id: Int!
+  newMultiplier: Int!
+}
+
+type CreateFenestration {
+  id: Int!
+  name: String!
+  surfaceId: Int!
+  uValueWM2k: Float!
+  shgc: Float!
+  vlt: Float!
+  areaM2: Float!
+  heightM: Float!
+  sillHeightM: Float!
+  frameConductanceWK: Float!
+  dividerConductanceWK: Float!
+  overhangDepthM: Float!
+  overhangOffsetM: Float!
+  finDepthM: Float!
+  finOffsetM: Float!
+  glazingConstructionId: Int
+}
+
+type DeleteFenestration {
+  id: Int!
+}
+
+type RenameFenestration {
+  id: Int!
+  newName: String!
+}
+
+type ChangeFenestrationSurface {
+  id: Int!
+  newSurfaceId: Int!
+}
+
+type ChangeFenestrationUValue {
+  id: Int!
+  newUValueWM2k: Float!
+}
+
+type ChangeFenestrationShgc {
+  id: Int!
+  newShgc: Float!
+}
+
+type ChangeFenestrationVlt {
+  id: Int!
+  newVlt: Float!
+}
+
+type ChangeFenestrationArea {
+  id: Int!
+  newAreaM2: Float!
+}
+
+type ChangeFenestrationFrameConductance {
+  id: Int!
+  newFrameConductanceWK: Float!
+}
+
+type ChangeFenestrationDividerConductance {
+  id: Int!
+  newDividerConductanceWK: Float!
+}
+
+type CreateShadingSurface {
+  id: Int!
+  name: String!
+  verticesM: [[Float!]!]!
+  transmittanceScheduleId: Int
+}
+
+type DeleteShadingSurface {
+  id: Int!
+}
+
+type RenameShadingSurface {
+  id: Int!
+  newName: String!
+}
+
+type ReplaceShadingSurfaceVertices {
+  id: Int!
+  newVerticesM: [[Float!]!]!
+}
+
+type ChangeShadingSurfaceTransmittanceSchedule {
+  id: Int!
+  newTransmittanceScheduleId: Int
+}
+
+type ConnectSurfaces {
+  surfaceAId: Int!
+  surfaceBId: Int!
+}
+
+type DisconnectSurfaces {
+  surfaceAId: Int!
+  surfaceBId: Int!
+}
+
+type BindFenestrationGlazingConstruction {
+  id: Int!
+  constructionId: Int!
+}
+
+type ClearFenestrationGlazingConstruction {
+  id: Int!
+}
+
+type ChangeFenestrationHeight {
+  id: Int!
+  newHeightM: Float!
+}
+
+type ChangeFenestrationSillHeight {
+  id: Int!
+  newSillHeightM: Float!
+}
+
+type ChangeFenestrationOverhangDepth {
+  id: Int!
+  newOverhangDepthM: Float!
+}
+
+type ChangeFenestrationOverhangOffset {
+  id: Int!
+  newOverhangOffsetM: Float!
+}
+
+type ChangeFenestrationFinDepth {
+  id: Int!
+  newFinDepthM: Float!
+}
+
+type ChangeFenestrationFinOffset {
+  id: Int!
+  newFinOffsetM: Float!
+}
+
+type CreateMaterial {
+  index: Int!
+  id: Int!
+  name: String!
+  thicknessM: Float!
+  conductivityWMK: Float!
+  densityKgM3: Float!
+  specificHeatJKgK: Float!
+  thermalAbsorptance: Float!
+  solarAbsorptance: Float!
+  visibleAbsorptance: Float!
+}
+
+type DeleteMaterial {
+  id: Int!
+}
+
+type RenameMaterial {
+  id: Int!
+  newName: String!
+}
+
+type ChangeMaterialThickness {
+  id: Int!
+  newThicknessM: Float!
+}
+
+type ChangeMaterialConductivity {
+  id: Int!
+  newConductivityWMK: Float!
+}
+
+type ChangeMaterialDensity {
+  id: Int!
+  newDensityKgM3: Float!
+}
+
+type ChangeMaterialSpecificHeat {
+  id: Int!
+  newSpecificHeatJKgK: Float!
+}
+
+type ChangeMaterialThermalAbsorptance {
+  id: Int!
+  newThermalAbsorptance: Float!
+}
+
+type ChangeMaterialSolarAbsorptance {
+  id: Int!
+  newSolarAbsorptance: Float!
+}
+
+type ChangeMaterialVisibleAbsorptance {
+  id: Int!
+  newVisibleAbsorptance: Float!
+}
+
+type CreateConstruction {
+  index: Int!
+  id: Int!
+  name: String!
+  layerMaterialIds: [Int!]!
+}
+
+type DeleteConstruction {
+  id: Int!
+}
+
+type RenameConstruction {
+  id: Int!
+  newName: String!
+}
+
+type AddConstructionLayer {
+  id: Int!
+  index: Int!
+  materialId: Int!
+}
+
+type RemoveConstructionLayer {
+  id: Int!
+  index: Int!
+}
+
+type ReorderConstructionLayers {
+  id: Int!
+  newLayerMaterialIds: [Int!]!
+}
+
+type CreatePeopleGain {
+  index: Int!
+  id: Int!
+  zoneId: Int!
+  scheduleId: Int!
+  activityScheduleId: Int!
+  peoplePerArea: Float!
+  sensibleFraction: Float!
+  latentFraction: Float!
+  radiantFraction: Float!
+}
+
+type DeletePeopleGain {
+  id: Int!
+}
+
+type ChangePeopleGainZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangePeopleGainSchedule {
+  id: Int!
+  newScheduleId: Int!
+}
+
+type ChangePeopleGainActivitySchedule {
+  id: Int!
+  newActivityScheduleId: Int!
+}
+
+type ChangePeopleGainPeoplePerArea {
+  id: Int!
+  newPeoplePerArea: Float!
+}
+
+type ChangePeopleGainSensibleFraction {
+  id: Int!
+  newSensibleFraction: Float!
+}
+
+type ChangePeopleGainLatentFraction {
+  id: Int!
+  newLatentFraction: Float!
+}
+
+type ChangePeopleGainRadiantFraction {
+  id: Int!
+  newRadiantFraction: Float!
+}
+
+type CreateLightingGain {
+  index: Int!
+  id: Int!
+  zoneId: Int!
+  scheduleId: Int!
+  wattsPerArea: Float!
+  radiantFraction: Float!
+  visibleFraction: Float!
+  returnAirFraction: Float!
+}
+
+type DeleteLightingGain {
+  id: Int!
+}
+
+type ChangeLightingGainZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeLightingGainSchedule {
+  id: Int!
+  newScheduleId: Int!
+}
+
+type ChangeLightingGainWattsPerArea {
+  id: Int!
+  newWattsPerArea: Float!
+}
+
+type ChangeLightingGainRadiantFraction {
+  id: Int!
+  newRadiantFraction: Float!
+}
+
+type ChangeLightingGainVisibleFraction {
+  id: Int!
+  newVisibleFraction: Float!
+}
+
+type ChangeLightingGainReturnAirFraction {
+  id: Int!
+  newReturnAirFraction: Float!
+}
+
+type CreateEquipmentGain {
+  index: Int!
+  id: Int!
+  zoneId: Int!
+  scheduleId: Int!
+  wattsPerArea: Float!
+  radiantFraction: Float!
+  latentFraction: Float!
+}
+
+type DeleteEquipmentGain {
+  id: Int!
+}
+
+type ChangeEquipmentGainZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeEquipmentGainSchedule {
+  id: Int!
+  newScheduleId: Int!
+}
+
+type ChangeEquipmentGainWattsPerArea {
+  id: Int!
+  newWattsPerArea: Float!
+}
+
+type ChangeEquipmentGainRadiantFraction {
+  id: Int!
+  newRadiantFraction: Float!
+}
+
+type ChangeEquipmentGainLatentFraction {
+  id: Int!
+  newLatentFraction: Float!
+}
+
+type CreateInfiltration {
+  index: Int!
+  id: Int!
+  zoneId: Int!
+  scheduleId: Int!
+  method: String!
+  designFlowAch: Float!
+  flowPerExteriorAreaM3SM2: Float!
+  effectiveLeakageAreaM2: Float!
+  dischargeCoefficient: Float!
+  stackHeightM: Float!
+  constantTermCoefficient: Float!
+  temperatureTermCoefficient: Float!
+  velocityTermCoefficient: Float!
+  velocitySquaredTermCoefficient: Float!
+}
+
+type DeleteInfiltration {
+  id: Int!
+}
+
+type ChangeInfiltrationZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeInfiltrationSchedule {
+  id: Int!
+  newScheduleId: Int!
+}
+
+type ChangeInfiltrationFlowPerExteriorArea {
+  id: Int!
+  newFlowPerExteriorAreaM3SM2: Float!
+}
+
+type ChangeInfiltrationConstantTermCoefficient {
+  id: Int!
+  newConstantTermCoefficient: Float!
+}
+
+type ChangeInfiltrationTemperatureTermCoefficient {
+  id: Int!
+  newTemperatureTermCoefficient: Float!
+}
+
+type ChangeInfiltrationVelocityTermCoefficient {
+  id: Int!
+  newVelocityTermCoefficient: Float!
+}
+
+type ChangeInfiltrationVelocitySquaredTermCoefficient {
+  id: Int!
+  newVelocitySquaredTermCoefficient: Float!
+}
+
+type CreateMechanicalVentilation {
+  index: Int!
+  id: Int!
+  zoneId: Int!
+  scheduleId: Int!
+  designFlowM3S: Float!
+  fanTotalEfficiency: Float!
+  fanDeltaPressurePa: Float!
+}
+
+type DeleteMechanicalVentilation {
+  id: Int!
+}
+
+type ChangeMechanicalVentilationZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeMechanicalVentilationSchedule {
+  id: Int!
+  newScheduleId: Int!
+}
+
+type ChangeMechanicalVentilationDesignFlow {
+  id: Int!
+  newDesignFlowM3S: Float!
+}
+
+type ChangeMechanicalVentilationFanTotalEfficiency {
+  id: Int!
+  newFanTotalEfficiency: Float!
+}
+
+type ChangeMechanicalVentilationFanDeltaPressure {
+  id: Int!
+  newFanDeltaPressurePa: Float!
+}
+
+type ChangeInfiltrationMethod {
+  id: Int!
+  newMethod: String!
+}
+
+type ChangeInfiltrationDesignFlowAch {
+  id: Int!
+  newDesignFlowAch: Float!
+}
+
+type ChangeInfiltrationEffectiveLeakageArea {
+  id: Int!
+  newEffectiveLeakageAreaM2: Float!
+}
+
+type ChangeInfiltrationDischargeCoefficient {
+  id: Int!
+  newDischargeCoefficient: Float!
+}
+
+type ChangeInfiltrationStackHeight {
+  id: Int!
+  newStackHeightM: Float!
+}
+
+type CreateThermostat {
+  id: Int!
+  zoneId: Int!
+  heatingSetpointScheduleId: Int!
+  coolingSetpointScheduleId: Int!
+  heatingThrottleRangeK: Float!
+  coolingThrottleRangeK: Float!
+}
+
+type DeleteThermostat {
+  id: Int!
+}
+
+type ChangeThermostatZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeThermostatHeatingSetpointSchedule {
+  id: Int!
+  newHeatingSetpointScheduleId: Int!
+}
+
+type ChangeThermostatCoolingSetpointSchedule {
+  id: Int!
+  newCoolingSetpointScheduleId: Int!
+}
+
+type ChangeThermostatHeatingThrottleRange {
+  id: Int!
+  newHeatingThrottleRangeK: Float!
+}
+
+type ChangeThermostatCoolingThrottleRange {
+  id: Int!
+  newCoolingThrottleRangeK: Float!
+}
+
+type CreateHumidistat {
+  id: Int!
+  zoneId: Int!
+  humidifyingSetpointScheduleId: Int!
+  dehumidifyingSetpointScheduleId: Int!
+  humidifyingThrottleRange: Float!
+  dehumidifyingThrottleRange: Float!
+}
+
+type DeleteHumidistat {
+  id: Int!
+}
+
+type ChangeHumidistatZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeHumidistatHumidifyingSetpointSchedule {
+  id: Int!
+  newHumidifyingSetpointScheduleId: Int!
+}
+
+type ChangeHumidistatDehumidifyingSetpointSchedule {
+  id: Int!
+  newDehumidifyingSetpointScheduleId: Int!
+}
+
+type ChangeHumidistatHumidifyingThrottleRange {
+  id: Int!
+  newHumidifyingThrottleRange: Float!
+}
+
+type ChangeHumidistatDehumidifyingThrottleRange {
+  id: Int!
+  newDehumidifyingThrottleRange: Float!
+}
+
+type CreateIdealLoadsSystem {
+  id: Int!
+  zoneId: Int!
+  maxHeatingSupplyAirTempC: Float!
+  minCoolingSupplyAirTempC: Float!
+  maxHeatingCapacityPresent: Boolean!
+  maxHeatingCapacityW: Float!
+  maxCoolingCapacityPresent: Boolean!
+  maxCoolingCapacityW: Float!
+  outdoorAirPerPersonM3S: Float!
+  outdoorAirPerAreaM3SM2: Float!
+}
+
+type DeleteIdealLoadsSystem {
+  id: Int!
+}
+
+type ChangeIdealLoadsSystemZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp {
+  id: Int!
+  newMaxHeatingSupplyAirTempC: Float!
+}
+
+type ChangeIdealLoadsSystemMinCoolingSupplyAirTemp {
+  id: Int!
+  newMinCoolingSupplyAirTempC: Float!
+}
+
+type ChangeIdealLoadsSystemMaxHeatingCapacity {
+  id: Int!
+  newCapacityPresent: Boolean!
+  newMaxHeatingCapacityW: Float!
+}
+
+type ChangeIdealLoadsSystemMaxCoolingCapacity {
+  id: Int!
+  newCapacityPresent: Boolean!
+  newMaxCoolingCapacityW: Float!
+}
+
+type ChangeIdealLoadsSystemOutdoorAirPerPerson {
+  id: Int!
+  newOutdoorAirPerPersonM3S: Float!
+}
+
+type ChangeIdealLoadsSystemOutdoorAirPerArea {
+  id: Int!
+  newOutdoorAirPerAreaM3SM2: Float!
+}
+
+type CreateZoneEquipment {
+  id: Int!
+  zoneId: Int!
+  equipmentType: String!
+  priority: Int!
+  heatingCapacityW: Float!
+  coolingCapacityW: Float!
+}
+
+type DeleteZoneEquipment {
+  id: Int!
+}
+
+type ChangeZoneEquipmentZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeZoneEquipmentType {
+  id: Int!
+  newEquipmentType: String!
+}
+
+type ChangeZoneEquipmentPriority {
+  id: Int!
+  newPriority: Int!
+}
+
+type ChangeZoneEquipmentHeatingCapacity {
+  id: Int!
+  newHeatingCapacityW: Float!
+}
+
+type ChangeZoneEquipmentCoolingCapacity {
+  id: Int!
+  newCoolingCapacityW: Float!
+}
+
+type CreateDaylightZone {
+  id: Int!
+  zoneId: Int!
+  illuminanceTargetLux: Float!
+  glareLimit: Float!
+  windowTransmittance: Float!
+}
+
+type DeleteDaylightZone {
+  id: Int!
+}
+
+type ChangeDaylightZoneZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeDaylightZoneIlluminanceTarget {
+  id: Int!
+  newIlluminanceTargetLux: Float!
+}
+
+type ChangeDaylightZoneGlareLimit {
+  id: Int!
+  newGlareLimit: Float!
+}
+
+type ChangeDaylightZoneWindowTransmittance {
+  id: Int!
+  newWindowTransmittance: Float!
+}
+
+type CreateSizingObject {
+  id: Int!
+  zoneId: Int!
+  sizingType: String!
+  designDayType: String!
+}
+
+type DeleteSizingObject {
+  id: Int!
+}
+
+type ChangeSizingObjectZone {
+  id: Int!
+  newZoneId: Int!
+}
+
+type ChangeSizingObjectSizingType {
+  id: Int!
+  newSizingType: String!
+}
+
+type ChangeSizingObjectDesignDayType {
+  id: Int!
+  newDesignDayType: String!
+}
+
+type CreateRoomAirModelAssignment {
+  zoneId: Int!
+  model: String!
+}
+
+type DeleteRoomAirModelAssignment {
+  zoneId: Int!
+}
+
+type ChangeRoomAirModel {
+  zoneId: Int!
+  newModel: String!
+}
+
+type CreateSetpointManager {
+  id: Int!
+  name: String!
+  kind: String!
+  lowOutdoorC: Float!
+  highOutdoorC: Float!
+  lowSetpointC: Float!
+  highSetpointC: Float!
+  schedulePresent: Boolean!
+  scheduleId: Int!
+}
+
+type DeleteSetpointManager {
+  id: Int!
+}
+
+type RenameSetpointManager {
+  id: Int!
+  newName: String!
+}
+
+type ReplaceSetpointManagerKind {
+  id: Int!
+  newKind: String!
+  newLowOutdoorC: Float!
+  newHighOutdoorC: Float!
+  newLowSetpointC: Float!
+  newHighSetpointC: Float!
+}
+
+type ChangeSetpointManagerSchedule {
+  id: Int!
+  newSchedulePresent: Boolean!
+  newScheduleId: Int!
+}
+
+type CreateAirLoop {
+  id: Int!
+  name: String!
+  supplyNodeId: Int!
+  returnNodeId: Int!
+  designSupplyAirFlowM3S: Float!
+  terminalZoneIds: [Int!]!
+}
+
+type DeleteAirLoop {
+  id: Int!
+}
+
+type RenameAirLoop {
+  id: Int!
+  newName: String!
+}
+
+type ChangeAirLoopSupplyNode {
+  id: Int!
+  newSupplyNodeId: Int!
+}
+
+type ChangeAirLoopReturnNode {
+  id: Int!
+  newReturnNodeId: Int!
+}
+
+type ChangeAirLoopDesignSupplyAirFlow {
+  id: Int!
+  newDesignSupplyAirFlowM3S: Float!
+}
+
+type AddAirLoopTerminalZone {
+  id: Int!
+  zoneId: Int!
+}
+
+type RemoveAirLoopTerminalZone {
+  id: Int!
+  zoneId: Int!
+}
+
+type CreatePlantLoop {
+  id: Int!
+  name: String!
+  loopType: String!
+  supplyTemperatureC: Float!
+  returnTemperatureC: Float!
+  designFlowKgS: Float!
+  equipmentIds: [Int!]!
+}
+
+type DeletePlantLoop {
+  id: Int!
+}
+
+type RenamePlantLoop {
+  id: Int!
+  newName: String!
+}
+
+type ChangePlantLoopType {
+  id: Int!
+  newLoopType: String!
+}
+
+type ChangePlantLoopSupplyTemperature {
+  id: Int!
+  newSupplyTemperatureC: Float!
+}
+
+type ChangePlantLoopReturnTemperature {
+  id: Int!
+  newReturnTemperatureC: Float!
+}
+
+type ChangePlantLoopDesignFlow {
+  id: Int!
+  newDesignFlowKgS: Float!
+}
+
+type AddPlantLoopEquipment {
+  id: Int!
+  equipmentId: Int!
+}
+
+type RemovePlantLoopEquipment {
+  id: Int!
+  equipmentId: Int!
+}
+
+type CreateOutdoorAirSystem {
+  id: Int!
+  airLoopId: Int!
+  minOaFlowM3S: Float!
+  economizerEnabled: Boolean!
+}
+
+type DeleteOutdoorAirSystem {
+  id: Int!
+}
+
+type ChangeOutdoorAirSystemAirLoop {
+  id: Int!
+  newAirLoopId: Int!
+}
+
+type ChangeOutdoorAirSystemMinOaFlow {
+  id: Int!
+  newMinOaFlowM3S: Float!
+}
+
+type ChangeOutdoorAirSystemEconomizerEnabled {
+  id: Int!
+  newEconomizerEnabled: Boolean!
+}
+
+type CreateElectricalLoadCenter {
+  index: Int!
+  id: Int!
+  name: String!
+  generatorIds: [Int!]!
+  pvIds: [Int!]!
+  batteryIds: [Int!]!
+}
+
+type DeleteElectricalLoadCenter {
+  id: Int!
+}
+
+type RenameElectricalLoadCenter {
+  id: Int!
+  newName: String!
+}
+
+type AddElectricalLoadCenterPv {
+  id: Int!
+  index: Int!
+  pvId: Int!
+}
+
+type RemoveElectricalLoadCenterPv {
+  id: Int!
+  pvId: Int!
+}
+
+type AddElectricalLoadCenterBattery {
+  id: Int!
+  index: Int!
+  batteryId: Int!
+}
+
+type RemoveElectricalLoadCenterBattery {
+  id: Int!
+  batteryId: Int!
+}
+
+type CreatePvSystem {
+  index: Int!
+  id: Int!
+  dcCapacityW: Float!
+  areaM2: Float!
+  tiltDeg: Float!
+  azimuthDeg: Float!
+  moduleEfficiency: Float!
+  inverterEfficiency: Float!
+}
+
+type DeletePvSystem {
+  id: Int!
+}
+
+type ChangePvSystemDcCapacity {
+  id: Int!
+  newDcCapacityW: Float!
+}
+
+type ChangePvSystemArea {
+  id: Int!
+  newAreaM2: Float!
+}
+
+type ChangePvSystemTilt {
+  id: Int!
+  newTiltDeg: Float!
+}
+
+type ChangePvSystemAzimuth {
+  id: Int!
+  newAzimuthDeg: Float!
+}
+
+type ChangePvSystemModuleEfficiency {
+  id: Int!
+  newModuleEfficiency: Float!
+}
+
+type ChangePvSystemInverterEfficiency {
+  id: Int!
+  newInverterEfficiency: Float!
+}
+
+type CreateBattery {
+  index: Int!
+  id: Int!
+  capacityKwh: Float!
+  maxChargeW: Float!
+  maxDischargeW: Float!
+  roundTripEfficiency: Float!
+}
+
+type DeleteBattery {
+  id: Int!
+}
+
+type ChangeBatteryCapacity {
+  id: Int!
+  newCapacityKwh: Float!
+}
+
+type ChangeBatteryMaxCharge {
+  id: Int!
+  newMaxChargeW: Float!
+}
+
+type ChangeBatteryMaxDischarge {
+  id: Int!
+  newMaxDischargeW: Float!
+}
+
+type ChangeBatteryRoundTripEfficiency {
+  id: Int!
+  newRoundTripEfficiency: Float!
+}
+
+type CreateShwSystem {
+  index: Int!
+  id: Int!
+  heaterCapacityW: Float!
+  storageVolumeM3: Float!
+  setpointC: Float!
+  scheduleId: Int!
+}
+
+type DeleteShwSystem {
+  id: Int!
+}
+
+type ChangeShwSystemHeaterCapacity {
+  id: Int!
+  newHeaterCapacityW: Float!
+}
+
+type ChangeShwSystemStorageVolume {
+  id: Int!
+  newStorageVolumeM3: Float!
+}
+
+type ChangeShwSystemSetpoint {
+  id: Int!
+  newSetpointC: Float!
+}
+
+type ChangeShwSystemSchedule {
+  id: Int!
+  newScheduleId: Int!
+}
+
+type CreateSolarThermalSystem {
+  index: Int!
+  id: Int!
+  collectorAreaM2: Float!
+  efficiency: Float!
+  storageVolumeM3: Float!
+  tiltDeg: Float!
+  azimuthDeg: Float!
+}
+
+type DeleteSolarThermalSystem {
+  id: Int!
+}
+
+type ChangeSolarThermalSystemCollectorArea {
+  id: Int!
+  newCollectorAreaM2: Float!
+}
+
+type ChangeSolarThermalSystemEfficiency {
+  id: Int!
+  newEfficiency: Float!
+}
+
+type ChangeSolarThermalSystemStorageVolume {
+  id: Int!
+  newStorageVolumeM3: Float!
+}
+
+type ChangeSolarThermalSystemTilt {
+  id: Int!
+  newTiltDeg: Float!
+}
+
+type ChangeSolarThermalSystemAzimuth {
+  id: Int!
+  newAzimuthDeg: Float!
+}
+
+type CreateRefrigerationSystem {
+  index: Int!
+  id: Int!
+  caseCount: Int!
+  designLoadW: Float!
+  defrostScheduleId: Int!
+}
+
+type DeleteRefrigerationSystem {
+  id: Int!
+}
+
+type ChangeRefrigerationSystemCaseCount {
+  id: Int!
+  newCaseCount: Int!
+}
+
+type ChangeRefrigerationSystemDesignLoad {
+  id: Int!
+  newDesignLoadW: Float!
+}
+
+type ChangeRefrigerationSystemDefrostSchedule {
+  id: Int!
+  newDefrostScheduleId: Int!
+}
+
+type CreateWaterSystem {
+  index: Int!
+  id: Int!
+  fixtureCount: Int!
+  peakFlowLS: Float!
+  scheduleId: Int!
+}
+
+type DeleteWaterSystem {
+  id: Int!
+}
+
+type ChangeWaterSystemFixtureCount {
+  id: Int!
+  newFixtureCount: Int!
+}
+
+type ChangeWaterSystemPeakFlow {
+  id: Int!
+  newPeakFlowLS: Float!
+}
+
+type ChangeWaterSystemSchedule {
+  id: Int!
+  newScheduleId: Int!
+}
+
+type CreateFault {
+  index: Int!
+  id: Int!
+  targetEquipmentId: Int!
+  faultType: String!
+  severity: Float!
+  startScheduleId: Int!
+}
+
+type DeleteFault {
+  id: Int!
+}
+
+type ChangeFaultTargetEquipment {
+  id: Int!
+  newTargetEquipmentId: Int!
+}
+
+type ChangeFaultType {
+  id: Int!
+  newFaultType: String!
+}
+
+type ChangeFaultSeverity {
+  id: Int!
+  newSeverity: Float!
+}
+
+type ChangeFaultStartSchedule {
+  id: Int!
+  newStartScheduleId: Int!
+}
+
+type CreateSpaceList {
+  index: Int!
+  id: Int!
+  name: String!
+  spaceIds: [Int!]!
+}
+
+type DeleteSpaceList {
+  id: Int!
+}
+
+type RenameSpaceList {
+  id: Int!
+  newName: String!
+}
+
+type AddSpaceListMember {
+  id: Int!
+  index: Int!
+  spaceId: Int!
+}
+
+type RemoveSpaceListMember {
+  id: Int!
+  spaceId: Int!
+}
+
+type CreateThermalEnclosure {
+  index: Int!
+  id: Int!
+  name: String!
+  zoneIds: [Int!]!
+}
+
+type DeleteThermalEnclosure {
+  id: Int!
+}
+
+type RenameThermalEnclosure {
+  id: Int!
+  newName: String!
+}
+
+type AddThermalEnclosureZone {
+  id: Int!
+  index: Int!
+  zoneId: Int!
+}
+
+type RemoveThermalEnclosureZone {
+  id: Int!
+  zoneId: Int!
+}
+
+type CreateConstantSchedule {
+  index: Int!
+  id: Int!
+  value: Float!
+}
+
+type DeleteConstantSchedule {
+  id: Int!
+}
+
+type ChangeConstantScheduleValue {
+  id: Int!
+  newValue: Float!
+}
+
+type CreateDailySchedule {
+  index: Int!
+  id: Int!
+  hourlyValues: [Float!]!
+  interpolation: String!
+  limitsMin: Float
+  limitsMax: Float
+}
+
+type DeleteDailySchedule {
+  id: Int!
+}
+
+type ReplaceDailyScheduleHourlyValues {
+  id: Int!
+  newHourlyValues: [Float!]!
+}
+
+type ChangeDailyScheduleInterpolation {
+  id: Int!
+  newInterpolation: String!
+}
+
+type ChangeDailyScheduleLimits {
+  id: Int!
+  newLimitsMin: Float
+  newLimitsMax: Float
+}
+
+type CreateWeeklySchedule {
+  index: Int!
+  id: Int!
+  dailyScheduleIds: [Int!]!
+}
+
+type DeleteWeeklySchedule {
+  id: Int!
+}
+
+type ChangeWeeklyScheduleDay {
+  id: Int!
+  dayIndex: Int!
+  newDailyScheduleId: Int!
+}
+
+type CreateAnnualSchedule {
+  index: Int!
+  id: Int!
+  defaultDailyScheduleId: Int!
+  holidayDailyScheduleId: Int
+}
+
+type DeleteAnnualSchedule {
+  id: Int!
+}
+
+type InsertAnnualScheduleRule {
+  id: Int!
+  index: Int!
+  startMonth: Int!
+  startDay: Int!
+  endMonth: Int!
+  endDay: Int!
+  dailyScheduleId: Int!
+}
+
+type RemoveAnnualScheduleRule {
+  id: Int!
+  index: Int!
+}
+
+type ReorderAnnualScheduleRules {
+  id: Int!
+  from: Int!
+  to: Int!
+}
+
+type ChangeAnnualScheduleDefaultDailySchedule {
+  id: Int!
+  newDefaultDailyScheduleId: Int!
+}
+
+type ChangeAnnualScheduleHolidayDailySchedule {
+  id: Int!
+  newHolidayDailyScheduleId: Int
+}
+
+type AddAnnualScheduleHoliday {
+  id: Int!
+  index: Int!
+  year: Int!
+  month: Int!
+  day: Int!
+}
+
+type RemoveAnnualScheduleHoliday {
+  id: Int!
+  year: Int!
+  month: Int!
+  day: Int!
+}
+
+type CreateTimeSeriesSchedule {
+  index: Int!
+  id: Int!
+  values: [Float!]!
+  timestepSeconds: Int!
+}
+
+type DeleteTimeSeriesSchedule {
+  id: Int!
+}
+
+type ReplaceTimeSeriesScheduleValues {
+  id: Int!
+  newValues: [Float!]!
+}
+
+type ChangeTimeSeriesScheduleTimestep {
+  id: Int!
+  newTimestepSeconds: Int!
+}
+
 union EnergyModelMutation =
   RenameModel
   | ChangeModelVersion
@@ -108,3 +1556,262 @@ union EnergyModelMutation =
   | ChangeZoneMultiplier
   | ChangeZoneConditioned
   | ChangeZoneFloorAreaParticipation
+  | CreateZone
+  | DeleteZone
+  | CreateSpace
+  | DeleteSpace
+  | RenameSpace
+  | ChangeSpaceFloorArea
+  | ChangeSpaceZone
+  | CreateSurface
+  | DeleteSurface
+  | RenameSurface
+  | ChangeSurfaceZone
+  | ChangeSurfaceClass
+  | ReplaceSurfaceVertices
+  | ChangeSurfaceConstruction
+  | ChangeSurfaceBoundaryCondition
+  | ChangeSurfaceSunExposed
+  | ChangeSurfaceWindExposed
+  | ChangeSurfaceMultiplier
+  | CreateFenestration
+  | DeleteFenestration
+  | RenameFenestration
+  | ChangeFenestrationSurface
+  | ChangeFenestrationUValue
+  | ChangeFenestrationShgc
+  | ChangeFenestrationVlt
+  | ChangeFenestrationArea
+  | ChangeFenestrationFrameConductance
+  | ChangeFenestrationDividerConductance
+  | CreateShadingSurface
+  | DeleteShadingSurface
+  | RenameShadingSurface
+  | ReplaceShadingSurfaceVertices
+  | ChangeShadingSurfaceTransmittanceSchedule
+  | ConnectSurfaces
+  | DisconnectSurfaces
+  | BindFenestrationGlazingConstruction
+  | ClearFenestrationGlazingConstruction
+  | ChangeFenestrationHeight
+  | ChangeFenestrationSillHeight
+  | ChangeFenestrationOverhangDepth
+  | ChangeFenestrationOverhangOffset
+  | ChangeFenestrationFinDepth
+  | ChangeFenestrationFinOffset
+  | CreateMaterial
+  | DeleteMaterial
+  | RenameMaterial
+  | ChangeMaterialThickness
+  | ChangeMaterialConductivity
+  | ChangeMaterialDensity
+  | ChangeMaterialSpecificHeat
+  | ChangeMaterialThermalAbsorptance
+  | ChangeMaterialSolarAbsorptance
+  | ChangeMaterialVisibleAbsorptance
+  | CreateConstruction
+  | DeleteConstruction
+  | RenameConstruction
+  | AddConstructionLayer
+  | RemoveConstructionLayer
+  | ReorderConstructionLayers
+  | CreatePeopleGain
+  | DeletePeopleGain
+  | ChangePeopleGainZone
+  | ChangePeopleGainSchedule
+  | ChangePeopleGainActivitySchedule
+  | ChangePeopleGainPeoplePerArea
+  | ChangePeopleGainSensibleFraction
+  | ChangePeopleGainLatentFraction
+  | ChangePeopleGainRadiantFraction
+  | CreateLightingGain
+  | DeleteLightingGain
+  | ChangeLightingGainZone
+  | ChangeLightingGainSchedule
+  | ChangeLightingGainWattsPerArea
+  | ChangeLightingGainRadiantFraction
+  | ChangeLightingGainVisibleFraction
+  | ChangeLightingGainReturnAirFraction
+  | CreateEquipmentGain
+  | DeleteEquipmentGain
+  | ChangeEquipmentGainZone
+  | ChangeEquipmentGainSchedule
+  | ChangeEquipmentGainWattsPerArea
+  | ChangeEquipmentGainRadiantFraction
+  | ChangeEquipmentGainLatentFraction
+  | CreateInfiltration
+  | DeleteInfiltration
+  | ChangeInfiltrationZone
+  | ChangeInfiltrationSchedule
+  | ChangeInfiltrationFlowPerExteriorArea
+  | ChangeInfiltrationConstantTermCoefficient
+  | ChangeInfiltrationTemperatureTermCoefficient
+  | ChangeInfiltrationVelocityTermCoefficient
+  | ChangeInfiltrationVelocitySquaredTermCoefficient
+  | CreateMechanicalVentilation
+  | DeleteMechanicalVentilation
+  | ChangeMechanicalVentilationZone
+  | ChangeMechanicalVentilationSchedule
+  | ChangeMechanicalVentilationDesignFlow
+  | ChangeMechanicalVentilationFanTotalEfficiency
+  | ChangeMechanicalVentilationFanDeltaPressure
+  | ChangeInfiltrationMethod
+  | ChangeInfiltrationDesignFlowAch
+  | ChangeInfiltrationEffectiveLeakageArea
+  | ChangeInfiltrationDischargeCoefficient
+  | ChangeInfiltrationStackHeight
+  | CreateThermostat
+  | DeleteThermostat
+  | ChangeThermostatZone
+  | ChangeThermostatHeatingSetpointSchedule
+  | ChangeThermostatCoolingSetpointSchedule
+  | ChangeThermostatHeatingThrottleRange
+  | ChangeThermostatCoolingThrottleRange
+  | CreateHumidistat
+  | DeleteHumidistat
+  | ChangeHumidistatZone
+  | ChangeHumidistatHumidifyingSetpointSchedule
+  | ChangeHumidistatDehumidifyingSetpointSchedule
+  | ChangeHumidistatHumidifyingThrottleRange
+  | ChangeHumidistatDehumidifyingThrottleRange
+  | CreateIdealLoadsSystem
+  | DeleteIdealLoadsSystem
+  | ChangeIdealLoadsSystemZone
+  | ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp
+  | ChangeIdealLoadsSystemMinCoolingSupplyAirTemp
+  | ChangeIdealLoadsSystemMaxHeatingCapacity
+  | ChangeIdealLoadsSystemMaxCoolingCapacity
+  | ChangeIdealLoadsSystemOutdoorAirPerPerson
+  | ChangeIdealLoadsSystemOutdoorAirPerArea
+  | CreateZoneEquipment
+  | DeleteZoneEquipment
+  | ChangeZoneEquipmentZone
+  | ChangeZoneEquipmentType
+  | ChangeZoneEquipmentPriority
+  | ChangeZoneEquipmentHeatingCapacity
+  | ChangeZoneEquipmentCoolingCapacity
+  | CreateDaylightZone
+  | DeleteDaylightZone
+  | ChangeDaylightZoneZone
+  | ChangeDaylightZoneIlluminanceTarget
+  | ChangeDaylightZoneGlareLimit
+  | ChangeDaylightZoneWindowTransmittance
+  | CreateSizingObject
+  | DeleteSizingObject
+  | ChangeSizingObjectZone
+  | ChangeSizingObjectSizingType
+  | ChangeSizingObjectDesignDayType
+  | CreateRoomAirModelAssignment
+  | DeleteRoomAirModelAssignment
+  | ChangeRoomAirModel
+  | CreateSetpointManager
+  | DeleteSetpointManager
+  | RenameSetpointManager
+  | ReplaceSetpointManagerKind
+  | ChangeSetpointManagerSchedule
+  | CreateAirLoop
+  | DeleteAirLoop
+  | RenameAirLoop
+  | ChangeAirLoopSupplyNode
+  | ChangeAirLoopReturnNode
+  | ChangeAirLoopDesignSupplyAirFlow
+  | AddAirLoopTerminalZone
+  | RemoveAirLoopTerminalZone
+  | CreatePlantLoop
+  | DeletePlantLoop
+  | RenamePlantLoop
+  | ChangePlantLoopType
+  | ChangePlantLoopSupplyTemperature
+  | ChangePlantLoopReturnTemperature
+  | ChangePlantLoopDesignFlow
+  | AddPlantLoopEquipment
+  | RemovePlantLoopEquipment
+  | CreateOutdoorAirSystem
+  | DeleteOutdoorAirSystem
+  | ChangeOutdoorAirSystemAirLoop
+  | ChangeOutdoorAirSystemMinOaFlow
+  | ChangeOutdoorAirSystemEconomizerEnabled
+  | CreateElectricalLoadCenter
+  | DeleteElectricalLoadCenter
+  | RenameElectricalLoadCenter
+  | AddElectricalLoadCenterPv
+  | RemoveElectricalLoadCenterPv
+  | AddElectricalLoadCenterBattery
+  | RemoveElectricalLoadCenterBattery
+  | CreatePvSystem
+  | DeletePvSystem
+  | ChangePvSystemDcCapacity
+  | ChangePvSystemArea
+  | ChangePvSystemTilt
+  | ChangePvSystemAzimuth
+  | ChangePvSystemModuleEfficiency
+  | ChangePvSystemInverterEfficiency
+  | CreateBattery
+  | DeleteBattery
+  | ChangeBatteryCapacity
+  | ChangeBatteryMaxCharge
+  | ChangeBatteryMaxDischarge
+  | ChangeBatteryRoundTripEfficiency
+  | CreateShwSystem
+  | DeleteShwSystem
+  | ChangeShwSystemHeaterCapacity
+  | ChangeShwSystemStorageVolume
+  | ChangeShwSystemSetpoint
+  | ChangeShwSystemSchedule
+  | CreateSolarThermalSystem
+  | DeleteSolarThermalSystem
+  | ChangeSolarThermalSystemCollectorArea
+  | ChangeSolarThermalSystemEfficiency
+  | ChangeSolarThermalSystemStorageVolume
+  | ChangeSolarThermalSystemTilt
+  | ChangeSolarThermalSystemAzimuth
+  | CreateRefrigerationSystem
+  | DeleteRefrigerationSystem
+  | ChangeRefrigerationSystemCaseCount
+  | ChangeRefrigerationSystemDesignLoad
+  | ChangeRefrigerationSystemDefrostSchedule
+  | CreateWaterSystem
+  | DeleteWaterSystem
+  | ChangeWaterSystemFixtureCount
+  | ChangeWaterSystemPeakFlow
+  | ChangeWaterSystemSchedule
+  | CreateFault
+  | DeleteFault
+  | ChangeFaultTargetEquipment
+  | ChangeFaultType
+  | ChangeFaultSeverity
+  | ChangeFaultStartSchedule
+  | CreateSpaceList
+  | DeleteSpaceList
+  | RenameSpaceList
+  | AddSpaceListMember
+  | RemoveSpaceListMember
+  | CreateThermalEnclosure
+  | DeleteThermalEnclosure
+  | RenameThermalEnclosure
+  | AddThermalEnclosureZone
+  | RemoveThermalEnclosureZone
+  | CreateConstantSchedule
+  | DeleteConstantSchedule
+  | ChangeConstantScheduleValue
+  | CreateDailySchedule
+  | DeleteDailySchedule
+  | ReplaceDailyScheduleHourlyValues
+  | ChangeDailyScheduleInterpolation
+  | ChangeDailyScheduleLimits
+  | CreateWeeklySchedule
+  | DeleteWeeklySchedule
+  | ChangeWeeklyScheduleDay
+  | CreateAnnualSchedule
+  | DeleteAnnualSchedule
+  | InsertAnnualScheduleRule
+  | RemoveAnnualScheduleRule
+  | ReorderAnnualScheduleRules
+  | ChangeAnnualScheduleDefaultDailySchedule
+  | ChangeAnnualScheduleHolidayDailySchedule
+  | AddAnnualScheduleHoliday
+  | RemoveAnnualScheduleHoliday
+  | CreateTimeSeriesSchedule
+  | DeleteTimeSeriesSchedule
+  | ReplaceTimeSeriesScheduleValues
+  | ChangeTimeSeriesScheduleTimestep

@@ -1,0 +1,84 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": {
+    "ingest": {
+      "frameSampleStride": 1,
+      "maxFrames": 32,
+      "downscaleLongEdgePx": 320,
+      "minSharpness": 0.125
+    },
+    "feature": {
+      "detector": "akaze",
+      "targetCount": 600,
+      "octaves": 4,
+      "edgeThreshold": 10.0
+    },
+    "matching": {
+      "matcher": "brute-force",
+      "ratioTest": 0.8515625,
+      "crossCheck": true,
+      "sequentialWindow": 6,
+      "maxPairsPerFrame": 16,
+      "loopClosure": true
+    },
+    "sfm": {
+      "ransacIterations": 4000,
+      "ransacThresholdPx": 1.25,
+      "minTrackLength": 3,
+      "baMaxIterations": 60,
+      "robustLoss": "cauchy",
+      "huberDeltaPx": 0.875
+    },
+    "dense": {
+      "resolution": "low",
+      "windowRadiusPx": 2,
+      "minViewConsistency": 3,
+      "confidenceThreshold": 0.5,
+      "maxPoints": 50000
+    },
+    "mesh": {
+      "tsdfVoxelSizeMm": 100.0,
+      "tsdfTruncationMm": 330.0,
+      "decimateTargetTriangles": 20000,
+      "smoothingIterations": 1,
+      "textureEnabled": false,
+      "textureSize": 256,
+      "guaranteeWatertight": true,
+      "holeFillMaxBoundaryVerts": 512,
+      "selfIntersectionCheck": false
+    },
+    "motion": {
+      "enabled": true,
+      "maxTracks": 64,
+      "trackWindowPx": 21,
+      "minTrackQuality": 0.30078125,
+      "minTrackLengthFrames": 5
+    },
+    "geo": {
+      "enabled": true,
+      "originLon": 8.5,
+      "originLat": 47.375,
+      "originAlt": 408.0,
+      "gsdM": 0.05078125,
+      "dsmCellM": 0.099609375,
+      "dtmFilterRadiusM": 2.0,
+      "orthoMaxPx": 4096
+    }
+  },
+  "gcps": null,
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

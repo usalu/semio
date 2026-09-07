@@ -1,12 +1,7 @@
 {
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "version",
-    "open",
-    "cases",
-    "contracts"
-  ],
+  "required": ["version", "open", "cases", "contracts"],
   "properties": {
     "version": {
       "const": 1
@@ -14,11 +9,7 @@
     "open": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "activation_generation",
-        "instance_id",
-        "request_sequence"
-      ],
+      "required": ["activation_generation", "instance_id", "request_sequence"],
       "properties": {
         "activation_generation": {
           "const": 41
@@ -38,13 +29,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "id",
-          "exact",
-          "live",
-          "capacity",
-          "accepted"
-        ],
+        "required": ["id", "exact", "live", "capacity", "accepted"],
         "properties": {
           "id": {
             "type": "string"
@@ -67,15 +52,7 @@
     "contracts": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "capturedBeforeLive",
-        "singleNativeAdmission",
-        "exactLeaseRetained",
-        "nativeRetiredBeforeReceipt",
-        "releaseAfterExactAck",
-        "collisionPreservesOwner",
-        "failedTurnRetainsAck"
-      ],
+      "required": ["capturedBeforeLive", "singleNativeAdmission", "exactLeaseRetained", "nativeRetiredBeforeReceipt", "releaseAfterExactAck", "collisionPreservesOwner", "failedTurnRetainsAck"],
       "properties": {
         "capturedBeforeLive": {
           "const": true

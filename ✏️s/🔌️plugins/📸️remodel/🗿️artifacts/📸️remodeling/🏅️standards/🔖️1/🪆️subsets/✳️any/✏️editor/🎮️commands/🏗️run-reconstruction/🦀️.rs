@@ -650,7 +650,7 @@ fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelingSnapshot>, re
     }
     let generation = NEXT_RECONSTRUCTION_GENERATION.fetch_add(1, Ordering::Relaxed);
     let job_id = next_remodeling_id("job");
-    let engine_params = build_engine_params(&scene.params);
+    let engine_params = build_engine_params(&scene.params, &scene.calibration);
     let session = ReconstructionSession {
         job_id: job_id.clone(),
         artifact_authority: doc.operation_optional().map_or_else(

@@ -1,9 +1,11 @@
-//! 🧪️ `create-asset` fixture — `🖼️stores-a-new-jpeg-frame-asset`.
+//! 🧪️ `create-asset` fixture — `🖼️stores-a-new-d56283`.
 //!
-//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
-//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
-//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
-//! asserted by the shared codec-matrix harness, not here.
+//! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `create-asset` is this vector's scenario id in
+//! `../../../../🧪️tests/📸️mutate-remodeling-1/🥒️.feature`, where the same bytes are replayed against
+//! this subset's independent Python reference.
+//!
+//! 🏞️ the pre-existing two-stream unit vector, regenerated onto the corrected toy base
 
 use crate::artifacts::remodeling::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 use crate::artifacts::remodeling::{RemodelingDiff, RemodelingSnapshot};
@@ -11,109 +13,88 @@ use crate::artifacts::remodeling::{RemodelingDiff, RemodelingSnapshot};
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
 const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> RemodelingSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> RemodelingMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<RemodelingDiff> {
     <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation(), &before())
 }
+fn json_of<T: dsl::ToValue>(value: &T) -> pack::JsonValue {
+    pack::json_from_dsl_value(&dsl::ToValue::to_value(value))
+}
 
-/// ▶️ The raw `ImageAsset` payload never lands in the document: the diff mints a composed
-/// `s.stdio.semio/v1/image` CHILD handle and stores that instead, keyed by the payload key.
-/// `image/jpeg` does not decode through the semio-image bridge, so the handle is the RAW-bytes
-/// content hash of `(mime, data)`.
+/// ▶️ The verb reaches its committed after-document, and moved it.
 #[semio_framework_async_macros::async_test]
-async fn stores_a_minted_child_handle_rather_than_the_raw_bytes() {
+async fn reaches_the_committed_after_document() {
     let applied = apply_remodeling_mutation(&before(), &mutation()).expect("create-asset applies to its committed before-snapshot");
-    assert_eq!(applied, expected_after(), "create-asset/stores-a-new-jpeg-frame-asset: applied state differs from committed after-snapshot");
-    let minted = applied.assets.get("asset-b").expect("the new key is present in the assets map");
-    assert_eq!(minted.child_id, "remodeling-asset-75b20f8d69a86e9a", "the child id is the deterministic content hash of the raw (mime, data) pair");
-    assert_eq!(minted.target.artifact_id, "asset-b-image", "the child target is derived from the asset key");
-    assert_eq!(minted.target.dialect.subset, "image", "assets compose the semio image subset");
-    assert_eq!(applied.assets.len(), 2, "the pre-existing asset-a handle is preserved beside the new key");
-    assert_eq!(applied.streams, before().streams, "create-asset never wires the new asset into any stream frame");
+    assert_eq!(applied, expected_after(), "create-asset/stores-a-new-d56283: applied state differs from committed after-snapshot");
+    assert_ne!(applied, before(), "create-asset/stores-a-new-d56283: an applied vector must move the document");
 }
 
-/// ↩️ For a key that is absent from `base`, the inverse is exactly one `delete-asset`.
-#[semio_framework_async_macros::async_test]
-async fn inverse_is_a_single_delete_of_asset_b() {
-    let base = before();
-    let inverse = inverse_remodeling_mutation(&base, &mutation());
-    assert!(matches!(inverse.as_slice(), [RemodelingMutation::DeleteAsset(payload)] if payload.key == "asset-b"), "create-asset's inverse for a fresh key is one delete-asset for that key, got {inverse:?}");
-    let mut snapshot = apply_remodeling_mutation(&base, &mutation()).expect("forward applies");
-    for step in &inverse {
-        snapshot = apply_remodeling_mutation(&snapshot, step).expect("inverse step applies");
-    }
-    assert_eq!(snapshot, base, "create-asset/stores-a-new-jpeg-frame-asset: inverse did not restore the before-snapshot");
-}
-
-/// 🎯️ Declared `applied`. This leaf is deliberately guard-free: it upserts, so an existing key is
-/// an overwrite rather than a `mutation.duplicate-id` rejection, and it has no no-op warning.
-#[semio_framework_async_macros::async_test]
-async fn declared_applied_outcome_is_an_unguarded_upsert() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(declared["status"], "applied", "create-asset/stores-a-new-jpeg-frame-asset declares an applied outcome");
-    let produced = produced();
-    assert!(produced.messages().is_empty(), "create-asset raises no diagnostics at all, got {:?}", produced.messages());
-    let assets = produced.diff().assets.as_ref().expect("create-asset writes the assets field");
-    assert_eq!(assets.len(), 2, "the assets delta REPLACES the whole map, so it carries the pre-existing key too");
-    assert!(produced.diff().results.is_none() && produced.diff().streams.is_none(), "create-asset writes assets alone");
-}
-
-/// 🔣️ The committed snapshots and the committed mutation are already canonical: decode→encode is a
-/// fixed point, so `fixtures generate` derives the other encodings from stable bytes.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RemodelingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "create-asset/stores-a-new-jpeg-frame-asset: committed {label} JSON is not canonical");
-    }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "create-asset/stores-a-new-jpeg-frame-asset: committed mutation JSON is not canonical");
-}
-
-/// 🔺️ The sparse delta `create-asset` produces is EXACTLY the committed diff — the
-/// load-bearing assertion of the whole fixture, because it pins which fields this leaf is allowed to
-/// touch rather than merely that the end state matches.
+/// 🔺️ The sparse delta this leaf produces is EXACTLY the committed diff — the load-bearing
+/// assertion, because it pins WHICH lanes the verb is allowed to touch, not merely the end state.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = produced();
-    let encoded = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(encoded, committed, "create-asset/stores-a-new-jpeg-frame-asset: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let committed_diff: RemodelingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let assets = committed_diff.assets.as_ref().expect("create-asset's delta is the whole assets map");
-    assert_eq!(assets.len(), 2, "the committed delta is the whole post-insert map — a replace, not a single-entry insert");
-    assert_eq!(assets.get("asset-b").expect("the new key is in the delta").child_id, "remodeling-asset-75b20f8d69a86e9a", "pinning the minted content-addressed child id");
+    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
+    assert_eq!(json_of(outcome.diff()), committed, "create-asset/stores-a-new-d56283: produced diff differs from the committed 🔺️diff/🔣️.json");
+    let decoded: RemodelingDiff = pack::from_json_str(DIFF).expect("committed diff decodes into the diff type");
+    assert_eq!(json_of(&decoded), committed, "create-asset/stores-a-new-d56283: committed diff JSON is not canonical");
 }
 
-/// 🔣️ The committed diff is itself canonical and decodes back into `RemodelingDiff`, whose seventeen
-/// `Option` fields carry no `skip_serializing_if` — every untouched field must be present as `null`.
+/// 🩹 Applying the committed diff straight to `before` yields `after` — the delta is a COMPLETE
+/// description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
-    let decoded: RemodelingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "create-asset/stores-a-new-jpeg-frame-asset: committed diff JSON is not canonical");
-}
-
-/// 🩹 Applying the committed diff straight to `before` yields `after` — the delta is a complete
-/// description of `create-asset`'s change, not a summary of it.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
-    let decoded: RemodelingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+async fn committed_diff_carries_before_to_after() {
+    let decoded: RemodelingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let applied = <RemodelingDiff as protocol::MutationDiff<RemodelingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(applied, expected_after(), "create-asset/stores-a-new-jpeg-frame-asset: committed diff did not carry before to after");
+    assert_eq!(applied, expected_after(), "create-asset/stores-a-new-d56283: committed diff did not carry before to after");
+}
+
+/// 🎯️ The declared outcome — its status and every diagnostic it names — is what this leaf emits.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let declared = pack::parse_json(OUTCOME).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("applied"), "create-asset/stores-a-new-d56283 declares an applied outcome");
+    let produced = produced();
+    let declared_codes: Vec<String> = match declared.get("messages") {
+        Some(pack::JsonValue::Array(entries)) => entries.iter().filter_map(|entry| entry.get("code").and_then(|code| code.as_str()).map(str::to_string)).collect(),
+        _ => Vec::new(),
+    };
+    let emitted: Vec<String> = produced.messages().iter().map(|message| message.code.0.clone()).collect();
+    assert_eq!(emitted, declared_codes, "create-asset/stores-a-new-d56283: emitted diagnostics differ from the declared ones");
+}
+
+/// ↩️ Applying the verb and then EVERY step of its own computed inverse restores the committed
+/// before-document — member positions included, which a delete undone by re-appending would fail.
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_the_before_document() {
+    let base = before();
+    let mut snapshot = apply_remodeling_mutation(&base, &mutation()).expect("forward applies");
+    for step in &inverse_remodeling_mutation(&base, &mutation()) {
+        snapshot = apply_remodeling_mutation(&snapshot, step).expect("inverse step applies");
+    }
+    assert_eq!(snapshot, base, "create-asset/stores-a-new-d56283: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ The committed snapshots and the committed mutation are already canonical: decode→encode is a
+/// fixed point over `pack::json`, which is the codec the crate uses since serde left this type graph.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: RemodelingSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let original = pack::parse_json(text).expect("snapshot reparses");
+        assert_eq!(json_of(&decoded), original, "create-asset/stores-a-new-d56283: committed {label} JSON is not canonical");
+    }
+    let original = pack::parse_json(MUTATION).expect("mutation reparses");
+    assert_eq!(json_of(&mutation()), original, "create-asset/stores-a-new-d56283: committed mutation JSON is not canonical");
 }

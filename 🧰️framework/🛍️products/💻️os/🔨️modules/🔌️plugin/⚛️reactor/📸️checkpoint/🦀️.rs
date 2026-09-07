@@ -18,8 +18,8 @@
 
 use crate::plugin_runtime;
 use semio_framework::Fault;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, ToValue, Deserialize, FromValue)]
 struct InstanceCheckpoint {

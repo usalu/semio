@@ -1,4 +1,4 @@
-//! 🧪️ `replace-region` fixture — `🪜️punches-a-stair-opening-through-the-slab`.
+//! 🧪️ `replace-region` fixture — `🪜️punches-a-stair-f7b3b1`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem2dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("replace-region applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "replace-region/punches-a-stair-opening-through-the-slab: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.regions.len(), 1, "replace-region/punches-a-stair-opening-through-the-slab: a replacement must not change the region count");
-    assert_eq!(snapshot.regions[0].holes.len(), 1, "replace-region/punches-a-stair-opening-through-the-slab: the stair opening must have appeared as one hole loop");
-    assert_eq!(snapshot.regions[0].mesh_size, 0.25, "replace-region/punches-a-stair-opening-through-the-slab: the refined mesh size must survive the round trip exactly");
+    assert_eq!(snapshot, expected_after(), "replace-region/punches-a-stair-f7b3b1: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.regions.len(), 1, "replace-region/punches-a-stair-f7b3b1: a replacement must not change the region count");
+    assert_eq!(snapshot.regions[0].holes.len(), 1, "replace-region/punches-a-stair-f7b3b1: the stair opening must have appeared as one hole loop");
+    assert_eq!(snapshot.regions[0].mesh_size, 0.25, "replace-region/punches-a-stair-f7b3b1: the refined mesh size must survive the round trip exactly");
 }
 
 /// ↩️ The inverse is a `replace-region` carrying the solid slab recovered from `base`.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "replace-region/punches-a-stair-opening-through-the-slab: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "replace-region/punches-a-stair-f7b3b1: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,12 +59,12 @@ fn committed_json_is_canonical() {
         let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "replace-region/punches-a-stair-opening-through-the-slab: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "replace-region/punches-a-stair-f7b3b1: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "replace-region/punches-a-stair-opening-through-the-slab: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "replace-region/punches-a-stair-f7b3b1: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
@@ -75,12 +75,12 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "replace-region/punches-a-stair-opening-through-the-slab: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "replace-region/punches-a-stair-f7b3b1: declared applied but the mutation was rejected"),
         "rejected" => {
-            assert!(!applied, "replace-region/punches-a-stair-opening-through-the-slab: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "replace-region/punches-a-stair-opening-through-the-slab: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "replace-region/punches-a-stair-f7b3b1: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "replace-region/punches-a-stair-f7b3b1: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("replace-region/punches-a-stair-opening-through-the-slab: unknown outcome status {other:?}"),
+        other => panic!("replace-region/punches-a-stair-f7b3b1: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +89,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().regions.as_ref().expect("regions delta").patched.len(), 1, "replace-region/punches-a-stair-opening-through-the-slab: exactly one region may be patched");
-    assert!(outcome.diff().regions.as_ref().expect("regions delta").added.is_empty(), "replace-region/punches-a-stair-opening-through-the-slab: a replacement is never an addition");
+    assert_eq!(outcome.diff().regions.as_ref().expect("regions delta").patched.len(), 1, "replace-region/punches-a-stair-f7b3b1: exactly one region may be patched");
+    assert!(outcome.diff().regions.as_ref().expect("regions delta").added.is_empty(), "replace-region/punches-a-stair-f7b3b1: a replacement is never an addition");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "replace-region/punches-a-stair-opening-through-the-slab: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "replace-region/punches-a-stair-f7b3b1: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +102,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "replace-region/punches-a-stair-opening-through-the-slab: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "replace-region/punches-a-stair-f7b3b1: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `regions.patched` entry on `before` must reproduce the perforated slab.
@@ -110,5 +110,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "replace-region/punches-a-stair-opening-through-the-slab: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "replace-region/punches-a-stair-f7b3b1: committed diff did not carry before to after");
 }

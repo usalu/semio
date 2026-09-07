@@ -1,0 +1,17 @@
+{
+  "mutation": "createLoadCase",
+  "loadCase": {
+    "id": "snow",
+    "name": "Snow",
+    "loads": [
+      {
+        "kind": "memberUdl",
+        "id": "lsn1",
+        "elementId": "b2",
+        "wx": 0.0,
+        "wy": -3600.0
+      }
+    ],
+    "selfWeight": false
+  }
+}

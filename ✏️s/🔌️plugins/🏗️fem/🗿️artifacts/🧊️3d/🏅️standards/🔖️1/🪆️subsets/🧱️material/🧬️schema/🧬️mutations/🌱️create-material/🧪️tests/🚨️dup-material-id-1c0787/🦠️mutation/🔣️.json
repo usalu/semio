@@ -1,0 +1,11 @@
+{
+  "mutation": "createMaterial",
+  "material": {
+    "id": "gl24h",
+    "name": "GL24h Glulam",
+    "e": 11500000000.0,
+    "g": 650000000.0,
+    "nu": 0.3,
+    "rho": 420.0
+  }
+}

@@ -47,6 +47,14 @@
     { "ordinal": 3, "kind": "cancel-requested" },
     { "ordinal": 4, "kind": "cancelled" }
   ],
+  "committer": {
+    "capacity": 64,
+    "roles": ["map", "drawing", "value"],
+    "children": ["gismap-drawing", "gismap-value"],
+    "phases": ["ready", "assembly", "journal", "verification", "committed", "closing"],
+    "witnessSource": "sole-committed-wal-event",
+    "retryOwner": "same-document-three-store-host"
+  },
   "visibility": [
     { "role": "author-owner", "readEvents": true, "readProposal": true, "approve": true, "expectedCode": null },
     { "role": "peer-author-same-space", "readEvents": false, "readProposal": false, "approve": false, "expectedCode": "inference.denied" },

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-zone-equipment",
+  "semanticKind": "delete-zone-equipment",
+  "displayName": "Delete Zone Equipment",
+  "emoji": "🗑️",
+  "aggregateVariant": "DeleteZoneEquipment",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "delete-zone-equipment",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

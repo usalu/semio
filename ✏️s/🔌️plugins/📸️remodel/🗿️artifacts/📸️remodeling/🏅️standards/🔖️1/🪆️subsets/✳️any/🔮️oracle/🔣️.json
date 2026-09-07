@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/🔣️.json; each mutation's own 🧬️.schema.json and ↩️inverse/🦀️.rs (read for convention only, not transliterated)",
         "fixtureCoverage": {
-          "vectors": 34,
+          "vectors": 134,
           "capabilitiesCovered": [
             "remodeling-1-mutate"
           ]
@@ -82,7 +82,19 @@
           "scenarios": [
             {
               "id": "adds-the-first-05b1b5",
-            "directoryName": "🔎️adds-the-first-05b1b5"
+              "directoryName": "🔎️adds-the-first-05b1b5"
+            },
+            {
+              "id": "refuses-to-pick-3c0570",
+              "directoryName": "🚫️refuses-to-pick-3c0570"
+            },
+            {
+              "id": "warns-that-this-dca661",
+              "directoryName": "🔁️warns-that-this-dca661"
+            },
+            {
+              "id": "picks-the-south-eb0c4d",
+              "directoryName": "🔎️picks-the-south-eb0c4d"
             }
           ]
         },
@@ -93,7 +105,23 @@
           "scenarios": [
             {
               "id": "appends-a-third-8ac259",
-            "directoryName": "🎞️appends-a-third-8ac259"
+              "directoryName": "🎞️appends-a-third-8ac259"
+            },
+            {
+              "id": "refuses-a-frame-81beea",
+              "directoryName": "🎬️refuses-a-frame-81beea"
+            },
+            {
+              "id": "refuses-to-c93e98",
+              "directoryName": "🚫️refuses-to-c93e98"
+            },
+            {
+              "id": "warns-that-the-1e8abe",
+              "directoryName": "🔁️warns-that-the-1e8abe"
+            },
+            {
+              "id": "appends-an-0c2164",
+              "directoryName": "🎞️appends-an-0c2164"
             }
           ]
         },
@@ -104,7 +132,38 @@
           "scenarios": [
             {
               "id": "shifts-stream-a-5b442c",
-            "directoryName": "⏱️shifts-stream-a-5b442c"
+              "directoryName": "⏱️shifts-stream-a-5b442c"
+            },
+            {
+              "id": "refuses-to-8095d3",
+              "directoryName": "🚫️refuses-to-8095d3"
+            },
+            {
+              "id": "warns-that-the-a98c13",
+              "directoryName": "🔁️warns-that-the-a98c13"
+            },
+            {
+              "id": "retimes-the-50dd75",
+              "directoryName": "⏱️retimes-the-50dd75"
+            }
+          ]
+        },
+        {
+          "mutationId": "commit-reconstruction",
+          "sourceMutationDirectoryName": "🏁commit-reconstruction",
+          "mutationDirectoryName": "🏁commit-reconstruction",
+          "scenarios": [
+            {
+              "id": "rejects-an-e9fa51",
+              "directoryName": "🖼️rejects-an-e9fa51"
+            },
+            {
+              "id": "rejects-an-5d3a60",
+              "directoryName": "🕸️rejects-an-5d3a60"
+            },
+            {
+              "id": "rejects-an-2e5568",
+              "directoryName": "⭐️rejects-an-2e5568"
             }
           ]
         },
@@ -115,7 +174,19 @@
           "scenarios": [
             {
               "id": "stores-a-new-d56283",
-            "directoryName": "🖼️stores-a-new-d56283"
+              "directoryName": "🖼️stores-a-new-d56283"
+            },
+            {
+              "id": "stores-an-9f39e1",
+              "directoryName": "🖼️stores-an-9f39e1"
+            },
+            {
+              "id": "refuses-an-asset-cb0d4b",
+              "directoryName": "🚫️refuses-an-asset-cb0d4b"
+            },
+            {
+              "id": "overwrites-an-a34b9d",
+              "directoryName": "♻️overwrites-an-a34b9d"
             }
           ]
         },
@@ -126,7 +197,15 @@
           "scenarios": [
             {
               "id": "adds-the-cam-c-82c8fb",
-            "directoryName": "📷️adds-the-cam-c-82c8fb"
+              "directoryName": "📷️adds-the-cam-c-82c8fb"
+            },
+            {
+              "id": "refuses-a-camera-e92a02",
+              "directoryName": "🚫️refuses-a-camera-e92a02"
+            },
+            {
+              "id": "adds-a-fourth-97e912",
+              "directoryName": "📷️adds-a-fourth-97e912"
             }
           ]
         },
@@ -137,7 +216,19 @@
           "scenarios": [
             {
               "id": "adds-gcp-tower-d71a54",
-            "directoryName": "📍️adds-gcp-tower-d71a54"
+              "directoryName": "📍️adds-gcp-tower-d71a54"
+            },
+            {
+              "id": "refuses-a-19c1ab",
+              "directoryName": "🚫️refuses-a-19c1ab"
+            },
+            {
+              "id": "adds-a-quay-7569de",
+              "directoryName": "📍️adds-a-quay-7569de"
+            },
+            {
+              "id": "adds-a-control-298de4",
+              "directoryName": "🕳️adds-a-control-298de4"
             }
           ]
         },
@@ -148,7 +239,19 @@
           "scenarios": [
             {
               "id": "adds-a-rig-2df5df",
-            "directoryName": "🔗️adds-a-rig-2df5df"
+              "directoryName": "🔗️adds-a-rig-2df5df"
+            },
+            {
+              "id": "refuses-a-second-95e04d",
+              "directoryName": "🚫️refuses-a-second-95e04d"
+            },
+            {
+              "id": "places-the-0d0b8d",
+              "directoryName": "🔗️places-the-0d0b8d"
+            },
+            {
+              "id": "refuses-a-rig-cb71ba",
+              "directoryName": "🚫️refuses-a-rig-cb71ba"
             }
           ]
         },
@@ -159,7 +262,23 @@
           "scenarios": [
             {
               "id": "adds-stream-c-458900",
-            "directoryName": "🎥️adds-stream-c-458900"
+              "directoryName": "🎥️adds-stream-c-458900"
+            },
+            {
+              "id": "rejects-a-6b58da",
+              "directoryName": "🔂️rejects-a-6b58da"
+            },
+            {
+              "id": "adds-a-third-61fb5d",
+              "directoryName": "🛰️adds-a-third-61fb5d"
+            },
+            {
+              "id": "adds-an-unbound-2b2373",
+              "directoryName": "🎞️adds-an-unbound-2b2373"
+            },
+            {
+              "id": "rejects-a-stream-aac5c2",
+              "directoryName": "👻️rejects-a-stream-aac5c2"
             }
           ]
         },
@@ -169,8 +288,24 @@
           "mutationDirectoryName": "🗞️delete-asset",
           "scenarios": [
             {
-              "id": "removes-asset-a-170889",
-            "directoryName": "🗑️removes-asset-a-170889"
+              "id": "drops-the-spare-c6ffb6",
+              "directoryName": "🧹️drops-the-spare-c6ffb6"
+            },
+            {
+              "id": "refuses-to-5c6f74",
+              "directoryName": "🗺️refuses-to-5c6f74"
+            },
+            {
+              "id": "refuses-to-c4563a",
+              "directoryName": "🚫️refuses-to-c4563a"
+            },
+            {
+              "id": "sweeps-the-503b27",
+              "directoryName": "🗑️sweeps-the-503b27"
+            },
+            {
+              "id": "refuses-to-f9541f",
+              "directoryName": "🖼️refuses-to-f9541f"
             }
           ]
         },
@@ -181,7 +316,19 @@
           "scenarios": [
             {
               "id": "removes-the-cam-f90b89",
-            "directoryName": "🚫️removes-the-cam-f90b89"
+              "directoryName": "🚫️removes-the-cam-f90b89"
+            },
+            {
+              "id": "refuses-to-73655a",
+              "directoryName": "🚫️refuses-to-73655a"
+            },
+            {
+              "id": "removes-the-40cba4",
+              "directoryName": "🚫️removes-the-40cba4"
+            },
+            {
+              "id": "refuses-to-remove-3c8f32",
+              "directoryName": "⛓️refuses-to-remove-3c8f32"
             }
           ]
         },
@@ -192,7 +339,19 @@
           "scenarios": [
             {
               "id": "removes-gcp-209b7d",
-            "directoryName": "🚫️removes-gcp-209b7d"
+              "directoryName": "🚫️removes-gcp-209b7d"
+            },
+            {
+              "id": "refuses-to-12366b",
+              "directoryName": "🚫️refuses-to-12366b"
+            },
+            {
+              "id": "removes-the-south-42cd9e",
+              "directoryName": "🚮removes-the-south-42cd9e"
+            },
+            {
+              "id": "removes-an-8f3868",
+              "directoryName": "🕳️removes-an-8f3868"
             }
           ]
         },
@@ -203,7 +362,19 @@
           "scenarios": [
             {
               "id": "drops-the-cam-a-a1f8a2",
-            "directoryName": "✂️drops-the-cam-a-a1f8a2"
+              "directoryName": "✂️drops-the-cam-a-a1f8a2"
+            },
+            {
+              "id": "unplaces-the-f5b35e",
+              "directoryName": "⏮️unplaces-the-f5b35e"
+            },
+            {
+              "id": "refuses-to-1805df",
+              "directoryName": "🚫️refuses-to-1805df"
+            },
+            {
+              "id": "unplaces-the-a39356",
+              "directoryName": "✂️unplaces-the-a39356"
             }
           ]
         },
@@ -213,8 +384,20 @@
           "mutationDirectoryName": "🪓delete-stream",
           "scenarios": [
             {
-              "id": "removes-stream-b-0f62a7",
-            "directoryName": "🚫️removes-stream-b-0f62a7"
+              "id": "removes-the-first-c0fc2a",
+              "directoryName": "⏮️removes-the-first-c0fc2a"
+            },
+            {
+              "id": "refuses-to-3c20ff",
+              "directoryName": "🚫️refuses-to-3c20ff"
+            },
+            {
+              "id": "removes-the-spare-556d1d",
+              "directoryName": "🪓removes-the-spare-556d1d"
+            },
+            {
+              "id": "refuses-to-remove-422a37",
+              "directoryName": "⛓️refuses-to-remove-422a37"
             }
           ]
         },
@@ -225,7 +408,19 @@
           "scenarios": [
             {
               "id": "removes-the-only-f82e64",
-            "directoryName": "🚫️removes-the-only-f82e64"
+              "directoryName": "🚫️removes-the-only-f82e64"
+            },
+            {
+              "id": "drops-the-first-9ebf0b",
+              "directoryName": "⏮️drops-the-first-9ebf0b"
+            },
+            {
+              "id": "refuses-an-109cf1",
+              "directoryName": "🚫️refuses-an-109cf1"
+            },
+            {
+              "id": "drops-the-middle-282fb7",
+              "directoryName": "🚷drops-the-middle-282fb7"
             }
           ]
         },
@@ -236,7 +431,19 @@
           "scenarios": [
             {
               "id": "removes-the-last-304bdf",
-            "directoryName": "🚫️removes-the-last-304bdf"
+              "directoryName": "🚫️removes-the-last-304bdf"
+            },
+            {
+              "id": "drops-the-first-d98a0f",
+              "directoryName": "⏮️drops-the-first-d98a0f"
+            },
+            {
+              "id": "refuses-a-frame-e7c374",
+              "directoryName": "🚫️refuses-a-frame-e7c374"
+            },
+            {
+              "id": "drops-the-middle-2d6d53",
+              "directoryName": "✂️drops-the-middle-2d6d53"
             }
           ]
         },
@@ -247,7 +454,15 @@
           "scenarios": [
             {
               "id": "swaps-in-a-two-c688db",
-            "directoryName": "☁️swaps-in-a-two-c688db"
+              "directoryName": "☁️swaps-in-a-two-c688db"
+            },
+            {
+              "id": "warns-that-the-675b6e",
+              "directoryName": "🔁️warns-that-the-675b6e"
+            },
+            {
+              "id": "swaps-in-a-denser-4174e1",
+              "directoryName": "☁️swaps-in-a-denser-4174e1"
             }
           ]
         },
@@ -258,7 +473,19 @@
           "scenarios": [
             {
               "id": "adds-the-dtm-and-64d5bb",
-            "directoryName": "🗺️adds-the-dtm-and-64d5bb"
+              "directoryName": "🗺️adds-the-dtm-and-64d5bb"
+            },
+            {
+              "id": "refuses-to-clear-b8c54a",
+              "directoryName": "🚫️refuses-to-clear-b8c54a"
+            },
+            {
+              "id": "clears-the-geo-f4886e",
+              "directoryName": "🧹️clears-the-geo-f4886e"
+            },
+            {
+              "id": "records-a-dtm-6e132a",
+              "directoryName": "🗺️records-a-dtm-6e132a"
             }
           ]
         },
@@ -269,7 +496,15 @@
           "scenarios": [
             {
               "id": "advances-the-job-c1e878",
-            "directoryName": "🎨️advances-the-job-c1e878"
+              "directoryName": "🎨️advances-the-job-c1e878"
+            },
+            {
+              "id": "warns-that-the-bdf2e9",
+              "directoryName": "🔁️warns-that-the-bdf2e9"
+            },
+            {
+              "id": "advances-the-555298",
+              "directoryName": "🎨️advances-the-555298"
             }
           ]
         },
@@ -280,7 +515,19 @@
           "scenarios": [
             {
               "id": "swaps-in-an-f23e71",
-            "directoryName": "🕸️swaps-in-an-f23e71"
+              "directoryName": "🕸️swaps-in-an-f23e71"
+            },
+            {
+              "id": "warns-that-the-b39bab",
+              "directoryName": "🔁️warns-that-the-b39bab"
+            },
+            {
+              "id": "swaps-the-c43d9c",
+              "directoryName": "🕸️swaps-the-c43d9c"
+            },
+            {
+              "id": "refuses-a-48f3a6",
+              "directoryName": "🚫️refuses-a-48f3a6"
             }
           ]
         },
@@ -291,7 +538,19 @@
           "scenarios": [
             {
               "id": "records-a-qc-f5caf4",
-            "directoryName": "📋️records-a-qc-f5caf4"
+              "directoryName": "📋️records-a-qc-f5caf4"
+            },
+            {
+              "id": "refuses-to-clear-30cbb5",
+              "directoryName": "🚫️refuses-to-clear-30cbb5"
+            },
+            {
+              "id": "clears-the-qc-1d2249",
+              "directoryName": "🧹️clears-the-qc-1d2249"
+            },
+            {
+              "id": "files-a-qc-report-64d222",
+              "directoryName": "✅️files-a-qc-report-64d222"
             }
           ]
         },
@@ -302,7 +561,15 @@
           "scenarios": [
             {
               "id": "swaps-in-an-6d9ae4",
-            "directoryName": "✨️swaps-in-an-6d9ae4"
+              "directoryName": "✨️swaps-in-an-6d9ae4"
+            },
+            {
+              "id": "warns-that-the-56a3a9",
+              "directoryName": "🔁️warns-that-the-56a3a9"
+            },
+            {
+              "id": "swaps-in-a-re-3cfa6d",
+              "directoryName": "✨️swaps-in-a-re-3cfa6d"
             }
           ]
         },
@@ -313,7 +580,19 @@
           "scenarios": [
             {
               "id": "clears-the-video-143f2b",
-            "directoryName": "🧹️clears-the-video-143f2b"
+              "directoryName": "🧹️clears-the-video-143f2b"
+            },
+            {
+              "id": "attaches-a-607df8",
+              "directoryName": "📼️attaches-a-607df8"
+            },
+            {
+              "id": "refuses-to-f7f40d",
+              "directoryName": "🚫️refuses-to-f7f40d"
+            },
+            {
+              "id": "reingests-the-311c32",
+              "directoryName": "🎥️reingests-the-311c32"
             }
           ]
         },
@@ -324,7 +603,19 @@
           "scenarios": [
             {
               "id": "replaces-the-d40c68",
-            "directoryName": "⏸️replaces-the-d40c68"
+              "directoryName": "⏸️replaces-the-d40c68"
+            },
+            {
+              "id": "clears-every-760061",
+              "directoryName": "🕳️clears-every-760061"
+            },
+            {
+              "id": "warns-that-the-8dbf82",
+              "directoryName": "🔁️warns-that-the-8dbf82"
+            },
+            {
+              "id": "swaps-in-two-166265",
+              "directoryName": "🏃️swaps-in-two-166265"
             }
           ]
         },
@@ -335,7 +626,19 @@
           "scenarios": [
             {
               "id": "clears-the-d2f81a",
-            "directoryName": "🧹️clears-the-d2f81a"
+              "directoryName": "🧹️clears-the-d2f81a"
+            },
+            {
+              "id": "refuses-to-clear-524569",
+              "directoryName": "🚫️refuses-to-clear-524569"
+            },
+            {
+              "id": "drops-the-6436a8",
+              "directoryName": "🕳️drops-the-6436a8"
+            },
+            {
+              "id": "swaps-in-a-three-49b17f",
+              "directoryName": "🛣️swaps-in-a-three-49b17f"
             }
           ]
         },
@@ -346,7 +649,19 @@
           "scenarios": [
             {
               "id": "refines-the-cam-0eaef0",
-            "directoryName": "🔍️refines-the-cam-0eaef0"
+              "directoryName": "🔍️refines-the-cam-0eaef0"
+            },
+            {
+              "id": "refuses-to-b60a39",
+              "directoryName": "🚫️refuses-to-b60a39"
+            },
+            {
+              "id": "warns-that-the-697b4f",
+              "directoryName": "🔁️warns-that-the-697b4f"
+            },
+            {
+              "id": "refines-the-9fd25a",
+              "directoryName": "🔍️refines-the-9fd25a"
             }
           ]
         },
@@ -357,7 +672,15 @@
           "scenarios": [
             {
               "id": "raises-the-dense-ddb263",
-            "directoryName": "🔬️raises-the-dense-ddb263"
+              "directoryName": "🔬️raises-the-dense-ddb263"
+            },
+            {
+              "id": "warns-that-the-4e65c8",
+              "directoryName": "🔁️warns-that-the-4e65c8"
+            },
+            {
+              "id": "sharpens-the-25044c",
+              "directoryName": "🧊️sharpens-the-25044c"
             }
           ]
         },
@@ -368,7 +691,19 @@
           "scenarios": [
             {
               "id": "switches-the-423de9",
-            "directoryName": "🔎️switches-the-423de9"
+              "directoryName": "🔎️switches-the-423de9"
+            },
+            {
+              "id": "refuses-a-d82e38",
+              "directoryName": "🚫️refuses-a-d82e38"
+            },
+            {
+              "id": "warns-that-the-b6b7dc",
+              "directoryName": "🔁️warns-that-the-b6b7dc"
+            },
+            {
+              "id": "moves-the-3621f6",
+              "directoryName": "🌟️moves-the-3621f6"
             }
           ]
         },
@@ -379,7 +714,19 @@
           "scenarios": [
             {
               "id": "enables-georefere-18a68a",
-            "directoryName": "🌐️enables-georefere-18a68a"
+              "directoryName": "🌐️enables-georefere-18a68a"
+            },
+            {
+              "id": "refuses-a-zero-fa917f",
+              "directoryName": "🚫️refuses-a-zero-fa917f"
+            },
+            {
+              "id": "warns-that-the-efc6e8",
+              "directoryName": "🔁️warns-that-the-efc6e8"
+            },
+            {
+              "id": "halves-the-002a17",
+              "directoryName": "🌐️halves-the-002a17"
             }
           ]
         },
@@ -390,7 +737,19 @@
           "scenarios": [
             {
               "id": "tightens-the-499c47",
-            "directoryName": "🔍️tightens-the-499c47"
+              "directoryName": "🔍️tightens-the-499c47"
+            },
+            {
+              "id": "refuses-an-59752a",
+              "directoryName": "🚫️refuses-an-59752a"
+            },
+            {
+              "id": "warns-that-the-8eaad8",
+              "directoryName": "🔁️warns-that-the-8eaad8"
+            },
+            {
+              "id": "widens-the-73f33e",
+              "directoryName": "📥️widens-the-73f33e"
             }
           ]
         },
@@ -401,7 +760,19 @@
           "scenarios": [
             {
               "id": "switches-the-652d03",
-            "directoryName": "🌳️switches-the-652d03"
+              "directoryName": "🌳️switches-the-652d03"
+            },
+            {
+              "id": "refuses-a-ratio-65dcb9",
+              "directoryName": "🚫️refuses-a-ratio-65dcb9"
+            },
+            {
+              "id": "warns-that-the-414aae",
+              "directoryName": "🔁️warns-that-the-414aae"
+            },
+            {
+              "id": "switches-to-a-kd-d6fa4b",
+              "directoryName": "🌳️switches-to-a-kd-d6fa4b"
             }
           ]
         },
@@ -412,7 +783,15 @@
           "scenarios": [
             {
               "id": "doubles-the-c245d5",
-            "directoryName": "🔳️doubles-the-c245d5"
+              "directoryName": "🔳️doubles-the-c245d5"
+            },
+            {
+              "id": "warns-that-the-887e9f",
+              "directoryName": "🔁️warns-that-the-887e9f"
+            },
+            {
+              "id": "halves-the-voxel-21b53d",
+              "directoryName": "🔳️halves-the-voxel-21b53d"
             }
           ]
         },
@@ -423,7 +802,15 @@
           "scenarios": [
             {
               "id": "enables-motion-2444a3",
-            "directoryName": "🏃️enables-motion-2444a3"
+              "directoryName": "🏃️enables-motion-2444a3"
+            },
+            {
+              "id": "warns-that-the-83ff67",
+              "directoryName": "🔁️warns-that-the-83ff67"
+            },
+            {
+              "id": "triples-the-4bb69f",
+              "directoryName": "🏃️triples-the-4bb69f"
             }
           ]
         },
@@ -434,7 +821,19 @@
           "scenarios": [
             {
               "id": "retunes-the-cam-4ca5a2",
-            "directoryName": "📍️retunes-the-cam-4ca5a2"
+              "directoryName": "📍️retunes-the-cam-4ca5a2"
+            },
+            {
+              "id": "refuses-to-2cfb53",
+              "directoryName": "🚫️refuses-to-2cfb53"
+            },
+            {
+              "id": "warns-that-the-89422a",
+              "directoryName": "🔁️warns-that-the-89422a"
+            },
+            {
+              "id": "retunes-the-675f52",
+              "directoryName": "📍️retunes-the-675f52"
             }
           ]
         },
@@ -445,7 +844,15 @@
           "scenarios": [
             {
               "id": "switches-the-7f0371",
-            "directoryName": "🎯️switches-the-7f0371"
+              "directoryName": "🎯️switches-the-7f0371"
+            },
+            {
+              "id": "warns-that-the-79a92a",
+              "directoryName": "🔁️warns-that-the-79a92a"
+            },
+            {
+              "id": "tightens-the-850036",
+              "directoryName": "🎯️tightens-the-850036"
             }
           ]
         }
@@ -1188,7 +1595,7 @@
   "fixtureManifests": [
     {
       "schema": "semio.repository-test.fixture/v2",
-      "id": "commit-reconstruction-applied",
+      "id": "commit-reconstruction-refused",
       "class": "handcrafted",
       "target": {
         "artifact": "s.remodel.remodeling",
@@ -1196,7 +1603,7 @@
         "subset": "any"
       },
       "mutation": "commit-reconstruction",
-      "outcome": "applied",
+      "outcome": "rejected",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1206,15 +1613,22 @@
           "role": "expected-before",
           "path": "../🧫️fixtures/🏁️commit-reconstruction/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:536361f105ce7e545369063fe155d9dd39ee3edc9988da41f5dc236e9946b6f1",
-          "bytes": 5348
+          "sha256": "sha256:18933fd33733c9e2afc5e6fdfc1e82e02d516b28c749f22693c03a6d532f3e97",
+          "bytes": 8280
+        },
+        {
+          "role": "mutation-payload",
+          "path": "../🧫️fixtures/🏁️commit-reconstruction/🦠️mutation.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3b6e981be94e941828cae41e5904f812fbcd4455c57b20b2e97c8a1599333998",
+          "bytes": 749
         },
         {
           "role": "expected-after",
           "path": "../🧫️fixtures/🏁️commit-reconstruction/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:cbeb214bbdad4e66625e78e461fa7f55ab736835be15443d34b391a3dd1b4d21",
-          "bytes": 7110
+          "sha256": "sha256:18933fd33733c9e2afc5e6fdfc1e82e02d516b28c749f22693c03a6d532f3e97",
+          "bytes": 8280
         }
       ],
       "provenance": {
@@ -1227,7 +1641,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "remodeling-carrier",
-      "notes": "CommitReconstruction{job,sparse,trajectory,mesh,geo,qc,assets} finalizes the whole reconstruction job atomically. Both snapshots are built from this subset's own already-committed, fully-realistic RemodelingSnapshot (the delete-asset case's before-fixture — same streams/cameras/gcps/job/results shape used throughout this artifact's other 40 mutation vectors); `before` backdates job.stage/progress and nulls the not-yet-finalized trajectory/mesh/geo/qc sub-results, `after` is the genuine already-committed completed state."
+      "notes": "CommitReconstruction{job,sparse,trajectory,mesh,geo,qc,assets} publishes what a staged reconstruction produced, so every result argument it accepts must be a replayable `remodeling-content:` staging handle. This vector's `sparse` argument is a plain point buffer, which names no staged run and is therefore refused with mutation.invalid-reconstruction-sparse; a refused commit leaves the scene untouched, so ⬅️before.json and ➡️after.json are the same document. Both are this subset's own committed replace-job before-snapshot, and the payload pairs that leaf's committed job with ⭐replace-sparse's committed sparse buffer — no byte of this vector is hand-typed. The kind's three OTHER guards (invalid-reconstruction-asset, invalid-reconstruction-mesh and the sparse guard again on the real-world survey) ship as ordinary leaf vectors under 🧬️schema/🧬️mutations/🏁commit-reconstruction/🧪️tests/."
     }
   ]
 }

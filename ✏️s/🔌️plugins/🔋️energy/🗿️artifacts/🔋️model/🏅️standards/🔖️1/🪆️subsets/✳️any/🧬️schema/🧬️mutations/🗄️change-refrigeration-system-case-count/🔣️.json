@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration-system-case-count",
+  "semanticKind": "change-refrigeration-system-case-count",
+  "displayName": "Change Refrigeration System Case Count",
+  "emoji": "🗄️",
+  "aggregateVariant": "ChangeRefrigerationSystemCaseCount",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-refrigeration-system-case-count",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -2,8 +2,12 @@
 use super::return_message::ReturnMessageCursor;
 use super::{Effect, MessageEndpoint, PluginInstanceId};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
-fn unhex(value: &str) -> Vec<u8> { (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
+}
+fn unhex(value: &str) -> Vec<u8> {
+    (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect()
+}
 fn endpoint(value: &serde_json::Value) -> MessageEndpoint {
     match value["kind"].as_str().unwrap() {
         "shell" => MessageEndpoint::Shell { instance: PluginInstanceId(value["instance"].as_str().unwrap().into()) },
@@ -29,7 +33,9 @@ fn encode(effect: &Effect, grant: usize) -> Vec<u8> {
         assert!(step.advanced_items <= 1 && step.written_bytes <= grant);
         assert!(page[step.written_bytes..].iter().all(|byte| *byte == 73));
         result.extend_from_slice(&page[..step.written_bytes]);
-        if step.complete { return result; }
+        if step.complete {
+            return result;
+        }
     }
     panic!("borrowed message cursor did not terminate");
 }
@@ -39,7 +45,9 @@ fn return_content_message_all_endpoints_match_independent_bytes_without_payload_
     let fixture = fixture();
     for row in fixture["vectors"].as_array().unwrap() {
         let effect = Effect::SendMessage { target: endpoint(&row["endpoint"]), payload: unhex(fixture["payloadHex"].as_str().unwrap()) };
-        for grant in [1, 64, 4096] { assert_eq!(encode(&effect, grant), unhex(row["recordHex"].as_str().unwrap())); }
+        for grant in [1, 64, 4096] {
+            assert_eq!(encode(&effect, grant), unhex(row["recordHex"].as_str().unwrap()));
+        }
     }
     let common: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap();
     let effect = Effect::SendMessage { target: MessageEndpoint::Shell { instance: PluginInstanceId("7".into()) }, payload: unhex(common["invocation"]["appFrameHex"].as_str().unwrap()) };
@@ -56,11 +64,17 @@ fn return_content_message_large_payload_and_cancel_keep_original_source_allocati
     let pointer = payload.as_ptr();
     let effect = Effect::SendMessage { target: MessageEndpoint::Shell { instance: PluginInstanceId("7".into()) }, payload };
     let mut expected = unhex(fixture["largePayload"]["prefixHex"].as_str().unwrap());
-    if let Effect::SendMessage { payload, .. } = &effect { expected.extend_from_slice(payload); }
-    for grant in [1, 64, 4096] { assert_eq!(encode(&effect, grant), expected); }
+    if let Effect::SendMessage { payload, .. } = &effect {
+        expected.extend_from_slice(payload);
+    }
+    for grant in [1, 64, 4096] {
+        assert_eq!(encode(&effect, grant), expected);
+    }
     for frontier in 0..8 {
         let mut cursor = ReturnMessageCursor::new(&effect).unwrap();
-        for _ in 0..frontier { let _ = cursor.write(&mut [0; 64], 1, 64); }
+        for _ in 0..frontier {
+            let _ = cursor.write(&mut [0; 64], 1, 64);
+        }
         drop(cursor);
         assert!(matches!(&effect, Effect::SendMessage { payload, .. } if payload.as_ptr() == pointer && payload.len() == length));
     }

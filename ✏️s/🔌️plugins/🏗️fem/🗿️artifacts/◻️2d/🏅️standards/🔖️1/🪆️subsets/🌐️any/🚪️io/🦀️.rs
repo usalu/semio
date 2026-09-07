@@ -1,17 +1,40 @@
-//! 🚪️ IO s.fem2d (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from ⚙️engine::register), not per-leaf register(). `stdio.obj`/`stdio.stl` are
-//! EXPORT-only (real geometry: `FemRegion` footprints, genuinely triangulated and extruded by
-//! their own `thickness` — see `engine::meshing::build_semio_mesh_snapshot`); no honest IMPORT
-//! exists (an arbitrary mesh carries no `FemMaterial`/`FemSection`/`FemSupport`/`FemLoadCase` to
-//! reconstruct a `Fem2dSnapshot` from). `stdio.zip`/`stdio.png` were deleted outright in both
-//! directions: fem2d has no real archive-bundle or raster-visualization capability to honestly
-//! back them (see ticket w5a--report.md's `stdio_gaps`/rationale).
-pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
-}
-pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.md", "stdio.obj", "stdio.stl", "stdio.txt"]
-}
+//! 🚪️ IO `s.fem.fem2d` (1/🌐️any) — `io() -> IoDeclaration`: this subset's native codecs plus every
+//! foreign hop, aggregated from the typed `Serializer<Fem2dSnapshot>`/`Deserializer<Fem2dSnapshot>`
+//! leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`. Foreign io goes EXCLUSIVELY
+//! through the framework's `io_mechanism` registry, reached from the sibling `🪆️subsets/🌐️any/🦀️.rs`'s
+//! `io: io::io()` — the same wiring `🗒️note`/`🧱️block` use.
+//!
+//! The OLD `ComposerEntry`/`io_registry` export channel this file used to carry is DELETED, not
+//! shimmed (ticket 26/09/06/FEM-PLUGIN-END-TO-END, W4): its `entries()` had zero callers repo-wide
+//! (the only surviving mentions were this file's own doc comment and a bookkeeping note in the
+//! artifact root), so nothing was ever registered on it. `import_stdio_kinds()`/`export_stdio_kinds()`
+//! went with it — the live lists are `artifact_kind()`'s own fields in the artifact root.
+//!
+//! `derived_composition` below STAYS and is now native-only: it is the `ArtifactComposition` facet
+//! `semio_framework_plugin::derive_artifact_facets!` binds in the sibling `🧬️schema/🦀️.rs`, and every
+//! foreign-format branch it used to carry now lives in a typed leaf instead.
+//!
+//! Format coverage — IDENTICAL in `◻️2d` and `🧊️3d` (full decision table in the ticket's
+//! `📓️w4-io.md`):
+//!
+//! | foreign dialect | direction | fidelity | behaviour |
+//! |---|---|---|---|
+//! | `s.stdio.txt@utf-8/*` | both | `Exact` | this subset's own `.semio` DSL snapshot text — the exact bytes `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` carries |
+//! | `s.stdio.json@rfc8259/*` | both | `Exact` | the `dsl::ToValue` record tree as compact rfc8259 |
+//! | `s.stdio.csv@rfc4180/*` | both | `Exact` | a real RFC 4180 envelope: header `payload`, one quoted cell carrying the DSL text |
+//! | `s.stdio.md@commonmark/*` | both | `Exact` | a real CommonMark envelope: one fenced code block, info string `fem2d`, carrying the DSL text |
+//! | `s.stdio.stl@ascii/*` | export | `Lossy` | REAL geometry — extruded `FemRegion` footprints via the meshing kernel |
+//! | `s.stdio.stl@ascii/*` | import | `Lossy` | typed `Err` — a triangle soup carries no material/section/support/load case |
+//! | `s.stdio.obj@3.0/*` | export | `Lossy` | REAL geometry — same kernel, `.obj` grammar |
+//! | `s.stdio.obj@3.0/*` | import | `Lossy` | typed `Err` — same reason as `stl` |
+//!
+//! The two refusing hops stay registered on purpose: an unregistered `(from, into)` yields a bare
+//! "no route" at the router, a registered one at the weakest fidelity (`Lossy`, rank 0, so the
+//! router never prefers it over a real hop) hands the caller the actual reason. They live HERE
+//! rather than under `📥️import/🧩️deserializers/…/{🔺️stl,🧊️obj}` because the crate root mounts no
+//! import leaf for either format — the mount tree is not this packet's file to edit, and an unmounted
+//! leaf would be dead code.
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::fem2d::standards::v1::subsets::any::schema::Fem2dAnalyzer;
@@ -19,11 +42,10 @@ pub mod derived_composition {
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem2d", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
-    const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_MD: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
+    /// 🎹️ The `ArtifactComposition` facet `derive_artifact_facets!` binds in `🧬️schema/🦀️.rs`.
+    /// Native-only by design: foreign dialects are the `io_mechanism` entries in `io()` below, not
+    /// composer sources.
     pub struct Fem2dComposerComposition;
 
     impl ArtifactComposition for Fem2dComposerComposition {
@@ -31,7 +53,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_CSV, DEP_JSON, DEP_MD, DEP_TXT]
+            &[DIALECT]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -46,161 +68,181 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
                 }
-                if source.dialect == DEP_CSV {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::fem2d::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_JSON {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::fem2d::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_MD {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::fem2d::io::import::deserializers::artifacts::md::v_commonmark::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_TXT {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::fem2d::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
             }
-            Err(ComposeError { message: "Fem2dComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
+            Err(ComposeError { message: "Fem2dComposerComposition: no source in this artifact's own dialect".into(), diagnostics: Vec::new() })
         }
     }
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-//#region 🚪️IoRegistry
-/// 🚪️ Moved out of the (now deleted) artifact `⚙️engine` root — the actual `ComposerEntry` table for
-/// `s.fem2d`, including the reverse EXPORT-direction entries (csv/md/json/stl/obj) that wrap this
-/// artifact's own `📤️export/🧵️serializers` leaves. `crate::artifacts::fem2d::io_registry` (the artifact
-/// root's own wrapper module, unaffected by this move) shadows this with a `.iter().collect()` view of
-/// different type (`&[&ComposerEntry]` vs `&[ComposerEntry]`) — every reference into this module from
-/// elsewhere in the crate must stay fully qualified as `crate::artifacts::fem2d::standards::v1::subsets::any::io::io_registry::…`.
-pub mod io_registry {
-    use crate::artifacts::fem2d::standards::v1::subsets::any::schema::Fem2dBuilder as Fem2dAnyBuilder;
-    use crate::artifacts::fem2d::standards::v1::subsets::any::schema::Fem2dComposer as Fem2dAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+//#region 🚫️GeometryImport
+/// 🚫️ The import direction of the two geometry hops, which HONESTLY REFUSE. Both live here rather
+/// than in `📥️import/🧩️deserializers/🗿️artifacts/{🔺️stl,🧊️obj}/…` because the crate root's `#[path]`
+/// mount tree declares no import leaf for either format (only the two export leaves), and a file
+/// nothing mounts is dead code.
+pub mod geometry_import {
+    use crate::artifacts::fem2d::Fem2dSnapshot;
+    use semio_framework::io::io_mechanism::Deserializer;
+    use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
+    use semio_framework_plugin::{StandardId, SubsetId};
+
+    /// 🎯️ The foreign dialects these leaves would read.
+    pub const STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
+    pub const OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };
+
+    const REASON: &str = "a mesh carries triangles only — it has no node/element topology, no FemMaterial, no FemSection, no FemSupport, no FemLoadCase and no analysis settings, so no fem2d model can be reconstructed from it";
+
+    /// 🧩️ `s.stdio.stl@ascii/*` → `s.fem.fem2d@1/*` — always `Err`, see this module's doc.
+    pub struct StlIntoFem2d;
+
+    impl Deserializer<Fem2dSnapshot> for StlIntoFem2d {
+        const FROM: Dialect = STL_DIALECT;
+        const FIDELITY: IoFidelity = IoFidelity::Lossy;
+        async fn deserialize(_payload: &IoPayload) -> IoResult<Fem2dSnapshot> {
+            Err(IoError { message: format!("stl import not supported for a fem2d model: {REASON}"), diagnostics: Vec::new() })
+        }
+    }
+
+    /// 🧩️ `s.stdio.obj@3.0/*` → `s.fem.fem2d@1/*` — always `Err`, see this module's doc.
+    pub struct ObjIntoFem2d;
+
+    impl Deserializer<Fem2dSnapshot> for ObjIntoFem2d {
+        const FROM: Dialect = OBJ_DIALECT;
+        const FIDELITY: IoFidelity = IoFidelity::Lossy;
+        async fn deserialize(_payload: &IoPayload) -> IoResult<Fem2dSnapshot> {
+            Err(IoError { message: format!("obj import not supported for a fem2d model: {REASON}"), diagnostics: Vec::new() })
+        }
+    }
+}
+//#endregion 🚫️GeometryImport
+
+//#region 🔖️IoDeclaration
+/// 🚪️ This subset's complete io declaration — the native `LanguagePair`s and `ArtifactCodec` plus
+/// the twelve typed foreign entries. `pilot_languages()` indices are fixed by that function's own
+/// literal `vec![document, op, diff, pack, spr]` order, the same role→slot mapping `🗒️note`'s
+/// `io()` uses.
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+    use crate::artifacts::fem2d::io::export::serializers::artifacts as export;
+    use crate::artifacts::fem2d::io::import::deserializers::artifacts as import;
+    use crate::artifacts::fem2d::standards::v1::subsets::any::io::geometry_import::{ObjIntoFem2d, StlIntoFem2d};
+    use crate::artifacts::fem2d::{Fem2dMutation, Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
+    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
-    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
-    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
-    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
-    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
-    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
-    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
-    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
-    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
-    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
-    const FEM2D_DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem2d", standard: StandardId("1"), subset: SubsetId("*") };
-    const FEM2D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::fem2d::Fem2dSnapshot, ComposeError> {
-        if let Some(source) = sources.iter().find(|s| s.dialect == FEM2D_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => Fem2dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => Fem2dAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-            };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "Fem2dComposer export: build() failed".into(), diagnostics });
-        }
-        if let Some(source) = sources.iter().find(|s| s.dialect == FEM2D_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `dsl::DslValue`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
-            let bytes: Vec<u8> = match &source.payload {
-                IoPayload::Text(t) => t.as_bytes().to_vec(),
-                IoPayload::Binary(b) => b.clone(),
-            };
-            return crate::artifacts::fem2d::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
-        }
-        Err(ComposeError { message: "Fem2dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
-    }
-
-    const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
-    fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_CSV_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    /// 🌉️ `stl`/`obj` below are real geometry (bridged through the semio mesh subset — see
-    /// `engine::meshing::build_semio_mesh_snapshot` — never hand-rolled bytes). `zip`/`png` export
-    /// entries were REMOVED outright (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-
-    /// MEDIA-FORMAT-RETIREMENT W5a): fem2d has no real archive-bundle or raster-visualization
-    /// capability to honestly back a `.zip`/`.png` export — their old leaves wrote raw JSON bytes
-    /// under a fabricated format name.
-    const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::stl::v_ascii::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::fem2d::io::export::serializers::artifacts::obj::v3_0::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    //#endregion 🔖️ExportEntries
-
-    pub fn entries() -> &'static [ComposerEntry] {
+    /// 🎹️ One vtable row per typed leaf — the single place this subset advertises what it can and
+    /// cannot convert.
+    fn entries() -> &'static [IoEntry] {
+        static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {
                 vec![
-                    composer_entry_of::<Fem2dAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_csv },
-                    ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_md },
-                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_json },
-                    ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_stl },
-                    ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[FEM2D_DIALECT], compose: compose_export_obj },
+                    serializer_entry::<Fem2dSnapshot, export::txt::v_utf_8::any::Fem2dIntoTxt>(FEM2D_DIALECT),
+                    deserializer_entry::<Fem2dSnapshot, import::txt::v_utf_8::any::TxtIntoFem2d>(FEM2D_DIALECT),
+                    serializer_entry::<Fem2dSnapshot, export::json::v_rfc8259::any::Fem2dIntoJson>(FEM2D_DIALECT),
+                    deserializer_entry::<Fem2dSnapshot, import::json::v_rfc8259::any::JsonIntoFem2d>(FEM2D_DIALECT),
+                    serializer_entry::<Fem2dSnapshot, export::csv::v_rfc4180::any::Fem2dIntoCsv>(FEM2D_DIALECT),
+                    deserializer_entry::<Fem2dSnapshot, import::csv::v_rfc4180::any::CsvIntoFem2d>(FEM2D_DIALECT),
+                    serializer_entry::<Fem2dSnapshot, export::md::v_commonmark::any::Fem2dIntoMd>(FEM2D_DIALECT),
+                    deserializer_entry::<Fem2dSnapshot, import::md::v_commonmark::any::MdIntoFem2d>(FEM2D_DIALECT),
+                    serializer_entry::<Fem2dSnapshot, export::stl::v_ascii::any::Fem2dIntoStl>(FEM2D_DIALECT),
+                    deserializer_entry::<Fem2dSnapshot, StlIntoFem2d>(FEM2D_DIALECT),
+                    serializer_entry::<Fem2dSnapshot, export::obj::v3_0::any::Fem2dIntoObj>(FEM2D_DIALECT),
+                    deserializer_entry::<Fem2dSnapshot, ObjIntoFem2d>(FEM2D_DIALECT),
                 ]
             })
             .as_slice()
     }
+
+    let langs = crate::artifacts::fem2d::pilot_languages();
+    IoDeclaration {
+        native: NativeCodecs {
+            snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
+            diff: LanguagePair { text: Some(&langs[2]), binary: None },
+            mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
+            inferences: None,
+            codec: store::ArtifactCodec::of::<Fem2dSnapshot, Fem2dMutation>(FEM_2D_SCHEMA.to_string()),
+        },
+        entries: entries(),
+    }
 }
-//#endregion 🚪️IoRegistry
+//#endregion 🔖️IoDeclaration
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::geometry_import::{ObjIntoFem2d, StlIntoFem2d};
+    use crate::artifacts::fem2d::io::export::serializers::artifacts::csv::v_rfc4180::any::csv_text;
+    use crate::artifacts::fem2d::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
+    use crate::artifacts::fem2d::io::export::serializers::artifacts::md::v_commonmark::any::md_text;
+    use crate::artifacts::fem2d::io::export::serializers::artifacts::obj::v3_0::any::obj_text;
+    use crate::artifacts::fem2d::io::export::serializers::artifacts::stl::v_ascii::any::stl_text;
+    use crate::artifacts::fem2d::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
+    use crate::artifacts::fem2d::io::import::deserializers::artifacts::csv::v_rfc4180::any::from_csv_text;
+    use crate::artifacts::fem2d::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
+    use crate::artifacts::fem2d::io::import::deserializers::artifacts::md::v_commonmark::any::from_md_text;
+    use crate::artifacts::fem2d::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+    use semio_framework::io::io_mechanism::Deserializer;
+    use semio_framework::io_schema::IoPayload;
+
+    /// 📄️ This subset's handcrafted `.semio` DSL example asset — the same bytes the shipped example
+    /// serves to the shell.
+    const EXAMPLE: &str = crate::artifacts::fem2d::examples::demo::PRIMARY_TEXT;
+
+    #[semio_framework_async_macros::async_test]
+    async fn txt_round_trips_the_example() {
+        let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
+        let printed = dsl_text(&snapshot);
+        assert_eq!(from_dsl_text(&printed).unwrap(), snapshot, "txt is not a fixed point");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn json_round_trips_the_example() {
+        let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
+        assert_eq!(from_json_text(&json_text(&snapshot)).expect("json must read back"), snapshot, "json is not a lossless round trip");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn csv_round_trips_the_example_as_a_real_rfc4180_envelope() {
+        let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
+        let text = csv_text(&snapshot);
+        assert!(text.starts_with("payload\n"), "csv export must open with the envelope header row");
+        assert_eq!(from_csv_text(&text).expect("csv must read back"), snapshot, "csv is not a lossless round trip");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn md_round_trips_the_example_as_a_real_fenced_block() {
+        let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
+        let text = md_text(&snapshot);
+        assert!(text.starts_with("```fem2d\n"), "md export must open the tagged fence");
+        assert_eq!(from_md_text(&text).expect("md must read back"), snapshot, "md is not a lossless round trip");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn geometry_exports_are_real_and_their_imports_refuse_with_a_reason() {
+        let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
+        assert!(stl_text(&snapshot).expect("stl export must succeed").starts_with("solid"), "stl export must be real ascii stl");
+        obj_text(&snapshot).expect("obj export must succeed");
+        let empty = IoPayload::Text(String::new());
+        for message in [StlIntoFem2d::deserialize(&empty).await.expect_err("stl import must refuse").message, ObjIntoFem2d::deserialize(&empty).await.expect_err("obj import must refuse").message] {
+            assert!(message.contains("not supported for"), "every refusing hop must name the reason, got: {message}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn io_declaration_registers_both_directions_of_all_six_formats() {
+        let declaration = super::io();
+        assert_eq!(declaration.entries.len(), 12, "six formats x two directions");
+        let own = "s.fem.fem2d";
+        let mut foreign: Vec<&str> = Vec::new();
+        for entry in declaration.entries {
+            assert!(entry.from.artifact_kind == own || entry.into.artifact_kind == own, "every entry must touch this subset's own dialect");
+            foreign.push(if entry.from.artifact_kind == own { entry.into.artifact_kind } else { entry.from.artifact_kind });
+        }
+        foreign.sort_unstable();
+        foreign.dedup();
+        assert_eq!(foreign, vec!["s.stdio.csv", "s.stdio.json", "s.stdio.md", "s.stdio.obj", "s.stdio.stl", "s.stdio.txt"]);
+    }
+}
+//#endregion 🧪️Tests

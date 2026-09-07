@@ -20,7 +20,7 @@
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "synthetic-orbit";
-pub async fn label() -> LocalizedLabel {
+pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Synthetic Orbit", "Synthetischer Orbit")
 }
 pub const ICON: &str = "camera";
@@ -52,6 +52,6 @@ pub const FRAMES: [(&str, &[u8]); 10] = [
     ("synthetic-orbit-frame-9", include_bytes!("🖼️assets/🎞️frame-09.png")),
 ];
 
-pub async fn source() -> ExampleSource {
+pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

@@ -75,17 +75,64 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const FEM2D_RETAINED_TOOL_IDS: &[&str] = &["setCamera", "setResultDisplay", "setLocale"];
+/// 🧵️ Every `Fem2dCommand` row, without exception — fem2d declares no host-only verb, so the retained
+/// route table and `create_fem2d_app`'s `Migrated` classification list are the same nineteen ids
+/// (pinned by `retained_routes_cover_every_command_exactly_once`).
+const FEM2D_RETAINED_TOOL_IDS: &[&str] = &[
+    "addNode", "addBar", "addBeam", "addMaterial", "addSection", "addSupport", "addNodalLoad", "addMemberUdl", "addAreaLoad", "addRegion", "addLoadCase", "addCombination", "setSelfWeight", "setAnalysisSettings", "removeSelection", "setActiveExample", "setCamera",
+    "setResultDisplay", "setLocale",
+];
 const FEM2D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.2d.tool-command.v1";
-const FEM2D_RETAINED_RAW_BYTES: usize = 8_192;
-const FEM2D_RETAINED_WORK_ITEMS: usize = 1;
+const FEM2D_RETAINED_RAW_BYTES: usize = 65_536;
+const FEM2D_RETAINED_WORK_ITEMS: usize = 4_096;
+/// 🧮️ The largest document a retained fem2d route will reduce over in one bounded first step — the
+/// same number the artifact-lane store preparation admits, so a document too large for the reducer is
+/// rejected before any authority is claimed rather than mid-publication.
+const FEM2D_MAXIMUM_DOCUMENT_ITEMS: usize = 4_096;
+/// 🛣️ Publication lanes per route: the fifteen structural editors emit `Fem2dMutation`s only, while
+/// `setActiveExample` replaces the whole document through a non-history `Effect::LoadDocument` and
+/// publishes ONLY its two granular config resets (`SetResultDisplay`, `SetCamera`) — effects are not a
+/// store lane, so its contract is `Config`, exactly like the three view actions.
+const FEM2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addBar", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addBeam", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addMaterial", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addSection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addSupport", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addNodalLoad", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addMemberUdl", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addAreaLoad", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addRegion", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addLoadCase", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addCombination", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setSelfWeight", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setAnalysisSettings", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+];
 
 fn fem2d_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(FEM2D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
+    ToolExecutionContract::bounded_first_step(FEM2D_RETAINED_RAW_BYTES, FEM2D_RETAINED_WORK_ITEMS, 1, 262_144, 7_500)
 }
 
-fn fem2d_retained_extent(_command: &Fem2dCommand, _snapshot: &Fem2dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    Some(1)
+/// 🧮️ Every fem2d route reduces in exactly one bounded step, admitted only while the live document
+/// stays inside `FEM2D_MAXIMUM_DOCUMENT_ITEMS` — an oversized document faults as "exceeds semantic
+/// work capacity" instead of silently blowing the step budget.
+fn fem2d_document_items(snapshot: &Fem2dSnapshot) -> Option<usize> {
+    [snapshot.nodes.len(), snapshot.elements.len(), snapshot.regions.len(), snapshot.materials.len(), snapshot.sections.len(), snapshot.supports.len(), snapshot.load_cases.len(), snapshot.combinations.len()]
+        .into_iter()
+        .try_fold(1usize, |total, count| total.checked_add(count))
+}
+
+fn fem2d_retained_extent(command: &Fem2dCommand, snapshot: &Fem2dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return None;
+    }
+    fem2d_document_items(snapshot).filter(|items| *items <= FEM2D_MAXIMUM_DOCUMENT_ITEMS).map(|_| 1)
 }
 
 fn fem2d_retained_reduce(
@@ -153,11 +200,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Fem2dRetainedComman
     type Owner = semio_framework_plugin::EditorApp<Fem2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FEM2D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem2d::FEM_2D_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
-    ];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM2D_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
 
@@ -172,10 +215,10 @@ fn fem2d_config_text_bytes(config: &Fem2dConfig) -> usize {
 
 fn fem2d_config_publication_bytes(mutation: &Fem2dConfigMutation) -> Result<usize, String> {
     let bytes = match mutation {
+        Fem2dConfigMutation::Snapshot { config } => fem2d_config_text_bytes(config),
         Fem2dConfigMutation::SetResultDisplay { source_id, mode, .. } => source_id.as_ref().map_or(0, String::len).saturating_add(mode.len()),
         Fem2dConfigMutation::SetCamera { .. } => 0,
         Fem2dConfigMutation::SetLocale { value } => value.len(),
-        _ => return Err("fem2d-config-unsupported-mutation".into()),
     };
     if bytes > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("fem2d-config-text-envelope".into()); }
     Ok(FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES)
@@ -224,13 +267,16 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation> fo
         let mutation = self.mutation.as_ref().ok_or_else(|| "fem2d-config-mutation-owner-missing".to_string())?;
         let mut next = base.get().clone();
         let inverse = match mutation {
+            Fem2dConfigMutation::Snapshot { config } => {
+                next = config.clone();
+                Fem2dConfigMutation::Snapshot { config: base.get().clone() }
+            }
             Fem2dConfigMutation::SetResultDisplay { source_id, mode, mode_index } => {
                 next.result_source_id = source_id.clone(); next.result_mode = mode.clone(); next.result_mode_index = *mode_index;
                 Fem2dConfigMutation::SetResultDisplay { source_id: base.get().result_source_id.clone(), mode: base.get().result_mode.clone(), mode_index: base.get().result_mode_index }
             }
             Fem2dConfigMutation::SetCamera { camera } => { next.camera = camera.clone(); Fem2dConfigMutation::SetCamera { camera: base.get().camera.clone() } }
             Fem2dConfigMutation::SetLocale { value } => { next.locale = value.clone(); Fem2dConfigMutation::SetLocale { value: base.get().locale.clone() } }
-            _ => return Err("fem2d-config-unsupported-mutation".into()),
         };
         if fem2d_config_text_bytes(&next) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("fem2d-config-post-text-envelope".into()); }
         let authority = self.authority.as_ref().ok_or_else(|| "fem2d-config-authority-missing".to_string())?;
@@ -306,6 +352,143 @@ mod fem2d_config_preparation_laws {
 }
 //#endregion 🧪️PreparationLaws
 //#endregion 📬️ConfigStorePreparation
+
+//#region 📬️ArtifactStorePreparation
+/// 📬️ The document lane's one-item publication authority — the counterpart of
+/// `Fem2dConfigPreparationFactory` above. Without it every `Artifact`-lane route is refused at
+/// registration with `interactive-job.publication-authority-missing`, which is why fem2d's fifteen
+/// structural editors could not be retained before.
+struct Fem2dArtifactPreparationFactory;
+
+struct Fem2dArtifactPreparation {
+    base: Option<store::SnapshotRead<Fem2dSnapshot>>,
+    mutation: Option<Fem2dMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparationFactory {
+    fn preflight(&self, _mutation: &Fem2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("fem2d-artifact-lane-or-description-envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Fem2dSnapshot, Fem2dMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem2dSnapshot, Fem2dMutation>> {
+        let admitted = fem2d_document_items(request.base.get()).is_some_and(|items| items <= FEM2D_MAXIMUM_DOCUMENT_ITEMS);
+        if !admitted
+            || request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Fem2dArtifactPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::Mutation as _;
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "fem2d-artifact-base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "fem2d-artifact-mutation-owner-missing".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "fem2d-artifact-authority-missing".to_string())?;
+        let id = format!("fem2d-retained-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![mutation], inverse,
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            }],
+            description: self.description.take(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        };
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("fem2d-artifact-base-retirement-rejected".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+
+//#region 🧪️ArtifactPreparationLaws
+#[cfg(test)]
+mod fem2d_artifact_preparation_laws {
+    use super::*;
+    use store::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory};
+
+    #[test]
+    fn admitted_document_mutations_make_bounded_progress_and_retire() {
+        let factory = Fem2dArtifactPreparationFactory;
+        let mutation = Fem2dMutation::CreateNode(crate::artifacts::fem2d::mutations::create_node::mutation::CreateNode { node: crate::artifacts::fem2d::FemNode { id: "n1".into(), x: 0.0, y: 0.0 } });
+        assert_eq!(factory.preflight(&mutation, None, store::HistoryLane::Document).expect("document admission").work_items, 1);
+        assert!(factory.preflight(&mutation, Some(&"x".repeat(store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES + 1)), store::HistoryLane::Document).is_err());
+        let mut work = Fem2dArtifactPreparation {
+            base: None, mutation: Some(mutation), description: None, authority: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        };
+        assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 1_048_576 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+        work.cancel();
+        assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1_048_576 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+        work.begin_close();
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 1_048_576 }), Ok(store::SnapshotRetirementStep::Blocked)));
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1_048_576 }), Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })));
+        assert!(work.terminal_is_empty());
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1_048_576 }), Ok(store::SnapshotRetirementStep::Complete)));
+    }
+}
+//#endregion 🧪️ArtifactPreparationLaws
+//#endregion 📬️ArtifactStorePreparation
 
 //#region 🔖️ExportImportHelpers
 /// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
@@ -413,6 +596,36 @@ pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 }
 //#endregion 🔌️Io
 
+//#region 🔖️ActionArgHelpers
+/// 🛡️ Reads one `FemDof` out of an action arg's free text (`"tx"`, `"Ty"`, `"rz"`, …) — the shells
+/// stage every declared arg as a JSON scalar, so the typed enum is resolved here rather than by the
+/// stringly action wire.
+fn fem2d_dof(value: Option<&str>) -> Option<crate::artifacts::fem2d::FemDof> {
+    use crate::artifacts::fem2d::FemDof;
+    match value?.trim().to_ascii_lowercase().as_str() {
+        "tx" => Some(FemDof::Tx),
+        "ty" => Some(FemDof::Ty),
+        "tz" => Some(FemDof::Tz),
+        "rx" => Some(FemDof::Rx),
+        "ry" => Some(FemDof::Ry),
+        "rz" => Some(FemDof::Rz),
+        _ => None,
+    }
+}
+
+/// 🛡️ Reads `addSupport`'s separator-delimited `fixed` list, defaulting to the pinned support
+/// (`tx,ty`) every fem2d fixture starts from when nothing is staged.
+fn fem2d_dofs(value: Option<&str>) -> Vec<crate::artifacts::fem2d::FemDof> {
+    use crate::artifacts::fem2d::FemDof;
+    let parsed: Vec<FemDof> = value.map(|text| text.split([',', ' ', ';']).filter_map(|token| fem2d_dof(Some(token))).collect()).unwrap_or_default();
+    if parsed.is_empty() {
+        vec![FemDof::Tx, FemDof::Ty]
+    } else {
+        parsed
+    }
+}
+//#endregion 🔖️ActionArgHelpers
+
 //#region 🔖️Fem2dPlayApp
 /// 🧪️ B1: unit struct — every former `Fem2dPlayApp` `RefCell` field (`result_display`, `camera`) plus
 /// the deleted `ViewModel::locale` now live in `crate::editor::fem2d::config::Fem2dConfig`, written
@@ -444,6 +657,10 @@ impl ArtifactEditor for Fem2dPlayApp {
         Some(std::sync::Arc::new(Fem2dConfigPreparationFactory))
     }
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Fem2dArtifactPreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<Fem2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
@@ -451,8 +668,28 @@ impl ArtifactEditor for Fem2dPlayApp {
         document_schema: "fem.2d",
         factory: "Fem2dRetainedCommandJobFactory",
         factory_type: Fem2dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-        tools: ["setCamera", "setResultDisplay", "setLocale"]
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        tools: [
+            "addNode",
+            "addBar",
+            "addBeam",
+            "addMaterial",
+            "addSection",
+            "addSupport",
+            "addNodalLoad",
+            "addMemberUdl",
+            "addAreaLoad",
+            "addRegion",
+            "addLoadCase",
+            "addCombination",
+            "setSelfWeight",
+            "setAnalysisSettings",
+            "removeSelection",
+            "setActiveExample",
+            "setCamera",
+            "setResultDisplay",
+            "setLocale"
+        ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -497,8 +734,10 @@ impl ArtifactEditor for Fem2dPlayApp {
         Some(crate::editor::fem2d::config::schema::app_schema_descriptor())
     }
 
+    /// 🌱️ Boots on the bundled `📚️examples/🎬️demo` document so the playground paints a real structure
+    /// at first frame instead of an empty canvas — the same snapshot `Fem2dViewer` already booted on.
     fn initial_snapshot() -> Fem2dSnapshot {
-        crate::artifacts::fem2d::schema::empty_fem2d_snapshot()
+        crate::artifacts::fem2d::schema::default_fem2d_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -591,6 +830,70 @@ impl ArtifactEditor for Fem2dPlayApp {
         command.command_id()
     }
 
+    /// 🎯️ Maps host action id + staged args onto `Fem2dCommand` — the React/wgpu shells still speak the
+    /// stringly `{action, args}` wire (`ShellHost`'s action pane and its example switcher both do), and
+    /// the trait's default rejects every app action outright, so without this bridge none of fem2d's
+    /// nineteen declared actions can reach `dispatch`. Every key here is the `ActionArgDef.id` declared
+    /// for that action in `🔖️Manifest` below.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let text = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string);
+        let number = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64);
+        let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_bool);
+        let list = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_array).map(|items| items.iter().filter_map(dsl::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
+        match action {
+            "addNode" => Ok(Fem2dCommand::AddNode(add_node::AddNode { x: number("x").unwrap_or_default(), y: number("y").unwrap_or_default() })),
+            "addBar" => Ok(Fem2dCommand::AddBar(add_bar::AddBar { start: text("start").unwrap_or_default(), end: text("end").unwrap_or_default(), material_id: text("materialId").unwrap_or_default(), section_id: text("sectionId").unwrap_or_default() })),
+            "addBeam" => Ok(Fem2dCommand::AddBeam(add_beam::AddBeam { start: text("start").unwrap_or_default(), end: text("end").unwrap_or_default(), material_id: text("materialId").unwrap_or_default(), section_id: text("sectionId").unwrap_or_default() })),
+            "addMaterial" => Ok(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: text("name").unwrap_or_default(), e: number("e").unwrap_or(2.1e11) })),
+            "addSection" => Ok(Fem2dCommand::AddSection(add_section::AddSection { name: text("name").unwrap_or_default(), area: number("area").unwrap_or_default(), iy: number("iy").unwrap_or_default() })),
+            "addSupport" => Ok(Fem2dCommand::AddSupport(add_support::AddSupport { node_id: text("nodeId").unwrap_or_default(), fixed: fem2d_dofs(text("fixed").as_deref()) })),
+            "addNodalLoad" => Ok(Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad {
+                node_id: text("nodeId").unwrap_or_default(),
+                dof: fem2d_dof(text("dof").as_deref()).unwrap_or(crate::artifacts::fem2d::FemDof::Ty),
+                value: number("value").unwrap_or_default(),
+                case_id: text("caseId").filter(|id| !id.is_empty()),
+            })),
+            "addMemberUdl" => Ok(Fem2dCommand::AddMemberUdl(add_member_udl::AddMemberUdl {
+                element_id: text("elementId").unwrap_or_default(),
+                wx: number("wx").unwrap_or_default(),
+                wy: number("wy").unwrap_or_default(),
+                case_id: text("caseId").filter(|id| !id.is_empty()),
+            })),
+            "addAreaLoad" => Ok(Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad {
+                region_id: text("regionId").unwrap_or_default(),
+                pressure: number("pressure").unwrap_or_default(),
+                case_id: text("caseId").filter(|id| !id.is_empty()),
+            })),
+            "addRegion" => Ok(Fem2dCommand::AddRegion(add_region::AddRegion {
+                x: number("x").unwrap_or_default(),
+                y: number("y").unwrap_or_default(),
+                width: number("width").unwrap_or_default(),
+                height: number("height").unwrap_or_default(),
+                material_id: text("materialId").unwrap_or_default(),
+                thickness: number("thickness"),
+                mesh_size: number("meshSize"),
+            })),
+            "addLoadCase" => Ok(Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: text("name").unwrap_or_default(), self_weight: flag("selfWeight").unwrap_or(false) })),
+            "addCombination" => Ok(Fem2dCommand::AddCombination(add_combination::AddCombination { name: text("name").unwrap_or_default(), terms: Vec::new() })),
+            "setSelfWeight" => Ok(Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: text("caseId").unwrap_or_default(), enabled: flag("enabled").unwrap_or(false) })),
+            "setAnalysisSettings" => Ok(Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings {
+                modal_count: number("modalCount").map(|value| value.max(0.0) as u32),
+                buckling_count: number("bucklingCount").map(|value| value.max(0.0) as u32),
+                deformation_scale: number("deformationScale"),
+            })),
+            "removeSelection" => Ok(Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: list("ids").unwrap_or_default() })),
+            "setActiveExample" => Ok(Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text("exampleId").or_else(|| text("id")).unwrap_or_default() })),
+            "setCamera" => Ok(Fem2dCommand::SetCamera(set_camera::SetCamera { x: number("x").unwrap_or_default(), y: number("y").unwrap_or_default(), zoom: number("zoom").unwrap_or(1.0) })),
+            "setResultDisplay" => Ok(Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay {
+                source_id: text("sourceId").filter(|id| !id.is_empty()),
+                mode: text("mode").unwrap_or_else(|| "static".into()),
+                mode_index: number("modeIndex").map(|value| value.max(0.0) as u32).unwrap_or_default(),
+            })),
+            "setLocale" => Ok(Fem2dCommand::SetLocale(set_locale::SetLocale { value: text("value").unwrap_or_else(|| "en-US".into()) })),
+            other => Err(Fault::from(format!("action '{other}' is not a declared fem2d action — every app action is dispatched through the typed command channel (see `dispatch_typed_command`)"))),
+        }
+    }
+
     fn handle(
         command: &Fem2dCommand,
         doc: &ArtifactView<'_, Fem2dSnapshot>,
@@ -643,13 +946,13 @@ pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::
 //#endregion 🔖️ResetDocument
 
 //#region 🔖️Manifest
-/// 🚧️ SDK GAP (contract §2.4, matching the cad pilot's identical note): `EditorBuilder` has no
-/// `.example(...)`/`.workflow(...)` methods — `.editor::<E>(def: AppDefinition)` only takes the bare
-/// definition, so the former `.example("default", …, FEM2D_EXAMPLE_DSL, "file")` and
-/// `.workflow("fem2d", "FEM 2D", "structure")` registrations are dropped here, not ported. Every
-/// consumer of the bundled example DSL (`setActiveExample`'s handler, every test fixture) still reads
-/// `FEM2D_EXAMPLE_DSL` directly, so no behavior beyond the manifest-level example/workflow listing is
-/// lost.
+/// 📚️ `AppBuilder` carries no `.example(...)`: an example is declared ONCE as a definition leaf
+/// (`📚️examples/🎬️demo`'s `ExampleSource`) and reaches `PluginManifest.examples` through the subset
+/// root's `SubsetDeclaration.examples` — see `🪆️subsets/🌐️any/🦀️.rs`. The shell's navbar switcher
+/// reads that list and dispatches `setActiveExample { exampleId }` back into this app, which is why
+/// `setActiveExample`'s select option below is that same `demo::ID` and why the action is `Migrated`
+/// (a `BatchOnlyPendingRewrite` classification would make the switcher a dead control). `.workflow(...)`
+/// stays dropped: `WorkflowDefinition` was deleted from framework-core, with no replacement surface.
 pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::fem2d::FEM2D_DIALECT)
             .document(["semio", "fem", "fem2d"])
@@ -674,14 +977,56 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required(),
             ])
             .mutation("addBar", LocalizedLabel::native("Add Bar", "Stab hinzufügen"))
+            .action_args("addBar", vec![
+                ActionArgDef::text("start", LocalizedLabel::native("Start Node", "Startknoten")).required(),
+                ActionArgDef::text("end", LocalizedLabel::native("End Node", "Endknoten")).required(),
+                ActionArgDef::text("materialId", LocalizedLabel::native("Material", "Material")).required(),
+                ActionArgDef::text("sectionId", LocalizedLabel::native("Section", "Querschnitt")).required(),
+            ])
             .mutation("addBeam", LocalizedLabel::native("Add Beam", "Balken hinzufügen"))
+            .action_args("addBeam", vec![
+                ActionArgDef::text("start", LocalizedLabel::native("Start Node", "Startknoten")).required(),
+                ActionArgDef::text("end", LocalizedLabel::native("End Node", "Endknoten")).required(),
+                ActionArgDef::text("materialId", LocalizedLabel::native("Material", "Material")).required(),
+                ActionArgDef::text("sectionId", LocalizedLabel::native("Section", "Querschnitt")).required(),
+            ])
             .mutation("addMaterial", LocalizedLabel::native("Add Material", "Material hinzufügen"))
+            .action_args("addMaterial", vec![
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
+                ActionArgDef::number("e", LocalizedLabel::native("Young's Modulus", "Elastizitätsmodul")).default_value(2.1e11),
+            ])
             .mutation("addSection", LocalizedLabel::native("Add Section", "Querschnitt hinzufügen"))
+            .action_args("addSection", vec![
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
+                ActionArgDef::number("area", LocalizedLabel::native("Area", "Fläche")).required(),
+                ActionArgDef::number("iy", LocalizedLabel::native("Second Moment of Area", "Flächenträgheitsmoment")).required(),
+            ])
             .mutation("addSupport", LocalizedLabel::native("Add Support", "Lager hinzufügen"))
+            // 🛡️ `fixed` is `Vec<FemDof>`; no `ActionArgDef` control maps to a typed enum list, so the
+            // staged form takes the separator-delimited spelling `fem2d_dofs` reads (`"tx,ty"`).
+            .action_args("addSupport", vec![
+                ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
+                ActionArgDef::text("fixed", LocalizedLabel::native("Fixed Degrees of Freedom", "Gesperrte Freiheitsgrade")).default_value("tx,ty"),
+            ])
             .mutation("addNodalLoad", LocalizedLabel::native("Add Nodal Load", "Knotenlast hinzufügen"))
-            .action_args("addNodalLoad", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
+            .action_args("addNodalLoad", vec![
+                ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
+                ActionArgDef::select("dof", LocalizedLabel::native("Degree of Freedom", "Freiheitsgrad"), vec![
+                    ActionArgOption::new("tx", LocalizedLabel::native("Tx", "Tx")),
+                    ActionArgOption::new("ty", LocalizedLabel::native("Ty", "Ty")),
+                    ActionArgOption::new("rz", LocalizedLabel::native("Rz", "Rz")),
+                ])
+                .default_value("ty"),
+                ActionArgDef::number("value", LocalizedLabel::native("Value", "Wert")).required(),
+                ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
+            ])
             .mutation("addMemberUdl", LocalizedLabel::native("Add Member UDL", "Streckenlast hinzufügen"))
-            .action_args("addMemberUdl", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
+            .action_args("addMemberUdl", vec![
+                ActionArgDef::text("elementId", LocalizedLabel::native("Element", "Element")).required(),
+                ActionArgDef::number("wx", LocalizedLabel::native("Wx", "Wx")).default_value(0.0),
+                ActionArgDef::number("wy", LocalizedLabel::native("Wy", "Wy")).required(),
+                ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
+            ])
             .mutation("addAreaLoad", LocalizedLabel::native("Add Area Load", "Flächenlast hinzufügen"))
             .action_args("addAreaLoad", vec![
                 ActionArgDef::text("regionId", LocalizedLabel::native("Region", "Bereich")).required(),
@@ -704,10 +1049,10 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(false),
             ])
             // 🎯️ `terms` is `Fem2dCommand::AddCombination`'s typed `Vec<FemCombinationTerm>` — no single
-            // `ActionArgDef` control maps to that shape, so (mirroring the sibling apps' precedent for
-            // commands with no matching staged form) this action simply has no `.action_args(...)`
-            // declaration.
+            // `ActionArgDef` control maps to that shape, so the staged form declares `name` only and the
+            // action bridge opens an empty combination the term rows are added to afterwards.
             .mutation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
+            .action_args("addCombination", vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required()])
             .mutation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
             .action_args("setSelfWeight", vec![
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")).required(),
@@ -722,29 +1067,41 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            // 📚️ The option id is the bundled example's own `ExampleSource` id, because the shell's
+            // navbar switcher dispatches `setActiveExample { exampleId }` straight from
+            // `PluginManifest.examples` (`ShellHost`'s `dispatchActiveExample`) — a select option that
+            // did not match that id could never be reached from the switcher.
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard"))])
-                    .default_value("default"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(
+                    crate::artifacts::fem2d::examples::demo::ID,
+                    crate::artifacts::fem2d::examples::demo::label(),
+                )])
+                .default_value(crate::artifacts::fem2d::examples::demo::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
-            .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addBar", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addBeam", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addMaterial", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addSection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addSupport", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addNodalLoad", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addMemberUdl", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addAreaLoad", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addRegion", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addLoadCase", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addCombination", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSelfWeight", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            // 🧵️ Every row is `Migrated`: each one is an owned retained route on
+            // `Fem2dRetainedCommandJobFactory` (`FEM2D_RETAINED_TOOL_IDS`) with a real reducer
+            // (`fem2d_retained_reduce` → the `🎮️commands/*` handler) and a real publication authority
+            // (`Fem2dArtifactPreparationFactory` for the document lane, `Fem2dConfigPreparationFactory`
+            // for the config lane) — pinned by `retained_routes_cover_every_command_exactly_once`.
+            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBar", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBeam", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addMaterial", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addSection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addSupport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNodalLoad", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addMemberUdl", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addAreaLoad", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addRegion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addLoadCase", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addCombination", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelfWeight", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setResultDisplay", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
@@ -772,12 +1129,11 @@ pub(crate) mod testkit {
         semio_framework_plugin::resolve_ready(new_app::<EditorApp<Fem2dPlayApp>>())
     }
 
-    /// 🧪️ Adapts `create_fem2d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
-    /// examples }` shape `testkit::new_app_with_registry` still expects (SDK gap — mirrors the cad
-    /// pilot's identical `cad_app_manifest_for_testkit` wrapper; `🧰️framework/**` is outside this
-    /// packet's lease).
+    /// 🧪️ Adapts `create_fem2d_app`'s `AppDefinition` into the `App { definition, examples }` shape
+    /// `testkit::new_app_with_registry` expects, carrying the SAME example list the subset root hands
+    /// the real host (`SubsetDeclaration.examples`) so a test host's switcher sees what a live one does.
     fn fem2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_fem2d_app(), examples: Vec::new() }
+        semio_framework_plugin::App { definition: create_fem2d_app(), examples: vec![crate::artifacts::fem2d::examples::demo::source().into()] }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
@@ -915,6 +1271,68 @@ mod tests {
     }
     //#endregion 🔖️CommandSurface
 
+    //#region 🔖️RetainedRoutes
+    /// 🧵️ LAW: the retained route table, the bounded-first-step proof roster, the publication-lane
+    /// contracts and the manifest's `Migrated` classifications are FOUR views of one set — every
+    /// declared command, exactly once, with no `BatchOnlyPendingRewrite` survivor. A route missing from
+    /// any one of them is a dead action at runtime (`interactive-job.missing-owned-reducer` or
+    /// `interactive-job.publication-authority-missing`).
+    #[semio_framework_async_macros::async_test]
+    async fn retained_routes_cover_every_command_exactly_once() {
+        use std::collections::BTreeSet;
+        let commands: BTreeSet<&str> = every_command().iter().map(Fem2dCommand::command_id).collect();
+        let routes: BTreeSet<&str> = FEM2D_RETAINED_TOOL_IDS.iter().copied().collect();
+        assert_eq!(routes.len(), FEM2D_RETAINED_TOOL_IDS.len(), "no duplicate retained route ids");
+        assert_eq!(commands, routes, "every declared command is a retained route and vice versa");
+        assert_eq!(<Fem2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), FEM2D_RETAINED_TOOL_IDS.len());
+        assert_eq!(Fem2dRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), FEM2D_RETAINED_TOOL_IDS.len());
+        let definition = create_fem2d_app();
+        for tool_id in FEM2D_RETAINED_TOOL_IDS {
+            let contract = Fem2dRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
+            assert!(!contract.lanes.is_empty(), "{tool_id} publishes into at least one lane");
+            let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} declared"));
+            assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id} must be Migrated to dispatch interactively");
+        }
+    }
+
+    /// 🛣️ LAW: a route's declared lanes cover exactly what its own handler emits — the framework
+    /// refuses a completion whose emitted lane is absent from the contract.
+    #[semio_framework_async_macros::async_test]
+    async fn every_route_declares_the_lane_its_handler_emits() {
+        let snapshot = crate::artifacts::fem2d::schema::default_fem2d_snapshot();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let config = Fem2dConfig::default();
+        let cfg = ConfigView { snapshot: &config };
+        for command in every_command() {
+            let tool_id = command.command_id();
+            let emit = command.dispatch(&doc, &cfg).unwrap_or_else(|error| panic!("{tool_id} dispatches: {error:?}"));
+            let lanes = Fem2dRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == tool_id).expect("publication contract").lanes;
+            assert!(emit.artifact_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::Artifact), "{tool_id} emits document mutations without the Artifact lane");
+            assert!(emit.config_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::Config), "{tool_id} emits config mutations without the Config lane");
+        }
+    }
+
+    /// 🎯️ LAW: the stringly `{action, args}` wire every shell speaks resolves to the typed command
+    /// with the same id — the trait's default rejects app actions outright, so this bridge is the only
+    /// path from a rendered button to `dispatch`.
+    #[semio_framework_async_macros::async_test]
+    async fn command_from_action_resolves_every_declared_action() {
+        let args = dsl::DslValue::Object(vec![
+            ("x".into(), dsl::DslValue::float(1.0)),
+            ("y".into(), dsl::DslValue::float(2.0)),
+            ("exampleId".into(), dsl::DslValue::String(crate::artifacts::fem2d::examples::demo::ID.into())),
+        ]);
+        for tool_id in FEM2D_RETAINED_TOOL_IDS {
+            let command = <Fem2dPlayApp as ArtifactEditor>::command_from_action(*tool_id, Some(&args)).unwrap_or_else(|error| panic!("action {tool_id} must resolve: {error:?}"));
+            assert_eq!(command.command_id(), *tool_id);
+        }
+        assert!(<Fem2dPlayApp as ArtifactEditor>::command_from_action("nope", None).is_err());
+        let node = <Fem2dPlayApp as ArtifactEditor>::command_from_action("addNode", Some(&args)).expect("addNode resolves");
+        assert_eq!(node, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0 }));
+    }
+    //#endregion 🔖️RetainedRoutes
+
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
@@ -928,7 +1346,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn config_spec_declares_no_fields() {
-        assert!(semio_framework_plugin::resolve_ready(Fem2dPlayApp::config_spec()).fields.is_empty());
+        assert!(Fem2dPlayApp::config_spec().fields.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -943,7 +1361,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_io_forwards_the_engine_declared_ports() {
-        let io = semio_framework_plugin::resolve_ready(Fem2dPlayApp::io()).expect("io declared");
+        let io = Fem2dPlayApp::io().expect("io declared");
         assert!(io.ports.iter().any(|port| port.id == "geometry:in"));
         assert!(io.ports.iter().any(|port| port.id == "results:out"));
     }
@@ -994,14 +1412,27 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
+    /// 🌱️ LAW: a fresh editor opens on the bundled example, not on an empty canvas — the model window
+    /// must have something to paint at first frame.
+    #[semio_framework_async_macros::async_test]
+    async fn the_editor_boots_on_the_bundled_example_document() {
+        let boot = <Fem2dPlayApp as ArtifactEditor>::initial_snapshot();
+        assert!(!boot.nodes.is_empty(), "expected the bundled example fixture's nodes");
+        assert!(!boot.elements.is_empty(), "expected the bundled example fixture's elements");
+        assert_ne!(boot, crate::artifacts::fem2d::schema::empty_fem2d_snapshot());
+        assert_eq!(boot, Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).expect("the bundled example parses"));
+        let app = fem2d_app();
+        assert!(!app.snapshot().expect("snapshot").nodes.is_empty(), "a booted app renders a non-empty document");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn undo_restores_document_after_add_node() {
         let mut app = fem2d_app();
-        let before = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").nodes.len();
+        let before = app.snapshot().expect("snapshot").nodes.len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
             &mut app,
             Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }),
-            |app| semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").nodes.len(),
+            |app| app.snapshot().expect("snapshot").nodes.len(),
             before,
             before + 1,
         )
@@ -1025,8 +1456,8 @@ mod tests {
         semio_framework_plugin::resolve_ready(instance_a.handle_action("commitCheckpoint", None, &semio_framework_plugin::testkit::meta("actor-a"))).expect("pump a");
         semio_framework_plugin::resolve_ready(instance_b.handle_action("commitCheckpoint", None, &semio_framework_plugin::testkit::meta("actor-b"))).expect("pump b");
 
-        let projection_a = semio_framework_plugin::resolve_ready(instance_a.snapshot()).expect("snapshot a");
-        let projection_b = semio_framework_plugin::resolve_ready(instance_b.snapshot()).expect("snapshot b");
+        let projection_a = instance_a.snapshot().expect("snapshot a");
+        let projection_b = instance_b.snapshot().expect("snapshot b");
         assert!(projection_a.materials.iter().any(|m| m.name == "Steel"), "A keeps its material");
         assert!(projection_a.nodes.iter().any(|n| n.x == 5.0), "A absorbs B's node");
         assert_eq!(projection_a.nodes.len(), projection_b.nodes.len(), "both instances converge to the same node set");
@@ -1046,15 +1477,15 @@ mod tests {
     async fn export_media_document_out_round_trips_via_import_media_document_in() {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        let media = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("document:out", &doc)).expect("document:out exports");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let media = Fem2dPlayApp::export_media("document:out", &doc).expect("document:out exports");
         assert_eq!(media.media_type.class, MediaClass::TwoD);
         assert_eq!(media.media_type.form, MediaForm::Vector);
         let empty_projection = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let empty_history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let empty_doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&empty_projection, &empty_history));
-        let emit = semio_framework_plugin::resolve_ready(Fem2dPlayApp::import_media("document:in", &media, &empty_doc)).expect("document:in imports");
+        let empty_history = semio_framework_plugin::HistoryView::empty();
+        let empty_doc = ArtifactView::new(&empty_projection, &empty_history);
+        let emit = Fem2dPlayApp::import_media("document:in", &media, &empty_doc).expect("document:in imports");
         assert!(emit.artifact_mutations.is_empty(), "whole-document replace must not be an artifact_mutations entry");
         let semio_framework::kernel::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
@@ -1067,9 +1498,9 @@ mod tests {
     async fn export_media_results_out_returns_json_with_every_case_and_combination() {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        let media = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("results:out", &doc)).expect("results:out exports");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let media = Fem2dPlayApp::export_media("results:out", &doc).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
         match media.payload {
@@ -1091,9 +1522,9 @@ mod tests {
     async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        let error = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("results:out", &doc)).expect_err("no load cases means no results to export");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let error = Fem2dPlayApp::export_media("results:out", &doc).expect_err("no load cases means no results to export");
         match error {
             MediaError::Payload(port, _) => assert_eq!(port, "results:out"),
             other => panic!("expected MediaError::Payload, got {other:?}"),
@@ -1104,9 +1535,9 @@ mod tests {
     async fn export_media_unknown_port_is_not_implemented() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        assert!(matches!(semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("bogus:out", &doc)), Err(MediaError::NotImplemented)));
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        assert!(matches!(Fem2dPlayApp::export_media("bogus:out", &doc), Err(MediaError::NotImplemented)));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1114,11 +1545,11 @@ mod tests {
         let _app = Fem2dPlayApp;
         let mut snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         snapshot.materials.push(crate::artifacts::fem2d::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
         let payload = dsl::json::to_string(&dsl::json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
-        let emit = semio_framework_plugin::resolve_ready(Fem2dPlayApp::import_media("geometry:in", &media, &doc)).expect("geometry:in imports");
+        let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         assert_eq!(emit.artifact_mutations.len(), 1);
         match &emit.artifact_mutations[0] {
             Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region }) => {
@@ -1134,11 +1565,11 @@ mod tests {
     async fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
         let payload = dsl::json::to_string(&dsl::json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
-        let emit = semio_framework_plugin::resolve_ready(Fem2dPlayApp::import_media("geometry:in", &media, &doc)).expect("geometry:in imports");
+        let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         match &emit.artifact_mutations[0] {
             Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region }) => assert_eq!(region.material_id, "unassigned"),
             _ => panic!("expected CreateRegion"),

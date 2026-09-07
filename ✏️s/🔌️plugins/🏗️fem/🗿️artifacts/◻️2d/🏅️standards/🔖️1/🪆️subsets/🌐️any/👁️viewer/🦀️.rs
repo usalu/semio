@@ -49,12 +49,11 @@ impl ArtifactViewer for Fem2dViewer {
     const DIALECT: Dialect = FEM2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = FEM_2D_SCHEMA;
 
-    /// 🌱️ A real, non-empty default scene: the bundled `fem2d` example DSL, falling back to the empty
-    /// document on a parse error (should never trigger — the fixture is asserted parseable by the
-    /// sibling editor's own tests — but a viewer must never panic building its initial snapshot).
+    /// 🌱️ A real, non-empty default scene: the artifact-side boot document (the bundled `fem2d`
+    /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
+    /// too — no editor import, this is `crate::artifacts::fem2d::schema`.
     fn initial_snapshot() -> Fem2dSnapshot {
-        use store::ArtifactDsl;
-        Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::fem2d::schema::empty_fem2d_snapshot())
+        crate::artifacts::fem2d::schema::default_fem2d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Fem2dViewCommand::Noop` variant never carries a config
@@ -107,7 +106,7 @@ mod tests {
 
     #[test]
     fn initial_snapshot_is_non_empty() {
-        let snapshot = semio_framework_plugin::resolve_ready(<Fem2dViewer as ArtifactViewer>::initial_snapshot());
+        let snapshot = <Fem2dViewer as ArtifactViewer>::initial_snapshot();
         assert!(!snapshot.nodes.is_empty(), "expected the bundled example fixture's nodes");
     }
 }

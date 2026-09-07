@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start-schedule",
+  "semanticKind": "change-fault-start-schedule",
+  "displayName": "Change Fault Start Schedule",
+  "emoji": "🕓️",
+  "aggregateVariant": "ChangeFaultStartSchedule",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-fault-start-schedule",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -582,19 +582,19 @@ write_text(
 
 write_text(
     SCHEMA / "🛰️.proto",
-    proto_record("// 🧬️ Remodeling artifact schema.", "semio.s.remodeling.remodeling.artifact", "RemodelingArtifact", artifact_fields),
+    proto_record("// 🧬️ Remodeling artifact schema.", "semio.s.remodel.remodeling.artifact", "RemodelingArtifact", artifact_fields),
 )
 write_text(
     SCHEMA / "📸️snapshot/🛰️.proto",
-    proto_record("// 📸️ Remodeling snapshot schema.", "semio.s.remodeling.remodeling.snapshot", "RemodelingSnapshot", snapshot_fields),
+    proto_record("// 📸️ Remodeling snapshot schema.", "semio.s.remodel.remodeling.snapshot", "RemodelingSnapshot", snapshot_fields),
 )
 write_text(
     SCHEMA / "🔺️diff/🛰️.proto",
-    proto_record("// 🔺️ Remodeling diff schema.", "semio.s.remodeling.remodeling.diff", "RemodelingDiff", diff_fields),
+    proto_record("// 🔺️ Remodeling diff schema.", "semio.s.remodel.remodeling.diff", "RemodelingDiff", diff_fields),
 )
 write_text(
     SCHEMA / "💡️inferences/🛰️.proto",
-    proto_record("// 💡️ Remodeling inference schema.", "semio.s.remodeling.remodeling.inference", "RemodelingInference", inference_fields),
+    proto_record("// 💡️ Remodeling inference schema.", "semio.s.remodel.remodeling.inference", "RemodelingInference", inference_fields),
 )
 
 # 🧬️ Mutation union GraphQL/protobuf: one type/message per payload plus the shared record closure.
@@ -633,7 +633,7 @@ for variant, payload in MUT_ORDER:
 oneof = "\n".join(f"    {payload} {snake(payload)} = {i};" for i, (_, payload) in enumerate(MUT_ORDER, start=1))
 write_text(
     SCHEMA / "🧬️mutations/🛰️.proto",
-    "syntax = \"proto3\";\npackage semio.s.remodeling.remodeling.mutation;\n\n"
+    "syntax = \"proto3\";\npackage semio.s.remodel.remodeling.mutation;\n\n"
     "// 🧬️ Remodeling mutation vocabulary — one message per semantic kind.\n\n"
     "message RemodelingMutation {\n  oneof kind {\n" + oneof + "\n  }\n}\n\n"
     + "\n\n".join(mut_msgs)

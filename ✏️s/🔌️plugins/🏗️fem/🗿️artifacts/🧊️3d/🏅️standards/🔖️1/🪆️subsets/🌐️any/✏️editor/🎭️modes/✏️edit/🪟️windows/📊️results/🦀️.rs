@@ -93,6 +93,7 @@ pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::artifacts
     let mut scene =
         semio_framework_plugin::world3d_scene(crate::editor::fem3d::fem3d_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
     scene.snapshot = visual.map(crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease::snapshot);
+    eprintln!("[DEBUG] fem3d results window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
     crate::app_surface::world_3d_surface(FEM3D_BODY_RESULTS, scene)
 }
 
@@ -182,7 +183,7 @@ fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usi
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::fem3d::testkit::{dispatch, fem3d_app, render as render_body, Fem3dApp};
+    use crate::editor::fem3d::testkit::{dispatch, fem3d_app, fem3d_empty_app, render as render_body, Fem3dApp};
     use crate::editor::fem3d::Fem3dCommand;
 
     async fn app_with_example() -> Fem3dApp {
@@ -200,7 +201,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn results_window_surfaces_solver_error_without_panicking_3d() {
-        let mut app = fem3d_app();
+        let mut app = fem3d_empty_app().await;
         let _ = render_body(&mut app, FEM3D_BODY_RESULTS);
     }
 
@@ -225,7 +226,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn results_scene_includes_solid_vertex_colors_3d() {
         let mut app = app_with_example().await;
-        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let snapshot = app.snapshot().expect("snapshot");
         let config = Fem3dConfig { result_source_id: Some("dead".into()), result_mode: "static".into(), ..Fem3dConfig::default() };
         let node = render(&snapshot, &config);
         let props = node

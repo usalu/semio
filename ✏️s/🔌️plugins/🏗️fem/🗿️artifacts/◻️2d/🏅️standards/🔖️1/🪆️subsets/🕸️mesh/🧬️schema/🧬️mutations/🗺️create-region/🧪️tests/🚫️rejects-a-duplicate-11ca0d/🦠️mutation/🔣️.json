@@ -1,0 +1,29 @@
+{
+  "mutation": "createRegion",
+  "region": {
+    "id": "wall1",
+    "name": "Infill Wall Panel duplicate",
+    "outline": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        6.0,
+        0.0
+      ],
+      [
+        6.0,
+        3.5
+      ],
+      [
+        0.0,
+        3.5
+      ]
+    ],
+    "holes": [],
+    "thickness": 0.2,
+    "materialId": "concrete_c30",
+    "meshSize": 0.5
+  }
+}

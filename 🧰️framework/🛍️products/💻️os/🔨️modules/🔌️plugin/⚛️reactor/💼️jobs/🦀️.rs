@@ -52,13 +52,13 @@
 //! this ticket's `📓️terra-jobs-runtime-report.md`, `## lease-requests` section, for the exact diff
 //! text sol applies.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::rc::Rc;
 use std::task::{Context, Poll};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 // 🧊️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): the three remaining well-known cold job
 // kinds design-abi.md §2 names (`semio.infer`/`semio.mutation-plan`/`semio.migrate` — `semio.compose`

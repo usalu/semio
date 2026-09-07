@@ -1,6 +1,11 @@
 //! 🔺️ Sparse diff builder for `ReplaceSupport`.
+//!
+//! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
+//! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME `node_id` resolution
+//! `create-support` runs (`mutation.target-missing`, Error), and finally `mutation.no-op`.
 use super::ReplaceSupport;
 use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dSupportsDelta, Fem2dSupportsPatchEntry};
+use crate::artifacts::fem2d::mutations::guards;
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️Diff
@@ -8,6 +13,12 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem2dSnapshot) -> protocol::Mutatio
     let Some(existing) = base.supports.iter().find(|support| support.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Support \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
+    if let Some(rejection) = guards::identity_matches("support", &payload.id, &payload.new_support.id) {
+        return rejection;
+    }
+    if let Some(rejection) = guards::node_reference(base, &payload.new_support.node_id) {
+        return rejection;
+    }
     if *existing == payload.new_support {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Support \"{}\" is already equal to the replacement value.", payload.id));
     }

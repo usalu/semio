@@ -1,0 +1,22 @@
+{
+  "mutation": "createCameraCalibration",
+  "camera": {
+    "id": "orbit-cam-quaternary",
+    "label": "Orbit Quaternary",
+    "model": "fisheye",
+    "fx": 272.0,
+    "fy": 272.0,
+    "cx": 160.0,
+    "cy": 120.0,
+    "skew": 0.0,
+    "distortion": [
+      0.125,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rmsReprojectionPx": null,
+    "locked": false
+  }
+}

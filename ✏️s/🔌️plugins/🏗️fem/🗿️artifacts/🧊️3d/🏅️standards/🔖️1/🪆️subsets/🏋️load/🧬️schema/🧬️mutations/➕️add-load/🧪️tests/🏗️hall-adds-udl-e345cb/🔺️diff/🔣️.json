@@ -1,0 +1,56 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "dead",
+        "item": {
+          "id": "dead",
+          "name": "Dead Load",
+          "loads": [
+            {
+              "kind": "memberUdl",
+              "id": "ld_roof",
+              "elementId": "raf_l_1",
+              "wx": 0.0,
+              "wy": 0.0,
+              "wz": -2700.0
+            },
+            {
+              "kind": "area",
+              "id": "ld_floor",
+              "solidId": "slab_raft",
+              "pressure": 2500.0
+            },
+            {
+              "kind": "memberUdl",
+              "id": "ld_services",
+              "elementId": "pur_a_0",
+              "wx": 0.0,
+              "wy": 0.0,
+              "wz": -300.0
+            }
+          ],
+          "selfWeight": true
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

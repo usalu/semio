@@ -10,7 +10,9 @@ use protocol::InteractionState;
 // the hand-written impls below, which forward straight to the inner state.
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, serde::Serialize, serde::Deserialize)]
 #[mutation_leaf(contract = ::protocol)]
-pub struct SetInteractionState { pub state: InteractionState }
+pub struct SetInteractionState {
+    pub state: InteractionState,
+}
 
 impl protocol::ToValue for SetInteractionState {
     fn to_value(&self) -> protocol::DslValue {
@@ -27,9 +29,15 @@ impl protocol::FromValue for SetInteractionState {
 //#region ⚙️ColdSemantics
 impl SetInteractionState {
     /// 🧊️ Ordinary mutation evaluation; retained publication supplies its exact prebuilt root separately.
-    pub fn apply(&self) -> protocol::MutationApplyResult<InteractionState> { Ok(self.state.clone()) }
-    pub fn diff(&self) -> protocol::MutationOutcome<InteractionConfigMutation> { protocol::MutationOutcome::new(InteractionConfigMutation::SetState(self.clone())) }
-    pub fn inverse(&self, base: &InteractionState) -> Vec<InteractionConfigMutation> { vec![InteractionConfigMutation::set_state(base.clone())] }
+    pub fn apply(&self) -> protocol::MutationApplyResult<InteractionState> {
+        Ok(self.state.clone())
+    }
+    pub fn diff(&self) -> protocol::MutationOutcome<InteractionConfigMutation> {
+        protocol::MutationOutcome::new(InteractionConfigMutation::SetState(self.clone()))
+    }
+    pub fn inverse(&self, base: &InteractionState) -> Vec<InteractionConfigMutation> {
+        vec![InteractionConfigMutation::set_state(base.clone())]
+    }
 }
 //#endregion ⚙️ColdSemantics
 

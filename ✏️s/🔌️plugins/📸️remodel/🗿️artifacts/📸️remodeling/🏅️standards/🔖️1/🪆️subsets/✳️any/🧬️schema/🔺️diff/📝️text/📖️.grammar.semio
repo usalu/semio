@@ -5,9 +5,12 @@ start diff
 
 # 🔺️ The sparse-delta text form. `RemodelingDiff` carries `ToValue`/`FromValue` only — it has NO
 # `dsl::DslRecord`/`dsl::DslDiff` derive, so it owns no `RecordSpec` and no dedicated printer; its
-# only text rendering is the value bridge (`store::to_dsl_value` -> `dsl::print_dsl_value`), which
-# emits an object as `{ key=value … }` with keys sorted and every lane present as an explicit
-# `null` when unset. This grammar therefore pins the 17 real lane keys (camelCase, per
+# only text rendering is the value bridge: `store::to_dsl_value` then the framework's DslValue
+# notation, which emits an object as `{ key=value … }` with bare (unquoted) keys sorted by name and
+# every lane present as an explicit `null` when unset. That notation is `🗣️dsl/🧬️schema/🦀️.rs`'s
+# `print_dsl_value`, which is PRIVATE and reachable only as the payload of a printed record field of
+# `Shape::Value` — the framework exposes no standalone `DslValue -> String` entry point today, so a
+# test must print a one-field `Shape::Value` record and drop the leading `value=` key token. This grammar therefore pins the 17 real lane keys (camelCase, per
 # `#[value(rename_all = "camelCase")]`) at the top level and models each lane payload as the
 # generic value notation the bridge emits, rather than inventing a hand-written syntax the code
 # does not print. See 📓️w10-grammars.md for the follow-up that would make this a real `DslDiff`.

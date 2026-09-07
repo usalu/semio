@@ -1,0 +1,35 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "sec_pur",
+        "item": {
+          "id": "sec_pur",
+          "name": "C24 Purlin 100x220",
+          "area": 0.022,
+          "iy": 8.873e-05,
+          "iz": 1.833e-05,
+          "j": 5.258e-05
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "solids": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

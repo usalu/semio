@@ -9,7 +9,7 @@ use crate::artifacts::model::mutations as vocabulary;
 //#region 🔖️Diff
 pub fn diff(payload: &super::BindWeatherFile, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     let Ok(target) = store::os_io::ArtifactRef::parse_uri(&payload.target_uri) else {
-        return protocol::MutationOutcome::error("mutation.invalid-payload", format!("{:?} is not an artifact reference URI.", payload.target_uri), [payload.target_uri.clone()]);
+        return protocol::MutationOutcome::error("mutation.invariant", format!("{:?} is not an artifact reference URI.", payload.target_uri), [payload.target_uri.clone()]);
     };
     let link = store::ArtifactLink { target, pin: store::LinkPin::Head, role: vocabulary::WEATHER_LINK_ROLE.to_string() };
     if base.weather_link.as_ref() == Some(&link) {

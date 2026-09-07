@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `remodeling.remodeling.snapshot`. */
+/** 💾️ Binary representation for `remodel.remodeling.snapshot`. */
 export type RemodelingSnapshotBinary = Uint8Array;

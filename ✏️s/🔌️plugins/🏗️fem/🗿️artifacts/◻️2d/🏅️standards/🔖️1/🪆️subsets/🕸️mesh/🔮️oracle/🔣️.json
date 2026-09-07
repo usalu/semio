@@ -15,8 +15,16 @@
           "mutationDirectoryName": "🧩️create-element",
           "scenarios": [
             {
-              "id": "appends-bar-e2-between-n2-and-n3",
-              "directoryName": "➖️appends-bar-e2-between-n2-and-n3"
+              "id": "appends-bar-e2-between-fc1c09",
+              "directoryName": "➖️appends-bar-e2-between-fc1c09"
+            },
+            {
+              "id": "braces-the-upper-d96634",
+              "directoryName": "📐️braces-the-upper-d96634"
+            },
+            {
+              "id": "rejects-a-dangling-b9e64c",
+              "directoryName": "🚫️rejects-a-dangling-b9e64c"
             }
           ]
         },
@@ -28,6 +36,14 @@
             {
               "id": "appends-node-n3",
               "directoryName": "📍️appends-node-n3"
+            },
+            {
+              "id": "appends-the-canopy-226a20",
+              "directoryName": "🏢️appends-the-canopy-226a20"
+            },
+            {
+              "id": "rejects-a-duplicate-eb0df0",
+              "directoryName": "🚫️rejects-a-duplicate-eb0df0"
             }
           ]
         },
@@ -37,8 +53,24 @@
           "mutationDirectoryName": "🗺️create-region",
           "scenarios": [
             {
-              "id": "appends-a-solid-rectangular-slab",
-              "directoryName": "🧱️appends-a-solid-rectangular-slab"
+              "id": "appends-a-solid-d78275",
+              "directoryName": "🧱️appends-a-solid-d78275"
+            },
+            {
+              "id": "infills-the-upper-6cc520",
+              "directoryName": "🏢️infills-the-upper-6cc520"
+            },
+            {
+              "id": "rejects-a-duplicate-11ca0d",
+              "directoryName": "🚫️rejects-a-duplicate-11ca0d"
+            },
+            {
+              "id": "denies-two-point-99954a",
+              "directoryName": "📐️denies-two-point-99954a"
+            },
+            {
+              "id": "denies-loose-hole-d9efa1",
+              "directoryName": "🕳️denies-loose-hole-d9efa1"
             }
           ]
         },
@@ -50,6 +82,18 @@
             {
               "id": "appends-the-ipe300-profile",
               "directoryName": "📐️appends-the-ipe300-profile"
+            },
+            {
+              "id": "adds-the-hea220-dfdf34",
+              "directoryName": "➕️adds-the-hea220-dfdf34"
+            },
+            {
+              "id": "rejects-a-duplicate-e91bc7",
+              "directoryName": "🚫️rejects-a-duplicate-e91bc7"
+            },
+            {
+              "id": "denies-zero-area-58b5ca",
+              "directoryName": "⚗️denies-zero-area-58b5ca"
             }
           ]
         },
@@ -59,8 +103,20 @@
           "mutationDirectoryName": "🗑️delete-element",
           "scenarios": [
             {
-              "id": "removes-bar-e2-and-keeps-its-end-nodes",
-              "directoryName": "🚫️removes-bar-e2-and-keeps-its-end-nodes"
+              "id": "removes-bar-e2-and-3c0260",
+              "directoryName": "🚫️removes-bar-e2-and-3c0260"
+            },
+            {
+              "id": "cuts-the-lower-e4a250",
+              "directoryName": "✂️cuts-the-lower-e4a250"
+            },
+            {
+              "id": "rejects-a-missing-611215",
+              "directoryName": "⛔️rejects-a-missing-611215"
+            },
+            {
+              "id": "blocks-udl-a1df8e",
+              "directoryName": "🔗️blocks-udl-a1df8e"
             }
           ]
         },
@@ -70,8 +126,16 @@
           "mutationDirectoryName": "🕳️delete-node",
           "scenarios": [
             {
-              "id": "removes-node-n3-without-cascading-to-its-support",
-              "directoryName": "🚫️removes-node-n3-without-cascading-to-its-support"
+              "id": "removes-node-n3-without-6eab3f",
+              "directoryName": "🚫️removes-node-n3-without-6eab3f"
+            },
+            {
+              "id": "drops-the-spare-6c285d",
+              "directoryName": "🗑️drops-the-spare-6c285d"
+            },
+            {
+              "id": "rejects-a-missing-429801",
+              "directoryName": "⛔️rejects-a-missing-429801"
             }
           ]
         },
@@ -81,8 +145,20 @@
           "mutationDirectoryName": "🚫️delete-region",
           "scenarios": [
             {
-              "id": "removes-the-slab-and-keeps-its-material",
-              "directoryName": "🚫️removes-the-slab-and-keeps-its-material"
+              "id": "removes-the-slab-and-5b301a",
+              "directoryName": "🚫️removes-the-slab-and-5b301a"
+            },
+            {
+              "id": "drops-the-spare-460714",
+              "directoryName": "🧹️drops-the-spare-460714"
+            },
+            {
+              "id": "rejects-a-missing-a83a6d",
+              "directoryName": "⛔️rejects-a-missing-a83a6d"
+            },
+            {
+              "id": "blocks-in-use-7c7862",
+              "directoryName": "🔗️blocks-in-use-7c7862"
             }
           ]
         },
@@ -92,8 +168,20 @@
           "mutationDirectoryName": "✂️delete-section",
           "scenarios": [
             {
-              "id": "removes-the-spare-hollow-section",
-              "directoryName": "🚫️removes-the-spare-hollow-section"
+              "id": "removes-the-spare-1c235a",
+              "directoryName": "🚫️removes-the-spare-1c235a"
+            },
+            {
+              "id": "drops-the-spare-dcf609",
+              "directoryName": "✂️drops-the-spare-dcf609"
+            },
+            {
+              "id": "rejects-a-missing-dbd0a4",
+              "directoryName": "⛔️rejects-a-missing-dbd0a4"
+            },
+            {
+              "id": "blocks-in-use-0a6a3c",
+              "directoryName": "🔗️blocks-in-use-0a6a3c"
             }
           ]
         },
@@ -103,8 +191,24 @@
           "mutationDirectoryName": "♻️replace-element",
           "scenarios": [
             {
-              "id": "converts-beam-e1-into-a-bar-in-place",
-              "directoryName": "♻️converts-beam-e1-into-a-bar-in-place"
+              "id": "converts-beam-e1-into-a-5d21f5",
+              "directoryName": "♻️converts-beam-e1-into-a-5d21f5"
+            },
+            {
+              "id": "regrades-the-roof-fb20eb",
+              "directoryName": "🔧️regrades-the-roof-fb20eb"
+            },
+            {
+              "id": "rejects-a-missing-bd448c",
+              "directoryName": "⛔️rejects-a-missing-bd448c"
+            },
+            {
+              "id": "denies-rename-0d46d8",
+              "directoryName": "🪪️denies-rename-0d46d8"
+            },
+            {
+              "id": "dangling-start-cda887",
+              "directoryName": "🚫️dangling-start-cda887"
             }
           ]
         },
@@ -114,8 +218,28 @@
           "mutationDirectoryName": "🔄️replace-region",
           "scenarios": [
             {
-              "id": "punches-a-stair-opening-through-the-slab",
-              "directoryName": "🪜️punches-a-stair-opening-through-the-slab"
+              "id": "punches-a-stair-f7b3b1",
+              "directoryName": "🪜️punches-a-stair-f7b3b1"
+            },
+            {
+              "id": "rejects-a-missing-6e0d70",
+              "directoryName": "⛔️rejects-a-missing-6e0d70"
+            },
+            {
+              "id": "widens-the-window-09a8ec",
+              "directoryName": "🪟️widens-the-window-09a8ec"
+            },
+            {
+              "id": "denies-rename-574c91",
+              "directoryName": "🪪️denies-rename-574c91"
+            },
+            {
+              "id": "dangling-mat-7ef81b",
+              "directoryName": "👻️dangling-mat-7ef81b"
+            },
+            {
+              "id": "denies-zero-thick-7d805e",
+              "directoryName": "📐️denies-zero-thick-7d805e"
             }
           ]
         },
@@ -125,8 +249,24 @@
           "mutationDirectoryName": "📏️replace-section",
           "scenarios": [
             {
-              "id": "stiffens-ipe200-with-a-reinforced-profile",
-              "directoryName": "💪️stiffens-ipe200-with-a-reinforced-profile"
+              "id": "stiffens-ipe200-with-5e9c08",
+              "directoryName": "💪️stiffens-ipe200-with-5e9c08"
+            },
+            {
+              "id": "rejects-a-missing-b468f4",
+              "directoryName": "⛔️rejects-a-missing-b468f4"
+            },
+            {
+              "id": "thickens-the-chs-e235a5",
+              "directoryName": "🛠️thickens-the-chs-e235a5"
+            },
+            {
+              "id": "denies-rename-1d02dd",
+              "directoryName": "🪪️denies-rename-1d02dd"
+            },
+            {
+              "id": "denies-zero-iy-404e31",
+              "directoryName": "⚗️denies-zero-iy-404e31"
             }
           ]
         }

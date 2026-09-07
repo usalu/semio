@@ -332,6 +332,47 @@ def check(label, grammar_path, doc_texts):
     return ok_all, g, rec
 
 
+# ── binary layout lint ─────────────────────────────────────────────────────────
+# 🔬️ The record layout every 💾️binary triple must actually describe, read off the framework:
+# `os_pack::encode_record_fields` = `field_count varint, (field_id varint, tagged value)*`
+# (🎒️pack/🌱️value/🦀️.rs:342), sorted by field id, `Absent` omitted; tag alphabet 0x00..0x17;
+# the value bridge is the one-field `value_bridge_spec()` (🏪️store/🦀️.rs:4970, field id 1,
+# `Shape::Value`, `TAG_VALUE` 0x11). Anything short of naming these is the copy-pasted stub.
+SNAPSHOT_FIELD_IDS = ["0", "schema", "1", "id", "2", "streams", "3", "assets", "4", "durable-artifacts", "5", "calibration", "6", "params", "7", "gcps", "8", "job", "9", "results"]
+OP_ORDINAL_ENDS = ["create-stream", "commit-reconstruction"]
+
+
+def binary_layout_problems(facet, slug, proto, ksy, spicy, abnf):
+    out = []
+    if slug in ("snapshot", "op"):
+        for label, body in (("🥋️", ksy), ("🌶️", spicy), ("🔠️", abnf)):
+            if "field_count" not in body and "field-count" not in body:
+                out.append(f"{label} never names the record field_count")
+            if "field_id" not in body and "field-id" not in body:
+                out.append(f"{label} never names the per-entry field_id")
+        if "0x0d" not in ksy.lower():
+            out.append("🥋️ no 0x0D record tag in the value alphabet")
+        for token in SNAPSHOT_FIELD_IDS if slug == "snapshot" else OP_ORDINAL_ENDS:
+            if token not in ksy:
+                out.append(f"🥋️ missing {'field id' if slug == 'snapshot' else 'ordinal'} `{token}`")
+        if slug == "op":
+            for i, kw in enumerate(("create-stream", "commit-reconstruction")):
+                probe = f"{0 if i == 0 else 34:2d} {kw}"
+                if probe not in abnf or probe not in spicy:
+                    out.append(f"ordinal row `{probe.strip()}` missing from 🔠️/🌶️")
+    else:
+        for label, body in (("🥋️", ksy), ("🌶️", spicy), ("🔠️", abnf)):
+            # ABNF spells a byte `%x11`, ksy/spicy spell it `0x11` — accept either notation.
+            if "0x11" not in body and "%x11" not in body:
+                out.append(f"{label} never names TAG_VALUE 0x11")
+            if "VALUE_BRIDGE_FIELD_ID" not in body and "value_bridge_spec" not in body:
+                out.append(f"{label} never names the value bridge spec")
+        for tag in ("12", "0C", "10", "07"):
+            if f"%x{tag}" not in abnf.upper().replace("%X", "%x"):
+                out.append(f"🔠️ DslValue tag 0x{tag} unlisted")
+    return out
+
+
 def read(path):
     with open(path, encoding="utf-8") as fh:
         return fh.read()
@@ -424,6 +465,7 @@ def main():
             problems.append(f"🌶️ module is not Remodeling_{slug}")
         if not abnf.startswith("; abnf remodeling."):
             problems.append("🔠️ header comment is not remodeling.*")
+        problems.extend(binary_layout_problems(facet, slug, proto, ksy, spicy, abnf))
         if "repeat " not in proto:
             ok, consumed, total, toks, _ = proto_rec.recognize(proto)
             if not ok:

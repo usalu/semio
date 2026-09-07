@@ -102,15 +102,73 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id              | dir                | fixture                                         |
-    | create-node     | ⚪️create-node     | 📍️appends-the-column-head-node-n3                 |
-    | delete-node     | 🕳️delete-node     | 🚫️removes-the-column-head-node-under-a-live-frame |
-    | create-element  | 🧩️create-element  | ➖️appends-a-diagonal-bracing-bar                  |
-    | delete-element  | 🗑️delete-element  | 🚫️removes-the-bracing-bar-and-leaves-the-frame    |
-    | replace-element | ♻️replace-element | 🔄️rolls-the-column-about-its-own-axis             |
-    | create-section  | 📐️create-section    | 🔳️appends-a-square-hollow-profile                 |
-    | delete-section  | ✂️delete-section  | 🚫️removes-the-spare-square-hollow-profile         |
-    | replace-section | 📏️replace-section | 🌀️raises-the-torsion-constant-of-hea200           |
-    | create-solid    | 🧊️create-solid    | 🏠️appends-an-extruded-roof-slab                   |
-    | delete-solid    | 🚫️delete-solid    | 🚫️removes-the-roof-slab-and-keeps-its-material    |
-    | replace-solid   | 🔄️replace-solid     | 📚️thickens-the-slab-and-adds-a-mesh-layer         |
+    | id              | dir               | fixture                           |
+    | create-node     | ⚪️create-node     | 📍️appends-the-column-head-node-n3 |
+    | delete-node     | 🕳️delete-node     | 🚫️removes-the-column-head-056295  |
+    | create-element  | 🧩️create-element  | ➖️appends-a-diagonal-bracing-bar  |
+    | delete-element  | 🗑️delete-element  | 🚫️removes-the-bracing-be89d2      |
+    | replace-element | ♻️replace-element | 🔄️rolls-the-column-50f732         |
+    | create-section  | 📐️create-section  | 🔳️appends-a-square-bd0e4e         |
+    | delete-section  | ✂️delete-section  | 🚫️removes-the-spare-30ecfb        |
+    | replace-section | 📏️replace-section | 🌀️raises-the-torsion-296ef0       |
+    | create-solid    | 🧊️create-solid    | 🏠️appends-an-extruded-roof-slab   |
+    | delete-solid    | 🚫️delete-solid    | 🚫️removes-the-roof-slab-f0fb64    |
+    | replace-solid   | 🔄️replace-solid   | 📚️thickens-the-slab-and-b51ef0    |
+
+  @id-hall-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> glulam-hall vector through both implementations
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
+    Examples:
+    | id              | dir               | fixture                   |
+    | replace-element | ♻️replace-element | 🏗️hall-strut-d0e4b7       |
+    | create-node     | ⚪️create-node     | 🏗️hall-new-node-b26700    |
+    | delete-section  | ✂️delete-section  | 🏗️hall-cut-shs-d44b9e     |
+    | replace-section | 📏️replace-section | 🏗️hall-deep-purlin-176fd0 |
+    | create-section  | 📐️create-section  | 🏗️hall-new-beam-251a92    |
+    | replace-solid   | 🔄️replace-solid   | 🏗️hall-thick-raft-cddc0f  |
+    | delete-node     | 🕳️delete-node     | 🏗️hall-cut-node-8350fd    |
+    | delete-element  | 🗑️delete-element  | 🏗️hall-cut-tie-c268d4     |
+    | delete-solid    | 🚫️delete-solid    | 🏗️hall-cut-apron-6c79d3   |
+    | create-solid    | 🧊️create-solid    | 🏗️hall-new-slab-d79da4    |
+    | create-element  | 🧩️create-element  | 🏗️hall-new-tie-074a69     |
+
+  @id-reject
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Refuse the committed <id> vector in both implementations and leave the model where it was
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
+    Examples:
+    | id                      | dir               | fixture                   |
+    | same-element-61adb2     | ♻️replace-element | ⏸️same-element-61adb2     |
+    | dangling-sec-70b168     | ♻️replace-element | 🚨️dangling-sec-70b168     |
+    | renames-brace-219be2    | ♻️replace-element | 🪪️renames-brace-219be2    |
+    | dup-node-id-86f2e1      | ⚪️create-node     | 🚨️dup-node-id-86f2e1      |
+    | purlin-in-use-99eb01    | ✂️delete-section  | ⛓️purlin-in-use-99eb01    |
+    | no-such-section-50d29b  | ✂️delete-section  | 🚨️no-such-section-50d29b  |
+    | same-section-d1d013     | 📏️replace-section | ⏸️same-section-d1d013     |
+    | negative-iy-d4e0a8      | 📏️replace-section | 🧨️negative-iy-d4e0a8      |
+    | renames-purlin-dfe160   | 📏️replace-section | 🪪️renames-purlin-dfe160   |
+    | dup-section-id-a76686   | 📐️create-section  | 🚨️dup-section-id-a76686   |
+    | zero-area-475a19        | 📐️create-section  | 🧨️zero-area-475a19        |
+    | same-solid-8ad12c       | 🔄️replace-solid   | ⏸️same-solid-8ad12c       |
+    | zero-height-2b131a      | 🔄️replace-solid   | 📐️zero-height-2b131a      |
+    | dangling-mat-9c89da     | 🔄️replace-solid   | 🚨️dangling-mat-9c89da     |
+    | renames-apron-7bfadd    | 🔄️replace-solid   | 🪪️renames-apron-7bfadd    |
+    | no-such-node-4027a8     | 🕳️delete-node     | 🚨️no-such-node-4027a8     |
+    | rafter-under-udl-e0342d | 🗑️delete-element  | ⛓️rafter-under-udl-e0342d |
+    | no-such-element-eb788c  | 🗑️delete-element  | 🚨️no-such-element-eb788c  |
+    | raft-under-load-e4ea39  | 🚫️delete-solid    | ⛓️raft-under-load-e4ea39  |
+    | no-such-solid-f08d23    | 🚫️delete-solid    | 🚨️no-such-solid-f08d23    |
+    | sliver-outline-316a7c   | 🧊️create-solid    | 📐️sliver-outline-316a7c   |
+    | dangling-mat-1ebd78     | 🧊️create-solid    | 🚨️dangling-mat-1ebd78     |
+    | dangling-start-ab4132   | 🧩️create-element  | 🚨️dangling-start-ab4132   |

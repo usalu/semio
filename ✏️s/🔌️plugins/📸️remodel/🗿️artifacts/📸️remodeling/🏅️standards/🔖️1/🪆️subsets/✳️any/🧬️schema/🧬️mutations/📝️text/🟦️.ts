@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `remodeling.remodeling.mutations`. */
+/** 📝️ Text representation for `remodel.remodeling.mutations`. */
 export type RemodelingMutationsText = string;

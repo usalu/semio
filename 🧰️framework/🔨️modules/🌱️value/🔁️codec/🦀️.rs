@@ -562,6 +562,45 @@ mod tests {
         assert_eq!(f64::from_value(encoded), Ok(-0.0));
     }
 
+    /// 🔬️ An `f32` widens by DECIMAL identity, not by bits: `0.42f32` is the number the writer
+    /// wrote, so `to_value` must carry the `f64` whose shortest lexeme is `0.42` — the byte
+    /// `serde_json::serialize_f32` writes — and not `0.42f32 as f64`, whose own shortest lexeme is
+    /// `0.41999998688697815`. `serde_json` is the third-party oracle for both widths here.
+    #[test]
+    fn f32_widens_through_its_own_shortest_lexeme_not_its_bits() {
+        for value in [0.42_f32, 1.1, 3.14159, 1e-7, 16777217.0, -0.02, 0.85, 0.0625, f32::MIN_POSITIVE, f32::MAX, f32::from_bits(1)] {
+            let DslValue::Number(Number::Float(widened)) = value.to_value() else {
+                panic!("f32 must encode as Number::Float, found {:?}", value.to_value());
+            };
+            assert_eq!(serde_json::to_string(&widened).expect("finite f64"), serde_json::to_string(&value).expect("finite f32"), "widened lexeme must equal serde_json's own f32 lexeme for {value:e}");
+            assert_eq!(f32::from_value(value.to_value()), Ok(value), "narrowing back must be exact for {value:e}");
+        }
+        assert_eq!((0.42_f32).to_value(), DslValue::float(0.42));
+    }
+
+    /// 🔬️ Deterministic sweep over arbitrary `f32` bit patterns — every finite `f32` must survive
+    /// `to_value`/`from_value` bit-exactly (this is what keeps the binary record carriers, which
+    /// store `Number::Float`'s `f64` verbatim, lossless for `f32` fields) AND must widen to a
+    /// `f64` that prints as `serde_json` prints the `f32`.
+    #[test]
+    fn every_finite_f32_round_trips_bit_exactly_and_prints_like_serde_json() {
+        let mut state: u64 = 0x9E37_79B9_7F4A_7C15;
+        let mut checked = 0usize;
+        for _ in 0..200_000u32 {
+            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            let value = f32::from_bits((state >> 32) as u32);
+            if !value.is_finite() {
+                continue;
+            }
+            let encoded = value.to_value();
+            let DslValue::Number(Number::Float(widened)) = encoded else { panic!("f32 must encode as Number::Float") };
+            assert_eq!(serde_json::to_string(&widened).expect("finite f64"), serde_json::to_string(&value).expect("finite f32"), "lexeme mismatch for f32 bits {:#010x}", value.to_bits());
+            assert_eq!(f32::from_value(encoded).expect("float").to_bits(), value.to_bits(), "bit mismatch for f32 bits {:#010x}", value.to_bits());
+            checked += 1;
+        }
+        assert!(checked > 150_000, "sweep must reach a real sample count, got {checked}");
+    }
+
     #[test]
     fn whole_float_and_same_valued_integer_are_distinct_dsl_values() {
         let as_float = DslValue::float(3600.0);

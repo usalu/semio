@@ -1,6 +1,6 @@
 //! 🪪️ Actual builder admission laws; each registered law runs in an isolated test process.
 
-use crate::app::{declarations::fixture, ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, Plugin};
+use crate::app::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, Plugin, declarations::fixture};
 use store::os_io::ArtifactKindId;
 
 fn definition(kind: &str) -> ArtifactDefinition {
@@ -9,16 +9,16 @@ fn definition(kind: &str) -> ArtifactDefinition {
 
 fn declaration(kind: &str) -> ArtifactDeclaration {
     let schema = fixture::build_declaration().standards[0].subsets[0].schema.descriptor.clone();
-    let capability = ArtifactCapability::new(ArtifactIdentity::parse(&format!("{kind}.schema.fixture")).unwrap(), ArtifactCapabilityKind::schema()).descriptor(b"admission fixture".to_vec()).unwrap().claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), schema.id).unwrap()).unwrap();
+    let capability = ArtifactCapability::new(ArtifactIdentity::parse(&format!("{kind}.schema.fixture")).unwrap(), ArtifactCapabilityKind::schema())
+        .descriptor(b"admission fixture".to_vec())
+        .unwrap()
+        .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), schema.id).unwrap())
+        .unwrap();
     ArtifactDeclaration::builder(definition(kind).capability(capability).unwrap()).schema(schema).try_build().expect("inert declaration")
 }
 
 async fn assert_no_publication() {
-    for (id, codec) in [
-        ("s.testkit.w1c-fixture@1/*", "semio.testkit.w1c-fixture.std1-any/v1"),
-        ("s.testkit.w1c-fixture@1/strict", "semio.testkit.w1c-fixture.std1-strict/v1"),
-        ("s.testkit.w1c-fixture@2/*", "semio.testkit.w1c-fixture.std2-any/v1"),
-    ] {
+    for (id, codec) in [("s.testkit.w1c-fixture@1/*", "semio.testkit.w1c-fixture.std1-any/v1"), ("s.testkit.w1c-fixture@1/strict", "semio.testkit.w1c-fixture.std1-strict/v1"), ("s.testkit.w1c-fixture@2/*", "semio.testkit.w1c-fixture.std2-any/v1")] {
         assert!(!semio_framework_schema::artifact_schema_descriptor_registered(id));
         assert!(store::document_codec(codec).await.expect("registry available").is_none());
     }

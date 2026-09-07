@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
-#[artifact_schema(id = "s.remodeling.remodeling.remodelingworldcamera")]
+#[artifact_schema(id = "s.remodel.remodeling.remodelingworldcamera")]
 pub struct RemodelingWorldCamera {
     #[state(config)]
     pub position: [f64; 3],
@@ -19,7 +19,7 @@ pub struct RemodelingWorldCamera {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
-#[artifact_schema(id = "s.remodeling.remodeling.remodelinglayervisibility")]
+#[artifact_schema(id = "s.remodel.remodeling.remodelinglayervisibility")]
 pub struct RemodelingLayerVisibility {
     #[state(config)]
     pub mesh: bool,
@@ -36,7 +36,7 @@ pub struct RemodelingLayerVisibility {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
-#[artifact_schema(id = "s.remodeling.remodeling.remodelingframecursor")]
+#[artifact_schema(id = "s.remodel.remodeling.remodelingframecursor")]
 pub struct RemodelingFrameCursor {
     #[state(config)]
     pub stream_id: Option<String>,
@@ -47,7 +47,7 @@ pub struct RemodelingFrameCursor {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
-#[artifact_schema(id = "s.remodeling.remodeling.config")]
+#[artifact_schema(id = "s.remodel.remodeling.config")]
 pub struct RemodelingConfig {
     #[state(config)]
     pub camera: RemodelingWorldCamera,
@@ -64,13 +64,13 @@ pub struct RemodelingConfig {
 }
 
 //region 📎 App-schema descriptor
-/// 📎 The `s.remodeling.remodeling.remodelingworldcamera` app-schema descriptor (config + presence facets) —
+/// 📎 The `s.remodel.remodeling.remodelingworldcamera` app-schema descriptor (config + presence facets) —
 /// returned, not self-registered; `ArtifactEditor::app_schema` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` for
 /// registration.
 pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
-        id: "s.remodeling.remodeling.remodelingworldcamera",
+        id: "s.remodel.remodeling.remodelingworldcamera",
         config: ::schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         presence: ::schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),

@@ -68,17 +68,24 @@ fn committed_json_is_canonical() {
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "create-solid/appends-an-extruded-roof-slab: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "create-solid/appends-an-extruded-roof-slab: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "create-solid/appends-an-extruded-roof-slab: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "create-solid/appends-an-extruded-roof-slab: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "create-solid/appends-an-extruded-roof-slab: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "create-solid/appends-an-extruded-roof-slab: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "create-solid/appends-an-extruded-roof-slab: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("create-solid/appends-an-extruded-roof-slab: unknown outcome status {other:?}"),
     }

@@ -1,6 +1,7 @@
 //! 🔺️ Sparse diff builder for `AddLoad` — clones the target case, pushes the load, patches it.
 use super::AddLoad;
 use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
+use crate::artifacts::fem3d::mutations::resolve_load;
 use crate::artifacts::fem3d::{load_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
@@ -11,6 +12,9 @@ pub fn diff(payload: &AddLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcom
     let new_load_id = load_id(&payload.load);
     if existing.loads.iter().any(|load| load_id(load) == new_load_id) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Load \"{}\" already exists in case \"{}\".", new_load_id, payload.case_id));
+    }
+    if let Some(refusal) = resolve_load(base, &payload.load) {
+        return refusal;
     }
     let mut item = existing.clone();
     item.loads.push((*payload.load).clone());

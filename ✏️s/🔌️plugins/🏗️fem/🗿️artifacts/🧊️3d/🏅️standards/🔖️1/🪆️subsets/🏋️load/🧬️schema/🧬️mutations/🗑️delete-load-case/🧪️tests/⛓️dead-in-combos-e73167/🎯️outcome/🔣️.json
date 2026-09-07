@@ -1,0 +1,16 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-referenced",
+  "path": [
+    "dead",
+    "uls_str",
+    "sls_char",
+    "sls_qp_spare"
+  ],
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-referenced"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "mutation": "updateFeatureParams",
+  "params": {
+    "detector": "harris",
+    "targetCount": 2400,
+    "octaves": 5,
+    "edgeThreshold": 8.5
+  }
+}

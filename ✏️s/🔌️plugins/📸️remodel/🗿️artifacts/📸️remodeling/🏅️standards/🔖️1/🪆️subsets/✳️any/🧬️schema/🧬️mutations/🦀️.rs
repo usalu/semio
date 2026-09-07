@@ -96,6 +96,18 @@ pub use super::update_rig_extrinsic::{update_rig_extrinsic, UpdateRigExtrinsic};
 pub use super::update_sfm_params::{update_sfm_params, UpdateSfmParams};
 //#endregion 🔖️Reexports
 
+//#region 🔖️CanonicalOrder
+/// 🔢️ Insertion point that keeps a keyed collection in ascending key order. Every collection this
+/// vocabulary addresses by key — `streams` and `gcps` by `id`, `calibration.cameras` by `id`,
+/// `calibration.rig` by `camera_id`, a stream's `frames` by `(index, asset_id)`, a GCP's
+/// `observations` by `(stream_id, frame_index)` — is a canonically ordered document invariant, so a
+/// `create-*`/`add-*` puts its member exactly where a later `delete-*`/`remove-*` took it from and
+/// `inverse(m, before)` applied to `after` restores `before` member positions included.
+pub fn ordered_index<T, K: Ord>(items: &[T], key: &K, key_of: impl Fn(&T) -> K) -> usize {
+    items.partition_point(|item| key_of(item) < *key)
+}
+//#endregion 🔖️CanonicalOrder
+
 //#region 🔖️ApplyInverse
 /// ▶️ Applies `mutation` via its diff — kept as a free-function wrapper (matching
 /// `🎬️sequence`'s `apply_sequence_mutation`) since external callers (the editor surface) still call it

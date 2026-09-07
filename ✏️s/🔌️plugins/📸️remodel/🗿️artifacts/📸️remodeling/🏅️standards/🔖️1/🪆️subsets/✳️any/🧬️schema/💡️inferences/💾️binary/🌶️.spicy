@@ -7,7 +7,19 @@ module Remodeling_inference;
 public type Body = unit {
     symbol_count: uint64 &convert=$$;
     symbols:      Symbol[self.symbol_count];
-    fields:       bytes &eod;
+    field_count:  uint64 &convert=$$ &requires=($$ == 1);
+    field_id:     uint64 &convert=$$ &requires=($$ == 1);   # VALUE_BRIDGE_FIELD_ID
+    bridge_tag:   uint8 &requires=($$ == 0x11);             # TAG_VALUE
+    value:        DslValue;
+};
+
+# 🌱️ pack_value::encode_dsl_value — a closed 10-tag alphabet: 0x12 null, 0x01/0x02 bool,
+# 0x03 int varint, 0x04 uint varint, 0x05 f64 (8 LE bytes), 0x06 symref varint,
+# 0x07 inline (len varint + UTF-8), 0x0C array (count + nodes), 0x10 object (count +
+# (inline-key, node) pairs sorted by key bytes; object keys are never symrefs).
+type DslValue = unit {
+    tag:  uint8;
+    body: bytes &eod;
 };
 
 type Symbol = unit {

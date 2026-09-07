@@ -17,6 +17,12 @@
       "path": "✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python",
       "version": "0.1.0",
       "module": "🧪️oracle.🐍️"
+    },
+    {
+      "implementation": "python",
+      "package": "jsonschema",
+      "version": "4.26.0",
+      "module": "jsonschema"
     }
   ]
 }

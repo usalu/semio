@@ -3426,7 +3426,14 @@ mod tests {
         assert!((total_ty_reaction - expected).abs() / expected < 0.01, "reaction sum {total_ty_reaction} vs expected {expected}");
     }
 
-    /// 🎯️ Cantilever modal frequencies vs the classical closed form `f_i = (β_iL)²/(2πL²) · sqrt(EI/ρA)`.
+    /// 🎯️ Cantilever modal frequencies vs the classical closed form `f_i = (β_iL)²/(2πL²)·sqrt(EI/ρA)`
+    /// with `β_iL` the first three roots of `cos(x)cosh(x)+1=0`. NINE elements are kept (27 free
+    /// DOFs; `sparse::SUBSPACE_MAXIMUM_ORDER = 40` caps any refinement at 13 anyway) because that
+    /// discretisation already reaches 2 % with two orders of magnitude to spare: an independent
+    /// numpy/scipy `eigh` on the identical consistent-mass Hermitian beam system reports
+    /// 9.924511 / 62.198891 / 174.216924 Hz, i.e. 0.0001 % / 0.005 % / 0.039 % above the closed form
+    /// (`🔨️w7-kernel-references.py` section 1). The 2 % bound therefore gates the SOLVER
+    /// (`subspace_iteration` convergence, mass assembly), not the mesh.
     #[test]
     fn modal_cantilever_matches_analytical_frequencies() {
         let (e, iy, area, density, total_l) = (200e9, 1e-5, 0.01, 7850.0, 3.0);
@@ -3437,42 +3444,57 @@ mod tests {
         let model = AnalysisModel { nodes, elements, supports: vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }] };
 
         let result = modal(&model, 3).expect("modal solves");
-        let beta_l = [1.875104_f64, 4.694091, 7.854757];
+        let beta_l = [1.875104068711961_f64, 4.694091132974175, 7.854757438237613];
+        let scale = (e * iy / (density * area)).sqrt();
         for i in 0..3 {
-            let expected = (beta_l[i] * beta_l[i]) / (2.0 * std::f64::consts::PI * total_l * total_l) * (e * iy / (density * area)).sqrt();
+            let expected = (beta_l[i] * beta_l[i]) / (2.0 * std::f64::consts::PI * total_l * total_l) * scale;
             let actual = result.frequencies_hz[i];
-            assert!((actual - expected).abs() / expected < 0.10, "mode {i}: {actual} Hz vs analytical {expected} Hz");
+            assert!((actual - expected).abs() / expected < 0.02, "mode {i}: {actual} Hz vs analytical {expected} Hz");
         }
     }
 
-    /// 🌀️ Euler pinned-pinned column buckling load vs `π²EI/L²` (K=1.0).
+    /// 🌀️ Euler column buckling across all four classical end conditions vs `π²EI/(KL)²`. An
+    /// independent numpy/scipy geometric-stiffness eigenproblem on this identical 7-element
+    /// discretisation (`🔨️w7-kernel-references.py` section 2) reports 1754694.177 N (K=1.0,
+    /// 0.006 % above the closed form), 7024460.631 N (K=0.5, 0.087 %), 3590288.885 N (K=0.7,
+    /// 0.265 % — of which 0.24 % is the K=0.7 rounding of the exact `4.4934²EI/L²` root of
+    /// `tan(x)=x`) and 438650.625 N (K=2.0, 0.0004 %), so 2 % is a real gate on every case.
     #[test]
     fn buckling_euler_column_matches_analytical_load() {
         let (e, iy, area, density, total_l) = (200e9, 8e-6, 0.005, 7850.0, 3.0);
-        let n = 7;
+        let n = 7usize;
         let dl = total_l / n as f64;
-        let nodes: Vec<Node> = (0..=n).map(|i| Node { id: format!("n{i}"), pos: [dl * i as f64, 0.0, 0.0] }).collect();
-        let elements: Vec<Elements> = (0..n).map(|i| BeamEb2 { id: format!("e{i}"), start: format!("n{i}"), end: format!("n{}", i + 1), e, area, iy, density }.into()).collect();
-        let supports = vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: format!("n{n}"), fixed: vec![Dof::Ty] }];
-        let model = AnalysisModel { nodes, elements, supports };
-
         let p_ref = 1.0;
-        let reference_case = LoadCase { id: "axial_compression".into(), nodal_loads: vec![NodalLoad { node_id: format!("n{n}"), dof: Dof::Tx, value: -p_ref }], member_loads: vec![], self_weight: false };
+        let cases: [(&str, &[Dof], &[Dof], f64); 4] = [
+            ("pinned-pinned", &[Dof::Tx, Dof::Ty], &[Dof::Ty], 1.0),
+            ("fixed-fixed", &[Dof::Tx, Dof::Ty, Dof::Rz], &[Dof::Ty, Dof::Rz], 0.5),
+            ("fixed-pinned", &[Dof::Tx, Dof::Ty, Dof::Rz], &[Dof::Ty], 0.7),
+            ("fixed-free", &[Dof::Tx, Dof::Ty, Dof::Rz], &[], 2.0),
+        ];
 
-        // Sanity-check the reference static solve first: pure axial compression should give nonzero Tx
-        // displacement at the loaded end and ~zero Ty/Rz everywhere (no bending under a concentric load).
-        let static_results = solve_multi_case(&model, std::slice::from_ref(&reference_case), &[], [0.0, 0.0, 0.0]).expect("reference solves");
-        let static_result = static_results.get("axial_compression").unwrap();
-        for d in &static_result.displacements {
-            assert!(d.values[Dof::Ty.index()].abs() < 1e-9, "unexpected transverse displacement at {}: {}", d.node_id, d.values[Dof::Ty.index()]);
+        for (name, base, tip, k_factor) in cases {
+            let nodes: Vec<Node> = (0..=n).map(|i| Node { id: format!("n{i}"), pos: [dl * i as f64, 0.0, 0.0] }).collect();
+            let elements: Vec<Elements> = (0..n).map(|i| BeamEb2 { id: format!("e{i}"), start: format!("n{i}"), end: format!("n{}", i + 1), e, area, iy, density }.into()).collect();
+            let mut supports = vec![Support { node_id: "n0".into(), fixed: base.to_vec() }];
+            if !tip.is_empty() {
+                supports.push(Support { node_id: format!("n{n}"), fixed: tip.to_vec() });
+            }
+            let model = AnalysisModel { nodes, elements, supports };
+            let reference_case = LoadCase { id: "axial_compression".into(), nodal_loads: vec![NodalLoad { node_id: format!("n{n}"), dof: Dof::Tx, value: -p_ref }], member_loads: vec![], self_weight: false };
+
+            // Sanity-check the reference static solve first: pure axial compression should give nonzero Tx
+            // displacement at the loaded end and ~zero Ty/Rz everywhere (no bending under a concentric load).
+            let static_results = solve_multi_case(&model, std::slice::from_ref(&reference_case), &[], [0.0, 0.0, 0.0]).expect("reference solves");
+            let static_result = static_results.get("axial_compression").unwrap();
+            for d in &static_result.displacements {
+                assert!(d.values[Dof::Ty.index()].abs() < 1e-9, "{name}: unexpected transverse displacement at {}: {}", d.node_id, d.values[Dof::Ty.index()]);
+            }
+
+            let critical_load = buckling(&model, &reference_case, 1).expect("buckling solves").factors[0] * p_ref;
+            let expected = std::f64::consts::PI.powi(2) * e * iy / (k_factor * total_l).powi(2);
+            assert!(critical_load > 0.0, "{name}: critical load should be positive, got {critical_load}");
+            assert!((critical_load - expected).abs() / expected < 0.02, "{name}: critical load {critical_load} vs analytical {expected}");
         }
-
-        let result = buckling(&model, &reference_case, 1).expect("buckling solves");
-        let factor = result.factors[0];
-        let critical_load = factor * p_ref;
-        let expected = std::f64::consts::PI.powi(2) * e * iy / (total_l * total_l);
-        assert!(critical_load > 0.0, "critical load should be positive, got {critical_load}");
-        assert!((critical_load - expected).abs() / expected < 0.10, "critical load {critical_load} vs analytical {expected}");
     }
 
     /// 🔍️ Duplicate-node-id models are rejected the same way `lib.rs::validate` rejects them.

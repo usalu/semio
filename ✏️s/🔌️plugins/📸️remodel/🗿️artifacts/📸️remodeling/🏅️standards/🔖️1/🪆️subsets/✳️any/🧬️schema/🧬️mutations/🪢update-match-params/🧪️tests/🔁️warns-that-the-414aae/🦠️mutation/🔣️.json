@@ -1,0 +1,11 @@
+{
+  "mutation": "updateMatchParams",
+  "params": {
+    "matcher": "brute-force",
+    "ratioTest": 0.8515625,
+    "crossCheck": true,
+    "sequentialWindow": 6,
+    "maxPairsPerFrame": 16,
+    "loopClosure": true
+  }
+}

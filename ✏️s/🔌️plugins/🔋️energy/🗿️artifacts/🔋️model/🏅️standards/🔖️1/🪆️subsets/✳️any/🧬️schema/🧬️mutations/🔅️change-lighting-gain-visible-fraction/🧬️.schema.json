@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeLightingGainVisibleFraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newVisibleFraction"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newVisibleFraction": {
+      "type": "number"
+    }
+  }
+}

@@ -2,11 +2,18 @@
 use protocol::{FromValue, Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation, ToValue};
 use std::fmt::Debug;
 
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.json")).expect("declaration fixture cases") }
-fn i32_value(value: &serde_json::Value) -> i32 { i32::try_from(value.as_i64().expect("integer")).expect("i32") }
+fn cases() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🔣️.json")).expect("declaration fixture cases")
+}
+fn i32_value(value: &serde_json::Value) -> i32 {
+    i32::try_from(value.as_i64().expect("integer")).expect("i32")
+}
 
 pub(super) fn assert_metadata<S, M, L>(descriptor: &str, operation: fn(i32) -> M)
-where M: Mutation<S> + SemanticMutation<S>, L: MutationLeaf {
+where
+    M: Mutation<S> + SemanticMutation<S>,
+    L: MutationLeaf,
+{
     let descriptor_json: serde_json::Value = serde_json::from_str(descriptor).expect("owned descriptor JSON");
     assert_eq!(serde_json::Value::from(L::DESCRIPTOR.to_value()), descriptor_json);
     assert!(L::DESCRIPTOR.validate().is_ok());
@@ -23,7 +30,15 @@ where M: Mutation<S> + SemanticMutation<S>, L: MutationLeaf {
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", provenance.owner));
     assert_eq!(provenance.descriptor_path, format!("{}/🔣️.json", provenance.owner));
     assert!(provenance.owner.ends_with("/🧬️mutations/📝️set-value"));
-    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, owner_layout: protocol::MutationOwnerLayout::Flat, taxonomy_path: provenance.taxonomy_path, mutation_payload_facet: "🦠️mutation", source_filename: "🦀️.rs", descriptor_filename: "🔣️.json" };
+    let scope = protocol::MutationLeafSourceScope {
+        workspace_token: provenance.workspace_token,
+        mutation_root: provenance.mutation_root,
+        owner_layout: protocol::MutationOwnerLayout::Flat,
+        taxonomy_path: provenance.taxonomy_path,
+        mutation_payload_facet: "🦠️mutation",
+        source_filename: "🦀️.rs",
+        descriptor_filename: "🔣️.json",
+    };
     assert!(protocol::validate_mutation_leaf_source(&L::DESCRIPTOR, &provenance, &scope).is_ok());
     let mut wrong = provenance;
     wrong.source_path = "macro-template/🦀️.rs";
@@ -31,7 +46,11 @@ where M: Mutation<S> + SemanticMutation<S>, L: MutationLeaf {
 }
 
 pub(super) fn assert_laws<S, M>(snapshot: fn(i32) -> S, operation: fn(i32) -> M)
-where S: Clone + Debug + PartialEq, M: Mutation<S> + Debug + PartialEq, M::Diff: ToValue + FromValue {
+where
+    S: Clone + Debug + PartialEq,
+    M: Mutation<S> + Debug + PartialEq,
+    M::Diff: ToValue + FromValue,
+{
     for row in cases()["cases"].as_array().expect("assignment cases") {
         let base = snapshot(i32_value(&row["base"]));
         let mut current = base.clone();
@@ -44,7 +63,9 @@ where S: Clone + Debug + PartialEq, M: Mutation<S> + Debug + PartialEq, M::Diff:
         assert_eq!(current, snapshot(i32_value(&row["result"])), "{row}");
         let expected: Vec<M> = row["inverse"].as_array().expect("inverse").iter().map(|value| operation(i32_value(value))).collect();
         assert_eq!(stored, expected, "{row}");
-        for mutation in stored.iter().rev() { current = mutation.diff(&current).diff().apply(&current).expect("Store reverse undo"); }
+        for mutation in stored.iter().rev() {
+            current = mutation.diff(&current).diff().apply(&current).expect("Store reverse undo");
+        }
         assert_eq!(current, base, "{row}");
     }
     for row in cases()["composition"].as_array().expect("composition cases") {
@@ -78,10 +99,12 @@ where S: Clone + Debug + PartialEq, M: Mutation<S> + Debug + PartialEq, M::Diff:
 }
 
 pub(super) fn assert_codecs<S, M, L>(operation: fn(i32) -> M)
-where S: Clone + Debug + PartialEq + ToValue + FromValue + store::ArtifactDsl + store::ArtifactPack,
-      M: Mutation<S> + Debug + PartialEq + OpText + OpBinary,
-      M::Diff: ToValue + FromValue,
-      L: ToValue + FromValue {
+where
+    S: Clone + Debug + PartialEq + ToValue + FromValue + store::ArtifactDsl + store::ArtifactPack,
+    M: Mutation<S> + Debug + PartialEq + OpText + OpBinary,
+    M::Diff: ToValue + FromValue,
+    L: ToValue + FromValue,
+{
     let vectors = cases();
     for value in vectors["values"].as_array().expect("values") {
         let mutation = operation(i32_value(value));
@@ -133,11 +156,17 @@ where S: Clone + Debug + PartialEq + ToValue + FromValue + store::ArtifactDsl + 
         assert_eq!(S::parse_dsl(&text).expect("snapshot text"), snapshot);
         assert_eq!(S::decode_pack(&snapshot.encode_pack()).expect("snapshot pack"), snapshot);
     }
-    for value in vectors["invalidSnapshots"].as_array().expect("invalid snapshots") { assert!(S::from_value(value.clone().into()).is_err(), "{value}"); }
+    for value in vectors["invalidSnapshots"].as_array().expect("invalid snapshots") {
+        assert!(S::from_value(value.clone().into()).is_err(), "{value}");
+    }
     assert_eq!(serde_json::Value::from(S::parse_dsl(" ").expect("empty snapshot text").to_value()), serde_json::json!({"value":0}));
     assert_eq!(serde_json::Value::from(S::decode_pack(&[]).expect("empty snapshot pack").to_value()), serde_json::json!({"value":0}));
-    for value in vectors["diffs"].as_array().expect("diffs") { assert!(M::Diff::from_value(value.clone().into()).is_ok(), "{value}"); }
-    for value in vectors["invalidDiffs"].as_array().expect("invalid diffs") { assert!(M::Diff::from_value(value.clone().into()).is_err(), "{value}"); }
+    for value in vectors["diffs"].as_array().expect("diffs") {
+        assert!(M::Diff::from_value(value.clone().into()).is_ok(), "{value}");
+    }
+    for value in vectors["invalidDiffs"].as_array().expect("invalid diffs") {
+        assert!(M::Diff::from_value(value.clone().into()).is_err(), "{value}");
+    }
 }
 
 #[test]

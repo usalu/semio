@@ -1,0 +1,14 @@
+{
+  "status": "rejected",
+  "code": "mutation.id-mismatch",
+  "path": [
+    "c24",
+    "c24_v2"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.id-mismatch"
+    }
+  ]
+}

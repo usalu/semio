@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeFenestrationVlt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newVlt"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newVlt": {
+      "type": "number"
+    }
+  }
+}

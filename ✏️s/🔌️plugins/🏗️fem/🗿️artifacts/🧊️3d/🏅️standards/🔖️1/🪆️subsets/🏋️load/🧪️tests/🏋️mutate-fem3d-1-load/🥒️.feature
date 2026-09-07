@@ -94,11 +94,51 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id                           | dir                           | fixture                                                     |
-    | create-load-case             | 📋️create-load-case           | 🌬️appends-a-wind-case-pushing-on-the-column-head              |
-    | delete-load-case             | 🗑️delete-load-case           | 🚫️removes-the-wind-case-together-with-its-load                |
-    | add-load                     | ➕️add-load                     | 🏠️lays-an-area-pressure-over-the-roof-slab                    |
-    | remove-load                  | ➖️remove-load                  | ➖️drops-the-trailing-member-udl-from-the-dead-case            |
-    | change-load-case-self-weight | ⚖️change-load-case-self-weight | ⏸️switches-self-weight-off-for-the-dead-case                  |
-    | create-combination           | 🔗️create-combination         | 🔗️appends-a-serviceability-combination-keyed-by-case-id       |
-    | delete-combination           | ✂️delete-combination         | ✂️removes-the-serviceability-combination-and-keeps-both-cases |
+    | id                           | dir                            | fixture                             |
+    | create-load-case             | 📋️create-load-case             | 🌬️appends-a-wind-case-a6c267        |
+    | delete-load-case             | 🗑️delete-load-case             | 🚫️removes-the-wind-caeb06           |
+    | add-load                     | ➕️add-load                     | 🏠️lays-an-area-pressure-over-769710 |
+    | remove-load                  | ➖️remove-load                  | ➖️drops-the-trailing-member-b73b25  |
+    | change-load-case-self-weight | ⚖️change-load-case-self-weight | ⏸️switches-self-7e0cda              |
+    | create-combination           | 🔗️create-combination           | 🔗️appends-a-8ede20                  |
+    | delete-combination           | ✂️delete-combination           | ✂️removes-the-182f7b                |
+
+  @id-hall-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> glulam-hall vector through both implementations
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
+    Examples:
+    | id                           | dir                            | fixture                  |
+    | change-load-case-self-weight | ⚖️change-load-case-self-weight | 🏗️hall-crane-sw-978370   |
+    | delete-combination           | ✂️delete-combination           | 🏗️hall-cut-qp-ebd806     |
+    | add-load                     | ➕️add-load                     | 🏗️hall-adds-udl-e345cb   |
+    | remove-load                  | ➖️remove-load                  | 🏗️hall-cut-wind-6cf528   |
+    | create-load-case             | 📋️create-load-case             | 🏗️hall-snow-drift-068d9b |
+    | create-combination           | 🔗️create-combination           | 🏗️hall-new-acc-4099b2    |
+    | delete-load-case             | 🗑️delete-load-case             | 🏗️hall-cut-crane-52270d  |
+
+  @id-reject
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Refuse the committed <id> vector in both implementations and leave the model where it was
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
+    Examples:
+    | id                     | dir                            | fixture                  |
+    | sw-no-such-case-bfe5bc | ⚖️change-load-case-self-weight | 🚨️sw-no-such-case-bfe5bc |
+    | no-such-combo-f42cd6   | ✂️delete-combination           | 🚨️no-such-combo-f42cd6   |
+    | dup-load-id-4f4a0a     | ➕️add-load                     | ⏸️dup-load-id-4f4a0a     |
+    | no-such-member-3fe6e9  | ➕️add-load                     | 🚨️no-such-member-3fe6e9  |
+    | no-such-load-5bab2d    | ➖️remove-load                  | 🚨️no-such-load-5bab2d    |
+    | dangling-solid-5e04d9  | 📋️create-load-case             | 🚨️dangling-solid-5e04d9  |
+    | dangling-term-b9d144   | 🔗️create-combination           | 🚨️dangling-term-b9d144   |
+    | dead-in-combos-e73167  | 🗑️delete-load-case             | ⛓️dead-in-combos-e73167  |
+    | no-such-case-ef1fde    | 🗑️delete-load-case             | 🚨️no-such-case-ef1fde    |

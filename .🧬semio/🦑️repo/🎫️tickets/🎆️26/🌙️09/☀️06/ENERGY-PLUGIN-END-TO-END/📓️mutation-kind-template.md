@@ -378,3 +378,32 @@ bun nx run mutation-outcome-law
 RUSTC_WRAPPER= CARGO_TARGET_DIR=…/target-energy-e2e cargo check -p semio-s-plugin-energy --lib --tests --message-format=short
 RUSTC_WRAPPER= CARGO_TARGET_DIR=…/target-energy-e2e cargo test  -p semio-s-plugin-energy <slug>
 ```
+
+## 11. What `🐍️generate-mutation-leaves.py` refuses (W-D0, custodian)
+
+`audit()` runs before a single file is written, so a bad row fails the whole run rather than half-
+landing. Every one of these was probed by injecting the bad row and confirming the message:
+
+| Refusal | Message |
+|---|---|
+| two kinds on one ledger number | `ledger number 1 is claimed by both rename-model and other-kind` |
+| two kinds on one emoji, or on one slug | same shape, `emoji`/`slug` |
+| emoji missing (or doubling) U+FE0F | `'🌟' needs exactly one trailing U+FE0F` |
+| emoji already used by a non-kind sibling (`💾️📖️📝️🔗️🔣️🛰️🟦️🦀️`) | `🦀️ is a non-kind sibling inside 🧬️mutations/` |
+| directory name `taxonomy.json`'s own `mutationDirectoryPattern` rejects (single-word slug, missing FE0F, non-NFC) | `directory '🌟️otherkind' does not match taxonomy.json's mutationDirectoryPattern` — the pattern is READ from `taxonomy.json`, never copied |
+| ledger number outside every §2 range | `ledger number 1500 is outside every range in the ledger's §2` |
+| `kebab(<VARIANT>) != <SLUG>` (which `dsl::Mutations` would only report as a compile error much later) | `dsl::Mutations requires kebab(RenameModel) == rename-model` |
+| a kind without both a `✅️` happy and a `⛔️` refusal fixture | `needs at least one ✅️ happy and one ⛔️ refusal fixture, got ['✅️']` |
+| two fixture cases sharing one directory name | `two fixture cases share one directory name` |
+| a case path over the 227-UTF-16-unit budget (see the ledger §3 — the number is measured, not the stale 190) | `300 UTF-16 units exceeds the 227-unit path budget` |
+
+Two more custodian properties, both measured by running the generator twice and checksumming:
+
+- **Idempotent.** A second run changes nothing, in `🧬️mutations/` (309 files) or in any of the five
+  files it rewrites outside it. Committed fixture JSON is only ever SEEDED (`{}` when absent), never
+  overwritten, so re-running after `SEMIO_ENERGY_WRITE_FIXTURES=1` cannot wipe a materialized vector.
+- **Stale-case pruning.** A `🧪️tests/<case>/` directory no longer declared by its kind's spec row is
+  deleted, so renaming a case leaves no orphan. Kind directories with no spec row are **reported and
+  left alone** (`NOTE: …/<dir> has no spec row … left untouched`) — a directory a group has not yet
+  added a row for is in-flight work, and guessing between "rename" and "in-flight" by deleting is how
+  one worker destroys another's files.

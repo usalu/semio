@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "mutation.invalid-reconstruction-sparse",
+  "path": [
+    "sparse"
+  ]
+}

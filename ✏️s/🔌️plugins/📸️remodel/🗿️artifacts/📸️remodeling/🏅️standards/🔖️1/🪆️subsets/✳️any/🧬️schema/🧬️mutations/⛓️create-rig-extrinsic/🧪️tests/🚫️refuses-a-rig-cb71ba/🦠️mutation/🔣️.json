@@ -1,0 +1,17 @@
+{
+  "mutation": "createRigExtrinsic",
+  "extrinsic": {
+    "cameraId": "orbit-cam-absent",
+    "rotationWxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "translationM": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}

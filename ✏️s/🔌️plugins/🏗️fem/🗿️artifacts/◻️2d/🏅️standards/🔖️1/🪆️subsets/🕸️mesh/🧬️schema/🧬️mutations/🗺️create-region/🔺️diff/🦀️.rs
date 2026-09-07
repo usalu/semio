@@ -1,6 +1,11 @@
 //! 🔺️ Sparse diff builder for `CreateRegion`.
+//!
+//! Guards, in the order they run: `mutation.duplicate-id` (Fatal), the `material_id` resolution
+//! (`mutation.target-missing`, Error), then the shared `guards::region_geometry` meshability bounds
+//! (`mutation.invariant`, Fatal) — outline arity and area, thickness, mesh size, hole containment.
 use super::CreateRegion;
 use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dRegionsDelta};
+use crate::artifacts::fem2d::mutations::guards;
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️Diff
@@ -8,8 +13,11 @@ pub fn diff(payload: &CreateRegion, base: &Fem2dSnapshot) -> protocol::MutationO
     if base.regions.iter().any(|region| region.id == payload.region.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A region with id \"{}\" already exists.", payload.region.id), [payload.region.id.clone()]);
     }
-    if !base.materials.iter().any(|material| material.id == payload.region.material_id) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.region.material_id), [payload.region.material_id.clone()]);
+    if let Some(rejection) = guards::material_reference(base, &payload.region.material_id) {
+        return rejection;
+    }
+    if let Some(rejection) = guards::region_geometry(&payload.region) {
+        return rejection;
     }
     protocol::MutationOutcome::new(Fem2dDiff { regions: Some(Fem2dRegionsDelta { added: vec![payload.region.clone()], ..Default::default() }), ..Default::default() })
 }

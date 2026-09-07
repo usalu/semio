@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateHumidistat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "zoneId",
+    "humidifyingSetpointScheduleId",
+    "dehumidifyingSetpointScheduleId",
+    "humidifyingThrottleRange",
+    "dehumidifyingThrottleRange"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "humidifyingSetpointScheduleId": {
+      "type": "integer"
+    },
+    "dehumidifyingSetpointScheduleId": {
+      "type": "integer"
+    },
+    "humidifyingThrottleRange": {
+      "type": "number"
+    },
+    "dehumidifyingThrottleRange": {
+      "type": "number"
+    }
+  }
+}

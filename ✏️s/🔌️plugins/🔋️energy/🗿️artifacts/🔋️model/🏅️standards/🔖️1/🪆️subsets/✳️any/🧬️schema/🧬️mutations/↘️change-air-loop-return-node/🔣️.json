@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return-node",
+  "semanticKind": "change-air-loop-return-node",
+  "displayName": "Change Air Loop Return Node",
+  "emoji": "↘️",
+  "aggregateVariant": "ChangeAirLoopReturnNode",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-air-loop-return-node",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

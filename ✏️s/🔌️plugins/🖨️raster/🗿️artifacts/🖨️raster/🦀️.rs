@@ -801,14 +801,14 @@ mod tests {
     use super::*;
 
     trait RasterChildOwnerOracle {
-        fn expected() -> serde_json::Value;
+        fn expected() -> dsl::json::Value;
     }
 
-    struct SerdeJsonRasterChildOwnerOracle;
+    struct CommittedRasterChildOwnerOracle;
 
-    impl RasterChildOwnerOracle for SerdeJsonRasterChildOwnerOracle {
-        fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Raster child-owner fixture")
+    impl RasterChildOwnerOracle for CommittedRasterChildOwnerOracle {
+        fn expected() -> dsl::json::Value {
+            dsl::json::parse(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Raster child-owner fixture")
         }
     }
 
@@ -821,15 +821,15 @@ mod tests {
     async fn raster_materialization_is_owned_by_the_exact_snapshot_child() {
         let content = SemioImageSnapshot::default();
         let owned = image_content_child_handle("isolated", &content).with_local_owner(std::sync::Arc::new(content));
-        let wire = serde_json::to_vec(&owned).expect("Raster child wire identity");
-        let reconstructed: RasterAssetChild = serde_json::from_slice(&wire).expect("Raster child wire roundtrip");
-        let observed = serde_json::json!({
-            "ownedHasMaterialization": owned.local_owner::<SemioImageSnapshot>().is_some(),
-            "wireIdentityMatches": owned == reconstructed,
-            "wireHasMaterialization": reconstructed.local_owner::<SemioImageSnapshot>().is_some(),
-        });
+        let wire = dsl::json::to_string(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&owned)));
+        let reconstructed: RasterAssetChild = dsl::json::from_json_str(&wire).expect("Raster child wire roundtrip");
+        let observed = dsl::json::object([
+            ("ownedHasMaterialization".to_string(), dsl::json::Value::Bool(owned.local_owner::<SemioImageSnapshot>().is_some())),
+            ("wireIdentityMatches".to_string(), dsl::json::Value::Bool(owned == reconstructed)),
+            ("wireHasMaterialization".to_string(), dsl::json::Value::Bool(reconstructed.local_owner::<SemioImageSnapshot>().is_some())),
+        ]);
 
-        assert_eq!(observed, SerdeJsonRasterChildOwnerOracle::expected());
+        assert!(dsl::json::value_eq_ignoring_object_order(&observed, &CommittedRasterChildOwnerOracle::expected()));
     }
 }
 //#endregion 🧪️Tests

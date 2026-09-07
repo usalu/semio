@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal-system-storage-volume",
+  "semanticKind": "change-solar-thermal-system-storage-volume",
+  "displayName": "Change Solar Thermal System Storage Volume",
+  "emoji": "🧃️",
+  "aggregateVariant": "ChangeSolarThermalSystemStorageVolume",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-solar-thermal-system-storage-volume",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

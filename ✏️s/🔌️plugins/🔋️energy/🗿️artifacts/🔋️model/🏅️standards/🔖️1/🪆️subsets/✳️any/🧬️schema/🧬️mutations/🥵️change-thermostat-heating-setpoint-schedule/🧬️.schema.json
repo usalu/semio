@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeThermostatHeatingSetpointSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHeatingSetpointScheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newHeatingSetpointScheduleId": {
+      "type": "integer"
+    }
+  }
+}

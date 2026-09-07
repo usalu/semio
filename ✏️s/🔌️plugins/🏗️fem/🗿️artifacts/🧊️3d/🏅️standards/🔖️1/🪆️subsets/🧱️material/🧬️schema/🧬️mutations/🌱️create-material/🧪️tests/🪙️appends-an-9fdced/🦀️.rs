@@ -1,4 +1,4 @@
-//! 🧪️ `create-material` fixture — `🪙️appends-an-aluminium-alloy`.
+//! 🧪️ `create-material` fixture — `🪙️appends-an-9fdced`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("create-material applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "create-material/appends-an-aluminium-alloy: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.materials.len(), 2, "create-material/appends-an-aluminium-alloy: the alloy must be appended behind the steel row");
-    assert_eq!(snapshot.materials[1].g, 26000000000.0, "create-material/appends-an-aluminium-alloy: the shear modulus must survive the round trip exactly");
-    assert_eq!(snapshot.materials[0], before().materials[0], "create-material/appends-an-aluminium-alloy: the steel row must be untouched");
+    assert_eq!(snapshot, expected_after(), "create-material/appends-an-9fdced: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.materials.len(), 2, "create-material/appends-an-9fdced: the alloy must be appended behind the steel row");
+    assert_eq!(snapshot.materials[1].g, 26000000000.0, "create-material/appends-an-9fdced: the shear modulus must survive the round trip exactly");
+    assert_eq!(snapshot.materials[0], before().materials[0], "create-material/appends-an-9fdced: the steel row must be untouched");
 }
 
 /// ↩️ The inverse is a `delete-material` of `alu`, restoring the single-material catalogue.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "create-material/appends-an-aluminium-alloy: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "create-material/appends-an-9fdced: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,28 +59,35 @@ fn committed_json_is_canonical() {
         let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "create-material/appends-an-aluminium-alloy: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "create-material/appends-an-9fdced: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "create-material/appends-an-aluminium-alloy: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "create-material/appends-an-9fdced: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "create-material/appends-an-aluminium-alloy: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "create-material/appends-an-9fdced: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "create-material/appends-an-aluminium-alloy: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "create-material/appends-an-aluminium-alloy: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "create-material/appends-an-9fdced: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "create-material/appends-an-9fdced: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "create-material/appends-an-9fdced: a refused mutation must leave the snapshot untouched");
         }
-        other => panic!("create-material/appends-an-aluminium-alloy: unknown outcome status {other:?}"),
+        other => panic!("create-material/appends-an-9fdced: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +96,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert!(outcome.diff().materials.is_some(), "create-material/appends-an-aluminium-alloy: the created alloy must surface in the materials delta");
-    assert!(outcome.diff().solids.is_none() && outcome.diff().elements.is_none(), "create-material/appends-an-aluminium-alloy: no consumer collection may be touched when a material is coined");
+    assert!(outcome.diff().materials.is_some(), "create-material/appends-an-9fdced: the created alloy must surface in the materials delta");
+    assert!(outcome.diff().solids.is_none() && outcome.diff().elements.is_none(), "create-material/appends-an-9fdced: no consumer collection may be touched when a material is coined");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "create-material/appends-an-aluminium-alloy: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "create-material/appends-an-9fdced: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +109,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "create-material/appends-an-aluminium-alloy: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "create-material/appends-an-9fdced: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `materials.added` entry on `before` must reproduce the two-material catalogue.
@@ -110,5 +117,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "create-material/appends-an-aluminium-alloy: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "create-material/appends-an-9fdced: committed diff did not carry before to after");
 }

@@ -179,6 +179,26 @@ impl protocol::OpBinary for Fem2dConfigMutation {
 impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
     type Diff = Fem2dConfig;
 
+    /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum — `dsl::DslOps` emits `DslVariants`
+    /// only): config authorities are session state, not document leaves, so the `owner` paths are
+    /// registry metadata and carry no `🧬️mutations` leaf directory. One entry per variant, in
+    /// declaration order, matching `descriptor()`'s arms below.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🟤️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/👁️set-result-display", semantic_kind: "set-result-display", display_name: "Set Result Display", emoji: "👁️", aggregate_variant: "SetResultDisplay", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🎥️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::SetResultDisplay { .. } => &Self::DESCRIPTORS[1],
+            Self::SetCamera { .. } => &Self::DESCRIPTORS[2],
+            Self::SetLocale { .. } => &Self::DESCRIPTORS[3],
+        }
+    }
+
     fn diff(&self, base: &Fem2dConfig) -> protocol::MutationOutcome<Fem2dConfig> {
         let mut next = base.clone();
         match self {
@@ -258,6 +278,25 @@ mod tests {
         let op = Fem2dConfigMutation::SetLocale { value: "de-DE".into() };
         let next = op.diff(&base).diff().clone();
         assert_eq!(next.locale, "de-DE");
+    }
+
+    /// 🧷️ LAW: every `Fem2dConfigMutation` variant owns exactly one `MutationLeafDescriptor`, and
+    /// `descriptor()` returns the one whose `aggregate_variant` names it.
+    #[test]
+    fn every_config_mutation_variant_has_its_own_descriptor() {
+        let variants = [
+            Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() },
+            Fem2dConfigMutation::SetResultDisplay { source_id: None, mode: "static".into(), mode_index: 0 },
+            Fem2dConfigMutation::SetCamera { camera: FemCamera::default() },
+            Fem2dConfigMutation::SetLocale { value: "de-DE".into() },
+        ];
+        assert_eq!(<Fem2dConfigMutation as Mutation<Fem2dConfig>>::DESCRIPTORS.len(), variants.len());
+        for (index, variant) in variants.iter().enumerate() {
+            let descriptor = variant.descriptor();
+            assert_eq!(descriptor, &<Fem2dConfigMutation as Mutation<Fem2dConfig>>::DESCRIPTORS[index]);
+            assert_eq!(descriptor.schema_version, 1);
+            assert!(!descriptor.display_name.is_empty() && !descriptor.emoji.is_empty());
+        }
     }
 
     #[test]

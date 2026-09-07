@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-referenced",
+  "path": [
+    "b1",
+    "dead/ld1",
+    "live/ll1"
+  ]
+}

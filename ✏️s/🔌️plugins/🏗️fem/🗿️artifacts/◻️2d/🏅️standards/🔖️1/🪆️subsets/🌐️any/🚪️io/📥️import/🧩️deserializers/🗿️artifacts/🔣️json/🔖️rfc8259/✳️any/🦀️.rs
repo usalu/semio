@@ -1,24 +1,40 @@
-//! fem2d <- json. `stdio.json`'s real `JsonSnapshot` shape (`value: JsonValue`, a lexeme-
-//! preserving custom tree, not `dsl::DslValue`) landed after this leaf was first written —
-//! lagging call site fixed to match (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-
-//! MEDIA-FORMAT-RETIREMENT W5a): `JsonSnapshot::to_serde_value` walks the real `JsonValue` tree
-//! back into `dsl::DslValue` so `dsl::FromValue::from_value` still works; `deserialize_bytes`
-//! parses through stdio's own real RFC 8259 text codec (`parse_json_text`), not a re-derived parser.
+//! 🚪️ fem2d ← json — foreign `Deserializer<Fem2dSnapshot>` on the framework's `io_mechanism`
+//! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`. Parsing goes
+//! through stdio's own real RFC 8259 codec (`parse_json_text`), never a re-derived parser.
+
 use crate::artifacts::fem2d::Fem2dSnapshot;
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 
-pub fn register() {}
+/// 🎯️ The foreign dialect this leaf reads.
+pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &JsonSnapshot) -> Result<Fem2dSnapshot, store::TextError> {
-    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let raw: dsl::DslValue = from.to_serde_value().into();
-    let snap: Fem2dSnapshot = dsl::FromValue::from_value(raw).map_err(|e| store::TextError::new(format!("fem2d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
-    Ok(snap)
+/// 🔣️ Parses rfc8259 text into this subset's snapshot.
+pub fn from_json_text(text: &str) -> Result<Fem2dSnapshot, IoError> {
+    let value = parse_json_text(text).map_err(|error| IoError { message: format!("json→fem2d: parse failed: {error}"), diagnostics: Vec::new() })?;
+    let raw: dsl::DslValue = JsonSnapshot::from_value(value).to_serde_value().into();
+    dsl::FromValue::from_value(raw).map_err(|error| IoError { message: format!("json→fem2d: {error}"), diagnostics: Vec::new() })
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<Fem2dSnapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    let value = parse_json_text(text)?;
-    deserialize(&JsonSnapshot::from_value(value))
+/// 🧩️ `s.stdio.json@rfc8259/*` → `s.fem.fem2d@1/*`.
+pub struct JsonIntoFem2d;
+
+impl Deserializer<Fem2dSnapshot> for JsonIntoFem2d {
+    const FROM: Dialect = JSON_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    async fn sniff(payload: &IoPayload) -> Confidence {
+        match payload {
+            IoPayload::Text(text) if text.trim_start().starts_with('{') => Confidence::Low,
+            _ => Confidence::None,
+        }
+    }
+    async fn deserialize(payload: &IoPayload) -> IoResult<Fem2dSnapshot> {
+        let IoPayload::Text(text) = payload else {
+            return Err(IoError { message: "json→fem2d: expected a text json payload".to_string(), diagnostics: Vec::new() });
+        };
+        Ok(IoOutcome::clean(from_json_text(text)?))
+    }
 }

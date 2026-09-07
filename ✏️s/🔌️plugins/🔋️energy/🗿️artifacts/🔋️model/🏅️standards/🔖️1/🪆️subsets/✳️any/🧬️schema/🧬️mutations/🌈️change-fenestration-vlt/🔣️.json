@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️change-fenestration-vlt",
+  "semanticKind": "change-fenestration-vlt",
+  "displayName": "Change Fenestration VLT",
+  "emoji": "🌈️",
+  "aggregateVariant": "ChangeFenestrationVlt",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-fenestration-vlt",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

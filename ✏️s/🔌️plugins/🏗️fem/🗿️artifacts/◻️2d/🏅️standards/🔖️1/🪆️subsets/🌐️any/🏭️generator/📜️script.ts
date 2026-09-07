@@ -163,7 +163,7 @@ function topology(shape: Manifold): { solids: number; genus: number | null; comp
 const RECIPES: readonly Recipe[] = [
   // 👪️rectangles — the plainest possible extruded footprint, at three sizes.
   { id: "rect-unit-square", family: "rectangles", tolerance: "fem-polygon-exact", notes: "1×1 m square, 0.1 m thick — the simplest possible FemRegion.", outline: [[0, 0], [1, 0], [1, 1], [0, 1]], holes: [], thickness: 0.1 },
-  { id: "rect-floor-slab", family: "rectangles", tolerance: "fem-polygon-exact", notes: "4×2 m, 0.25 m thick — mirrors the committed create-region/appends-a-solid-rectangular-slab scenario exactly (same outline+thickness).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [], thickness: 0.25 },
+  { id: "rect-floor-slab", family: "rectangles", tolerance: "fem-polygon-exact", notes: "4×2 m, 0.25 m thick — mirrors the committed create-region/appends-a-solid-d78275 scenario exactly (same outline+thickness).", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [], thickness: 0.25 },
   { id: "rect-thin-plate", family: "rectangles", tolerance: "fem-polygon-exact", notes: "10×6 m footprint, 0.02 m thick — a high aspect-ratio plate.", outline: [[0, 0], [10, 0], [10, 6], [0, 6]], holes: [], thickness: 0.02 },
 
   // 👪️polygons — non-rectangular, non-convex outlines. Volume/area of a straight-edged prism is
@@ -172,7 +172,7 @@ const RECIPES: readonly Recipe[] = [
   { id: "polygon-triangle", family: "polygons", tolerance: "fem-polygon-exact", notes: "a triangular footprint, 0.15 m thick.", outline: [[0, 0], [5, 0], [2.5, 4]], holes: [], thickness: 0.15 },
 
   // 👪️holes — a region with holes punched through it, mirroring the committed
-  // replace-region/punches-a-stair-opening-through-the-slab scenario. A through-hole in a linearly
+  // replace-region/punches-a-stair-f7b3b1 scenario. A through-hole in a linearly
   // extruded prism is a genuine topological fact (genus rises by one per hole), not merely a triangle
   // count, exactly as the mesh pilot's bored cube proved for a curved solid.
   { id: "region-one-hole", family: "holes", tolerance: "fem-polygon-exact", notes: "4×2 m slab, one 1×1 m rectangular hole (a stair opening) — genus 1.", outline: [[0, 0], [4, 0], [4, 2], [0, 2]], holes: [[[1, 0.5], [2, 0.5], [2, 1.5], [1, 1.5]]], thickness: 0.25 },

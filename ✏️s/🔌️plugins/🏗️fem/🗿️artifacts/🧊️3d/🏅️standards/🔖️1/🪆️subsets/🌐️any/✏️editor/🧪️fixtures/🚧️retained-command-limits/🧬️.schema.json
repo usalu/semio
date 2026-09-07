@@ -40,12 +40,14 @@
         "configBaseBytes",
         "commandStepBytes",
         "storeStepBytes",
+        "artifactStoreBytes",
         "workItems",
+        "decodedItems",
         "preparationPhases"
       ],
       "properties": {
         "rawBytes": {
-          "const": 8192
+          "const": 65536
         },
         "checkpointBytes": {
           "const": 512
@@ -57,13 +59,19 @@
           "const": 512
         },
         "commandStepBytes": {
-          "const": 65536
+          "const": 262144
         },
         "storeStepBytes": {
           "const": 4096
         },
+        "artifactStoreBytes": {
+          "const": 65536
+        },
         "workItems": {
-          "const": 1
+          "const": 4096
+        },
+        "decodedItems": {
+          "const": 4096
         },
         "preparationPhases": {
           "const": 3
@@ -89,13 +97,15 @@
               "const": "addNode"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Fresh-ID discovery scans nodes and artifact publication clones the whole FEM model."
+              "const": ""
             }
           }
         },
@@ -113,13 +123,15 @@
               "const": "addBar"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Node/material/section validation and fresh-ID discovery scan model collections before whole-root preparation."
+              "const": ""
             }
           }
         },
@@ -137,13 +149,15 @@
               "const": "addFrame"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Node/material/section validation and fresh-ID discovery scan model collections before whole-root preparation."
+              "const": ""
             }
           }
         },
@@ -161,13 +175,15 @@
               "const": "addMaterial"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Fresh-ID discovery scans materials and artifact publication clones the whole FEM model."
+              "const": ""
             }
           }
         },
@@ -185,13 +201,15 @@
               "const": "addSection"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Fresh-ID discovery scans sections and artifact publication clones the whole FEM model."
+              "const": ""
             }
           }
         },
@@ -209,13 +227,15 @@
               "const": "addSupport"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Node/support lookup scans model collections and whole-root preparation is not resumable."
+              "const": ""
             }
           }
         },
@@ -233,13 +253,15 @@
               "const": "addNodalLoad"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Load-case and load lookup clone/scan collections before whole-root artifact preparation."
+              "const": ""
             }
           }
         },
@@ -257,13 +279,15 @@
               "const": "addMemberUdl"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Member/load-case lookup clones or scans collections before whole-root artifact preparation."
+              "const": ""
             }
           }
         },
@@ -281,13 +305,15 @@
               "const": "addAreaLoad"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Area/load-case lookup clones or scans collections before whole-root artifact preparation."
+              "const": ""
             }
           }
         },
@@ -305,13 +331,15 @@
               "const": "addSolid"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Solid construction and fresh-ID discovery scan/allocate model collections before whole-root preparation."
+              "const": ""
             }
           }
         },
@@ -329,13 +357,15 @@
               "const": "addLoadCase"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Fresh-ID discovery scans load cases and artifact publication clones the whole FEM model."
+              "const": ""
             }
           }
         },
@@ -353,13 +383,15 @@
               "const": "addCombination"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Combination term parsing and ID discovery scan/allocate collections before whole-root preparation."
+              "const": ""
             }
           }
         },
@@ -377,13 +409,15 @@
               "const": "setSelfWeight"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Load-case lookup scans the case collection and artifact publication clones the whole FEM model."
+              "const": ""
             }
           }
         },
@@ -401,13 +435,15 @@
               "const": "setAnalysisSettings"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "The reducer is scalar but artifact publication clones the complete FEM model; no bounded root-scalar preparation exists."
+              "const": ""
             }
           }
         },
@@ -425,13 +461,15 @@
               "const": "removeSelection"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Artifact"
+              ]
             },
             "blocker": {
-              "const": "Nested selection/model scans assemble an unbounded removal batch and whole-model inverse/root state."
+              "const": ""
             }
           }
         },
@@ -449,13 +487,15 @@
               "const": "setActiveExample"
             },
             "disposition": {
-              "const": "BatchOnlyPendingRewrite"
+              "const": "Migrated"
             },
             "lanes": {
-              "const": []
+              "const": [
+                "Config"
+              ]
             },
             "blocker": {
-              "const": "Builds and serializes an entire replacement FEM document into a host effect without a retained encoder owner."
+              "const": ""
             }
           }
         },

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent-fraction",
+  "semanticKind": "change-people-gain-latent-fraction",
+  "displayName": "Change People Gain Latent Fraction",
+  "emoji": "💧️",
+  "aggregateVariant": "ChangePeopleGainLatentFraction",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-people-gain-latent-fraction",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

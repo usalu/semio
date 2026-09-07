@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-equipment-gain",
+  "semanticKind": "delete-equipment-gain",
+  "displayName": "Delete Equipment Gain",
+  "emoji": "🧯️",
+  "aggregateVariant": "DeleteEquipmentGain",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "delete-equipment-gain",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -25,17 +25,32 @@ async fn stores() -> [TestStore; 3] {
 
 fn query(stores: &[TestStore; 3], generation: u64) -> Query {
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: stores[2].generation_now(), revision: stores[2].content_revision_now(), document_revision: stores[0].content_revision_now(), topology_revision: [8; 32] };
-    Query::new(13, generation, identity, Some(stores[0].snapshot_read().unwrap()), stores[0].generation_now(), Some(stores[1].snapshot_read().unwrap()), stores[1].generation_now(), stores[1].content_revision_now(), Some(stores[2].snapshot_read().unwrap()))
+    Query::new(
+        13,
+        generation,
+        identity,
+        Some(stores[0].snapshot_read().unwrap()),
+        stores[0].generation_now(),
+        Some(stores[1].snapshot_read().unwrap()),
+        stores[1].generation_now(),
+        stores[1].content_revision_now(),
+        Some(stores[2].snapshot_read().unwrap()),
+    )
 }
 
 fn pump(stores: &mut [TestStore; 3], owners: &mut [Option<Box<dyn ErasedSnapshotRetirement>>; 3], bytes: usize) {
     for (store, owner) in stores.iter_mut().zip(owners.iter_mut()) {
-        if owner.is_none() { *owner = store.take_returned_snapshot_read_retirement().unwrap(); }
+        if owner.is_none() {
+            *owner = store.take_returned_snapshot_read_retirement().unwrap();
+        }
         if let Some(active) = owner.as_mut() {
             match active.close_step(1, bytes).unwrap() {
-                SnapshotRetirementStep::Complete => { assert!(active.terminal_is_empty()); *owner = None; },
+                SnapshotRetirementStep::Complete => {
+                    assert!(active.terminal_is_empty());
+                    *owner = None;
+                }
                 SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= bytes),
-                SnapshotRetirementStep::Blocked => {},
+                SnapshotRetirementStep::Blocked => {}
             }
         }
     }
@@ -45,7 +60,9 @@ fn finish_close(stores: &mut [TestStore; 3], query: &mut Query, bytes: usize) ->
     let mut owners = [None, None, None];
     for _ in 0..1_000_000 {
         let step = query.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap();
-        if step == LocalInteractionLiveStep::Complete { assert!(query.owners_are_empty()); }
+        if step == LocalInteractionLiveStep::Complete {
+            assert!(query.owners_are_empty());
+        }
         pump(stores, &mut owners, bytes);
         assert!(query.take_reply_admitted(|_| false).is_none());
         assert!(!query.terminal_is_empty());
@@ -62,7 +79,9 @@ fn finish_close(stores: &mut [TestStore; 3], query: &mut Query, bytes: usize) ->
 fn close_stores(stores: &mut [TestStore; 3], bytes: usize) {
     for store in stores {
         for _ in 0..1_000_000 {
-            if store.close_owned_step(1, bytes).unwrap() == SnapshotRetirementStep::Complete { break; }
+            if store.close_owned_step(1, bytes).unwrap() == SnapshotRetirementStep::Complete {
+                break;
+            }
         }
         assert!(store.close_owned_terminal_is_empty());
     }
@@ -89,11 +108,15 @@ async fn local_interaction_live_pages_wait_exact_ack_and_all_three_roots() {
             assert!(!query.has_pending_work());
             assert!(query.take_reply().is_none());
             let ack = LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
-            let mut stale = ack.clone(); stale.query_generation -= 1;
-            assert!(!query.acknowledge(&stale)); assert!(!query.cancel_authorized(&stale));
+            let mut stale = ack.clone();
+            stale.query_generation -= 1;
+            assert!(!query.acknowledge(&stale));
+            assert!(!query.cancel_authorized(&stale));
             output.extend_from_slice(&page.bytes);
             assert!(query.acknowledge(&ack));
-            if page.terminal { break; }
+            if page.terminal {
+                break;
+            }
         }
         let captured: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&output).unwrap()).unwrap();
         assert_eq!(captured.identity, token.identity);
@@ -150,7 +173,13 @@ fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retiremen
         let inputs = LocalInteractionInputReads::<(), ()>::from_optional(None, 0, [0; 32], None, 0, [0; 32]);
         let mut query = LocalInteractionLiveQuery {
             owned: ManuallyDrop::new(LiveState { query: Some(LocalInteractionQuery::new(source, 13, 41)), inputs, error_bytes: None }),
-            request_id: 13, started: false, page_sent: false, closing: false, cancelled: false, failed: false, terminal_sent: false,
+            request_id: 13,
+            started: false,
+            page_sent: false,
+            closing: false,
+            cancelled: false,
+            failed: false,
+            terminal_sent: false,
         };
         assert!(matches!(query.take_reply(), Some(LocalInteractionQueryReply::Started { .. })));
         let mut emitted = 0;
@@ -159,14 +188,17 @@ fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retiremen
             match query.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap() {
                 LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes, released_items } => {
                     assert!(emitted_bytes + retired_bytes <= bytes && released_items <= 1);
-                    emitted += emitted_bytes; retired += retired_bytes;
-                },
+                    emitted += emitted_bytes;
+                    retired += retired_bytes;
+                }
                 LocalInteractionLiveStep::Complete => assert!(query.owners_are_empty()),
-                LocalInteractionLiveStep::Blocked => {},
+                LocalInteractionLiveStep::Blocked => {}
             }
             if let Some(reply) = query.take_reply() {
                 match reply {
-                    LocalInteractionQueryReply::Page { page } => { assert!(query.acknowledge(&LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity, ordinal: page.ordinal })); },
+                    LocalInteractionQueryReply::Page { page } => {
+                        assert!(query.acknowledge(&LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity, ordinal: page.ordinal }));
+                    }
                     LocalInteractionQueryReply::Rejected { code: LocalInteractionQueryRejection::SourceFailed, .. } => break,
                     _ => panic!("partial error must never publish a successful terminal page"),
                 }

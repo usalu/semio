@@ -2151,7 +2151,7 @@ pub fn create_flow_app() -> AppDefinition {
         .action_with(semio_framework_plugin::resolve_ready(flow_internal_action("openSpotlight", LocalizedLabel::native("Open Spotlight", "Spotlight öffnen"), ActionKind::View).with_category("create")))
         .action_with(semio_framework_plugin::resolve_ready(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions")))
         .action_with(flow_internal_action("setCatalogueSections", LocalizedLabel::native("Set Catalogue Sections", "Katalogabschnitte festlegen"), ActionKind::View))
-        .action_with(flow_internal_action("toggleAutomation", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
+        .action_with(flow_internal_action("toggleExtension", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
         // 📝️ Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
         .action_args("addWidget", vec![ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
             ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),

@@ -1,0 +1,115 @@
+{
+  "analysis": {
+    "bucklingCount": 3,
+    "deformationScale": 100.0,
+    "modalCount": 4
+  },
+  "combinations": [],
+  "elements": [
+    {
+      "end": "mid",
+      "id": "span_l",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "left"
+    },
+    {
+      "end": "right",
+      "id": "span_r",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "hea200",
+      "start": "mid"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "udl",
+      "loads": [
+        {
+          "elementId": "span_l",
+          "id": "w_l",
+          "kind": "memberUdl",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -6000.0
+        },
+        {
+          "elementId": "span_r",
+          "id": "w_r",
+          "kind": "memberUdl",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -6000.0
+        }
+      ],
+      "name": "Uniform Load",
+      "selfWeight": false
+    }
+  ],
+  "materials": [
+    {
+      "e": 210000000000.0,
+      "g": 80769230769.0,
+      "id": "steel",
+      "name": "Steel S355",
+      "nu": 0.3,
+      "rho": 7850.0
+    }
+  ],
+  "nodes": [
+    {
+      "id": "left",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "mid",
+      "x": 4.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "right",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  ],
+  "sections": [
+    {
+      "area": 0.00538,
+      "id": "hea200",
+      "iy": 3.692e-05,
+      "iz": 1.336e-05,
+      "j": 2.098e-07,
+      "name": "HEA 200"
+    }
+  ],
+  "solids": [],
+  "supports": [
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx"
+      ],
+      "id": "shoe_l",
+      "nodeId": "left"
+    },
+    {
+      "fixed": [
+        "Ty",
+        "Tz",
+        "Rx"
+      ],
+      "id": "shoe_r",
+      "nodeId": "right"
+    }
+  ]
+}

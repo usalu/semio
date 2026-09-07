@@ -1,0 +1,8 @@
+{
+  "mutation": "createNode",
+  "node": {
+    "id": "n3",
+    "x": 0.5,
+    "y": 3.5
+  }
+}

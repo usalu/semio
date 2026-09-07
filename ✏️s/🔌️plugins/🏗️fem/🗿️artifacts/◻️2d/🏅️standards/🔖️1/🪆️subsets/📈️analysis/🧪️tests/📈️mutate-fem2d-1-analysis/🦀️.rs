@@ -39,6 +39,21 @@ const UNOBSERVABLE: &[&str] = &[
 const DERIVED_ASSET: &str = "local://🏗️timber-portal-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
+//#region 🔖️Scenarios
+/// 📇️ Every FORWARD committed vector this subset owns, as `(scenario id, kind)`. Two per kind:
+/// the pre-existing `spec-vector-<kind>` and the steel-frame `frame-vector-<kind>`.
+const COMMITTED: &[(&str, &str)] = &[
+    ("spec-vector-update-analysis-settings", "update-analysis-settings"),
+    ("frame-vector-update-analysis-settings", "update-analysis-settings"),
+];
+
+/// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
+const REFUSED: &[(&str, &str)] = &[
+    ("reject-update-analysis-settings-1", "update-analysis-settings"),
+    ("reject-update-analysis-settings-2", "update-analysis-settings"),
+];
+//#endregion 🔖️Scenarios
+
 //#region 🔖️Fixtures
 /// 🧫️ One kind's committed `(before, mutation, after, diff, outcome)` specification vector, read
 /// literally via `include_str!`. This IS the independently handcrafted evidence this case rests on —
@@ -47,20 +62,41 @@ struct Vector {
     before: &'static str,
     mutation: &'static str,
     after: &'static str,
-    diff: &'static str,
+    diff: Option<&'static str>,
     outcome: &'static str,
 }
 
-fn vector(kind: &str) -> Vector {
-    match kind {
-        "update-analysis-settings" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-count-and-halves-the-deformation-scale/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-count-and-halves-the-deformation-scale/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-count-and-halves-the-deformation-scale/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-count-and-halves-the-deformation-scale/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-count-and-halves-the-deformation-scale/🎯️outcome/🔣️.json"),
+fn vector(scenario: &str) -> Vector {
+    match scenario {
+        "spec-vector-update-analysis-settings" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-3fbb1a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-3fbb1a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-3fbb1a/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-3fbb1a/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-3fbb1a/🎯️outcome/🔣️.json"),
         },
-        other => panic!("mutate-fem2d-1-analysis: no committed specification vector is registered for kind {other:?}"),
+        "frame-vector-update-analysis-settings" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🎚️raises-the-mode-908c2b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🎚️raises-the-mode-908c2b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🎚️raises-the-mode-908c2b/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🎚️raises-the-mode-908c2b/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🎚️raises-the-mode-908c2b/🎯️outcome/🔣️.json"),
+        },
+        "reject-update-analysis-settings-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔁️keeps-the-analysis-196e4a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔁️keeps-the-analysis-196e4a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔁️keeps-the-analysis-196e4a/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔁️keeps-the-analysis-196e4a/🎯️outcome/🔣️.json"),
+        },
+        "reject-update-analysis-settings-2" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🚫️denies-zero-modes-babc1d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🚫️denies-zero-modes-babc1d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🚫️denies-zero-modes-babc1d/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🚫️denies-zero-modes-babc1d/🎯️outcome/🔣️.json"),
+        },
+        other => panic!("📈️mutate-fem2d-1-analysis: no committed specification vector is registered for scenario {other:?}"),
     }
 }
 
@@ -246,26 +282,62 @@ mod subject {
         }
     }
 
-    /// 📐️ Replays one committed handcrafted specification vector. This is where the evidence the case
-    /// carried before the relocation still lives, undiminished: the applied model is held to the
-    /// committed after-snapshot, the produced delta to the committed `🔺️diff`, and the diagnostics to
-    /// the committed `🎯️outcome`.
-    pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// 📐️ Replays one committed handcrafted specification vector, addressed by SCENARIO id rather
+    /// than by kind — every kind now carries several. This is where the evidence the case carried
+    /// before the relocation still lives, undiminished: the applied model is held to the committed
+    /// after-snapshot, the produced delta to the committed `🔺️diff`, and the diagnostics to the
+    /// committed `🎯️outcome`.
+    pub fn committed_vector(kind: &'static str, scenario: &str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        let scenario = scenario.to_string();
         move |_ctx: &Context| {
-            let committed = vector(kind);
-            let report = report_of(&format!("spec-vector-{kind}"), committed.before, committed.mutation, committed.after)?;
+            let committed = vector(&scenario);
+            let report = report_of(&scenario, committed.before, committed.mutation, committed.after)?;
             let applied = member(&report, "snapshot")?;
             if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
-                return Err(format!("spec-vector-{kind}: the applied model is not the committed after-snapshot — {first}"));
+                return Err(format!("{scenario}: the applied model is not the committed after-snapshot — {first}"));
             }
-            if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(committed.diff)) {
-                return Err(format!("spec-vector-{kind}: the produced delta is not the committed 🔺️diff — {first}"));
+            match committed.diff {
+                Some(text) => {
+                    if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(text)) {
+                        return Err(format!("{scenario}: the produced delta is not the committed 🔺️diff — {first}"));
+                    }
+                }
+                None => return Err(format!("{scenario}: a forward vector must carry a committed 🔺️diff")),
             }
             declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
             law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
-            touches_one(&format!("spec-vector-{kind}"), kind, member(&report, "base")?, applied)?;
+            touches_one(&scenario, kind, member(&report, "base")?, applied)?;
             law::inverse_restores(kind, member(&report, "inverseSnapshot")?, member(&report, "base")?)?;
             Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
+        }
+    }
+
+    /// 🚫️ Replays one committed REFUSAL or no-op vector. The projection carries the diagnostic
+    /// beside the model on purpose: two implementations that merely both decline to move a document
+    /// agree vacuously, and what these rows are evidence for is that they refuse for the SAME
+    /// reason — same code, same level, same address.
+    pub fn reject(kind: &'static str, scenario: &str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        let scenario = scenario.to_string();
+        move |_ctx: &Context| {
+            let committed = vector(&scenario);
+            if committed.diff.is_some() {
+                return Err(format!("{scenario}: a refusal vector carries 🔺️diff/🚫️.absent, never a committed delta"));
+            }
+            let report = report_of(&scenario, committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            if let Some(first) = law::divergence(applied, member(&report, "base")?) {
+                return Err(format!("{scenario}: a refused or no-op mutation must leave the model exactly where it was — {first}"));
+            }
+            let raised = members(&report, "messages")?;
+            let first = raised.first().ok_or_else(|| format!("{scenario}: the vector declares a refusal, the implementation raised nothing"))?;
+            declared_outcome_holds(kind, &raised, &canonical(committed.outcome))?;
+            let refusal = Json::Object(vec![
+                ("code".to_string(), Json::String(first.str("code"))),
+                ("level".to_string(), Json::String(level_of(&first.str("level")))),
+                ("target".to_string(), Json::Array(strings(first, "target").into_iter().map(Json::String).collect())),
+            ]);
+            let projection = Json::Object(vec![("model".to_string(), applied.clone()), ("refusal".to_string(), refusal)]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }
     //#endregion 🔖️Handlers
@@ -284,13 +356,18 @@ pub fn adapter() -> Adapter {
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
             built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
-            built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
+        }
+        for &(scenario, kind) in COMMITTED {
+            built = built.subject(scenario, subject::committed_vector(kind, scenario));
+        }
+        for &(scenario, kind) in REFUSED {
+            built = built.subject(scenario, subject::reject(kind, scenario));
         }
         return built;
     }
     #[cfg(not(feature = "sut"))]
     {
-        let _ = (KINDS, UNOBSERVABLE, vector as fn(&str) -> Vector);
+        let _ = (KINDS, UNOBSERVABLE, COMMITTED, REFUSED, vector as fn(&str) -> Vector);
         built
     }
 }

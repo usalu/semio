@@ -1191,7 +1191,7 @@ mod tests {
     async fn mesh_preview_renders_region_edges() {
         let mut app = fem2d_app();
         crate::editor::fem2d::testkit::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
-        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let snapshot = app.snapshot().expect("snapshot");
         let node = render(&snapshot, &FemCamera::default());
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");

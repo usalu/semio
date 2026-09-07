@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.id-mismatch",
+  "path": [
+    "sup_tie",
+    "sup_tie_b"
+  ]
+}

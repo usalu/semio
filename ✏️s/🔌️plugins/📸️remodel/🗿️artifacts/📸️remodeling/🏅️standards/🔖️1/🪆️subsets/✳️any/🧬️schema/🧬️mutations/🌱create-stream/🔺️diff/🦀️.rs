@@ -1,5 +1,6 @@
-//! 🔺️ Sparse diff builder for `CreateStream` — a real append-only insert (never a whole-snapshot
-//! capture). Duplicate `stream.id` ⇒ Fatal `mutation.duplicate-id`; a `camera_id` referencing an
+//! 🔺️ Sparse diff builder for `CreateStream` — a real single-member insert at the stream's canonical
+//! position in `id` order (never a whole-snapshot capture), so `delete-stream` puts it back exactly
+//! where it was. Duplicate `stream.id` ⇒ Fatal `mutation.duplicate-id`; a `camera_id` referencing an
 //! unknown camera ⇒ Fatal `mutation.invariant`.
 use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
 use crate::artifacts::remodeling::RemodelingSnapshot;
@@ -15,7 +16,8 @@ pub fn diff(payload: &super::CreateStream, base: &RemodelingSnapshot) -> protoco
         }
     }
     let mut streams = base.streams.clone();
-    streams.push(payload.stream.clone());
+    let at = crate::artifacts::remodeling::mutations::ordered_index(&streams, &payload.stream.id, |stream| stream.id.clone());
+    streams.insert(at, payload.stream.clone());
     protocol::MutationOutcome::new(RemodelingDiff { streams: Some(RemodelingMediaStreamList { values: streams }), ..Default::default() })
 }
 //#endregion 🔖️Diff

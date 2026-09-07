@@ -86,7 +86,41 @@ Feature: Apply every typed fem3d material mutation twice — once in Rust, once 
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id               | dir                 | fixture                                  |
-    | create-material  | 🌱️create-material  | 🪙️appends-an-aluminium-alloy               |
-    | delete-material  | 🗑️delete-material  | 🚫️removes-the-unreferenced-aluminium-alloy |
-    | replace-material | 🔁️replace-material | 📉️softens-the-steel-shear-modulus-in-place |
+    | id               | dir                | fixture              |
+    | create-material  | 🌱️create-material  | 🪙️appends-an-9fdced  |
+    | delete-material  | 🗑️delete-material  | 🚫️removes-the-b7b56a |
+    | replace-material | 🔁️replace-material | 📉️softens-the-2cd183 |
+
+  @id-hall-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> glulam-hall vector through both implementations
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
+    Examples:
+    | id               | dir                | fixture                 |
+    | create-material  | 🌱️create-material  | 🏗️hall-new-steel-0d2572 |
+    | replace-material | 🔁️replace-material | 🏗️hall-regrades-8dbc23  |
+    | delete-material  | 🗑️delete-material  | 🏗️hall-cut-gl32c-264bca |
+
+  @id-reject
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Refuse the committed <id> vector in both implementations and leave the model where it was
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
+    Examples:
+    | id                      | dir                | fixture                   |
+    | dup-material-id-1c0787  | 🌱️create-material  | 🚨️dup-material-id-1c0787  |
+    | nu-at-a-half-8253d2     | 🌱️create-material  | 🧨️nu-at-a-half-8253d2     |
+    | same-material-950f90    | 🔁️replace-material | ⏸️same-material-950f90    |
+    | negative-e-84dad7       | 🔁️replace-material | 🧨️negative-e-84dad7       |
+    | renames-c24-b60696      | 🔁️replace-material | 🪪️renames-c24-b60696      |
+    | glulam-in-use-1208e1    | 🗑️delete-material  | ⛓️glulam-in-use-1208e1    |
+    | no-such-material-494b10 | 🗑️delete-material  | 🚨️no-such-material-494b10 |

@@ -1,0 +1,15 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-referenced",
+  "path": [
+    "raf_l_1",
+    "ld_roof",
+    "ld_snow_l"
+  ],
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-referenced"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating-throttle-range",
+  "semanticKind": "change-thermostat-heating-throttle-range",
+  "displayName": "Change Thermostat Heating Throttle Range",
+  "emoji": "🎚️",
+  "aggregateVariant": "ChangeThermostatHeatingThrottleRange",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-thermostat-heating-throttle-range",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

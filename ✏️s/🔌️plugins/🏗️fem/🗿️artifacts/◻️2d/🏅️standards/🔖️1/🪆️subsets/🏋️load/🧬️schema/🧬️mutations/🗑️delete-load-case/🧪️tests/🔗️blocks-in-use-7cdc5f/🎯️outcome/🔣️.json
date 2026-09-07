@@ -1,0 +1,10 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-referenced",
+  "path": [
+    "dead",
+    "uls1",
+    "sls1",
+    "uls_spare"
+  ]
+}

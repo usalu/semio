@@ -33,50 +33,331 @@
 
 use semio_repo_test_host::Adapter;
 
-//#region 🔖️Kinds
+//#region 🔖️Scenarios
 /// 🏷️ Mirrors `KINDS` in `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not imported, because
 /// the host may not reach into the subject crate outside the `sut` feature. The contract's
-/// mutation-coverage gate keeps this list honest against the catalog and
-/// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
+/// mutation-coverage gate keeps this list honest against the catalog.
 #[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
-    "create-stream",
-    "delete-stream",
-    "change-stream-sync",
-    "add-stream-frame",
-    "remove-stream-frame",
-    "replace-stream-source",
-    "create-asset",
-    "delete-asset",
-    "create-camera-calibration",
-    "update-camera-calibration",
-    "delete-camera-calibration",
-    "create-rig-extrinsic",
-    "delete-rig-extrinsic",
-    "update-rig-extrinsic",
-    "create-gcp",
-    "delete-gcp",
     "add-gcp-observation",
+    "add-stream-frame",
+    "change-stream-sync",
+    "commit-reconstruction",
+    "create-asset",
+    "create-camera-calibration",
+    "create-gcp",
+    "create-rig-extrinsic",
+    "create-stream",
+    "delete-asset",
+    "delete-camera-calibration",
+    "delete-gcp",
+    "delete-rig-extrinsic",
+    "delete-stream",
     "remove-gcp-observation",
-    "update-ingest-params",
-    "update-feature-params",
-    "update-match-params",
-    "update-sfm-params",
+    "remove-stream-frame",
+    "replace-dense",
+    "replace-geo-products",
+    "replace-job",
+    "replace-mesh-result",
+    "replace-qc",
+    "replace-sparse",
+    "replace-stream-source",
+    "replace-tracks",
+    "replace-trajectory",
+    "update-camera-calibration",
     "update-dense-params",
+    "update-feature-params",
+    "update-geo-params",
+    "update-ingest-params",
+    "update-match-params",
     "update-mesh-params",
     "update-motion-params",
-    "update-geo-params",
-    "replace-job",
-    "replace-sparse",
-    "replace-dense",
-    "replace-mesh-result",
-    "replace-trajectory",
-    "replace-tracks",
-    "replace-geo-products",
-    "replace-qc",
-    "commit-reconstruction",
+    "update-rig-extrinsic",
+    "update-sfm-params",
 ];
-//#endregion 🔖️Kinds
+
+/// ▶️ Every `@id-mutate` row `🥒️.feature` plans, applied and refused alike — generated with the
+/// feature itself, so a row that gains or loses a vector cannot leave this list behind.
+#[cfg(feature = "sut")]
+const MUTATE_SCENARIOS: &[&str] = &[
+    "add-gcp-observation",
+    "add-gcp-observation-missing",
+    "add-gcp-observation-noop",
+    "add-gcp-observation-realworld",
+    "add-stream-frame",
+    "add-stream-frame-kind",
+    "add-stream-frame-missing",
+    "add-stream-frame-noop",
+    "add-stream-frame-realworld",
+    "change-stream-sync",
+    "change-stream-sync-missing",
+    "change-stream-sync-noop",
+    "change-stream-sync-realworld",
+    "commit-reconstruction",
+    "commit-reconstruction-asset",
+    "commit-reconstruction-mesh",
+    "commit-reconstruction-sparse",
+    "create-asset",
+    "create-asset-realworld",
+    "create-asset-staging-handle",
+    "create-asset-upsert",
+    "create-camera-calibration",
+    "create-camera-calibration-duplicate",
+    "create-camera-calibration-realworld",
+    "create-gcp",
+    "create-gcp-duplicate",
+    "create-gcp-realworld",
+    "create-gcp-unobserved",
+    "create-rig-extrinsic",
+    "create-rig-extrinsic-duplicate",
+    "create-rig-extrinsic-realworld",
+    "create-rig-extrinsic-unknown-camera",
+    "create-stream",
+    "create-stream-duplicate-id",
+    "create-stream-realworld",
+    "create-stream-unbound",
+    "create-stream-unknown-camera",
+    "delete-asset",
+    "delete-asset-geo-product",
+    "delete-asset-missing",
+    "delete-asset-realworld",
+    "delete-asset-referenced-frames",
+    "delete-camera-calibration",
+    "delete-camera-calibration-missing",
+    "delete-camera-calibration-realworld",
+    "delete-camera-calibration-referenced",
+    "delete-gcp",
+    "delete-gcp-missing",
+    "delete-gcp-realworld",
+    "delete-gcp-unobserved",
+    "delete-rig-extrinsic",
+    "delete-rig-extrinsic-first",
+    "delete-rig-extrinsic-missing",
+    "delete-rig-extrinsic-realworld",
+    "delete-stream",
+    "delete-stream-missing",
+    "delete-stream-realworld",
+    "delete-stream-referenced",
+    "remove-gcp-observation",
+    "remove-gcp-observation-first",
+    "remove-gcp-observation-out-of-range",
+    "remove-gcp-observation-realworld",
+    "remove-stream-frame",
+    "remove-stream-frame-first",
+    "remove-stream-frame-out-of-range",
+    "remove-stream-frame-realworld",
+    "replace-dense",
+    "replace-dense-noop",
+    "replace-dense-realworld",
+    "replace-geo-products",
+    "replace-geo-products-absent",
+    "replace-geo-products-clears",
+    "replace-geo-products-realworld",
+    "replace-job",
+    "replace-job-noop",
+    "replace-job-realworld",
+    "replace-mesh-result",
+    "replace-mesh-result-noop",
+    "replace-mesh-result-realworld",
+    "replace-mesh-result-staged",
+    "replace-qc",
+    "replace-qc-absent",
+    "replace-qc-clears",
+    "replace-qc-realworld",
+    "replace-sparse",
+    "replace-sparse-noop",
+    "replace-sparse-realworld",
+    "replace-stream-source",
+    "replace-stream-source-attaches",
+    "replace-stream-source-missing",
+    "replace-stream-source-realworld",
+    "replace-tracks",
+    "replace-tracks-empty",
+    "replace-tracks-noop",
+    "replace-tracks-realworld",
+    "replace-trajectory",
+    "replace-trajectory-absent",
+    "replace-trajectory-clears",
+    "replace-trajectory-realworld",
+    "update-camera-calibration",
+    "update-camera-calibration-missing",
+    "update-camera-calibration-noop",
+    "update-camera-calibration-realworld",
+    "update-dense-params",
+    "update-dense-params-noop",
+    "update-dense-params-realworld",
+    "update-feature-params",
+    "update-feature-params-invariant",
+    "update-feature-params-noop",
+    "update-feature-params-realworld",
+    "update-geo-params",
+    "update-geo-params-invariant",
+    "update-geo-params-noop",
+    "update-geo-params-realworld",
+    "update-ingest-params",
+    "update-ingest-params-invariant",
+    "update-ingest-params-noop",
+    "update-ingest-params-realworld",
+    "update-match-params",
+    "update-match-params-invariant",
+    "update-match-params-noop",
+    "update-match-params-realworld",
+    "update-mesh-params",
+    "update-mesh-params-noop",
+    "update-mesh-params-realworld",
+    "update-motion-params",
+    "update-motion-params-noop",
+    "update-motion-params-realworld",
+    "update-rig-extrinsic",
+    "update-rig-extrinsic-missing",
+    "update-rig-extrinsic-noop",
+    "update-rig-extrinsic-realworld",
+    "update-sfm-params",
+    "update-sfm-params-noop",
+    "update-sfm-params-realworld",
+];
+
+/// ↩️ Every `@id-inverse` row — one per committed vector. A refused or warned vector's inverse is
+/// empty, which still restores: its forward step moved nothing.
+#[cfg(feature = "sut")]
+const INVERSE_SCENARIOS: &[&str] = &[
+    "add-gcp-observation",
+    "add-gcp-observation-missing",
+    "add-gcp-observation-noop",
+    "add-gcp-observation-realworld",
+    "add-stream-frame",
+    "add-stream-frame-kind",
+    "add-stream-frame-missing",
+    "add-stream-frame-noop",
+    "add-stream-frame-realworld",
+    "change-stream-sync",
+    "change-stream-sync-missing",
+    "change-stream-sync-noop",
+    "change-stream-sync-realworld",
+    "commit-reconstruction",
+    "commit-reconstruction-asset",
+    "commit-reconstruction-mesh",
+    "commit-reconstruction-sparse",
+    "create-asset",
+    "create-asset-realworld",
+    "create-asset-staging-handle",
+    "create-asset-upsert",
+    "create-camera-calibration",
+    "create-camera-calibration-duplicate",
+    "create-camera-calibration-realworld",
+    "create-gcp",
+    "create-gcp-duplicate",
+    "create-gcp-realworld",
+    "create-gcp-unobserved",
+    "create-rig-extrinsic",
+    "create-rig-extrinsic-duplicate",
+    "create-rig-extrinsic-realworld",
+    "create-rig-extrinsic-unknown-camera",
+    "create-stream",
+    "create-stream-duplicate-id",
+    "create-stream-realworld",
+    "create-stream-unbound",
+    "create-stream-unknown-camera",
+    "delete-asset",
+    "delete-asset-geo-product",
+    "delete-asset-missing",
+    "delete-asset-realworld",
+    "delete-asset-referenced-frames",
+    "delete-camera-calibration",
+    "delete-camera-calibration-missing",
+    "delete-camera-calibration-realworld",
+    "delete-camera-calibration-referenced",
+    "delete-gcp",
+    "delete-gcp-missing",
+    "delete-gcp-realworld",
+    "delete-gcp-unobserved",
+    "delete-rig-extrinsic",
+    "delete-rig-extrinsic-first",
+    "delete-rig-extrinsic-missing",
+    "delete-rig-extrinsic-realworld",
+    "delete-stream",
+    "delete-stream-missing",
+    "delete-stream-realworld",
+    "delete-stream-referenced",
+    "remove-gcp-observation",
+    "remove-gcp-observation-first",
+    "remove-gcp-observation-out-of-range",
+    "remove-gcp-observation-realworld",
+    "remove-stream-frame",
+    "remove-stream-frame-first",
+    "remove-stream-frame-out-of-range",
+    "remove-stream-frame-realworld",
+    "replace-dense",
+    "replace-dense-noop",
+    "replace-dense-realworld",
+    "replace-geo-products",
+    "replace-geo-products-absent",
+    "replace-geo-products-clears",
+    "replace-geo-products-realworld",
+    "replace-job",
+    "replace-job-noop",
+    "replace-job-realworld",
+    "replace-mesh-result",
+    "replace-mesh-result-noop",
+    "replace-mesh-result-realworld",
+    "replace-mesh-result-staged",
+    "replace-qc",
+    "replace-qc-absent",
+    "replace-qc-clears",
+    "replace-qc-realworld",
+    "replace-sparse",
+    "replace-sparse-noop",
+    "replace-sparse-realworld",
+    "replace-stream-source",
+    "replace-stream-source-attaches",
+    "replace-stream-source-missing",
+    "replace-stream-source-realworld",
+    "replace-tracks",
+    "replace-tracks-empty",
+    "replace-tracks-noop",
+    "replace-tracks-realworld",
+    "replace-trajectory",
+    "replace-trajectory-absent",
+    "replace-trajectory-clears",
+    "replace-trajectory-realworld",
+    "update-camera-calibration",
+    "update-camera-calibration-missing",
+    "update-camera-calibration-noop",
+    "update-camera-calibration-realworld",
+    "update-dense-params",
+    "update-dense-params-noop",
+    "update-dense-params-realworld",
+    "update-feature-params",
+    "update-feature-params-invariant",
+    "update-feature-params-noop",
+    "update-feature-params-realworld",
+    "update-geo-params",
+    "update-geo-params-invariant",
+    "update-geo-params-noop",
+    "update-geo-params-realworld",
+    "update-ingest-params",
+    "update-ingest-params-invariant",
+    "update-ingest-params-noop",
+    "update-ingest-params-realworld",
+    "update-match-params",
+    "update-match-params-invariant",
+    "update-match-params-noop",
+    "update-match-params-realworld",
+    "update-mesh-params",
+    "update-mesh-params-noop",
+    "update-mesh-params-realworld",
+    "update-motion-params",
+    "update-motion-params-noop",
+    "update-motion-params-realworld",
+    "update-rig-extrinsic",
+    "update-rig-extrinsic-missing",
+    "update-rig-extrinsic-noop",
+    "update-rig-extrinsic-realworld",
+    "update-sfm-params",
+    "update-sfm-params-noop",
+    "update-sfm-params-realworld",
+];
+//#endregion 🔖️Scenarios
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
@@ -137,6 +418,16 @@ mod subject {
     }
 
     /// 🚨️ A vector that declares a refusal must raise exactly the diagnostic it names.
+    /// 🏭️ Bridge version every scenario reports beside its operation. It is the `bridgeVersion` the
+    /// oracle registry's own `productionDispatch` rows declare for all 35 kinds; a subject result
+    /// without this record is treated as a vector replay and refused by `vectorReplayBreaches`.
+    const PRODUCTION_BRIDGE_VERSION: u32 = 1;
+
+    /// 🔁️ The operation `identity-round-trip` reports. It is not a mutation kind — the bridge it
+    /// reaches is the codec's `round_trip_remodeling_dsl`, so it names that instead of borrowing a
+    /// mutation's id.
+    const ROUND_TRIP_BRIDGE_OPERATION: &str = "round-trip-remodeling-dsl";
+
     fn raised(vector: &Vector, codes: &[String]) -> Result<(), String> {
         match &vector.code {
             None => Ok(()),
@@ -160,7 +451,7 @@ mod subject {
         } else if law::divergence(&document, &vector.before).is_some() {
             return Err(format!("mutate-{}: the vector declares a refusal, so the document must be left untouched", vector.kind));
         }
-        Ok(Outcome::with_raw(document.to_string().into_bytes(), document))
+        Ok(Outcome::with_raw(document.to_string().into_bytes(), document).dispatched(&vector.kind, PRODUCTION_BRIDGE_VERSION))
     }
 
     /// ↩️ The inverse law in role: applying the kind and then EVERY step of its own computed inverse
@@ -170,7 +461,7 @@ mod subject {
         let vector = vector(ctx)?;
         let (document, _codes) = answer(&undo_remodeling_mutation_json(&vector.before_text, &vector.mutation_text)?)?;
         law::inverse_restores(&vector.kind, &document, &vector.before)?;
-        Ok(Outcome::with_raw(document.to_string().into_bytes(), document))
+        Ok(Outcome::with_raw(document.to_string().into_bytes(), document).dispatched(&vector.kind, PRODUCTION_BRIDGE_VERSION))
     }
 
     /// 🔁️ The identity law in role, on the real committed example the scenario's doc string names.
@@ -191,7 +482,7 @@ mod subject {
         law::round_trip_preserves(&reparsed, &parsed)?;
         let printed = value.str("printed");
         law::carrier_is_exact(printed.as_bytes(), &input)?;
-        Ok(Outcome::with_raw(printed.clone().into_bytes(), Json::String(printed)))
+        Ok(Outcome::with_raw(printed.clone().into_bytes(), Json::String(printed)).dispatched(ROUND_TRIP_BRIDGE_OPERATION, PRODUCTION_BRIDGE_VERSION))
     }
 }
 //#endregion 🔖️Subject
@@ -207,8 +498,12 @@ pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
-    for kind in KINDS {
-        built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
+    for scenario in MUTATE_SCENARIOS {
+        built = built.subject(&format!("mutate-{scenario}"), subject::mutate);
+    }
+    #[cfg(feature = "sut")]
+    for scenario in INVERSE_SCENARIOS {
+        built = built.subject(&format!("inverse-{scenario}"), subject::inverse);
     }
     #[cfg(feature = "sut")]
     {

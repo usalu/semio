@@ -1,5 +1,7 @@
-//! ↩️ Inverse for `RemoveStreamFrame` — re-`add-stream-frame`s the captured BASE frame (with the
-//! stream's BASE `kind`). Missing target/index ⇒ `Vec::new()`.
+//! ↩️ Inverse for `RemoveStreamFrame` — re-`add-stream-frame`s the captured BASE frame, which lands
+//! at its canonical `(index, asset_id)` position, i.e. exactly the one it was removed from. `kind` is
+//! the stream's own BASE kind, which is what the forward verb now asserts rather than rewrites.
+//! Missing target/index ⇒ `Vec::new()`.
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::RemodelingSnapshot;
 

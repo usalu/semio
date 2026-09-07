@@ -1,12 +1,12 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
 use crate::app::{
-    resolve_ready, App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
-    PluginCommandHandler,
+    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler,
+    resolve_ready,
 };
 use semio_framework::{
-    kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
     AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
+    kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
 };
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::marker::PhantomData;
@@ -297,7 +297,10 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     }
 
     /// 🗂️ Declares an app-owned codec under a foreign document schema for the aggregate codec commit.
-    pub fn foreign_document_codec<A: ArtifactApp>(mut self, schema: impl Into<String>) -> Self where A::Mutation: Sync {
+    pub fn foreign_document_codec<A: ArtifactApp>(mut self, schema: impl Into<String>) -> Self
+    where
+        A::Mutation: Sync,
+    {
         self.foreign_document_codecs.push(crate::app::DocumentCodecSpec::foreign::<A>(schema));
         self
     }
@@ -638,7 +641,13 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         let version = version.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.version", "typestate-ready builder has no version"))?;
         let package_id = package_id.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.package-id", "component package identity was not declared"))?;
         let package_suffix = package_id.strip_prefix("semio:").ok_or_else(|| PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must use the semio namespace"))?;
-        if package_suffix != plugin_id || package_suffix.is_empty() || package_suffix.starts_with('-') || package_suffix.ends_with('-') || package_suffix.contains("--") || !package_suffix.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-') {
+        if package_suffix != plugin_id
+            || package_suffix.is_empty()
+            || package_suffix.starts_with('-')
+            || package_suffix.ends_with('-')
+            || package_suffix.contains("--")
+            || !package_suffix.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+        {
             return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must exactly match semio:<plugin-id> in canonical lowercase form"));
         }
         crate::app::declarations::preflight_artifact_declarations(&plugin_id, &declared_artifacts)?;

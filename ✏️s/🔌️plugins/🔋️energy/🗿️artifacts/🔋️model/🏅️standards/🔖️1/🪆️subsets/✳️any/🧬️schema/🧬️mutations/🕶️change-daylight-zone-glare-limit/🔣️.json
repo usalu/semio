@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone-glare-limit",
+  "semanticKind": "change-daylight-zone-glare-limit",
+  "displayName": "Change Daylight Zone Glare Limit",
+  "emoji": "🕶️",
+  "aggregateVariant": "ChangeDaylightZoneGlareLimit",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-daylight-zone-glare-limit",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

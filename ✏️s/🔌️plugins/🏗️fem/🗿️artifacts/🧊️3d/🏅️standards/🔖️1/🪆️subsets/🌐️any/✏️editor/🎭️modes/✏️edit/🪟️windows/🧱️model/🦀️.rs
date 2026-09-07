@@ -26,10 +26,16 @@ pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin
 }
 
 /// 👁️ Borrows a generation-qualified immutable renderer packet without scene rebuilding on the UI thread.
+///
+/// 🕳️ `meshes_json`/`instances_json` stay the literal `"[]"` by design: geometry travels on
+/// `scene.snapshot`, the `live_visual` page lease. A `None` lease therefore paints an EMPTY world — the
+/// `[DEBUG]` line below is the discriminator between "the reconcile job has not published yet / the
+/// identity did not line up" and "the app is genuinely rendering geometry".
 pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut scene =
         semio_framework_plugin::world3d_scene(crate::editor::fem3d::fem3d_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
     scene.snapshot = visual.map(crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease::snapshot);
+    eprintln!("[DEBUG] fem3d model window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
     crate::app_surface::world_3d_surface(FEM3D_BODY_MODEL, scene)
 }
 
@@ -50,7 +56,7 @@ mod tests {
     async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
         let mut app = fem3d_app();
         crate::editor::fem3d::testkit::dispatch(&mut app, crate::editor::fem3d::Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
-        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let snapshot = app.snapshot().expect("snapshot");
         let node = render(&snapshot, &FemCamera::default());
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected world surface") };
         let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(props).expect("decode world scene");

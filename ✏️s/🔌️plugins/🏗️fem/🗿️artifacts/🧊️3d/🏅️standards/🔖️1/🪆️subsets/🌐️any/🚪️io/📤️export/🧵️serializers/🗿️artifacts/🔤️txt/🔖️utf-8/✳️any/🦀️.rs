@@ -1,14 +1,35 @@
-//! ser fem3d to txt
-//! 🐛️ Pre-migration content here referenced `crate::artifacts::json`/`crate::artifacts::txt`,
-//! types that don't exist in this crate (dead code, never mounted by the old glue, never
-//! compiled) -- likely a copy-paste of stdio's own internal json<-txt bridge into the wrong
-//! plugin's txt target folder. Left as an honest stub producing this artifact's own real
-//! snapshot type, pending a real txt import/export implementation.
+//! 🚪️ fem3d → txt — foreign `Serializer<Fem3dSnapshot>` on the framework's `io_mechanism` channel.
+//! `s.stdio.txt@utf-8` for this subset IS its own `.semio` DSL snapshot text
+//! (`🧬️schema/📸️snapshot/📝️text`): the very bytes `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` carries
+//! and `<Fem3dSnapshot as store::ArtifactDsl>::parse_dsl` reads back, so the hop is
+//! `IoFidelity::Exact` and the sibling `📥️import` leaf is its exact inverse.
+//!
+//! 🐛️ Repaired here (ticket 26/09/06/FEM-PLUGIN-END-TO-END, W4): this file used to be an
+//! `Err("txt export not yet implemented")` stub that ALSO carried a stray `deserialize_bytes` — an
+//! import-direction function inside the export tree, left behind by a copy-paste of stdio's own
+//! json↔txt bridge. Both are gone.
+
 use crate::artifacts::fem3d::Fem3dSnapshot;
-pub fn register() {}
-pub fn serialize(_from: &Fem3dSnapshot) -> Result<semio_s_plugin_stdio::artifacts::txt::TxtSnapshot, String> {
-    Err("txt export not yet implemented".into())
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+
+/// 🎯️ The foreign dialect this leaf writes.
+pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
+
+/// 🔤️ This subset's snapshot as `.semio` DSL text — also the authoritative payload the `📊️csv` and
+/// `📝️md` envelope leaves carry.
+pub fn dsl_text(from: &Fem3dSnapshot) -> String {
+    <Fem3dSnapshot as store::ArtifactDsl>::print_dsl(from)
 }
-pub fn deserialize_bytes(_bytes: &[u8]) -> Result<Fem3dSnapshot, String> {
-    Err("txt import not yet implemented".into())
+
+/// 🧵️ `s.fem.fem3d@1/*` → `s.stdio.txt@utf-8/*`.
+pub struct Fem3dIntoTxt;
+
+impl Serializer<Fem3dSnapshot> for Fem3dIntoTxt {
+    const INTO: Dialect = TXT_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    async fn serialize(from: &Fem3dSnapshot) -> IoResult<IoPayload> {
+        Ok(IoOutcome::clean(IoPayload::Text(dsl_text(from))))
+    }
 }

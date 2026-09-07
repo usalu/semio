@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceElement",
+  "id": "b2",
+  "newElement": {
+    "kind": "beam",
+    "id": "b3",
+    "start": "n5",
+    "end": "n6",
+    "materialId": "steel_s355",
+    "sectionId": "ipe240"
+  }
+}

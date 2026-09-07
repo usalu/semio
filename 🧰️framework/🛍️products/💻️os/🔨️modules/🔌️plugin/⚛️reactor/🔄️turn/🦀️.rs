@@ -9,15 +9,24 @@ enum CommandIngressOwner {
     Generic { cursor: semio_framework::kernel::CommandPageCursor, command: crate::plugin_runtime::PluginCommandIngress },
 }
 
-
-struct RetainedCommandIngress { key: instance_lifetime::NativeCloseKey, state: CommandIngressOwner }
+struct RetainedCommandIngress {
+    key: instance_lifetime::NativeCloseKey,
+    state: CommandIngressOwner,
+}
 
 fn retire_command_ingress(state: CommandIngressOwner) -> Option<CommandIngressOwner> {
     match state {
-        CommandIngressOwner::ReservedPresence { admission, .. } => { admission.cancel.cancel_now(); None }
+        CommandIngressOwner::ReservedPresence { admission, .. } => {
+            admission.cancel.cancel_now();
+            None
+        }
         CommandIngressOwner::Presence { .. } | CommandIngressOwner::PendingPresencePage { .. } => None,
         CommandIngressOwner::GenericAssembly { cursor, mut pages } | CommandIngressOwner::ClosingAssembly { cursor, mut pages } => {
-            if pages.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0 { None } else { Some(CommandIngressOwner::ClosingAssembly { cursor, pages }) }
+            if pages.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0 {
+                None
+            } else {
+                Some(CommandIngressOwner::ClosingAssembly { cursor, pages })
+            }
         }
         CommandIngressOwner::Generic { cursor, command } => command.retire_step().map(|command| CommandIngressOwner::Generic { cursor, command }),
     }
@@ -37,7 +46,9 @@ crate::component_persistent_local! {
     static COMMAND_INGRESS: RefCell<[Option<RetainedCommandIngress>; 2]> = RefCell::new([None, None]);
 }
 
-fn native_close_key_fault(message: &'static str) -> semio_framework::Fault { reactor_close_fault(message) }
+fn native_close_key_fault(message: &'static str) -> semio_framework::Fault {
+    reactor_close_fault(message)
+}
 
 fn native_close_key<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
     let lifetimes = runtime.guest_lifetimes.try_borrow().map_err(|_| reactor_close_fault("lifecycle authority busy"))?;
@@ -91,19 +102,23 @@ pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
 ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
-    poll_kernel_output(runtime, events, command_page, budget, Ok).await
+    poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result).await
 }
 
-pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
+pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
-    lower: impl FnOnce(semio_framework::kernel::TurnResult) -> Result<T, semio_framework::Fault>,
+    prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
+    publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
 ) -> Result<T, semio_framework::Fault> {
     let started_us = semio_framework_job::default_now_us();
+    let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
     let mut dirty = DirtyPollOwners::new();
     let mut focus = None;
     for event in &events {
@@ -116,7 +131,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
             _ => None,
         };
         if let Some(instance) = instance {
-            if focus.replace(instance).is_some() { return Err(reactor_close_fault("one lifecycle command is admitted per turn")); }
+            if focus.replace(instance).is_some() {
+                return Err(reactor_close_fault("one lifecycle command is admitted per turn"));
+            }
         }
     }
     for event in &events {
@@ -134,7 +151,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
             _ => {}
         }
     }
-    if focus.is_none() { focus = runtime.guest_lifetimes.borrow_mut().next_work(); }
+    if focus.is_none() {
+        focus = runtime.guest_lifetimes.borrow_mut().next_work();
+    }
     if let Some(instance) = focus {
         let mut lifetimes = runtime.guest_lifetimes.borrow_mut();
         if let Some(slot) = lifetimes.get_mut(instance) {
@@ -145,7 +164,10 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
     }
     let mut close_instances: Vec<u32> = events.iter().filter_map(|event| if let Event::InstanceClose(request) = event { Some(request.lifetime.instance_id) } else { None }).collect();
     let _ = step_reactor_close()?;
-    PATCHES.with(|patches| { patches.close_step(); });
+    let _ = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one());
+    PATCHES.with(|patches| {
+        patches.close_step();
+    });
     let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one().map_err(reactor_close_fault)?;
     let _ = ui_contract::close_ui_document_page_one();
     let _ = ui_contract::close_ui_patch_owner_one();
@@ -153,6 +175,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
     let _ = semio_framework::kernel::close_ui_turn_patch_owner_one();
     let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
     let _ = crate::app::close_table_rows_view_one();
+    with_pending_patches(|pending| pending.borrow_mut().advance_rejection(|surface, generation| PATCHES.with(|patches| patches.mark_rejected(surface, generation))));
     with_pending_patches(|pending| pending.borrow_mut().close_step()).map_err(reactor_close_fault)?;
     let close_cleanup_work = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
     let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
@@ -194,7 +217,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
                 native_close_key(runtime, numeric_instance)?;
                 if let Ok(intent_value) = store::pack_rt::decode_wire_value(&intent) {
                     if let Ok(intent) = serde_json::from_value::<ui_contract::UiIntent>(intent_value.into()) {
-                        if parse_surface_instance(intent.surface.as_ref()) != Some(numeric_instance) { return Err(reactor_close_fault("intent surface names another lifetime")); }
+                        if parse_surface_instance(intent.surface.as_ref()) != Some(numeric_instance) {
+                            return Err(reactor_close_fault("intent surface names another lifetime"));
+                        }
                         let current_revision = PATCHES.with(|patches| patches.revision(&intent.surface.0));
                         if !is_stale_intent(intent.revision, current_revision, DEFAULT_REVISION_TOLERANCE) {
                             dirty
@@ -212,14 +237,18 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
                 }
             }
             Event::SurfaceHidden { .. } | Event::SurfaceResized { .. } => {}
-            Event::PatchAck { surface, revision, .. } => {
-                with_pending_patches(|pending| {
-                    pending.borrow_mut().apply_published_ack(&surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| PATCHES.with(|patches| patches.mark_published_ack(ack)))
-                })
-                .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.patch-ack-authority"), reason))?;
+            Event::PatchAck { receipt, surface, revision } => {
+                if !live_patch_receipt(runtime, receipt) {
+                    continue;
+                }
+                with_pending_patches(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| PATCHES.with(|patches| patches.mark_published_ack(ack))))
+                    .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.patch-ack-authority"), reason))?;
             }
-            Event::PatchRejected { surface, .. } => {
-                PATCHES.with(|patches| patches.mark_rejected(&surface));
+            Event::PatchRejected { receipt, surface, revision, .. } => {
+                if !live_patch_receipt(runtime, receipt) {
+                    continue;
+                }
+                with_pending_patches(|pending| pending.borrow_mut().apply_issued_rejection(receipt, &surface, revision, |generation| PATCHES.with(|patches| patches.mark_rejected(&surface, generation))));
             }
             Event::Completed { req, result } => {
                 REGISTRY.with(|registry| registry.resolve(req, crate::host::outcome_to_result(result)));
@@ -287,6 +316,25 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
     }
 
     let mut effects: Vec<Effect> = Vec::new();
+    let mut cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Idle;
+    if let Some(page) = cold_pair_page {
+        let lifetime = page.header.lifetime;
+        let transfer_generation = page.header.transfer_generation;
+        let terminal_cursor = page.header.cursor(page.header.page_count.saturating_sub(1));
+        let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
+        cold_pair_ingress = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().accept_page(page, live));
+        if matches!(cold_pair_ingress, semio_framework::kernel::ColdPairIngressStatus::Loading(_)) {
+            let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
+            let load = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().begin_load(lifetime, transfer_generation, live));
+            if let Some(load) = load {
+                let result = crate::plugin_runtime::plugin_load_document_pack(runtime, lifetime.instance_id, load.files()).await.map_err(|fault| dsl::encode_fault_bytes(&fault));
+                let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
+                cold_pair_ingress = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().finish_load(load, result, live));
+            } else {
+                cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Fault { cursor: terminal_cursor, fault: b"cold-pair.load-admission".to_vec() };
+            }
+        }
+    }
     let mut command_ingress = semio_framework::kernel::CommandIngressStatus::Idle;
     let (mut retained, retained_slot, mut retained_key) = COMMAND_INGRESS.with(|ingress| {
         let mut ingress = ingress.borrow_mut();
@@ -294,10 +342,17 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
             let entry = ingress[0].take().expect("retained command");
             (Some(entry.state), 0, Some(entry.key))
         } else {
-            match ingress[1].take() { Some(entry) => (Some(entry.state), 1, Some(entry.key)), None => (None, 1, None) }
+            match ingress[1].take() {
+                Some(entry) => (Some(entry.state), 1, Some(entry.key)),
+                None => (None, 1, None),
+            }
         }
     });
-    if let Some(key) = retained_key { if native_close_key(runtime, key.instance()).ok() != Some(key) { close_instances.push(key.instance()); } }
+    if let Some(key) = retained_key {
+        if native_close_key(runtime, key.instance()).ok() != Some(key) {
+            close_instances.push(key.instance());
+        }
+    }
     retained = match retained.take() {
         Some(CommandIngressOwner::ReservedPresence { cursor, admission, .. }) if close_instances.contains(&cursor.instance) => {
             admission.cancel.cancel_now();
@@ -337,9 +392,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
     retained = match retained.take() {
         Some(CommandIngressOwner::ReservedPresence { cursor, admission, page }) => {
             let now_ms = crate::host::now_ms().await;
-            match crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, cursor.seq, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms)
-                .await
-            {
+            match crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, cursor.seq, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms).await {
                 Ok(publication_generation) => {
                     command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
                     Some(CommandIngressOwner::Presence { cursor, publication_generation })
@@ -425,8 +478,11 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
         }
     }
     if let Some((cursor, page)) = command_page {
-        if retained.is_none() { retained_key = native_close_key(runtime, cursor.instance).ok(); }
-        if !runtime.guest_lifetimes.borrow().get(cursor.instance).is_some_and(|slot| slot.cell.is_live()) || close_instances.contains(&cursor.instance)
+        if retained.is_none() {
+            retained_key = native_close_key(runtime, cursor.instance).ok();
+        }
+        if !runtime.guest_lifetimes.borrow().get(cursor.instance).is_some_and(|slot| slot.cell.is_live())
+            || close_instances.contains(&cursor.instance)
             || page.len() > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES
             || cursor.page_count == 0
             || cursor.page_count as usize > semio_framework::kernel::COMMAND_MAXIMUM_PAGES
@@ -631,7 +687,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
     let now_ms = u64::try_from(crate::host::now_ms().await).unwrap_or(0);
 
     for (instance, surface) in dirty.surfaces {
-        if native_close_key(runtime, instance).is_err() { continue; }
+        if native_close_key(runtime, instance).is_err() {
+            continue;
+        }
         let body_key = surface_body_key(surface.as_ref()).to_owned();
         let mounted = match native_close_key(runtime, instance) {
             Ok(key) => PATCHES.with(|patches| patches.reserve_mounted(surface, key)),
@@ -733,6 +791,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
         || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some))
         || runtime.guest_lifetimes.borrow().has_work();
 
+    let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose().map_err(reactor_close_fault)?.flatten();
     let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();
     let mut ui_patch_receipt = None;
     let taken = with_pending_patches(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES))
@@ -742,7 +801,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
         match ui_patches.try_push_ui_patch(patch) {
             Ok(()) => ui_patch_receipt = instance.and_then(|instance| runtime.guest_lifetimes.borrow_mut().next_patch_receipt(instance)),
             Err(patch) => {
-                let _ = with_pending_patches(|pending| pending.borrow_mut().hand_back_turn(patch));
+                with_pending_patches(|pending| pending.borrow_mut().hand_back_turn(patch)).expect("exact unpublished patch returns to its reserved slot");
             }
         }
     }
@@ -756,10 +815,44 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T>(
     });
     let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-    let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose().map_err(reactor_close_fault)?.flatten();
-    let output = lower(semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, lifecycle_receipt, ui_patch_receipt })?;
-    if let Some(instance) = focus { runtime.guest_lifetimes.borrow_mut().finish_turn(instance, started_us).map_err(reactor_close_fault)?; }
-    Ok(output)
+    let mut result = semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
+    with_pending_patches(|pending| {
+        let mut pending = pending.borrow_mut();
+        let prepared = (|| {
+            result.validate_ui_patch_receipt().map_err(reactor_close_fault)?;
+            if let Some(receipt) = result.ui_patch_receipt {
+                pending.stage_emission(receipt, result.ui_patches.iter().next().expect("paired patch owner")).map_err(reactor_close_fault)?;
+            }
+            let prepared = prepare(&result)?;
+            if let Some(instance) = focus {
+                runtime.guest_lifetimes.borrow_mut().finish_turn(instance, started_us).map_err(|reason| {
+                    if reason == super::instance_lifetime::GUEST_LIFECYCLE_TURN_DEADLINE {
+                        semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-turn-deadline"), reason).with_retryable(retryable_lifecycle)
+                    } else {
+                        reactor_close_fault(reason)
+                    }
+                })?;
+            }
+            Ok(prepared)
+        })();
+        match prepared {
+            Err(fault) => {
+                let returned = result.ui_patches.try_transfer_one(|patch| pending.hand_back_turn(patch));
+                assert!(!matches!(returned, semio_framework::kernel::UiTurnPatchTransfer::Refused), "failed output retains its exact pending patch slot");
+                Err(fault)
+            }
+            Ok(prepared) => {
+                if result.ui_patch_receipt.is_some() {
+                    pending.commit_emission();
+                }
+                Ok(publish(result, prepared))
+            }
+        }
+    })
+}
+
+fn live_patch_receipt<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, receipt: semio_framework::kernel::ActorUiPatchReceipt) -> bool {
+    runtime.guest_lifetimes.borrow().get(receipt.lifetime.instance_id).is_some_and(|slot| slot.cell.is_live() && slot.cell.lifetime() == receipt.lifetime)
 }
 
 fn route_exchange_output(instance: u32, output: crate::plugin_runtime::PluginExchangeOutput, effects: &mut Vec<Effect>) {

@@ -1,4 +1,4 @@
-//! 🧪️ `create-load-case` fixture — `📍️appends-a-live-case-carrying-one-nodal-load`.
+//! 🧪️ `create-load-case` fixture — `📍️appends-a-live-case-59118a`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem2dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("create-load-case applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "create-load-case/appends-a-live-case-carrying-one-nodal-load: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.load_cases.len(), 2, "create-load-case/appends-a-live-case-carrying-one-nodal-load: the live case must be appended behind the dead case");
-    assert_eq!(snapshot.load_cases[1].loads.len(), 1, "create-load-case/appends-a-live-case-carrying-one-nodal-load: the seeded load must arrive with the case, not separately");
-    assert!(!snapshot.load_cases[1].self_weight, "create-load-case/appends-a-live-case-carrying-one-nodal-load: the live case explicitly excludes self-weight");
+    assert_eq!(snapshot, expected_after(), "create-load-case/appends-a-live-case-59118a: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.load_cases.len(), 2, "create-load-case/appends-a-live-case-59118a: the live case must be appended behind the dead case");
+    assert_eq!(snapshot.load_cases[1].loads.len(), 1, "create-load-case/appends-a-live-case-59118a: the seeded load must arrive with the case, not separately");
+    assert!(!snapshot.load_cases[1].self_weight, "create-load-case/appends-a-live-case-59118a: the live case explicitly excludes self-weight");
 }
 
 /// ↩️ The inverse is a `delete-load-case` of `live`, taking the seeded load with it.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "create-load-case/appends-a-live-case-carrying-one-nodal-load: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "create-load-case/appends-a-live-case-59118a: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,12 +59,12 @@ fn committed_json_is_canonical() {
         let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "create-load-case/appends-a-live-case-carrying-one-nodal-load: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "create-load-case/appends-a-live-case-59118a: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "create-load-case/appends-a-live-case-carrying-one-nodal-load: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "create-load-case/appends-a-live-case-59118a: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
@@ -75,12 +75,12 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "create-load-case/appends-a-live-case-carrying-one-nodal-load: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "create-load-case/appends-a-live-case-59118a: declared applied but the mutation was rejected"),
         "rejected" => {
-            assert!(!applied, "create-load-case/appends-a-live-case-carrying-one-nodal-load: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "create-load-case/appends-a-live-case-carrying-one-nodal-load: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "create-load-case/appends-a-live-case-59118a: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "create-load-case/appends-a-live-case-59118a: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("create-load-case/appends-a-live-case-carrying-one-nodal-load: unknown outcome status {other:?}"),
+        other => panic!("create-load-case/appends-a-live-case-59118a: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +89,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert!(outcome.diff().load_cases.is_some(), "create-load-case/appends-a-live-case-carrying-one-nodal-load: the coined case must surface in the loadCases delta");
-    assert!(outcome.diff().nodes.is_none(), "create-load-case/appends-a-live-case-carrying-one-nodal-load: the node the seeded load validates against is read-only");
+    assert!(outcome.diff().load_cases.is_some(), "create-load-case/appends-a-live-case-59118a: the coined case must surface in the loadCases delta");
+    assert!(outcome.diff().nodes.is_none(), "create-load-case/appends-a-live-case-59118a: the node the seeded load validates against is read-only");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "create-load-case/appends-a-live-case-carrying-one-nodal-load: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "create-load-case/appends-a-live-case-59118a: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +102,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "create-load-case/appends-a-live-case-carrying-one-nodal-load: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "create-load-case/appends-a-live-case-59118a: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `loadCases.added` entry on `before` must reproduce dead-then-live.
@@ -110,5 +110,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "create-load-case/appends-a-live-case-carrying-one-nodal-load: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "create-load-case/appends-a-live-case-59118a: committed diff did not carry before to after");
 }

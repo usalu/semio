@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceSection",
+  "id": "sec_raf",
+  "newSection": {
+    "id": "sec_raf",
+    "name": "GL24h Rafter 180x600",
+    "area": 0.108,
+    "iy": 0.00324,
+    "iz": 0.0002916,
+    "j": 0.00092
+  }
+}

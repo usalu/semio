@@ -1,0 +1,73 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "wall1",
+        "item": {
+          "id": "wall1",
+          "name": "Infill Wall Panel",
+          "outline": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              6.0,
+              0.0
+            ],
+            [
+              6.0,
+              3.5
+            ],
+            [
+              0.0,
+              3.5
+            ]
+          ],
+          "holes": [
+            [
+              [
+                2.2,
+                1.0
+              ],
+              [
+                3.8,
+                1.0
+              ],
+              [
+                3.8,
+                2.4
+              ],
+              [
+                2.2,
+                2.4
+              ]
+            ]
+          ],
+          "thickness": 0.2,
+          "materialId": "concrete_c30",
+          "meshSize": 0.4
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

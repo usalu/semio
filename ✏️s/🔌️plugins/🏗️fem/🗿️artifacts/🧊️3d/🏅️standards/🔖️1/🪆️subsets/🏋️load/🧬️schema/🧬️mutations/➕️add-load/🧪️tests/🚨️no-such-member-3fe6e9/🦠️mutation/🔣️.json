@@ -1,0 +1,12 @@
+{
+  "mutation": "addLoad",
+  "caseId": "snow",
+  "load": {
+    "kind": "memberUdl",
+    "id": "ld_snow_x",
+    "elementId": "raf_l_9",
+    "wx": 0.0,
+    "wy": 0.0,
+    "wz": -4320.0
+  }
+}

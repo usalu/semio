@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeMaterialSolarAbsorptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSolarAbsorptance"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newSolarAbsorptance": {
+      "type": "number"
+    }
+  }
+}

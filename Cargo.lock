@@ -5954,6 +5954,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-async",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-db",
  "semio-framework-plugin",
@@ -6760,8 +6761,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
- "serde",
- "serde_json",
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
 //! ✉️ Bounded canonical protocol bytes, never a GIS execution or current-session capability.
 
-use super::{schema::SAFE_INTEGER_MAX, InferenceErrorV1, InferencePrivateBytesV1};
+use super::{InferenceErrorV1, InferencePrivateBytesV1, schema::SAFE_INTEGER_MAX};
 
 pub(super) const COMMAND_MAX_BYTES: usize = 8192;
 const TEXT_MAX_BYTES: usize = 256;
@@ -79,6 +79,20 @@ impl<'a> CanonicalInferenceCommandV1<'a> {
 
     pub(super) fn matches_identity(&self, mutation_id: &str, document_id: &str, actor: &str) -> bool {
         self.mutation_id == mutation_id && self.document_id == document_id && self.actor == actor
+    }
+
+    /// 🧩️ Confirms the server-stamped envelope is exactly the rederived parent member.
+    pub(super) fn matches_fixed_three_parent(&self, mutation_id: &str, document_id: &str, actor: &str, proposal: &[u8], inverse: &[u8]) -> bool {
+        self.matches_identity(mutation_id, document_id, actor)
+            && self.dependency_count == 0
+            && self.diff_schema == super::schema::GIS_DOCUMENT_SCHEMA
+            && self.inverse_schema == super::schema::GIS_DOCUMENT_SCHEMA
+            && self.diff_payload == proposal
+            && self.inverse_payload == inverse
+    }
+
+    pub(super) fn timestamp(&self) -> protocol::HybridLogicalTimestamp {
+        self.timestamp
     }
 
     fn encode(&self, output: &mut Vec<u8>) {

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person",
+  "semanticKind": "change-ideal-loads-system-outdoor-air-per-person",
+  "displayName": "Change Ideal Loads System Outdoor Air Per Person",
+  "emoji": "🧍️",
+  "aggregateVariant": "ChangeIdealLoadsSystemOutdoorAirPerPerson",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-ideal-loads-system-outdoor-air-per-person",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

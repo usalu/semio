@@ -1,0 +1,13 @@
+{
+  "mutation": "updateGeoParams",
+  "params": {
+    "enabled": true,
+    "originLon": 8.5390625,
+    "originLat": 47.375,
+    "originAlt": 408.5,
+    "gsdM": 0.025390625,
+    "dsmCellM": 0.05078125,
+    "dtmFilterRadiusM": 1.5,
+    "orthoMaxPx": 8192
+  }
+}

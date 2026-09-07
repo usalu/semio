@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.app.remodeling.remodeling;
+package semio.app.remodel.remodeling;
 
 message RemodelingPresence {
   // @state presence

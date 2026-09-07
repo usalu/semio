@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceMaterial",
+  "id": "gl32c",
+  "newMaterial": {
+    "id": "gl32c",
+    "name": "GL32c Glulam",
+    "e": -13500000000.0,
+    "g": 650000000.0,
+    "nu": 0.3,
+    "rho": 440.0
+  }
+}

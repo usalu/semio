@@ -2,7 +2,6 @@
 
 use crate::artifacts::model::{EnergyStructureChild, EnergyZonesChild};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️LinkSlotDelta
@@ -10,9 +9,8 @@ use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValu
 /// not change at all — a typed three-state instead of the `Option<Option<ArtifactLink>>` double
 /// option, whose JSON form collapsed "unchanged" and "now detached" onto the same `null` and made a
 /// detach undecodable (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[serde(tag = "kind", rename_all = "camelCase")]
 pub enum EnergyLinkSlotDelta {
     Detached,
     Attached { link: store::ArtifactLink },
@@ -22,11 +20,11 @@ pub enum EnergyLinkSlotDelta {
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the energy-model artifact. `structure`/`zones` are always-present
 /// slots (never absent, only ever replaced) — single-`Option`, matching `mathematical`'s/`forms`'s
-/// diff shape. `referenced_model` uses the optional-slot double-`Option` shape (outer = "did the
-/// presence/identity change", inner = "is it now present") per the migration recipe's §8
-/// convention, matching `layout`'s own `referenced_model` diff field.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+/// diff shape. The two LINK slots use `Option<EnergyLinkSlotDelta>` instead of the migration recipe
+/// §8 double-`Option` that `layout` still carries: absent still means "unchanged", but "now
+/// detached" is the explicit [`EnergyLinkSlotDelta::Detached`] variant rather than an inner `None`
+/// that JSON renders as the same `null` as the outer one.
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelDiff {
     #[state(artifact)]

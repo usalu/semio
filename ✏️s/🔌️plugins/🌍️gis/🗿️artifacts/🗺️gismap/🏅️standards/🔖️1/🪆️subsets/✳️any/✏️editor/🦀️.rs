@@ -11,7 +11,7 @@
 
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
-use crate::artifacts::gismap::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
+use crate::artifacts::gismap::{GIS_MAP_SCHEMA, GisMapSnapshot, artifact_kind};
 use crate::editor::gis2d::commands::{example, features, inference, locale, shell, view};
 use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::modes::edit;
@@ -22,12 +22,12 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    tree_item, tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
-    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
-    SelectionSpec, UiNode, UiTreeItemNode, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, INTERACTION_SELECT_ACTION_ID, InteractionDefinition, InteractionRef, Label,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowMeasure, tree_item, tree_item_with_action,
+    ui_text,
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use store::ArtifactPack;
 use store::EngineHandles;
@@ -64,16 +64,12 @@ pub fn gis2d_window_action(action: &str, args: Option<Value>) -> ActionDescripto
 
 /// 🏷️ Admits resolved app text into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref())
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "GIS UI label admission failed"))
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "GIS UI label admission failed"))
 }
-
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -86,27 +82,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -116,13 +105,10 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
-
 
 /// 🌳️ A layer tree item — `tree_item_with_action`/`tree_item` plus the icon that identifies each map
 /// layer, since the SDK's `PanelKit` family has no icon-carrying constructor. Shared by the document
@@ -376,12 +362,20 @@ impl ArtifactOwnedToolJobFactory for Gis2dRetainedCommandJobFactory {
 //#region 📬️OneItemPreparation
 struct Gis2dOneItemPreparationFactory<P, M> {
     marker: std::marker::PhantomData<fn() -> (P, M)>,
+    stamp: Option<GisMapOneItemStampV1>,
 }
 
 impl<P, M> Default for Gis2dOneItemPreparationFactory<P, M> {
     fn default() -> Self {
-        Self { marker: std::marker::PhantomData }
+        Self { marker: std::marker::PhantomData, stamp: None }
     }
+}
+
+/// 🛡️ Server-derived identity carried into one exact Store edit without caller-visible seal authority.
+#[derive(Clone)]
+pub struct GisMapOneItemStampV1 {
+    pub mutation_id: protocol::MutationId,
+    pub timestamp: protocol::HybridLogicalTimestamp,
 }
 
 /// 📍 Creates the exact parent Map preparation port used by the retained fixed-three assembly.
@@ -390,25 +384,52 @@ pub fn gis_map_parent_one_item_preparation_factory() -> std::sync::Arc<dyn store
 }
 
 /// 🎨 Creates the exact drawing-child preparation port used by the retained fixed-three assembly.
-pub fn gis_map_drawing_one_item_preparation_factory(
-) -> std::sync::Arc<
+pub fn gis_map_drawing_one_item_preparation_factory() -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
-    >,
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+        >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
 }
 
 /// 🔢 Creates the exact value-child preparation port used by the retained fixed-three assembly.
-pub fn gis_map_value_one_item_preparation_factory(
-) -> std::sync::Arc<
+pub fn gis_map_value_one_item_preparation_factory() -> std::sync::Arc<
     dyn store::ArtifactStoreOneItemPreparationFactory<
-        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
-    >,
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+        >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
+}
+
+/// 📍 Creates the exact stamped parent preparation port used by the Hub-owned fixed-three committer.
+pub fn gis_map_parent_stamped_one_item_preparation_factory(stamp: GisMapOneItemStampV1) -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
+}
+
+/// 🎨 Creates the exact stamped drawing preparation port used by the Hub-owned fixed-three committer.
+pub fn gis_map_drawing_stamped_one_item_preparation_factory(
+    stamp: GisMapOneItemStampV1,
+) -> std::sync::Arc<
+    dyn store::ArtifactStoreOneItemPreparationFactory<
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+        >,
+> {
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
+}
+
+/// 🔢 Creates the exact stamped value preparation port used by the Hub-owned fixed-three committer.
+pub fn gis_map_value_stamped_one_item_preparation_factory(
+    stamp: GisMapOneItemStampV1,
+) -> std::sync::Arc<
+    dyn store::ArtifactStoreOneItemPreparationFactory<
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+        >,
+> {
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
 }
 
 struct Gis2dOneItemPreparation<P, M> {
@@ -420,21 +441,23 @@ struct Gis2dOneItemPreparation<P, M> {
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
     closing: bool,
+    stamp: Option<GisMapOneItemStampV1>,
 }
 
-fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority, stamp: Option<GisMapOneItemStampV1>) -> protocol::Edit<M> {
     let id = format!("gis2d-retained-{}", authority.next_sequence_number());
+    let (mutation_id, timestamp) = stamp.map_or_else(|| (protocol::MutationId(format!("{id}#0")), authority.next_clock()), |stamp| (stamp.mutation_id, stamp.timestamp));
     protocol::Edit {
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
         inverse,
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            mutation_id: Some(mutation_id),
             dependencies: Vec::new(),
             base_version: authority.base_applied_edit_count() as u64,
             author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
+            timestamp,
             undo_policy: protocol::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
             semantic_kind: None,
@@ -481,6 +504,7 @@ where
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             closing: false,
+            stamp: self.stamp.clone(),
         }))
     }
 }
@@ -503,7 +527,7 @@ where
         let inverse = mutation.inverse(base.get());
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "GIS map retained preparation lost its Store authority".to_string())?;
-        let edit = gis2d_one_item_edit(mutation, inverse, self.description.take(), authority);
+        let edit = gis2d_one_item_edit(mutation, inverse, self.description.take(), authority, self.stamp.take());
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -591,10 +615,7 @@ async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRe
             .await
             .action_args(INTERACTION_SELECT_ACTION_ID, select_feature_action_args(&feature.id))
             .await
-            .action_args(
-                "focusFeature",
-                dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone())), ("featureKind".to_string(), dsl::DslValue::String(kind.to_string()))]),
-            )
+            .action_args("focusFeature", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone())), ("featureKind".to_string(), dsl::DslValue::String(kind.to_string()))]))
             .await;
         if kind == "position" {
             menu = menu.action_args("openSource", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone()))])).await;
@@ -1048,16 +1069,21 @@ mod tests {
         let parent: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> = gis_map_parent_one_item_preparation_factory();
         let drawing: std::sync::Arc<
             dyn store::ArtifactStoreOneItemPreparationFactory<
-                semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-                semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
-            >,
+                    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
+                    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+                >,
         > = gis_map_drawing_one_item_preparation_factory();
         let value: std::sync::Arc<
             dyn store::ArtifactStoreOneItemPreparationFactory<
-                semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-                semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
-            >,
+                    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
+                    semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+                >,
         > = gis_map_value_one_item_preparation_factory();
+        assert_eq!([std::sync::Arc::strong_count(&parent), std::sync::Arc::strong_count(&drawing), std::sync::Arc::strong_count(&value)], [1, 1, 1]);
+        let stamped = GisMapOneItemStampV1 { mutation_id: protocol::MutationId("11111111111111111111111111111111".into()), timestamp: protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 } };
+        let parent = gis_map_parent_stamped_one_item_preparation_factory(stamped.clone());
+        let drawing = gis_map_drawing_stamped_one_item_preparation_factory(stamped.clone());
+        let value = gis_map_value_stamped_one_item_preparation_factory(stamped);
         assert_eq!([std::sync::Arc::strong_count(&parent), std::sync::Arc::strong_count(&drawing), std::sync::Arc::strong_count(&value)], [1, 1, 1]);
     }
 
@@ -1180,8 +1206,23 @@ mod tests {
 
     /// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
     /// manifest action id. Pinned so a reordered/renamed row is caught here, not in production.
-    const WIRE_KEYWORDS: &[&str] =
-        &["active-example", "patch-positions", "patch-routes", "patch-route", "toggle-layer-visibility", "fit-world", "camera", "render-mode", "vector-style", "lod-mode", "focus-feature", "layer-stroke-scale", "locale", "open-source", "propose-bounds-region"];
+    const WIRE_KEYWORDS: &[&str] = &[
+        "active-example",
+        "patch-positions",
+        "patch-routes",
+        "patch-route",
+        "toggle-layer-visibility",
+        "fit-world",
+        "camera",
+        "render-mode",
+        "vector-style",
+        "lod-mode",
+        "focus-feature",
+        "layer-stroke-scale",
+        "locale",
+        "open-source",
+        "propose-bounds-region",
+    ];
 
     #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {

@@ -1,0 +1,30 @@
+{
+  "mutation": "replaceRegion",
+  "id": "panel9",
+  "newRegion": {
+    "id": "panel9",
+    "name": "Ghost Panel",
+    "outline": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        0.0
+      ],
+      [
+        1.0,
+        1.0
+      ],
+      [
+        0.0,
+        1.0
+      ]
+    ],
+    "holes": [],
+    "thickness": 0.1,
+    "materialId": "concrete_c30",
+    "meshSize": 0.5
+  }
+}

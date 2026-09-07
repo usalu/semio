@@ -72,34 +72,114 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const FEM3D_RETAINED_TOOL_IDS: &[&str] = &["setCamera", "setResultDisplay"];
+/// 🧾️ Every fem3d tool id, in `Fem3dCommand` declaration order — a bijection with the enum's 18 rows,
+/// with `FEM3D_RETAINED_PUBLICATION_CONTRACTS`, and with the `.action_interactive_job(…, Migrated)` set
+/// `create_fem3d_app` declares. `AppActionRegistry::tool_job_registration` enforces exactly that set
+/// equality at construction time: a row missing here, or an action left `BatchOnlyPendingRewrite`,
+/// faults the whole app with `interactive-job.catalog-incomplete` instead of silently going
+/// dispatch-dead at the UI gate — which is what the pre-migration two-row list did to the other 16.
+const FEM3D_RETAINED_TOOL_IDS: &[&str] = &[
+    "addNode",
+    "addBar",
+    "addFrame",
+    "addMaterial",
+    "addSection",
+    "addSupport",
+    "addNodalLoad",
+    "addMemberUdl",
+    "addAreaLoad",
+    "addSolid",
+    "addLoadCase",
+    "addCombination",
+    "setSelfWeight",
+    "setAnalysisSettings",
+    "removeSelection",
+    "setActiveExample",
+    "setCamera",
+    "setResultDisplay",
+];
 const FEM3D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.3d.tool-command.v1";
-const FEM3D_RETAINED_RAW_BYTES: usize = 8_192;
-const FEM3D_RETAINED_WORK_ITEMS: usize = 1;
+const FEM3D_RETAINED_RAW_BYTES: usize = 65_536;
+const FEM3D_RETAINED_DECODED_ITEMS: usize = 4_096;
+const FEM3D_RETAINED_OUTPUT_BYTES: usize = 262_144;
+const FEM3D_RETAINED_STEP_MICROS: u32 = 7_500;
+/// 🎒️ Semantic work ceiling for one retained fem3d command: the document's own id-keyed collections
+/// (`removeSelection` walks every one of them), so a model beyond this size falls out of the retained
+/// path with `fem3d-command-payload-too-large` rather than blocking the interactive step budget.
+const FEM3D_RETAINED_WORK_ITEMS: usize = 4_096;
 const FEM3D_CONFIG_VALUE_BYTES: usize = 512;
 const FEM3D_CONFIG_BASE_BYTES: usize = 512;
 const FEM3D_CONFIG_STEP_BYTES: usize = 4_096;
+/// 🎒️ Real bound for one Artifact-lane edit: the largest single `Fem3dMutation` any of the 15 document
+/// tools emits is `CreateSolid` (outline + holes polygons) — 64 KiB is a genuine ceiling for that
+/// encoded op, not a rubber stamp.
+const FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
+/// 🧾️ Which store lane each retained tool publishes on — the 15 document tools emit `Fem3dMutation`s
+/// only, `setActiveExample` emits a whole-document `Effect::LoadDocument` plus the two config resets,
+/// and the two view actions are config-only. `VcsArtifactApp` rejects any lane here that has no
+/// one-item preparation factory with `interactive-job.publication-authority-missing`, which is why
+/// `build_artifact_store_one_item_preparation_factory` is now implemented alongside the config one.
 const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addBar", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addFrame", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addMaterial", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addSection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addSupport", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addNodalLoad", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addMemberUdl", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addAreaLoad", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addSolid", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addLoadCase", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addCombination", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setSelfWeight", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setAnalysisSettings", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 
+/// 🧷️ The single source of truth for this app's tool execution contract — `bounded_first_step_tool_proofs!`
+/// calls this same fn, so the declared proof row and the registered factory can never disagree (they did
+/// before: the proof declared `bounded_first_step` while the factory returned `resumable`, which made
+/// `validate_tool_job_rows`' `registration.contract == row.contract` check reject even `setCamera`).
 fn fem3d_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(FEM3D_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500, 1, 1)
+    ToolExecutionContract::bounded_first_step(FEM3D_RETAINED_RAW_BYTES, FEM3D_RETAINED_DECODED_ITEMS, 1, FEM3D_RETAINED_OUTPUT_BYTES, FEM3D_RETAINED_STEP_MICROS)
 }
 
-fn fem3d_retained_extent(command: &Fem3dCommand, _snapshot: &Fem3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+/// 📏️ The config-lane payload bytes a command carries, `0` for every document-lane command — the two
+/// view actions write an opaque host JSON blob straight into `Fem3dConfig`, so their envelope is
+/// checked against `FEM3D_CONFIG_VALUE_BYTES` before the job is ever built.
+fn fem3d_retained_config_value_bytes(command: &Fem3dCommand) -> usize {
     match command {
-        Fem3dCommand::SetCamera(payload) if payload.json.len() <= FEM3D_CONFIG_VALUE_BYTES => Some(1),
-        Fem3dCommand::SetResultDisplay(payload)
-            if payload.mode.len().saturating_add(payload.source_id.as_ref().map_or(0, String::len)) <= FEM3D_CONFIG_VALUE_BYTES =>
-        {
-            Some(1)
-        }
-        _ => None,
+        Fem3dCommand::SetCamera(payload) => payload.json.len(),
+        Fem3dCommand::SetResultDisplay(payload) => payload.mode.len().saturating_add(payload.source_id.as_ref().map_or(0, String::len)),
+        _ => 0,
     }
 }
 
+fn fem3d_retained_extent(command: &Fem3dCommand, snapshot: &Fem3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    if !FEM3D_RETAINED_TOOL_IDS.contains(&command.command_id()) || fem3d_retained_config_value_bytes(command) > FEM3D_CONFIG_VALUE_BYTES {
+        return None;
+    }
+    let collections = [
+        snapshot.nodes.len(),
+        snapshot.elements.len(),
+        snapshot.materials.len(),
+        snapshot.sections.len(),
+        snapshot.solids.len(),
+        snapshot.supports.len(),
+        snapshot.load_cases.len(),
+        snapshot.combinations.len(),
+    ];
+    let items = collections.into_iter().try_fold(1usize, |total, count| total.checked_add(count))?;
+    (items <= FEM3D_RETAINED_WORK_ITEMS).then_some(1)
+}
+
+/// 🎯️ One reducer for all 18 rows: `Fem3dCommand::dispatch` already routes each row to its own
+/// `🎮️commands/*` handler, so the retained job reuses the exact same owned reducers the batch path
+/// used — no second, drifting copy of any command body.
 fn fem3d_retained_reduce(
     command: &Fem3dCommand,
     snapshot: &Fem3dSnapshot,
@@ -109,17 +189,7 @@ fn fem3d_retained_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, NoDraftMutation>, Fault> {
-    let document = ArtifactView::with_operation(snapshot, history, operation.clone());
-    let config = ConfigView { snapshot: config };
-    match command {
-        Fem3dCommand::SetCamera(payload) if payload.json.len() <= FEM3D_CONFIG_VALUE_BYTES => set_camera::handle(payload, &document, &config),
-        Fem3dCommand::SetResultDisplay(payload)
-            if payload.mode.len().saturating_add(payload.source_id.as_ref().map_or(0, String::len)) <= FEM3D_CONFIG_VALUE_BYTES =>
-        {
-            set_result_display::handle(payload, &document, &config)
-        }
-        _ => Err(Fault::from("fem3d-retained-route-mismatch")),
-    }
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
 }
 
 struct Fem3dRetainedCommandJobFactory {
@@ -180,6 +250,137 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Fem3dRetainedComman
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM3D_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️ArtifactStorePreparation
+/// 📏️ One document mutation's retained envelope, measured on its own canonical binary op rather than
+/// on a cloned snapshot — `OpBinary` is the exact shape the store publishes.
+fn fem3d_artifact_mutation_retained_bytes(mutation: &Fem3dMutation) -> Result<usize, String> {
+    protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "fem3d-artifact-mutation-encode-failed".to_string())
+}
+
+fn admit_fem3d_artifact_mutation(mutation: &Fem3dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = fem3d_artifact_mutation_retained_bytes(mutation)?;
+    if retained_bytes > FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES {
+        return Err("fem3d-artifact-mutation-envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+/// 🧬️ Builds the single `protocol::Edit<Fem3dMutation>` the Artifact lane's `advance()` publishes —
+/// the config lane's `fem3d_config_edit` twin, differing only in `M` and the edit-id prefix.
+fn fem3d_artifact_edit(forward: Fem3dMutation, inverse: Vec<Fem3dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Fem3dMutation> {
+    let id = format!("fem3d-artifact-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+/// 📬️ Required by the Artifact publication lane: 15 of the 18 retained tools emit `Fem3dMutation`s, and
+/// `VcsArtifactApp` rejects any tool whose declared lane has no one-item preparation factory with
+/// `interactive-job.publication-authority-missing`.
+struct Fem3dArtifactPreparationFactory;
+
+struct Fem3dArtifactPreparation {
+    base: Option<store::SnapshotRead<Fem3dSnapshot>>,
+    mutation: Option<Fem3dMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Fem3dSnapshot, Fem3dMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Fem3dSnapshot, Fem3dMutation> for Fem3dArtifactPreparationFactory {
+    fn preflight(&self, mutation: &Fem3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("fem3d-artifact-lane-or-description-envelope".into());
+        }
+        admit_fem3d_artifact_mutation(mutation)
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Fem3dSnapshot, Fem3dMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem3dSnapshot, Fem3dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem3dSnapshot, Fem3dMutation>> {
+        let retained_bytes = fem3d_artifact_mutation_retained_bytes(&request.mutation).unwrap_or(FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES.saturating_add(1));
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || retained_bytes > FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Fem3dArtifactPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Fem3dSnapshot, Fem3dMutation> for Fem3dArtifactPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "fem3d-artifact-base-owner-missing".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "fem3d-artifact-mutation-owner-missing".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "fem3d-artifact-authority-missing".to_string())?;
+        let edit = fem3d_artifact_edit(mutation, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem3dSnapshot, Fem3dMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem3dSnapshot, Fem3dMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("fem3d-artifact-base-retirement-rejected".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ArtifactStorePreparation
 
 //#region 📬️ConfigStorePreparation
 struct Fem3dConfigPreparationFactory;
@@ -618,7 +819,7 @@ fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
 /// model window and every results view (static/modal/buckling).
 #[cfg(test)]
 pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
-    let mut meshes = dsl::json::parse(&semio_framework_plugin::resolve_ready(semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()])))
+    let mut meshes = dsl::json::parse(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()]))
         .ok()
         .and_then(|value| value.as_array().cloned())
         .unwrap_or_default();
@@ -672,6 +873,11 @@ impl ArtifactEditor for Fem3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
 
+    /// 📬️ Required by the Artifact publication lane — see `Fem3dArtifactPreparationFactory`.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Fem3dArtifactPreparationFactory))
+    }
+
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Fem3dConfigPreparationFactory))
     }
@@ -683,8 +889,27 @@ impl ArtifactEditor for Fem3dPlayApp {
         document_schema: "fem.3d",
         factory: "Fem3dRetainedCommandJobFactory",
         factory_type: Fem3dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
-        tools: ["setCamera", "setResultDisplay"]
+        contract: fem3d_retained_contract(),
+        tools: [
+            "addNode",
+            "addBar",
+            "addFrame",
+            "addMaterial",
+            "addSection",
+            "addSupport",
+            "addNodalLoad",
+            "addMemberUdl",
+            "addAreaLoad",
+            "addSolid",
+            "addLoadCase",
+            "addCombination",
+            "setSelfWeight",
+            "setAnalysisSettings",
+            "removeSelection",
+            "setActiveExample",
+            "setCamera",
+            "setResultDisplay"
+        ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -728,8 +953,22 @@ impl ArtifactEditor for Fem3dPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
+    /// 🚀️ Boots on the bundled `default` example instead of the empty document — the Model window is a
+    /// `World3d` surface fed by `live_visual`, and an empty boot document meshes to nothing, so the very
+    /// first paint was a blank scene until a client dispatched `setActiveExample`. Mirrors the sibling
+    /// `Fem3dViewer::initial_snapshot` (and block3d's `block3d_boot_snapshot`) so editor and viewer boot
+    /// the same geometry. See `crate::artifacts::fem3d::dsl::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
-        crate::artifacts::fem3d::schema::empty_fem3d_snapshot()
+        let snapshot = crate::artifacts::fem3d::dsl::fem3d_boot_snapshot();
+        eprintln!(
+            "[DEBUG] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}",
+            snapshot.nodes.len(),
+            snapshot.elements.len(),
+            snapshot.solids.len(),
+            snapshot.materials.len(),
+            snapshot.load_cases.len()
+        );
+        snapshot
     }
 
     fn io() -> Option<AppIo> {
@@ -880,7 +1119,7 @@ pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::
 ///
 /// 🚧️ SDK GAP (contract §2.4, `App { definition, examples }` split): `EditorBuilder` has no
 /// `.example(...)`/`.workflow(...)` methods — the pre-migration chain's trailing
-/// `.example("default", LocalizedLabel::native("Family House", "Einfamilienhaus"),
+/// `.example(examples::demo::ID, LocalizedLabel::native("Family House", "Einfamilienhaus"),
 /// crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT, "file")` and `.workflow("fem3d", "FEM 3D",
 /// "structure")` calls are dropped here, not ported. `setActiveExample`'s handler loads the same
 /// `FEM3D_EXAMPLE_TEXT` fixture directly.
@@ -957,26 +1196,29 @@ pub fn create_fem3d_app() -> AppDefinition {
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard"))]).default_value("default"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::artifacts::fem3d::examples::demo::ID, LocalizedLabel::native("Default", "Standard"))]).default_value(crate::artifacts::fem3d::examples::demo::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
-            .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addBar", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addFrame", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addMaterial", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addSection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addSupport", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addNodalLoad", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addMemberUdl", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addAreaLoad", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addSolid", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addLoadCase", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addCombination", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSelfWeight", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            // 🧵️ All 18 rows are owned by `Fem3dRetainedCommandJobFactory` — this set must stay exactly
+            // equal to `FEM3D_RETAINED_TOOL_IDS`, or `AppActionRegistry::tool_job_registration` faults the
+            // whole app with `interactive-job.catalog-incomplete`.
+            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBar", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addFrame", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addMaterial", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addSection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addSupport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNodalLoad", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addMemberUdl", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addAreaLoad", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addSolid", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addLoadCase", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addCombination", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelfWeight", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setResultDisplay", InteractiveJobClassification::Migrated)
             // 🎯️ Typed channel surface — `config_spec()`/`fem3d_io()` are this same information's single
@@ -1032,6 +1274,17 @@ pub(crate) mod testkit {
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
         dsl::json::to_json_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render"))
     }
+
+    /// 🧪️ An app reset to the empty document. `Fem3dPlayApp::initial_snapshot` now boots the bundled
+    /// `default` example (so the `World3d` Model window paints real geometry on first paint), which means
+    /// a test reasoning about "the first material" or "no load cases yet" has to say so explicitly —
+    /// `setActiveExample` with any id other than `examples::demo::ID` is exactly that reset, and `dispatch` above
+    /// already applies its `Effect::LoadDocument` the way the real host does.
+    pub async fn fem3d_empty_app() -> Fem3dApp {
+        let mut app = fem3d_app();
+        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })).await;
+        app
+    }
 }
 //#endregion 🧪️Testkit
 
@@ -1048,6 +1301,29 @@ mod tests {
         let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
         assert_eq!(migrated, FEM3D_RETAINED_TOOL_IDS);
         assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
+        for (row, contract) in fixture["routes"].as_array().expect("routes").iter().zip(FEM3D_RETAINED_PUBLICATION_CONTRACTS) {
+            assert_eq!(row["id"].as_str(), Some(contract.tool_id));
+            let declared: Vec<&str> = row["lanes"].as_array().expect("lanes").iter().map(|lane| lane.as_str().expect("lane id")).collect();
+            let actual: Vec<&str> = contract
+                .lanes
+                .iter()
+                .map(|lane| match lane {
+                    ArtifactToolPublicationLane::Artifact => "Artifact",
+                    ArtifactToolPublicationLane::Config => "Config",
+                    ArtifactToolPublicationLane::Draft => "Draft",
+                    ArtifactToolPublicationLane::Presence => "Presence",
+                    ArtifactToolPublicationLane::Transient => "Transient",
+                    ArtifactToolPublicationLane::Child => "Child",
+                    ArtifactToolPublicationLane::HostOnly => "HostOnly",
+                })
+                .collect();
+            assert_eq!(declared, actual, "publication lanes drifted for {}", contract.tool_id);
+        }
+        assert_eq!(fixture["limits"]["rawBytes"].as_u64(), Some(FEM3D_RETAINED_RAW_BYTES as u64));
+        assert_eq!(fixture["limits"]["commandStepBytes"].as_u64(), Some(FEM3D_RETAINED_OUTPUT_BYTES as u64));
+        assert_eq!(fixture["limits"]["workItems"].as_u64(), Some(FEM3D_RETAINED_WORK_ITEMS as u64));
+        assert_eq!(fixture["limits"]["decodedItems"].as_u64(), Some(FEM3D_RETAINED_DECODED_ITEMS as u64));
+        assert_eq!(fixture["limits"]["artifactStoreBytes"].as_u64(), Some(FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES as u64));
         assert_eq!(fixture["limits"]["configValueBytes"].as_u64(), Some(FEM3D_CONFIG_VALUE_BYTES as u64));
         assert_eq!(fixture["limits"]["storeStepBytes"].as_u64(), Some(FEM3D_CONFIG_STEP_BYTES as u64));
         let factory = Fem3dConfigPreparationFactory;
@@ -1082,6 +1358,79 @@ mod tests {
         assert_eq!(counter.write(&[0; 4_096]).expect("maximum serialized envelope"), 4_096);
         assert!(counter.write(&[0]).is_err());
     }
+
+    /// ⚖️ LAW: every one of the 18 declared actions is owned by `Fem3dRetainedCommandJobFactory`, is
+    /// classified `Migrated` in the manifest, and declares a nonempty publication lane contract.
+    /// `AppActionRegistry::tool_job_registration` enforces the same set equality at app construction
+    /// (`interactive-job.catalog-incomplete`), and `validate_ui_dispatch_classification` rejects anything
+    /// not `Migrated` at the very first gate of `handle_action` — this pins both, so a future row that
+    /// forgets its retained-tool-id, its classification or its lane contract fails here instead of going
+    /// silently dispatch-dead the way 16 of these 18 rows were.
+    #[semio_framework_async_macros::async_test]
+    async fn retained_route_dispositions_are_exact_and_exhaustive() {
+        use semio_framework::ToolExecutionShape;
+        assert_eq!(FEM3D_RETAINED_TOOL_IDS.len(), 18);
+        assert_eq!(<Fem3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 18);
+        assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), 18);
+        // 🧷️ `validate_tool_job_rows` compares `registration.contract == row.contract` byte for byte, so
+        // the proof rows and the registered factory MUST build from the one `fem3d_retained_contract()`.
+        assert_eq!(fem3d_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
+        assert_eq!(semio_framework::ToolJobFactory::execution_contract(&Fem3dRetainedCommandJobFactory::new("s.fem.fem3d@1/*#editor")), fem3d_retained_contract());
+        let mut sorted_ids = FEM3D_RETAINED_TOOL_IDS.to_vec();
+        sorted_ids.sort_unstable();
+        sorted_ids.dedup();
+        assert_eq!(sorted_ids.len(), FEM3D_RETAINED_TOOL_IDS.len(), "duplicate retained tool ids in {FEM3D_RETAINED_TOOL_IDS:?}");
+        assert_eq!(Fem3dRetainedCommandJobFactory::TOOL_IDS, FEM3D_RETAINED_TOOL_IDS);
+        for command in every_command() {
+            let tool_id = command.command_id();
+            assert!(FEM3D_RETAINED_TOOL_IDS.contains(&tool_id), "command {tool_id} is not owned by Fem3dRetainedCommandJobFactory");
+            let contract = FEM3D_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == tool_id).unwrap_or_else(|| panic!("tool {tool_id} declares a publication contract"));
+            assert!(!contract.lanes.is_empty(), "tool {tool_id} declares a nonempty publication lane set");
+        }
+        let definition = create_fem3d_app();
+        let model_window = definition.window_kinds.iter().find(|window| window.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
+        for tool_id in FEM3D_RETAINED_TOOL_IDS {
+            let action = model_window.actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared by the manifest"));
+            assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "action {tool_id} must be UI-dispatchable");
+        }
+    }
+
+    /// ⚖️ LAW: both lanes a fem3d tool can publish into have a real one-item preparation factory — an
+    /// Artifact-lane tool without `build_artifact_store_one_item_preparation_factory` is rejected at
+    /// dispatch with `interactive-job.publication-authority-missing`, which is exactly what would have
+    /// happened to all 15 document tools without `Fem3dArtifactPreparationFactory`.
+    #[semio_framework_async_macros::async_test]
+    async fn both_declared_publication_lanes_have_a_preparation_factory() {
+        assert!(<Fem3dPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some());
+        assert!(<Fem3dPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
+    }
+
+    /// ⚖️ LAW: every document mutation the 15 Artifact-lane tools can emit fits the Artifact lane's
+    /// one-item envelope, measured on the boot document (the largest fixture this app ships).
+    #[semio_framework_async_macros::async_test]
+    async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
+        use store::ArtifactStoreOneItemPreparationFactory as _;
+        let boot = crate::artifacts::fem3d::dsl::fem3d_boot_snapshot();
+        let factory = Fem3dArtifactPreparationFactory;
+        for solid in &boot.solids {
+            let mutation = Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::mutation::CreateSolid { solid: solid.clone() });
+            assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
+        }
+        for node in &boot.nodes {
+            let mutation = Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::mutation::CreateNode { node: node.clone() });
+            assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
+        }
+        assert!(factory.preflight(&Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::mutation::CreateNode { node: crate::artifacts::fem3d::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), None, store::HistoryLane::Interaction).is_err());
+    }
+
+    /// 🚀️ LAW: the editor boots with real geometry, so the `World3d` Model window has something to mesh
+    /// on first paint instead of the pre-fix empty document.
+    #[semio_framework_async_macros::async_test]
+    async fn initial_snapshot_is_the_bundled_example_not_empty() {
+        let snapshot = <Fem3dPlayApp as ArtifactEditor>::initial_snapshot();
+        assert!(!snapshot.nodes.is_empty(), "expected the bundled default example's nodes");
+        assert!(!snapshot.solids.is_empty(), "expected the bundled default example's solids");
+    }
     //#endregion 🧪️RetainedCommandEnvelope
 
     use crate::editor::fem3d::testkit::{dispatch, fem3d_app, Fem3dApp};
@@ -1107,7 +1456,7 @@ mod tests {
             Fem3dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
             Fem3dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) }),
             Fem3dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }),
-            Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
+            Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::fem3d::examples::demo::ID.into() }),
             Fem3dCommand::SetCamera(set_camera::SetCamera { json: "{\"x\":1}".into() }),
             Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }),
         ]
@@ -1233,8 +1582,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn undo_restores_document_after_add_node() {
         let mut app = fem3d_app();
-        let before = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").nodes.len();
-        assert_undo_redo_round_trip(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").nodes.len(), before, before + 1).await;
+        let before = app.snapshot().expect("snapshot").nodes.len();
+        assert_undo_redo_round_trip(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1252,11 +1601,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
         let mut app: Fem3dApp = fem3d_app();
-        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() })).await;
-        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        let media = semio_framework_plugin::resolve_ready(Fem3dPlayApp::export_media("results:out", &doc)).expect("results:out exports");
+        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::fem3d::examples::demo::ID.into() })).await;
+        let snapshot = app.snapshot().expect("snapshot");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let media = Fem3dPlayApp::export_media("results:out", &doc).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a Structured payload") };
@@ -1271,20 +1620,20 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_errors_without_load_cases_3d() {
         let snapshot = crate::artifacts::fem3d::schema::empty_fem3d_snapshot();
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        let err = semio_framework_plugin::resolve_ready(Fem3dPlayApp::export_media("results:out", &doc)).expect_err("no load cases should error");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
+        let err = Fem3dPlayApp::export_media("results:out", &doc).expect_err("no load cases should error");
         assert!(matches!(err, MediaError::Payload(..)));
     }
 
     /// 🎞️ `"geometry:in"` decodes an extruded-footprint JSON contract into a new `FemSolid` operation.
     #[semio_framework_async_macros::async_test]
     async fn import_media_geometry_in_adds_a_new_solid_3d() {
-        let mut app: Fem3dApp = fem3d_app();
+        let mut app: Fem3dApp = crate::editor::fem3d::testkit::fem3d_empty_app().await;
         dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 30e9, g: 12.5e9 })).await;
-        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
-        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
+        let snapshot = app.snapshot().expect("snapshot");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&snapshot, &history);
         let json = dsl::json!({
             "outline": [[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]],
             "holes": [],
@@ -1294,7 +1643,7 @@ mod tests {
         })
         .to_string();
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any }, payload: MediaPayload::Structured { schema: "geometry".into(), json } };
-        let emit = semio_framework_plugin::resolve_ready(Fem3dPlayApp::import_media("geometry:in", &media, &doc)).expect("geometry:in imports");
+        let emit = Fem3dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         assert_eq!(emit.artifact_mutations.len(), 1);
         match &emit.artifact_mutations[0] {
             Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::mutation::CreateSolid { solid }) => {
@@ -1310,7 +1659,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fem3d_io_matches_declared_artifact_identity_3d() {
-        let io = semio_framework_plugin::resolve_ready(Fem3dPlayApp::io()).expect("fem3d declares typed media I/O");
+        let io = Fem3dPlayApp::io().expect("fem3d declares typed media I/O");
         assert_eq!(io.artifact.id, "3d.fem");
         assert!(io.ports.iter().any(|port| port.id == "geometry:in"));
         assert!(io.ports.iter().any(|port| port.id == "results:out"));

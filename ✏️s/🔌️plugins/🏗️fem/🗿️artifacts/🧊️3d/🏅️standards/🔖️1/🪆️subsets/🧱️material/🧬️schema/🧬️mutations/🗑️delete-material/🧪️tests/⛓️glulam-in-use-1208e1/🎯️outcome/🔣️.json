@@ -1,0 +1,25 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-referenced",
+  "path": [
+    "gl24h",
+    "col_l_0",
+    "raf_l_0",
+    "raf_r_0",
+    "col_r_0",
+    "col_l_1",
+    "raf_l_1",
+    "raf_r_1",
+    "col_r_1",
+    "col_l_2",
+    "raf_l_2",
+    "raf_r_2",
+    "col_r_2"
+  ],
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-referenced"
+    }
+  ]
+}

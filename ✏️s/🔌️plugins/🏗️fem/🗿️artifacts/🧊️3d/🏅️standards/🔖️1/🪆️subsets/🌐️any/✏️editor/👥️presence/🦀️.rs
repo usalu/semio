@@ -51,6 +51,19 @@ pub enum Fem3dPresenceMutation {
 impl Mutation<Fem3dPresence> for Fem3dPresenceMutation {
     type Diff = Fem3dPresence;
 
+    /// 🧷️ Hand-written, one entry for the sole `Noop` variant. ⚠️ PROVISIONAL: no authored mutation-leaf
+    /// directory on disk yet — the `owner` below names a path that does not exist, matching block3d's
+    /// and puzzle3d's own presence-mutation precedent.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/👥️presence/🚫️presence-noop", semantic_kind: "presence-noop", display_name: "Presence Noop", emoji: "🚫", aggregate_variant: "Noop", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Fem3dPresenceMutation::Noop => &Self::DESCRIPTORS[0],
+        }
+    }
+
     fn diff(&self, _base: &Fem3dPresence) -> protocol::MutationOutcome<Fem3dPresence> {
         protocol::MutationOutcome::new(Fem3dPresence::default())
     }

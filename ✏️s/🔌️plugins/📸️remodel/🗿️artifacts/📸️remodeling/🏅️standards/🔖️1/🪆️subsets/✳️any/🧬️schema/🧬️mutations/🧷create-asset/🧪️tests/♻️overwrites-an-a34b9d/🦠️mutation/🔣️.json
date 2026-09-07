@@ -1,0 +1,10 @@
+{
+  "mutation": "createAsset",
+  "key": "orbit-frame-00",
+  "asset": {
+    "mime": "image/png",
+    "data": "b3JiaXQtZnJhbWUtMDAtcmVzY2Fu",
+    "width": 320,
+    "height": 240
+  }
+}

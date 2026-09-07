@@ -2,8 +2,54 @@
 frame        = format ordinal record-body
 format       = %x01                        ; OP_BINARY_FORMAT
 ordinal      = varint                      ; index into DslVariants::variants(), 0..34
-record-body  = symbol-count *symbol fields
+record-body  = symbol-count *symbol record-fields
 symbol-count = varint
 symbol       = varint *OCTET               ; length-prefixed UTF-8 symbol-table entry
-fields       = *OCTET                      ; self-describing per-field-id tag stream
+
+; os_pack::encode_record_fields of the variant's payload RecordSpec. Entries sort by ascending
+; field-id; Absent fields are never written. Payload field ids are that struct's own DslRecord
+; 0-based declaration indices, keys as listed per op in ../📝️text/📖️.grammar.semio.
+record-fields = field-count *field-entry
+field-count   = varint
+field-entry   = field-id tagged-value
+field-id      = varint
+tagged-value  = tag *OCTET                 ; tag-driven; tag %x0D (record) nests record-fields
+tag           = %x00-17
 varint       = *(%x80-FF) %x00-7F
+
+; ordinal -> keyword (RemodelingMutation declaration order, 35 variants)
+;  0 create-stream
+;  1 delete-stream
+;  2 change-stream-sync
+;  3 add-stream-frame
+;  4 remove-stream-frame
+;  5 replace-stream-source
+;  6 create-asset
+;  7 delete-asset
+;  8 create-camera-calibration
+;  9 update-camera-calibration
+; 10 delete-camera-calibration
+; 11 create-rig-extrinsic
+; 12 delete-rig-extrinsic
+; 13 update-rig-extrinsic
+; 14 create-gcp
+; 15 delete-gcp
+; 16 add-gcp-observation
+; 17 remove-gcp-observation
+; 18 update-ingest-params
+; 19 update-feature-params
+; 20 update-match-params
+; 21 update-sfm-params
+; 22 update-dense-params
+; 23 update-mesh-params
+; 24 update-motion-params
+; 25 update-geo-params
+; 26 replace-job
+; 27 replace-sparse
+; 28 replace-dense
+; 29 replace-mesh-result
+; 30 replace-trajectory
+; 31 replace-tracks
+; 32 replace-geo-products
+; 33 replace-qc
+; 34 commit-reconstruction

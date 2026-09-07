@@ -18,7 +18,7 @@
 //! return type already matches `JobFn`'s exactly — no fault-code translation needed here, unlike
 //! `💡️infer`'s `ArtifactInferenceExecutionError` boundary.
 
-use super::{run_two_phase, JobCtx};
+use super::{JobCtx, run_two_phase};
 use std::future::Future;
 use std::pin::Pin;
 
@@ -51,7 +51,7 @@ mod job_test_mutation_fixture;
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use super::job_test_mutation_fixture::{AddValue,JobTestOp,JobTestSnapshot};
+    use super::job_test_mutation_fixture::{AddValue, JobTestOp, JobTestSnapshot};
     use store::{ArtifactPack, OpBinary};
 
     /// 🪪️ Commits one contributed mutation kind into the SAME process-global registry

@@ -2,15 +2,11 @@
 
 use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full raster artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterArtifact {
     #[state(artifact)]
@@ -22,7 +18,6 @@ pub struct RasterArtifact {
     #[state(artifact)]
     pub layers: Vec<RasterLayerNode>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map"))]
     pub assets: RasterOwnedMap<RasterAssetChild>,
     #[state(presence)]
     pub selected_ids: Vec<String>,

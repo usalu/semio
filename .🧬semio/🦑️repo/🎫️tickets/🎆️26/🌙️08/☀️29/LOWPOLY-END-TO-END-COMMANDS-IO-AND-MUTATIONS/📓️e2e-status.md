@@ -688,3 +688,33 @@ stdio needs its own build pass. One is running now; stdio's component is the lar
 | 6 | browser boot | 🟡 **PARTIAL** — app boots and is observed: `semio · lowpoly`, Edit/Paint modes, `lowpoly-main`/`Model` window, plugin live as actor `lowpoly#1`. **Geometry does not render**; blocked on the stdio descriptor 404 + lifecycle time authority. Examples switching and command dispatch **not yet exercised**. |
 
 Nothing above is claimed beyond what was observed.
+
+## The stdio plugin-module build is OOM-blocked (environmental, not a code defect)
+
+To clear the `plugin.descriptor-unavailable` 404, stdio's plugin module must be materialized —
+`SEMIO_PLUGIN_ONLY=stdio`, since that variable matches exactly one `pluginId`. Two attempts:
+
+| Attempt | Setup | Outcome |
+|---|---|---|
+| 1 | `SEMIO_PLUGIN_ONLY=stdio` while a previous dev server still held port 6078 | Never built — the lease made it `[dev] plugin builds owned by pid 90882 (port 6078); serving only`. Had to kill the port owner *and* clear `semio-dev-leases` first. |
+| 2 | clean, `CARGO_BUILD_JOBS=8`, `codegen-units=16` | Compiled ~115 min, then **`could not compile semio-s-plugin-stdio (lib); 1484 warnings emitted` / `process didn't exit successfully`** — **no rustc diagnostics at all**. That signature is a kill, not a compile error. |
+| 3 | `CARGO_BUILD_JOBS=1`, default codegen units (lowest peak RSS) | In flight. |
+
+Evidence it is memory, not code: 1484 warnings were emitted (so it type-checked fine), rustc then
+died silently, and at the time of death the machine had **65 MB free RAM** with
+**41.6 G / 43.0 G swap used (~1.4 G free)** — while **17 concurrent `semio_s_plugin_stdio` rustc
+processes** were running repo-wide across peer sessions. stdio's component is the largest artifact
+in the repo (its previous `…core.wasm` is **377 MB**).
+
+This is the one remaining blocker for a fully-rendering gate 6, and it is an environmental capacity
+limit rather than anything wrong with lowpoly.
+
+### Process lesson recorded
+
+Killing a dev boot without reaping its cargo children left orphans that kept compiling: at one point
+**7 concurrent stdio compiles** were running from boots killed hours earlier (oldest 3h25m),
+starving the live build and driving `kernel_task` to 166%. Clearing them is what let the next build
+finish in 10m54s. Kill the cargo **parent** by pid, then the rustc, and verify with
+`pgrep -f "rustc --crate-name semio_s_plugin"` before relaunching. Also note `ps -o pcpu` reports a
+**lifetime average**, so a long-lived rustc reads ~1-2% even while working — use `top -l 2` for
+instantaneous CPU before concluding a build is stalled.

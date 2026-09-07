@@ -1,0 +1,62 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": {
+    "asset-a": {
+      "childId": "remodeling-asset-45070beb0101de64",
+      "target": {
+        "artifactId": "asset-a-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "asset-dsm": {
+      "childId": "remodeling-asset-a462ec9257d3fccf",
+      "target": {
+        "artifactId": "asset-dsm-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  },
+  "durableArtifacts": {
+    "remodeling-asset-45070beb0101de64": {
+      "kind": "image",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 480,
+      "chunks": [
+        "ZnJhbWUtYQ=="
+      ]
+    },
+    "remodeling-asset-a462ec9257d3fccf": {
+      "kind": "image",
+      "mime": "image/tiff",
+      "width": 128,
+      "height": 128,
+      "chunks": [
+        "dG95LWRzbS10aWxl"
+      ]
+    }
+  },
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

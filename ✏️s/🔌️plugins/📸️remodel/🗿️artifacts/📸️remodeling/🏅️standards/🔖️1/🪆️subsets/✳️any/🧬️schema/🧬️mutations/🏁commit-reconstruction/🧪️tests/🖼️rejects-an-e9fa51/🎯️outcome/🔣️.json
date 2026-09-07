@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "mutation.invalid-reconstruction-asset",
+  "path": [
+    "orbit-frame-10"
+  ]
+}

@@ -54,13 +54,12 @@ const MIN_SPARSE_POINTS_PER_TRUTH_POINT: f64 = 0.25;
 const MAX_ROTATION_ERROR_DEG: f64 = 2.0;
 const MAX_TRANSLATION_RMSE_RATIO: f64 = 0.03;
 
-/// 🕳️ Tolerance multiplier applied to the two constants above at APP level. `build_engine_params`
-/// (`✏️editor/⚙️engine/🦀️.rs`) never feeds the document's `calibration.cameras` into
-/// `EngineParams::assumed_focal_ratio`, so an app-level run always reconstructs this fixture through
-/// the engine's `fx = fy = max(w, h)` guess instead of the true `0.85 · width` — a documented
-/// simplification whose cost is a systematic gauge error the strict engine-level test isolates. Drop
-/// this multiplier to `1.0` the moment calibration becomes a wired stage.
-const UNCALIBRATED_GAUGE_SLACK: f64 = 12.0;
+/// 🕳️ Tolerance multiplier applied to the two constants above at APP level. It is `1.0` because
+/// calibration is now a wired stage: `build_engine_params` (`✏️editor/⚙️engine/🦀️.rs`) reads the
+/// document's `calibration.cameras` through `assumed_focal_ratio`, so an app-level run reconstructs
+/// this fixture at the true `0.85 · width` focal instead of the engine's `fx = fy = max(w, h)` guess,
+/// and the app-level bounds are the strict engine-level ones.
+const UNCALIBRATED_GAUGE_SLACK: f64 = 1.0;
 //#endregion 🔖️FixtureConstants
 
 //#region 🎲️Rng

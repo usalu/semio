@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "ld_wx_0"
+  ],
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-missing"
+    }
+  ]
+}

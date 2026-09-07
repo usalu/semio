@@ -5811,6 +5811,29 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   }
   if (statuses.get("approval.commit-unavailable") !== 503) throw new Error("a missing composition transaction must fail closed with 503");
   for (const rejection of fixture.approvalRejections) if (!statuses.has(rejection.code)) throw new Error(`approval rejection ${rejection.name} uses an unpublished code`);
+  const committer = fixture.committer;
+  if (
+    committer.capacity !== fixture.limits.documentGateCapacity ||
+    JSON.stringify(committer.roles) !== JSON.stringify(["map", "drawing", "value"]) ||
+    JSON.stringify(committer.children) !== JSON.stringify(["gismap-drawing", "gismap-value"]) ||
+    JSON.stringify(committer.phases) !== JSON.stringify(["ready", "assembly", "journal", "verification", "committed", "closing"]) ||
+    committer.witnessSource !== "sole-committed-wal-event" ||
+    committer.retryOwner !== "same-document-three-store-host"
+  )
+    throw new Error("retained fixed-three committer contract drifted");
+  const runtime = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🏃️runtime", "🦀️.rs"), "utf8");
+  for (const symbol of [
+    "RetainedGisMapApprovalCommitterV1",
+    "RetainedGisMapDocumentStateV1",
+    "DurableOwnedThreeStoreMapAssemblyV1",
+    "durable_group_journal_sink",
+    "InferenceWalVerifierV1",
+    "gis_map_parent_stamped_one_item_preparation_factory",
+    "sole committed WAL event",
+  ])
+    if (!runtime.includes(symbol)) throw new Error(`retained GIS Map committer source is missing ${symbol}`);
+  const retainedCommitter = runtime.slice(runtime.indexOf("pub struct RetainedGisMapApprovalCommitterV1"), runtime.indexOf("/// 🗺️ The server-materialized Map base"));
+  if (!runtime.includes('const GIS_MAP_COMMITTER_CAPACITY: usize = 64;') || retainedCommitter.includes("ArtifactHandle::submit")) throw new Error("retained GIS Map committer capacity or typed journal boundary drifted");
   const frozen = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🧊️gis-map-frozen-binding-v1", "🔣️.json"), "utf8"));
   const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
   if (
@@ -5821,7 +5844,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   )
     throw new Error("proposal, frozen-binding and ledger corpora disagree on the frozen executable identity");
   console.log(
-    `gis-map-proposal-oracle: ajv=1 hostile=${hostile.length} node-sha256=2 independent-bounds=2 preview=1 lifecycle=${fixture.lifecycle.length + fixture.cancelLifecycle.length} visibility=${fixture.visibility.length} errors=${fixture.errors.length} approval-rejections=${fixture.approvalRejections.length} cross-fixture=1; no external model provider, no WGPU rendering`,
+    `gis-map-proposal-oracle: ajv=1 hostile=${hostile.length} node-sha256=2 independent-bounds=2 preview=1 lifecycle=${fixture.lifecycle.length + fixture.cancelLifecycle.length} committer=6 visibility=${fixture.visibility.length} errors=${fixture.errors.length} approval-rejections=${fixture.approvalRejections.length} cross-fixture=1; no external model provider, no WGPU rendering`,
   );
   return hostile.length;
 }

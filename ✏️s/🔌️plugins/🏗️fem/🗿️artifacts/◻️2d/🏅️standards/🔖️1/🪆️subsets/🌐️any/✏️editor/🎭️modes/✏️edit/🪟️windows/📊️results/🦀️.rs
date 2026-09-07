@@ -312,7 +312,7 @@ mod tests {
     async fn results_window_renders_contour_for_region() {
         let mut app = fem2d_app();
         load_default_example(&mut app).await;
-        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let snapshot = app.snapshot().expect("snapshot");
         let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default());
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
@@ -324,7 +324,7 @@ mod tests {
     async fn results_window_renders_reaction_labels_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app).await;
-        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let snapshot = app.snapshot().expect("snapshot");
         let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default());
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");

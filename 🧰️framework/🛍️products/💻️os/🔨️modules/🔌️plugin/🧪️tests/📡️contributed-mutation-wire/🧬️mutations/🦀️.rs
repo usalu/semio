@@ -2,8 +2,8 @@
 //! 🧬️ Transparent contributed-wire mutation roster.
 
 use super::{WireTestDiff, WireTestSnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 #[path = "➕️add-value/🦀️.rs"]
 mod add_value;

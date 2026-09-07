@@ -1,0 +1,5 @@
+{
+  "mutation": "removeLoad",
+  "caseId": "wind_x",
+  "loadId": "ld_wx_spare"
+}

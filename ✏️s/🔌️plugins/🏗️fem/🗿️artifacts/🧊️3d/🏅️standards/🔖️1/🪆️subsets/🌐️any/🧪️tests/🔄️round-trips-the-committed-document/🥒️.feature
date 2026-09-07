@@ -29,7 +29,7 @@ Feature: Read the real derived frame in both languages, and hold the committed c
 
   One deliberate exception: `delete-node` (owned by `🕸️mesh`) addresses `n3`, which the spare
   support `s_spare` points at. The committed vector for this kind is named
-  `🚫️removes-the-column-head-node-under-a-live-frame`, so the non-cascade IS the specified behaviour,
+  `🚫️removes-the-column-head-056295`, so the non-cascade IS the specified behaviour,
   and the row exercises it against a real frame.
 
   Where the assertions live. `🐍️.py` in this directory reads the derived model and additionally

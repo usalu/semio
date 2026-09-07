@@ -17,6 +17,18 @@
             {
               "id": "appends-a-member-udl-to-the-dead-case",
               "directoryName": "📏️appends-a-member-udl-to-the-dead-case"
+            },
+            {
+              "id": "pushes-a-wind-load-5c3f1e",
+              "directoryName": "💨️pushes-a-wind-load-5c3f1e"
+            },
+            {
+              "id": "rejects-a-missing-4271bc",
+              "directoryName": "🚫️rejects-a-missing-4271bc"
+            },
+            {
+              "id": "dangling-node-8d113b",
+              "directoryName": "👻️dangling-node-8d113b"
             }
           ]
         },
@@ -26,8 +38,16 @@
           "mutationDirectoryName": "⚖️change-load-case-self-weight",
           "scenarios": [
             {
-              "id": "switches-self-weight-on-for-the-dead-case",
-              "directoryName": "⚖️switches-self-weight-on-for-the-dead-case"
+              "id": "switches-self-abbff2",
+              "directoryName": "⚖️switches-self-abbff2"
+            },
+            {
+              "id": "keeps-self-weight-ff696b",
+              "directoryName": "🔁️keeps-self-weight-ff696b"
+            },
+            {
+              "id": "switches-self-5977a5",
+              "directoryName": "🏋️switches-self-5977a5"
             }
           ]
         },
@@ -37,8 +57,16 @@
           "mutationDirectoryName": "🔗️create-combination",
           "scenarios": [
             {
-              "id": "appends-an-uls-combination-over-both-cases",
-              "directoryName": "🔗️appends-an-uls-combination-over-both-cases"
+              "id": "appends-an-uls-0c18bb",
+              "directoryName": "🔗️appends-an-uls-0c18bb"
+            },
+            {
+              "id": "appends-the-6-10a-eefe01",
+              "directoryName": "➕️appends-the-6-10a-eefe01"
+            },
+            {
+              "id": "rejects-a-dangling-2aa3ea",
+              "directoryName": "🚫️rejects-a-dangling-2aa3ea"
             }
           ]
         },
@@ -48,8 +76,16 @@
           "mutationDirectoryName": "📋️create-load-case",
           "scenarios": [
             {
-              "id": "appends-a-live-case-carrying-one-nodal-load",
-              "directoryName": "📍️appends-a-live-case-carrying-one-nodal-load"
+              "id": "appends-a-live-case-59118a",
+              "directoryName": "📍️appends-a-live-case-59118a"
+            },
+            {
+              "id": "appends-the-snow-4c007c",
+              "directoryName": "❄️appends-the-snow-4c007c"
+            },
+            {
+              "id": "rejects-a-dangling-4904f4",
+              "directoryName": "🚫️rejects-a-dangling-4904f4"
             }
           ]
         },
@@ -59,8 +95,20 @@
           "mutationDirectoryName": "✂️delete-combination",
           "scenarios": [
             {
-              "id": "removes-the-uls-combination-and-keeps-both-cases",
-              "directoryName": "✂️removes-the-uls-combination-and-keeps-both-cases"
+              "id": "removes-the-uls-438c0c",
+              "directoryName": "✂️removes-the-uls-438c0c"
+            },
+            {
+              "id": "drops-the-spare-60fda7",
+              "directoryName": "🗑️drops-the-spare-60fda7"
+            },
+            {
+              "id": "rejects-a-missing-d4bc03",
+              "directoryName": "⛔️rejects-a-missing-d4bc03"
+            },
+            {
+              "id": "blocks-in-use-0b898b",
+              "directoryName": "🔗️blocks-in-use-0b898b"
             }
           ]
         },
@@ -70,8 +118,20 @@
           "mutationDirectoryName": "🗑️delete-load-case",
           "scenarios": [
             {
-              "id": "removes-the-live-case-together-with-its-loads",
-              "directoryName": "🚫️removes-the-live-case-together-with-its-loads"
+              "id": "removes-the-live-06415d",
+              "directoryName": "🚫️removes-the-live-06415d"
+            },
+            {
+              "id": "drops-the-spare-49435f",
+              "directoryName": "🗑️drops-the-spare-49435f"
+            },
+            {
+              "id": "rejects-a-missing-79ed15",
+              "directoryName": "⛔️rejects-a-missing-79ed15"
+            },
+            {
+              "id": "blocks-in-use-7cdc5f",
+              "directoryName": "🔗️blocks-in-use-7cdc5f"
             }
           ]
         },
@@ -81,8 +141,16 @@
           "mutationDirectoryName": "➖️remove-load",
           "scenarios": [
             {
-              "id": "strips-the-trailing-member-udl-from-the-dead-case",
-              "directoryName": "➖️strips-the-trailing-member-udl-from-the-dead-case"
+              "id": "strips-the-trailing-member-133914",
+              "directoryName": "➖️strips-the-trailing-member-133914"
+            },
+            {
+              "id": "rejects-a-missing-1a8a80",
+              "directoryName": "⛔️rejects-a-missing-1a8a80"
+            },
+            {
+              "id": "strips-the-roof-udl-0c1b3c",
+              "directoryName": "✂️strips-the-roof-udl-0c1b3c"
             }
           ]
         }

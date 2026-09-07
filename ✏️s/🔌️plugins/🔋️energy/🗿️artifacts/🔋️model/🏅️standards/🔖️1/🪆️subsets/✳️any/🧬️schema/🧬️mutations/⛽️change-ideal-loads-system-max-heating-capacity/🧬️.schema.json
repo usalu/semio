@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeIdealLoadsSystemMaxHeatingCapacity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCapacityPresent",
+    "newMaxHeatingCapacityW"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newCapacityPresent": {
+      "type": "boolean"
+    },
+    "newMaxHeatingCapacityW": {
+      "type": "number"
+    }
+  }
+}

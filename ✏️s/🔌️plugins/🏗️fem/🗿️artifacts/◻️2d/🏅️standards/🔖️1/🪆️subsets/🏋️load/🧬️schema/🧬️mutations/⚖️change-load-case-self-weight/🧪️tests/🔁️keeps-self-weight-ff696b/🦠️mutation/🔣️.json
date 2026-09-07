@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLoadCaseSelfWeight",
+  "caseId": "dead",
+  "newSelfWeight": true
+}

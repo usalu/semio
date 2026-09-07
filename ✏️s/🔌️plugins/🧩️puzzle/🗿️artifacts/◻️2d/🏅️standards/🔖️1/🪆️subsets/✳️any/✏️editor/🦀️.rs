@@ -13,8 +13,8 @@
 use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use crate::editor::puzzle2d::commands::{
     add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, focus_selection, force_layout, lod_scale_json,
-    open_slot, patch_inspector, redraw_handles, select_same_kind, set_active_example, set_active_utility, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index, set_fill_count, set_grid_factor, set_grid_snap_enabled,
-    set_locale, set_lod_mode_for_pane, set_selection_flag, set_suggestion_offset, set_terminology,
+    open_slot, patch_inspector, select_same_kind, set_active_example, set_active_utility, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index, set_fill_count, set_grid_factor, set_grid_snap_enabled, set_locale,
+    set_lod_mode_for_pane, set_selection_flag, set_suggestion_offset, set_terminology,
 };
 use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
@@ -1645,7 +1645,6 @@ fn puzzle2d_dispatch_emit(command: &Puzzle2dCommand, before: Value, config: &Puz
             "setSelectionFlag" => set_selection_flag::set_selection_flag(ctx, args),
             "addNode" => add_node::add_node(ctx, args),
             "patchInspectorNodes" => patch_inspector::patch_inspector(ctx, args),
-            "redrawHandles" => redraw_handles::redraw_handles(ctx),
             "forceLayout" | "reorganize" => force_layout::force_layout(ctx),
             "setCamera" => set_camera::set_camera(ctx, args),
             "focusSelection" => focus_selection::focus_selection(ctx),

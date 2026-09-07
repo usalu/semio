@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal-system",
+  "semanticKind": "create-solar-thermal-system",
+  "displayName": "Create Solar Thermal System",
+  "emoji": "🌄️",
+  "aggregateVariant": "CreateSolarThermalSystem",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "create-solar-thermal-system",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

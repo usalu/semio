@@ -15,8 +15,20 @@
           "mutationDirectoryName": "➕️add-load",
           "scenarios": [
             {
-              "id": "lays-an-area-pressure-over-the-roof-slab",
-              "directoryName": "🏠️lays-an-area-pressure-over-the-roof-slab"
+              "id": "no-such-member-3fe6e9",
+              "directoryName": "🚨️no-such-member-3fe6e9"
+            },
+            {
+              "id": "dup-load-id-4f4a0a",
+              "directoryName": "⏸️dup-load-id-4f4a0a"
+            },
+            {
+              "id": "hall-adds-udl-e345cb",
+              "directoryName": "🏗️hall-adds-udl-e345cb"
+            },
+            {
+              "id": "lays-an-area-pressure-over-769710",
+              "directoryName": "🏠️lays-an-area-pressure-over-769710"
             }
           ]
         },
@@ -26,8 +38,16 @@
           "mutationDirectoryName": "⚖️change-load-case-self-weight",
           "scenarios": [
             {
-              "id": "switches-self-weight-off-for-the-dead-case",
-              "directoryName": "⏸️switches-self-weight-off-for-the-dead-case"
+              "id": "sw-no-such-case-bfe5bc",
+              "directoryName": "🚨️sw-no-such-case-bfe5bc"
+            },
+            {
+              "id": "hall-crane-sw-978370",
+              "directoryName": "🏗️hall-crane-sw-978370"
+            },
+            {
+              "id": "switches-self-7e0cda",
+              "directoryName": "⏸️switches-self-7e0cda"
             }
           ]
         },
@@ -37,8 +57,16 @@
           "mutationDirectoryName": "🔗️create-combination",
           "scenarios": [
             {
-              "id": "appends-a-serviceability-combination-keyed-by-case-id",
-              "directoryName": "🔗️appends-a-serviceability-combination-keyed-by-case-id"
+              "id": "dangling-term-b9d144",
+              "directoryName": "🚨️dangling-term-b9d144"
+            },
+            {
+              "id": "hall-new-acc-4099b2",
+              "directoryName": "🏗️hall-new-acc-4099b2"
+            },
+            {
+              "id": "appends-a-8ede20",
+              "directoryName": "🔗️appends-a-8ede20"
             }
           ]
         },
@@ -48,8 +76,16 @@
           "mutationDirectoryName": "📋️create-load-case",
           "scenarios": [
             {
-              "id": "appends-a-wind-case-pushing-on-the-column-head",
-              "directoryName": "🌬️appends-a-wind-case-pushing-on-the-column-head"
+              "id": "dangling-solid-5e04d9",
+              "directoryName": "🚨️dangling-solid-5e04d9"
+            },
+            {
+              "id": "hall-snow-drift-068d9b",
+              "directoryName": "🏗️hall-snow-drift-068d9b"
+            },
+            {
+              "id": "appends-a-wind-case-a6c267",
+              "directoryName": "🌬️appends-a-wind-case-a6c267"
             }
           ]
         },
@@ -59,8 +95,16 @@
           "mutationDirectoryName": "✂️delete-combination",
           "scenarios": [
             {
-              "id": "removes-the-serviceability-combination-and-keeps-both-cases",
-              "directoryName": "✂️removes-the-serviceability-combination-and-keeps-both-cases"
+              "id": "no-such-combo-f42cd6",
+              "directoryName": "🚨️no-such-combo-f42cd6"
+            },
+            {
+              "id": "hall-cut-qp-ebd806",
+              "directoryName": "🏗️hall-cut-qp-ebd806"
+            },
+            {
+              "id": "removes-the-182f7b",
+              "directoryName": "✂️removes-the-182f7b"
             }
           ]
         },
@@ -70,8 +114,20 @@
           "mutationDirectoryName": "🗑️delete-load-case",
           "scenarios": [
             {
-              "id": "removes-the-wind-case-together-with-its-load",
-              "directoryName": "🚫️removes-the-wind-case-together-with-its-load"
+              "id": "dead-in-combos-e73167",
+              "directoryName": "⛓️dead-in-combos-e73167"
+            },
+            {
+              "id": "no-such-case-ef1fde",
+              "directoryName": "🚨️no-such-case-ef1fde"
+            },
+            {
+              "id": "hall-cut-crane-52270d",
+              "directoryName": "🏗️hall-cut-crane-52270d"
+            },
+            {
+              "id": "removes-the-wind-caeb06",
+              "directoryName": "🚫️removes-the-wind-caeb06"
             }
           ]
         },
@@ -81,8 +137,16 @@
           "mutationDirectoryName": "➖️remove-load",
           "scenarios": [
             {
-              "id": "drops-the-trailing-member-udl-from-the-dead-case",
-              "directoryName": "➖️drops-the-trailing-member-udl-from-the-dead-case"
+              "id": "no-such-load-5bab2d",
+              "directoryName": "🚨️no-such-load-5bab2d"
+            },
+            {
+              "id": "hall-cut-wind-6cf528",
+              "directoryName": "🏗️hall-cut-wind-6cf528"
+            },
+            {
+              "id": "drops-the-trailing-member-b73b25",
+              "directoryName": "➖️drops-the-trailing-member-b73b25"
             }
           ]
         }

@@ -45,7 +45,7 @@ impl store::InferredField<RemodelingSnapshot> for RemodelingRelativeCameraPose {
     type Key = String;
     type Value = RemodelingPoseDelta;
 
-    const FIELD_ID: &'static str = "s.remodeling.remodeling.inference.relative_camera_pose";
+    const FIELD_ID: &'static str = "s.remodel.remodeling.inference.relative_camera_pose";
     const SCHEMA_VERSION: u32 = 1;
 
     fn reads() -> &'static [&'static str] {

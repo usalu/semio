@@ -12,8 +12,15 @@ fn close(cursor: &mut dyn ErasedSnapshotRetirement, bytes: usize) -> usize {
     assert!(matches!(cursor.close_step(0, bytes).unwrap(), SnapshotRetirementStep::Blocked));
     for _ in 0..200_000 {
         match cursor.close_step(1, bytes).unwrap() {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= bytes); released += released_bytes; }
-            SnapshotRetirementStep::Complete => { assert!(cursor.terminal_is_empty()); return released; }
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= bytes);
+                released += released_bytes;
+            }
+            SnapshotRetirementStep::Complete => {
+                assert!(cursor.terminal_is_empty());
+                return released;
+            }
             SnapshotRetirementStep::Blocked => panic!("positive interaction retirement grant blocked"),
         }
     }
@@ -60,5 +67,10 @@ fn local_interaction_retirement_releases_empty_reserved_allocations() {
 
 #[test]
 fn local_interaction_retirement_live_drop_is_rejected() {
-    assert!(std::panic::catch_unwind(|| { drop(InteractionRetirement::owned(InteractionState::default())); }).is_err());
+    assert!(
+        std::panic::catch_unwind(|| {
+            drop(InteractionRetirement::owned(InteractionState::default()));
+        })
+        .is_err()
+    );
 }

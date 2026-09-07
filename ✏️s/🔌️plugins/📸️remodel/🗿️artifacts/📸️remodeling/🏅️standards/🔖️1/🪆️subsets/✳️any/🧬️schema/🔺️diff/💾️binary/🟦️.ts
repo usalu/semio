@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `remodeling.remodeling.diff`. */
+/** 💾️ Binary representation for `remodel.remodeling.diff`. */
 export type RemodelingDiffBinary = Uint8Array;

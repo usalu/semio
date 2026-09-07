@@ -1,0 +1,153 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": {
+    "values": [
+      {
+        "id": "orbit-primary",
+        "name": "Orbit Primary",
+        "kind": "video",
+        "cameraId": "orbit-cam-primary",
+        "syncOffsetMs": 0.0,
+        "fpsHint": 2.0,
+        "frames": [
+          {
+            "index": 0,
+            "timestampMs": 0.0,
+            "assetId": "orbit-frame-00"
+          },
+          {
+            "index": 1,
+            "timestampMs": 500.0,
+            "assetId": "orbit-frame-01"
+          },
+          {
+            "index": 2,
+            "timestampMs": 1000.0,
+            "assetId": "orbit-frame-02"
+          },
+          {
+            "index": 3,
+            "timestampMs": 1500.0,
+            "assetId": "orbit-frame-03"
+          },
+          {
+            "index": 4,
+            "timestampMs": 2000.0,
+            "assetId": "orbit-frame-04"
+          },
+          {
+            "index": 5,
+            "timestampMs": 2500.0,
+            "assetId": "orbit-frame-05"
+          },
+          {
+            "index": 6,
+            "timestampMs": 3000.0,
+            "assetId": "orbit-frame-06"
+          },
+          {
+            "index": 7,
+            "timestampMs": 3500.0,
+            "assetId": "orbit-frame-07"
+          },
+          {
+            "index": 8,
+            "timestampMs": 4000.0,
+            "assetId": "orbit-frame-08"
+          },
+          {
+            "index": 9,
+            "timestampMs": 4500.0,
+            "assetId": "orbit-frame-09"
+          }
+        ],
+        "source": {
+          "name": "orbit-primary.mp4",
+          "container": "mp4",
+          "codec": "avc",
+          "durationMs": 5000.0,
+          "frameCount": 10,
+          "width": 320,
+          "height": 240
+        }
+      },
+      {
+        "id": "orbit-secondary",
+        "name": "Orbit Secondary",
+        "kind": "image-sequence",
+        "cameraId": "orbit-cam-secondary",
+        "syncOffsetMs": 40.0,
+        "fpsHint": 2.0,
+        "frames": [
+          {
+            "index": 0,
+            "timestampMs": 40.0,
+            "assetId": "orbit-frame-00"
+          },
+          {
+            "index": 1,
+            "timestampMs": 540.0,
+            "assetId": "orbit-frame-01"
+          },
+          {
+            "index": 2,
+            "timestampMs": 1040.0,
+            "assetId": "orbit-frame-02"
+          },
+          {
+            "index": 3,
+            "timestampMs": 1540.0,
+            "assetId": "orbit-frame-03"
+          },
+          {
+            "index": 4,
+            "timestampMs": 2040.0,
+            "assetId": "orbit-frame-04"
+          },
+          {
+            "index": 5,
+            "timestampMs": 2540.0,
+            "assetId": "orbit-frame-05"
+          },
+          {
+            "index": 6,
+            "timestampMs": 3040.0,
+            "assetId": "orbit-frame-06"
+          },
+          {
+            "index": 7,
+            "timestampMs": 3540.0,
+            "assetId": "orbit-frame-07"
+          },
+          {
+            "index": 8,
+            "timestampMs": 4040.0,
+            "assetId": "orbit-frame-08"
+          },
+          {
+            "index": 9,
+            "timestampMs": 4540.0,
+            "assetId": "orbit-frame-09"
+          }
+        ],
+        "source": null
+      }
+    ]
+  },
+  "assets": null,
+  "durableArtifacts": null,
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

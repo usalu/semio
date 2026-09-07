@@ -23,7 +23,8 @@ async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>)
         "generation": identity.generation.to_string(),
         "revision": hex(&identity.revision),
         "topologyRevision": hex(&identity.topology_revision),
-    }, "state": row["expected"]})).unwrap();
+    }, "state": row["expected"]}))
+    .unwrap();
     let cursor = LocalInteractionCaptureCursor::new(store.snapshot_read().unwrap(), identity);
     (store, cursor, expected)
 }
@@ -37,7 +38,9 @@ fn finish(cursor: &mut LocalInteractionCaptureCursor, bytes: usize) -> Vec<u8> {
         assert!(count <= bytes.min(256));
         assert_eq!(cursor.completed_bytes() - prior, count as u64);
         result.extend_from_slice(&output[..count]);
-        if cursor.complete() { return result; }
+        if cursor.complete() {
+            return result;
+        }
     }
     panic!("capture failed to complete");
 }
@@ -50,27 +53,37 @@ fn close(store: &mut InteractionStore, cursor: &mut LocalInteractionCaptureCurso
             match cursor.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap() {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= bytes),
                 SnapshotRetirementStep::Complete => assert!(cursor.terminal_is_empty()),
-                SnapshotRetirementStep::Blocked => {},
+                SnapshotRetirementStep::Blocked => {}
             }
         }
-        if retirement.is_none() { retirement = store.take_returned_snapshot_read_retirement().unwrap(); }
+        if retirement.is_none() {
+            retirement = store.take_returned_snapshot_read_retirement().unwrap();
+        }
         if let Some(active) = retirement.as_mut() {
             match active.close_step(1, bytes).unwrap() {
-                SnapshotRetirementStep::Complete => { assert!(active.terminal_is_empty()); retirement = None; },
+                SnapshotRetirementStep::Complete => {
+                    assert!(active.terminal_is_empty());
+                    retirement = None;
+                }
                 SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= bytes),
-                SnapshotRetirementStep::Blocked => {},
+                SnapshotRetirementStep::Blocked => {}
             }
         }
-        if cursor.terminal_is_empty() && retirement.is_none() && store.snapshot_read_leases_terminal_is_empty() { break; }
+        if cursor.terminal_is_empty() && retirement.is_none() && store.snapshot_read_leases_terminal_is_empty() {
+            break;
+        }
     }
     assert!(cursor.terminal_is_empty());
     assert!(retirement.is_none());
     assert!(store.snapshot_read_leases_terminal_is_empty());
     for _ in 0..1_000_000 {
         match store.close_owned_step(1, bytes).unwrap() {
-            SnapshotRetirementStep::Complete => { assert!(store.close_owned_terminal_is_empty()); return; },
+            SnapshotRetirementStep::Complete => {
+                assert!(store.close_owned_terminal_is_empty());
+                return;
+            }
             SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= bytes),
-            SnapshotRetirementStep::Blocked => {},
+            SnapshotRetirementStep::Blocked => {}
         }
     }
     panic!("capture Store failed to close");
@@ -92,8 +105,13 @@ async fn local_interaction_capture_actual_store_matches_canonical_fixture_at_sma
 async fn local_interaction_capture_cancel_worker_transfer_and_exact_registry_return() {
     for prefix in [0, 17, 4097, usize::MAX] {
         let (mut store, mut cursor, _) = fixture().await;
-        if prefix == usize::MAX { finish(&mut cursor, 4096); }
-        else { for _ in 0..prefix { cursor.write_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }, &mut [0; 1]).unwrap(); } }
+        if prefix == usize::MAX {
+            finish(&mut cursor, 4096);
+        } else {
+            for _ in 0..prefix {
+                cursor.write_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }, &mut [0; 1]).unwrap();
+            }
+        }
         cursor = std::thread::spawn(move || cursor).join().unwrap();
         cursor.cancel();
         let before = cursor.completed_bytes();

@@ -27,7 +27,7 @@ use std::collections::BTreeMap;
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "remodeling")]
-#[artifact_schema(id = "s.remodeling.remodeling")]
+#[artifact_schema(id = "s.remodel.remodeling")]
 pub struct RemodelingSnapshot {
     #[state(artifact)]
     pub schema: String,

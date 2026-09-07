@@ -1,0 +1,9 @@
+{
+  "mutation": "updateIngestParams",
+  "params": {
+    "frameSampleStride": 1,
+    "maxFrames": 32,
+    "downscaleLongEdgePx": 320,
+    "minSharpness": 0.125
+  }
+}

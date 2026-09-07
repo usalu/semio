@@ -2,7 +2,6 @@
 
 use crate::artifacts::model::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Snapshot
@@ -17,8 +16,7 @@ use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValu
 /// `dsl::DslRecord` derive — `ArtifactChild<S>`/`ArtifactLink` have no `dsl::DslField` impl
 /// reachable from this crate, the same wall every composed exemplar hit; every field's text/binary
 /// shape is hand-rolled below instead.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelSnapshot {
     #[state(artifact)]
@@ -33,14 +31,12 @@ pub struct EnergyModelSnapshot {
     pub zones: EnergyZonesChild,
     #[state(artifact)]
     #[link_slot(roles("model"))]
-    #[serde(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
     /// 🌦️ Forward link to the `🌦️epw` stdio artifact this model is simulated against — a link slot
     /// exactly like `referenced_model`, never an inlined `EpwWeather` (ticket
     /// 26/09/06/ENERGY-PLUGIN-END-TO-END).
     #[state(artifact)]
     #[link_slot(roles("weather"))]
-    #[serde(rename = "weatherLink", default, skip_serializing_if = "Option::is_none")]
     pub weather_link: Option<store::ArtifactLink>,
 }
 
@@ -121,26 +117,17 @@ fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 //#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️JsonFieldPrimitives
-/// 🧾️ `referenced_model` (an `Option<store::ArtifactLink>`) is JSON-serialized then hex-encoded,
-/// same convention `layout`'s own `enc_json`/`dec_json` uses — `ArtifactLink`/`LinkPin`/`BlobRef`
-/// (framework-owned, `🏪️store/🦀️.rs`) are themselves plain `Serialize`/`Deserialize` only
-/// (not yet `ToValue`/`FromValue` — out of this batch's scope, framework-exempt), so this ONE field
-/// keeps the `serde_json` round trip; `enc_dsl_json`/`dec_dsl_json` below are the `ToValue`/
-/// `FromValue` analog for every other structured field on this snapshot.
-fn enc_json<T: serde::Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("EnergyModelSnapshot structured fields are always JSON-serializable"))
-}
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
-}
-
-/// 🧾️ `model` (`crate::model::Model`, first-party `ToValue`/`FromValue`) hex-encoded the same way —
-/// no `serde_json` needed for this field, since round-tripping back into the SAME typed `Model`
-/// through `DslValue` (always-`f64` numbers) is exact: `FromValue` for every integer primitive
-/// recovers `n as $int_ty`, so no precision is lost across THIS specific round trip (contrast with
-/// the artifact root's `energy_structure_from_model`, which targets a foreign, generically-typed
-/// `SemioValue` tree that must distinguish `Int` from `Float` on the wire — a real reason to keep
-/// `serde_json` THERE, not here).
+/// 🧾️ Every structured field on this snapshot — `model` (`crate::model::Model`) and BOTH link slots
+/// (`Option<store::ArtifactLink>`) — is carried through `ToValue`/`FromValue` and `pack::json`, then
+/// hex-encoded. There is no `serde_json` round trip left in either codec: `ArtifactLink`/`LinkPin`/
+/// `BlobRef` grew first-party `ToValue`/`FromValue` impls, so the "this ONE field stays on serde"
+/// carve-out this file used to document is gone (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
+///
+/// Round-tripping back into the SAME typed value through `DslValue` is exact: `FromValue` for every
+/// integer primitive recovers `n as $int_ty`, so no precision is lost across THIS round trip
+/// (contrast with the artifact root's `energy_structure_from_model`, which targets a foreign,
+/// generically-typed `SemioValue` tree that must distinguish `Int` from `Float` on the wire — a real
+/// reason to keep `serde_json` THERE, not here).
 fn enc_dsl_json<T: ToValue>(value: &T) -> String {
     enc_str(&pack::json::to_json_string(value))
 }
@@ -222,12 +209,6 @@ fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactCh
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
-fn write_json<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
-    write_str_lp(out, &serde_json::to_string(value).expect("EnergyModelSnapshot structured fields are always JSON-serializable"));
-}
-fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    serde_json::from_str(&read_str_lp(reader)?).map_err(|e| e.to_string())
-}
 fn write_dsl_json<T: ToValue>(out: &mut Vec<u8>, value: &T) {
     write_str_lp(out, &pack::json::to_json_string(value));
 }
@@ -303,15 +284,17 @@ mod round_trip_tests {
     fn sample_with_composition() -> EnergyModelSnapshot {
         let mut snapshot = energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, &crate::model::Model { name: "Demo".into(), version: "1".into(), ..crate::model::Model::default() }, None);
         snapshot.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
+        snapshot.weather_link = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("denver-tmy!s.stdio.semio@v1/value").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "weather".into() });
         snapshot
     }
 
-    /// 🧪️ Every field on `EnergyModelSnapshot` — including the two composition slots and the link
-    /// slot — must survive both hand-rolled codecs (text and binary), independently. Codec
-    /// completeness is not caught by `cargo check`; this is the real round-trip proof the migration
-    /// recipe requires.
+    /// 🧪️ Every field on `EnergyModelSnapshot` — the two composition slots and BOTH link slots —
+    /// must survive both hand-rolled codecs (text and binary), independently. Codec completeness is
+    /// not caught by `cargo check`; this is the real round-trip proof the migration recipe requires,
+    /// and since neither slot is on `serde` any more it is also the proof that the
+    /// `ToValue`/`FromValue` + `pack::json` route carries an `ArtifactLink` losslessly.
     #[semio_framework_async_macros::async_test]
-    async fn structure_zones_and_referenced_model_round_trip_through_text_and_binary() {
+    async fn structure_zones_and_both_link_slots_round_trip_through_text_and_binary() {
         let snapshot = sample_with_composition();
         let text = store::ArtifactDsl::print_dsl(&snapshot);
         let from_text = <EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
@@ -322,14 +305,38 @@ mod round_trip_tests {
         assert_eq!(from_binary, snapshot);
     }
 
+    /// 🧪️ An absent link slot must come back absent, not as a decode error and not as a present
+    /// link — checked on each slot on its own AND on both at once, because a codec that reads the
+    /// two slots in the wrong order still round-trips whenever they happen to agree.
     #[semio_framework_async_macros::async_test]
-    async fn absent_link_slot_round_trips_as_none() {
-        let mut snapshot = sample_with_composition();
-        snapshot.referenced_model = None;
-        let text = store::ArtifactDsl::print_dsl(&snapshot);
-        assert_eq!(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
-        let bytes = store::ArtifactPack::encode_pack(&snapshot);
-        assert_eq!(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
+    async fn absent_link_slots_round_trip_as_none() {
+        let full = sample_with_composition();
+        let mut without_referenced_model = full.clone();
+        without_referenced_model.referenced_model = None;
+        let mut without_weather = full.clone();
+        without_weather.weather_link = None;
+        let mut without_either = full.clone();
+        without_either.referenced_model = None;
+        without_either.weather_link = None;
+        for snapshot in [without_referenced_model, without_weather, without_either] {
+            let text = store::ArtifactDsl::print_dsl(&snapshot);
+            assert_eq!(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
+            let bytes = store::ArtifactPack::encode_pack(&snapshot);
+            assert_eq!(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
+        }
+    }
+
+    /// 🧪️ The two link slots are distinguishable on the wire: swapping their contents must produce a
+    /// different document. Without this, a codec that wrote one slot twice would pass every test
+    /// above.
+    #[semio_framework_async_macros::async_test]
+    async fn the_two_link_slots_are_not_interchangeable_on_the_wire() {
+        let snapshot = sample_with_composition();
+        let mut swapped = snapshot.clone();
+        std::mem::swap(&mut swapped.referenced_model, &mut swapped.weather_link);
+        assert_ne!(store::ArtifactDsl::print_dsl(&swapped), store::ArtifactDsl::print_dsl(&snapshot));
+        assert_ne!(store::ArtifactPack::encode_pack(&swapped), store::ArtifactPack::encode_pack(&snapshot));
+        assert_eq!(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&swapped)).expect("decode"), swapped);
     }
 
     /// 🧪️ `energy_structure_from_model`/`energy_model_from_structure` round-trip the whole `Model`

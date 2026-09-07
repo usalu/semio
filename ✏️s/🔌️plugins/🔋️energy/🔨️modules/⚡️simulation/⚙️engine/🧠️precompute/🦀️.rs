@@ -273,25 +273,25 @@ impl PrecomputeBuilder {
     pub(crate) fn step(&mut self, model: &Model) {
         match self.stage {
             PrecomputeStage::ReserveBacking => {
-                let result = match self.reserve_cursor {
-                    0 => self.output.zone_geometry.admit(model.zones.len()),
-                    1 => self.output.surfaces.admit(model.surfaces.len()),
-                    2 => self.output.fenestrations.admit(model.fenestrations.len()),
-                    3 => self.output.default_setpoints.admit(model.zones.len()),
-                    4 => self.output.zone_indices.admit(model.zones.len()),
-                    5 => self.output.surface_indices.admit(model.surfaces.len()),
-                    6 => self.output.material_indices.admit(model.materials.len()),
-                    7 => self.output.construction_indices.admit(model.constructions.len()),
-                    8 => self.output.fault_severity.admit(model.faults.len()),
-                    9 => self.output.zone_order.try_reserve_exact(model.zones.len()),
-                    10 => self.output.surface_order.try_reserve_exact(model.surfaces.len()),
-                    11 => self.output.fenestration_order.try_reserve_exact(model.fenestrations.len()),
+                let rejected = match self.reserve_cursor {
+                    0 => self.output.zone_geometry.admit(model.zones.len()).is_err(),
+                    1 => self.output.surfaces.admit(model.surfaces.len()).is_err(),
+                    2 => self.output.fenestrations.admit(model.fenestrations.len()).is_err(),
+                    3 => self.output.default_setpoints.admit(model.zones.len()).is_err(),
+                    4 => self.output.zone_indices.admit(model.zones.len()).is_err(),
+                    5 => self.output.surface_indices.admit(model.surfaces.len()).is_err(),
+                    6 => self.output.material_indices.admit(model.materials.len()).is_err(),
+                    7 => self.output.construction_indices.admit(model.constructions.len()).is_err(),
+                    8 => self.output.fault_severity.admit(model.faults.len()).is_err(),
+                    9 => self.output.zone_order.try_reserve_exact(model.zones.len()).is_err(),
+                    10 => self.output.surface_order.try_reserve_exact(model.surfaces.len()).is_err(),
+                    11 => self.output.fenestration_order.try_reserve_exact(model.fenestrations.len()).is_err(),
                     _ => {
                         self.advance(PrecomputeStage::IndexMaterials);
                         return;
                     }
                 };
-                if result.is_err() {
+                if rejected {
                     self.backing_rejected = true;
                     self.stage = PrecomputeStage::Complete;
                 } else {
@@ -601,7 +601,7 @@ mod tests {
     #[test]
     fn fenestration_precompute_derives_from_host_surface() {
         let mut model = crate::sim::test_model_single_zone();
-        model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, height_m: 1.0, sill_height_m: 0.8, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0, overhang_depth_m: 0.0, overhang_offset_m: 0.0, fin_depth_m: 0.0, fin_offset_m: 0.0 });
+        model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, height_m: 1.0, sill_height_m: 0.8, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0, overhang_depth_m: 0.0, overhang_offset_m: 0.0, fin_depth_m: 0.0, fin_offset_m: 0.0, glazing_construction_id: None });
         let pre = PrecomputedModel::build(&model, 60, 60);
         let fen = pre.fenestrations.get(&EntityId(40)).unwrap();
         assert_eq!(fen.surface_id, EntityId(30));

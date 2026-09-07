@@ -1,0 +1,12 @@
+{
+  "mutation": "addLoad",
+  "caseId": "dead",
+  "load": {
+    "kind": "memberUdl",
+    "id": "ld_services",
+    "elementId": "pur_a_0",
+    "wx": 0.0,
+    "wy": 0.0,
+    "wz": -300.0
+  }
+}

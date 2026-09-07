@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateDailySchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "id",
+    "hourlyValues",
+    "interpolation",
+    "limitsMin",
+    "limitsMax"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "id": {
+      "type": "integer"
+    },
+    "hourlyValues": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "interpolation": {
+      "enum": [
+        "Continuous",
+        "Discrete"
+      ]
+    },
+    "limitsMin": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "limitsMax": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "mutation": "updateDenseParams",
+  "params": {
+    "resolution": "high",
+    "windowRadiusPx": 4,
+    "minViewConsistency": 4,
+    "confidenceThreshold": 0.6875,
+    "maxPoints": 200000
+  }
+}

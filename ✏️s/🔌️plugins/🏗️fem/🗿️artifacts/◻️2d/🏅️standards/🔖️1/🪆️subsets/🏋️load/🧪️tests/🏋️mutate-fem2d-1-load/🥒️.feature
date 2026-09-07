@@ -45,6 +45,14 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
   that re-derived a sibling collection on every edit — renumbering ids, re-sorting sections — would
   still land on the right value for the member it meant to write.
 
+
+  THE WHOLE CORPUS, NOT ONE ROW PER KIND (ticket `26/09/06/FEM-PLUGIN-END-TO-END`). Case discovery
+  is explicit in all three languages, so until this wave the two `Scenario Outline`s below did not
+  exist and every committed vector but one per kind was Rust-only evidence. `frame-vector-<kind>`
+  replays the second happy path — the two-storey braced steel frame — and `reject-<kind>-<n>`
+  replays every refusal and no-op the kind declares, holding BOTH implementations to the same
+  diagnostic code, level and address rather than merely to an unchanged document.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -95,11 +103,53 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id                           | dir                           | fixture                                           |
-    | create-load-case             | 📋️create-load-case           | 📍️appends-a-live-case-carrying-one-nodal-load       |
-    | delete-load-case             | 🗑️delete-load-case           | 🚫️removes-the-live-case-together-with-its-loads     |
-    | add-load                     | ➕️add-load                     | 📏️appends-a-member-udl-to-the-dead-case             |
-    | remove-load                  | ➖️remove-load                  | ➖️strips-the-trailing-member-udl-from-the-dead-case |
-    | change-load-case-self-weight | ⚖️change-load-case-self-weight | ⚖️switches-self-weight-on-for-the-dead-case         |
-    | create-combination           | 🔗️create-combination         | 🔗️appends-an-uls-combination-over-both-cases        |
-    | delete-combination           | ✂️delete-combination         | ✂️removes-the-uls-combination-and-keeps-both-cases  |
+    | id                           | dir                            | fixture                                 |
+    | create-load-case             | 📋️create-load-case             | 📍️appends-a-live-case-59118a            |
+    | delete-load-case             | 🗑️delete-load-case             | 🚫️removes-the-live-06415d               |
+    | add-load                     | ➕️add-load                     | 📏️appends-a-member-udl-to-the-dead-case |
+    | remove-load                  | ➖️remove-load                  | ➖️strips-the-trailing-member-133914     |
+    | change-load-case-self-weight | ⚖️change-load-case-self-weight | ⚖️switches-self-abbff2                  |
+    | create-combination           | 🔗️create-combination           | 🔗️appends-an-uls-0c18bb                 |
+    | delete-combination           | ✂️delete-combination           | ✂️removes-the-uls-438c0c                |
+
+  @id-frame-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> steel-frame specification vector through both implementations
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
+    Examples:
+    | id                           | dir                            | fixture                      |
+    | add-load                     | ➕️add-load                     | 💨️pushes-a-wind-load-5c3f1e  |
+    | change-load-case-self-weight | ⚖️change-load-case-self-weight | 🏋️switches-self-5977a5       |
+    | create-combination           | 🔗️create-combination           | ➕️appends-the-6-10a-eefe01   |
+    | create-load-case             | 📋️create-load-case             | ❄️appends-the-snow-4c007c    |
+    | delete-combination           | ✂️delete-combination           | 🗑️drops-the-spare-60fda7     |
+    | delete-load-case             | 🗑️delete-load-case             | 🗑️drops-the-spare-49435f     |
+    | remove-load                  | ➖️remove-load                  | ✂️strips-the-roof-udl-0c1b3c |
+
+  @id-reject
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Refuse the committed <id> vector in both implementations, for the same reason
+    Given the committed before-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️.json
+    And the committed after-model asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️.json
+    And the committed outcome asset://🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then both implementations leave the document exactly where it was and report the same diagnostic code, level and address
+    Examples:
+    | id                             | dir                            | fixture                     |
+    | add-load-1                     | ➕️add-load                     | 🚫️rejects-a-missing-4271bc  |
+    | add-load-2                     | ➕️add-load                     | 👻️dangling-node-8d113b      |
+    | change-load-case-self-weight-1 | ⚖️change-load-case-self-weight | 🔁️keeps-self-weight-ff696b  |
+    | create-combination-1           | 🔗️create-combination           | 🚫️rejects-a-dangling-2aa3ea |
+    | create-load-case-1             | 📋️create-load-case             | 🚫️rejects-a-dangling-4904f4 |
+    | delete-combination-1           | ✂️delete-combination           | ⛔️rejects-a-missing-d4bc03  |
+    | delete-combination-2           | ✂️delete-combination           | 🔗️blocks-in-use-0b898b      |
+    | delete-load-case-1             | 🗑️delete-load-case             | ⛔️rejects-a-missing-79ed15  |
+    | delete-load-case-2             | 🗑️delete-load-case             | 🔗️blocks-in-use-7cdc5f      |
+    | remove-load-1                  | ➖️remove-load                  | ⛔️rejects-a-missing-1a8a80  |

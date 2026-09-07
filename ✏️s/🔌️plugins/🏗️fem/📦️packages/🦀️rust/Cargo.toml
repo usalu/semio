@@ -14,6 +14,14 @@ package = "semio:fem"
 [package.metadata.semio]
 role = "plugin"
 
+# 📚️ Storybook coverage opt-in — read by `.storybook/scopes.ts`'s `buildGeneratedScopes`, which resolves
+# `sourceRoots` against this package's discovered owner root and derives the story glob
+# `./stories/fem/**` from `id`. Stories live in `.storybook/stories/fem/`.
+[package.metadata.semio.storybook]
+id = "fem"
+titlePrefix = "🏗️fem"
+sourceRoots = ["."]
+
 [[package.metadata.semio.playground]]
 variant = "fem2d"
 app = "s.fem.fem2d@1/*#editor"

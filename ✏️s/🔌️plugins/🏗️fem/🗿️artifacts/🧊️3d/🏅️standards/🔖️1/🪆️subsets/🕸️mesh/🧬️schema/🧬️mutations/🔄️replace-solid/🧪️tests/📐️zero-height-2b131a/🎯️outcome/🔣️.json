@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "slab_apron"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.invariant"
+    }
+  ]
+}

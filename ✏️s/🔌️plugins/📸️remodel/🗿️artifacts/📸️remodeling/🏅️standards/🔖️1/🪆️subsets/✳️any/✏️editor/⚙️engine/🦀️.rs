@@ -11,17 +11,35 @@
 
 #[cfg(test)]
 use crate::artifacts::remodeling::ImageAsset;
-use crate::artifacts::remodeling::{CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
+use crate::artifacts::remodeling::{CalibrationState, CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
 use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, images as remodeling_image, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
 
 //#region 🔖️EngineMapping
-/// ⚙️ Builds `remodeling_engine::EngineParams` from the document's 8 param sub-structs. Fields with no
-/// engine-side counterpart (`SfmParams::ransac_iterations` — the LO-RANSAC solver doesn't expose an
-/// iteration cap; `GeoParams::origin_*` — no georeferencing-origin knob exists on the engine side;
-/// `EngineParams::assumed_focal_ratio` — no document field feeds it, calibration is not yet a wired
-/// stage) are documented simplifications, not oversights.
-pub fn build_engine_params(params: &ReconstructionParams) -> remodeling_engine::EngineParams {
+/// 🔭️ The calibrated focal ratio the engine's own calibration-free intrinsics guess needs, or `None`
+/// for an uncalibrated document. `remodeling_engine::default_intrinsics` builds `fx = fy = ratio ·
+/// max(w, h)` around a CENTRED principal point (`cx, cy = w/2, h/2`), so a calibrated camera pins
+/// `ratio` exactly without the document ever carrying frame dimensions: the sensor's long side is
+/// `2 · max(cx, cy)` under that same centring assumption, and the ratio is the camera's own focal
+/// length over it. Degenerate rows (no camera, non-positive principal point or focal length) return
+/// `None`, leaving the engine's `1.0` default rather than a fabricated number.
+pub fn assumed_focal_ratio(calibration: &CalibrationState) -> Option<f64> {
+    let camera = calibration.cameras.first()?;
+    let long_side = 2.0 * camera.cx.max(camera.cy);
+    let focal = camera.fx.max(camera.fy);
+    (long_side > 0.0 && focal > 0.0).then_some(focal / long_side)
+}
+
+/// ⚙️ Builds `remodeling_engine::EngineParams` from the document's 8 param sub-structs plus its
+/// `CalibrationState`. Fields with no engine-side counterpart (`SfmParams::ransac_iterations` — the
+/// LO-RANSAC solver doesn't expose an iteration cap; `GeoParams::origin_*` — no georeferencing-origin
+/// knob exists on the engine side; `CameraCalibration::distortion`/`skew` — `EngineParams` carries no
+/// distortion slot at all, `default_intrinsics` hard-codes `Distortion::None`) are documented
+/// simplifications, not oversights.
+pub fn build_engine_params(params: &ReconstructionParams, calibration: &CalibrationState) -> remodeling_engine::EngineParams {
     let mut engine_params = remodeling_engine::EngineParams::default();
+    if let Some(ratio) = assumed_focal_ratio(calibration) {
+        engine_params.assumed_focal_ratio = ratio;
+    }
     engine_params.ingest.stride = params.ingest.frame_sample_stride.max(1);
     engine_params.ingest.max_frames = params.ingest.max_frames;
     engine_params.ingest.min_sharpness = params.ingest.min_sharpness;

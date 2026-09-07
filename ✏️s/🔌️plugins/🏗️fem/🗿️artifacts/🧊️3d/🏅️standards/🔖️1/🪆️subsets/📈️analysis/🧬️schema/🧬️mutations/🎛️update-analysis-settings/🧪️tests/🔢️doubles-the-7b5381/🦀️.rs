@@ -1,4 +1,4 @@
-//! 🧪️ `update-analysis-settings` fixture — `🔢️doubles-the-buckling-mode-count`.
+//! 🧪️ `update-analysis-settings` fixture — `🔢️doubles-the-7b5381`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("update-analysis-settings applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "update-analysis-settings/doubles-the-buckling-mode-count: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.analysis.buckling_count, 6, "update-analysis-settings/doubles-the-buckling-mode-count: the buckling count must have doubled");
-    assert_eq!(snapshot.analysis.modal_count, before().analysis.modal_count, "update-analysis-settings/doubles-the-buckling-mode-count: the untouched modal count must be re-stated identically by the indivisible facet");
-    assert_eq!(snapshot.nodes, before().nodes, "update-analysis-settings/doubles-the-buckling-mode-count: an analysis-settings edit must never touch the model itself");
+    assert_eq!(snapshot, expected_after(), "update-analysis-settings/doubles-the-7b5381: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.analysis.buckling_count, 6, "update-analysis-settings/doubles-the-7b5381: the buckling count must have doubled");
+    assert_eq!(snapshot.analysis.modal_count, before().analysis.modal_count, "update-analysis-settings/doubles-the-7b5381: the untouched modal count must be re-stated identically by the indivisible facet");
+    assert_eq!(snapshot.nodes, before().nodes, "update-analysis-settings/doubles-the-7b5381: an analysis-settings edit must never touch the model itself");
 }
 
 /// ↩️ The inverse is the same mutation carrying the prior settings record read back out of `base`.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "update-analysis-settings/doubles-the-buckling-mode-count: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "update-analysis-settings/doubles-the-7b5381: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,28 +59,35 @@ fn committed_json_is_canonical() {
         let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "update-analysis-settings/doubles-the-buckling-mode-count: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "update-analysis-settings/doubles-the-7b5381: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "update-analysis-settings/doubles-the-buckling-mode-count: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "update-analysis-settings/doubles-the-7b5381: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "update-analysis-settings/doubles-the-buckling-mode-count: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "update-analysis-settings/doubles-the-7b5381: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "update-analysis-settings/doubles-the-buckling-mode-count: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "update-analysis-settings/doubles-the-buckling-mode-count: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "update-analysis-settings/doubles-the-7b5381: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "update-analysis-settings/doubles-the-7b5381: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "update-analysis-settings/doubles-the-7b5381: a refused mutation must leave the snapshot untouched");
         }
-        other => panic!("update-analysis-settings/doubles-the-buckling-mode-count: unknown outcome status {other:?}"),
+        other => panic!("update-analysis-settings/doubles-the-7b5381: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +96,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert!(outcome.diff().analysis.is_some(), "update-analysis-settings/doubles-the-buckling-mode-count: the settings record must surface in the analysis field");
-    assert!(outcome.diff().nodes.is_none() && outcome.diff().elements.is_none() && outcome.diff().solids.is_none(), "update-analysis-settings/doubles-the-buckling-mode-count: no collection delta may be opened by a settings edit");
+    assert!(outcome.diff().analysis.is_some(), "update-analysis-settings/doubles-the-7b5381: the settings record must surface in the analysis field");
+    assert!(outcome.diff().nodes.is_none() && outcome.diff().elements.is_none() && outcome.diff().solids.is_none(), "update-analysis-settings/doubles-the-7b5381: no collection delta may be opened by a settings edit");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "update-analysis-settings/doubles-the-buckling-mode-count: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "update-analysis-settings/doubles-the-7b5381: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +109,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "update-analysis-settings/doubles-the-buckling-mode-count: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "update-analysis-settings/doubles-the-7b5381: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `analysis` value on `before` must rewrite the settings and nothing else.
@@ -110,5 +117,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "update-analysis-settings/doubles-the-buckling-mode-count: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "update-analysis-settings/doubles-the-7b5381: committed diff did not carry before to after");
 }

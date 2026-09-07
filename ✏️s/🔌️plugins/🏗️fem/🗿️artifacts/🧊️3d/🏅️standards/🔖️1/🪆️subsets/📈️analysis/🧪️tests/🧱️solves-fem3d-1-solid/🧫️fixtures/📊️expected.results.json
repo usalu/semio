@@ -1,0 +1,30 @@
+{
+  "producedBy": [
+    "skfem-fem3d-solid"
+  ],
+  "scenarios": {
+    "solid-prismatic-column": {
+      "projection": {
+        "closedFormZ": {
+          "pressure": "-6.06061e-5",
+          "self": "-5.70764e-6"
+        },
+        "model": "prismatic-solid-column",
+        "pressureShorteningZ": "-6.06061e-5",
+        "selfWeightWithinFivePercent": true
+      },
+      "reference": {
+        "closedFormZ": {
+          "pressure": -6.0606060606060605e-05,
+          "self": -5.707636363636363e-06
+        },
+        "model": "prismatic-solid-column",
+        "topDisplacementZ": {
+          "pressure": -6.060606060606056e-05,
+          "self": -5.692535621183464e-06
+        }
+      }
+    }
+  },
+  "schema": "semio.fem3d.analysis-reference/v1"
+}

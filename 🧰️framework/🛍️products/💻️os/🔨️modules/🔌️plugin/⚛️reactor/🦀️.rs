@@ -14,18 +14,20 @@
 
 #[path = "📸️checkpoint/🦀️.rs"]
 pub mod checkpoint;
+#[path = "📥️cold-pair/🦀️.rs"]
+pub(crate) mod cold_pair;
 #[path = "🧵️executor/🦀️.rs"]
 pub mod executor;
+#[path = "🚪️lifetime/🦀️.rs"]
+pub(crate) mod instance_lifetime;
 #[path = "💼️jobs/🦀️.rs"]
 pub mod jobs;
 #[path = "🩹️patches/🦀️.rs"]
 pub mod patches;
-#[path = "📮️requests/🦀️.rs"]
-pub mod requests;
-#[path = "🚪️lifetime/🦀️.rs"]
-pub(crate) mod instance_lifetime;
 #[path = "📨️pending/🦀️.rs"]
 mod pending;
+#[path = "📮️requests/🦀️.rs"]
+pub mod requests;
 
 // 🧬️ Only `wit_bridge` below (component-guest/-extension-guest wasm32-wasip2) consumes these —
 // a plain native build never reaches the WIT-boundary translation code, so unlike `RefCell` these
@@ -48,12 +50,12 @@ use semio_framework_ui_contract as ui_contract;
 /// `patches::PatchTracker` (an equally wit_bridge-only consumer) is reached through the ungated
 /// `pub mod patches;` at this file's top.
 use semio_framework_ui_runtime::PresenceHub;
-use semio_framework_ui_runtime::{is_stale_intent, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch, DEFAULT_REVISION_TOLERANCE};
+use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch, is_stale_intent};
 use std::cell::{Cell, RefCell};
 // 🧵️ Turn-local command/intent grouping and the pre-admitted task-resume ring use these
 // collections; all identity and close authority is held by fixed direct registries below.
-use std::collections::{HashMap, VecDeque};
 use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::{HashMap, VecDeque};
 
 const RECONCILE_STEP_OPPORTUNITY_LIMIT: u64 = 1_024;
 
@@ -132,6 +134,7 @@ crate::component_persistent_local! {
     /// again on `Event::InstanceClose`. `spawn_task`'s quota gate is the first real reader.
     static REACTOR_CLOSES: RefCell<ReactorCloseRegistry> = RefCell::new(ReactorCloseRegistry::new());
     static REACTOR_CLOSE_CURSOR: Cell<usize> = Cell::new(0);
+    static COLD_PAIR_INGRESS: RefCell<cold_pair::ColdDocumentPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(cold_pair::ColdDocumentPairIngressRegistry::new());
 }
 
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): one `AsyncTask` this actor's
@@ -363,11 +366,7 @@ impl TaskRecordRegistry {
 
     fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
         let index = Self::index(id);
-        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) {
-            None
-        } else {
-            self.slots.take(index).map(|(_, record)| record)
-        }
+        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) { None } else { self.slots.take(index).map(|(_, record)| record) }
     }
 
     fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
@@ -584,11 +583,7 @@ impl InstanceMetadataRegistry {
 
     fn remove(&mut self, instance: u32) -> Option<InstanceMetadata> {
         let index = Self::index(instance);
-        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) {
-            self.slots.take(index)
-        } else {
-            None
-        }
+        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) { self.slots.take(index) } else { None }
     }
 
     fn checkpoint_rows(&self) -> Vec<(u32, String)> {
@@ -863,8 +858,12 @@ pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> b
 fn preflight_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
     REACTOR_CLOSES.with(|closes| {
         let closes = closes.try_borrow().map_err(|_| reactor_close_fault("reactor close preflight busy"))?;
-        if !closes.slots.allocation_admitted { return Err(reactor_close_fault("reactor close backing unavailable")); }
-        if closes.slots.get(ReactorCloseRegistry::index(key.instance())).is_some_and(|retained| retained.key != key) { return Err(reactor_close_fault("reactor close slot belongs to another allocation")); }
+        if !closes.slots.allocation_admitted {
+            return Err(reactor_close_fault("reactor close backing unavailable"));
+        }
+        if closes.slots.get(ReactorCloseRegistry::index(key.instance())).is_some_and(|retained| retained.key != key) {
+            return Err(reactor_close_fault("reactor close slot belongs to another allocation"));
+        }
         Ok(())
     })
 }
@@ -873,14 +872,27 @@ fn reserve_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), s
     let instance = key.instance();
     let request_cursor = REGISTRY.with(|registry| registry.begin_cancel_instance(instance));
     let resume_remaining = TASK_RESUMES.with(|resumes| resumes.borrow().begin_cancel_instance());
-    let state = ReactorCloseState { key, instance, active: false, complete: false, task_cursor: 0, timer_cursor: 0, request_cursor, resume_remaining, command_ingress_complete: false, requests_complete: false, resumes_complete: false, timers_complete: false, metadata_complete: false };
+    let state = ReactorCloseState {
+        key,
+        instance,
+        active: false,
+        complete: false,
+        task_cursor: 0,
+        timer_cursor: 0,
+        request_cursor,
+        resume_remaining,
+        command_ingress_complete: false,
+        requests_complete: false,
+        resumes_complete: false,
+        timers_complete: false,
+        metadata_complete: false,
+    };
     REACTOR_CLOSES.with(|closes| {
         let mut closes = closes.try_borrow_mut().map_err(|_| reactor_close_fault("reactor close authority is busy"))?;
         if let Some(retained) = closes.slots.get(ReactorCloseRegistry::index(instance)) {
             return if retained.key == key { Ok(()) } else { Err(reactor_close_fault("reactor close slot belongs to another captured allocation")) };
         }
-        closes.insert(state)
-            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-capacity"), "fixed reactor close authority is saturated or collided"))
+        closes.insert(state).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-capacity"), "fixed reactor close authority is saturated or collided"))
     })
 }
 
@@ -908,45 +920,67 @@ fn release_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), s
     REACTOR_CLOSES.with(|closes| {
         let mut closes = closes.try_borrow_mut().map_err(|_| reactor_close_fault("reactor close receipt is busy"))?;
         let index = ReactorCloseRegistry::index(key.instance());
-        if !closes.slots.get(index).is_some_and(|state| state.key == key && state.complete) { return Err(reactor_close_fault("reactor close receipt is not terminal")); }
+        if !closes.slots.get(index).is_some_and(|state| state.key == key && state.complete) {
+            return Err(reactor_close_fault("reactor close receipt is not terminal"));
+        }
         drop(closes.take_at(index));
         Ok(())
     })
 }
 
+fn preflight_cold_pair_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow().map_err(|_| reactor_close_fault("cold pair close preflight busy"))?.preflight_close_instance(key).map_err(reactor_close_fault))
+}
+
+fn reserve_cold_pair_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow_mut().map_err(|_| reactor_close_fault("cold pair close reservation busy"))?.reserve_close_instance(key).map_err(reactor_close_fault))
+}
+
+fn activate_cold_pair_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow_mut().map_err(|_| reactor_close_fault("cold pair close activation busy"))?.activate_close_instance(key).map_err(reactor_close_fault))
+}
+
+fn cold_pair_close_complete(key: instance_lifetime::NativeCloseKey) -> Result<bool, &'static str> {
+    COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow().map_err(|_| "cold pair close receipt busy")?.close_instance_complete(key))
+}
+
+fn release_cold_pair_close(key: instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow_mut().map_err(|_| "cold pair close release busy")?.release_close_instance(key))
+}
+
 fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
     REACTOR_CLOSES.with(|closes| {
-    let Ok(mut closes) = closes.try_borrow_mut() else { return Ok(false) };
-    let start = REACTOR_CLOSE_CURSOR.with(Cell::get);
-    let Some(index) = (0..PLUGIN_REACTOR_INSTANCE_SLOTS).map(|offset| (start + offset) % PLUGIN_REACTOR_INSTANCE_SLOTS).find(|index| closes.slots.get(*index).is_some_and(|state| state.active && !state.complete)) else { return Ok(false) };
-    REACTOR_CLOSE_CURSOR.with(|cursor| cursor.set((index + 1) % PLUGIN_REACTOR_INSTANCE_SLOTS));
-    let state = closes.slots.get_mut(index).expect("selected exact active close");
-    let complete = if !state.command_ingress_complete {
-        state.command_ingress_complete = turn::close_command_ingress_step(state.key)?;
-        false
-    } else if !state.requests_complete {
-        state.requests_complete = REGISTRY.with(|registry| registry.cancel_instance_step(&mut state.request_cursor) == requests::RequestCloseStep::Complete);
-        false
-    } else if !state.resumes_complete {
-        state.resumes_complete = TASK_RESUMES.with(|resumes| resumes.borrow_mut().cancel_instance_step(state.instance, &mut state.resume_remaining));
-        false
-    } else if state.task_cursor < REACTOR_TASK_SLOTS {
-        cancel_instance_tasks_step(state.instance, &mut state.task_cursor);
-        false
-    } else if !state.timers_complete {
-        state.timers_complete = ARMED_TIMERS.with(|timers| timers.borrow_mut().cancel_instance_step(state.instance, &mut state.timer_cursor));
-        false
-    } else if !state.metadata_complete {
-        INSTANCE_METADATA.with(|metadata| {
-            drop(metadata.borrow_mut().remove(state.instance));
-        });
-        state.metadata_complete = true;
-        false
-    } else {
-        true
-    };
-    state.complete = complete;
-    Ok(true)
+        let Ok(mut closes) = closes.try_borrow_mut() else { return Ok(false) };
+        let start = REACTOR_CLOSE_CURSOR.with(Cell::get);
+        let Some(index) = (0..PLUGIN_REACTOR_INSTANCE_SLOTS).map(|offset| (start + offset) % PLUGIN_REACTOR_INSTANCE_SLOTS).find(|index| closes.slots.get(*index).is_some_and(|state| state.active && !state.complete)) else { return Ok(false) };
+        REACTOR_CLOSE_CURSOR.with(|cursor| cursor.set((index + 1) % PLUGIN_REACTOR_INSTANCE_SLOTS));
+        let state = closes.slots.get_mut(index).expect("selected exact active close");
+        let complete = if !state.command_ingress_complete {
+            state.command_ingress_complete = turn::close_command_ingress_step(state.key)?;
+            false
+        } else if !state.requests_complete {
+            state.requests_complete = REGISTRY.with(|registry| registry.cancel_instance_step(&mut state.request_cursor) == requests::RequestCloseStep::Complete);
+            false
+        } else if !state.resumes_complete {
+            state.resumes_complete = TASK_RESUMES.with(|resumes| resumes.borrow_mut().cancel_instance_step(state.instance, &mut state.resume_remaining));
+            false
+        } else if state.task_cursor < REACTOR_TASK_SLOTS {
+            cancel_instance_tasks_step(state.instance, &mut state.task_cursor);
+            false
+        } else if !state.timers_complete {
+            state.timers_complete = ARMED_TIMERS.with(|timers| timers.borrow_mut().cancel_instance_step(state.instance, &mut state.timer_cursor));
+            false
+        } else if !state.metadata_complete {
+            INSTANCE_METADATA.with(|metadata| {
+                drop(metadata.borrow_mut().remove(state.instance));
+            });
+            state.metadata_complete = true;
+            false
+        } else {
+            true
+        };
+        state.complete = complete;
+        Ok(true)
     })
 }
 
@@ -1121,6 +1155,7 @@ mod wit_bridge {
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<crate::component::component::exports::semio::framework::reactor::Event>,
         command_page: Option<crate::component::component::exports::semio::framework::reactor::CommandIngressPage>,
+        cold_pair_page: Option<crate::component::component::exports::semio::framework::reactor::ColdDocumentPairPage>,
         budget: crate::component::component::exports::semio::framework::reactor::Budget,
     ) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
         let mut kernel_events = Vec::with_capacity(events.len());
@@ -1129,7 +1164,8 @@ mod wit_bridge {
         }
         let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let command_page = command_page.map(wit_command_page_to_kernel).transpose()?;
-        super::turn::poll_kernel_output(runtime, kernel_events, command_page, kernel_budget, |result| kernel_turn_result_to_wit(result, budget)).await
+        let cold_pair_page = cold_pair_page.map(wit_cold_pair_page_to_kernel).transpose()?;
+        super::turn::poll_kernel_output(runtime, kernel_events, command_page, cold_pair_page, kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared).await
     }
 
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes `instance-open-event.quotas` (a wire
@@ -1273,6 +1309,64 @@ mod wit_bridge {
         wit::CommandIngressStatus { kind, cursor, fault }
     }
 
+    fn wit_cold_sha256(bytes: Vec<u8>, field: &'static str) -> Result<[u8; 32], semio_framework::Fault> {
+        bytes.try_into().map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-hash-width"), field))
+    }
+
+    fn wit_cold_pair_page_to_kernel(page: crate::component::component::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<semio_framework::kernel::ColdDocumentPairPage, semio_framework::Fault> {
+        let header = page.header;
+        let frontier = header.baseline_frontier;
+        Ok(semio_framework::kernel::ColdDocumentPairPage {
+            header: semio_framework::kernel::ColdDocumentPairHeader {
+                lifetime: wit_lifetime_to_kernel(header.lifetime),
+                transfer_generation: header.transfer_generation,
+                descriptor_sha256: wit_cold_sha256(header.descriptor_sha256, "cold pair descriptor hash must be 32 bytes")?,
+                baseline_frontier: semio_framework::kernel::ColdDocumentPairFrontier {
+                    document_id: frontier.document_id,
+                    head_edit_ordinal: frontier.head_edit_ordinal,
+                    head_edit_id: frontier.head_edit_id,
+                    last_commit_seq: frontier.last_commit_seq,
+                    chain_sha256: wit_cold_sha256(frontier.chain_sha256, "cold pair frontier hash must be 32 bytes")?,
+                },
+                pack_sha256: wit_cold_sha256(header.pack_sha256, "cold pair Pack hash must be 32 bytes")?,
+                spr_sha256: wit_cold_sha256(header.spr_sha256, "cold pair SPR hash must be 32 bytes")?,
+                aggregate_sha256: wit_cold_sha256(header.aggregate_sha256, "cold pair aggregate hash must be 32 bytes")?,
+                pack_length: header.pack_length,
+                spr_length: header.spr_length,
+                page_count: header.page_count,
+            },
+            page_index: page.page_index,
+            bytes: page.bytes,
+        })
+    }
+
+    fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdDocumentPairFrontier) -> crate::component::component::exports::semio::framework::reactor::ColdDocumentPairFrontier {
+        use crate::component::component::exports::semio::framework::reactor as wit;
+        wit::ColdDocumentPairFrontier { document_id: frontier.document_id, head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id, last_commit_seq: frontier.last_commit_seq, chain_sha256: frontier.chain_sha256.to_vec() }
+    }
+
+    fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdDocumentPairCursor) -> crate::component::component::exports::semio::framework::reactor::ColdDocumentPairCursor {
+        use crate::component::component::exports::semio::framework::reactor as wit;
+        wit::ColdDocumentPairCursor { lifetime: kernel_lifetime_to_wit(cursor.lifetime), transfer_generation: cursor.transfer_generation, page_index: cursor.page_index, page_count: cursor.page_count }
+    }
+
+    fn kernel_cold_pair_ingress_to_wit(status: semio_framework::kernel::ColdPairIngressStatus) -> crate::component::component::exports::semio::framework::reactor::ColdPairIngressStatus {
+        use crate::component::component::exports::semio::framework::reactor as wit;
+        match status {
+            semio_framework::kernel::ColdPairIngressStatus::Idle => wit::ColdPairIngressStatus::Idle,
+            semio_framework::kernel::ColdPairIngressStatus::PageAccepted(cursor) => wit::ColdPairIngressStatus::PageAccepted(kernel_cold_cursor_to_wit(cursor)),
+            semio_framework::kernel::ColdPairIngressStatus::Backpressure(cursor) => wit::ColdPairIngressStatus::Backpressure(kernel_cold_cursor_to_wit(cursor)),
+            semio_framework::kernel::ColdPairIngressStatus::Loading(cursor) => wit::ColdPairIngressStatus::Loading(kernel_cold_cursor_to_wit(cursor)),
+            semio_framework::kernel::ColdPairIngressStatus::Applied(receipt) => wit::ColdPairIngressStatus::Applied(wit::ColdDocumentPairApplied {
+                lifetime: kernel_lifetime_to_wit(receipt.lifetime),
+                transfer_generation: receipt.transfer_generation,
+                baseline_frontier: kernel_cold_frontier_to_wit(receipt.baseline_frontier),
+                aggregate_sha256: receipt.aggregate_sha256.to_vec(),
+            }),
+            semio_framework::kernel::ColdPairIngressStatus::Fault { cursor, fault } => wit::ColdPairIngressStatus::Fault(wit::ColdDocumentPairFault { cursor: kernel_cold_cursor_to_wit(cursor), fault }),
+        }
+    }
+
     fn decode_wire_quotas(bytes: &[u8]) -> semio_framework::kernel::QuotaSchema {
         store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default()
     }
@@ -1397,23 +1491,24 @@ mod wit_bridge {
     /// still names the OLD replication `PresencePeer` payload; this packet's report carries the exact
     /// (doc-comment-only, plus a field rename for clarity) WIT diff as a registrar lease-request.
     fn kernel_turn_result_to_wit(
-        result: semio_framework::kernel::TurnResult,
+        result: &semio_framework::kernel::TurnResult,
         _budget: crate::component::component::exports::semio::framework::reactor::Budget,
     ) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
         use crate::component::component::exports::semio::framework::reactor as wit;
         Ok(wit::TurnResult {
-            ui_patches: result.ui_patches.into_iter().map(kernel_ui_patch_to_wit).collect(),
-            effects: result.effects.into_iter().map(kernel_effect_to_wit).collect::<Result<Vec<_>, _>>()?,
-            presence: result.presence.into_iter().map(kernel_presence_update_to_wit).collect(),
+            ui_patches: result.ui_patches.iter().map(kernel_ui_patch_to_wit).collect(),
+            effects: result.effects.iter().cloned().map(kernel_effect_to_wit).collect::<Result<Vec<_>, _>>()?,
+            presence: result.presence.iter().map(kernel_presence_update_to_wit).collect(),
             next_wake: result.next_wake,
-            status: match result.status {
+            status: match &result.status {
                 TurnStatus::Idle => wit::TurnStatus::Idle,
                 TurnStatus::MoreWork => wit::TurnStatus::MoreWork,
-                TurnStatus::CheckpointReady { checkpoint } => wit::TurnStatus::CheckpointReady(wit::JobCheckpoint { state: checkpoint.state, applied_progress: checkpoint.applied_progress }),
-                TurnStatus::Faulted(bytes) => wit::TurnStatus::Faulted(bytes),
+                TurnStatus::CheckpointReady { checkpoint } => wit::TurnStatus::CheckpointReady(wit::JobCheckpoint { state: checkpoint.state.clone(), applied_progress: checkpoint.applied_progress }),
+                TurnStatus::Faulted(bytes) => wit::TurnStatus::Faulted(bytes.clone()),
             },
             fuel_used: result.fuel_used,
-            command_ingress: kernel_command_ingress_to_wit(result.command_ingress),
+            command_ingress: kernel_command_ingress_to_wit(result.command_ingress.clone()),
+            cold_pair_ingress: kernel_cold_pair_ingress_to_wit(result.cold_pair_ingress.clone()),
             lifecycle_receipt: result.lifecycle_receipt.map(kernel_lifecycle_receipt_to_wit),
             ui_patch_receipt: result.ui_patch_receipt.map(kernel_patch_receipt_to_wit),
         })
@@ -1422,19 +1517,19 @@ mod wit_bridge {
     /// 👥️ M2: pack-encodes a whole `ui_contract::PresenceUpdate` into the WIT `presence-update.update`
     /// field — same `pack_patch_field` helper every `patch-op` variant already uses, since a
     /// render-plane presence update is exactly as opaque to the WIT boundary as a patch op's payload.
-    fn kernel_presence_update_to_wit(update: ui_contract::PresenceUpdate) -> crate::component::component::exports::semio::framework::reactor::PresenceUpdate {
+    fn kernel_presence_update_to_wit(update: &ui_contract::PresenceUpdate) -> crate::component::component::exports::semio::framework::reactor::PresenceUpdate {
         use crate::component::component::exports::semio::framework::reactor as wit;
         wit::PresenceUpdate { update: pack_patch_field(&update) }
     }
 
-    fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
+    fn kernel_ui_patch_to_wit(patch: &UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
         use crate::component::component::exports::semio::framework::reactor as wit;
         let (instance, surface) = patch.surface.0.split_once(':').unwrap_or(("0", patch.surface.0.as_str()));
         wit::UiPatch {
             surface: wit_ui::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() },
             revision: patch.revision.0,
             base_revision: patch.base_revision.0,
-            ops: patch.ops.into_iter().map(kernel_patch_op_to_wit).collect(),
+            ops: patch.ops.iter().map(kernel_patch_op_to_wit).collect(),
         }
     }
 
@@ -1466,13 +1561,13 @@ mod wit_bridge {
         disabled: bool,
     }
 
-    fn kernel_patch_op_to_wit(op: UiPatchOp) -> wit_ui::PatchOp {
+    fn kernel_patch_op_to_wit(op: &UiPatchOp) -> wit_ui::PatchOp {
         match op {
             UiPatchOp::Upsert(record) => wit_ui::PatchOp::Upsert(wit_ui::PatchUpsert { node: pack_patch_field(&record) }),
             UiPatchOp::SetComponent { id, component } => wit_ui::PatchOp::SetComponent(wit_ui::PatchSetComponent { node: id.0, component: pack_patch_field(&component) }),
             UiPatchOp::SetLayout { id, layout } => wit_ui::PatchOp::SetLayout(wit_ui::PatchSetLayout { node: id.0, layout: pack_patch_field(&layout) }),
-            UiPatchOp::SetActivity { id, activity, disabled } => wit_ui::PatchOp::SetActivity(wit_ui::PatchSetActivity { node: id.0, activity: pack_patch_field(&ActivityPatchPayload { activity: &activity, disabled }) }),
-            UiPatchOp::SetChildren { id, children } => wit_ui::PatchOp::SetChildren(wit_ui::PatchSetChildren { node: id.0, children: children.into_iter().map(|child| child.0).collect() }),
+            UiPatchOp::SetActivity { id, activity, disabled } => wit_ui::PatchOp::SetActivity(wit_ui::PatchSetActivity { node: id.0, activity: pack_patch_field(&ActivityPatchPayload { activity, disabled: *disabled }) }),
+            UiPatchOp::SetChildren { id, children } => wit_ui::PatchOp::SetChildren(wit_ui::PatchSetChildren { node: id.0, children: children.iter().map(|child| child.0).collect() }),
             UiPatchOp::SetStyle { id, style } => wit_ui::PatchOp::SetStyle(wit_ui::PatchSetStyle { node: id.0, style: pack_patch_field(&style) }),
             UiPatchOp::SetAccessibility { id, accessibility } => wit_ui::PatchOp::SetAccessibility(wit_ui::PatchSetAccessibility { node: id.0, accessibility: pack_patch_field(&accessibility) }),
             UiPatchOp::SetBindings { id, bindings } => wit_ui::PatchOp::SetBindings(wit_ui::PatchSetBindings { node: id.0, bindings: pack_patch_field(&bindings) }),
@@ -1612,10 +1707,45 @@ mod wit_bridge {
 pub(crate) mod test_support {
     use super::*;
 
-    pub(crate) async fn poll_with_output_failure<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
-        super::turn::poll_kernel_output(runtime, events, None, budget, |_| Err(reactor_close_fault("injected output conversion failure"))).await
+    pub(crate) fn queue_external_patch(patch: UiPatch) {
+        super::pending::with_state(|pending| pending.borrow_mut().push_external(patch)).unwrap();
     }
 
+    pub(crate) fn patch_receipt_is_issued(receipt: semio_framework::kernel::ActorUiPatchReceipt) -> bool {
+        super::pending::with_state(|pending| pending.borrow().receipt_is_issued(receipt))
+    }
+
+    pub(crate) async fn poll_with_patch_output_fault<PA: crate::app::PluginApp>(
+        runtime: &crate::plugin_runtime::PluginRuntime<PA>,
+        events: Vec<Event>,
+        budget: semio_framework::kernel::Budget,
+        late_clock: bool,
+    ) -> (Result<(), semio_framework::Fault>, Option<semio_framework::kernel::ActorUiPatchReceipt>) {
+        let mut receipt = None;
+        let result = super::turn::poll_kernel_output(
+            runtime,
+            events,
+            None,
+            None,
+            budget,
+            |result| {
+                receipt = result.ui_patch_receipt;
+                if late_clock {
+                    std::thread::sleep(std::time::Duration::from_millis(9));
+                    Ok(())
+                } else {
+                    Err(reactor_close_fault("injected output conversion failure"))
+                }
+            },
+            |_, ()| (),
+        )
+        .await;
+        (result, receipt)
+    }
+
+    pub(crate) async fn poll_with_output_failure<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
+        super::turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| ()).await
+    }
 
     /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
     pub(crate) async fn run_until_idle(max_iterations: u32) -> bool {
@@ -1704,7 +1834,9 @@ pub(crate) mod test_support {
                     assert!(bytes > 0);
                     let patch = payload.source_mut().expect("test-owned writable payload").take();
                     while !owner.close_step_with_grant(1, 4096).expect("test ready close").complete {}
-                    if let Some(mut published) = published { while !published.close_step_with_grant(1, 4096).expect("test published close").complete {} }
+                    if let Some(mut published) = published {
+                        while !published.close_step_with_grant(1, 4096).expect("test published close").complete {}
+                    }
                     return patch;
                 }
             }

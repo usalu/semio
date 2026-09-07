@@ -1,4 +1,6 @@
-//! ↩️ Inverse for `DeleteCameraCalibration` — recreates the captured BASE record.
+//! ↩️ Inverse for `DeleteCameraCalibration` — recreates the captured BASE record at its canonical
+//! `id` position, which restores the document exactly: the delete refuses while anything references
+//! the camera, so it removes nothing else.
 //! Missing target ⇒ `Vec::new()`.
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::RemodelingSnapshot;

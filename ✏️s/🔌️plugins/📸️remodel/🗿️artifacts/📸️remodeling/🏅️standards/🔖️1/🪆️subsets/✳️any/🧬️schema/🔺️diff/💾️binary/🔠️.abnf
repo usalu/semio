@@ -1,6 +1,19 @@
 ; abnf remodeling.remodeling.diff — value-bridge record body (no dedicated codec: RemodelingDiff has no DslRecord derive)
-body         = symbol-count *symbol fields
+body         = symbol-count *symbol bridge-field
 symbol-count = varint
 symbol       = varint *OCTET               ; length-prefixed UTF-8 symbol-table entry
-fields       = *OCTET                      ; self-describing per-field-id tag stream
+
+; the one-field value_bridge_spec(): field-count 1, field-id 1, TAG_VALUE, one DslValue
+bridge-field = %x01 %x01 %x11 dsl-value
+dsl-value    = null / bool / int / uint / f64 / str-ref / str-inline / array / object
+null         = %x12
+bool         = %x01 / %x02                 ; false / true
+int          = %x03 varint                 ; zigzag varint
+uint         = %x04 varint
+f64          = %x05 8OCTET                 ; IEEE-754 little-endian
+str-ref      = %x06 varint                 ; symbol-table index
+str-inline   = %x07 varint *OCTET          ; byte length then UTF-8
+array        = %x0C varint *dsl-value      ; count then that many nodes
+object       = %x10 varint *member         ; count then that many members, keys sorted
+member       = str-inline dsl-value        ; object keys are never symrefs
 varint       = *(%x80-FF) %x00-7F

@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `remodeling.remodeling.snapshot`. */
+/** 📝️ Text representation for `remodel.remodeling.snapshot`. */
 export type RemodelingSnapshotText = string;

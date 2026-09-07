@@ -1,0 +1,10 @@
+{
+  "mutation": "replaceSection",
+  "id": "chs889",
+  "newSection": {
+    "id": "chs889",
+    "name": "CHS 88.9x5.0",
+    "area": 0.001318,
+    "iy": 0.00000116376
+  }
+}

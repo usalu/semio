@@ -12,30 +12,75 @@
       "type": "string"
     },
     "newElement": {
+      "title": "FemElement",
       "oneOf": [
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "end",
+            "id",
+            "kind",
+            "materialId",
+            "sectionId",
+            "start"
+          ],
           "properties": {
             "kind": {
-              "const": "Bar"
+              "const": "bar"
+            },
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "materialId": {
+              "type": "string"
+            },
+            "sectionId": {
+              "type": "string"
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "end",
+            "id",
+            "kind",
+            "materialId",
+            "roll",
+            "sectionId",
+            "start"
+          ],
           "properties": {
             "kind": {
-              "const": "Frame"
+              "const": "frame"
+            },
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "materialId": {
+              "type": "string"
+            },
+            "sectionId": {
+              "type": "string"
+            },
+            "roll": {
+              "type": "number"
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         }
       ]
     }

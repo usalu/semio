@@ -27,42 +27,99 @@
         "loads": {
           "type": "array",
           "items": {
+            "title": "FemLoad",
             "oneOf": [
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "dof",
+                  "id",
+                  "kind",
+                  "nodeId",
+                  "value"
+                ],
                 "properties": {
                   "kind": {
-                    "const": "Nodal"
+                    "const": "nodal"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "nodeId": {
+                    "type": "string"
+                  },
+                  "dof": {
+                    "type": "string",
+                    "enum": [
+                      "Tx",
+                      "Ty",
+                      "Tz",
+                      "Rx",
+                      "Ry",
+                      "Rz"
+                    ]
+                  },
+                  "value": {
+                    "type": "number"
                   }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
+                }
               },
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "elementId",
+                  "id",
+                  "kind",
+                  "wx",
+                  "wy",
+                  "wz"
+                ],
                 "properties": {
                   "kind": {
-                    "const": "MemberUdl"
+                    "const": "memberUdl"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "elementId": {
+                    "type": "string"
+                  },
+                  "wx": {
+                    "type": "number"
+                  },
+                  "wy": {
+                    "type": "number"
+                  },
+                  "wz": {
+                    "type": "number"
                   }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
+                }
               },
               {
                 "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "kind",
+                  "pressure",
+                  "solidId"
+                ],
                 "properties": {
                   "kind": {
-                    "const": "Area"
+                    "const": "area"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "solidId": {
+                    "type": "string"
+                  },
+                  "pressure": {
+                    "type": "number"
                   }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
+                }
               }
             ]
           }

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️create-refrigeration-system",
+  "semanticKind": "create-refrigeration-system",
+  "displayName": "Create Refrigeration System",
+  "emoji": "❄️",
+  "aggregateVariant": "CreateRefrigerationSystem",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "create-refrigeration-system",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -3,17 +3,19 @@
 // Specs: Story-local, self-contained copies of the remodel plugin's own populated document fixture and of
 // its editor config defaults + complete en/de label set — the data half of the `📸️remodel` scope's stories.
 // Summary: `REMODEL_POPULATED_SCENE` is a verbatim transcription of the shared mutation-fixture document
-// `🗿️artifacts/📸️remodeling/…/🧬️schema/🧬️mutations/*/🧪️tests/*/📸️snapshot/⬅️before/🔣️.json` (identical across
-// all 34 fixture cases — two streams, two calibrated cameras, two GCPs, a mid-run `bundle-adjusting` job with a
-// camera-pose preview, and finished sparse/dense/trajectory/tracks/geo/qc results). It is copied rather than
+// `🗿️artifacts/📸️remodeling/…/🧬️schema/🧬️mutations/*/🧪️tests/<toy case>/📸️snapshot/⬅️before/🔣️.json` (the shared
+// toy scene every `toy`-role vector starts from — two streams, three assets with their durable leaves, two
+// calibrated cameras, two GCPs in canonical id order, a mid-run `bundle-adjusting` job with a camera-pose
+// preview, and finished sparse/dense/trajectory/tracks/geo/qc results). It is copied rather than
 // imported because a `?raw`/`?json` import of a plugin-owned asset would couple this scope to that plugin
 // directory's layout, which is actively being renamed. `REMODEL_EMPTY_SCENE` mirrors `default_remodeling_scene()`
 // (`🗿️artifacts/📸️remodeling/🦀️.rs`) — everything empty, the placeholder mesh handle seeded — which is also what
 // the shipped `📚️examples/🎬️demo` document contains (its `🗣️.dsl.semio` declares zero streams/gcps/cameras).
 // `REMODEL_LABELS` transcribes every field of `app_labels! { RemodelingLabels }` (`✏️editor/🗣️terminology/🦀️.rs`)
 // in both native locales, so a story renders the same strings the Rust panels would for `locale: "en-US"/"de-DE"`.
-// ⚠️ Neither document carries a `durableArtifacts` map, so the composed `s.stdio.semio@v1/mesh` CHILD handle in
-// `results.mesh.mesh` resolves to nothing — matching `resolve_bounded_remodeling_mesh`'s documented
+// ⚠️ The populated document now carries its `durableArtifacts` store, so every `assets[key]` handle in it
+// resolves to real content — but no leaf exists for the composed `s.stdio.semio@v1/mesh` CHILD handle in
+// `results.mesh.mesh`, which resolves to nothing, matching `resolve_bounded_remodeling_mesh`'s documented
 // "unavailable content renders no mesh entity" behavior. Every mesh-shaped readout below is therefore honestly
 // empty, exactly as the plugin's own render path would be for these documents.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -40,6 +42,29 @@ export type RemodelStream = {
 
 /** @emoji 🧩️ A composed child-artifact handle (`s.stdio.semio@v1/<subset>`) — opaque geometry/pixels live behind it. */
 export type RemodelChildHandle = { readonly childId: string; readonly target: { readonly artifactId: string; readonly dialect: { readonly artifactKind: string; readonly standard: string; readonly subset: string } } };
+
+/** @emoji 💧️ The watertightness audit a reconstructed mesh carries — `results.mesh.watertight` / `results.qc.watertight`. */
+export type RemodelWatertightReport = {
+  readonly vertexCount: number;
+  readonly triangleCount: number;
+  readonly boundaryEdgeCount: number;
+  readonly boundaryLoopCount: number;
+  readonly nonManifoldEdgeCount: number;
+  readonly nonManifoldVertexCount: number;
+  readonly connectedComponents: number;
+  readonly consistentlyOriented: boolean;
+  readonly eulerCharacteristic: number;
+  readonly genus: number | null;
+  readonly signedVolume: number;
+  readonly selfIntersectionPairs: number;
+  readonly closedFallbackUsed: boolean;
+  readonly isClosed: boolean;
+  readonly isTwoManifold: boolean;
+  readonly isWatertight: boolean;
+};
+
+/** @emoji 🧱️ One document-owned durable leaf — `durableArtifacts[childId]`, the content an asset handle addresses. */
+export type RemodelDurableArtifact = { readonly kind: string; readonly mime: string | null; readonly width: number; readonly height: number; readonly chunks: readonly string[] };
 
 /** @emoji 📷️ One calibrated camera — `calibration.cameras[]`. */
 export type RemodelCamera = {
@@ -86,6 +111,7 @@ export type RemodelScene = {
   readonly id: string;
   readonly streams: readonly RemodelStream[];
   readonly assets: Readonly<Record<string, RemodelChildHandle>>;
+  readonly durableArtifacts: Readonly<Record<string, RemodelDurableArtifact>>;
   readonly calibration: { readonly cameras: readonly RemodelCamera[]; readonly rig: readonly { readonly cameraId: string; readonly rotationWxyz: readonly number[]; readonly translationM: readonly number[] }[] };
   readonly params: {
     readonly ingest: { readonly frameSampleStride: number; readonly maxFrames: number; readonly downscaleLongEdgePx: number; readonly minSharpness: number };
@@ -95,21 +121,21 @@ export type RemodelScene = {
     readonly dense: { readonly resolution: string; readonly windowRadiusPx: number; readonly minViewConsistency: number; readonly confidenceThreshold: number; readonly maxPoints: number };
     readonly mesh: { readonly tsdfVoxelSizeMm: number; readonly tsdfTruncationMm: number; readonly decimateTargetTriangles: number; readonly smoothingIterations: number; readonly textureEnabled: boolean; readonly textureSize: number; readonly guaranteeWatertight: boolean; readonly holeFillMaxBoundaryVerts: number; readonly selfIntersectionCheck: boolean };
     readonly motion: { readonly enabled: boolean; readonly maxTracks: number; readonly trackWindowPx: number; readonly minTrackQuality: number; readonly minTrackLengthFrames: number };
-    readonly geo: { readonly enabled: boolean; readonly gsdM: number; readonly dsmCellM: number; readonly dtmFilterRadiusM: number; readonly orthoMaxPx: number };
+    readonly geo: { readonly enabled: boolean; readonly originLon: number | null; readonly originLat: number | null; readonly originAlt: number | null; readonly gsdM: number; readonly dsmCellM: number; readonly dtmFilterRadiusM: number; readonly orthoMaxPx: number };
   };
   readonly gcps: readonly RemodelGcp[];
   readonly job: RemodelJob;
   readonly results: {
     readonly sparse: { readonly points: string; readonly colors: string | null } | null;
-    readonly dense: { readonly positions: string; readonly colors: string | null } | null;
-    readonly mesh: { readonly mesh: RemodelChildHandle; readonly source: string; readonly textureAssetId: string | null };
+    readonly dense: { readonly positions: string; readonly colors: string | null; readonly confidence: string | null; readonly classification: string | null } | null;
+    readonly mesh: { readonly mesh: RemodelChildHandle; readonly source: string; readonly textureAssetId: string | null; readonly watertight: RemodelWatertightReport | null };
     readonly trajectory: { readonly poses: readonly RemodelPose[] } | null;
     readonly tracks: readonly { readonly id: string; readonly length: number; readonly class: string; readonly meanSpeedMS: number }[];
     readonly geo: { readonly dsmAssetId: string | null; readonly dtmAssetId: string | null; readonly orthoAssetId: string | null } | null;
     readonly qc: {
       readonly reprojectionRmsPx: number;
       readonly gcpCheckpointRmse: number | null;
-      readonly watertight: { readonly isWatertight: boolean; readonly boundaryEdgeCount: number; readonly connectedComponents: number; readonly eulerCharacteristic: number; readonly genus: number | null; readonly closedFallbackUsed: boolean } | null;
+      readonly watertight: RemodelWatertightReport | null;
       readonly meanTrackLength: number;
       readonly registeredFrameRatio: number;
       readonly denseCoverageRatio: number;
@@ -124,44 +150,215 @@ export type RemodelScene = {
 export const REMODEL_POPULATED_SCENE: RemodelScene = {
   schema: "remodeling.scene",
   id: "remodeling-fixture",
-  streams: [
-    {
-      id: "stream-a",
-      name: "Front",
-      kind: "video",
-      cameraId: "cam-a",
-      syncOffsetMs: 12.5,
-      fpsHint: 30,
-      frames: [
-        { index: 0, timestampMs: 0, assetId: "asset-a" },
-        { index: 1, timestampMs: 40, assetId: "asset-a" },
-      ],
-      source: { name: "front.mp4", container: "mp4", codec: "avc", durationMs: 6400, frameCount: 160, width: 1920, height: 1080 },
+  streams: [{
+    id: "stream-a",
+    name: "Front",
+    kind: "video",
+    cameraId: "cam-a",
+    syncOffsetMs: 12.5,
+    fpsHint: 30,
+    frames: [{
+      index: 0,
+      timestampMs: 0,
+      assetId: "asset-a"
+    }, {
+      index: 1,
+      timestampMs: 40,
+      assetId: "asset-a"
+    }],
+    source: {
+      name: "front.mp4",
+      container: "mp4",
+      codec: "avc",
+      durationMs: 6400,
+      frameCount: 160,
+      width: 1024,
+      height: 768
+    }
+  }, {
+    id: "stream-b",
+    name: "Side",
+    kind: "image-sequence",
+    cameraId: null,
+    syncOffsetMs: 0,
+    fpsHint: 24,
+    frames: [{
+      index: 0,
+      timestampMs: 0,
+      assetId: "asset-a"
+    }],
+    source: null
+  }],
+  assets: {
+    "asset-a": {
+      childId: "remodeling-asset-45070beb0101de64",
+      target: {
+        artifactId: "asset-a-image",
+        dialect: {
+          artifactKind: "s.stdio.semio",
+          standard: "v1",
+          subset: "image"
+        }
+      }
     },
-    { id: "stream-b", name: "Side", kind: "image-sequence", cameraId: null, syncOffsetMs: 0, fpsHint: 24, frames: [{ index: 0, timestampMs: 0, assetId: "asset-a" }], source: null },
-  ],
-  assets: { "asset-a": { childId: "remodeling-asset-45070beb0101de64", target: { artifactId: "asset-a-image", dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset: "image" } } } },
+    "asset-dsm": {
+      childId: "remodeling-asset-a462ec9257d3fccf",
+      target: {
+        artifactId: "asset-dsm-image",
+        dialect: {
+          artifactKind: "s.stdio.semio",
+          standard: "v1",
+          subset: "image"
+        }
+      }
+    },
+    "asset-spare": {
+      childId: "remodeling-asset-84ec1bd76bb83a25",
+      target: {
+        artifactId: "asset-spare-image",
+        dialect: {
+          artifactKind: "s.stdio.semio",
+          standard: "v1",
+          subset: "image"
+        }
+      }
+    }
+  },
+  durableArtifacts: {
+    "remodeling-asset-45070beb0101de64": {
+      kind: "image",
+      mime: "image/jpeg",
+      width: 640,
+      height: 480,
+      chunks: ["ZnJhbWUtYQ=="]
+    },
+    "remodeling-asset-84ec1bd76bb83a25": {
+      kind: "image",
+      mime: "image/png",
+      width: 64,
+      height: 64,
+      chunks: ["c3BhcmUtcmFzdGVy"]
+    },
+    "remodeling-asset-a462ec9257d3fccf": {
+      kind: "image",
+      mime: "image/tiff",
+      width: 128,
+      height: 128,
+      chunks: ["dG95LWRzbS10aWxl"]
+    }
+  },
   calibration: {
-    cameras: [
-      { id: "cam-a", label: "Front", model: "brownConrady", fx: 1000, fy: 1000, cx: 512, cy: 384, skew: 0, distortion: [0.0625, -0.03125, 0, 0, 0], rmsReprojectionPx: 0.5, locked: false },
-      { id: "cam-b", label: "Side", model: "pinhole", fx: 800, fy: 800, cx: 320, cy: 240, skew: 0, distortion: [0, 0, 0, 0, 0], rmsReprojectionPx: null, locked: true },
-    ],
-    rig: [{ cameraId: "cam-a", rotationWxyz: [1, 0, 0, 0], translationM: [0, 0, 0] }],
+    cameras: [{
+      id: "cam-a",
+      label: "Front",
+      model: "brownConrady",
+      fx: 1000,
+      fy: 1000,
+      cx: 512,
+      cy: 384,
+      skew: 0,
+      distortion: [0.0625, -0.03125, 0, 0, 0],
+      rmsReprojectionPx: 0.5,
+      locked: false
+    }, {
+      id: "cam-b",
+      label: "Side",
+      model: "pinhole",
+      fx: 800,
+      fy: 800,
+      cx: 320,
+      cy: 240,
+      skew: 0,
+      distortion: [0, 0, 0, 0, 0],
+      rmsReprojectionPx: null,
+      locked: true
+    }],
+    rig: [{
+      cameraId: "cam-a",
+      rotationWxyz: [1, 0, 0, 0],
+      translationM: [0, 0, 0]
+    }]
   },
   params: {
-    ingest: { frameSampleStride: 5, maxFrames: 200, downscaleLongEdgePx: 1600, minSharpness: 0.25 },
-    feature: { detector: "orb", targetCount: 4000, octaves: 4, edgeThreshold: 10 },
-    matching: { matcher: "brute-force", ratioTest: 0.75, crossCheck: true, sequentialWindow: 8, maxPairsPerFrame: 16, loopClosure: true },
-    sfm: { ransacIterations: 1000, ransacThresholdPx: 2, minTrackLength: 3, baMaxIterations: 50, robustLoss: "huber", huberDeltaPx: 1.5 },
-    dense: { resolution: "medium", windowRadiusPx: 3, minViewConsistency: 3, confidenceThreshold: 0.5, maxPoints: 500000 },
-    mesh: { tsdfVoxelSizeMm: 5, tsdfTruncationMm: 20, decimateTargetTriangles: 200000, smoothingIterations: 2, textureEnabled: true, textureSize: 2048, guaranteeWatertight: true, holeFillMaxBoundaryVerts: 512, selfIntersectionCheck: false },
-    motion: { enabled: false, maxTracks: 64, trackWindowPx: 21, minTrackQuality: 0.25, minTrackLengthFrames: 5 },
-    geo: { enabled: false, gsdM: 0.0625, dsmCellM: 0.125, dtmFilterRadiusM: 2, orthoMaxPx: 4096 },
+    ingest: {
+      frameSampleStride: 5,
+      maxFrames: 200,
+      downscaleLongEdgePx: 1600,
+      minSharpness: 0.25
+    },
+    feature: {
+      detector: "orb",
+      targetCount: 4000,
+      octaves: 4,
+      edgeThreshold: 10
+    },
+    matching: {
+      matcher: "brute-force",
+      ratioTest: 0.75,
+      crossCheck: true,
+      sequentialWindow: 8,
+      maxPairsPerFrame: 16,
+      loopClosure: true
+    },
+    sfm: {
+      ransacIterations: 1000,
+      ransacThresholdPx: 2,
+      minTrackLength: 3,
+      baMaxIterations: 50,
+      robustLoss: "huber",
+      huberDeltaPx: 1.5
+    },
+    dense: {
+      resolution: "medium",
+      windowRadiusPx: 3,
+      minViewConsistency: 3,
+      confidenceThreshold: 0.5,
+      maxPoints: 500000
+    },
+    mesh: {
+      tsdfVoxelSizeMm: 5,
+      tsdfTruncationMm: 20,
+      decimateTargetTriangles: 200000,
+      smoothingIterations: 2,
+      textureEnabled: true,
+      textureSize: 2048,
+      guaranteeWatertight: true,
+      holeFillMaxBoundaryVerts: 512,
+      selfIntersectionCheck: false
+    },
+    motion: {
+      enabled: false,
+      maxTracks: 64,
+      trackWindowPx: 21,
+      minTrackQuality: 0.25,
+      minTrackLengthFrames: 5
+    },
+    geo: {
+      enabled: false,
+      originLon: null,
+      originLat: null,
+      originAlt: null,
+      gsdM: 0.0625,
+      dsmCellM: 0.125,
+      dtmFilterRadiusM: 2,
+      orthoMaxPx: 4096
+    }
   },
-  gcps: [
-    { id: "gcp-ridge", name: "Ridge", worldPosition: [4, 5, 6], observations: [] },
-    { id: "gcp-corner", name: "Corner", worldPosition: [1, 2, 3], observations: [{ streamId: "stream-b", frameIndex: 0, pixel: [10, 20] }] },
-  ],
+  gcps: [{
+    id: "gcp-corner",
+    name: "Corner",
+    worldPosition: [1, 2, 3],
+    observations: [{
+      streamId: "stream-b",
+      frameIndex: 0,
+      pixel: [10, 20]
+    }]
+  }, {
+    id: "gcp-ridge",
+    name: "Ridge",
+    worldPosition: [4, 5, 6],
+    observations: []
+  }],
   job: {
     id: "job-a",
     stage: "bundle-adjusting",
@@ -170,23 +367,89 @@ export const REMODEL_POPULATED_SCENE: RemodelScene = {
     stageCursor: 3,
     startedAtMs: 1000,
     error: null,
-    cameraPosesPreview: [{ cameraId: "cam-a", rotationWxyz: [1, 0, 0, 0], translation: [0, 0, 0] }],
-    sparsePointCloudPreview: "AAAAPwAAgD4AAAA+",
+    cameraPosesPreview: [{
+      cameraId: "cam-a",
+      rotationWxyz: [1, 0, 0, 0],
+      translation: [0, 0, 0]
+    }],
+    sparsePointCloudPreview: "AAAAPwAAgD4AAAA+"
   },
   results: {
-    sparse: { points: "AAAAAAAAAAAAAAAAAACAPwAAgD8AAIA/", colors: "/wAAAP8A" },
-    dense: { positions: "AAAAAAAAAAAAAAAA", colors: "AAD/" },
-    mesh: { mesh: { childId: "remodeling-mesh-901ccade3f60f8f1", target: { artifactId: "remodeling-mesh", dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset: "mesh" } } }, source: "reconstructed", textureAssetId: "asset-a" },
-    trajectory: {
-      poses: [
-        { cameraId: "cam-a", rotationWxyz: [1, 0, 0, 0], translation: [0, 0, 0] },
-        { cameraId: "cam-a", rotationWxyz: [0.75, 0.25, 0, 0], translation: [0.5, 0, 0] },
-      ],
+    sparse: {
+      points: "AAAAAAAAAAAAAAAAAACAPwAAgD8AAIA/",
+      colors: "/wAAAP8A"
     },
-    tracks: [{ id: "track-a", length: 42, class: "moving", meanSpeedMS: 1.5 }],
-    geo: { dsmAssetId: "asset-dsm", dtmAssetId: null, orthoAssetId: null },
-    qc: { reprojectionRmsPx: 0.5, gcpCheckpointRmse: 0.25, watertight: null, meanTrackLength: 6, registeredFrameRatio: 1, denseCoverageRatio: 0.75, warnings: ["low overlap on frame 12"] },
-  },
+    dense: {
+      positions: "AAAAAAAAAAAAAAAA",
+      colors: "AAD/",
+      confidence: "AAAAPw==",
+      classification: "Ag=="
+    },
+    mesh: {
+      mesh: {
+        childId: "remodeling-mesh-901ccade3f60f8f1",
+        target: {
+          artifactId: "remodeling-mesh",
+          dialect: {
+            artifactKind: "s.stdio.semio",
+            standard: "v1",
+            subset: "mesh"
+          }
+        }
+      },
+      source: "reconstructed",
+      textureAssetId: "asset-a",
+      watertight: {
+        vertexCount: 512,
+        triangleCount: 1020,
+        boundaryEdgeCount: 0,
+        boundaryLoopCount: 0,
+        nonManifoldEdgeCount: 0,
+        nonManifoldVertexCount: 0,
+        connectedComponents: 1,
+        consistentlyOriented: true,
+        eulerCharacteristic: 2,
+        genus: 0,
+        signedVolume: 12.5,
+        selfIntersectionPairs: 0,
+        closedFallbackUsed: false,
+        isClosed: true,
+        isTwoManifold: true,
+        isWatertight: true
+      }
+    },
+    trajectory: {
+      poses: [{
+        cameraId: "cam-a",
+        rotationWxyz: [1, 0, 0, 0],
+        translation: [0, 0, 0]
+      }, {
+        cameraId: "cam-a",
+        rotationWxyz: [0.75, 0.25, 0, 0],
+        translation: [0.5, 0, 0]
+      }]
+    },
+    tracks: [{
+      id: "track-a",
+      length: 42,
+      class: "moving",
+      meanSpeedMS: 1.5
+    }],
+    geo: {
+      dsmAssetId: "asset-dsm",
+      dtmAssetId: null,
+      orthoAssetId: null
+    },
+    qc: {
+      reprojectionRmsPx: 0.5,
+      gcpCheckpointRmse: 0.25,
+      watertight: null,
+      meanTrackLength: 6,
+      registeredFrameRatio: 1,
+      denseCoverageRatio: 0.75,
+      warnings: ["low overlap on frame 12"]
+    }
+  }
 };
 
 /** 🌱️ The boot document — `default_remodeling_scene()` / the shipped `📚️examples/🎬️demo` DSL: everything empty, the placeholder mesh handle seeded. */
@@ -195,10 +458,11 @@ export const REMODEL_EMPTY_SCENE: RemodelScene = {
   id: "remodeling",
   streams: [],
   assets: {},
+  durableArtifacts: {},
   calibration: { cameras: [], rig: [] },
   gcps: [],
   job: { id: "", stage: "idle", progress01: 0, cancelRequested: false, stageCursor: 0, startedAtMs: null, error: null, cameraPosesPreview: [], sparsePointCloudPreview: "" },
-  results: { sparse: null, dense: null, mesh: { mesh: REMODEL_POPULATED_SCENE.results.mesh.mesh, source: "placeholder", textureAssetId: null }, trajectory: null, tracks: [], geo: null, qc: null },
+  results: { sparse: null, dense: null, mesh: { mesh: REMODEL_POPULATED_SCENE.results.mesh.mesh, source: "placeholder", textureAssetId: null, watertight: null }, trajectory: null, tracks: [], geo: null, qc: null },
 };
 //#endregion 🔖️Documents
 

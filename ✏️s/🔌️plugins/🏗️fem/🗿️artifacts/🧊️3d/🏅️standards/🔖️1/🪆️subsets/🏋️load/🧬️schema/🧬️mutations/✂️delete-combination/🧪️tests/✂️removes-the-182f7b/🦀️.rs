@@ -1,4 +1,4 @@
-//! 🧪️ `delete-combination` fixture — `✂️removes-the-serviceability-combination-and-keeps-both-cases`.
+//! 🧪️ `delete-combination` fixture — `✂️removes-the-182f7b`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,9 +32,9 @@ fn mutation() -> Fem3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("delete-combination applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: applied state differs from committed after-snapshot");
-    assert!(snapshot.combinations.is_empty(), "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: the combination list must be empty afterwards");
-    assert_eq!(snapshot.load_cases, before().load_cases, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: both referenced cases must survive their combination");
+    assert_eq!(snapshot, expected_after(), "delete-combination/removes-the-182f7b: applied state differs from committed after-snapshot");
+    assert!(snapshot.combinations.is_empty(), "delete-combination/removes-the-182f7b: the combination list must be empty afterwards");
+    assert_eq!(snapshot.load_cases, before().load_cases, "delete-combination/removes-the-182f7b: both referenced cases must survive their combination");
 }
 
 /// ↩️ The inverse is a `create-combination` rebuilt from `base`, restoring both keyed factors.
@@ -48,7 +48,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "delete-combination/removes-the-182f7b: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -58,28 +58,35 @@ fn committed_json_is_canonical() {
         let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "delete-combination/removes-the-182f7b: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-combination/removes-the-182f7b: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "delete-combination/removes-the-182f7b: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "delete-combination/removes-the-182f7b: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "delete-combination/removes-the-182f7b: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "delete-combination/removes-the-182f7b: a refused mutation must leave the snapshot untouched");
         }
-        other => panic!("delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: unknown outcome status {other:?}"),
+        other => panic!("delete-combination/removes-the-182f7b: unknown outcome status {other:?}"),
     }
 }
 
@@ -88,11 +95,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().combinations.as_ref().expect("combinations delta").removed, vec!["sls".to_string()], "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: exactly sls may be removed");
-    assert!(outcome.diff().load_cases.is_none(), "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: no load-case delta may be opened");
+    assert_eq!(outcome.diff().combinations.as_ref().expect("combinations delta").removed, vec!["sls".to_string()], "delete-combination/removes-the-182f7b: exactly sls may be removed");
+    assert!(outcome.diff().load_cases.is_none(), "delete-combination/removes-the-182f7b: no load-case delta may be opened");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "delete-combination/removes-the-182f7b: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -101,7 +108,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "delete-combination/removes-the-182f7b: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `combinations.removed` id on `before` must leave the two cases untouched.
@@ -109,5 +116,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "delete-combination/removes-the-182f7b: committed diff did not carry before to after");
 }

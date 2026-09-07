@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
-#[artifact_schema(id = "s.remodeling.remodeling.presence")]
+#[artifact_schema(id = "s.remodel.remodeling.presence")]
 pub struct RemodelingPresence {
     #[state(presence)]
     pub world_camera_position: [f64; 3],

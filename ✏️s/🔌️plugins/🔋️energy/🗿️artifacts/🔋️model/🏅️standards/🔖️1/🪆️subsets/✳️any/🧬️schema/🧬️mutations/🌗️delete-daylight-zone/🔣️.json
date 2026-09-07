@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗️delete-daylight-zone",
+  "semanticKind": "delete-daylight-zone",
+  "displayName": "Delete Daylight Zone",
+  "emoji": "🌗️",
+  "aggregateVariant": "DeleteDaylightZone",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "delete-daylight-zone",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -20,13 +20,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> RasterSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> RasterSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> RasterMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ Hiding `overlay` carries `before` to exactly the committed `after`.
@@ -60,22 +60,22 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RasterSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "change-layer-visible/hides-the-overlay-layer: committed {side} JSON is not canonical");
+        let decoded: RasterSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&decoded));
+        let original = dsl::json::parse(text).expect("snapshot reparses");
+        assert!(dsl::json::value_eq_ignoring_object_order(&reencoded, &original), "change-layer-visible/hides-the-overlay-layer: committed {side} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "change-layer-visible/hides-the-overlay-layer: committed mutation JSON is not canonical");
+    let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&mutation()));
+    let original = dsl::json::parse(MUTATION).expect("mutation reparses");
+    assert!(dsl::json::value_eq_ignoring_object_order(&reencoded, &original), "change-layer-visible/hides-the-overlay-layer: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces: a clean apply with no
 /// diagnostic, because `overlay` was genuinely visible before.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-layer-visible/hides-the-overlay-layer declares an applied outcome");
+    let outcome = dsl::json::parse(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(dsl::json::Value::as_str), Some("applied"), "change-layer-visible/hides-the-overlay-layer declares an applied outcome");
     let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-layer-visible/hides-the-overlay-layer: flipping a genuinely different `visible` must not raise the mutation.no-op warning, got {:?}", produced.messages());
     assert!(apply_raster_mutation(&before(), &mutation()).is_ok(), "change-layer-visible/hides-the-overlay-layer: declared applied but the mutation was rejected");
@@ -87,9 +87,9 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
-    let encoded = serde_json::to_value(produced.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(encoded, committed, "change-layer-visible/hides-the-overlay-layer: produced diff differs from the committed 🔺️diff/🔣️.json");
+    let encoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(produced.diff()));
+    let committed = dsl::json::parse(DIFF).expect("committed diff decodes");
+    assert!(dsl::json::value_eq_ignoring_object_order(&encoded, &committed), "change-layer-visible/hides-the-overlay-layer: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = produced.diff().layers.as_ref().expect("change-layer-visible writes a layers delta");
     assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.moved.is_empty(), "change-layer-visible/hides-the-overlay-layer: this verb patches in place — it never adds, removes or moves a layer");
     assert_eq!(delta.patched.len(), 1, "change-layer-visible/hides-the-overlay-layer: exactly one layer is patched");
@@ -101,17 +101,17 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "change-layer-visible/hides-the-overlay-layer: committed diff JSON is not canonical");
+    let decoded: RasterDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&decoded));
+    let original = dsl::json::parse(DIFF).expect("committed diff reparses");
+    assert!(dsl::json::value_eq_ignoring_object_order(&reencoded, &original), "change-layer-visible/hides-the-overlay-layer: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: RasterDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-layer-visible/hides-the-overlay-layer: committed diff did not carry before to after");
 }

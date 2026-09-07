@@ -1,0 +1,32 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": {
+    "added": [
+      {
+        "id": "concrete_c25",
+        "name": "Concrete C25/30",
+        "e": 31000000000.0,
+        "nu": 0.2,
+        "rho": 2500.0
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

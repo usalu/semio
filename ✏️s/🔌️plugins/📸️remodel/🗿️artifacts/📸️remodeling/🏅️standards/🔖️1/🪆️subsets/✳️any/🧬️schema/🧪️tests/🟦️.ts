@@ -4,6 +4,13 @@
  *  Every fixture is discovered by globbing `🧬️mutations/<slug>/🧪️tests/<case>/` on disk; no case
  *  directory name is transcribed, because those names carry a content hash that is re-minted
  *  whenever a vector changes.
+ *
+ *  A vector is one of three shapes, told apart by what it commits rather than by its name:
+ *  an APPLIED vector ships a `🔺️diff/🔣️.json` and an `applied` outcome; a REFUSED vector ships
+ *  `🔺️diff/🚫️.absent` (the repository-wide marker for a file that is deliberately not there) and a
+ *  `rejected` outcome naming the code and target its guard raises; a WARNED no-op ships an all-null
+ *  diff, an `applied` outcome and a `mutation.no-op` message, and its after-document is its
+ *  before-document. All three are asserted here.
  */
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
@@ -20,14 +27,21 @@ const here = dirname(fileURLToPath(import.meta.url));
 const subset = join(here, "../..");
 const mutationsRoot = join(subset, "🧬️schema/🧬️mutations");
 
+interface Outcome {
+  status: "applied" | "rejected";
+  code?: string;
+  path?: string[];
+  messages?: { level: string; code: string }[];
+}
+
 interface Vector {
   slug: string;
   caseName: string;
   before: unknown;
   after: unknown;
   mutation: unknown;
-  diff: unknown;
-  outcome: { status: string };
+  diff: unknown | null;
+  outcome: Outcome;
 }
 
 const readJson = (path: string): unknown => JSON.parse(readFileSync(path, "utf8"));
@@ -41,14 +55,15 @@ function discoverVectors(): Vector[] {
     for (const caseName of readdirSync(testsDir).sort()) {
       const root = join(testsDir, caseName);
       if (!existsSync(join(root, "🦠️mutation/🔣️.json"))) continue;
+      const diffPath = join(root, "🔺️diff/🔣️.json");
       vectors.push({
         slug,
         caseName,
         before: readJson(join(root, "📸️snapshot/⬅️before/🔣️.json")),
         after: readJson(join(root, "📸️snapshot/➡️after/🔣️.json")),
         mutation: readJson(join(root, "🦠️mutation/🔣️.json")),
-        diff: readJson(join(root, "🔺️diff/🔣️.json")),
-        outcome: readJson(join(root, "🎯️outcome/🔣️.json")) as { status: string },
+        diff: existsSync(diffPath) ? readJson(diffPath) : null,
+        outcome: readJson(join(root, "🎯️outcome/🔣️.json")) as Outcome,
       });
     }
   }
@@ -56,75 +71,79 @@ function discoverVectors(): Vector[] {
 }
 
 const VECTORS = discoverVectors();
-/** 🕳️ The one field the committed vectors predate; see `📓️w3-ts-codec-oracle.md`. */
-const KNOWN_ABSENT_KEY = "durableArtifacts";
-
-/** 🚩 Vectors whose committed after-snapshot omits the `durableArtifacts` entry the leaf writes.
- *  `create-asset`'s Rust `diff` inserts `durable_artifacts[handle.child_id]`, so the committed
- *  after-document is stale, not the TypeScript twin — it is asserted here rather than tolerated so
- *  the list cannot silently grow. */
-const DURABLE_ARTIFACT_DRIFT: readonly string[] = readdirSync(join(here, "../🧬️mutations")).filter((slug) => slug.endsWith("create-asset"));
-
-/** ✂️ Drops the single emitted line the committed vectors predate, so the rest can be compared byte for byte. */
-const withoutDurableLine = (text: string): string => text.split("\n").filter((line) => line !== `  ${JSON.stringify(KNOWN_ABSENT_KEY)}: {},` && line !== `  ${JSON.stringify(KNOWN_ABSENT_KEY)}: null,`).join("\n");
 
 describe("remodeling fixture oracle", () => {
-  it("discovers a vector for every mutation directory that ships one", () => {
-    expect(VECTORS.length).toBeGreaterThan(0);
+  it("discovers at least one vector for every mutation directory that ships tests", () => {
     const slugs = new Set(VECTORS.map((vector) => vector.slug));
-    expect(slugs.size).toBe(VECTORS.length);
+    expect(slugs.size).toBe(readdirSync(mutationsRoot).filter((slug) => existsSync(join(mutationsRoot, slug, "🧪️tests"))).length);
+    const identities = VECTORS.map((vector) => `${vector.slug}/${vector.caseName}`);
+    expect(new Set(identities).size).toBe(identities.length);
   });
 
-  it("covers every wire tag except the one the feature file documents as vector-less", () => {
+  it("covers every wire tag, commitReconstruction now included", () => {
     const covered = new Set(VECTORS.map((vector) => (vector.mutation as { mutation: string }).mutation));
-    const missing = REMODELING_MUTATION_TAGS.filter((tag) => !covered.has(tag));
-    expect(missing).toEqual(["commitReconstruction"]);
+    expect(REMODELING_MUTATION_TAGS.filter((tag) => !covered.has(tag))).toEqual([]);
+  });
+
+  it("carries all four vector roles for the vocabulary as a whole", () => {
+    const refused = VECTORS.filter((vector) => vector.outcome.status === "rejected");
+    const warned = VECTORS.filter((vector) => vector.diff !== null && remodelingDiffLanes(decodeRemodelingDiff(vector.diff)).length === 0);
+    expect(refused.length).toBeGreaterThan(0);
+    expect(warned.length).toBeGreaterThan(0);
+    expect(new Set(refused.map((vector) => vector.slug)).size).toBeGreaterThan(20);
   });
 });
 
 describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vector] as const))("%s", (_label, vector) => {
   const before = () => decodeRemodelingSnapshot(vector.before);
   const mutation = () => decodeRemodelingMutation(vector.mutation) as RemodelingAnyMutation;
+  const refused = vector.outcome.status === "rejected";
 
   it("decodes its committed quartet under total validation", () => {
     expect(() => before()).not.toThrow();
     expect(() => decodeRemodelingSnapshot(vector.after)).not.toThrow();
     expect(() => mutation()).not.toThrow();
-    expect(() => decodeRemodelingDiff(vector.diff)).not.toThrow();
+    if (vector.diff !== null) expect(() => decodeRemodelingDiff(vector.diff)).not.toThrow();
   });
 
-  it("applies in TypeScript to the committed after-snapshot", () => {
-    const applied = applyRemodelingMutation(before(), mutation());
-    const expected = decodeRemodelingSnapshot(vector.after);
-    expect({ ...applied, durableArtifacts: expected.durableArtifacts }).toEqual(expected);
+  it("applies in TypeScript to the committed after-snapshot, durableArtifacts included", () => {
+    expect(applyRemodelingMutation(before(), mutation())).toEqual(decodeRemodelingSnapshot(vector.after));
   });
 
-  it("agrees with the committed after-snapshot on durableArtifacts, or is a listed stale vector", () => {
-    const applied = applyRemodelingMutation(before(), mutation());
-    const expected = decodeRemodelingSnapshot(vector.after);
-    const drifts = JSON.stringify(applied.durableArtifacts) !== JSON.stringify(expected.durableArtifacts);
-    expect(drifts ? vector.slug : null).toBe(DURABLE_ARTIFACT_DRIFT.includes(vector.slug) ? vector.slug : null);
-  });
-
-  it("produces the committed diff", () => {
+  it("produces the committed diff, or commits no diff at all when it refuses", () => {
     const produced = remodelingMutationDiff(before(), mutation());
-    expect(JSON.parse(remodelingDiffToJsonText(produced.diff))).toEqual({ ...(vector.diff as object), ...withoutDiffDrift(produced) });
+    if (refused) {
+      expect(vector.diff).toBeNull();
+      expect(remodelingDiffLanes(produced.diff)).toEqual([]);
+      return;
+    }
+    expect(JSON.parse(remodelingDiffToJsonText(produced.diff))).toEqual(vector.diff);
   });
 
-  it("declares the committed outcome status", () => {
+  it("declares the committed outcome status and every diagnostic it names", () => {
     const produced = remodelingMutationDiff(before(), mutation());
-    const refused = produced.messages.some((message) => message.severity === "error" || message.severity === "fatal");
-    expect(refused ? "refused" : "applied").toBe(vector.outcome.status);
+    const isRefusal = produced.messages.some((message) => message.severity === "error" || message.severity === "fatal");
+    expect(isRefusal ? "rejected" : "applied").toBe(vector.outcome.status);
+    if (isRefusal) {
+      expect(produced.messages.map((message) => message.code)).toEqual([vector.outcome.code]);
+      expect(produced.messages[0].target).toEqual(vector.outcome.path ?? []);
+      return;
+    }
+    expect(produced.messages.map((message) => message.code)).toEqual((vector.outcome.messages ?? []).map((message) => message.code));
   });
 
   it("carries the committed diff from before to after", () => {
+    if (refused) {
+      expect(vector.after).toEqual(vector.before);
+      return;
+    }
     expect(applyRemodelingDiff(decodeRemodelingDiff(vector.diff), before())).toEqual(decodeRemodelingSnapshot(vector.after));
   });
 
   it("writes only the lanes the committed diff writes", () => {
     const produced = remodelingMutationDiff(before(), mutation());
-    const committed = remodelingDiffLanes(decodeRemodelingDiff(vector.diff));
-    expect(remodelingDiffLanes(produced.diff).filter((lane) => lane !== "durable_artifacts")).toEqual(committed);
+    const committed = vector.diff === null ? [] : remodelingDiffLanes(decodeRemodelingDiff(vector.diff));
+    expect(remodelingDiffLanes(produced.diff)).toEqual(committed);
   });
 
   it("round-trips both snapshots through encode/decode", () => {
@@ -134,19 +153,17 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
     }
   });
 
-  it("re-emits the committed snapshot bytes apart from the one field they predate", () => {
+  it("re-emits the committed snapshot bytes exactly", () => {
     for (const side of ["⬅️before", "➡️after"] as const) {
       const path = join(mutationsRoot, vector.slug, "🧪️tests", vector.caseName, "📸️snapshot", side, "🔣️.json");
-      const emitted = remodelingSnapshotToJsonText(decodeRemodelingSnapshot(readJson(path)));
-      expect(withoutDurableLine(emitted)).toBe(readFileSync(path, "utf8").trimEnd());
+      expect(remodelingSnapshotToJsonText(decodeRemodelingSnapshot(readJson(path)))).toBe(readFileSync(path, "utf8").trimEnd());
     }
   });
 
-  it("re-emits the committed diff bytes apart from the one field they predate", () => {
+  it("re-emits the committed diff bytes exactly", () => {
+    if (refused) return;
     const path = join(mutationsRoot, vector.slug, "🧪️tests", vector.caseName, "🔺️diff", "🔣️.json");
-    const produced = remodelingMutationDiff(before(), mutation());
-    if (produced.diff.durableArtifacts !== null) return;
-    expect(withoutDurableLine(remodelingDiffToJsonText(produced.diff))).toBe(readFileSync(path, "utf8").trimEnd());
+    expect(remodelingDiffToJsonText(remodelingMutationDiff(before(), mutation()).diff)).toBe(readFileSync(path, "utf8").trimEnd());
   });
 
   it("survives the artifact/snapshot round trip", () => {
@@ -155,52 +172,27 @@ describe.each(VECTORS.map((vector) => [`${vector.slug}/${vector.caseName}`, vect
   });
 });
 
-/** 🩹 The `durableArtifacts` lane the committed diffs predate, re-supplied for the comparison. */
-function withoutDiffDrift(produced: { diff: { durableArtifacts: unknown } }): Record<string, unknown> {
-  return { durableArtifacts: produced.diff.durableArtifacts };
-}
-
-describe("commit-reconstruction refusal", () => {
+describe("commit-reconstruction shared vector", () => {
   const fixtures = join(subset, "🧫️fixtures/🏁️commit-reconstruction");
-  const replaceJobVector = VECTORS.find((vector) => (vector.mutation as { mutation: string }).mutation === "replaceJob");
-  const replaceSparseVector = VECTORS.find((vector) => (vector.mutation as { mutation: string }).mutation === "replaceSparse");
+
+  /** 🏁️ The one kind whose diff reads process-global staging state a `(before, mutation, after)`
+   *  triple cannot carry, committed as the refusal its own guard raises. All three documents are
+   *  schema-valid, the pair really is unchanged across the refusal, and the payload the feature file
+   *  names is on disk — the three counts on which this fixture used to be stale. */
+  it("ships a schema-valid, self-consistent refusal triple", () => {
+    for (const name of ["⬅️before.json", "🦠️mutation.json", "➡️after.json"]) expect(existsSync(join(fixtures, name))).toBe(true);
+    const base = decodeRemodelingSnapshot(readJson(join(fixtures, "⬅️before.json")));
+    expect(readJson(join(fixtures, "➡️after.json"))).toEqual(readJson(join(fixtures, "⬅️before.json")));
+    expect(base.job.stage).toBe("bundle-adjusting");
+    expect(base.results.mesh).not.toBeNull();
+  });
 
   it("refuses a plain sparse buffer with mutation.invalid-reconstruction-sparse and moves nothing", () => {
-    expect(replaceJobVector).toBeDefined();
-    expect(replaceSparseVector).toBeDefined();
-    const base = decodeRemodelingSnapshot(replaceJobVector!.before);
-    const commit = decodeRemodelingMutation({
-      mutation: "commitReconstruction",
-      job: (replaceJobVector!.mutation as { job: unknown }).job,
-      sparse: (replaceSparseVector!.mutation as { sparse: unknown }).sparse,
-      trajectory: null,
-      mesh: null,
-      geo: null,
-      qc: null,
-      assets: [],
-    });
+    const base = decodeRemodelingSnapshot(readJson(join(fixtures, "⬅️before.json")));
+    const commit = decodeRemodelingMutation(readJson(join(fixtures, "🦠️mutation.json")));
     const outcome = remodelingMutationDiff(base, commit);
     expect(outcome.messages.map((message) => message.code)).toEqual(["mutation.invalid-reconstruction-sparse"]);
     expect(applyRemodelingMutation(base, commit)).toEqual(base);
-  });
-
-  /** 🚩 `🧫️fixtures/🏁️commit-reconstruction/` is stale on three counts, asserted rather than skipped so
-   *  the assertions flip red the moment the pair is regenerated: both documents carry a `job.stage`
-   *  lexeme that is not in `ReconstructionStage` (so Rust's own `serde_json::from_str` rejects them
-   *  too), they are not equal to each other although the feature file says a refused commit leaves
-   *  the scene untouched, and the `🦠️…-mutation.json` that feature file names is not on disk. */
-  it("still ships the stale pre-rename commit-reconstruction fixture pair", () => {
-    for (const [side, stage] of [
-      ["⬅️before.json", "dense-reconstructing"],
-      ["➡️after.json", "completed"],
-    ] as const) {
-      const path = join(fixtures, side);
-      expect(existsSync(path)).toBe(true);
-      expect((readJson(path) as { job: { stage: string } }).job.stage).toBe(stage);
-      expect(() => decodeRemodelingSnapshot(readJson(path))).toThrow(`.job.stage: expected one of`);
-    }
-    expect(readJson(join(fixtures, "⬅️before.json"))).not.toEqual(readJson(join(fixtures, "➡️after.json")));
-    expect(existsSync(join(fixtures, "🦠️mutation.json"))).toBe(false);
   });
 });
 

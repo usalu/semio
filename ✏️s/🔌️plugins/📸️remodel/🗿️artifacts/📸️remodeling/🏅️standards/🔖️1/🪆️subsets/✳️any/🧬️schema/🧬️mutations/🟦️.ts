@@ -511,6 +511,22 @@ const clone = <T,>(value: T): T => structuredClone(value);
 const streamList = (values: MediaStream[]): RemodelingMediaStreamList => ({ values });
 const gcpList = (values: GroundControlPoint[]): RemodelingGcpList => ({ values });
 const finite = (value: number): boolean => Number.isFinite(value);
+/** 🔢️ Where a member belongs in a collection held in ascending key order: the count of members that
+ * sort BEFORE the new one. Every keyed collection in this document is ordered — ids for streams,
+ * cameras, rig entries and ground control points, `(index, assetId)` for a stream's frames,
+ * `(streamId, frameIndex)` for a GCP's observations — which is what makes every delete/remove exactly
+ * invertible by the create/add that pairs with it. */
+const orderedIndex = <T,>(items: readonly T[], before: (item: T) => boolean): number => {
+  let position = 0;
+  while (position < items.length && before(items[position]!)) position += 1;
+  return position;
+};
+const inserted = <T,>(items: readonly T[], at: number, value: T): T[] => [...items.slice(0, at), value, ...items.slice(at)];
+const withoutKey = (store: Record<string, RemodelingDurableArtifact>, key: string | undefined): Record<string, RemodelingDurableArtifact> =>
+  Object.fromEntries(Object.entries(store).filter(([name]) => name !== key));
+const frameBefore = (frame: FrameRef, next: FrameRef): boolean => frame.index < next.index || (frame.index === next.index && frame.assetId < next.assetId);
+const observationBefore = (observation: GcpObservation, next: GcpObservation): boolean =>
+  observation.streamId < next.streamId || (observation.streamId === next.streamId && observation.frameIndex < next.frameIndex);
 //#endregion 🔖️Outcome
 
 //#region 🔖️Diffs
@@ -522,33 +538,32 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       if (base.streams.some((stream) => stream.id === payloadStream.id)) return refuse("fatal", "mutation.duplicate-id", `A stream with id "${payloadStream.id}" already exists.`, [payloadStream.id]);
       if (payloadStream.cameraId !== null && !base.calibration.cameras.some((camera) => camera.id === payloadStream.cameraId))
         return refuse("fatal", "mutation.invariant", `Stream "${payloadStream.id}" references unknown camera "${payloadStream.cameraId}".`, [payloadStream.id]);
-      return ok({ streams: streamList([...clone(base.streams), clone(payloadStream)]) });
+      const streams = clone(base.streams);
+      return ok({ streams: streamList(inserted(streams, orderedIndex(streams, (stream) => stream.id < payloadStream.id), clone(payloadStream))) });
     }
     case "deleteStream": {
       if (!base.streams.some((stream) => stream.id === mutation.id)) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
-      const streams = clone(base.streams).filter((stream) => stream.id !== mutation.id);
-      const cascaded = base.gcps.reduce((total, gcp) => total + gcp.observations.filter((observation) => observation.streamId === mutation.id).length, 0);
-      const patch: Partial<RemodelingDiff> = { streams: streamList(streams) };
-      if (cascaded > 0)
-        patch.gcps = gcpList(
-          clone(base.gcps).map((gcp) => ({ ...gcp, observations: gcp.observations.filter((observation) => observation.streamId !== mutation.id) })),
-        );
-      const outcome = ok(patch);
-      return cascaded === 0 ? outcome : noted(outcome, "info", "mutation.cascade", `Deleting stream "${mutation.id}" also removed ${cascaded} GCP observation(s).`);
+      const referencing = base.gcps.filter((gcp) => gcp.observations.some((observation) => observation.streamId === mutation.id)).map((gcp) => gcp.id);
+      if (referencing.length > 0)
+        return refuse("error", "mutation.referenced", `Stream "${mutation.id}" is still observed by ${referencing.length} ground control point(s); remove those observations first.`, referencing);
+      return ok({ streams: streamList(clone(base.streams).filter((stream) => stream.id !== mutation.id)) });
     }
     case "changeStreamSync": {
       const existing = base.streams.find((stream) => stream.id === mutation.id);
       if (existing === undefined) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
-      if (existing.syncOffsetMs === mutation.newSyncOffsetMs) return noted(empty(), "warn", "mutation.no-op", `Stream "${mutation.id}" sync offset is already ${mutation.newSyncOffsetMs}ms.`);
       if (!finite(mutation.newSyncOffsetMs)) return refuse("fatal", "mutation.invariant", `Stream "${mutation.id}" sync offset must be finite, got ${mutation.newSyncOffsetMs}.`, [mutation.id]);
+      if (existing.syncOffsetMs === mutation.newSyncOffsetMs) return noted(empty(), "warn", "mutation.no-op", `Stream "${mutation.id}" sync offset is already ${mutation.newSyncOffsetMs}ms.`);
       const streams = clone(base.streams).map((stream) => (stream.id === mutation.id ? { ...stream, syncOffsetMs: mutation.newSyncOffsetMs } : stream));
       return ok({ streams: streamList(streams) });
     }
     case "addStreamFrame": {
       const stream = base.streams.find((candidate) => candidate.id === mutation.id);
       if (stream === undefined) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
+      if (mutation.kind !== stream.kind) return refuse("fatal", "mutation.invariant", `Stream "${mutation.id}" is not of the media kind this frame declares.`, [mutation.id]);
       if (stream.frames.some((frame) => same(frame, mutation.frame))) return noted(empty(), "warn", "mutation.no-op", `Stream "${mutation.id}" already has frame ${mutation.frame.index}.`);
-      const streams = clone(base.streams).map((candidate) => (candidate.id === mutation.id ? { ...candidate, frames: [...candidate.frames, clone(mutation.frame)], kind: mutation.kind } : candidate));
+      const streams = clone(base.streams).map((candidate) =>
+        candidate.id === mutation.id ? { ...candidate, frames: inserted(candidate.frames, orderedIndex(candidate.frames, (frame) => frameBefore(frame, mutation.frame)), clone(mutation.frame)) } : candidate,
+      );
       return ok({ streams: streamList(streams) });
     }
     case "removeStreamFrame": {
@@ -571,37 +586,46 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const artifact = durableRemodelingAsset(mutation.asset);
       if (artifact === null) return refuse("error", "mutation.invalid-asset-payload", "The asset payload is malformed or exceeds its exact bounded envelope.", [mutation.key]);
       const handle = imageAssetChildHandle(mutation.key, mutation.asset);
-      return ok({ assets: { ...clone(base.assets), [mutation.key]: handle }, durableArtifacts: { ...clone(base.durableArtifacts), [handle.childId]: artifact } });
+      const durableArtifacts = { ...withoutKey(clone(base.durableArtifacts), base.assets[mutation.key]?.childId), [handle.childId]: artifact };
+      return ok({ assets: { ...clone(base.assets), [mutation.key]: handle }, durableArtifacts });
     }
     case "deleteAsset": {
       if (mutation.key.startsWith(ASSET_STAGE_PREFIX) || mutation.key.startsWith(MESH_STAGE_PREFIX))
         throw new RemodelingUnsupportedError(`deleteAsset staging keys discard from the plugin's process-global chunk registry, which this twin does not model (key "${mutation.key}")`);
       if (!(mutation.key in base.assets)) return refuse("error", "mutation.target-missing", `Asset "${mutation.key}" does not exist.`, [mutation.key]);
+      const referencing = base.streams.filter((stream) => stream.frames.some((frame) => frame.assetId === mutation.key)).map((stream) => stream.id);
+      if (base.results.mesh.textureAssetId === mutation.key) referencing.push("results.mesh.textureAssetId");
+      if (base.results.geo !== null)
+        for (const [lane, assetId] of [["dsm", base.results.geo.dsmAssetId], ["dtm", base.results.geo.dtmAssetId], ["ortho", base.results.geo.orthoAssetId]] as const)
+          if (assetId === mutation.key) referencing.push(`results.geo.${lane}AssetId`);
+      if (referencing.length > 0) return refuse("error", "mutation.referenced", `Asset "${mutation.key}" is still referenced by ${referencing.length} place(s) in the document.`, referencing);
       const assets = clone(base.assets);
+      const childId = assets[mutation.key]?.childId;
       delete assets[mutation.key];
-      let stale = base.streams.reduce((total, stream) => total + stream.frames.filter((frame) => frame.assetId === mutation.key).length, 0);
-      if (base.results.mesh.textureAssetId === mutation.key) stale += 1;
-      if (base.results.geo !== null) stale += [base.results.geo.dsmAssetId, base.results.geo.dtmAssetId, base.results.geo.orthoAssetId].filter((assetId) => assetId === mutation.key).length;
-      const outcome = ok({ assets });
-      return stale === 0 ? outcome : noted(outcome, "info", "mutation.cascade", `Deleting asset "${mutation.key}" leaves ${stale} stale reference(s) elsewhere in the document.`);
+      return ok({ assets, durableArtifacts: withoutKey(clone(base.durableArtifacts), childId) });
     }
     case "createCameraCalibration": {
       if (base.calibration.cameras.some((camera) => camera.id === mutation.camera.id)) return refuse("fatal", "mutation.duplicate-id", `A camera calibration with id "${mutation.camera.id}" already exists.`, [mutation.camera.id]);
-      const calibration: CalibrationState = { ...clone(base.calibration), cameras: [...clone(base.calibration.cameras), clone(mutation.camera)] };
+      const cameras = clone(base.calibration.cameras);
+      const calibration: CalibrationState = { ...clone(base.calibration), cameras: inserted(cameras, orderedIndex(cameras, (camera) => camera.id < mutation.camera.id), clone(mutation.camera)) };
       return ok({ calibration });
     }
     case "updateCameraCalibration": {
       const existing = base.calibration.cameras.find((camera) => camera.id === mutation.camera.id);
       if (existing === undefined) return refuse("error", "mutation.target-missing", `Camera calibration "${mutation.camera.id}" does not exist.`, [mutation.camera.id]);
-      if (same(existing, mutation.camera)) return noted(empty(), "warn", "mutation.no-op", `Camera calibration "${mutation.camera.id}" is already up to date.`);
       const camera = mutation.camera;
       const nonFinite = ![camera.fx, camera.fy, camera.cx, camera.cy, camera.skew].every(finite) || !camera.distortion.every(finite) || (camera.rmsReprojectionPx !== null && !finite(camera.rmsReprojectionPx));
       if (nonFinite) return refuse("fatal", "mutation.invariant", `Camera calibration "${camera.id}" has non-finite intrinsics or distortion.`, [camera.id]);
+      if (same(existing, camera)) return noted(empty(), "warn", "mutation.no-op", `Camera calibration "${mutation.camera.id}" is already up to date.`);
       const calibration: CalibrationState = { ...clone(base.calibration), cameras: clone(base.calibration.cameras).map((candidate) => (candidate.id === camera.id ? clone(camera) : candidate)) };
       return ok({ calibration });
     }
     case "deleteCameraCalibration": {
       if (!base.calibration.cameras.some((camera) => camera.id === mutation.cameraId)) return refuse("error", "mutation.target-missing", `Camera calibration "${mutation.cameraId}" does not exist.`, [mutation.cameraId]);
+      const referencing = base.streams.filter((stream) => stream.cameraId === mutation.cameraId).map((stream) => stream.id);
+      if (base.calibration.rig.some((extrinsic) => extrinsic.cameraId === mutation.cameraId)) referencing.push(`calibration.rig.${mutation.cameraId}`);
+      if (referencing.length > 0)
+        return refuse("error", "mutation.referenced", `Camera calibration "${mutation.cameraId}" is still referenced by ${referencing.length} record(s); detach them first.`, referencing);
       const calibration: CalibrationState = { ...clone(base.calibration), cameras: clone(base.calibration.cameras).filter((camera) => camera.id !== mutation.cameraId) };
       return ok({ calibration });
     }
@@ -609,7 +633,8 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const cameraId = mutation.extrinsic.cameraId;
       if (base.calibration.rig.some((extrinsic) => extrinsic.cameraId === cameraId)) return refuse("fatal", "mutation.duplicate-id", `A rig extrinsic for camera "${cameraId}" already exists.`, [cameraId]);
       if (!base.calibration.cameras.some((camera) => camera.id === cameraId)) return refuse("fatal", "mutation.invariant", `Rig extrinsic references unknown camera "${cameraId}".`, [cameraId]);
-      const calibration: CalibrationState = { ...clone(base.calibration), rig: [...clone(base.calibration.rig), clone(mutation.extrinsic)] };
+      const rig = clone(base.calibration.rig);
+      const calibration: CalibrationState = { ...clone(base.calibration), rig: inserted(rig, orderedIndex(rig, (entry) => entry.cameraId < cameraId), clone(mutation.extrinsic)) };
       return ok({ calibration });
     }
     case "deleteRigExtrinsic": {
@@ -629,7 +654,8 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
     }
     case "createGcp": {
       if (base.gcps.some((gcp) => gcp.id === mutation.gcp.id)) return refuse("fatal", "mutation.duplicate-id", `A GCP with id "${mutation.gcp.id}" already exists.`, [mutation.gcp.id]);
-      return ok({ gcps: gcpList([...clone(base.gcps), clone(mutation.gcp)]) });
+      const gcps = clone(base.gcps);
+      return ok({ gcps: gcpList(inserted(gcps, orderedIndex(gcps, (gcp) => gcp.id < mutation.gcp.id), clone(mutation.gcp))) });
     }
     case "deleteGcp": {
       const gcp = base.gcps.find((candidate) => candidate.id === mutation.id);
@@ -641,8 +667,14 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
     case "addGcpObservation": {
       const gcp = base.gcps.find((candidate) => candidate.id === mutation.id);
       if (gcp === undefined) return refuse("error", "mutation.target-missing", `GCP "${mutation.id}" does not exist.`, [mutation.id]);
+      if (!base.streams.some((stream) => stream.id === mutation.observation.streamId))
+        return refuse("fatal", "mutation.invariant", `GCP "${mutation.id}" cannot be observed in unknown stream "${mutation.observation.streamId}".`, [mutation.observation.streamId]);
       if (gcp.observations.some((observation) => same(observation, mutation.observation))) return noted(empty(), "warn", "mutation.no-op", `GCP "${mutation.id}" already has this observation.`);
-      const gcps = clone(base.gcps).map((candidate) => (candidate.id === mutation.id ? { ...candidate, observations: [...candidate.observations, clone(mutation.observation)] } : candidate));
+      const gcps = clone(base.gcps).map((candidate) =>
+        candidate.id === mutation.id
+          ? { ...candidate, observations: inserted(candidate.observations, orderedIndex(candidate.observations, (observation) => observationBefore(observation, mutation.observation)), clone(mutation.observation)) }
+          : candidate,
+      );
       return ok({ gcps: gcpList(gcps) });
     }
     case "removeGcpObservation": {
@@ -678,26 +710,26 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
     }
     case "updateSfmParams": {
       const params = mutation.params;
-      if (same(params, base.params.sfm)) return noted(empty(), "warn", "mutation.no-op", "SfM params are already up to date.");
       if (!finite(params.ransacThresholdPx) || !finite(params.huberDeltaPx)) return refuse("fatal", "mutation.invariant", "SfM params have non-finite thresholds.", [base.id]);
+      if (same(params, base.params.sfm)) return noted(empty(), "warn", "mutation.no-op", "SfM params are already up to date.");
       return ok({ params: { ...clone(base.params), sfm: clone(params) } });
     }
     case "updateDenseParams": {
       const params = mutation.params;
-      if (same(params, base.params.dense)) return noted(empty(), "warn", "mutation.no-op", "Dense params are already up to date.");
       if (!finite(params.confidenceThreshold)) return refuse("fatal", "mutation.invariant", "Dense params have a non-finite confidence threshold.", [base.id]);
+      if (same(params, base.params.dense)) return noted(empty(), "warn", "mutation.no-op", "Dense params are already up to date.");
       return ok({ params: { ...clone(base.params), dense: clone(params) } });
     }
     case "updateMeshParams": {
       const params = mutation.params;
-      if (same(params, base.params.mesh)) return noted(empty(), "warn", "mutation.no-op", "Mesh params are already up to date.");
       if (!finite(params.tsdfVoxelSizeMm) || !finite(params.tsdfTruncationMm)) return refuse("fatal", "mutation.invariant", "Mesh params have a non-finite TSDF voxel size or truncation.", [base.id]);
+      if (same(params, base.params.mesh)) return noted(empty(), "warn", "mutation.no-op", "Mesh params are already up to date.");
       return ok({ params: { ...clone(base.params), mesh: clone(params) } });
     }
     case "updateMotionParams": {
       const params = mutation.params;
-      if (same(params, base.params.motion)) return noted(empty(), "warn", "mutation.no-op", "Motion params are already up to date.");
       if (!finite(params.minTrackQuality)) return refuse("fatal", "mutation.invariant", "Motion params have a non-finite minimum track quality.", [base.id]);
+      if (same(params, base.params.motion)) return noted(empty(), "warn", "mutation.no-op", "Motion params are already up to date.");
       return ok({ params: { ...clone(base.params), motion: clone(params) } });
     }
     case "updateGeoParams": {

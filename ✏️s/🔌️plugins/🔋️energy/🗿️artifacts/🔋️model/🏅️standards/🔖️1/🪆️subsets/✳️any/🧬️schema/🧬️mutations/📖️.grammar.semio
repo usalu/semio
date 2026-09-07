@@ -5,7 +5,7 @@ start mutation
 
 artifact-mark = "energy.model-mutations"
 mutation = artifact-mark op+
-op = rename-model | change-model-version | update-site | update-ground-temperature | update-run-period | replace-airflow-network | add-output-variable | remove-output-variable | bind-weather-file | unbind-weather-file | connect-referenced-model | disconnect-referenced-model | rename-zone | change-zone-volume | change-zone-multiplier | change-zone-conditioned | change-zone-floor-area-participation
+op = rename-model | change-model-version | update-site | update-ground-temperature | update-run-period | replace-airflow-network | add-output-variable | remove-output-variable | bind-weather-file | unbind-weather-file | connect-referenced-model | disconnect-referenced-model | rename-zone | change-zone-volume | change-zone-multiplier | change-zone-conditioned | change-zone-floor-area-participation | create-zone | delete-zone | create-space | delete-space | rename-space | change-space-floor-area | change-space-zone | create-surface | delete-surface | rename-surface | change-surface-zone | change-surface-class | replace-surface-vertices | change-surface-construction | change-surface-boundary-condition | change-surface-sun-exposed | change-surface-wind-exposed | change-surface-multiplier | create-fenestration | delete-fenestration | rename-fenestration | change-fenestration-surface | change-fenestration-u-value | change-fenestration-shgc | change-fenestration-vlt | change-fenestration-area | change-fenestration-frame-conductance | change-fenestration-divider-conductance | create-shading-surface | delete-shading-surface | rename-shading-surface | replace-shading-surface-vertices | change-shading-surface-transmittance-schedule | connect-surfaces | disconnect-surfaces | bind-fenestration-glazing-construction | clear-fenestration-glazing-construction | change-fenestration-height | change-fenestration-sill-height | change-fenestration-overhang-depth | change-fenestration-overhang-offset | change-fenestration-fin-depth | change-fenestration-fin-offset | create-material | delete-material | rename-material | change-material-thickness | change-material-conductivity | change-material-density | change-material-specific-heat | change-material-thermal-absorptance | change-material-solar-absorptance | change-material-visible-absorptance | create-construction | delete-construction | rename-construction | add-construction-layer | remove-construction-layer | reorder-construction-layers | create-people-gain | delete-people-gain | change-people-gain-zone | change-people-gain-schedule | change-people-gain-activity-schedule | change-people-gain-people-per-area | change-people-gain-sensible-fraction | change-people-gain-latent-fraction | change-people-gain-radiant-fraction | create-lighting-gain | delete-lighting-gain | change-lighting-gain-zone | change-lighting-gain-schedule | change-lighting-gain-watts-per-area | change-lighting-gain-radiant-fraction | change-lighting-gain-visible-fraction | change-lighting-gain-return-air-fraction | create-equipment-gain | delete-equipment-gain | change-equipment-gain-zone | change-equipment-gain-schedule | change-equipment-gain-watts-per-area | change-equipment-gain-radiant-fraction | change-equipment-gain-latent-fraction | create-infiltration | delete-infiltration | change-infiltration-zone | change-infiltration-schedule | change-infiltration-flow-per-exterior-area | change-infiltration-constant-term-coefficient | change-infiltration-temperature-term-coefficient | change-infiltration-velocity-term-coefficient | change-infiltration-velocity-squared-term-coefficient | create-mechanical-ventilation | delete-mechanical-ventilation | change-mechanical-ventilation-zone | change-mechanical-ventilation-schedule | change-mechanical-ventilation-design-flow | change-mechanical-ventilation-fan-total-efficiency | change-mechanical-ventilation-fan-delta-pressure | change-infiltration-method | change-infiltration-design-flow-ach | change-infiltration-effective-leakage-area | change-infiltration-discharge-coefficient | change-infiltration-stack-height | create-thermostat | delete-thermostat | change-thermostat-zone | change-thermostat-heating-setpoint-schedule | change-thermostat-cooling-setpoint-schedule | change-thermostat-heating-throttle-range | change-thermostat-cooling-throttle-range | create-humidistat | delete-humidistat | change-humidistat-zone | change-humidistat-humidifying-setpoint-schedule | change-humidistat-dehumidifying-setpoint-schedule | change-humidistat-humidifying-throttle-range | change-humidistat-dehumidifying-throttle-range | create-ideal-loads-system | delete-ideal-loads-system | change-ideal-loads-system-zone | change-ideal-loads-system-max-heating-supply-air-temp | change-ideal-loads-system-min-cooling-supply-air-temp | change-ideal-loads-system-max-heating-capacity | change-ideal-loads-system-max-cooling-capacity | change-ideal-loads-system-outdoor-air-per-person | change-ideal-loads-system-outdoor-air-per-area | create-zone-equipment | delete-zone-equipment | change-zone-equipment-zone | change-zone-equipment-type | change-zone-equipment-priority | change-zone-equipment-heating-capacity | change-zone-equipment-cooling-capacity | create-daylight-zone | delete-daylight-zone | change-daylight-zone-zone | change-daylight-zone-illuminance-target | change-daylight-zone-glare-limit | change-daylight-zone-window-transmittance | create-sizing-object | delete-sizing-object | change-sizing-object-zone | change-sizing-object-sizing-type | change-sizing-object-design-day-type | create-room-air-model-assignment | delete-room-air-model-assignment | change-room-air-model | create-setpoint-manager | delete-setpoint-manager | rename-setpoint-manager | replace-setpoint-manager-kind | change-setpoint-manager-schedule | create-air-loop | delete-air-loop | rename-air-loop | change-air-loop-supply-node | change-air-loop-return-node | change-air-loop-design-supply-air-flow | add-air-loop-terminal-zone | remove-air-loop-terminal-zone | create-plant-loop | delete-plant-loop | rename-plant-loop | change-plant-loop-type | change-plant-loop-supply-temperature | change-plant-loop-return-temperature | change-plant-loop-design-flow | add-plant-loop-equipment | remove-plant-loop-equipment | create-outdoor-air-system | delete-outdoor-air-system | change-outdoor-air-system-air-loop | change-outdoor-air-system-min-oa-flow | change-outdoor-air-system-economizer-enabled | create-electrical-load-center | delete-electrical-load-center | rename-electrical-load-center | add-electrical-load-center-pv | remove-electrical-load-center-pv | add-electrical-load-center-battery | remove-electrical-load-center-battery | create-pv-system | delete-pv-system | change-pv-system-dc-capacity | change-pv-system-area | change-pv-system-tilt | change-pv-system-azimuth | change-pv-system-module-efficiency | change-pv-system-inverter-efficiency | create-battery | delete-battery | change-battery-capacity | change-battery-max-charge | change-battery-max-discharge | change-battery-round-trip-efficiency | create-shw-system | delete-shw-system | change-shw-system-heater-capacity | change-shw-system-storage-volume | change-shw-system-setpoint | change-shw-system-schedule | create-solar-thermal-system | delete-solar-thermal-system | change-solar-thermal-system-collector-area | change-solar-thermal-system-efficiency | change-solar-thermal-system-storage-volume | change-solar-thermal-system-tilt | change-solar-thermal-system-azimuth | create-refrigeration-system | delete-refrigeration-system | change-refrigeration-system-case-count | change-refrigeration-system-design-load | change-refrigeration-system-defrost-schedule | create-water-system | delete-water-system | change-water-system-fixture-count | change-water-system-peak-flow | change-water-system-schedule | create-fault | delete-fault | change-fault-target-equipment | change-fault-type | change-fault-severity | change-fault-start-schedule | create-space-list | delete-space-list | rename-space-list | add-space-list-member | remove-space-list-member | create-thermal-enclosure | delete-thermal-enclosure | rename-thermal-enclosure | add-thermal-enclosure-zone | remove-thermal-enclosure-zone | create-constant-schedule | delete-constant-schedule | change-constant-schedule-value | create-daily-schedule | delete-daily-schedule | replace-daily-schedule-hourly-values | change-daily-schedule-interpolation | change-daily-schedule-limits | create-weekly-schedule | delete-weekly-schedule | change-weekly-schedule-day | create-annual-schedule | delete-annual-schedule | insert-annual-schedule-rule | remove-annual-schedule-rule | reorder-annual-schedule-rules | change-annual-schedule-default-daily-schedule | change-annual-schedule-holiday-daily-schedule | add-annual-schedule-holiday | remove-annual-schedule-holiday | create-time-series-schedule | delete-time-series-schedule | replace-time-series-schedule-values | change-time-series-schedule-timestep
 rename-model = "rename-model" "new-name" "=" TEXT
 change-model-version = "change-model-version" "new-version" "=" TEXT
 update-site = "update-site" "latitude-deg" "=" NUMBER "longitude-deg" "=" NUMBER "elevation-m" "=" NUMBER "time-zone-hours" "=" NUMBER "north-axis-deg" "=" NUMBER
@@ -23,3 +23,262 @@ change-zone-volume = "change-zone-volume" "id" "=" NUMBER "new-volume-m3" "=" NU
 change-zone-multiplier = "change-zone-multiplier" "id" "=" NUMBER "new-multiplier" "=" NUMBER
 change-zone-conditioned = "change-zone-conditioned" "id" "=" NUMBER "new-conditioned" "=" NUMBER
 change-zone-floor-area-participation = "change-zone-floor-area-participation" "id" "=" NUMBER "new-part-of-total-floor-area" "=" NUMBER
+create-zone = "create-zone" "id" "=" NUMBER "name" "=" TEXT "volume-m3" "=" NUMBER "multiplier" "=" NUMBER "conditioned" "=" NUMBER "part-of-total-floor-area" "=" NUMBER
+delete-zone = "delete-zone" "id" "=" NUMBER
+create-space = "create-space" "id" "=" NUMBER "name" "=" TEXT "zone-id" "=" NUMBER "floor-area-m2" "=" NUMBER
+delete-space = "delete-space" "id" "=" NUMBER
+rename-space = "rename-space" "id" "=" NUMBER "new-name" "=" TEXT
+change-space-floor-area = "change-space-floor-area" "id" "=" NUMBER "new-floor-area-m2" "=" NUMBER
+change-space-zone = "change-space-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+create-surface = "create-surface" "id" "=" NUMBER "name" "=" TEXT "zone-id" "=" NUMBER "class" "=" TEXT "vertices-m" "=" NUMBER "construction-id" "=" NUMBER "boundary" "=" TEXT "interzone-surface-id" "=" NUMBER "sun-exposed" "=" NUMBER "wind-exposed" "=" NUMBER "multiplier" "=" NUMBER
+delete-surface = "delete-surface" "id" "=" NUMBER
+rename-surface = "rename-surface" "id" "=" NUMBER "new-name" "=" TEXT
+change-surface-zone = "change-surface-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-surface-class = "change-surface-class" "id" "=" NUMBER "new-class" "=" TEXT
+replace-surface-vertices = "replace-surface-vertices" "id" "=" NUMBER "new-vertices-m" "=" NUMBER
+change-surface-construction = "change-surface-construction" "id" "=" NUMBER "new-construction-id" "=" NUMBER
+change-surface-boundary-condition = "change-surface-boundary-condition" "id" "=" NUMBER "new-boundary" "=" TEXT "new-interzone-surface-id" "=" NUMBER
+change-surface-sun-exposed = "change-surface-sun-exposed" "id" "=" NUMBER "new-sun-exposed" "=" NUMBER
+change-surface-wind-exposed = "change-surface-wind-exposed" "id" "=" NUMBER "new-wind-exposed" "=" NUMBER
+change-surface-multiplier = "change-surface-multiplier" "id" "=" NUMBER "new-multiplier" "=" NUMBER
+create-fenestration = "create-fenestration" "id" "=" NUMBER "name" "=" TEXT "surface-id" "=" NUMBER "u-value-w-m2k" "=" NUMBER "shgc" "=" NUMBER "vlt" "=" NUMBER "area-m2" "=" NUMBER "height-m" "=" NUMBER "sill-height-m" "=" NUMBER "frame-conductance-w-k" "=" NUMBER "divider-conductance-w-k" "=" NUMBER "overhang-depth-m" "=" NUMBER "overhang-offset-m" "=" NUMBER "fin-depth-m" "=" NUMBER "fin-offset-m" "=" NUMBER "glazing-construction-id" "=" NUMBER
+delete-fenestration = "delete-fenestration" "id" "=" NUMBER
+rename-fenestration = "rename-fenestration" "id" "=" NUMBER "new-name" "=" TEXT
+change-fenestration-surface = "change-fenestration-surface" "id" "=" NUMBER "new-surface-id" "=" NUMBER
+change-fenestration-u-value = "change-fenestration-u-value" "id" "=" NUMBER "new-u-value-w-m2k" "=" NUMBER
+change-fenestration-shgc = "change-fenestration-shgc" "id" "=" NUMBER "new-shgc" "=" NUMBER
+change-fenestration-vlt = "change-fenestration-vlt" "id" "=" NUMBER "new-vlt" "=" NUMBER
+change-fenestration-area = "change-fenestration-area" "id" "=" NUMBER "new-area-m2" "=" NUMBER
+change-fenestration-frame-conductance = "change-fenestration-frame-conductance" "id" "=" NUMBER "new-frame-conductance-w-k" "=" NUMBER
+change-fenestration-divider-conductance = "change-fenestration-divider-conductance" "id" "=" NUMBER "new-divider-conductance-w-k" "=" NUMBER
+create-shading-surface = "create-shading-surface" "id" "=" NUMBER "name" "=" TEXT "vertices-m" "=" NUMBER "transmittance-schedule-id" "=" NUMBER
+delete-shading-surface = "delete-shading-surface" "id" "=" NUMBER
+rename-shading-surface = "rename-shading-surface" "id" "=" NUMBER "new-name" "=" TEXT
+replace-shading-surface-vertices = "replace-shading-surface-vertices" "id" "=" NUMBER "new-vertices-m" "=" NUMBER
+change-shading-surface-transmittance-schedule = "change-shading-surface-transmittance-schedule" "id" "=" NUMBER "new-transmittance-schedule-id" "=" NUMBER
+connect-surfaces = "connect-surfaces" "surface-a-id" "=" NUMBER "surface-b-id" "=" NUMBER
+disconnect-surfaces = "disconnect-surfaces" "surface-a-id" "=" NUMBER "surface-b-id" "=" NUMBER
+bind-fenestration-glazing-construction = "bind-fenestration-glazing-construction" "id" "=" NUMBER "construction-id" "=" NUMBER
+clear-fenestration-glazing-construction = "clear-fenestration-glazing-construction" "id" "=" NUMBER
+change-fenestration-height = "change-fenestration-height" "id" "=" NUMBER "new-height-m" "=" NUMBER
+change-fenestration-sill-height = "change-fenestration-sill-height" "id" "=" NUMBER "new-sill-height-m" "=" NUMBER
+change-fenestration-overhang-depth = "change-fenestration-overhang-depth" "id" "=" NUMBER "new-overhang-depth-m" "=" NUMBER
+change-fenestration-overhang-offset = "change-fenestration-overhang-offset" "id" "=" NUMBER "new-overhang-offset-m" "=" NUMBER
+change-fenestration-fin-depth = "change-fenestration-fin-depth" "id" "=" NUMBER "new-fin-depth-m" "=" NUMBER
+change-fenestration-fin-offset = "change-fenestration-fin-offset" "id" "=" NUMBER "new-fin-offset-m" "=" NUMBER
+create-material = "create-material" "index" "=" NUMBER "id" "=" NUMBER "name" "=" TEXT "thickness-m" "=" NUMBER "conductivity-w-m-k" "=" NUMBER "density-kg-m3" "=" NUMBER "specific-heat-j-kg-k" "=" NUMBER "thermal-absorptance" "=" NUMBER "solar-absorptance" "=" NUMBER "visible-absorptance" "=" NUMBER
+delete-material = "delete-material" "id" "=" NUMBER
+rename-material = "rename-material" "id" "=" NUMBER "new-name" "=" TEXT
+change-material-thickness = "change-material-thickness" "id" "=" NUMBER "new-thickness-m" "=" NUMBER
+change-material-conductivity = "change-material-conductivity" "id" "=" NUMBER "new-conductivity-w-m-k" "=" NUMBER
+change-material-density = "change-material-density" "id" "=" NUMBER "new-density-kg-m3" "=" NUMBER
+change-material-specific-heat = "change-material-specific-heat" "id" "=" NUMBER "new-specific-heat-j-kg-k" "=" NUMBER
+change-material-thermal-absorptance = "change-material-thermal-absorptance" "id" "=" NUMBER "new-thermal-absorptance" "=" NUMBER
+change-material-solar-absorptance = "change-material-solar-absorptance" "id" "=" NUMBER "new-solar-absorptance" "=" NUMBER
+change-material-visible-absorptance = "change-material-visible-absorptance" "id" "=" NUMBER "new-visible-absorptance" "=" NUMBER
+create-construction = "create-construction" "index" "=" NUMBER "id" "=" NUMBER "name" "=" TEXT "layer-material-ids" "=" NUMBER
+delete-construction = "delete-construction" "id" "=" NUMBER
+rename-construction = "rename-construction" "id" "=" NUMBER "new-name" "=" TEXT
+add-construction-layer = "add-construction-layer" "id" "=" NUMBER "index" "=" NUMBER "material-id" "=" NUMBER
+remove-construction-layer = "remove-construction-layer" "id" "=" NUMBER "index" "=" NUMBER
+reorder-construction-layers = "reorder-construction-layers" "id" "=" NUMBER "new-layer-material-ids" "=" NUMBER
+create-people-gain = "create-people-gain" "index" "=" NUMBER "id" "=" NUMBER "zone-id" "=" NUMBER "schedule-id" "=" NUMBER "activity-schedule-id" "=" NUMBER "people-per-area" "=" NUMBER "sensible-fraction" "=" NUMBER "latent-fraction" "=" NUMBER "radiant-fraction" "=" NUMBER
+delete-people-gain = "delete-people-gain" "id" "=" NUMBER
+change-people-gain-zone = "change-people-gain-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-people-gain-schedule = "change-people-gain-schedule" "id" "=" NUMBER "new-schedule-id" "=" NUMBER
+change-people-gain-activity-schedule = "change-people-gain-activity-schedule" "id" "=" NUMBER "new-activity-schedule-id" "=" NUMBER
+change-people-gain-people-per-area = "change-people-gain-people-per-area" "id" "=" NUMBER "new-people-per-area" "=" NUMBER
+change-people-gain-sensible-fraction = "change-people-gain-sensible-fraction" "id" "=" NUMBER "new-sensible-fraction" "=" NUMBER
+change-people-gain-latent-fraction = "change-people-gain-latent-fraction" "id" "=" NUMBER "new-latent-fraction" "=" NUMBER
+change-people-gain-radiant-fraction = "change-people-gain-radiant-fraction" "id" "=" NUMBER "new-radiant-fraction" "=" NUMBER
+create-lighting-gain = "create-lighting-gain" "index" "=" NUMBER "id" "=" NUMBER "zone-id" "=" NUMBER "schedule-id" "=" NUMBER "watts-per-area" "=" NUMBER "radiant-fraction" "=" NUMBER "visible-fraction" "=" NUMBER "return-air-fraction" "=" NUMBER
+delete-lighting-gain = "delete-lighting-gain" "id" "=" NUMBER
+change-lighting-gain-zone = "change-lighting-gain-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-lighting-gain-schedule = "change-lighting-gain-schedule" "id" "=" NUMBER "new-schedule-id" "=" NUMBER
+change-lighting-gain-watts-per-area = "change-lighting-gain-watts-per-area" "id" "=" NUMBER "new-watts-per-area" "=" NUMBER
+change-lighting-gain-radiant-fraction = "change-lighting-gain-radiant-fraction" "id" "=" NUMBER "new-radiant-fraction" "=" NUMBER
+change-lighting-gain-visible-fraction = "change-lighting-gain-visible-fraction" "id" "=" NUMBER "new-visible-fraction" "=" NUMBER
+change-lighting-gain-return-air-fraction = "change-lighting-gain-return-air-fraction" "id" "=" NUMBER "new-return-air-fraction" "=" NUMBER
+create-equipment-gain = "create-equipment-gain" "index" "=" NUMBER "id" "=" NUMBER "zone-id" "=" NUMBER "schedule-id" "=" NUMBER "watts-per-area" "=" NUMBER "radiant-fraction" "=" NUMBER "latent-fraction" "=" NUMBER
+delete-equipment-gain = "delete-equipment-gain" "id" "=" NUMBER
+change-equipment-gain-zone = "change-equipment-gain-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-equipment-gain-schedule = "change-equipment-gain-schedule" "id" "=" NUMBER "new-schedule-id" "=" NUMBER
+change-equipment-gain-watts-per-area = "change-equipment-gain-watts-per-area" "id" "=" NUMBER "new-watts-per-area" "=" NUMBER
+change-equipment-gain-radiant-fraction = "change-equipment-gain-radiant-fraction" "id" "=" NUMBER "new-radiant-fraction" "=" NUMBER
+change-equipment-gain-latent-fraction = "change-equipment-gain-latent-fraction" "id" "=" NUMBER "new-latent-fraction" "=" NUMBER
+create-infiltration = "create-infiltration" "index" "=" NUMBER "id" "=" NUMBER "zone-id" "=" NUMBER "schedule-id" "=" NUMBER "method" "=" TEXT "design-flow-ach" "=" NUMBER "flow-per-exterior-area-m3-s-m2" "=" NUMBER "effective-leakage-area-m2" "=" NUMBER "discharge-coefficient" "=" NUMBER "stack-height-m" "=" NUMBER "constant-term-coefficient" "=" NUMBER "temperature-term-coefficient" "=" NUMBER "velocity-term-coefficient" "=" NUMBER "velocity-squared-term-coefficient" "=" NUMBER
+delete-infiltration = "delete-infiltration" "id" "=" NUMBER
+change-infiltration-zone = "change-infiltration-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-infiltration-schedule = "change-infiltration-schedule" "id" "=" NUMBER "new-schedule-id" "=" NUMBER
+change-infiltration-flow-per-exterior-area = "change-infiltration-flow-per-exterior-area" "id" "=" NUMBER "new-flow-per-exterior-area-m3-s-m2" "=" NUMBER
+change-infiltration-constant-term-coefficient = "change-infiltration-constant-term-coefficient" "id" "=" NUMBER "new-constant-term-coefficient" "=" NUMBER
+change-infiltration-temperature-term-coefficient = "change-infiltration-temperature-term-coefficient" "id" "=" NUMBER "new-temperature-term-coefficient" "=" NUMBER
+change-infiltration-velocity-term-coefficient = "change-infiltration-velocity-term-coefficient" "id" "=" NUMBER "new-velocity-term-coefficient" "=" NUMBER
+change-infiltration-velocity-squared-term-coefficient = "change-infiltration-velocity-squared-term-coefficient" "id" "=" NUMBER "new-velocity-squared-term-coefficient" "=" NUMBER
+create-mechanical-ventilation = "create-mechanical-ventilation" "index" "=" NUMBER "id" "=" NUMBER "zone-id" "=" NUMBER "schedule-id" "=" NUMBER "design-flow-m3-s" "=" NUMBER "fan-total-efficiency" "=" NUMBER "fan-delta-pressure-pa" "=" NUMBER
+delete-mechanical-ventilation = "delete-mechanical-ventilation" "id" "=" NUMBER
+change-mechanical-ventilation-zone = "change-mechanical-ventilation-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-mechanical-ventilation-schedule = "change-mechanical-ventilation-schedule" "id" "=" NUMBER "new-schedule-id" "=" NUMBER
+change-mechanical-ventilation-design-flow = "change-mechanical-ventilation-design-flow" "id" "=" NUMBER "new-design-flow-m3-s" "=" NUMBER
+change-mechanical-ventilation-fan-total-efficiency = "change-mechanical-ventilation-fan-total-efficiency" "id" "=" NUMBER "new-fan-total-efficiency" "=" NUMBER
+change-mechanical-ventilation-fan-delta-pressure = "change-mechanical-ventilation-fan-delta-pressure" "id" "=" NUMBER "new-fan-delta-pressure-pa" "=" NUMBER
+change-infiltration-method = "change-infiltration-method" "id" "=" NUMBER "new-method" "=" TEXT
+change-infiltration-design-flow-ach = "change-infiltration-design-flow-ach" "id" "=" NUMBER "new-design-flow-ach" "=" NUMBER
+change-infiltration-effective-leakage-area = "change-infiltration-effective-leakage-area" "id" "=" NUMBER "new-effective-leakage-area-m2" "=" NUMBER
+change-infiltration-discharge-coefficient = "change-infiltration-discharge-coefficient" "id" "=" NUMBER "new-discharge-coefficient" "=" NUMBER
+change-infiltration-stack-height = "change-infiltration-stack-height" "id" "=" NUMBER "new-stack-height-m" "=" NUMBER
+create-thermostat = "create-thermostat" "id" "=" NUMBER "zone-id" "=" NUMBER "heating-setpoint-schedule-id" "=" NUMBER "cooling-setpoint-schedule-id" "=" NUMBER "heating-throttle-range-k" "=" NUMBER "cooling-throttle-range-k" "=" NUMBER
+delete-thermostat = "delete-thermostat" "id" "=" NUMBER
+change-thermostat-zone = "change-thermostat-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-thermostat-heating-setpoint-schedule = "change-thermostat-heating-setpoint-schedule" "id" "=" NUMBER "new-heating-setpoint-schedule-id" "=" NUMBER
+change-thermostat-cooling-setpoint-schedule = "change-thermostat-cooling-setpoint-schedule" "id" "=" NUMBER "new-cooling-setpoint-schedule-id" "=" NUMBER
+change-thermostat-heating-throttle-range = "change-thermostat-heating-throttle-range" "id" "=" NUMBER "new-heating-throttle-range-k" "=" NUMBER
+change-thermostat-cooling-throttle-range = "change-thermostat-cooling-throttle-range" "id" "=" NUMBER "new-cooling-throttle-range-k" "=" NUMBER
+create-humidistat = "create-humidistat" "id" "=" NUMBER "zone-id" "=" NUMBER "humidifying-setpoint-schedule-id" "=" NUMBER "dehumidifying-setpoint-schedule-id" "=" NUMBER "humidifying-throttle-range" "=" NUMBER "dehumidifying-throttle-range" "=" NUMBER
+delete-humidistat = "delete-humidistat" "id" "=" NUMBER
+change-humidistat-zone = "change-humidistat-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-humidistat-humidifying-setpoint-schedule = "change-humidistat-humidifying-setpoint-schedule" "id" "=" NUMBER "new-humidifying-setpoint-schedule-id" "=" NUMBER
+change-humidistat-dehumidifying-setpoint-schedule = "change-humidistat-dehumidifying-setpoint-schedule" "id" "=" NUMBER "new-dehumidifying-setpoint-schedule-id" "=" NUMBER
+change-humidistat-humidifying-throttle-range = "change-humidistat-humidifying-throttle-range" "id" "=" NUMBER "new-humidifying-throttle-range" "=" NUMBER
+change-humidistat-dehumidifying-throttle-range = "change-humidistat-dehumidifying-throttle-range" "id" "=" NUMBER "new-dehumidifying-throttle-range" "=" NUMBER
+create-ideal-loads-system = "create-ideal-loads-system" "id" "=" NUMBER "zone-id" "=" NUMBER "max-heating-supply-air-temp-c" "=" NUMBER "min-cooling-supply-air-temp-c" "=" NUMBER "max-heating-capacity-present" "=" NUMBER "max-heating-capacity-w" "=" NUMBER "max-cooling-capacity-present" "=" NUMBER "max-cooling-capacity-w" "=" NUMBER "outdoor-air-per-person-m3-s" "=" NUMBER "outdoor-air-per-area-m3-s-m2" "=" NUMBER
+delete-ideal-loads-system = "delete-ideal-loads-system" "id" "=" NUMBER
+change-ideal-loads-system-zone = "change-ideal-loads-system-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-ideal-loads-system-max-heating-supply-air-temp = "change-ideal-loads-system-max-heating-supply-air-temp" "id" "=" NUMBER "new-max-heating-supply-air-temp-c" "=" NUMBER
+change-ideal-loads-system-min-cooling-supply-air-temp = "change-ideal-loads-system-min-cooling-supply-air-temp" "id" "=" NUMBER "new-min-cooling-supply-air-temp-c" "=" NUMBER
+change-ideal-loads-system-max-heating-capacity = "change-ideal-loads-system-max-heating-capacity" "id" "=" NUMBER "new-capacity-present" "=" NUMBER "new-max-heating-capacity-w" "=" NUMBER
+change-ideal-loads-system-max-cooling-capacity = "change-ideal-loads-system-max-cooling-capacity" "id" "=" NUMBER "new-capacity-present" "=" NUMBER "new-max-cooling-capacity-w" "=" NUMBER
+change-ideal-loads-system-outdoor-air-per-person = "change-ideal-loads-system-outdoor-air-per-person" "id" "=" NUMBER "new-outdoor-air-per-person-m3-s" "=" NUMBER
+change-ideal-loads-system-outdoor-air-per-area = "change-ideal-loads-system-outdoor-air-per-area" "id" "=" NUMBER "new-outdoor-air-per-area-m3-s-m2" "=" NUMBER
+create-zone-equipment = "create-zone-equipment" "id" "=" NUMBER "zone-id" "=" NUMBER "equipment-type" "=" TEXT "priority" "=" NUMBER "heating-capacity-w" "=" NUMBER "cooling-capacity-w" "=" NUMBER
+delete-zone-equipment = "delete-zone-equipment" "id" "=" NUMBER
+change-zone-equipment-zone = "change-zone-equipment-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-zone-equipment-type = "change-zone-equipment-type" "id" "=" NUMBER "new-equipment-type" "=" TEXT
+change-zone-equipment-priority = "change-zone-equipment-priority" "id" "=" NUMBER "new-priority" "=" NUMBER
+change-zone-equipment-heating-capacity = "change-zone-equipment-heating-capacity" "id" "=" NUMBER "new-heating-capacity-w" "=" NUMBER
+change-zone-equipment-cooling-capacity = "change-zone-equipment-cooling-capacity" "id" "=" NUMBER "new-cooling-capacity-w" "=" NUMBER
+create-daylight-zone = "create-daylight-zone" "id" "=" NUMBER "zone-id" "=" NUMBER "illuminance-target-lux" "=" NUMBER "glare-limit" "=" NUMBER "window-transmittance" "=" NUMBER
+delete-daylight-zone = "delete-daylight-zone" "id" "=" NUMBER
+change-daylight-zone-zone = "change-daylight-zone-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-daylight-zone-illuminance-target = "change-daylight-zone-illuminance-target" "id" "=" NUMBER "new-illuminance-target-lux" "=" NUMBER
+change-daylight-zone-glare-limit = "change-daylight-zone-glare-limit" "id" "=" NUMBER "new-glare-limit" "=" NUMBER
+change-daylight-zone-window-transmittance = "change-daylight-zone-window-transmittance" "id" "=" NUMBER "new-window-transmittance" "=" NUMBER
+create-sizing-object = "create-sizing-object" "id" "=" NUMBER "zone-id" "=" NUMBER "sizing-type" "=" TEXT "design-day-type" "=" TEXT
+delete-sizing-object = "delete-sizing-object" "id" "=" NUMBER
+change-sizing-object-zone = "change-sizing-object-zone" "id" "=" NUMBER "new-zone-id" "=" NUMBER
+change-sizing-object-sizing-type = "change-sizing-object-sizing-type" "id" "=" NUMBER "new-sizing-type" "=" TEXT
+change-sizing-object-design-day-type = "change-sizing-object-design-day-type" "id" "=" NUMBER "new-design-day-type" "=" TEXT
+create-room-air-model-assignment = "create-room-air-model-assignment" "zone-id" "=" NUMBER "model" "=" TEXT
+delete-room-air-model-assignment = "delete-room-air-model-assignment" "zone-id" "=" NUMBER
+change-room-air-model = "change-room-air-model" "zone-id" "=" NUMBER "new-model" "=" TEXT
+create-setpoint-manager = "create-setpoint-manager" "id" "=" NUMBER "name" "=" TEXT "kind" "=" TEXT "low-outdoor-c" "=" NUMBER "high-outdoor-c" "=" NUMBER "low-setpoint-c" "=" NUMBER "high-setpoint-c" "=" NUMBER "schedule-present" "=" NUMBER "schedule-id" "=" NUMBER
+delete-setpoint-manager = "delete-setpoint-manager" "id" "=" NUMBER
+rename-setpoint-manager = "rename-setpoint-manager" "id" "=" NUMBER "new-name" "=" TEXT
+replace-setpoint-manager-kind = "replace-setpoint-manager-kind" "id" "=" NUMBER "new-kind" "=" TEXT "new-low-outdoor-c" "=" NUMBER "new-high-outdoor-c" "=" NUMBER "new-low-setpoint-c" "=" NUMBER "new-high-setpoint-c" "=" NUMBER
+change-setpoint-manager-schedule = "change-setpoint-manager-schedule" "id" "=" NUMBER "new-schedule-present" "=" NUMBER "new-schedule-id" "=" NUMBER
+create-air-loop = "create-air-loop" "id" "=" NUMBER "name" "=" TEXT "supply-node-id" "=" NUMBER "return-node-id" "=" NUMBER "design-supply-air-flow-m3-s" "=" NUMBER "terminal-zone-ids" "=" NUMBER
+delete-air-loop = "delete-air-loop" "id" "=" NUMBER
+rename-air-loop = "rename-air-loop" "id" "=" NUMBER "new-name" "=" TEXT
+change-air-loop-supply-node = "change-air-loop-supply-node" "id" "=" NUMBER "new-supply-node-id" "=" NUMBER
+change-air-loop-return-node = "change-air-loop-return-node" "id" "=" NUMBER "new-return-node-id" "=" NUMBER
+change-air-loop-design-supply-air-flow = "change-air-loop-design-supply-air-flow" "id" "=" NUMBER "new-design-supply-air-flow-m3-s" "=" NUMBER
+add-air-loop-terminal-zone = "add-air-loop-terminal-zone" "id" "=" NUMBER "zone-id" "=" NUMBER
+remove-air-loop-terminal-zone = "remove-air-loop-terminal-zone" "id" "=" NUMBER "zone-id" "=" NUMBER
+create-plant-loop = "create-plant-loop" "id" "=" NUMBER "name" "=" TEXT "loop-type" "=" TEXT "supply-temperature-c" "=" NUMBER "return-temperature-c" "=" NUMBER "design-flow-kg-s" "=" NUMBER "equipment-ids" "=" NUMBER
+delete-plant-loop = "delete-plant-loop" "id" "=" NUMBER
+rename-plant-loop = "rename-plant-loop" "id" "=" NUMBER "new-name" "=" TEXT
+change-plant-loop-type = "change-plant-loop-type" "id" "=" NUMBER "new-loop-type" "=" TEXT
+change-plant-loop-supply-temperature = "change-plant-loop-supply-temperature" "id" "=" NUMBER "new-supply-temperature-c" "=" NUMBER
+change-plant-loop-return-temperature = "change-plant-loop-return-temperature" "id" "=" NUMBER "new-return-temperature-c" "=" NUMBER
+change-plant-loop-design-flow = "change-plant-loop-design-flow" "id" "=" NUMBER "new-design-flow-kg-s" "=" NUMBER
+add-plant-loop-equipment = "add-plant-loop-equipment" "id" "=" NUMBER "equipment-id" "=" NUMBER
+remove-plant-loop-equipment = "remove-plant-loop-equipment" "id" "=" NUMBER "equipment-id" "=" NUMBER
+create-outdoor-air-system = "create-outdoor-air-system" "id" "=" NUMBER "air-loop-id" "=" NUMBER "min-oa-flow-m3-s" "=" NUMBER "economizer-enabled" "=" NUMBER
+delete-outdoor-air-system = "delete-outdoor-air-system" "id" "=" NUMBER
+change-outdoor-air-system-air-loop = "change-outdoor-air-system-air-loop" "id" "=" NUMBER "new-air-loop-id" "=" NUMBER
+change-outdoor-air-system-min-oa-flow = "change-outdoor-air-system-min-oa-flow" "id" "=" NUMBER "new-min-oa-flow-m3-s" "=" NUMBER
+change-outdoor-air-system-economizer-enabled = "change-outdoor-air-system-economizer-enabled" "id" "=" NUMBER "new-economizer-enabled" "=" NUMBER
+create-electrical-load-center = "create-electrical-load-center" "index" "=" NUMBER "id" "=" NUMBER "name" "=" TEXT "generator-ids" "=" NUMBER "pv-ids" "=" NUMBER "battery-ids" "=" NUMBER
+delete-electrical-load-center = "delete-electrical-load-center" "id" "=" NUMBER
+rename-electrical-load-center = "rename-electrical-load-center" "id" "=" NUMBER "new-name" "=" TEXT
+add-electrical-load-center-pv = "add-electrical-load-center-pv" "id" "=" NUMBER "index" "=" NUMBER "pv-id" "=" NUMBER
+remove-electrical-load-center-pv = "remove-electrical-load-center-pv" "id" "=" NUMBER "pv-id" "=" NUMBER
+add-electrical-load-center-battery = "add-electrical-load-center-battery" "id" "=" NUMBER "index" "=" NUMBER "battery-id" "=" NUMBER
+remove-electrical-load-center-battery = "remove-electrical-load-center-battery" "id" "=" NUMBER "battery-id" "=" NUMBER
+create-pv-system = "create-pv-system" "index" "=" NUMBER "id" "=" NUMBER "dc-capacity-w" "=" NUMBER "area-m2" "=" NUMBER "tilt-deg" "=" NUMBER "azimuth-deg" "=" NUMBER "module-efficiency" "=" NUMBER "inverter-efficiency" "=" NUMBER
+delete-pv-system = "delete-pv-system" "id" "=" NUMBER
+change-pv-system-dc-capacity = "change-pv-system-dc-capacity" "id" "=" NUMBER "new-dc-capacity-w" "=" NUMBER
+change-pv-system-area = "change-pv-system-area" "id" "=" NUMBER "new-area-m2" "=" NUMBER
+change-pv-system-tilt = "change-pv-system-tilt" "id" "=" NUMBER "new-tilt-deg" "=" NUMBER
+change-pv-system-azimuth = "change-pv-system-azimuth" "id" "=" NUMBER "new-azimuth-deg" "=" NUMBER
+change-pv-system-module-efficiency = "change-pv-system-module-efficiency" "id" "=" NUMBER "new-module-efficiency" "=" NUMBER
+change-pv-system-inverter-efficiency = "change-pv-system-inverter-efficiency" "id" "=" NUMBER "new-inverter-efficiency" "=" NUMBER
+create-battery = "create-battery" "index" "=" NUMBER "id" "=" NUMBER "capacity-kwh" "=" NUMBER "max-charge-w" "=" NUMBER "max-discharge-w" "=" NUMBER "round-trip-efficiency" "=" NUMBER
+delete-battery = "delete-battery" "id" "=" NUMBER
+change-battery-capacity = "change-battery-capacity" "id" "=" NUMBER "new-capacity-kwh" "=" NUMBER
+change-battery-max-charge = "change-battery-max-charge" "id" "=" NUMBER "new-max-charge-w" "=" NUMBER
+change-battery-max-discharge = "change-battery-max-discharge" "id" "=" NUMBER "new-max-discharge-w" "=" NUMBER
+change-battery-round-trip-efficiency = "change-battery-round-trip-efficiency" "id" "=" NUMBER "new-round-trip-efficiency" "=" NUMBER
+create-shw-system = "create-shw-system" "index" "=" NUMBER "id" "=" NUMBER "heater-capacity-w" "=" NUMBER "storage-volume-m3" "=" NUMBER "setpoint-c" "=" NUMBER "schedule-id" "=" NUMBER
+delete-shw-system = "delete-shw-system" "id" "=" NUMBER
+change-shw-system-heater-capacity = "change-shw-system-heater-capacity" "id" "=" NUMBER "new-heater-capacity-w" "=" NUMBER
+change-shw-system-storage-volume = "change-shw-system-storage-volume" "id" "=" NUMBER "new-storage-volume-m3" "=" NUMBER
+change-shw-system-setpoint = "change-shw-system-setpoint" "id" "=" NUMBER "new-setpoint-c" "=" NUMBER
+change-shw-system-schedule = "change-shw-system-schedule" "id" "=" NUMBER "new-schedule-id" "=" NUMBER
+create-solar-thermal-system = "create-solar-thermal-system" "index" "=" NUMBER "id" "=" NUMBER "collector-area-m2" "=" NUMBER "efficiency" "=" NUMBER "storage-volume-m3" "=" NUMBER "tilt-deg" "=" NUMBER "azimuth-deg" "=" NUMBER
+delete-solar-thermal-system = "delete-solar-thermal-system" "id" "=" NUMBER
+change-solar-thermal-system-collector-area = "change-solar-thermal-system-collector-area" "id" "=" NUMBER "new-collector-area-m2" "=" NUMBER
+change-solar-thermal-system-efficiency = "change-solar-thermal-system-efficiency" "id" "=" NUMBER "new-efficiency" "=" NUMBER
+change-solar-thermal-system-storage-volume = "change-solar-thermal-system-storage-volume" "id" "=" NUMBER "new-storage-volume-m3" "=" NUMBER
+change-solar-thermal-system-tilt = "change-solar-thermal-system-tilt" "id" "=" NUMBER "new-tilt-deg" "=" NUMBER
+change-solar-thermal-system-azimuth = "change-solar-thermal-system-azimuth" "id" "=" NUMBER "new-azimuth-deg" "=" NUMBER
+create-refrigeration-system = "create-refrigeration-system" "index" "=" NUMBER "id" "=" NUMBER "case-count" "=" NUMBER "design-load-w" "=" NUMBER "defrost-schedule-id" "=" NUMBER
+delete-refrigeration-system = "delete-refrigeration-system" "id" "=" NUMBER
+change-refrigeration-system-case-count = "change-refrigeration-system-case-count" "id" "=" NUMBER "new-case-count" "=" NUMBER
+change-refrigeration-system-design-load = "change-refrigeration-system-design-load" "id" "=" NUMBER "new-design-load-w" "=" NUMBER
+change-refrigeration-system-defrost-schedule = "change-refrigeration-system-defrost-schedule" "id" "=" NUMBER "new-defrost-schedule-id" "=" NUMBER
+create-water-system = "create-water-system" "index" "=" NUMBER "id" "=" NUMBER "fixture-count" "=" NUMBER "peak-flow-l-s" "=" NUMBER "schedule-id" "=" NUMBER
+delete-water-system = "delete-water-system" "id" "=" NUMBER
+change-water-system-fixture-count = "change-water-system-fixture-count" "id" "=" NUMBER "new-fixture-count" "=" NUMBER
+change-water-system-peak-flow = "change-water-system-peak-flow" "id" "=" NUMBER "new-peak-flow-l-s" "=" NUMBER
+change-water-system-schedule = "change-water-system-schedule" "id" "=" NUMBER "new-schedule-id" "=" NUMBER
+create-fault = "create-fault" "index" "=" NUMBER "id" "=" NUMBER "target-equipment-id" "=" NUMBER "fault-type" "=" TEXT "severity" "=" NUMBER "start-schedule-id" "=" NUMBER
+delete-fault = "delete-fault" "id" "=" NUMBER
+change-fault-target-equipment = "change-fault-target-equipment" "id" "=" NUMBER "new-target-equipment-id" "=" NUMBER
+change-fault-type = "change-fault-type" "id" "=" NUMBER "new-fault-type" "=" TEXT
+change-fault-severity = "change-fault-severity" "id" "=" NUMBER "new-severity" "=" NUMBER
+change-fault-start-schedule = "change-fault-start-schedule" "id" "=" NUMBER "new-start-schedule-id" "=" NUMBER
+create-space-list = "create-space-list" "index" "=" NUMBER "id" "=" NUMBER "name" "=" TEXT "space-ids" "=" NUMBER
+delete-space-list = "delete-space-list" "id" "=" NUMBER
+rename-space-list = "rename-space-list" "id" "=" NUMBER "new-name" "=" TEXT
+add-space-list-member = "add-space-list-member" "id" "=" NUMBER "index" "=" NUMBER "space-id" "=" NUMBER
+remove-space-list-member = "remove-space-list-member" "id" "=" NUMBER "space-id" "=" NUMBER
+create-thermal-enclosure = "create-thermal-enclosure" "index" "=" NUMBER "id" "=" NUMBER "name" "=" TEXT "zone-ids" "=" NUMBER
+delete-thermal-enclosure = "delete-thermal-enclosure" "id" "=" NUMBER
+rename-thermal-enclosure = "rename-thermal-enclosure" "id" "=" NUMBER "new-name" "=" TEXT
+add-thermal-enclosure-zone = "add-thermal-enclosure-zone" "id" "=" NUMBER "index" "=" NUMBER "zone-id" "=" NUMBER
+remove-thermal-enclosure-zone = "remove-thermal-enclosure-zone" "id" "=" NUMBER "zone-id" "=" NUMBER
+create-constant-schedule = "create-constant-schedule" "index" "=" NUMBER "id" "=" NUMBER "value" "=" NUMBER
+delete-constant-schedule = "delete-constant-schedule" "id" "=" NUMBER
+change-constant-schedule-value = "change-constant-schedule-value" "id" "=" NUMBER "new-value" "=" NUMBER
+create-daily-schedule = "create-daily-schedule" "index" "=" NUMBER "id" "=" NUMBER "hourly-values" "=" NUMBER "interpolation" "=" TEXT "limits-min" "=" NUMBER "limits-max" "=" NUMBER
+delete-daily-schedule = "delete-daily-schedule" "id" "=" NUMBER
+replace-daily-schedule-hourly-values = "replace-daily-schedule-hourly-values" "id" "=" NUMBER "new-hourly-values" "=" NUMBER
+change-daily-schedule-interpolation = "change-daily-schedule-interpolation" "id" "=" NUMBER "new-interpolation" "=" TEXT
+change-daily-schedule-limits = "change-daily-schedule-limits" "id" "=" NUMBER "new-limits-min" "=" NUMBER "new-limits-max" "=" NUMBER
+create-weekly-schedule = "create-weekly-schedule" "index" "=" NUMBER "id" "=" NUMBER "daily-schedule-ids" "=" NUMBER
+delete-weekly-schedule = "delete-weekly-schedule" "id" "=" NUMBER
+change-weekly-schedule-day = "change-weekly-schedule-day" "id" "=" NUMBER "day-index" "=" NUMBER "new-daily-schedule-id" "=" NUMBER
+create-annual-schedule = "create-annual-schedule" "index" "=" NUMBER "id" "=" NUMBER "default-daily-schedule-id" "=" NUMBER "holiday-daily-schedule-id" "=" NUMBER
+delete-annual-schedule = "delete-annual-schedule" "id" "=" NUMBER
+insert-annual-schedule-rule = "insert-annual-schedule-rule" "id" "=" NUMBER "index" "=" NUMBER "start-month" "=" NUMBER "start-day" "=" NUMBER "end-month" "=" NUMBER "end-day" "=" NUMBER "daily-schedule-id" "=" NUMBER
+remove-annual-schedule-rule = "remove-annual-schedule-rule" "id" "=" NUMBER "index" "=" NUMBER
+reorder-annual-schedule-rules = "reorder-annual-schedule-rules" "id" "=" NUMBER "from" "=" NUMBER "to" "=" NUMBER
+change-annual-schedule-default-daily-schedule = "change-annual-schedule-default-daily-schedule" "id" "=" NUMBER "new-default-daily-schedule-id" "=" NUMBER
+change-annual-schedule-holiday-daily-schedule = "change-annual-schedule-holiday-daily-schedule" "id" "=" NUMBER "new-holiday-daily-schedule-id" "=" NUMBER
+add-annual-schedule-holiday = "add-annual-schedule-holiday" "id" "=" NUMBER "index" "=" NUMBER "year" "=" NUMBER "month" "=" NUMBER "day" "=" NUMBER
+remove-annual-schedule-holiday = "remove-annual-schedule-holiday" "id" "=" NUMBER "year" "=" NUMBER "month" "=" NUMBER "day" "=" NUMBER
+create-time-series-schedule = "create-time-series-schedule" "index" "=" NUMBER "id" "=" NUMBER "values" "=" NUMBER "timestep-seconds" "=" NUMBER
+delete-time-series-schedule = "delete-time-series-schedule" "id" "=" NUMBER
+replace-time-series-schedule-values = "replace-time-series-schedule-values" "id" "=" NUMBER "new-values" "=" NUMBER
+change-time-series-schedule-timestep = "change-time-series-schedule-timestep" "id" "=" NUMBER "new-timestep-seconds" "=" NUMBER

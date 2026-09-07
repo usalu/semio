@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.duplicate-id",
+  "path": [
+    "gl24h"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.duplicate-id"
+    }
+  ]
+}

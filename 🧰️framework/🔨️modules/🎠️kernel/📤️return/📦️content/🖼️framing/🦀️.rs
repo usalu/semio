@@ -1,8 +1,12 @@
 //#region 🧪️ContentFraming
 use super::return_content::{ReturnContentHeader, ReturnContentHeaderReader};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
-fn unhex(value: &str) -> Vec<u8> { (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
+}
+fn unhex(value: &str) -> Vec<u8> {
+    (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect()
+}
 
 #[test]
 fn return_content_framing_header_matches_neutral_records_at_each_byte_grant() {
@@ -26,7 +30,9 @@ fn return_content_framing_header_matches_neutral_records_at_each_byte_grant() {
                 assert!(step.written_bytes <= grant);
                 assert!(output[step.written_bytes..].iter().all(|byte| *byte == 73));
                 result.extend_from_slice(&output[..step.written_bytes]);
-                if step.complete { break; }
+                if step.complete {
+                    break;
+                }
             }
             assert_eq!(result, expected);
             assert!(cursor.is_complete());
@@ -51,7 +57,9 @@ fn return_content_framing_reader_owns_split_prefix_without_consuming_body() {
                 assert_eq!(reader.consume(&bytes[..split], 0, 11).unwrap().consumed_bytes, 0);
                 assert_eq!(reader.consume(&bytes[..split], 1, 0).unwrap().consumed_bytes, 0);
                 assert_eq!(reader.consume(&bytes[..split], 1, 11).unwrap().consumed_bytes, split);
-                if split < count { assert!(reader.finish().is_err()); }
+                if split < count {
+                    assert!(reader.finish().is_err());
+                }
                 let mut suffix = bytes[split..count].to_vec();
                 suffix.extend_from_slice(&[23, 29]);
                 assert_eq!(reader.consume(&suffix, 1, 11).unwrap().consumed_bytes, count - split);

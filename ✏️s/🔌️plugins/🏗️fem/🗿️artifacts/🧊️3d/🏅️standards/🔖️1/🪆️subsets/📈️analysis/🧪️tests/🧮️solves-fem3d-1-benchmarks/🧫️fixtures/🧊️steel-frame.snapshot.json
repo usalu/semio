@@ -1,0 +1,524 @@
+{
+  "nodes": [
+    {
+      "id": "n00_g",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n00_l1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 2.8
+    },
+    {
+      "id": "n00_l2",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 5.6
+    },
+    {
+      "id": "n20_g",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n20_l1",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 2.8
+    },
+    {
+      "id": "n20_l2",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 5.6
+    },
+    {
+      "id": "n02_g",
+      "x": 0.0,
+      "y": 10.0,
+      "z": 0.0
+    },
+    {
+      "id": "n02_l1",
+      "x": 0.0,
+      "y": 10.0,
+      "z": 2.8
+    },
+    {
+      "id": "n02_l2",
+      "x": 0.0,
+      "y": 10.0,
+      "z": 5.6
+    },
+    {
+      "id": "n22_g",
+      "x": 8.0,
+      "y": 10.0,
+      "z": 0.0
+    },
+    {
+      "id": "n22_l1",
+      "x": 8.0,
+      "y": 10.0,
+      "z": 2.8
+    },
+    {
+      "id": "n22_l2",
+      "x": 8.0,
+      "y": 10.0,
+      "z": 5.6
+    },
+    {
+      "id": "sc0",
+      "x": 10.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "sc1",
+      "x": 12.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "sc2",
+      "x": 12.0,
+      "y": 2.0,
+      "z": 0.0
+    },
+    {
+      "id": "sc3",
+      "x": 10.0,
+      "y": 2.0,
+      "z": 0.0
+    },
+    {
+      "id": "n3",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 3.5
+    }
+  ],
+  "elements": [
+    {
+      "kind": "frame",
+      "id": "e1",
+      "start": "n00_g",
+      "end": "n00_l1",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_00_u",
+      "start": "n00_l1",
+      "end": "n00_l2",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_20_l",
+      "start": "n20_g",
+      "end": "n20_l1",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_20_u",
+      "start": "n20_l1",
+      "end": "n20_l2",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_02_l",
+      "start": "n02_g",
+      "end": "n02_l1",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_02_u",
+      "start": "n02_l1",
+      "end": "n02_l2",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_22_l",
+      "start": "n22_g",
+      "end": "n22_l1",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_22_u",
+      "start": "n22_l1",
+      "end": "n22_l2",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb1_0",
+      "start": "n00_l1",
+      "end": "n20_l1",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb2_0",
+      "start": "n00_l2",
+      "end": "n20_l2",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb1_2",
+      "start": "n02_l1",
+      "end": "n22_l1",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb2_2",
+      "start": "n02_l2",
+      "end": "n22_l2",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb1_3",
+      "start": "n00_l1",
+      "end": "n02_l1",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb2_3",
+      "start": "n00_l2",
+      "end": "n02_l2",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb1_1",
+      "start": "n20_l1",
+      "end": "n22_l1",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb2_1",
+      "start": "n20_l2",
+      "end": "n22_l2",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    }
+  ],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel S235",
+      "e": 210000000000.0,
+      "g": 80770000000.0,
+      "nu": 0.3,
+      "rho": 7850.0
+    },
+    {
+      "id": "concrete",
+      "name": "C30/37 Concrete",
+      "e": 33000000000.0,
+      "g": 13750000000.0,
+      "nu": 0.2,
+      "rho": 2400.0
+    },
+    {
+      "id": "alu",
+      "name": "Aluminium EN AW-6082",
+      "e": 70000000000.0,
+      "g": 26000000000.0,
+      "nu": 0.25,
+      "rho": 2700.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "hea200",
+      "name": "HEA 200",
+      "area": 0.00538,
+      "iy": 3.69e-05,
+      "iz": 1.33e-05,
+      "j": 6e-07
+    },
+    {
+      "id": "shs120",
+      "name": "SHS 120x120x6",
+      "area": 0.00266,
+      "iy": 5.56e-05,
+      "iz": 5.56e-05,
+      "j": 8.89e-05
+    }
+  ],
+  "solids": [
+    {
+      "id": "sol1",
+      "name": "First Floor Slab",
+      "outline": [
+        [
+          10.0,
+          0.0
+        ],
+        [
+          12.0,
+          0.0
+        ],
+        [
+          12.0,
+          2.0
+        ],
+        [
+          10.0,
+          2.0
+        ]
+      ],
+      "holes": [],
+      "baseZ": 0.0,
+      "height": 0.5,
+      "layers": 1,
+      "meshSize": 1.0,
+      "materialId": "concrete"
+    },
+    {
+      "id": "sol_spare",
+      "name": "Roof slab",
+      "outline": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          6.0,
+          0.0
+        ],
+        [
+          6.0,
+          4.0
+        ],
+        [
+          0.0,
+          4.0
+        ]
+      ],
+      "holes": [],
+      "baseZ": 3.5,
+      "height": 0.25,
+      "layers": 2,
+      "meshSize": 0.5,
+      "materialId": "concrete"
+    }
+  ],
+  "supports": [
+    {
+      "id": "s_00",
+      "nodeId": "n00_g",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    {
+      "id": "s_20",
+      "nodeId": "n20_g",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    {
+      "id": "s_02",
+      "nodeId": "n02_g",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    {
+      "id": "s_22",
+      "nodeId": "n22_g",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    {
+      "id": "ss_0",
+      "nodeId": "sc0",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "ss_1",
+      "nodeId": "sc1",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "ss_2",
+      "nodeId": "sc2",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "ss_3",
+      "nodeId": "sc3",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "s_spare",
+      "nodeId": "n3",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead Load",
+      "loads": [
+        {
+          "kind": "area",
+          "id": "l1",
+          "solidId": "sol1",
+          "pressure": 800.0
+        }
+      ],
+      "selfWeight": true
+    },
+    {
+      "id": "live",
+      "name": "Live Load",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "l2",
+          "nodeId": "n20_l1",
+          "dof": "Tz",
+          "value": -5000.0
+        },
+        {
+          "kind": "area",
+          "id": "l3",
+          "solidId": "sol1",
+          "pressure": 1500.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "wind",
+      "name": "Wind X",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "w1",
+          "nodeId": "n20_l2",
+          "dof": "Tx",
+          "value": 7.5
+        }
+      ],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [
+    {
+      "id": "uls",
+      "name": "ULS",
+      "terms": {
+        "dead": 1.35,
+        "live": 1.5
+      }
+    },
+    {
+      "id": "sls_spare",
+      "name": "SLS characteristic",
+      "terms": {
+        "dead": 1.0,
+        "live": 0.5
+      }
+    }
+  ],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 300.0
+  }
+}

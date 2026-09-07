@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill-height",
+  "semanticKind": "change-fenestration-sill-height",
+  "displayName": "Change Fenestration Sill Height",
+  "emoji": "⬇️",
+  "aggregateVariant": "ChangeFenestrationSillHeight",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-fenestration-sill-height",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

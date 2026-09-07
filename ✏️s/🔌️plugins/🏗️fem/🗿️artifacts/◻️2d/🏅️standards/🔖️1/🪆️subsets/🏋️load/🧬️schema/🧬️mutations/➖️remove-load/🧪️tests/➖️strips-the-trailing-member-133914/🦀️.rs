@@ -1,4 +1,4 @@
-//! 🧪️ `remove-load` fixture — `➖️strips-the-trailing-member-udl-from-the-dead-case`.
+//! 🧪️ `remove-load` fixture — `➖️strips-the-trailing-member-133914`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem2dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("remove-load applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "remove-load/strips-the-trailing-member-udl-from-the-dead-case: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.load_cases[0].loads.len(), 1, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: only the nodal load may remain");
-    assert_eq!(crate::artifacts::fem2d::load_id(&snapshot.load_cases[0].loads[0]), "l1", "remove-load/strips-the-trailing-member-udl-from-the-dead-case: the surviving load is the nodal one");
-    assert_eq!(snapshot.elements, before().elements, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: the element the UDL sat on must stay");
+    assert_eq!(snapshot, expected_after(), "remove-load/strips-the-trailing-member-133914: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.load_cases[0].loads.len(), 1, "remove-load/strips-the-trailing-member-133914: only the nodal load may remain");
+    assert_eq!(crate::artifacts::fem2d::load_id(&snapshot.load_cases[0].loads[0]), "l1", "remove-load/strips-the-trailing-member-133914: the surviving load is the nodal one");
+    assert_eq!(snapshot.elements, before().elements, "remove-load/strips-the-trailing-member-133914: the element the UDL sat on must stay");
 }
 
 /// ↩️ The inverse is an `add-load` rebuilt from `base`, re-appending the UDL it never stored itself.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "remove-load/strips-the-trailing-member-133914: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,12 +59,12 @@ fn committed_json_is_canonical() {
         let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "remove-load/strips-the-trailing-member-133914: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "remove-load/strips-the-trailing-member-133914: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
@@ -75,12 +75,12 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "remove-load/strips-the-trailing-member-133914: declared applied but the mutation was rejected"),
         "rejected" => {
-            assert!(!applied, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "remove-load/strips-the-trailing-member-udl-from-the-dead-case: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "remove-load/strips-the-trailing-member-133914: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "remove-load/strips-the-trailing-member-133914: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("remove-load/strips-the-trailing-member-udl-from-the-dead-case: unknown outcome status {other:?}"),
+        other => panic!("remove-load/strips-the-trailing-member-133914: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +89,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: the owning case must be patched exactly once");
-    assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").removed.is_empty(), "remove-load/strips-the-trailing-member-udl-from-the-dead-case: detaching a load must never remove the case");
+    assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").patched.len(), 1, "remove-load/strips-the-trailing-member-133914: the owning case must be patched exactly once");
+    assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").removed.is_empty(), "remove-load/strips-the-trailing-member-133914: detaching a load must never remove the case");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "remove-load/strips-the-trailing-member-133914: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +102,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "remove-load/strips-the-trailing-member-udl-from-the-dead-case: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "remove-load/strips-the-trailing-member-133914: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `loadCases.patched` entry on `before` must yield the single-load case.
@@ -110,5 +110,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "remove-load/strips-the-trailing-member-udl-from-the-dead-case: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "remove-load/strips-the-trailing-member-133914: committed diff did not carry before to after");
 }

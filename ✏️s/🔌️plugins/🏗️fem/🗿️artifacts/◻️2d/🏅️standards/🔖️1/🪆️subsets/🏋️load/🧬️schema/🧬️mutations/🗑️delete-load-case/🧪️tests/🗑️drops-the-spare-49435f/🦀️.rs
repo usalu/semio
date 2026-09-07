@@ -1,0 +1,141 @@
+//! 🧪️ `delete-load-case` fixture — `🗑️drops-the-spare-49435f`.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+//!
+//! 🏢️ The model is the two-storey braced steel frame (6.0 m bay, 3.5 m storeys, HEB 200 columns,
+//! IPE 270/IPE 240 beams, a CHS 88.9x4.0 brace, an RC infill panel with a window opening), the
+//! SECOND real-world fem2d model — the first is the timber portal frame the subset-level
+//! differential cases share. Every value is in SI base units.
+//!
+//! 🗑️ Deleting a case takes its loads with it — they have no collection of their own. `snow_spare` is trailing and named by no combination, so nothing is orphaned.
+
+use crate::artifacts::fem2d::mutations::Fem2dMutation;
+use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::artifacts::fem2d::Fem2dSnapshot;
+
+const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+
+fn before() -> Fem2dSnapshot {
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+}
+fn expected_after() -> Fem2dSnapshot {
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+}
+fn mutation() -> Fem2dMutation {
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+}
+
+/// ▶️ `delete-load-case` carries `before` to exactly the committed `after`.
+#[test]
+fn applies_to_committed_after() {
+    let base = before();
+    let mut snapshot = base.clone();
+    apply_fem2d_mutation(&mut snapshot, &mutation()).expect("delete-load-case applies to its committed before-snapshot");
+    assert_eq!(snapshot, expected_after(), "delete-load-case/drops-the-spare-49435f: applied state differs from committed after-snapshot");
+    assert_ne!(snapshot, base, "delete-load-case/drops-the-spare-49435f: the forward mutation left the model untouched, so nothing was proved");
+    assert_eq!(snapshot.load_cases.len(), 3, "delete-load-case/drops-the-spare-49435f: the loadCases collection must end up 3 records long");
+    assert!(!snapshot.load_cases.iter().any(|item| item.id == "snow_spare"), "delete-load-case/drops-the-spare-49435f: no record named snow_spare may survive");
+}
+
+/// ↩️ Applying the computed inverse after the forward step lands back on `before`.
+#[test]
+fn inverse_restores_before() {
+    let base = before();
+    let mutation = mutation();
+    let inverse = inverse_fem2d_mutation(&base, &mutation);
+    assert_eq!(inverse.len(), 1, "delete-load-case/drops-the-spare-49435f: delete-load-case undoes with exactly one step, got {inverse:?}");
+    let mut snapshot = base.clone();
+    apply_fem2d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    for step in &inverse {
+        apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
+    }
+    assert_eq!(snapshot, base, "delete-load-case/drops-the-spare-49435f: inverse did not restore the before-snapshot");
+}
+
+/// 🎯️ The declared outcome — applied, with no diagnostic at all — is what this kind really emits.
+#[test]
+fn declared_outcome_holds() {
+    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("applied"), "delete-load-case/drops-the-spare-49435f declares an applied outcome");
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    assert!(produced.messages().is_empty(), "delete-load-case/drops-the-spare-49435f: a clean application raises no diagnostic, got {:?}", produced.messages());
+    let mut snapshot = before();
+    apply_fem2d_mutation(&mut snapshot, &mutation()).expect("delete-load-case/drops-the-spare-49435f: declared applied but the mutation was rejected");
+}
+
+/// 🔀️ Each verb writes exactly ONE of the nine members. An after-snapshot comparison cannot make
+/// this check on its own: an implementation that re-derived a sibling collection on every edit
+/// would still land on the right value for the member it meant to write.
+#[test]
+fn touches_only_its_own_member() {
+    let base = before();
+    let mut snapshot = base.clone();
+    apply_fem2d_mutation(&mut snapshot, &mutation()).expect("delete-load-case applies to its committed before-snapshot");
+    assert_eq!(snapshot.nodes, base.nodes, "delete-load-case/drops-the-spare-49435f: this verb writes loadCases and nothing else, but nodes moved");
+    assert_eq!(snapshot.elements, base.elements, "delete-load-case/drops-the-spare-49435f: this verb writes loadCases and nothing else, but elements moved");
+    assert_eq!(snapshot.regions, base.regions, "delete-load-case/drops-the-spare-49435f: this verb writes loadCases and nothing else, but regions moved");
+    assert_eq!(snapshot.materials, base.materials, "delete-load-case/drops-the-spare-49435f: this verb writes loadCases and nothing else, but materials moved");
+    assert_eq!(snapshot.sections, base.sections, "delete-load-case/drops-the-spare-49435f: this verb writes loadCases and nothing else, but sections moved");
+    assert_eq!(snapshot.supports, base.supports, "delete-load-case/drops-the-spare-49435f: this verb writes loadCases and nothing else, but supports moved");
+    assert_eq!(snapshot.combinations, base.combinations, "delete-load-case/drops-the-spare-49435f: this verb writes loadCases and nothing else, but combinations moved");
+    assert_eq!(snapshot.analysis, base.analysis, "delete-load-case/drops-the-spare-49435f: this verb writes loadCases and nothing else, but analysis moved");
+}
+
+/// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
+#[test]
+fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = dsl::ToValue::to_value(&decoded);
+        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "delete-load-case/drops-the-spare-49435f: committed {label} JSON is not canonical");
+    }
+    let decoded_mutation = mutation();
+    let reencoded = dsl::ToValue::to_value(&decoded_mutation);
+    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "delete-load-case/drops-the-spare-49435f: committed mutation JSON is not canonical");
+}
+
+/// 🔺️ The delta must be exactly the committed one, on exactly the `loadCases` slot.
+#[test]
+fn produces_committed_diff() {
+    let base = before();
+    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
+    let delta = outcome.diff().load_cases.as_ref().expect("loadCases delta");
+    assert_eq!((delta.added.len(), delta.removed.len(), delta.patched.len()), (0, 1, 0), "delete-load-case/drops-the-spare-49435f: the delta must be exactly one removed entry");
+    assert!(delta.reordered.is_none(), "delete-load-case/drops-the-spare-49435f: no verb in this vocabulary re-orders a collection");
+    assert!(outcome.diff().nodes.is_none(), "delete-load-case/drops-the-spare-49435f: no nodes delta may be opened by this verb");
+    assert!(outcome.diff().elements.is_none(), "delete-load-case/drops-the-spare-49435f: no elements delta may be opened by this verb");
+    assert!(outcome.diff().regions.is_none(), "delete-load-case/drops-the-spare-49435f: no regions delta may be opened by this verb");
+    assert!(outcome.diff().materials.is_none(), "delete-load-case/drops-the-spare-49435f: no materials delta may be opened by this verb");
+    assert!(outcome.diff().sections.is_none(), "delete-load-case/drops-the-spare-49435f: no sections delta may be opened by this verb");
+    assert!(outcome.diff().supports.is_none(), "delete-load-case/drops-the-spare-49435f: no supports delta may be opened by this verb");
+    assert!(outcome.diff().combinations.is_none(), "delete-load-case/drops-the-spare-49435f: no combinations delta may be opened by this verb");
+    let produced = dsl::ToValue::to_value(outcome.diff());
+    let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "delete-load-case/drops-the-spare-49435f: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
+#[test]
+fn committed_diff_is_canonical() {
+    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = dsl::ToValue::to_value(&decoded);
+    let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "delete-load-case/drops-the-spare-49435f: committed diff JSON is not canonical");
+}
+
+/// 🩹 Replaying the committed delta on `before` must reproduce the committed `after`.
+#[test]
+fn committed_diff_applies_to_after() {
+    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "delete-load-case/drops-the-spare-49435f: committed diff did not carry before to after");
+}

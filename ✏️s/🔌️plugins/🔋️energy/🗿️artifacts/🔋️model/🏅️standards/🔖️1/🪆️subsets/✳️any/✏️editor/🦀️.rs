@@ -16,6 +16,7 @@
 //! everything else.
 //!
 //! 📬️ Publication lanes: the twelve document verbs declare `ArtifactToolPublicationLane::Artifact`
+//! (`setActiveExample` does NOT — it publishes a `kernel::Effect::LoadDocument`, never a mutation)
 //! and are dispatchable only because [`EnergyModelEditor::build_artifact_store_one_item_preparation_factory`]
 //! supplies the document lane's one-item retained preparation; the six session verbs publish nothing
 //! to a store and declare `HostOnly`.
@@ -84,7 +85,10 @@ pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
     simulation::CONFIGURE_ACTION_ID,
 ];
 
-/// 📬️ The twelve verbs that publish into the document store; the remaining six are session-only.
+/// 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
+/// is deliberately NOT one of them — it swaps the whole document through `kernel::Effect::LoadDocument`
+/// (outside history), so it publishes to no store lane and declares `HostOnly` like the six session
+/// verbs do.
 pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
     SET_NODE_ACTION_ID,
     SET_CELL_ACTION_ID,
@@ -98,7 +102,6 @@ pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
     SET_THERMOSTAT_SETPOINTS_ACTION_ID,
     SET_SITE_ACTION_ID,
     SET_RUN_PERIOD_ACTION_ID,
-    SET_ACTIVE_EXAMPLE_ACTION_ID,
 ];
 //#endregion 🏷️ActionIds
 
@@ -359,10 +362,43 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
             steps.push(mutations::add_output_variable(now.name.clone(), now.key.clone(), now.reporting_frequency));
         }
     }
-    if base.zones.iter().map(|zone| zone.id).ne(model.zones.iter().map(|zone| zone.id)) {
-        return Err(kind_unavailable(kind, "create-zone / delete-zone"));
+    diff_zones(base, model, &mut steps);
+    diff_surfaces(base, model, &mut steps);
+    diff_materials(kind, base, model, &mut steps)?;
+    diff_thermostats(kind, base, model, &mut steps)?;
+    let mut probe = base.clone();
+    probe.name = model.name.clone();
+    probe.version = model.version.clone();
+    probe.site = model.site;
+    probe.run_period = model.run_period;
+    probe.ground_temperature = model.ground_temperature.clone();
+    probe.airflow_network = model.airflow_network.clone();
+    probe.output_variables = model.output_variables.clone();
+    probe.zones = model.zones.clone();
+    probe.surfaces = model.surfaces.clone();
+    probe.fenestrations = model.fenestrations.clone();
+    probe.adjacency_pairs = model.adjacency_pairs.clone();
+    probe.materials = model.materials.clone();
+    probe.thermostats = model.thermostats.clone();
+    if probe != *model {
+        return Err(kind_unavailable(kind, kind));
     }
-    for (was, now) in base.zones.iter().zip(&model.zones) {
+    Ok(Emit { artifact_mutations: steps, description: Some(description), ..Default::default() })
+}
+
+/// 🏘️ Zones: a create/delete of the whole row plus the five per-field kinds. `create-zone`/
+/// `delete-zone` landed with the 100s group, so an identity change is no longer a refusal.
+fn diff_zones(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) {
+    for was in &base.zones {
+        if !model.zones.iter().any(|now| now.id == was.id) {
+            steps.push(mutations::delete_zone(was.id));
+        }
+    }
+    for now in &model.zones {
+        let Some(was) = base.zones.iter().find(|was| was.id == now.id) else {
+            steps.push(mutations::create_zone(now.id, now.name.clone(), now.volume_m3, now.multiplier, now.conditioned, now.part_of_total_floor_area));
+            continue;
+        };
         if was.name != now.name {
             steps.push(mutations::rename_zone(now.id, now.name.clone()));
         }
@@ -379,19 +415,152 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
             steps.push(mutations::change_zone_floor_area_participation(now.id, now.part_of_total_floor_area));
         }
     }
-    let mut probe = base.clone();
-    probe.name = model.name.clone();
-    probe.version = model.version.clone();
-    probe.site = model.site;
-    probe.run_period = model.run_period;
-    probe.ground_temperature = model.ground_temperature.clone();
-    probe.airflow_network = model.airflow_network.clone();
-    probe.output_variables = model.output_variables.clone();
-    probe.zones = model.zones.clone();
-    if probe != *model {
-        return Err(kind_unavailable(kind, kind));
+}
+
+/// 🚧️ The interzone partner an `OutsideBoundary` carries — the boundary mutation names the tag
+/// through `OutsideBoundaryKind` and the partner through this separate optional id, because
+/// `dsl::DslScalar` binds unit variants only.
+fn interzone_partner(boundary: OutsideBoundary) -> Option<EntityId> {
+    match boundary {
+        OutsideBoundary::Interzone(partner) => Some(partner),
+        _ => None,
     }
-    Ok(Emit { artifact_mutations: steps, description: Some(description), ..Default::default() })
+}
+
+/// 🟫️ Surfaces and the two collections a surface delete cascades into. Order is load-bearing:
+/// every dependent (fenestration, adjacency pair) is disconnected BEFORE its surface disappears,
+/// and every create runs after every delete, so no intermediate document ever dangles a reference.
+fn diff_surfaces(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) {
+    for was in &base.fenestrations {
+        if !model.fenestrations.iter().any(|now| now.id == was.id) {
+            steps.push(mutations::delete_fenestration(was.id));
+        }
+    }
+    for was in &base.adjacency_pairs {
+        if !model.adjacency_pairs.iter().any(|now| now.surface_a_id == was.surface_a_id && now.surface_b_id == was.surface_b_id) {
+            steps.push(mutations::disconnect_surfaces(was.surface_a_id, was.surface_b_id));
+        }
+    }
+    for was in &base.surfaces {
+        if !model.surfaces.iter().any(|now| now.id == was.id) {
+            steps.push(mutations::delete_surface(was.id));
+        }
+    }
+    for now in &model.surfaces {
+        let Some(was) = base.surfaces.iter().find(|was| was.id == now.id) else {
+            steps.push(mutations::create_surface(
+                now.id,
+                now.name.clone(),
+                now.zone_id,
+                now.class,
+                now.vertices_m.clone(),
+                now.construction_id,
+                now.outside_boundary_condition.kind(),
+                interzone_partner(now.outside_boundary_condition),
+                now.sun_exposed,
+                now.wind_exposed,
+                now.multiplier,
+            ));
+            continue;
+        };
+        if was.name != now.name {
+            steps.push(mutations::rename_surface(now.id, now.name.clone()));
+        }
+        if was.zone_id != now.zone_id {
+            steps.push(mutations::change_surface_zone(now.id, now.zone_id));
+        }
+        if was.class != now.class {
+            steps.push(mutations::change_surface_class(now.id, now.class));
+        }
+        if was.vertices_m != now.vertices_m {
+            steps.push(mutations::replace_surface_vertices(now.id, now.vertices_m.clone()));
+        }
+        if was.construction_id != now.construction_id {
+            steps.push(mutations::change_surface_construction(now.id, now.construction_id));
+        }
+        if was.outside_boundary_condition != now.outside_boundary_condition {
+            steps.push(mutations::change_surface_boundary_condition(now.id, now.outside_boundary_condition.kind(), interzone_partner(now.outside_boundary_condition)));
+        }
+        if was.sun_exposed != now.sun_exposed {
+            steps.push(mutations::change_surface_sun_exposed(now.id, now.sun_exposed));
+        }
+        if was.wind_exposed != now.wind_exposed {
+            steps.push(mutations::change_surface_wind_exposed(now.id, now.wind_exposed));
+        }
+        if was.multiplier != now.multiplier {
+            steps.push(mutations::change_surface_multiplier(now.id, now.multiplier));
+        }
+    }
+}
+
+/// 🧱️ The seven material scalars `set-material-property` addresses. No editor verb creates or
+/// deletes a material, so an identity change is still refused LOUDLY rather than masked by the
+/// probe below.
+fn diff_materials(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<(), Fault> {
+    if base.materials.iter().map(|material| material.id).ne(model.materials.iter().map(|material| material.id)) {
+        return Err(kind_unavailable(kind, "create-material / delete-material"));
+    }
+    for (was, now) in base.materials.iter().zip(&model.materials) {
+        if was.thickness_m != now.thickness_m {
+            steps.push(mutations::change_material_thickness(now.id, now.thickness_m));
+        }
+        if was.conductivity_w_m_k != now.conductivity_w_m_k {
+            steps.push(mutations::change_material_conductivity(now.id, now.conductivity_w_m_k));
+        }
+        if was.density_kg_m3 != now.density_kg_m3 {
+            steps.push(mutations::change_material_density(now.id, now.density_kg_m3));
+        }
+        if was.specific_heat_j_kg_k != now.specific_heat_j_kg_k {
+            steps.push(mutations::change_material_specific_heat(now.id, now.specific_heat_j_kg_k));
+        }
+        if was.thermal_absorptance != now.thermal_absorptance {
+            steps.push(mutations::change_material_thermal_absorptance(now.id, now.thermal_absorptance));
+        }
+        if was.solar_absorptance != now.solar_absorptance {
+            steps.push(mutations::change_material_solar_absorptance(now.id, now.solar_absorptance));
+        }
+        if was.visible_absorptance != now.visible_absorptance {
+            steps.push(mutations::change_material_visible_absorptance(now.id, now.visible_absorptance));
+        }
+    }
+    Ok(())
+}
+
+/// 🌡️ The four thermostat fields `set-thermostat-setpoints` addresses. Like materials, no editor
+/// verb adds or removes a thermostat, so an identity change is refused rather than masked.
+fn diff_thermostats(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<(), Fault> {
+    if base.thermostats.iter().map(|thermostat| thermostat.id).ne(model.thermostats.iter().map(|thermostat| thermostat.id)) {
+        return Err(kind_unavailable(kind, "create-thermostat / delete-thermostat"));
+    }
+    for (was, now) in base.thermostats.iter().zip(&model.thermostats) {
+        if was.heating_setpoint_schedule_id != now.heating_setpoint_schedule_id {
+            steps.push(mutations::change_thermostat_heating_setpoint_schedule(now.id, now.heating_setpoint_schedule_id));
+        }
+        if was.cooling_setpoint_schedule_id != now.cooling_setpoint_schedule_id {
+            steps.push(mutations::change_thermostat_cooling_setpoint_schedule(now.id, now.cooling_setpoint_schedule_id));
+        }
+        if was.heating_throttle_range_k != now.heating_throttle_range_k {
+            steps.push(mutations::change_thermostat_heating_throttle_range(now.id, now.heating_throttle_range_k));
+        }
+        if was.cooling_throttle_range_k != now.cooling_throttle_range_k {
+            steps.push(mutations::change_thermostat_cooling_throttle_range(now.id, now.cooling_throttle_range_k));
+        }
+    }
+    Ok(())
+}
+
+/// 📂️ The sanctioned whole-document load: a `kernel::Effect::LoadDocument` carrying a genesis
+/// pack+spr the host swaps into the live store through `ArtifactStore::reset`, OUTSIDE undo history.
+/// This is why `📚️examples` need no `replace-model` kind — whole-document replace has no mutation
+/// representative in this artifact's vocabulary at all (`📓️derivation-rules.md` rule 6), exactly as
+/// in `📐️cad`'s `reset_document_effect` and `🔱️trinity`'s. A freshly minted envelope has no edits,
+/// so its spr encode is infallible.
+fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::kernel::Effect {
+    let snapshot = crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None);
+    let pack = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+    let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None);
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
 }
 
 /// ⛔️ The refusal a not-yet-landed mutation group raises, naming itself instead of degrading to a
@@ -587,8 +756,8 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             ("update-run-period", "Set run period".to_string())
         }
         EnergyModelEditorCommand::SetActiveExample { example_id } => {
-            model = example_model(example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("this artifact bundles no example {example_id:?}")))?;
-            ("set-active-example", format!("Load example {example_id}"))
+            let loaded = example_model(example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("this artifact bundles no example {example_id:?}")))?;
+            return Ok(Emit { effects: vec![load_document_effect(&loaded)], description: Some(format!("Load example {example_id}")), ..Default::default() });
         }
         _ => unreachable!("session events returned before document mutation dispatch"),
     };
@@ -788,7 +957,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for EnergyModelCommandJ
         ArtifactToolPublicationContract { tool_id: SET_THERMOSTAT_SETPOINTS_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: SET_SITE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: SET_RUN_PERIOD_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: simulation::START_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: simulation::CANCEL_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: simulation::RETRY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -1295,9 +1464,55 @@ mod tests {
         assert_eq!(picker.args[0].id, "exampleId");
     }
 
+    /// 📂️ Loading an example is a whole-document swap, and this artifact's vocabulary has NO
+    /// whole-document-replace kind on purpose. So the verb publishes a `kernel::Effect::LoadDocument`
+    /// (the host's `ArtifactStore::reset` route, outside undo history) and NOT a single mutation —
+    /// asserted for every bundled example, so a new row can never silently fall back on the seam.
+    #[semio_framework_async_macros::async_test]
+    async fn loading_an_example_swaps_the_document_through_an_effect_and_never_a_mutation() {
+        let snapshot = EnergyModelSnapshot::default();
+        let history = HistoryView::default();
+        let doc = ArtifactView::new(&snapshot, &history);
+        for (id, _, model) in example_rows() {
+            let emit = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: id.to_string() }, &doc).unwrap_or_else(|error| panic!("example {id} must load: {error:?}"));
+            assert!(emit.artifact_mutations.is_empty(), "example {id} must not reach the mutation seam");
+            let [semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }] = emit.effects.as_slice() else { panic!("example {id} must emit exactly one LoadDocument effect") };
+            assert!(!pack.is_empty() && !spr.is_empty(), "example {id} emitted an empty document");
+            let loaded = <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(pack).expect("the emitted pack decodes");
+            assert_eq!(loaded.model, model, "example {id} loaded a different model than its own leaf declares");
+        }
+        let fault = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: "nonsense".into() }, &doc).expect_err("an unknown example id is refused");
+        assert_eq!(fault.code.as_str(), "mutation.target-missing");
+    }
+
     fn model_with_one_zone() -> crate::model::Model {
         let mut model = crate::model::Model::default();
         model.zones.push(Zone { id: EntityId(1), name: "Zone 1".into(), volume_m3: 100.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true });
+        model
+    }
+
+    /// 🧫️ One zone, two constructions, one material, two constant schedules, one surface and one
+    /// thermostat — the smallest document in which every authored document verb has a real target.
+    fn populated_model() -> crate::model::Model {
+        let mut model = model_with_one_zone();
+        model.constructions.push(crate::model::Construction { id: EntityId(1), name: "Wall".into(), layer_material_ids: vec![EntityId(1)] });
+        model.constructions.push(crate::model::Construction { id: EntityId(2), name: "Roof".into(), layer_material_ids: vec![EntityId(1)] });
+        model.materials.push(Material { id: EntityId(1), name: "Concrete".into(), thickness_m: 0.1, conductivity_w_m_k: 1.0, density_kg_m3: 2000.0, specific_heat_j_kg_k: 900.0, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 });
+        model.surfaces.push(Surface {
+            id: EntityId(1),
+            name: "South".into(),
+            zone_id: EntityId(1),
+            class: SurfaceClass::ExteriorWall,
+            vertices_m: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 1.0]],
+            construction_id: EntityId(1),
+            outside_boundary_condition: OutsideBoundary::OutdoorAir,
+            sun_exposed: true,
+            wind_exposed: true,
+            multiplier: 1,
+        });
+        model.schedules.constants.push(crate::schedule::ConstantSchedule { id: ScheduleId(1), value: 20.0 });
+        model.schedules.constants.push(crate::schedule::ConstantSchedule { id: ScheduleId(2), value: 27.0 });
+        model.thermostats.push(Thermostat { id: EntityId(1), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(2), heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0 });
         model
     }
 
@@ -1334,49 +1549,46 @@ mod tests {
         assert!((cell.zones[0].volume_m3 - 129.6).abs() < 1e-9);
     }
 
-    /// ⛔️ Every remaining verb is wired against its ledger kind but that kind's leaf has not landed
-    /// yet. The seam refuses LOUDLY with `mutation.kind-unavailable` naming the missing kind — it
-    /// never degrades to a silent no-op or a whole-document replace. This test flips to the round
-    /// trip above the moment the owning group lands its leaves; until then it is the honest record
-    /// of exactly which vocabulary this editor is still waiting on.
+    /// 🧬️ The verbs that were waiting on the 100s–900s mutation groups. Those leaves have landed
+    /// (`create-zone`, `delete-zone`, `create-surface`, `delete-surface`, `change-surface-*`,
+    /// `change-material-*`, `change-thermostat-*`), so this is now a strict ROUND TRIP: each verb
+    /// must produce granular semantic steps whose application reproduces exactly the edit the user
+    /// asked for. A `mutation.kind-unavailable` here is a real regression, not a pending group.
     #[semio_framework_async_macros::async_test]
-    async fn verbs_awaiting_their_semantic_kind_refuse_loudly_and_name_it() {
-        let mut model = model_with_one_zone();
-        model.constructions.push(crate::model::Construction { id: EntityId(1), name: "Wall".into(), layer_material_ids: Vec::new() });
-        model.constructions.push(crate::model::Construction { id: EntityId(2), name: "Roof".into(), layer_material_ids: Vec::new() });
-        model.materials.push(Material { id: EntityId(1), name: "Concrete".into(), thickness_m: 0.1, conductivity_w_m_k: 1.0, density_kg_m3: 2000.0, specific_heat_j_kg_k: 900.0, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 });
-        model.surfaces.push(Surface {
-            id: EntityId(1),
-            name: "South".into(),
-            zone_id: EntityId(1),
-            class: SurfaceClass::ExteriorWall,
-            vertices_m: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 1.0]],
-            construction_id: EntityId(1),
-            outside_boundary_condition: OutsideBoundary::OutdoorAir,
-            sun_exposed: true,
-            wind_exposed: true,
-            multiplier: 1,
-        });
-        model.schedules.constants.push(crate::schedule::ConstantSchedule { id: ScheduleId(1), value: 20.0 });
-        model.thermostats.push(Thermostat { id: EntityId(1), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0 });
-        let snapshot = snapshot_of(&model);
-        let history = HistoryView::default();
-        let doc = ArtifactView::new(&snapshot, &history);
-        let pending = [
-            EnergyModelEditorCommand::CreateZone { name: "Attic".into(), volume_m3: 40.0, multiplier: 1, conditioned: false },
-            EnergyModelEditorCommand::DeleteZone { zone: 1 },
-            EnergyModelEditorCommand::CreateSurface { name: "North".into(), zone: 1, construction: 1, class: "exteriorWall".into() },
-            EnergyModelEditorCommand::DeleteSurface { surface: 1 },
-            EnergyModelEditorCommand::AssignSurfaceConstruction { surface: 1, construction: 2 },
-            EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: 0.04 },
-            EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: 1, heating_schedule: 1, cooling_schedule: 1, heating_throttle_range_k: 1.0, cooling_throttle_range_k: 1.0 },
-        ];
-        for command in pending {
-            match reduce(&command, &doc) {
-                Ok(emit) => assert!(!emit.artifact_mutations.is_empty(), "{} produced neither a mutation nor a refusal", command.action_id()),
-                Err(fault) => assert_eq!(fault.code.as_str(), "mutation.kind-unavailable", "{} failed for the wrong reason: {}", command.action_id(), fault.message),
-            }
-        }
+    async fn every_document_verb_round_trips_through_the_granular_vocabulary() {
+        let snapshot = snapshot_of(&populated_model());
+
+        let created = applied(&snapshot, &EnergyModelEditorCommand::CreateZone { name: "Attic".into(), volume_m3: 40.0, multiplier: 1, conditioned: false });
+        assert_eq!(created.zones.len(), 2);
+        assert_eq!(created.zones[1].name, "Attic");
+        assert!(!created.zones[1].conditioned);
+
+        let with_surface = applied(&snapshot, &EnergyModelEditorCommand::CreateSurface { name: "North".into(), zone: 1, construction: 1, class: "roof".into() });
+        assert_eq!(with_surface.surfaces.len(), 2);
+        assert_eq!(with_surface.surfaces[1].name, "North");
+        assert_eq!(with_surface.surfaces[1].class, SurfaceClass::Roof);
+
+        let without_surface = applied(&snapshot, &EnergyModelEditorCommand::DeleteSurface { surface: 1 });
+        assert!(without_surface.surfaces.is_empty());
+
+        let reconstructed = applied(&snapshot, &EnergyModelEditorCommand::AssignSurfaceConstruction { surface: 1, construction: 2 });
+        assert_eq!(reconstructed.surfaces[0].construction_id, EntityId(2));
+
+        let insulated = applied(&snapshot, &EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: 0.04 });
+        assert!((insulated.materials[0].conductivity_w_m_k - 0.04).abs() < 1e-12);
+
+        let retuned = applied(
+            &snapshot,
+            &EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: 1, heating_schedule: 2, cooling_schedule: 1, heating_throttle_range_k: 1.0, cooling_throttle_range_k: 1.5 },
+        );
+        assert_eq!(retuned.thermostats[0].heating_setpoint_schedule_id, ScheduleId(2));
+        assert!((retuned.thermostats[0].cooling_throttle_range_k - 1.5).abs() < 1e-12);
+
+        let mut freed = populated_model();
+        freed.surfaces.clear();
+        freed.thermostats.clear();
+        let dropped = applied(&snapshot_of(&freed), &EnergyModelEditorCommand::DeleteZone { zone: 1 });
+        assert!(dropped.zones.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]

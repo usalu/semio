@@ -1,8 +1,8 @@
 //#region 📡️ContributedMutationWireFixture
 //! 📡️ Direct test domain for contributed mutation wire planning.
 
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(deny_unknown_fields)]

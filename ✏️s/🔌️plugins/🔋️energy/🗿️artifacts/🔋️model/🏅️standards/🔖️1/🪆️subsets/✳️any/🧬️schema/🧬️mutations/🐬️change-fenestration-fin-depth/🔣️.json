@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin-depth",
+  "semanticKind": "change-fenestration-fin-depth",
+  "displayName": "Change Fenestration Fin Depth",
+  "emoji": "🐬️",
+  "aggregateVariant": "ChangeFenestrationFinDepth",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-fenestration-fin-depth",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

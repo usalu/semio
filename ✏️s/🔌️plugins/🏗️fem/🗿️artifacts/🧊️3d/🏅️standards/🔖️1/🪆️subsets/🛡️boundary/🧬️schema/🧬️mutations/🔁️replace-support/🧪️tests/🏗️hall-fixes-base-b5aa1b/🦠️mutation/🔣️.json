@@ -1,0 +1,16 @@
+{
+  "mutation": "replaceSupport",
+  "id": "sup_bl_0",
+  "newSupport": {
+    "id": "sup_bl_0",
+    "nodeId": "bl_0",
+    "fixed": [
+      "Tx",
+      "Ty",
+      "Tz",
+      "Rx",
+      "Ry",
+      "Rz"
+    ]
+  }
+}

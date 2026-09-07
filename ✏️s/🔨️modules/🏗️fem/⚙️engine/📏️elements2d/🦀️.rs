@@ -395,7 +395,7 @@ impl Element for BeamEb2 {
         let stations = (0..11)
             .map(|i| {
                 let x = l * (i as f64) / 10.0;
-                crate::model::BeamStation { x, n: -n1, v: v1 + wy_local * x, m: m1 + v1 * x + wy_local * x * x / 2.0 }
+                crate::model::BeamStation { x, n: -n1, v: v1 + wy_local * x, m: -m1 + v1 * x + wy_local * x * x / 2.0 }
             })
             .collect();
         ElementResult::Beam { stations }
@@ -1189,6 +1189,115 @@ mod tests {
         assert!((b.values[Dof::Rz.index()].abs() - expected_rotation).abs() / expected_rotation < 1e-6);
     }
 
+    /// 🏗️ Straight `BeamEb2` chain of `n` equal elements spanning `l` (nodes `n0..nN`), carrying a
+    /// downward UDL `w` as a member load on every element, with the given end restraints.
+    fn beam_udl_span(n: usize, l: f64, w: f64, base: Vec<Dof>, tip: Vec<Dof>) -> crate::model::StaticResult {
+        let (e, iy, area) = (200e9, 1e-5, 0.01);
+        let id = |i: usize| format!("n{i}");
+        let nodes: Vec<Node> = (0..=n).map(|i| Node { id: id(i), pos: [l * i as f64 / n as f64, 0.0, 0.0] }).collect();
+        let elements: Vec<Elements> = (0..n).map(|i| BeamEb2 { id: format!("e{i}"), start: id(i), end: id(i + 1), e, area, iy, density: 0.0 }.into()).collect();
+        let member_loads = (0..n).map(|i| (format!("e{i}"), MemberUdl { wx: 0.0, wy: -w, wz: 0.0 })).collect();
+        let supports = vec![Support { node_id: id(0), fixed: base }, Support { node_id: id(n), fixed: tip }];
+        let model = Model { nodes, elements, supports, nodal_loads: vec![], member_loads };
+        solve_linear_static(&model).expect("udl span solves")
+    }
+
+    /// 🏗️ Simply supported beam under a UDL, four `BeamEb2` elements: midspan deflection
+    /// `5wL⁴/384EI`, end rotations `wL³/24EI` and support reactions `wL/2`. Consistent nodal loads
+    /// make cubic-Hermite nodal values EXACT for a UDL, so all three are asserted to 1e-9 — an
+    /// independent numpy direct-stiffness solve (`🔨️w7-kernel-references.py` section 6) reproduces
+    /// the closed form to 3.3e-15.
+    #[test]
+    fn beam_eb2_simply_supported_udl_matches_closed_form() {
+        let (l, w) = (6.0_f64, 2000.0_f64);
+        let (e, iy) = (200e9_f64, 1e-5_f64);
+        let result = beam_udl_span(4, l, w, vec![Dof::Tx, Dof::Ty], vec![Dof::Ty]);
+
+        let midspan = result.displacements.iter().find(|d| d.node_id == "n2").unwrap();
+        let expected_deflection = -5.0 * w * l.powi(4) / (384.0 * e * iy);
+        assert!((midspan.values[Dof::Ty.index()] - expected_deflection).abs() / expected_deflection.abs() < 1e-9, "midspan {} vs {expected_deflection}", midspan.values[Dof::Ty.index()]);
+
+        let expected_rotation = w * l.powi(3) / (24.0 * e * iy);
+        for (node_id, sign) in [("n0", -1.0), ("n4", 1.0)] {
+            let rotation = result.displacements.iter().find(|d| d.node_id == node_id).unwrap().values[Dof::Rz.index()];
+            assert!((rotation - sign * expected_rotation).abs() / expected_rotation < 1e-9, "{node_id} rotation {rotation} vs {}", sign * expected_rotation);
+        }
+        for node_id in ["n0", "n4"] {
+            let reaction = result.reactions.iter().find(|r| r.node_id == node_id && r.dof == Dof::Ty).unwrap().value;
+            assert!((reaction - w * l / 2.0).abs() / (w * l / 2.0) < 1e-9, "{node_id} reaction {reaction} vs {}", w * l / 2.0);
+        }
+    }
+
+    /// 🏗️ Propped cantilever under a UDL, four `BeamEb2` elements — the classic statically
+    /// indeterminate reaction set `5wL/8` (fixed end), `3wL/8` (prop) and `wL²/8` (fixed-end moment),
+    /// exact for consistent nodal loads and reproduced to machine precision by the independent numpy
+    /// direct-stiffness solve in `🔨️w7-kernel-references.py` section 6 (7500 / 4500 / 9000 N, N·m).
+    #[test]
+    fn beam_eb2_propped_cantilever_reactions_match_closed_form() {
+        let (l, w) = (6.0_f64, 2000.0_f64);
+        let result = beam_udl_span(4, l, w, vec![Dof::Tx, Dof::Ty, Dof::Rz], vec![Dof::Ty]);
+        let reaction = |node_id: &str, dof: Dof| result.reactions.iter().find(|r| r.node_id == node_id && r.dof == dof).unwrap().value;
+        let expectations = [("n0", Dof::Ty, 5.0 * w * l / 8.0), ("n4", Dof::Ty, 3.0 * w * l / 8.0), ("n0", Dof::Rz, w * l * l / 8.0)];
+        for (node_id, dof, expected) in expectations {
+            let actual = reaction(node_id, dof);
+            assert!((actual - expected).abs() / expected < 1e-9, "{node_id} {dof:?} reaction {actual} vs {expected}");
+        }
+    }
+
+    /// 🏗️ Single-bay portal frame (6 m span, 4 m columns, both bases fully fixed) under a 15 kN
+    /// lateral load at the windward eaves — one `BeamEb2` per member, so the whole global transform
+    /// path (vertical columns) is exercised. Every asserted number comes from the independent
+    /// numpy/scipy direct-stiffness solve in `🔨️w7-kernel-references.py` section 6, whose own global
+    /// moment equilibrium about the origin closes to 9.7e-10 N·m.
+    #[test]
+    fn beam_eb2_portal_frame_sway_matches_stiffness_method() {
+        let (h, span, load) = (4.0_f64, 6.0_f64, 15000.0_f64);
+        let (ec, ac, ic) = (210e9, 0.008, 8.0e-5);
+        let (eb, ab, ib) = (210e9, 0.012, 2.0e-4);
+        let model = Model {
+            nodes: vec![
+                Node { id: "base_left".into(), pos: [0.0, 0.0, 0.0] },
+                Node { id: "eaves_left".into(), pos: [0.0, h, 0.0] },
+                Node { id: "eaves_right".into(), pos: [span, h, 0.0] },
+                Node { id: "base_right".into(), pos: [span, 0.0, 0.0] },
+            ],
+            elements: vec![
+                BeamEb2 { id: "col_left".into(), start: "base_left".into(), end: "eaves_left".into(), e: ec, area: ac, iy: ic, density: 0.0 }.into(),
+                BeamEb2 { id: "beam".into(), start: "eaves_left".into(), end: "eaves_right".into(), e: eb, area: ab, iy: ib, density: 0.0 }.into(),
+                BeamEb2 { id: "col_right".into(), start: "base_right".into(), end: "eaves_right".into(), e: ec, area: ac, iy: ic, density: 0.0 }.into(),
+            ],
+            supports: vec![
+                Support { node_id: "base_left".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] },
+                Support { node_id: "base_right".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] },
+            ],
+            nodal_loads: vec![NodalLoad { node_id: "eaves_left".into(), dof: Dof::Tx, value: load }],
+            member_loads: vec![],
+        };
+        let result = solve_linear_static(&model).expect("portal frame solves");
+
+        let displacement = |node_id: &str, dof: Dof| result.displacements.iter().find(|d| d.node_id == node_id).unwrap().values[dof.index()];
+        let reaction = |node_id: &str, dof: Dof| result.reactions.iter().find(|r| r.node_id == node_id && r.dof == dof).unwrap().value;
+        let references = [
+            ("sway left", displacement("eaves_left", Dof::Tx), 3.045764339376e-3),
+            ("sway right", displacement("eaves_right", Dof::Tx), 3.027946678835e-3),
+            ("eaves rotation left", displacement("eaves_left", Dof::Rz), -3.297738248139e-4),
+            ("eaves rotation right", displacement("eaves_right", Dof::Rz), -3.261293033395e-4),
+            ("base shear left", reaction("base_left", Dof::Tx), -7516.582572708),
+            ("base shear right", reaction("base_right", Dof::Tx), -7483.417427292),
+            ("base uplift left", reaction("base_left", Dof::Ty), -4540.867810293),
+            ("base uplift right", reaction("base_right", Dof::Ty), 4540.867810293),
+            ("base moment left", reaction("base_left", Dof::Rz), 16418.215209634),
+            ("base moment right", reaction("base_right", Dof::Rz), 16336.577928609),
+        ];
+        for (label, actual, expected) in references {
+            assert!((actual - expected).abs() / expected.abs() < 1e-9, "{label}: {actual} vs scipy {expected}");
+        }
+        let base_shear_sum = reaction("base_left", Dof::Tx) + reaction("base_right", Dof::Tx);
+        assert!((base_shear_sum + load).abs() / load < 1e-9, "base shears {base_shear_sum} must balance the applied {load}");
+        let global_moment = reaction("base_left", Dof::Rz) + reaction("base_right", Dof::Rz) + reaction("base_right", Dof::Ty) * span - load * h;
+        assert!(global_moment.abs() / (load * h) < 1e-9, "global moment residual {global_moment}");
+    }
+
     /// 🌀️ Rigid-body test: a pure translation (no relative deformation) must produce zero internal
     /// force — `Ke * rigid_translation ≈ 0`. Catches sign/assembly bugs that a single load case might not.
     #[test]
@@ -1470,41 +1579,134 @@ mod continuum_tests {
         assert_rigid_body_gives_zero_force(&ke, &rigid_translation_u_local(8, 1.5, -2.3));
     }
 
-    /// 🌀️ Cook's membrane: the classic tapered/skewed cantilever panel, meshed on a 4x4 grid of
-    /// `Quad4` elements via bilinear blending of the four corner points. A coarse-mesh sanity check
-    /// (not a fine-mesh convergence study) — the tip deflection must be positive and finite.
-    #[test]
-    fn quad4_cooks_membrane_tip_deflection_is_positive_and_finite() {
-        let n = 4usize;
-        let (p00, p10, p11, p01) = ((0.0, 0.0), (48.0, 44.0), (48.0, 60.0), (0.0, 44.0));
-        let blend = |r: f64, s: f64| {
-            let x = (1.0 - r) * (1.0 - s) * p00.0 + r * (1.0 - s) * p10.0 + r * s * p11.0 + (1.0 - r) * s * p01.0;
-            let y = (1.0 - r) * (1.0 - s) * p00.1 + r * (1.0 - s) * p10.1 + r * s * p11.1 + (1.0 - r) * s * p01.1;
-            (x, y)
+    /// 🌀️ Cook's membrane mesh — the classic tapered cantilever panel `(0,0)-(48,44)-(48,60)-(0,44)`
+    /// bilinearly blended into an `n x n` grid of `Quad4` (or, with `quadratic`, `Quad8`) elements,
+    /// clamped along `x=0`, carrying a uniform edge traction of unit TOTAL shear on `x=48` applied as
+    /// the consistent nodal loads for the element's own edge order (`h/2,h/2` linear, `h/6,2h/3,h/6`
+    /// quadratic). Returns the vertical deflection at the loaded edge's midpoint `(48,52)`.
+    fn cooks_membrane_tip_deflection(n: usize, quadratic: bool) -> f64 {
+        let steps = if quadratic { 2 * n } else { n };
+        let corners = [(0.0_f64, 0.0_f64), (48.0, 44.0), (48.0, 60.0), (0.0, 44.0)];
+        let blend = |i: usize, j: usize| {
+            let (r, s) = (i as f64 / steps as f64, j as f64 / steps as f64);
+            let w = [(1.0 - r) * (1.0 - s), r * (1.0 - s), r * s, (1.0 - r) * s];
+            [(0..4).map(|k| w[k] * corners[k].0).sum::<f64>(), (0..4).map(|k| w[k] * corners[k].1).sum::<f64>(), 0.0]
         };
-        let node_id = |i: usize, j: usize| format!("n{i}_{j}");
+        let id = |i: usize, j: usize| format!("n{i}_{j}");
 
         let mut nodes = Vec::new();
-        for i in 0..=n {
-            for j in 0..=n {
-                let (x, y) = blend(i as f64 / n as f64, j as f64 / n as f64);
-                nodes.push(Node { id: node_id(i, j), pos: [x, y, 0.0] });
+        for i in 0..=steps {
+            for j in 0..=steps {
+                if !(quadratic && i % 2 == 1 && j % 2 == 1) {
+                    nodes.push(Node { id: id(i, j), pos: blend(i, j) });
+                }
             }
         }
+
+        let (e, nu, t) = (1.0, 1.0 / 3.0, 1.0);
+        let step = if quadratic { 2 } else { 1 };
         let mut elements: Vec<Elements> = Vec::new();
-        for i in 0..n {
-            for j in 0..n {
-                elements.push(Quad4 { id: format!("e{i}_{j}"), nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1), node_id(i, j + 1)], e: 1.0, nu: 1.0 / 3.0, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }.into());
+        for a in 0..n {
+            for b in 0..n {
+                let (i, j) = (step * a, step * b);
+                if quadratic {
+                    elements.push(Quad8 { id: format!("q{a}_{b}"), nodes: [id(i, j), id(i + 2, j), id(i + 2, j + 2), id(i, j + 2), id(i + 1, j), id(i + 2, j + 1), id(i + 1, j + 2), id(i, j + 1)], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 }.into());
+                } else {
+                    elements.push(Quad4 { id: format!("q{a}_{b}"), nodes: [id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j + 1)], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 }.into());
+                }
             }
         }
-        let supports = (0..=n).map(|j| Support { node_id: node_id(0, j), fixed: vec![Dof::Tx, Dof::Ty] }).collect();
-        let per_node = 1.0 / (n as f64 + 1.0);
-        let nodal_loads = (0..=n).map(|j| NodalLoad { node_id: node_id(n, j), dof: Dof::Ty, value: per_node }).collect();
+
+        let supports = (0..=steps).map(|j| Support { node_id: id(0, j), fixed: vec![Dof::Tx, Dof::Ty] }).collect();
+        let (h, traction) = (16.0 / n as f64, 1.0 / 16.0);
+        let mut lumped: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
+        for b in 0..n {
+            let j = step * b;
+            if quadratic {
+                *lumped.entry(id(steps, j)).or_insert(0.0) += traction * h / 6.0;
+                *lumped.entry(id(steps, j + 2)).or_insert(0.0) += traction * h / 6.0;
+                *lumped.entry(id(steps, j + 1)).or_insert(0.0) += traction * h * 2.0 / 3.0;
+            } else {
+                *lumped.entry(id(steps, j)).or_insert(0.0) += traction * h / 2.0;
+                *lumped.entry(id(steps, j + 1)).or_insert(0.0) += traction * h / 2.0;
+            }
+        }
+        let nodal_loads = lumped.into_iter().map(|(node_id, value)| NodalLoad { node_id, dof: Dof::Ty, value }).collect();
 
         let model = Model { nodes, elements, supports, nodal_loads, member_loads: vec![] };
         let result = solve_linear_static(&model).expect("cook's membrane mesh solves");
-        let tip: f64 = (0..=n).map(|j| result.displacements.iter().find(|d| d.node_id == node_id(n, j)).unwrap().values[Dof::Ty.index()]).sum::<f64>() / (n as f64 + 1.0);
-        assert!(tip > 0.0 && tip.is_finite(), "tip deflection = {tip}");
+        result.displacements.iter().find(|d| d.node_id == id(steps, steps / 2)).unwrap().values[Dof::Ty.index()]
+    }
+
+    /// 🌀️ Cook's membrane (E=1, ν=1/3, t=1, unit total tip shear) against the tip deflection
+    /// scikit-fem 12.0.2 computes on the IDENTICAL mesh — `ElementQuad1` at `intorder=2` (2x2 Gauss,
+    /// matching `Quad4::rule`) and `ElementQuadS2` at `intorder=4` (3x3, matching `Quad8::rule`) —
+    /// and against the published converged reference 23.96. `🔨️w7-kernel-references.py` section 3
+    /// reports scikit-fem and an independent hand-assembled numpy kernel agreeing to <1e-11 on every
+    /// mesh, and the Quad4 sequence 11.845 / 18.299 / 22.079 / 23.430 / 23.818 (2x2 … 32x32)
+    /// reproducing the classical Cook convergence table.
+    #[test]
+    fn quad4_and_quad8_cooks_membrane_match_reference_tip_deflection() {
+        let quad4_coarse = cooks_membrane_tip_deflection(4, false);
+        let quad4_fine = cooks_membrane_tip_deflection(8, false);
+        let quad8_coarse = cooks_membrane_tip_deflection(4, true);
+        let references = [("quad4 4x4", quad4_coarse, 18.299165832569), ("quad4 8x8", quad4_fine, 22.079183389482), ("quad8 4x4", quad8_coarse, 23.708288809430)];
+        for (label, actual, reference) in references {
+            assert!((actual - reference).abs() / reference < 1e-6, "{label}: {actual} vs scikit-fem {reference}");
+        }
+        assert!(quad4_coarse < quad4_fine && quad4_fine < 23.96, "Quad4 must converge to 23.96 from below, got {quad4_coarse} then {quad4_fine}");
+        assert!((quad8_coarse - 23.96).abs() / 23.96 < 0.015, "Quad8 4x4 {quad8_coarse} must be within 1.5 % of the converged 23.96 (it lands at 1.05 %)");
+    }
+
+    /// 📏️ MacNeal-Harder straight-cantilever distortion sensitivity for `Quad4`: the standard
+    /// `L=6, h=0.2, t=0.1, E=1e7, ν=0.3` strip meshed as SIX elements in three shapes — rectangular,
+    /// 45° parallelogram, and 45° alternating trapezoid — under a unit tip shear, against the
+    /// beam-theory tip deflection 0.1081. Reference tip values from `🔨️w7-kernel-references.py`
+    /// section 7, where scikit-fem's `ElementQuad1` and an independent numpy kernel agree to <1e-13.
+    /// A plain fully-integrated bilinear quad shear-locks hard here (MacNeal-Harder's published
+    /// 0.904/0.080/0.071 row is for a QUAD4 WITH incompatible modes, which this kernel does not
+    /// have), so the gate is the exact same-mesh value plus the distortion ORDERING: both distorted
+    /// meshes must lose at least a further factor of three against the rectangular one.
+    #[test]
+    fn quad4_macneal_harder_distorted_cantilever_matches_reference_sensitivity() {
+        let cases = [("rectangular", 0.010088000000_f64), ("parallelogram", 0.002613057737), ("trapezoidal", 0.002908744060)];
+        let mut deflections = Vec::new();
+        for (shape, reference) in cases {
+            let tip = macneal_harder_tip_deflection(shape);
+            assert!((tip - reference).abs() / reference < 1e-6, "{shape}: {tip} vs scikit-fem {reference}");
+            deflections.push(tip);
+        }
+        let theory = 0.1081;
+        assert!(deflections[0] / theory < 0.12, "rectangular Quad4 must lock, got {}", deflections[0] / theory);
+        for distorted in &deflections[1..] {
+            assert!(distorted * 3.0 < deflections[0], "distortion must cost at least a factor of three, got {distorted} vs {}", deflections[0]);
+        }
+    }
+
+    /// 📏️ MacNeal-Harder cantilever mesh in one of the three published shapes; returns the mean tip
+    /// vertical deflection under a unit shear split over the two tip nodes.
+    fn macneal_harder_tip_deflection(shape: &str) -> f64 {
+        let (e, nu, t, length, height, n) = (1e7, 0.3, 0.1, 6.0, 0.2, 6usize);
+        let id = |i: usize, j: usize| format!("n{i}_{j}");
+        let mut nodes = Vec::new();
+        for i in 0..=n {
+            let x = length * i as f64 / n as f64;
+            for j in 0..2 {
+                let offset = match shape {
+                    "parallelogram" => height * j as f64,
+                    "trapezoidal" if i > 0 && i < n => (if i % 2 == 0 { 0.5 } else { -0.5 }) * height * (if j == 1 { 1.0 } else { -1.0 }),
+                    _ => 0.0,
+                };
+                nodes.push(Node { id: id(i, j), pos: [x + offset, height * j as f64, 0.0] });
+            }
+        }
+        let elements: Vec<Elements> = (0..n).map(|i| Quad4 { id: format!("q{i}"), nodes: [id(i, 0), id(i + 1, 0), id(i + 1, 1), id(i, 1)], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 }.into()).collect();
+        let supports = (0..2).map(|j| Support { node_id: id(0, j), fixed: vec![Dof::Tx, Dof::Ty] }).collect();
+        let nodal_loads = (0..2).map(|j| NodalLoad { node_id: id(n, j), dof: Dof::Ty, value: 0.5 }).collect();
+
+        let model = Model { nodes, elements, supports, nodal_loads, member_loads: vec![] };
+        let result = solve_linear_static(&model).expect("macneal-harder cantilever solves");
+        (0..2).map(|j| result.displacements.iter().find(|d| d.node_id == id(n, j)).unwrap().values[Dof::Ty.index()]).sum::<f64>() / 2.0
     }
 
     /// ⚖️ Consistent-mass physical sanity check (same identity `bar2_mass_total_equals_rho_a_l` uses):
@@ -1794,16 +1996,12 @@ mod plate_tests {
         }
     }
 
-    /// 🏗️ Simply-supported square plate (side `a`) under a uniform pressure `q`, meshed as a coarse
-    /// 2x2 grid (8 `PlateDkt` triangles), `Tz=0` at every boundary node (rotations free everywhere),
-    /// load lumped `q*Area_i/3` to each triangle's 3 nodes — checked against the classical thin-plate
-    /// centerpoint deflection `w = 0.00406*q*a⁴/D` within an order-of-magnitude (coarse mesh, crude
-    /// load lumping, so this is a sanity check, not a convergence study).
-    #[test]
-    fn plate_dkt_simply_supported_square_center_deflection_right_order_of_magnitude() {
-        let (e, nu, t, a) = (2e11, 0.3, 0.01, 2.0);
-        let q = 1000.0;
-        let n = 2usize;
+    /// 🏗️ Simply-supported square plate (side `a=2`, `t=0.01`, E=2e11, ν=0.3) under a uniform
+    /// pressure `q=1000`, meshed `n x n` into `2n²` `PlateDkt` triangles (cells split along the
+    /// `(i,j)-(i+1,j+1)` diagonal), `Tz=0` at every boundary node with rotations free (soft simple
+    /// support), load lumped `q*Area_i/3` to each triangle's 3 nodes. Returns the centre deflection.
+    fn plate_dkt_simply_supported_centre_deflection(n: usize) -> f64 {
+        let (e, nu, t, a, q) = (2e11, 0.3, 0.01, 2.0, 1000.0);
         let dx = a / n as f64;
         let node_id = |i: usize, j: usize| format!("n{i}_{j}");
 
@@ -1817,7 +2015,6 @@ mod plate_tests {
         let mut elements: Vec<Elements> = Vec::new();
         for i in 0..n {
             for j in 0..n {
-                // Each grid cell split into 2 triangles along the (i,j)-(i+1,j+1) diagonal.
                 elements.push(PlateDkt { id: format!("t{i}_{j}a"), nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1)], e, nu, thickness: t, density: 0.0 }.into());
                 elements.push(PlateDkt { id: format!("t{i}_{j}b"), nodes: [node_id(i, j), node_id(i + 1, j + 1), node_id(i, j + 1)], e, nu, thickness: t, density: 0.0 }.into());
             }
@@ -1825,12 +2022,10 @@ mod plate_tests {
 
         let supports = (0..=n).flat_map(|i| (0..=n).map(move |j| (i, j))).filter(|&(i, j)| i == 0 || i == n || j == 0 || j == n).map(|(i, j)| Support { node_id: node_id(i, j), fixed: vec![Dof::Tz] }).collect();
 
-        // Lump `q*Area/3` per triangle onto its 3 nodes, summed across all triangles sharing a node.
         let mut lumped: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
         for i in 0..n {
             for j in 0..n {
-                let area = 0.5 * dx * dx;
-                let share = q * area / 3.0;
+                let share = q * (0.5 * dx * dx) / 3.0;
                 for id in [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1)] {
                     *lumped.entry(id).or_insert(0.0) += share;
                 }
@@ -1843,14 +2038,28 @@ mod plate_tests {
 
         let model = Model { nodes, elements, supports, nodal_loads, member_loads: vec![] };
         let result = solve_linear_static(&model).expect("ss plate mesh solves");
-        let center = result.displacements.iter().find(|d| d.node_id == node_id(n / 2, n / 2)).unwrap();
-        let w_center = -center.values[Dof::Tz.index()];
+        -result.displacements.iter().find(|d| d.node_id == node_id(n / 2, n / 2)).unwrap().values[Dof::Tz.index()]
+    }
 
-        let d = e * t.powi(3) / (12.0 * (1.0 - nu * nu));
-        let expected = 0.00406 * q * a.powi(4) / d;
-        assert!(w_center.is_finite() && w_center > 0.0, "center deflection = {w_center}");
-        let ratio = w_center / expected;
-        assert!(ratio > 0.5 && ratio < 2.0, "deflection ratio {ratio} (actual {w_center} vs analytical {expected}) out of order-of-magnitude range");
+    /// 🏗️ Simply-supported square plate under UDL vs the classical thin-plate closed form
+    /// `w_max = 0.00406 q a⁴/D` (ν=0.3). `🔨️w7-kernel-references.py` section 4 confirms that
+    /// coefficient two ways: the Navier double sine series gives `w_max D/(q a⁴) = 0.00406235`, and
+    /// scikit-fem's `ElementTriMorley` Kirchhoff plate converges to that series value (0.12 % at
+    /// 16641 DOFs). The same script's independent numpy Batoz-DKT assembly on the IDENTICAL meshes
+    /// gives 3.406677456811e-3 m (4x4) and 3.514848272890e-3 m (8x8, 128 triangles, 243 DOFs),
+    /// i.e. 3.95 % then 0.90 % below the closed form — a monotone convergence this test also gates.
+    #[test]
+    fn plate_dkt_simply_supported_square_center_deflection_matches_closed_form() {
+        let (e, nu, t, a, q) = (2e11_f64, 0.3_f64, 0.01_f64, 2.0_f64, 1000.0_f64);
+        let closed_form = 0.00406 * q * a.powi(4) / (e * t.powi(3) / (12.0 * (1.0 - nu * nu)));
+
+        let coarse = plate_dkt_simply_supported_centre_deflection(4);
+        let fine = plate_dkt_simply_supported_centre_deflection(8);
+        for (label, actual, reference) in [("4x4", coarse, 3.406677456811e-3), ("8x8", fine, 3.514848272890e-3)] {
+            assert!((actual - reference).abs() / reference < 1e-6, "{label}: {actual} vs numpy DKT {reference}");
+        }
+        assert!(coarse < fine && fine < closed_form, "DKT must converge to {closed_form} from below, got {coarse} then {fine}");
+        assert!((fine - closed_form).abs() / closed_form < 0.02, "8x8 centre deflection {fine} vs closed form {closed_form}");
     }
 }
 // #endregion 🔖️PlateTests

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "items": 256,
+  "bytes": 16777216,
+  "traces": [
+    { "id": "one-peer", "queued": ["A2", "B1", "A1"], "retry": "A1", "expected": ["B1", "A1", "A2"] },
+    { "id": "peer-at-front", "queued": ["B1", "A2", "A1"], "retry": "A1", "expected": ["B1", "A1", "A2"] },
+    { "id": "no-peer", "queued": ["A2", "A1"], "retry": "A1", "expected": ["A1", "A2"] },
+    { "id": "only-one-peer", "queued": ["B1", "B2", "A2", "A1"], "retry": "A1", "expected": ["B1", "A1", "B2", "A2"] }
+  ],
+  "ownership": { "sameRegistration": true, "sameBudget": true, "sameBytes": true, "cancelRevokes": true, "replacementRefused": true }
+}

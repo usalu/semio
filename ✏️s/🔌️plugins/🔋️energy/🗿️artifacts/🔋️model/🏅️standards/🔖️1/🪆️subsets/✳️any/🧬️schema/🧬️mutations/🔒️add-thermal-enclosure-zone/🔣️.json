@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️add-thermal-enclosure-zone",
+  "semanticKind": "add-thermal-enclosure-zone",
+  "displayName": "Add Thermal Enclosure Zone",
+  "emoji": "🔒️",
+  "aggregateVariant": "AddThermalEnclosureZone",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "add-thermal-enclosure-zone",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

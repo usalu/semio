@@ -1,0 +1,37 @@
+{
+  "schema": "semio.backbone.canonical-bootstrap-folder-mirror-corpus/v1",
+  "documentId": "shared-map",
+  "artifactSchema": "gis.map",
+  "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+  "baselineFrontier": {
+    "documentId": "shared-map",
+    "headEditOrdinal": 7,
+    "headEditId": "edit-7",
+    "lastCommitSeq": 7,
+    "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "pairs": [
+    {
+      "name": "a",
+      "packHex": "010203",
+      "sprHex": "aabb",
+      "aggregateSha256": "d9f3466307fc5749ef237e7837461b919adeecd6678263c171b6477b7c40fef1"
+    },
+    {
+      "name": "b",
+      "packHex": "09080706",
+      "sprHex": "cc",
+      "aggregateSha256": "f1625b17053ff36e429a8a2b7975487c6a35d56bea755b349dec41a95bdaad3e"
+    }
+  ],
+  "hostile": [
+    { "name": "wrong-capability", "expected": "conflict" },
+    { "name": "wrong-epoch", "expected": "conflict" },
+    { "name": "mismatching-aggregate", "expected": "conflict" },
+    { "name": "malformed-bundle", "expected": "invalid" },
+    { "name": "max-plus-one", "expected": "too-large" },
+    { "name": "stale-publish", "expected": "conflict" },
+    { "name": "client-stale-stage", "expected": "conflict" },
+    { "name": "client-stale-publish", "expected": "conflict" }
+  ]
+}

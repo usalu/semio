@@ -1,0 +1,11 @@
+{
+  "mutation": "createMaterial",
+  "material": {
+    "id": "rubber",
+    "name": "Incompressible Elastomer",
+    "e": 5000000.0,
+    "g": 1670000.0,
+    "nu": 0.5,
+    "rho": 1100.0
+  }
+}

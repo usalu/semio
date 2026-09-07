@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/app/remodeling/remodeling/config.json",
+  "$id": "https://semio.tech/schema/app/remodel/remodeling/config.json",
   "title": "RemodelingConfig",
   "type": "object",
   "additionalProperties": false,

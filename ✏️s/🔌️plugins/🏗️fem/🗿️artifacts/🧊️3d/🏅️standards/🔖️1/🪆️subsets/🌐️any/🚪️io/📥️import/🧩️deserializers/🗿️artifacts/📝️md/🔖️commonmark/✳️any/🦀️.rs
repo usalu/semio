@@ -1,27 +1,59 @@
-//! fem3d <- md. `stdio.md`'s real `MdSnapshot` shape (`blocks: Vec<MdBlock>`) landed after this
-//! leaf was first written — lagging call site fixed to match (ticket 26/08/11/SEMIO-ARTIFACT-
-//! UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a): reads the DSL text back out of the
-//! first `CodeBlock` (mirror of the sibling exporter's encoding).
+//! 🚪️ fem3d ← md — foreign `Deserializer<Fem3dSnapshot>` on the framework's `io_mechanism`
+//! channel, the exact inverse of the sibling `📤️export` leaf's fenced-code-block envelope
+//! (`IoFidelity::Exact`). The `fem3d`-tagged fence wins; an untagged fence is accepted as a
+//! fallback (documents written before the info string existed, and hand-authored ones). A markdown
+//! document with no code block at all is a typed `Err` naming the reason.
+
 use crate::artifacts::fem3d::Fem3dSnapshot;
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::md::schema::snapshot::MdBlock;
-use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::md::MdSnapshot;
 
-pub fn register() {}
+/// 🎯️ The foreign dialect this leaf reads.
+pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &MdSnapshot) -> Result<Fem3dSnapshot, store::TextError> {
-    let _ = STDIO_MD_DOCUMENT_SCHEMA;
-    let literal = from
-        .blocks
-        .iter()
-        .find_map(|b| match b {
-            MdBlock::CodeBlock { literal, .. } => Some(literal.as_str()),
+/// 🏷️ The fenced block's info string the sibling exporter writes.
+pub const FENCE_INFO: &str = "fem3d";
+
+fn fenced_literal(snapshot: &MdSnapshot) -> Option<&str> {
+    let tagged = snapshot.blocks.iter().find_map(|block| match block {
+        MdBlock::CodeBlock { info: Some(info), literal } if info.trim() == FENCE_INFO => Some(literal.as_str()),
+        _ => None,
+    });
+    tagged.or_else(|| {
+        snapshot.blocks.iter().find_map(|block| match block {
+            MdBlock::CodeBlock { info: None, literal } => Some(literal.as_str()),
             _ => None,
         })
-        .ok_or_else(|| store::TextError::new("fem3d <- md: no code block found", dsl::TextSpan::at(1, 1)))?;
-    <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(literal)
+    })
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<Fem3dSnapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+/// 📝️ Reads the envelope's fenced code block back into this subset's snapshot.
+pub fn from_md_text(text: &str) -> Result<Fem3dSnapshot, IoError> {
+    let snapshot = MdSnapshot::from_text(text);
+    let literal = fenced_literal(&snapshot).ok_or_else(|| IoError { message: format!("md→fem3d: not a fem3d envelope — no `{FENCE_INFO}` fenced code block and no untagged one to fall back on"), diagnostics: Vec::new() })?;
+    <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(literal).map_err(|error| IoError { message: format!("md→fem3d: {error}"), diagnostics: Vec::new() })
+}
+
+/// 🧩️ `s.stdio.md@commonmark/*` → `s.fem.fem3d@1/*`.
+pub struct MdIntoFem3d;
+
+impl Deserializer<Fem3dSnapshot> for MdIntoFem3d {
+    const FROM: Dialect = MD_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    async fn sniff(payload: &IoPayload) -> Confidence {
+        match payload {
+            IoPayload::Text(text) if text.contains("```fem3d") => Confidence::High,
+            IoPayload::Text(text) if text.contains("```") => Confidence::Low,
+            _ => Confidence::None,
+        }
+    }
+    async fn deserialize(payload: &IoPayload) -> IoResult<Fem3dSnapshot> {
+        let IoPayload::Text(text) = payload else {
+            return Err(IoError { message: "md→fem3d: expected a text commonmark payload".to_string(), diagnostics: Vec::new() });
+        };
+        Ok(IoOutcome::clean(from_md_text(text)?))
+    }
 }

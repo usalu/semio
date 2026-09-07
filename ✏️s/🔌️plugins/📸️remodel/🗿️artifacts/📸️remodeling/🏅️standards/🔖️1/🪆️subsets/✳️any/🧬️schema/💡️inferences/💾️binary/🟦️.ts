@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `remodeling.remodeling.inference`. */
+/** 💾️ Binary representation for `remodel.remodeling.inference`. */
 export type RemodelingInferenceBinary = Uint8Array;

@@ -39,6 +39,41 @@ const UNOBSERVABLE: &[&str] = &[
 const DERIVED_ASSET: &str = "local://🏗️timber-portal-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
+//#region 🔖️Scenarios
+/// 📇️ Every FORWARD committed vector this subset owns, as `(scenario id, kind)`. Two per kind:
+/// the pre-existing `spec-vector-<kind>` and the steel-frame `frame-vector-<kind>`.
+const COMMITTED: &[(&str, &str)] = &[
+    ("spec-vector-add-load", "add-load"),
+    ("frame-vector-add-load", "add-load"),
+    ("spec-vector-change-load-case-self-weight", "change-load-case-self-weight"),
+    ("frame-vector-change-load-case-self-weight", "change-load-case-self-weight"),
+    ("spec-vector-create-combination", "create-combination"),
+    ("frame-vector-create-combination", "create-combination"),
+    ("spec-vector-create-load-case", "create-load-case"),
+    ("frame-vector-create-load-case", "create-load-case"),
+    ("spec-vector-delete-combination", "delete-combination"),
+    ("frame-vector-delete-combination", "delete-combination"),
+    ("spec-vector-delete-load-case", "delete-load-case"),
+    ("frame-vector-delete-load-case", "delete-load-case"),
+    ("spec-vector-remove-load", "remove-load"),
+    ("frame-vector-remove-load", "remove-load"),
+];
+
+/// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
+const REFUSED: &[(&str, &str)] = &[
+    ("reject-add-load-1", "add-load"),
+    ("reject-add-load-2", "add-load"),
+    ("reject-change-load-case-self-weight-1", "change-load-case-self-weight"),
+    ("reject-create-combination-1", "create-combination"),
+    ("reject-create-load-case-1", "create-load-case"),
+    ("reject-delete-combination-1", "delete-combination"),
+    ("reject-delete-combination-2", "delete-combination"),
+    ("reject-delete-load-case-1", "delete-load-case"),
+    ("reject-delete-load-case-2", "delete-load-case"),
+    ("reject-remove-load-1", "remove-load"),
+];
+//#endregion 🔖️Scenarios
+
 //#region 🔖️Fixtures
 /// 🧫️ One kind's committed `(before, mutation, after, diff, outcome)` specification vector, read
 /// literally via `include_str!`. This IS the independently handcrafted evidence this case rests on —
@@ -47,62 +82,181 @@ struct Vector {
     before: &'static str,
     mutation: &'static str,
     after: &'static str,
-    diff: &'static str,
+    diff: Option<&'static str>,
     outcome: &'static str,
 }
 
-fn vector(kind: &str) -> Vector {
-    match kind {
-        "create-load-case" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-carrying-one-nodal-load/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-carrying-one-nodal-load/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-carrying-one-nodal-load/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-carrying-one-nodal-load/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-carrying-one-nodal-load/🎯️outcome/🔣️.json"),
-        },
-        "delete-load-case" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-case-together-with-its-loads/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-case-together-with-its-loads/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-case-together-with-its-loads/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-case-together-with-its-loads/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-case-together-with-its-loads/🎯️outcome/🔣️.json"),
-        },
-        "add-load" => Vector {
+fn vector(scenario: &str) -> Vector {
+    match scenario {
+        "spec-vector-add-load" => Vector {
             before: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🦠️mutation/🔣️.json"),
             after: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🔺️diff/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🔺️diff/🔣️.json")),
             outcome: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🎯️outcome/🔣️.json"),
         },
-        "remove-load" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-udl-from-the-dead-case/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-udl-from-the-dead-case/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-udl-from-the-dead-case/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-udl-from-the-dead-case/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-udl-from-the-dead-case/🎯️outcome/🔣️.json"),
+        "frame-vector-add-load" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/💨️pushes-a-wind-load-5c3f1e/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/💨️pushes-a-wind-load-5c3f1e/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/💨️pushes-a-wind-load-5c3f1e/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/💨️pushes-a-wind-load-5c3f1e/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/💨️pushes-a-wind-load-5c3f1e/🎯️outcome/🔣️.json"),
         },
-        "change-load-case-self-weight" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-weight-on-for-the-dead-case/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-weight-on-for-the-dead-case/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-weight-on-for-the-dead-case/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-weight-on-for-the-dead-case/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-weight-on-for-the-dead-case/🎯️outcome/🔣️.json"),
+        "reject-add-load-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🚫️rejects-a-missing-4271bc/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🚫️rejects-a-missing-4271bc/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🚫️rejects-a-missing-4271bc/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/🚫️rejects-a-missing-4271bc/🎯️outcome/🔣️.json"),
         },
-        "create-combination" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-combination-over-both-cases/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-combination-over-both-cases/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-combination-over-both-cases/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-combination-over-both-cases/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-combination-over-both-cases/🎯️outcome/🔣️.json"),
+        "reject-add-load-2" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/👻️dangling-node-8d113b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/👻️dangling-node-8d113b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/👻️dangling-node-8d113b/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/👻️dangling-node-8d113b/🎯️outcome/🔣️.json"),
         },
-        "delete-combination" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-combination-and-keeps-both-cases/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-combination-and-keeps-both-cases/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-combination-and-keeps-both-cases/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-combination-and-keeps-both-cases/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-combination-and-keeps-both-cases/🎯️outcome/🔣️.json"),
+        "spec-vector-change-load-case-self-weight" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/🎯️outcome/🔣️.json"),
         },
-        other => panic!("mutate-fem2d-1-load: no committed specification vector is registered for kind {other:?}"),
+        "frame-vector-change-load-case-self-weight" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏋️switches-self-5977a5/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏋️switches-self-5977a5/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏋️switches-self-5977a5/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏋️switches-self-5977a5/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏋️switches-self-5977a5/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-load-case-self-weight-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🔁️keeps-self-weight-ff696b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🔁️keeps-self-weight-ff696b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🔁️keeps-self-weight-ff696b/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🔁️keeps-self-weight-ff696b/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-create-combination" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-create-combination" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends-the-6-10a-eefe01/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends-the-6-10a-eefe01/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends-the-6-10a-eefe01/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends-the-6-10a-eefe01/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends-the-6-10a-eefe01/🎯️outcome/🔣️.json"),
+        },
+        "reject-create-combination-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🚫️rejects-a-dangling-2aa3ea/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🚫️rejects-a-dangling-2aa3ea/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🚫️rejects-a-dangling-2aa3ea/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🚫️rejects-a-dangling-2aa3ea/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-create-load-case" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-create-load-case" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/❄️appends-the-snow-4c007c/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/❄️appends-the-snow-4c007c/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/❄️appends-the-snow-4c007c/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/❄️appends-the-snow-4c007c/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/❄️appends-the-snow-4c007c/🎯️outcome/🔣️.json"),
+        },
+        "reject-create-load-case-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🚫️rejects-a-dangling-4904f4/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🚫️rejects-a-dangling-4904f4/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🚫️rejects-a-dangling-4904f4/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🚫️rejects-a-dangling-4904f4/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-delete-combination" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-delete-combination" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops-the-spare-60fda7/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops-the-spare-60fda7/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops-the-spare-60fda7/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops-the-spare-60fda7/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops-the-spare-60fda7/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-combination-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/⛔️rejects-a-missing-d4bc03/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/⛔️rejects-a-missing-d4bc03/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/⛔️rejects-a-missing-d4bc03/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/⛔️rejects-a-missing-d4bc03/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-combination-2" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🔗️blocks-in-use-0b898b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🔗️blocks-in-use-0b898b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🔗️blocks-in-use-0b898b/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🔗️blocks-in-use-0b898b/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-delete-load-case" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-delete-load-case" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🗑️drops-the-spare-49435f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🗑️drops-the-spare-49435f/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🗑️drops-the-spare-49435f/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🗑️drops-the-spare-49435f/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🗑️drops-the-spare-49435f/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-load-case-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/⛔️rejects-a-missing-79ed15/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/⛔️rejects-a-missing-79ed15/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/⛔️rejects-a-missing-79ed15/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/⛔️rejects-a-missing-79ed15/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-load-case-2" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🔗️blocks-in-use-7cdc5f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🔗️blocks-in-use-7cdc5f/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🔗️blocks-in-use-7cdc5f/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🔗️blocks-in-use-7cdc5f/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-remove-load" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-remove-load" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/✂️strips-the-roof-udl-0c1b3c/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/✂️strips-the-roof-udl-0c1b3c/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/✂️strips-the-roof-udl-0c1b3c/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/✂️strips-the-roof-udl-0c1b3c/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/✂️strips-the-roof-udl-0c1b3c/🎯️outcome/🔣️.json"),
+        },
+        "reject-remove-load-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/⛔️rejects-a-missing-1a8a80/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/⛔️rejects-a-missing-1a8a80/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/⛔️rejects-a-missing-1a8a80/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/⛔️rejects-a-missing-1a8a80/🎯️outcome/🔣️.json"),
+        },
+        other => panic!("🏋️mutate-fem2d-1-load: no committed specification vector is registered for scenario {other:?}"),
     }
 }
 
@@ -288,26 +442,62 @@ mod subject {
         }
     }
 
-    /// 📐️ Replays one committed handcrafted specification vector. This is where the evidence the case
-    /// carried before the relocation still lives, undiminished: the applied model is held to the
-    /// committed after-snapshot, the produced delta to the committed `🔺️diff`, and the diagnostics to
-    /// the committed `🎯️outcome`.
-    pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// 📐️ Replays one committed handcrafted specification vector, addressed by SCENARIO id rather
+    /// than by kind — every kind now carries several. This is where the evidence the case carried
+    /// before the relocation still lives, undiminished: the applied model is held to the committed
+    /// after-snapshot, the produced delta to the committed `🔺️diff`, and the diagnostics to the
+    /// committed `🎯️outcome`.
+    pub fn committed_vector(kind: &'static str, scenario: &str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        let scenario = scenario.to_string();
         move |_ctx: &Context| {
-            let committed = vector(kind);
-            let report = report_of(&format!("spec-vector-{kind}"), committed.before, committed.mutation, committed.after)?;
+            let committed = vector(&scenario);
+            let report = report_of(&scenario, committed.before, committed.mutation, committed.after)?;
             let applied = member(&report, "snapshot")?;
             if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
-                return Err(format!("spec-vector-{kind}: the applied model is not the committed after-snapshot — {first}"));
+                return Err(format!("{scenario}: the applied model is not the committed after-snapshot — {first}"));
             }
-            if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(committed.diff)) {
-                return Err(format!("spec-vector-{kind}: the produced delta is not the committed 🔺️diff — {first}"));
+            match committed.diff {
+                Some(text) => {
+                    if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(text)) {
+                        return Err(format!("{scenario}: the produced delta is not the committed 🔺️diff — {first}"));
+                    }
+                }
+                None => return Err(format!("{scenario}: a forward vector must carry a committed 🔺️diff")),
             }
             declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
             law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
-            touches_one(&format!("spec-vector-{kind}"), kind, member(&report, "base")?, applied)?;
+            touches_one(&scenario, kind, member(&report, "base")?, applied)?;
             law::inverse_restores(kind, member(&report, "inverseSnapshot")?, member(&report, "base")?)?;
             Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
+        }
+    }
+
+    /// 🚫️ Replays one committed REFUSAL or no-op vector. The projection carries the diagnostic
+    /// beside the model on purpose: two implementations that merely both decline to move a document
+    /// agree vacuously, and what these rows are evidence for is that they refuse for the SAME
+    /// reason — same code, same level, same address.
+    pub fn reject(kind: &'static str, scenario: &str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        let scenario = scenario.to_string();
+        move |_ctx: &Context| {
+            let committed = vector(&scenario);
+            if committed.diff.is_some() {
+                return Err(format!("{scenario}: a refusal vector carries 🔺️diff/🚫️.absent, never a committed delta"));
+            }
+            let report = report_of(&scenario, committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            if let Some(first) = law::divergence(applied, member(&report, "base")?) {
+                return Err(format!("{scenario}: a refused or no-op mutation must leave the model exactly where it was — {first}"));
+            }
+            let raised = members(&report, "messages")?;
+            let first = raised.first().ok_or_else(|| format!("{scenario}: the vector declares a refusal, the implementation raised nothing"))?;
+            declared_outcome_holds(kind, &raised, &canonical(committed.outcome))?;
+            let refusal = Json::Object(vec![
+                ("code".to_string(), Json::String(first.str("code"))),
+                ("level".to_string(), Json::String(level_of(&first.str("level")))),
+                ("target".to_string(), Json::Array(strings(first, "target").into_iter().map(Json::String).collect())),
+            ]);
+            let projection = Json::Object(vec![("model".to_string(), applied.clone()), ("refusal".to_string(), refusal)]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }
     //#endregion 🔖️Handlers
@@ -326,13 +516,18 @@ pub fn adapter() -> Adapter {
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
             built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
-            built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
+        }
+        for &(scenario, kind) in COMMITTED {
+            built = built.subject(scenario, subject::committed_vector(kind, scenario));
+        }
+        for &(scenario, kind) in REFUSED {
+            built = built.subject(scenario, subject::reject(kind, scenario));
         }
         return built;
     }
     #[cfg(not(feature = "sut"))]
     {
-        let _ = (KINDS, UNOBSERVABLE, vector as fn(&str) -> Vector);
+        let _ = (KINDS, UNOBSERVABLE, COMMITTED, REFUSED, vector as fn(&str) -> Vector);
         built
     }
 }

@@ -3,12 +3,15 @@ pub mod mutations;
 pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 
 // 🧪️ Proves the viewer helpers against a minimal editor/viewer pair sharing one dialect.
-use crate::app::{built_text_to_component_tree, ArtifactEditor, ArtifactViewer, ArtifactView, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, REVERT_TO_COMMAND_ACTION_ID, UiAssemblyResult, ViewEmit, ViewerApp};
 use crate::app::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, meta, new_app, new_viewer};
+use crate::app::{
+    ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp,
+    REVERT_TO_COMMAND_ACTION_ID, UiAssemblyResult, ViewEmit, ViewerApp, built_text_to_component_tree,
+};
 use protocol::{Mutation, MutationDiff};
 use semio_framework::{Dialect, Fault, FaultOrigin, StandardId, SubsetId};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -84,11 +87,7 @@ impl ::protocol::OpText for SurfaceEditorCommand {
         let variants = <Self as ::dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
         let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
-        }
+        if body.is_empty() { keyword } else { format!("{keyword} {body}") }
     }
 }
 
@@ -176,13 +175,7 @@ impl ArtifactViewer for SurfaceViewerFixture {
         SurfaceSnapshot::default()
     }
 
-    fn handle(
-        _command: &SurfaceViewerCommand,
-        _doc: &ArtifactView<'_, SurfaceSnapshot>,
-        _cfg: &ConfigView<'_, NoConfig>,
-        _interaction: &crate::app::InteractionView<'_>,
-        _engines: &EngineHandles,
-    ) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+    fn handle(_command: &SurfaceViewerCommand, _doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &crate::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 

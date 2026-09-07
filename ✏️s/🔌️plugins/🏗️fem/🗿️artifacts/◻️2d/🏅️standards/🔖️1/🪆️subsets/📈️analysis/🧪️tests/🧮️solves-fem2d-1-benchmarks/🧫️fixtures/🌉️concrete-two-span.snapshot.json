@@ -1,0 +1,184 @@
+{
+  "nodes": [
+    {
+      "id": "n0",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "n1",
+      "x": 3.0,
+      "y": 0.0
+    },
+    {
+      "id": "n2",
+      "x": 6.0,
+      "y": 0.0
+    },
+    {
+      "id": "n3",
+      "x": 9.0,
+      "y": 0.0
+    },
+    {
+      "id": "n4",
+      "x": 12.0,
+      "y": 0.0
+    }
+  ],
+  "elements": [
+    {
+      "kind": "beam",
+      "id": "e1",
+      "start": "n0",
+      "end": "n1",
+      "materialId": "concrete",
+      "sectionId": "rc300x600"
+    },
+    {
+      "kind": "beam",
+      "id": "e2",
+      "start": "n1",
+      "end": "n2",
+      "materialId": "concrete",
+      "sectionId": "rc300x600"
+    },
+    {
+      "kind": "beam",
+      "id": "e3",
+      "start": "n2",
+      "end": "n3",
+      "materialId": "concrete",
+      "sectionId": "rc300x600"
+    },
+    {
+      "kind": "beam",
+      "id": "e4",
+      "start": "n3",
+      "end": "n4",
+      "materialId": "concrete",
+      "sectionId": "rc300x600"
+    }
+  ],
+  "regions": [],
+  "materials": [
+    {
+      "id": "concrete",
+      "name": "Concrete C30/37",
+      "e": 33000000000.0,
+      "nu": 0.2,
+      "rho": 2400.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "rc300x600",
+      "name": "RC 300x600",
+      "area": 0.18,
+      "iy": 0.0054
+    }
+  ],
+  "supports": [
+    {
+      "id": "sup_n0",
+      "nodeId": "n0",
+      "fixed": [
+        "Tx",
+        "Ty"
+      ]
+    },
+    {
+      "id": "sup_n2",
+      "nodeId": "n2",
+      "fixed": [
+        "Ty"
+      ]
+    },
+    {
+      "id": "sup_n4",
+      "nodeId": "n4",
+      "fixed": [
+        "Ty"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "l_d1",
+          "elementId": "e1",
+          "wx": 0.0,
+          "wy": -25000.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "l_d2",
+          "elementId": "e2",
+          "wx": 0.0,
+          "wy": -25000.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "l_d3",
+          "elementId": "e3",
+          "wx": 0.0,
+          "wy": -25000.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "l_d4",
+          "elementId": "e4",
+          "wx": 0.0,
+          "wy": -25000.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "live",
+      "name": "Live on span 1",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "l_l1",
+          "elementId": "e1",
+          "wx": 0.0,
+          "wy": -15000.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "l_l2",
+          "elementId": "e2",
+          "wx": 0.0,
+          "wy": -15000.0
+        }
+      ],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [
+    {
+      "id": "uls",
+      "name": "ULS",
+      "terms": [
+        {
+          "caseId": "dead",
+          "factor": 1.35
+        },
+        {
+          "caseId": "live",
+          "factor": 1.5
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 100.0
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "mutation": "replaceSolid",
+  "id": "slab_apron",
+  "newSolid": {
+    "id": "slab_apron_v2",
+    "name": "Door Apron Slab",
+    "outline": [
+      [
+        12.0,
+        0.0
+      ],
+      [
+        15.0,
+        0.0
+      ],
+      [
+        15.0,
+        12.0
+      ],
+      [
+        12.0,
+        12.0
+      ]
+    ],
+    "holes": [],
+    "baseZ": -0.2,
+    "height": 0.2,
+    "layers": 1,
+    "meshSize": 1.5,
+    "materialId": "c25_30"
+  }
+}

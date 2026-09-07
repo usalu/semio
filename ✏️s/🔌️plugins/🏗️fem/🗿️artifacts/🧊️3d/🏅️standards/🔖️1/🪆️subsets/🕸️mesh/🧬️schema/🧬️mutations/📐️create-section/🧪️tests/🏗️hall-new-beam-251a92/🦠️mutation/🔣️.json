@@ -1,0 +1,11 @@
+{
+  "mutation": "createSection",
+  "section": {
+    "id": "sec_ridge",
+    "name": "GL24h Beam 200x800",
+    "area": 0.16,
+    "iy": 0.00853333,
+    "iz": 0.00053333,
+    "j": 0.001798
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "slab_raft",
+        "item": {
+          "id": "slab_raft",
+          "name": "Workshop Raft Slab",
+          "outline": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              12.0,
+              0.0
+            ],
+            [
+              12.0,
+              12.0
+            ],
+            [
+              0.0,
+              12.0
+            ]
+          ],
+          "holes": [
+            [
+              [
+                4.0,
+                4.0
+              ],
+              [
+                8.0,
+                4.0
+              ],
+              [
+                8.0,
+                8.0
+              ],
+              [
+                4.0,
+                8.0
+              ]
+            ]
+          ],
+          "baseZ": -0.45,
+          "height": 0.45,
+          "layers": 2,
+          "meshSize": 0.75,
+          "materialId": "c25_30"
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

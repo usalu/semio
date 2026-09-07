@@ -15,8 +15,20 @@
           "mutationDirectoryName": "🌱️create-material",
           "scenarios": [
             {
-              "id": "appends-an-aluminium-alloy",
-              "directoryName": "🪙️appends-an-aluminium-alloy"
+              "id": "nu-at-a-half-8253d2",
+              "directoryName": "🧨️nu-at-a-half-8253d2"
+            },
+            {
+              "id": "dup-material-id-1c0787",
+              "directoryName": "🚨️dup-material-id-1c0787"
+            },
+            {
+              "id": "hall-new-steel-0d2572",
+              "directoryName": "🏗️hall-new-steel-0d2572"
+            },
+            {
+              "id": "appends-an-9fdced",
+              "directoryName": "🪙️appends-an-9fdced"
             }
           ]
         },
@@ -26,8 +38,20 @@
           "mutationDirectoryName": "🗑️delete-material",
           "scenarios": [
             {
-              "id": "removes-the-unreferenced-aluminium-alloy",
-              "directoryName": "🚫️removes-the-unreferenced-aluminium-alloy"
+              "id": "glulam-in-use-1208e1",
+              "directoryName": "⛓️glulam-in-use-1208e1"
+            },
+            {
+              "id": "no-such-material-494b10",
+              "directoryName": "🚨️no-such-material-494b10"
+            },
+            {
+              "id": "hall-cut-gl32c-264bca",
+              "directoryName": "🏗️hall-cut-gl32c-264bca"
+            },
+            {
+              "id": "removes-the-b7b56a",
+              "directoryName": "🚫️removes-the-b7b56a"
             }
           ]
         },
@@ -37,8 +61,24 @@
           "mutationDirectoryName": "🔁️replace-material",
           "scenarios": [
             {
-              "id": "softens-the-steel-shear-modulus-in-place",
-              "directoryName": "📉️softens-the-steel-shear-modulus-in-place"
+              "id": "negative-e-84dad7",
+              "directoryName": "🧨️negative-e-84dad7"
+            },
+            {
+              "id": "renames-c24-b60696",
+              "directoryName": "🪪️renames-c24-b60696"
+            },
+            {
+              "id": "same-material-950f90",
+              "directoryName": "⏸️same-material-950f90"
+            },
+            {
+              "id": "hall-regrades-8dbc23",
+              "directoryName": "🏗️hall-regrades-8dbc23"
+            },
+            {
+              "id": "softens-the-2cd183",
+              "directoryName": "📉️softens-the-2cd183"
             }
           ]
         }

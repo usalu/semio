@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "code": "plugin.reactor-turn-deadline",
+  "maximumFaultBytes": 65536,
+  "cases": [
+    {
+      "id": "empty-turn",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": true,
+      "events": [],
+      "eligible": true
+    },
+    {
+      "id": "exact-open",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": true,
+      "events": ["open"],
+      "eligible": true
+    },
+    {
+      "id": "exact-close",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": true,
+      "events": ["close"],
+      "eligible": true
+    },
+    {
+      "id": "exact-ack",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": true,
+      "events": ["ack"],
+      "eligible": true
+    },
+    {
+      "id": "multiple-lifecycles",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": true,
+      "events": ["open", "ack"],
+      "eligible": false
+    },
+    {
+      "id": "mixed-turn",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": true,
+      "events": ["ack", "wake"],
+      "eligible": false
+    },
+    {
+      "id": "command-page",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": true,
+      "events": ["page"],
+      "eligible": false
+    },
+    {
+      "id": "ordinary-event",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": true,
+      "events": ["wake"],
+      "eligible": false
+    },
+    {
+      "id": "non-retryable",
+      "code": "plugin.reactor-turn-deadline",
+      "retryable": false,
+      "events": ["ack"],
+      "eligible": false
+    },
+    {
+      "id": "other-code",
+      "code": "plugin.reactor-close-authority",
+      "retryable": true,
+      "events": ["ack"],
+      "eligible": false
+    }
+  ]
+}

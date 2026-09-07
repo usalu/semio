@@ -879,7 +879,15 @@ export function decodeRecord(value: unknown, spec: RecordSpec, path: string): Re
 /** 📸️ Decodes a parsed RFC 8259 value into a validated `RemodelingSnapshot`. */
 export const decodeRemodelingSnapshot = (json: unknown): RemodelingSnapshot => decodeRecord(json, REMODELING_SNAPSHOT_SPEC, "") as unknown as RemodelingSnapshot;
 
-/** 🔢 Shortest decimal lexeme that round-trips through the given float width — `ryu`'s rule. */
+/** 🔢 Shortest decimal lexeme that round-trips through the given float width — `ryu`'s rule.
+ *
+ *  ⚠️ A `format: float` FIELD is emitted at width 64, not 32, and that is not a mistake: since the
+ *  serde-elimination sweep this type graph is written through `pack::json` over `dsl::ToValue`, and
+ *  `impl ToValue for f32` widens with `*self as f64` (`🌱️value/🔁️codec/🦀️.rs:114`) before
+ *  `pack::json`'s f64 shortest-round-trip writer sees it. `0.42f32` therefore reaches the wire as
+ *  `0.41999998688697815`, not as `0.42` the way `serde_json`'s `serialize_f32` used to write it.
+ *  The width-32 rule stays available because it is still the right answer for anything that reaches
+ *  the wire as a real `f32`. */
 export function floatLexeme(value: number, width: 32 | 64): string {
   const narrow = width === 32 ? Math.fround : (n: number) => n;
   const target = narrow(value);
@@ -907,11 +915,11 @@ export function writeValueJson(value: unknown, spec: ValueSpec, depth: number): 
     case "f64":
       return floatLexeme(value as number, 64);
     case "f32":
-      return floatLexeme(value as number, 32);
+      return floatLexeme(value as number, 64);
     case "tuple": {
       const items = value as number[];
       if (items.length === 0) return "[]";
-      return `[\n${items.map((item) => `${indentOf(depth + 1)}${floatLexeme(item, spec.w)}`).join(",\n")}\n${indentOf(depth)}]`;
+      return `[\n${items.map((item) => `${indentOf(depth + 1)}${floatLexeme(item, 64)}`).join(",\n")}\n${indentOf(depth)}]`;
     }
     case "list": {
       const items = value as unknown[];

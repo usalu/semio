@@ -1112,6 +1112,112 @@ mod tests {
     use semio_framework_plugin::{testkit, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
     use store::MemoryBackbone;
 
+    //#region 🔖️RetainedEnvelopeIngress
+    /// 📨️ One live document-envelope wire, built from the artifact's own empty output shell — the only
+    /// snapshot `ArtifactPack::encode_pack` admits, since a populated Raster document reaches output
+    /// exclusively through the retained page authority. The envelope the wire describes is retired here
+    /// through the same owner bundle the app's decode hook installs, one bounded grant per turn.
+    fn raster_envelope_wire() -> Vec<u8> {
+        use store::ArtifactPack;
+
+        let snapshot = crate::artifacts::raster::schema::empty_raster_snapshot();
+        let snapshot_pack = snapshot.encode_pack();
+        let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        let wire = dsl::json::to_string(&dsl::json::object([
+            ("schema".to_string(), dsl::json::Value::String(RASTER_DOCUMENT_SCHEMA.to_string())),
+            ("id".to_string(), dsl::json::Value::String("raster-live-load".to_string())),
+            (
+                "vcs".to_string(),
+                dsl::json::object([
+                    ("initialSnapshot".to_string(), dsl::json::Value::String(snapshot_hex)),
+                    ("edits".to_string(), dsl::json::array([])),
+                    ("changes".to_string(), dsl::json::array([])),
+                    ("checkpoints".to_string(), dsl::json::array([])),
+                    ("alternatives".to_string(), dsl::json::array([])),
+                ]),
+            ),
+            ("editMessages".to_string(), dsl::json::array([])),
+            ("conflicts".to_string(), dsl::json::array([])),
+        ]))
+        .into_bytes();
+        let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-live-load", snapshot, None);
+        let mut retirement = crate::artifacts::raster::spr::raster_envelope_decode_owner_bundle().retire_envelope(envelope);
+        for _ in 0..100_000 {
+            match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Raster fixture envelope retirement") {
+                store::SnapshotRetirementStep::Complete => {
+                    assert!(retirement.terminal_is_empty());
+                    drop(retirement);
+                    return wire;
+                }
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1);
+                    assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                }
+                store::SnapshotRetirementStep::Blocked => panic!("unshared Raster fixture envelope retirement blocked"),
+            }
+        }
+        panic!("Raster fixture envelope retirement did not reach terminal")
+    }
+
+    /// 🎟️ Reserves page/byte credits first, then feeds the wire as fixed-size pages and seals — the
+    /// caller never holds a growable buffer and never sees the store the decode will publish into.
+    fn admit_raster_envelope(app: &mut RasterApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Raster live envelope ingress credits");
+        for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+            bytes[..chunk.len()].copy_from_slice(chunk);
+            let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Raster live envelope page");
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Raster live envelope page admission failed: {fault}"));
+        }
+        assert!(app.seal_artifact_envelope_ingress(handle).expect("Raster live envelope seal/submit"));
+        handle
+    }
+
+    /// 🔄️ Pumps the load one bounded maintenance turn at a time and polls after each — never inline,
+    /// never unbounded.
+    fn drive_raster_live_load(app: &mut RasterApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+        for _ in 0..100_000 {
+            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Raster live maintenance turn");
+            let poll = app.advance_artifact_envelope_load(handle).expect("Raster live load advancement");
+            if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+                return poll;
+            }
+            std::thread::yield_now();
+        }
+        panic!("Raster live envelope load did not reach terminal")
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
+        let mut app = app();
+        let base_generation = app.artifact_generation_now();
+        let handle = admit_raster_envelope(&mut app, &raster_envelope_wire());
+        assert_eq!(handle.generation, base_generation);
+        assert_eq!(drive_raster_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+        assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
+        assert!(app.acknowledge_artifact_store_replacement(handle).expect("first exact Raster load acknowledgement"));
+        assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate Raster load acknowledgement is a no-op"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn raster_live_envelope_cancel_closes_retained_pages_without_publication() {
+        let mut app = app();
+        let base_generation = app.artifact_generation_now();
+        let wire = raster_envelope_wire();
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled Raster ingress credits");
+        let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+        bytes[..first.len()].copy_from_slice(first);
+        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Raster first page");
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Raster page admission failed: {fault}"));
+        app.cancel_artifact_envelope_load(handle).expect("cancel exact Raster ingress");
+        assert_eq!(drive_raster_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+        assert_eq!(app.artifact_generation_now(), base_generation);
+    }
+    //#endregion 🔖️RetainedEnvelopeIngress
+
     /// 🌱️ Relocated verbatim from `⚙️engine`'s own test module (rule 4: `raster_io`/`raster_composite_media`
     /// now live in this file's own `🔖️Io` region).
     #[semio_framework_async_macros::async_test]

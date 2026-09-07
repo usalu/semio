@@ -1,0 +1,32 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": {
+    "added": [
+      {
+        "id": "sec_ridge",
+        "name": "GL24h Beam 200x800",
+        "area": 0.16,
+        "iy": 0.00853333,
+        "iz": 0.00053333,
+        "j": 0.001798
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "solids": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

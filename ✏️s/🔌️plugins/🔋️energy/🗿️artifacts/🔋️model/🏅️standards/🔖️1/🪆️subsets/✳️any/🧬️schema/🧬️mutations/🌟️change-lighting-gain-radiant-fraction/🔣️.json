@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain-radiant-fraction",
+  "semanticKind": "change-lighting-gain-radiant-fraction",
+  "displayName": "Change Lighting Gain Radiant Fraction",
+  "emoji": "🌟️",
+  "aggregateVariant": "ChangeLightingGainRadiantFraction",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-lighting-gain-radiant-fraction",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

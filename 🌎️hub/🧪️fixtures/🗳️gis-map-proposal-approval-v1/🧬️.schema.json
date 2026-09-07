@@ -3,7 +3,7 @@
   "$id": "urn:semio:hub:gis-map-proposal-approval-fixture:v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "version", "binding", "base", "sampleJobId", "proposalCanonical", "proposalHash", "preview", "inverseCanonical", "inverseHash", "lifecycle", "cancelLifecycle", "visibility", "errors", "approvalRejections", "limits", "nonclaims"],
+  "required": ["schema", "version", "binding", "base", "sampleJobId", "proposalCanonical", "proposalHash", "preview", "inverseCanonical", "inverseHash", "lifecycle", "cancelLifecycle", "committer", "visibility", "errors", "approvalRejections", "limits", "nonclaims"],
   "properties": {
     "schema": { "const": "semio.hub.gis-map-proposal-approval-fixture/v1" },
     "version": { "const": 1 },
@@ -89,6 +89,19 @@
     "inverseHash": { "$ref": "urn:semio:hub:inference-job:v1#/$defs/hash" },
     "lifecycle": { "allOf": [{ "$ref": "#/$defs/events" }, { "type": "array", "minItems": 5, "maxItems": 5 }] },
     "cancelLifecycle": { "allOf": [{ "$ref": "#/$defs/events" }, { "type": "array", "minItems": 4, "maxItems": 4 }] },
+    "committer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capacity", "roles", "children", "phases", "witnessSource", "retryOwner"],
+      "properties": {
+        "capacity": { "const": 64 },
+        "roles": { "const": ["map", "drawing", "value"] },
+        "children": { "const": ["gismap-drawing", "gismap-value"] },
+        "phases": { "const": ["ready", "assembly", "journal", "verification", "committed", "closing"] },
+        "witnessSource": { "const": "sole-committed-wal-event" },
+        "retryOwner": { "const": "same-document-three-store-host" }
+      }
+    },
     "visibility": {
       "type": "array",
       "minItems": 7,

@@ -1,0 +1,583 @@
+{
+  "nodes": [
+    {
+      "id": "a0",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "a1",
+      "x": 0.0,
+      "y": 0.75
+    },
+    {
+      "id": "a2",
+      "x": 0.0,
+      "y": 1.5
+    },
+    {
+      "id": "a3",
+      "x": 0.0,
+      "y": 2.25
+    },
+    {
+      "id": "a4",
+      "x": 0.0,
+      "y": 3.0
+    },
+    {
+      "id": "a5",
+      "x": 0.0,
+      "y": 3.75
+    },
+    {
+      "id": "a6",
+      "x": 0.0,
+      "y": 4.5
+    },
+    {
+      "id": "a7",
+      "x": 0.0,
+      "y": 5.25
+    },
+    {
+      "id": "a8",
+      "x": 0.0,
+      "y": 6.0
+    },
+    {
+      "id": "b0",
+      "x": 10.0,
+      "y": 0.0
+    },
+    {
+      "id": "b1",
+      "x": 10.0,
+      "y": 0.75
+    },
+    {
+      "id": "b2",
+      "x": 10.0,
+      "y": 1.5
+    },
+    {
+      "id": "b3",
+      "x": 10.0,
+      "y": 2.25
+    },
+    {
+      "id": "b4",
+      "x": 10.0,
+      "y": 3.0
+    },
+    {
+      "id": "b5",
+      "x": 10.0,
+      "y": 3.75
+    },
+    {
+      "id": "b6",
+      "x": 10.0,
+      "y": 4.5
+    },
+    {
+      "id": "b7",
+      "x": 10.0,
+      "y": 5.25
+    },
+    {
+      "id": "b8",
+      "x": 10.0,
+      "y": 6.0
+    },
+    {
+      "id": "c0",
+      "x": 20.0,
+      "y": 0.0
+    },
+    {
+      "id": "c1",
+      "x": 20.0,
+      "y": 0.75
+    },
+    {
+      "id": "c2",
+      "x": 20.0,
+      "y": 1.5
+    },
+    {
+      "id": "c3",
+      "x": 20.0,
+      "y": 2.25
+    },
+    {
+      "id": "c4",
+      "x": 20.0,
+      "y": 3.0
+    },
+    {
+      "id": "c5",
+      "x": 20.0,
+      "y": 3.75
+    },
+    {
+      "id": "c6",
+      "x": 20.0,
+      "y": 4.5
+    },
+    {
+      "id": "c7",
+      "x": 20.0,
+      "y": 5.25
+    },
+    {
+      "id": "c8",
+      "x": 20.0,
+      "y": 6.0
+    },
+    {
+      "id": "d0",
+      "x": 30.0,
+      "y": 0.0
+    },
+    {
+      "id": "d1",
+      "x": 30.0,
+      "y": 0.75
+    },
+    {
+      "id": "d2",
+      "x": 30.0,
+      "y": 1.5
+    },
+    {
+      "id": "d3",
+      "x": 30.0,
+      "y": 2.25
+    },
+    {
+      "id": "d4",
+      "x": 30.0,
+      "y": 3.0
+    },
+    {
+      "id": "d5",
+      "x": 30.0,
+      "y": 3.75
+    },
+    {
+      "id": "d6",
+      "x": 30.0,
+      "y": 4.5
+    },
+    {
+      "id": "d7",
+      "x": 30.0,
+      "y": 5.25
+    },
+    {
+      "id": "d8",
+      "x": 30.0,
+      "y": 6.0
+    }
+  ],
+  "elements": [
+    {
+      "kind": "beam",
+      "id": "e_a1",
+      "start": "a0",
+      "end": "a1",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_a2",
+      "start": "a1",
+      "end": "a2",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_a3",
+      "start": "a2",
+      "end": "a3",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_a4",
+      "start": "a3",
+      "end": "a4",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_a5",
+      "start": "a4",
+      "end": "a5",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_a6",
+      "start": "a5",
+      "end": "a6",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_a7",
+      "start": "a6",
+      "end": "a7",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_a8",
+      "start": "a7",
+      "end": "a8",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_b1",
+      "start": "b0",
+      "end": "b1",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_b2",
+      "start": "b1",
+      "end": "b2",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_b3",
+      "start": "b2",
+      "end": "b3",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_b4",
+      "start": "b3",
+      "end": "b4",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_b5",
+      "start": "b4",
+      "end": "b5",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_b6",
+      "start": "b5",
+      "end": "b6",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_b7",
+      "start": "b6",
+      "end": "b7",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_b8",
+      "start": "b7",
+      "end": "b8",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_c1",
+      "start": "c0",
+      "end": "c1",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_c2",
+      "start": "c1",
+      "end": "c2",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_c3",
+      "start": "c2",
+      "end": "c3",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_c4",
+      "start": "c3",
+      "end": "c4",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_c5",
+      "start": "c4",
+      "end": "c5",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_c6",
+      "start": "c5",
+      "end": "c6",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_c7",
+      "start": "c6",
+      "end": "c7",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_c8",
+      "start": "c7",
+      "end": "c8",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_d1",
+      "start": "d0",
+      "end": "d1",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_d2",
+      "start": "d1",
+      "end": "d2",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_d3",
+      "start": "d2",
+      "end": "d3",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_d4",
+      "start": "d3",
+      "end": "d4",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_d5",
+      "start": "d4",
+      "end": "d5",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_d6",
+      "start": "d5",
+      "end": "d6",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_d7",
+      "start": "d6",
+      "end": "d7",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    },
+    {
+      "kind": "beam",
+      "id": "e_d8",
+      "start": "d7",
+      "end": "d8",
+      "materialId": "steel",
+      "sectionId": "ipe300"
+    }
+  ],
+  "regions": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel S355",
+      "e": 210000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "ipe300",
+      "name": "IPE 300",
+      "area": 0.005381,
+      "iy": 8.356e-05
+    }
+  ],
+  "supports": [
+    {
+      "id": "sup_a_base",
+      "nodeId": "a0",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Rz"
+      ]
+    },
+    {
+      "id": "sup_b_base",
+      "nodeId": "b0",
+      "fixed": [
+        "Tx",
+        "Ty"
+      ]
+    },
+    {
+      "id": "sup_b_head",
+      "nodeId": "b8",
+      "fixed": [
+        "Tx"
+      ]
+    },
+    {
+      "id": "sup_c_base",
+      "nodeId": "c0",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Rz"
+      ]
+    },
+    {
+      "id": "sup_c_head",
+      "nodeId": "c8",
+      "fixed": [
+        "Tx"
+      ]
+    },
+    {
+      "id": "sup_d_base",
+      "nodeId": "d0",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Rz"
+      ]
+    },
+    {
+      "id": "sup_d_head",
+      "nodeId": "d8",
+      "fixed": [
+        "Tx",
+        "Rz"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "col_a",
+      "name": "Compression on column A",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "l_a",
+          "nodeId": "a8",
+          "dof": "Ty",
+          "value": -1000000.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "col_b",
+      "name": "Compression on column B",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "l_b",
+          "nodeId": "b8",
+          "dof": "Ty",
+          "value": -1000000.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "col_c",
+      "name": "Compression on column C",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "l_c",
+          "nodeId": "c8",
+          "dof": "Ty",
+          "value": -1000000.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "col_d",
+      "name": "Compression on column D",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "l_d",
+          "nodeId": "d8",
+          "dof": "Ty",
+          "value": -1000000.0
+        }
+      ],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 2,
+    "deformationScale": 100.0
+  }
+}

@@ -54,11 +54,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "update-analysis-settings" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-buckling-mode-count/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-7b5381/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-analysis: no committed specification vector is registered for kind {other:?}"),
     }
@@ -69,12 +69,54 @@ fn vector(kind: &str) -> Vector {
 fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("mutate-fem3d-1-analysis: a committed fixture must be valid JSON: {error}"))
 }
+
+/// 🏭️ One kind's committed GLULAM WORKSHOP HALL vector — the second real model this artifact
+/// carries (ticket `26/09/06/FEM-PLUGIN-END-TO-END`), a 12 m span two-bay GL24h portal hall on a
+/// C25/30 raft slab. Same five members as [`vector`], a different structural system.
+fn hall_vector_of(kind: &str) -> Vector {
+    match kind {
+        "update-analysis-settings" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🏗️hall-more-modes-ecbb5c/🎯️outcome/🔣️.json"),
+        },
+        other => panic!("📈️mutate-fem3d-1-analysis: no committed hall vector is registered for kind {other:?}"),
+    }
+}
+
+/// 🚫️ Every committed vector of this subset whose whole claim is that the model does NOT move — a
+/// refusal, or a declared no-op. Keyed by the scenario id, not by the kind, because a kind can
+/// refuse in several different ways. A rejection bundle carries no `🔺️diff/🔣️.json` at all, so the
+/// `diff` member is the empty object and no handler reads it.
+const REJECT_VECTORS: &[&str] = &["same-settings-fdb832", "zero-modes-a27c74"];
+
+fn reject_vector_of(identifier: &str) -> Vector {
+    match identifier {
+        "same-settings-fdb832" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/⏸️same-settings-fdb832/🎯️outcome/🔣️.json"),
+        },
+        "zero-modes-a27c74" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🧨️zero-modes-a27c74/🎯️outcome/🔣️.json"),
+        },
+        other => panic!("📈️mutate-fem3d-1-analysis: no committed rejection vector is registered for {other:?}"),
+    }
+}
 //#endregion 🔖️Fixtures
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
+    use super::{canonical, hall_vector_of, reject_vector_of, vector, DERIVED_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
     use semio_s_plugin_fem::artifacts::fem3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
@@ -268,6 +310,50 @@ mod subject {
             Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
         }
     }
+
+    /// 🏭️ Replays one committed glulam-hall vector — the same five laws [`spec_vector`] applies, on
+    /// the second real model, so no verb's evidence rests on a single structural system.
+    pub fn hall_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |_ctx: &Context| {
+            let committed = hall_vector_of(kind);
+            let report = report_of(&format!("hall-vector-{kind}"), committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
+                return Err(format!("hall-vector-{kind}: the applied model is not the committed after-snapshot — {first}"));
+            }
+            if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(committed.diff)) {
+                return Err(format!("hall-vector-{kind}: the produced delta is not the committed 🔺️diff — {first}"));
+            }
+            declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
+            law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
+            touches_one(&format!("hall-vector-{kind}"), kind, member(&report, "base")?, applied)?;
+            law::inverse_restores(kind, member(&report, "inverseSnapshot")?, member(&report, "base")?)?;
+            Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
+        }
+    }
+
+    /// 🚫️ Replays one committed vector whose claim is that NOTHING happens. The projection carries
+    /// the two facts both implementations can produce — whether the request was refused, and the
+    /// model it left behind. The refusal's wording is not projected: each implementation words it in
+    /// its own language, and what the differential holds them to is the verdict and the document.
+    pub fn reject(identifier: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |_ctx: &Context| {
+            let committed = reject_vector_of(identifier);
+            let report = report_of(&format!("reject-{identifier}"), committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            let messages = members(&report, "messages")?;
+            declared_outcome_holds(identifier, &messages, &canonical(committed.outcome))?;
+            if let Some(first) = law::divergence(applied, member(&report, "base")?) {
+                return Err(format!("reject-{identifier}: a refused or no-op mutation must leave the model exactly where it was — {first}"));
+            }
+            if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
+                return Err(format!("reject-{identifier}: the committed after-model is not the committed before-model — {first}"));
+            }
+            let refused = messages.iter().any(|message| { let level = message.str("level"); level == "error" || level == "fatal" });
+            let projection = Json::Object(vec![("refused".to_string(), Json::Bool(refused)), ("model".to_string(), applied.clone())]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+        }
+    }
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
@@ -285,12 +371,16 @@ pub fn adapter() -> Adapter {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
             built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
             built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
+            built = built.subject(&format!("hall-vector-{kind}"), subject::hall_vector(kind));
+        }
+        for identifier in REJECT_VECTORS {
+            built = built.subject(&format!("reject-{identifier}"), subject::reject(identifier));
         }
         return built;
     }
     #[cfg(not(feature = "sut"))]
     {
-        let _ = (KINDS, UNOBSERVABLE, vector as fn(&str) -> Vector);
+        let _ = (KINDS, UNOBSERVABLE, REJECT_VECTORS, vector as fn(&str) -> Vector, hall_vector_of as fn(&str) -> Vector, reject_vector_of as fn(&str) -> Vector);
         built
     }
 }

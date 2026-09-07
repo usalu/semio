@@ -43,8 +43,11 @@ export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
   "configure-energy-simulation",
 ] as const;
 
-/** 📬️ The twelve verbs that publish into the document store; the other six are session-only. */
-export const ENERGY_MODEL_DOCUMENT_TOOL_IDS = ENERGY_MODEL_RETAINED_TOOL_IDS.slice(0, 13);
+/** 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
+ * is NOT one of them — a whole-document swap has no mutation representative in this artifact's
+ * vocabulary, so it emits a `LoadDocument` effect (the host's `ArtifactStore::reset` route, outside
+ * undo history) and declares the `HostOnly` publication lane like the six session verbs. */
+export const ENERGY_MODEL_DOCUMENT_TOOL_IDS = ENERGY_MODEL_RETAINED_TOOL_IDS.slice(0, 12);
 
 /** 📚️ The bundled examples the plugin root registers through `editor_with_examples`. */
 export const ENERGY_MODEL_EXAMPLE_IDS = [

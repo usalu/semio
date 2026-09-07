@@ -34,7 +34,7 @@ pub use super::relative_pose::RemodelingPoseDelta;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
-#[artifact_schema(id = "s.remodeling.remodeling.inference")]
+#[artifact_schema(id = "s.remodel.remodeling.inference")]
 pub struct RemodelingInference {
     #[derived]
     pub bounds: RemodelingBounds,
@@ -59,13 +59,13 @@ impl Default for RemodelingInference {
 
 impl protocol::InferenceSpec<RemodelingSnapshot> for RemodelingInference {
     fn inference_schema_id() -> &'static str {
-        "s.remodeling.remodeling.inference"
+        "s.remodel.remodeling.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.remodeling.remodeling.inference.bounds", reads: &["results"] }, protocol::InferenceFieldSpec { id: "s.remodeling.remodeling.inference.relative_camera_pose", reads: &["results"] }]
+        &[protocol::InferenceFieldSpec { id: "s.remodel.remodeling.inference.bounds", reads: &["results"] }, protocol::InferenceFieldSpec { id: "s.remodel.remodeling.inference.relative_camera_pose", reads: &["results"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -78,11 +78,11 @@ impl ArtifactInferrer for crate::artifacts::remodeling::standards::v1::subsets::
 //#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.remodeling.remodeling.inference`'s facet leaves into the OS-wide inference catalog —
+/// 💡️ Registers `s.remodel.remodeling.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `remodeling_artifact_schema_descriptor`'s registration.
 pub fn remodeling_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
-        id: "s.remodeling.remodeling.inference",
+        id: "s.remodel.remodeling.inference",
         inference: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

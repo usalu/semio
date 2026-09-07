@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule-value",
+  "semanticKind": "change-constant-schedule-value",
+  "displayName": "Change Constant Schedule Value",
+  "emoji": "🕝️",
+  "aggregateVariant": "ChangeConstantScheduleValue",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-constant-schedule-value",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

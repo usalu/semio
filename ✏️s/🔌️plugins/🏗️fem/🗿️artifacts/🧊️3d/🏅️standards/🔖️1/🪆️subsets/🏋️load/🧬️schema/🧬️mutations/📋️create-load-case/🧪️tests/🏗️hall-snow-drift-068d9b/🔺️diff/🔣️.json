@@ -1,0 +1,39 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": {
+    "added": [
+      {
+        "id": "snow_drift",
+        "name": "Snow Drift",
+        "loads": [
+          {
+            "kind": "memberUdl",
+            "id": "ld_drift_l",
+            "elementId": "raf_l_1",
+            "wx": 0.0,
+            "wy": 0.0,
+            "wz": -8640.0
+          }
+        ],
+        "selfWeight": false
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

@@ -1,0 +1,11 @@
+{
+  "mutation": "createElement",
+  "element": {
+    "kind": "bar",
+    "id": "tie_f0",
+    "start": "el_0",
+    "end": "er_0",
+    "materialId": "s355",
+    "sectionId": "sec_tie"
+  }
+}

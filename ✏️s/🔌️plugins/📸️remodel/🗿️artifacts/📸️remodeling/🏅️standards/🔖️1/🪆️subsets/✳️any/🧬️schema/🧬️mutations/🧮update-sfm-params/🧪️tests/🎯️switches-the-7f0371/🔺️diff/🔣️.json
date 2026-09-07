@@ -4,6 +4,7 @@
   "id": null,
   "streams": null,
   "assets": null,
+  "durableArtifacts": null,
   "calibration": null,
   "params": {
     "ingest": {

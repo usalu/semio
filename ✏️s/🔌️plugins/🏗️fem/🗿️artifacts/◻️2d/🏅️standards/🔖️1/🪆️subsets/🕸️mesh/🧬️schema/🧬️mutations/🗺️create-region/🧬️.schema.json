@@ -1,24 +1,30 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CreateRegion",
+  "description": "The `create-region` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"createRegion\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "region"
   ],
   "properties": {
+    "mutation": {
+      "const": "createRegion",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire."
+    },
     "region": {
       "title": "FemRegion",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "holes",
         "id",
-        "materialId",
-        "meshSize",
         "name",
         "outline",
-        "thickness"
+        "holes",
+        "thickness",
+        "materialId",
+        "meshSize"
       ],
       "properties": {
         "id": {
@@ -32,7 +38,8 @@
           "items": {
             "type": "array",
             "items": {
-              "type": "number"
+              "type": "number",
+              "format": "double"
             },
             "minItems": 2,
             "maxItems": 2
@@ -45,7 +52,8 @@
             "items": {
               "type": "array",
               "items": {
-                "type": "number"
+                "type": "number",
+                "format": "double"
               },
               "minItems": 2,
               "maxItems": 2
@@ -53,13 +61,15 @@
           }
         },
         "thickness": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "materialId": {
           "type": "string"
         },
         "meshSize": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         }
       }
     }

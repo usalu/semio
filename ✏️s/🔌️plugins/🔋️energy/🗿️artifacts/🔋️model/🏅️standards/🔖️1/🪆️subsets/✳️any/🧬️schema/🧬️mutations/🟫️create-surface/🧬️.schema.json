@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateSurface",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "zoneId",
+    "class",
+    "verticesM",
+    "constructionId",
+    "boundary",
+    "interzoneSurfaceId",
+    "sunExposed",
+    "windExposed",
+    "multiplier"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "class": {
+      "enum": [
+        "ExteriorWall",
+        "InteriorWall",
+        "Roof",
+        "Ceiling",
+        "Floor",
+        "Interzone",
+        "Adiabatic",
+        "Ground"
+      ]
+    },
+    "verticesM": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+      }
+    },
+    "constructionId": {
+      "type": "integer"
+    },
+    "boundary": {
+      "enum": [
+        "OutdoorAir",
+        "Ground",
+        "OtherSideTemperature",
+        "Adiabatic",
+        "Interzone"
+      ]
+    },
+    "interzoneSurfaceId": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "sunExposed": {
+      "type": "boolean"
+    },
+    "windExposed": {
+      "type": "boolean"
+    },
+    "multiplier": {
+      "type": "integer"
+    }
+  }
+}

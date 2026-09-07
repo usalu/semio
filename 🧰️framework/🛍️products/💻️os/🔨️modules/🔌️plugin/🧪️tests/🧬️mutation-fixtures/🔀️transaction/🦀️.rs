@@ -8,12 +8,15 @@ mod command_close_tests;
 
 // 🧪️ Proves the `🧪️testkit` transaction helpers and the underlying transaction machinery
 // against a minimal `ArtifactApp` fixture whose notify mutation carries a real foreign step.
-use crate::app::{built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, UiAssemblyResult, VcsArtifactApp};
 use crate::app::testkit::{assert_proposes_transaction, assert_transaction_commits_as_one_edit, assert_transaction_rollback_leaves_state_untouched, meta, new_registered_app};
+use crate::app::{
+    ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, NoConfig,
+    NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, UiAssemblyResult, VcsArtifactApp, built_text_to_component_tree,
+};
 use protocol::{Mutation, MutationDiff};
-use semio_framework::{ActionKind, Fault, IconName, ToolFactoryKey, ToolJobFactory, ToolOperationSpec, ToolExecutionContract};
-use serde::{Deserialize, Serialize};
+use semio_framework::{ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 use store::{Backbone, BackboneMessage, EngineHandles, MemoryBackbone};
 use ui_wgpu::wgpu::LocalizedLabel;
 
@@ -92,11 +95,7 @@ impl ::protocol::OpText for TxnCommand {
         let variants = <Self as ::dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
         let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
-        }
+        if body.is_empty() { keyword } else { format!("{keyword} {body}") }
     }
 }
 
@@ -124,9 +123,15 @@ struct TxnFixtureJob {
 
 impl semio_framework_job::InteractiveJob for TxnFixtureJob {
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        if cx.is_cancelled() { return semio_framework_job::StepOutcome::Cancelled; }
-        if cx.should_yield() { return semio_framework_job::StepOutcome::Yield; }
-        let Some(command) = self.command.as_deref() else { return semio_framework_job::StepOutcome::Cancelled; };
+        if cx.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
+        }
+        if cx.should_yield() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        let Some(command) = self.command.as_deref() else {
+            return semio_framework_job::StepOutcome::Cancelled;
+        };
         let value = self.count + 1;
         let emit = match command {
             TxnCommand::Increment => Emit { artifact_mutations: vec![SetTransactionCountWithoutPreflight { value }.into()], description: Some("increment".into()), ..Default::default() },
@@ -140,33 +145,55 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
         })
     }
 
-    fn begin_close(&mut self) { self.closing = true; }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 { return semio_framework_job::InteractiveJobCloseStep::Blocked; }
+        if !self.closing || maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
         if let Some(command) = self.command.as_deref() {
             let released_bytes = std::mem::size_of_val(command);
-            if maximum_bytes < released_bytes { return semio_framework_job::InteractiveJobCloseStep::Blocked; }
+            if maximum_bytes < released_bytes {
+                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            }
             drop(self.command.take());
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
         }
-        if self.completion.take().is_some() { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }; }
+        if self.completion.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
-    fn terminal_is_empty(&self) -> bool { self.closing && self.command.is_none() && self.completion.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.command.is_none() && self.completion.is_none()
+    }
 }
 
-struct TxnFixtureFactory { keys: Vec<ToolFactoryKey> }
+struct TxnFixtureFactory {
+    keys: Vec<ToolFactoryKey>,
+}
 
 impl ToolJobFactory for TxnFixtureFactory {
     type Payload = TxnFixtureJob;
     type Job = TxnFixtureJob;
-    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
-    fn payload_schema_id(&self) -> &str { TXN_PAYLOAD_SCHEMA }
-    fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1) }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> { Ok(payload) }
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        TXN_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1)
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(payload)
+    }
 }
 
 impl ArtifactOwnedToolJobFactory for TxnFixtureFactory {
@@ -178,8 +205,12 @@ impl ArtifactOwnedToolJobFactory for TxnFixtureFactory {
         ArtifactToolPublicationContract { tool_id: "coalesced-increment", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "increment-and-notify", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
-    fn latest_wins_target(_command: &TxnCommand) -> Option<&str> { None }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<TxnCommand>>> { None }
+    fn latest_wins_target(_command: &TxnCommand) -> Option<&str> {
+        None
+    }
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<TxnCommand>>> {
+        None
+    }
 }
 
 async fn transaction_manifest() -> crate::app::App {
@@ -264,20 +295,40 @@ impl ArtifactApp for TxnApp {
         Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> { Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>()) }
-    fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> { Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>()) }
-    fn build_config_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> { Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>()) }
-    fn build_draft_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> { Some(crate::app::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>()) }
-    fn build_presence_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> { Some(crate::app::mutation_fixture::no_state::presence_store_disposer()) }
-    fn build_transient_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> { Some(crate::app::mutation_fixture::no_state::transient_store_disposer()) }
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory()) }
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory()) }
-    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> { Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory()) }
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
+    }
+    fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+    fn build_config_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+    fn build_draft_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(crate::app::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    }
+    fn build_presence_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_store_disposer())
+    }
+    fn build_transient_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(crate::app::mutation_fixture::no_state::transient_store_disposer())
+    }
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory())
+    }
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory())
+    }
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory())
+    }
 }
 
 fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
     for _ in 0..64 {
-        if app.close_terminal_is_empty() { return; }
+        if app.close_terminal_is_empty() {
+            return;
+        }
         match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("fixture app close") {
             crate::app::PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES),
             crate::app::PluginCloseStep::AwaitingInput { reason } => panic!("fixture close awaited input: {reason}"),

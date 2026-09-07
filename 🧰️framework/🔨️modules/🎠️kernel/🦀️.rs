@@ -3,9 +3,9 @@
 use crate::manifest::MediaType;
 use dsl::DslValue;
 pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use ui_wgpu::wgpu::UiNode;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Identifiers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -923,7 +923,7 @@ pub struct CommandContext {
 //#endregion 🔖️Invocation
 
 //#region 🔖️Presence
-pub use semio_framework_os_kernel::{decode_presence_peer, encode_presence_peer, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView};
+pub use semio_framework_os_kernel::{PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_peer, encode_presence_peer};
 //#endregion 🔖️Presence
 
 //#region 🔖️Window
@@ -1040,8 +1040,8 @@ pub enum RequestOutcome {
 /// `#[cfg(test)] mod extension_activation_tests` below, via its `use super::*`) keeps resolving —
 /// same pattern this file's own `PresencePeer` re-export above already uses.
 pub use semio_framework_os_kernel::channel::{
-    CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, FixedCommandPage, PagedCommand, PagedCommandReader,
-    RejectedCommandBuild, RejectedCommandBuildRegistry, COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES,
+    COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES, CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus,
+    CommandPageCursor, CommandPageSet, FixedCommandPage, PagedCommand, PagedCommandReader, RejectedCommandBuild, RejectedCommandBuildRegistry,
 };
 //#endregion 🔖️PagedCommandIngress
 
@@ -1050,6 +1050,10 @@ pub use semio_framework_os_kernel::channel::{
 /// capability/quota changes; channel/surface/completion/messaging/timer/request events drive a
 /// turn. Nothing constructs one yet — additive, packet A2-abi-sdk's executor is the first reader.
 pub use semio_framework_actor::instance_lifetime::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, ActorUiPatchReceipt};
+
+#[path = "📥️cold-pair/🦀️.rs"]
+mod cold_pair;
+pub use cold_pair::{COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES, ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -1246,12 +1250,18 @@ struct UiTurnPatchContents {
 }
 
 impl UiTurnPatchContents {
-    fn terminal_is_empty(&self) -> bool { self.pending.terminal_is_empty() }
+    fn terminal_is_empty(&self) -> bool {
+        self.pending.terminal_is_empty()
+    }
 
     fn close_step(&mut self, items: usize, bytes: usize) -> Result<semio_framework_ui_contract::UiValueRetirementStep, &'static str> {
         use semio_framework_ui_contract::UiValueRetirementStep;
-        if items == 0 || bytes == 0 { return Ok(UiValueRetirementStep::default()); }
-        if !self.pending.terminal_is_empty() { return self.pending.close_step(1, bytes); }
+        if items == 0 || bytes == 0 {
+            return Ok(UiValueRetirementStep::default());
+        }
+        if !self.pending.terminal_is_empty() {
+            return self.pending.close_step(1, bytes);
+        }
         Ok(UiValueRetirementStep { complete: true, ..Default::default() })
     }
 }
@@ -1265,15 +1275,21 @@ struct UiTurnPatchHandback {
 unsafe impl Sync for UiTurnPatchHandback {}
 
 impl UiTurnPatchHandback {
-    const fn new() -> Self { Self { ready: std::sync::atomic::AtomicBool::new(false), owner: std::cell::UnsafeCell::new(std::mem::MaybeUninit::uninit()) } }
+    const fn new() -> Self {
+        Self { ready: std::sync::atomic::AtomicBool::new(false), owner: std::cell::UnsafeCell::new(std::mem::MaybeUninit::uninit()) }
+    }
 
     fn publish(&self, key: UiTurnPatchRetireKey, contents: UiTurnPatchContents) {
-        unsafe { (*self.owner.get()).write((key, contents)); }
+        unsafe {
+            (*self.owner.get()).write((key, contents));
+        }
         self.ready.store(true, std::sync::atomic::Ordering::Release);
     }
 
     fn take(&self) -> Option<(UiTurnPatchRetireKey, UiTurnPatchContents)> {
-        if !self.ready.load(std::sync::atomic::Ordering::Acquire) { return None; }
+        if !self.ready.load(std::sync::atomic::Ordering::Acquire) {
+            return None;
+        }
         let owner = unsafe { (*self.owner.get()).assume_init_read() };
         self.ready.store(false, std::sync::atomic::Ordering::Release);
         Some(owner)
@@ -1282,9 +1298,8 @@ impl UiTurnPatchHandback {
 
 const _: () = assert!(std::mem::size_of::<(UiTurnPatchRetireKey, UiTurnPatchContents)>() <= 4096);
 static UI_TURN_PATCH_HANDBACKS: [UiTurnPatchHandback; UI_TURN_PATCH_RETIRE_SLOTS] = [const { UiTurnPatchHandback::new() }; UI_TURN_PATCH_RETIRE_SLOTS];
-static UI_TURN_PATCH_RETIRE_ARENA: std::sync::Mutex<UiTurnPatchRetireArena> = std::sync::Mutex::new(UiTurnPatchRetireArena {
-    slots: [const { UiTurnPatchRetireSlot { epoch: 0, reserved: false, contents: None } }; UI_TURN_PATCH_RETIRE_SLOTS], next_epoch: 1, epoch_exhausted: false, close_cursor: 0,
-});
+static UI_TURN_PATCH_RETIRE_ARENA: std::sync::Mutex<UiTurnPatchRetireArena> =
+    std::sync::Mutex::new(UiTurnPatchRetireArena { slots: [const { UiTurnPatchRetireSlot { epoch: 0, reserved: false, contents: None } }; UI_TURN_PATCH_RETIRE_SLOTS], next_epoch: 1, epoch_exhausted: false, close_cursor: 0 });
 
 #[derive(Debug)]
 struct UiTurnPatchRetireArena {
@@ -1327,7 +1342,9 @@ impl UiTurnPatchRetireArena {
     }
 
     fn handback(&mut self, key: UiTurnPatchRetireKey, contents: UiTurnPatchContents) -> Result<(), UiTurnPatchContents> {
-        let Some(slot) = self.slots.get_mut(key.slot).filter(|slot| slot.reserved && slot.epoch == key.epoch && slot.contents.is_none()) else { return Err(contents); };
+        let Some(slot) = self.slots.get_mut(key.slot).filter(|slot| slot.reserved && slot.epoch == key.epoch && slot.contents.is_none()) else {
+            return Err(contents);
+        };
         slot.contents = Some(contents);
         Ok(())
     }
@@ -1443,7 +1460,9 @@ impl UiTurnPatchTransportArena {
                 continue;
             }
             self.close_cursor = (index + 1) % UI_TURN_PATCH_TRANSPORT_SLOTS;
-            if self.slots[index].external { return Ok(UiTurnPatchTransportProgress::Blocked); }
+            if self.slots[index].external {
+                return Ok(UiTurnPatchTransportProgress::Blocked);
+            }
             let owner = self.slots[index].owner.as_mut().ok_or("closing turn patch transport lost its exact owner")?;
             let step = owner.close_step_with_grant(1, 4096)?;
             if step.complete {
@@ -1465,9 +1484,8 @@ impl UiTurnPatchTransportArena {
     }
 }
 
-static UI_TURN_PATCH_TRANSPORT_ARENA: std::sync::Mutex<UiTurnPatchTransportArena> = std::sync::Mutex::new(UiTurnPatchTransportArena {
-    slots: [const { UiTurnPatchTransportSlot { epoch: 0, session: 0, state: UiTurnPatchTransportState::Vacant, owner: None, external: false } }; UI_TURN_PATCH_TRANSPORT_SLOTS], close_cursor: 0,
-});
+static UI_TURN_PATCH_TRANSPORT_ARENA: std::sync::Mutex<UiTurnPatchTransportArena> =
+    std::sync::Mutex::new(UiTurnPatchTransportArena { slots: [const { UiTurnPatchTransportSlot { epoch: 0, session: 0, state: UiTurnPatchTransportState::Vacant, owner: None, external: false } }; UI_TURN_PATCH_TRANSPORT_SLOTS], close_cursor: 0 });
 
 struct UiTurnPatchTransportHandback {
     ready: std::sync::atomic::AtomicBool,
@@ -1478,13 +1496,19 @@ struct UiTurnPatchTransportHandback {
 unsafe impl Sync for UiTurnPatchTransportHandback {}
 
 impl UiTurnPatchTransportHandback {
-    const fn new() -> Self { Self { ready: std::sync::atomic::AtomicBool::new(false), value: std::cell::UnsafeCell::new(std::mem::MaybeUninit::uninit()) } }
+    const fn new() -> Self {
+        Self { ready: std::sync::atomic::AtomicBool::new(false), value: std::cell::UnsafeCell::new(std::mem::MaybeUninit::uninit()) }
+    }
     fn publish(&self, key: UiTurnPatchTransportKey, owner: Option<UiTurnPatches>) {
-        unsafe { (*self.value.get()).write((key, owner)); }
+        unsafe {
+            (*self.value.get()).write((key, owner));
+        }
         self.ready.store(true, std::sync::atomic::Ordering::Release);
     }
     fn take(&self) -> Option<(UiTurnPatchTransportKey, Option<UiTurnPatches>)> {
-        if !self.ready.load(std::sync::atomic::Ordering::Acquire) { return None; }
+        if !self.ready.load(std::sync::atomic::Ordering::Acquire) {
+            return None;
+        }
         let value = unsafe { (*self.value.get()).assume_init_read() };
         self.ready.store(false, std::sync::atomic::Ordering::Release);
         Some(value)
@@ -1528,7 +1552,9 @@ pub struct UiTurnPatchTransportProducer {
 
 impl UiTurnPatchTransportProducer {
     pub fn try_new(session: u64, owner: UiTurnPatches) -> Result<Self, UiTurnPatches> {
-        let Ok(mut arena) = UI_TURN_PATCH_TRANSPORT_ARENA.try_lock() else { return Err(owner); };
+        let Ok(mut arena) = UI_TURN_PATCH_TRANSPORT_ARENA.try_lock() else {
+            return Err(owner);
+        };
         let key = arena.reserve(session, owner)?;
         Ok(Self { key, patch: 0, operation: 0, ready: false, transferred: false, closing: false })
     }
@@ -1538,7 +1564,10 @@ impl UiTurnPatchTransportProducer {
             return UiTurnPatchTransportStep::Stale;
         }
         if cancelled || self.closing {
-            if !self.closing { UI_TURN_PATCH_TRANSPORT_HANDBACKS[self.key.slot].publish(self.key, None); self.closing = true; }
+            if !self.closing {
+                UI_TURN_PATCH_TRANSPORT_HANDBACKS[self.key.slot].publish(self.key, None);
+                self.closing = true;
+            }
             return UiTurnPatchTransportStep::Cancelled;
         }
         if deadline_expired {
@@ -1644,8 +1673,12 @@ impl UiTurnPatchTransportLease {
     }
 
     pub fn take_owner(mut self) -> Result<UiTurnPatches, Self> {
-        let Ok(mut arena) = UI_TURN_PATCH_TRANSPORT_ARENA.try_lock() else { return Err(self); };
-        let Some(slot) = arena.slot_mut(self.key).filter(|slot| slot.state == UiTurnPatchTransportState::CheckedOut && slot.external && slot.owner.is_none()) else { return Err(self); };
+        let Ok(mut arena) = UI_TURN_PATCH_TRANSPORT_ARENA.try_lock() else {
+            return Err(self);
+        };
+        let Some(slot) = arena.slot_mut(self.key).filter(|slot| slot.state == UiTurnPatchTransportState::CheckedOut && slot.external && slot.owner.is_none()) else {
+            return Err(self);
+        };
         let Some(owner) = self.owner.take() else { return Err(self) };
         let epoch = slot.epoch;
         *slot = UiTurnPatchTransportSlot { epoch, ..UiTurnPatchTransportSlot::default() };
@@ -1668,12 +1701,23 @@ pub fn close_ui_turn_patch_transport_one() -> Result<UiTurnPatchTransportProgres
     };
     for offset in 0..UI_TURN_PATCH_TRANSPORT_SLOTS {
         let index = (arena.close_cursor + offset) % UI_TURN_PATCH_TRANSPORT_SLOTS;
-        let Some((key, owner)) = UI_TURN_PATCH_TRANSPORT_HANDBACKS[index].take() else { continue; };
-        let Some(slot) = arena.slot_mut(key).filter(|slot| slot.external && if owner.is_some() { slot.state == UiTurnPatchTransportState::CheckedOut && slot.owner.is_none() } else { matches!(slot.state, UiTurnPatchTransportState::Building | UiTurnPatchTransportState::Published | UiTurnPatchTransportState::Closing) && slot.owner.is_some() }) else {
+        let Some((key, owner)) = UI_TURN_PATCH_TRANSPORT_HANDBACKS[index].take() else {
+            continue;
+        };
+        let Some(slot) = arena.slot_mut(key).filter(|slot| {
+            slot.external
+                && if owner.is_some() {
+                    slot.state == UiTurnPatchTransportState::CheckedOut && slot.owner.is_none()
+                } else {
+                    matches!(slot.state, UiTurnPatchTransportState::Building | UiTurnPatchTransportState::Published | UiTurnPatchTransportState::Closing) && slot.owner.is_some()
+                }
+        }) else {
             UI_TURN_PATCH_TRANSPORT_HANDBACKS[index].publish(key, owner);
             return Err("exact turn patch handback does not match its reserved slot");
         };
-        if owner.is_some() { slot.owner = owner; }
+        if owner.is_some() {
+            slot.owner = owner;
+        }
         slot.external = false;
         slot.state = UiTurnPatchTransportState::Closing;
         arena.close_cursor = (index + 1) % UI_TURN_PATCH_TRANSPORT_SLOTS;
@@ -1722,9 +1766,13 @@ impl PartialEq for UiTurnPatches {
 
 impl UiTurnPatches {
     pub fn try_push_ui_patch(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
-        if !self.contents.terminal_is_empty() || self.contents.pending.source_mut().is_err() { return Err(patch); }
+        if !self.contents.terminal_is_empty() || self.contents.pending.source_mut().is_err() {
+            return Err(patch);
+        }
         if self.retirement.is_none() {
-            let Ok(mut arena) = UI_TURN_PATCH_RETIRE_ARENA.try_lock() else { return Err(patch); };
+            let Ok(mut arena) = UI_TURN_PATCH_RETIRE_ARENA.try_lock() else {
+                return Err(patch);
+            };
             let Some(retirement) = arena.reserve() else { return Err(patch) };
             self.retirement = Some(retirement);
         }
@@ -1745,7 +1793,9 @@ impl UiTurnPatches {
     }
 
     pub fn try_transfer_one<T>(&mut self, transfer: impl FnOnce(UiPatch) -> Result<T, UiPatch>) -> UiTurnPatchTransfer<T> {
-        let Ok(source) = self.contents.pending.source_mut() else { return UiTurnPatchTransfer::Refused; };
+        let Ok(source) = self.contents.pending.source_mut() else {
+            return UiTurnPatchTransfer::Refused;
+        };
         let Some(patch) = source.take() else { return UiTurnPatchTransfer::Empty };
         match transfer(patch) {
             Ok(value) => UiTurnPatchTransfer::Transferred(value),
@@ -1762,7 +1812,9 @@ impl UiTurnPatches {
 
     pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> Result<semio_framework_ui_contract::UiValueRetirementStep, &'static str> {
         use semio_framework_ui_contract::UiValueRetirementStep;
-        if items == 0 || bytes == 0 { return Ok(UiValueRetirementStep::default()); }
+        if items == 0 || bytes == 0 {
+            return Ok(UiValueRetirementStep::default());
+        }
         if !self.contents.terminal_is_empty() {
             let mut step = self.contents.close_step(items, bytes)?;
             step.complete = false;
@@ -1774,7 +1826,9 @@ impl UiTurnPatches {
                 Err(std::sync::TryLockError::WouldBlock) => return Ok(UiValueRetirementStep::default()),
                 Err(std::sync::TryLockError::Poisoned(_)) => return Err("turn patch retirement arena is poisoned"),
             };
-            if !arena.release_empty(retirement) { return Err("exact turn patch retirement reservation missing"); }
+            if !arena.release_empty(retirement) {
+                return Err("exact turn patch retirement reservation missing");
+            }
             self.retirement = None;
             return Ok(UiValueRetirementStep { progressed: true, released_items: 1, ..Default::default() });
         }
@@ -1855,6 +1909,7 @@ pub struct TurnResult {
     pub status: TurnStatus,
     pub fuel_used: u64,
     pub command_ingress: CommandIngressStatus,
+    pub cold_pair_ingress: ColdPairIngressStatus,
     pub lifecycle_receipt: Option<ActorInstanceLifecycleReceipt>,
     pub ui_patch_receipt: Option<ActorUiPatchReceipt>,
 }
@@ -1907,13 +1962,18 @@ mod ui_turn_patch_tests {
         let key = owner.retirement.unwrap();
         let (send, receive) = std::sync::mpsc::channel();
         let (waited, worker) = with_ui_turn_patch_retire_arena(|_| {
-            let worker = std::thread::spawn(move || { drop(owner); send.send(()).unwrap(); });
+            let worker = std::thread::spawn(move || {
+                drop(owner);
+                send.send(()).unwrap();
+            });
             (receive.recv_timeout(std::time::Duration::from_millis(100)).is_err(), worker)
         });
         worker.join().unwrap();
         for turn in 0..4096 {
             close_ui_turn_patch_owner_one();
-            if with_ui_turn_patch_retire_arena(|arena| !arena.slots[key.slot].reserved) { break; }
+            if with_ui_turn_patch_retire_arena(|arena| !arena.slots[key.slot].reserved) {
+                break;
+            }
             assert!(turn < 4095);
         }
         assert_eq!(waited, fixture["dropWaitsForArena"].as_bool().unwrap());
@@ -1924,7 +1984,10 @@ mod ui_turn_patch_tests {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let (send, receive) = std::sync::mpsc::channel();
         let (waited, worker) = with_ui_turn_patch_retire_arena(|_| {
-            let worker = std::thread::spawn(move || { close_ui_turn_patch_owner_one(); send.send(()).unwrap(); });
+            let worker = std::thread::spawn(move || {
+                close_ui_turn_patch_owner_one();
+                send.send(()).unwrap();
+            });
             (receive.recv_timeout(std::time::Duration::from_millis(100)).is_err(), worker)
         });
         worker.join().unwrap();
@@ -1952,7 +2015,9 @@ mod ui_turn_patch_tests {
                 let step = owner.close_step_with_grant(1, grant).unwrap();
                 assert!(step.released_items <= 1 && step.released_bytes <= grant);
                 bytes += step.released_bytes;
-                if step.complete { break; }
+                if step.complete {
+                    break;
+                }
                 assert!(turn < 65_535);
             }
             assert_eq!(bytes, surface.as_bytes().len() + text.as_bytes().len());
@@ -2005,7 +2070,9 @@ mod ui_turn_patch_tests {
         for turn in 0..4096 {
             let step = patches.close_step_with_grant(1, 4096).unwrap();
             assert!(step.released_items <= 1 && step.released_bytes <= 4096);
-            if step.complete { break; }
+            if step.complete {
+                break;
+            }
             assert!(turn < 4095);
         }
         assert!(patches.contents.terminal_is_empty());
@@ -2041,7 +2108,9 @@ mod ui_turn_patch_tests {
         assert!(arena.slots[key.slot].reserved);
         for turn in 0..4096 {
             arena.close_one();
-            if !arena.slots[key.slot].reserved { break; }
+            if !arena.slots[key.slot].reserved {
+                break;
+            }
             assert!(turn < 4095);
         }
         assert!(!arena.slots[key.slot].reserved);
@@ -2082,13 +2151,18 @@ mod ui_turn_patch_tests {
         let key = producer.key;
         let (send, receive) = std::sync::mpsc::channel();
         let (waited, worker) = with_ui_turn_patch_transport_arena(|_| {
-            let worker = std::thread::spawn(move || { drop(producer); send.send(()).unwrap(); });
+            let worker = std::thread::spawn(move || {
+                drop(producer);
+                send.send(()).unwrap();
+            });
             (receive.recv_timeout(std::time::Duration::from_millis(100)).is_err(), worker)
         });
         worker.join().unwrap();
         for turn in 0..4096 {
             close_ui_turn_patch_transport_one().unwrap();
-            if with_ui_turn_patch_transport_arena(|arena| arena.slot_mut(key).is_none()) { break; }
+            if with_ui_turn_patch_transport_arena(|arena| arena.slot_mut(key).is_none()) {
+                break;
+            }
             assert!(turn < 4095);
         }
         assert!(with_ui_turn_patch_transport_arena(|arena| arena.slot_mut(key).is_none()));
@@ -2106,13 +2180,18 @@ mod ui_turn_patch_tests {
         let key = lease.key;
         let (send, receive) = std::sync::mpsc::channel();
         let (waited, worker) = with_ui_turn_patch_transport_arena(|_| {
-            let worker = std::thread::spawn(move || { drop(lease); send.send(()).unwrap(); });
+            let worker = std::thread::spawn(move || {
+                drop(lease);
+                send.send(()).unwrap();
+            });
             (receive.recv_timeout(std::time::Duration::from_millis(100)).is_err(), worker)
         });
         worker.join().unwrap();
         for turn in 0..4096 {
             close_ui_turn_patch_transport_one().unwrap();
-            if with_ui_turn_patch_transport_arena(|arena| arena.slot_mut(key).is_none()) { break; }
+            if with_ui_turn_patch_transport_arena(|arena| arena.slot_mut(key).is_none()) {
+                break;
+            }
             assert!(turn < 4095);
         }
         assert!(with_ui_turn_patch_transport_arena(|arena| arena.slot_mut(key).is_none()));
@@ -2124,7 +2203,10 @@ mod ui_turn_patch_tests {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
         let (send, receive) = std::sync::mpsc::channel();
         let (waited, worker) = with_ui_turn_patch_transport_arena(|_| {
-            let worker = std::thread::spawn(move || { close_ui_turn_patch_transport_one().unwrap(); send.send(()).unwrap(); });
+            let worker = std::thread::spawn(move || {
+                close_ui_turn_patch_transport_one().unwrap();
+                send.send(()).unwrap();
+            });
             (receive.recv_timeout(std::time::Duration::from_millis(100)).is_err(), worker)
         });
         worker.join().unwrap();
@@ -2192,8 +2274,8 @@ mod ui_turn_patch_tests {
                 UiTurnPatchTransportProgress::Pending { released_items, released_bytes } => {
                     assert!(released_items <= 1 && released_bytes <= 4096);
                     bytes += released_bytes;
-                },
-                UiTurnPatchTransportProgress::Blocked => {},
+                }
+                UiTurnPatchTransportProgress::Blocked => {}
                 UiTurnPatchTransportProgress::Idle => break,
             }
             assert!(turn < 65_535);

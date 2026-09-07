@@ -4,12 +4,15 @@ pub(crate) use mutations::{DummyMutation, SetDummyCount};
 
 // 🧪️ Proves each `testkit` primitive against a minimal dummy `ArtifactApp` before any real app
 // adopts them.
-use crate::app::{built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, UiAssemblyResult};
 use crate::app::testkit::{assert_registered_ingest_idempotent, assert_two_registered_instances_converge, assert_undo_redo_round_trip, close_registered_fixture_app, meta, new_app, new_registered_app};
+use crate::app::{
+    ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, NoConfig,
+    NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, UiAssemblyResult, built_text_to_component_tree,
+};
 use protocol::{Mutation, MutationDiff};
-use semio_framework::{ActionKind, Fault, IconName, ToolFactoryKey, ToolJobFactory, ToolOperationSpec, ToolExecutionContract};
-use serde::{Deserialize, Serialize};
+use semio_framework::{ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 use ui_wgpu::wgpu::LocalizedLabel;
 
@@ -86,11 +89,7 @@ impl ::protocol::OpText for DummyCommand {
         let variants = <Self as ::dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
         let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
-        }
+        if body.is_empty() { keyword } else { format!("{keyword} {body}") }
     }
 }
 
@@ -118,9 +117,15 @@ struct DummyFixtureJob {
 
 impl semio_framework_job::InteractiveJob for DummyFixtureJob {
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        if cx.is_cancelled() { return semio_framework_job::StepOutcome::Cancelled; }
-        if cx.should_yield() { return semio_framework_job::StepOutcome::Yield; }
-        let Some(DummyCommand::Increment) = self.command.as_deref() else { return semio_framework_job::StepOutcome::Cancelled; };
+        if cx.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
+        }
+        if cx.should_yield() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        let Some(DummyCommand::Increment) = self.command.as_deref() else {
+            return semio_framework_job::StepOutcome::Cancelled;
+        };
         self.completion.as_ref().expect("dummy fixture completion").complete(Ok(Emit::mutations(vec![SetDummyCount { value: self.count + 1 }.into()])), crate::app::EphemeralEmit::default()).expect("one exact dummy completion");
         semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
             state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
@@ -128,27 +133,47 @@ impl semio_framework_job::InteractiveJob for DummyFixtureJob {
         })
     }
 
-    fn begin_close(&mut self) { self.closing = true; }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 { return semio_framework_job::InteractiveJobCloseStep::Blocked; }
-        if self.command.take().is_some() || self.completion.take().is_some() { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }; }
+        if !self.closing || maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if self.command.take().is_some() || self.completion.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
-    fn terminal_is_empty(&self) -> bool { self.closing && self.command.is_none() && self.completion.is_none() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.command.is_none() && self.completion.is_none()
+    }
 }
 
-struct DummyFixtureFactory { keys: Vec<ToolFactoryKey> }
+struct DummyFixtureFactory {
+    keys: Vec<ToolFactoryKey>,
+}
 
 impl ToolJobFactory for DummyFixtureFactory {
     type Payload = DummyFixtureJob;
     type Job = DummyFixtureJob;
-    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
-    fn payload_schema_id(&self) -> &str { DUMMY_PAYLOAD_SCHEMA }
-    fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1) }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> { Ok(payload) }
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        DUMMY_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1)
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(payload)
+    }
 }
 
 impl ArtifactOwnedToolJobFactory for DummyFixtureFactory {
@@ -156,8 +181,12 @@ impl ArtifactOwnedToolJobFactory for DummyFixtureFactory {
     const TOOL_IDS: &'static [&'static str] = &[DUMMY_TOOL_ID];
     const DOCUMENT_SCHEMA: &'static str = DummyApp::DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: DUMMY_TOOL_ID, lanes: &[ArtifactToolPublicationLane::Artifact] }];
-    fn latest_wins_target(_command: &DummyCommand) -> Option<&str> { None }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<DummyCommand>>> { None }
+    fn latest_wins_target(_command: &DummyCommand) -> Option<&str> {
+        None
+    }
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<DummyCommand>>> {
+        None
+    }
 }
 
 async fn dummy_manifest() -> crate::app::App {
@@ -212,17 +241,39 @@ impl ArtifactApp for DummyApp {
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
     }
 
-    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> { Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>()) }
-    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> { Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>()) }
-    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> { Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>()) }
-    fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> { Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>()) }
-    fn build_config_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> { Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>()) }
-    fn build_draft_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> { Some(crate::app::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>()) }
-    fn build_presence_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> { Some(crate::app::mutation_fixture::no_state::presence_store_disposer()) }
-    fn build_transient_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> { Some(crate::app::mutation_fixture::no_state::transient_store_disposer()) }
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory()) }
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory()) }
-    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> { Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory()) }
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
+    }
+    fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+    fn build_config_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+    fn build_draft_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(crate::app::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    }
+    fn build_presence_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_store_disposer())
+    }
+    fn build_transient_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(crate::app::mutation_fixture::no_state::transient_store_disposer())
+    }
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory())
+    }
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory())
+    }
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory())
+    }
 
     async fn initial_snapshot() -> DummySnapshot {
         DummySnapshot::default()

@@ -1,14 +1,14 @@
 //! 🧾️ Exact committed-WAL command witnesses with fenced scope and retained cancellation cleanup.
 
 use super::{
-    schema::{hex, server_id, SAFE_INTEGER_MAX},
     InferenceErrorV1, InferenceOperationControlV1,
+    schema::{SAFE_INTEGER_MAX, hex, server_id},
 };
 use db::wal::{WalCursorControl, WalRecord, WalReplayCursor, WalReplayStep};
 use directory::os_directory::DocumentScope;
 use std::sync::{
-    atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
     Arc,
+    atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
 };
 use std::time::{Duration, Instant};
 
@@ -196,7 +196,7 @@ struct Transaction {
 
 #[cfg(feature = "native-artifact-execution")]
 fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<Option<String>, InferenceErrorV1> {
-    use semio_s_plugin_gis::artifacts::gismap::{mutations::GisMapMutation, GisMapSnapshot};
+    use semio_s_plugin_gis::artifacts::gismap::{GisMapSnapshot, mutations::GisMapMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::{
         drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot},
         value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot},
@@ -206,9 +206,7 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
     if record.document().artifact_id != document.0 {
         return Err(InferenceErrorV1::Invalid);
     }
-    let verified = record
-        .verify_fixed_three_edits::<GisMapSnapshot, GisMapMutation, SemioDrawingSnapshot, SemioDrawingMutation, SemioValueSnapshot, SemioValueMutation>()
-        .map_err(|_| InferenceErrorV1::Invalid)?;
+    let verified = record.verify_fixed_three_edits::<GisMapSnapshot, GisMapMutation, SemioDrawingSnapshot, SemioDrawingMutation, SemioValueSnapshot, SemioValueMutation>().map_err(|_| InferenceErrorV1::Invalid)?;
     if verified.document().artifact_id != document.0 {
         return Err(InferenceErrorV1::Invalid);
     }
@@ -217,6 +215,7 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
     if parent.forwards.len() != 1
         || parent.mutation_meta.len() != 1
         || !meta.dependencies.is_empty()
+        || meta.mutation_id.as_ref().map(|mutation| mutation.0.as_str()) != Some(target.mutation_id.as_str())
         || parent.actor.as_deref() != Some(target.actor.as_str())
         || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(target.actor.as_str())
     {

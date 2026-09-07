@@ -221,6 +221,7 @@ fn window(id: EntityId, name: &str, surface_id: EntityId) -> Fenestration {
         overhang_offset_m: 0.0,
         fin_depth_m: 0.0,
         fin_offset_m: 0.0,
+        glazing_construction_id: None,
     }
 }
 

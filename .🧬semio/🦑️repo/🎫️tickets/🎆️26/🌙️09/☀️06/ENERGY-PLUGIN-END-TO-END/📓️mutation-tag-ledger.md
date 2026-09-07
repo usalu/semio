@@ -49,10 +49,15 @@ same commit; it never borrows from a neighbour.
 - Inside a kind's own `🧪️tests/`, the case directories share one namespace: this ticket uses `✅️` for
   the vector that moves the document and `⛔️` for the vector that is refused. Reuse those two —
   different kinds have different parents, so they do not collide.
-- Keep the case slug short. A repo-wide sweep (`26/04/08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS…`'s
-  `🪟️shorten-long-paths.ts`) renames any `🧪️tests/<case>/…` path longer than 190 UTF-16 units to
-  `<truncated>-<6 hex>` and does NOT fix the `#[path]`/`include_str!`/`asset://` literals that name
-  it. The prefix up to `🧬️mutations/` is already 105 units, so budget accordingly.
+- Keep the case slug short, but the exact number was wrong here and is now MEASURED (W-D0). The
+  sweep this rule cited (`26/04/08/ENFORCE-UNIQUE-SEMANTIC-EMOJIS…`'s `🪟️shorten-long-paths.ts`)
+  targets 190 UTF-16 units and does NOT fix the `#[path]`/`include_str!`/`asset://` literals it
+  renames — but it is a **one-off script in that ticket's folder, not a live gate**: 1616 tracked
+  paths already exceed 190 and the repository maximum is 227 (`🧩️puzzle`'s own mutation fixtures
+  reach 225). 190 is also unreachable here: the prefix up to `🧬️mutations/` is 105 units and
+  `📐️change-zone-floor-area-participation` alone spends 39 more, leaving 5 for a case name.
+  The generator therefore enforces **227** — "never become the repository's new worst path" — and
+  fails loudly above it. Energy's longest case path today is 208.
 
 ## 4. How to insert your lines without conflicting
 
@@ -112,332 +117,347 @@ who both re-run it after adding only their own entries produce the same file, no
 | 102 | `change-zone-multiplier` | ✖️ | LANDED (W-D0) |
 | 103 | `change-zone-conditioned` | 🌬️ | LANDED (W-D0) |
 | 104 | `change-zone-floor-area-participation` | 📐️ | LANDED (W-D0) |
-| 105 | `create-zone` | — | reserved |
-| 106 | `delete-zone` | — | reserved |
+| 105 | `create-zone` | 🏘️ | LANDED (G1) |
+| 106 | `delete-zone` | 🏚️ | LANDED (G1) |
 | | **Space** | | |
-| 107 | `create-space` | — | reserved |
-| 108 | `delete-space` | — | reserved |
-| 109 | `rename-space` | — | reserved |
-| 110 | `change-space-floor-area` | — | reserved |
-| 111 | `change-space-zone` | — | reserved |
+| 107 | `create-space` | 🪑️ | LANDED (G1) |
+| 108 | `delete-space` | 🧹️ | LANDED (G1) |
+| 109 | `rename-space` | 🔤️ | LANDED (G1) |
+| 110 | `change-space-floor-area` | 🧮️ | LANDED (G1) |
+| 111 | `change-space-zone` | 🚚️ | LANDED (G1) |
 
 ### Geometry & envelope — `200`–`299` (§4.3)
 
 | # | kind | emoji | status |
 |---|---|---|---|
 | | **Surface** | | |
-| 200 | `create-surface` | — | reserved |
-| 201 | `delete-surface` | — | reserved |
-| 202 | `rename-surface` | — | reserved |
-| 203 | `change-surface-zone` | — | reserved |
-| 204 | `change-surface-class` | — | reserved |
-| 205 | `replace-surface-vertices` | — | reserved |
-| 206 | `change-surface-construction` | — | reserved |
-| 207 | `change-surface-boundary-condition` | — | reserved |
-| 208 | `change-surface-sun-exposed` | — | reserved |
-| 209 | `change-surface-wind-exposed` | — | reserved |
-| 210 | `change-surface-multiplier` | — | reserved |
+| 200 | `create-surface` | 🟫️ | LANDED (G1) |
+| 201 | `delete-surface` | 🪚️ | LANDED (G1) |
+| 202 | `rename-surface` | 🏳️ | LANDED (G1) |
+| 203 | `change-surface-zone` | 🗜️ | LANDED (G1) |
+| 204 | `change-surface-class` | 🧩️ | LANDED (G1) |
+| 205 | `replace-surface-vertices` | 🔺️ | LANDED (G1) |
+| 206 | `change-surface-construction` | 🧰️ | LANDED (G1) |
+| 207 | `change-surface-boundary-condition` | 🚧️ | LANDED (G1) |
+| 208 | `change-surface-sun-exposed` | 🌅️ | LANDED (G1) |
+| 209 | `change-surface-wind-exposed` | 🍃️ | LANDED (G1) |
+| 210 | `change-surface-multiplier` | 🔁️ | LANDED (G1) |
 | | **Fenestration** | | |
-| 211 | `create-fenestration` | — | reserved |
-| 212 | `delete-fenestration` | — | reserved |
-| 213 | `rename-fenestration` | — | reserved |
-| 214 | `change-fenestration-surface` | — | reserved |
-| 215 | `change-fenestration-u-value` | — | reserved |
-| 216 | `change-fenestration-shgc` | — | reserved |
-| 217 | `change-fenestration-vlt` | — | reserved |
-| 218 | `change-fenestration-area` | — | reserved |
-| 219 | `change-fenestration-frame-conductance` | — | reserved |
-| 220 | `change-fenestration-divider-conductance` | — | reserved |
+| 211 | `create-fenestration` | 🪟️ | LANDED (G1) |
+| 212 | `delete-fenestration` | 🚪️ | LANDED (G1) |
+| 213 | `rename-fenestration` | 🏁️ | LANDED (G1) |
+| 214 | `change-fenestration-surface` | 🧲️ | LANDED (G1) |
+| 215 | `change-fenestration-u-value` | 🌐️ | LANDED (G1) |
+| 216 | `change-fenestration-shgc` | 🌇️ | LANDED (G1) |
+| 217 | `change-fenestration-vlt` | 🌈️ | LANDED (G1) |
+| 218 | `change-fenestration-area` | 🟥️ | LANDED (G1) |
+| 219 | `change-fenestration-frame-conductance` | 🖼️ | LANDED (G1) |
+| 220 | `change-fenestration-divider-conductance` | 🧷️ | LANDED (G1) |
 | | **ShadingSurface** | | |
-| 221 | `create-shading-surface` | — | reserved |
-| 222 | `delete-shading-surface` | — | reserved |
-| 223 | `rename-shading-surface` | — | reserved |
-| 224 | `replace-shading-surface-vertices` | — | reserved |
-| 225 | `change-shading-surface-transmittance-schedule` | — | reserved |
+| 221 | `create-shading-surface` | 🌳️ | LANDED (G1) |
+| 222 | `delete-shading-surface` | 🪵️ | LANDED (G1) |
+| 223 | `rename-shading-surface` | 🏕️ | LANDED (G1) |
+| 224 | `replace-shading-surface-vertices` | 🗺️ | LANDED (G1) |
+| 225 | `change-shading-surface-transmittance-schedule` | ⛱️ | LANDED (G1) |
 | | **AdjacencyPair** | | |
-| 226 | `connect-surfaces` | — | reserved |
-| 227 | `disconnect-surfaces` | — | reserved |
+| 226 | `connect-surfaces` | 🤝️ | LANDED (G1) |
+| 227 | `disconnect-surfaces` | 💔️ | LANDED (G1) |
+| | **Fenestration glazing & attached shading (added by G1)** | | |
+| 228 | `bind-fenestration-glazing-construction` | 🧊️ | LANDED (G1) |
+| 229 | `clear-fenestration-glazing-construction` | 🫗️ | LANDED (G1) |
+| 230 | `change-fenestration-height` | ⬆️ | LANDED (G1) |
+| 231 | `change-fenestration-sill-height` | ⬇️ | LANDED (G1) |
+| 232 | `change-fenestration-overhang-depth` | 🧢️ | LANDED (G1) |
+| 233 | `change-fenestration-overhang-offset` | 🎩️ | LANDED (G1) |
+| 234 | `change-fenestration-fin-depth` | 🐬️ | LANDED (G1) |
+| 235 | `change-fenestration-fin-offset` | 🐋️ | LANDED (G1) |
 
 ### Constructions & materials — `300`–`399` (§4.4)
 
 | # | kind | emoji | status |
 |---|---|---|---|
 | | **Material** | | |
-| 300 | `create-material` | — | reserved |
-| 301 | `delete-material` | — | reserved |
-| 302 | `rename-material` | — | reserved |
-| 303 | `change-material-thickness` | — | reserved |
-| 304 | `change-material-conductivity` | — | reserved |
-| 305 | `change-material-density` | — | reserved |
-| 306 | `change-material-specific-heat` | — | reserved |
-| 307 | `change-material-thermal-absorptance` | — | reserved |
-| 308 | `change-material-solar-absorptance` | — | reserved |
-| 309 | `change-material-visible-absorptance` | — | reserved |
+| 300 | `create-material` | 🧱️ | LANDED (G2) |
+| 301 | `delete-material` | 🪨️ | LANDED (G2) |
+| 302 | `rename-material` | 🪧️ | LANDED (G2) |
+| 303 | `change-material-thickness` | 📏️ | LANDED (G2) |
+| 304 | `change-material-conductivity` | 🔥️ | LANDED (G2) |
+| 305 | `change-material-density` | ⚖️ | LANDED (G2) |
+| 306 | `change-material-specific-heat` | ♨️ | LANDED (G2) |
+| 307 | `change-material-thermal-absorptance` | 🔆️ | LANDED (G2) |
+| 308 | `change-material-solar-absorptance` | ☀️ | LANDED (G2) |
+| 309 | `change-material-visible-absorptance` | 👁️ | LANDED (G2) |
 | | **Construction** | | |
-| 310 | `create-construction` | — | reserved |
-| 311 | `delete-construction` | — | reserved |
-| 312 | `rename-construction` | — | reserved |
-| 313 | `add-construction-layer` | — | reserved |
-| 314 | `remove-construction-layer` | — | reserved |
-| 315 | `reorder-construction-layers` | — | reserved |
+| 310 | `create-construction` | 🏗️ | LANDED (G2) |
+| 311 | `delete-construction` | 🧨️ | LANDED (G2) |
+| 312 | `rename-construction` | 🪪️ | LANDED (G2) |
+| 313 | `add-construction-layer` | ➕️ | LANDED (G2) |
+| 314 | `remove-construction-layer` | ➖️ | LANDED (G2) |
+| 315 | `reorder-construction-layers` | 🔀️ | LANDED (G2) |
 
 ### Internal gains — `400`–`499` (§4.5)
 
 | # | kind | emoji | status |
 |---|---|---|---|
 | | **PeopleGain** | | |
-| 400 | `create-people-gain` | — | reserved |
-| 401 | `delete-people-gain` | — | reserved |
-| 402 | `change-people-gain-zone` | — | reserved |
-| 403 | `change-people-gain-schedule` | — | reserved |
-| 404 | `change-people-gain-activity-schedule` | — | reserved |
-| 405 | `change-people-gain-people-per-area` | — | reserved |
-| 406 | `change-people-gain-sensible-fraction` | — | reserved |
-| 407 | `change-people-gain-latent-fraction` | — | reserved |
-| 408 | `change-people-gain-radiant-fraction` | — | reserved |
+| 400 | `create-people-gain` | 👤️ | LANDED (G2) |
+| 401 | `delete-people-gain` | 🚷️ | LANDED (G2) |
+| 402 | `change-people-gain-zone` | 🚶️ | LANDED (G2) |
+| 403 | `change-people-gain-schedule` | ⏰️ | LANDED (G2) |
+| 404 | `change-people-gain-activity-schedule` | 🏃️ | LANDED (G2) |
+| 405 | `change-people-gain-people-per-area` | 👥️ | LANDED (G2) |
+| 406 | `change-people-gain-sensible-fraction` | 🌞️ | LANDED (G2) |
+| 407 | `change-people-gain-latent-fraction` | 💧️ | LANDED (G2) |
+| 408 | `change-people-gain-radiant-fraction` | 📡️ | LANDED (G2) |
 | | **LightingGain** | | |
-| 409 | `create-lighting-gain` | — | reserved |
-| 410 | `delete-lighting-gain` | — | reserved |
-| 411 | `change-lighting-gain-zone` | — | reserved |
-| 412 | `change-lighting-gain-schedule` | — | reserved |
-| 413 | `change-lighting-gain-watts-per-area` | — | reserved |
-| 414 | `change-lighting-gain-radiant-fraction` | — | reserved |
-| 415 | `change-lighting-gain-visible-fraction` | — | reserved |
-| 416 | `change-lighting-gain-return-air-fraction` | — | reserved |
+| 409 | `create-lighting-gain` | 💡️ | LANDED (G2) |
+| 410 | `delete-lighting-gain` | 🕯️ | LANDED (G2) |
+| 411 | `change-lighting-gain-zone` | 🔦️ | LANDED (G2) |
+| 412 | `change-lighting-gain-schedule` | ⏱️ | LANDED (G2) |
+| 413 | `change-lighting-gain-watts-per-area` | 🔌️ | LANDED (G2) |
+| 414 | `change-lighting-gain-radiant-fraction` | 🌟️ | LANDED (G2) |
+| 415 | `change-lighting-gain-visible-fraction` | 🔅️ | LANDED (G2) |
+| 416 | `change-lighting-gain-return-air-fraction` | 🎐️ | LANDED (G2) |
 | | **EquipmentGain** | | |
-| 417 | `create-equipment-gain` | — | reserved |
-| 418 | `delete-equipment-gain` | — | reserved |
-| 419 | `change-equipment-gain-zone` | — | reserved |
-| 420 | `change-equipment-gain-schedule` | — | reserved |
-| 421 | `change-equipment-gain-watts-per-area` | — | reserved |
-| 422 | `change-equipment-gain-radiant-fraction` | — | reserved |
-| 423 | `change-equipment-gain-latent-fraction` | — | reserved |
+| 417 | `create-equipment-gain` | 🖥️ | LANDED (G2) |
+| 418 | `delete-equipment-gain` | 🧯️ | LANDED (G2) |
+| 419 | `change-equipment-gain-zone` | 🖨️ | LANDED (G2) |
+| 420 | `change-equipment-gain-schedule` | ⌛️ | LANDED (G2) |
+| 421 | `change-equipment-gain-watts-per-area` | ⚡️ | LANDED (G2) |
+| 422 | `change-equipment-gain-radiant-fraction` | 🌠️ | LANDED (G2) |
+| 423 | `change-equipment-gain-latent-fraction` | 💦️ | LANDED (G2) |
 | | **Infiltration** | | |
-| 424 | `create-infiltration` | — | reserved |
-| 425 | `delete-infiltration` | — | reserved |
-| 426 | `change-infiltration-zone` | — | reserved |
-| 427 | `change-infiltration-schedule` | — | reserved |
-| 428 | `change-infiltration-flow-per-exterior-area` | — | reserved |
-| 429 | `change-infiltration-constant-term-coefficient` | — | reserved |
-| 430 | `change-infiltration-temperature-term-coefficient` | — | reserved |
-| 431 | `change-infiltration-velocity-term-coefficient` | — | reserved |
-| 432 | `change-infiltration-velocity-squared-term-coefficient` | — | reserved |
+| 424 | `create-infiltration` | 💨️ | LANDED (G2) |
+| 425 | `delete-infiltration` | 🧽️ | LANDED (G2) |
+| 426 | `change-infiltration-zone` | 🌀️ | LANDED (G2) |
+| 427 | `change-infiltration-schedule` | ⏳️ | LANDED (G2) |
+| 428 | `change-infiltration-flow-per-exterior-area` | 🌫️ | LANDED (G2) |
+| 429 | `change-infiltration-constant-term-coefficient` | 🅰️ | LANDED (G2) |
+| 430 | `change-infiltration-temperature-term-coefficient` | 🅱️ | LANDED (G2) |
+| 431 | `change-infiltration-velocity-term-coefficient` | 🆎️ | LANDED (G2) |
+| 432 | `change-infiltration-velocity-squared-term-coefficient` | 🆑️ | LANDED (G2) |
+| | **Infiltration — added by G2 after W-C's schema reshape** | | |
+| 440 | `change-infiltration-method` | 🔬️ | LANDED (G2) |
+| 441 | `change-infiltration-design-flow-ach` | 🔄️ | LANDED (G2) |
+| 442 | `change-infiltration-effective-leakage-area` | 🕳️ | LANDED (G2) |
+| 443 | `change-infiltration-discharge-coefficient` | 🚰️ | LANDED (G2) |
+| 444 | `change-infiltration-stack-height` | 🏭️ | LANDED (G2) |
 | | **MechanicalVentilation** | | |
-| 433 | `create-mechanical-ventilation` | — | reserved |
-| 434 | `delete-mechanical-ventilation` | — | reserved |
-| 435 | `change-mechanical-ventilation-zone` | — | reserved |
-| 436 | `change-mechanical-ventilation-schedule` | — | reserved |
-| 437 | `change-mechanical-ventilation-design-flow` | — | reserved |
-| 438 | `change-mechanical-ventilation-fan-total-efficiency` | — | reserved |
-| 439 | `change-mechanical-ventilation-fan-delta-pressure` | — | reserved |
+| 433 | `create-mechanical-ventilation` | 🌪️ | LANDED (G2) |
+| 434 | `delete-mechanical-ventilation` | 🚫️ | LANDED (G2) |
+| 435 | `change-mechanical-ventilation-zone` | 🧭️ | LANDED (G2) |
+| 436 | `change-mechanical-ventilation-schedule` | 📆️ | LANDED (G2) |
+| 437 | `change-mechanical-ventilation-design-flow` | 🚿️ | LANDED (G2) |
+| 438 | `change-mechanical-ventilation-fan-total-efficiency` | 💠️ | LANDED (G2) |
+| 439 | `change-mechanical-ventilation-fan-delta-pressure` | 🎈️ | LANDED (G2) |
 
 ### HVAC zone-level — `500`–`599` (§4.6)
 
 | # | kind | emoji | status |
 |---|---|---|---|
 | | **Thermostat** | | |
-| 500 | `create-thermostat` | — | reserved |
-| 501 | `delete-thermostat` | — | reserved |
-| 502 | `change-thermostat-zone` | — | reserved |
-| 503 | `change-thermostat-heating-setpoint-schedule` | — | reserved |
-| 504 | `change-thermostat-cooling-setpoint-schedule` | — | reserved |
-| 505 | `change-thermostat-heating-throttle-range` | — | reserved |
-| 506 | `change-thermostat-cooling-throttle-range` | — | reserved |
+| 500 | `create-thermostat` | 🩺️ | LANDED (G3) |
+| 501 | `delete-thermostat` | 🛑️ | LANDED (G3) |
+| 502 | `change-thermostat-zone` | 🛖️ | LANDED (G3) |
+| 503 | `change-thermostat-heating-setpoint-schedule` | 🥵️ | LANDED (G3) |
+| 504 | `change-thermostat-cooling-setpoint-schedule` | 🐧️ | LANDED (G3) |
+| 505 | `change-thermostat-heating-throttle-range` | 🎚️ | LANDED (G3) |
+| 506 | `change-thermostat-cooling-throttle-range` | 🎛️ | LANDED (G3) |
 | | **Humidistat** | | |
-| 507 | `create-humidistat` | — | reserved |
-| 508 | `delete-humidistat` | — | reserved |
-| 509 | `change-humidistat-zone` | — | reserved |
-| 510 | `change-humidistat-humidifying-setpoint-schedule` | — | reserved |
-| 511 | `change-humidistat-dehumidifying-setpoint-schedule` | — | reserved |
-| 512 | `change-humidistat-humidifying-throttle-range` | — | reserved |
-| 513 | `change-humidistat-dehumidifying-throttle-range` | — | reserved |
+| 507 | `create-humidistat` | 🌂️ | LANDED (G3) |
+| 508 | `delete-humidistat` | 🏜️ | LANDED (G3) |
+| 509 | `change-humidistat-zone` | 🏙️ | LANDED (G3) |
+| 510 | `change-humidistat-humidifying-setpoint-schedule` | ☔️ | LANDED (G3) |
+| 511 | `change-humidistat-dehumidifying-setpoint-schedule` | 🏝️ | LANDED (G3) |
+| 512 | `change-humidistat-humidifying-throttle-range` | 🌧️ | LANDED (G3) |
+| 513 | `change-humidistat-dehumidifying-throttle-range` | 🧻️ | LANDED (G3) |
 | | **IdealLoadsSystem** | | |
-| 514 | `create-ideal-loads-system` | — | reserved |
-| 515 | `delete-ideal-loads-system` | — | reserved |
-| 516 | `change-ideal-loads-system-zone` | — | reserved |
-| 517 | `change-ideal-loads-system-max-heating-supply-air-temp` | — | reserved |
-| 518 | `change-ideal-loads-system-min-cooling-supply-air-temp` | — | reserved |
-| 519 | `change-ideal-loads-system-max-heating-capacity` | — | reserved |
-| 520 | `change-ideal-loads-system-max-cooling-capacity` | — | reserved |
-| 521 | `change-ideal-loads-system-outdoor-air-per-person` | — | reserved |
-| 522 | `change-ideal-loads-system-outdoor-air-per-area` | — | reserved |
+| 514 | `create-ideal-loads-system` | 🫁️ | LANDED (G3) |
+| 515 | `delete-ideal-loads-system` | 🫥️ | LANDED (G3) |
+| 516 | `change-ideal-loads-system-zone` | 🏢️ | LANDED (G3) |
+| 517 | `change-ideal-loads-system-max-heating-supply-air-temp` | 🔴️ | LANDED (G3) |
+| 518 | `change-ideal-loads-system-min-cooling-supply-air-temp` | 🔵️ | LANDED (G3) |
+| 519 | `change-ideal-loads-system-max-heating-capacity` | ⛽️ | LANDED (G3) |
+| 520 | `change-ideal-loads-system-max-cooling-capacity` | 🟧️ | LANDED (G3) |
+| 521 | `change-ideal-loads-system-outdoor-air-per-person` | 🧍️ | LANDED (G3) |
+| 522 | `change-ideal-loads-system-outdoor-air-per-area` | 🔳️ | LANDED (G3) |
 | | **ZoneEquipmentAssignment** | | |
-| 523 | `create-zone-equipment` | — | reserved |
-| 524 | `delete-zone-equipment` | — | reserved |
-| 525 | `change-zone-equipment-zone` | — | reserved |
-| 526 | `change-zone-equipment-type` | — | reserved |
-| 527 | `change-zone-equipment-priority` | — | reserved |
-| 528 | `change-zone-equipment-heating-capacity` | — | reserved |
-| 529 | `change-zone-equipment-cooling-capacity` | — | reserved |
+| 523 | `create-zone-equipment` | 🛠️ | LANDED (G3) |
+| 524 | `delete-zone-equipment` | 🗑️ | LANDED (G3) |
+| 525 | `change-zone-equipment-zone` | 🏬️ | LANDED (G3) |
+| 526 | `change-zone-equipment-type` | 🔧️ | LANDED (G3) |
+| 527 | `change-zone-equipment-priority` | 🎗️ | LANDED (G3) |
+| 528 | `change-zone-equipment-heating-capacity` | 🧇️ | LANDED (G3) |
+| 529 | `change-zone-equipment-cooling-capacity` | 🍧️ | LANDED (G3) |
 | | **DaylightZoneConfig** | | |
-| 530 | `create-daylight-zone` | — | reserved |
-| 531 | `delete-daylight-zone` | — | reserved |
-| 532 | `change-daylight-zone-zone` | — | reserved |
-| 533 | `change-daylight-zone-illuminance-target` | — | reserved |
-| 534 | `change-daylight-zone-glare-limit` | — | reserved |
-| 535 | `change-daylight-zone-window-transmittance` | — | reserved |
+| 530 | `create-daylight-zone` | 🔭️ | LANDED (G3) |
+| 531 | `delete-daylight-zone` | 🌗️ | LANDED (G3) |
+| 532 | `change-daylight-zone-zone` | 🏫️ | LANDED (G3) |
+| 533 | `change-daylight-zone-illuminance-target` | 🪔️ | LANDED (G3) |
+| 534 | `change-daylight-zone-glare-limit` | 🕶️ | LANDED (G3) |
+| 535 | `change-daylight-zone-window-transmittance` | 🥃️ | LANDED (G3) |
 | | **SizingObject** | | |
-| 536 | `create-sizing-object` | — | reserved |
-| 537 | `delete-sizing-object` | — | reserved |
-| 538 | `change-sizing-object-zone` | — | reserved |
-| 539 | `change-sizing-object-sizing-type` | — | reserved |
-| 540 | `change-sizing-object-design-day-type` | — | reserved |
+| 536 | `create-sizing-object` | 📶️ | LANDED (G3) |
+| 537 | `delete-sizing-object` | 🪒️ | LANDED (G3) |
+| 538 | `change-sizing-object-zone` | 🏨️ | LANDED (G3) |
+| 539 | `change-sizing-object-sizing-type` | 🧾️ | LANDED (G3) |
+| 540 | `change-sizing-object-design-day-type` | 🌥️ | LANDED (G3) |
 | | **RoomAirModelAssignment** | | |
-| 541 | `create-room-air-model-assignment` | — | reserved |
-| 542 | `delete-room-air-model-assignment` | — | reserved |
-| 543 | `change-room-air-model` | — | reserved |
+| 541 | `create-room-air-model-assignment` | 🛏️ | LANDED (G3) |
+| 542 | `delete-room-air-model-assignment` | 🧺️ | LANDED (G3) |
+| 543 | `change-room-air-model` | 🪭️ | LANDED (G3) |
 
 ### HVAC loop-level & plant — `600`–`699` (§4.7)
 
 | # | kind | emoji | status |
 |---|---|---|---|
 | | **SetpointManager** | | |
-| 600 | `create-setpoint-manager` | — | reserved |
-| 601 | `delete-setpoint-manager` | — | reserved |
-| 602 | `rename-setpoint-manager` | — | reserved |
-| 603 | `replace-setpoint-manager-kind` | — | reserved |
-| 604 | `change-setpoint-manager-schedule` | — | reserved |
+| 600 | `create-setpoint-manager` | 📌️ | LANDED (G3) |
+| 601 | `delete-setpoint-manager` | 🍄️ | LANDED (G3) |
+| 602 | `rename-setpoint-manager` | 🖇️ | LANDED (G3) |
+| 603 | `replace-setpoint-manager-kind` | 🔃️ | LANDED (G3) |
+| 604 | `change-setpoint-manager-schedule` | 🎼️ | LANDED (G3) |
 | | **ModelAirLoop** | | |
-| 605 | `create-air-loop` | — | reserved |
-| 606 | `delete-air-loop` | — | reserved |
-| 607 | `rename-air-loop` | — | reserved |
-| 608 | `change-air-loop-supply-node` | — | reserved |
-| 609 | `change-air-loop-return-node` | — | reserved |
-| 610 | `change-air-loop-design-supply-air-flow` | — | reserved |
-| 611 | `add-air-loop-terminal-zone` | — | reserved |
-| 612 | `remove-air-loop-terminal-zone` | — | reserved |
+| 605 | `create-air-loop` | 🛞️ | LANDED (G3) |
+| 606 | `delete-air-loop` | 🥀️ | LANDED (G3) |
+| 607 | `rename-air-loop` | 📇️ | LANDED (G3) |
+| 608 | `change-air-loop-supply-node` | ↗️ | LANDED (G3) |
+| 609 | `change-air-loop-return-node` | ↘️ | LANDED (G3) |
+| 610 | `change-air-loop-design-supply-air-flow` | 🍥️ | LANDED (G3) |
+| 611 | `add-air-loop-terminal-zone` | 🪺️ | LANDED (G3) |
+| 612 | `remove-air-loop-terminal-zone` | 🪹️ | LANDED (G3) |
 | | **PlantLoopConfig** | | |
-| 613 | `create-plant-loop` | — | reserved |
-| 614 | `delete-plant-loop` | — | reserved |
-| 615 | `rename-plant-loop` | — | reserved |
-| 616 | `change-plant-loop-type` | — | reserved |
-| 617 | `change-plant-loop-supply-temperature` | — | reserved |
-| 618 | `change-plant-loop-return-temperature` | — | reserved |
-| 619 | `change-plant-loop-design-flow` | — | reserved |
-| 620 | `add-plant-loop-equipment` | — | reserved |
-| 621 | `remove-plant-loop-equipment` | — | reserved |
+| 613 | `create-plant-loop` | ⚗️ | LANDED (G3) |
+| 614 | `delete-plant-loop` | 💣️ | LANDED (G3) |
+| 615 | `rename-plant-loop` | 📛️ | LANDED (G3) |
+| 616 | `change-plant-loop-type` | ♻️ | LANDED (G3) |
+| 617 | `change-plant-loop-supply-temperature` | ☕️ | LANDED (G3) |
+| 618 | `change-plant-loop-return-temperature` | 🧫️ | LANDED (G3) |
+| 619 | `change-plant-loop-design-flow` | 🚤️ | LANDED (G3) |
+| 620 | `add-plant-loop-equipment` | 🔩️ | LANDED (G3) |
+| 621 | `remove-plant-loop-equipment` | ⚙️ | LANDED (G3) |
 | | **OutdoorAirSystem** | | |
-| 622 | `create-outdoor-air-system` | — | reserved |
-| 623 | `delete-outdoor-air-system` | — | reserved |
-| 624 | `change-outdoor-air-system-air-loop` | — | reserved |
-| 625 | `change-outdoor-air-system-min-oa-flow` | — | reserved |
-| 626 | `change-outdoor-air-system-economizer-enabled` | — | reserved |
+| 622 | `create-outdoor-air-system` | 🌲️ | LANDED (G3) |
+| 623 | `delete-outdoor-air-system` | 🍂️ | LANDED (G3) |
+| 624 | `change-outdoor-air-system-air-loop` | ⛓️ | LANDED (G3) |
+| 625 | `change-outdoor-air-system-min-oa-flow` | 🦋️ | LANDED (G3) |
+| 626 | `change-outdoor-air-system-economizer-enabled` | 💰️ | LANDED (G3) |
 
 ### Electrical, renewables & other systems — `700`–`799` (§4.8)
 
 | # | kind | emoji | status |
 |---|---|---|---|
 | | **ElectricalLoadCenter** | | |
-| 700 | `create-electrical-load-center` | — | reserved |
-| 701 | `delete-electrical-load-center` | — | reserved |
-| 702 | `rename-electrical-load-center` | — | reserved |
-| 703 | `add-electrical-load-center-generator` | — | reserved |
-| 704 | `remove-electrical-load-center-generator` | — | reserved |
-| 705 | `add-electrical-load-center-pv` | — | reserved |
-| 706 | `remove-electrical-load-center-pv` | — | reserved |
-| 707 | `add-electrical-load-center-battery` | — | reserved |
-| 708 | `remove-electrical-load-center-battery` | — | reserved |
+| 700 | `create-electrical-load-center` | 🏦️ | LANDED (G4) |
+| 701 | `delete-electrical-load-center` | 🔻️ | LANDED (G4) |
+| 702 | `rename-electrical-load-center` | 🖊️ | LANDED (G4) |
+| 703 | — | — | NOT AUTHORED (see §6) |
+| 704 | — | — | NOT AUTHORED (see §6) |
+| 705 | `add-electrical-load-center-pv` | ☄️ | LANDED (G4) |
+| 706 | `remove-electrical-load-center-pv` | 🌘️ | LANDED (G4) |
+| 707 | `add-electrical-load-center-battery` | 🔋️ | LANDED (G4) |
+| 708 | `remove-electrical-load-center-battery` | 🪝️ | LANDED (G4) |
 | | **PvSystemAssignment** | | |
-| 709 | `create-pv-system` | — | reserved |
-| 710 | `delete-pv-system` | — | reserved |
-| 711 | `change-pv-system-dc-capacity` | — | reserved |
-| 712 | `change-pv-system-area` | — | reserved |
-| 713 | `change-pv-system-tilt` | — | reserved |
-| 714 | `change-pv-system-azimuth` | — | reserved |
-| 715 | `change-pv-system-module-efficiency` | — | reserved |
-| 716 | `change-pv-system-inverter-efficiency` | — | reserved |
+| 709 | `create-pv-system` | ✨️ | LANDED (G4) |
+| 710 | `delete-pv-system` | 🌒️ | LANDED (G4) |
+| 711 | `change-pv-system-dc-capacity` | ⚛️ | LANDED (G4) |
+| 712 | `change-pv-system-area` | 🟨️ | LANDED (G4) |
+| 713 | `change-pv-system-tilt` | 📈️ | LANDED (G4) |
+| 714 | `change-pv-system-azimuth` | 🧿️ | LANDED (G4) |
+| 715 | `change-pv-system-module-efficiency` | 🎖️ | LANDED (G4) |
+| 716 | `change-pv-system-inverter-efficiency` | ♌️ | LANDED (G4) |
 | | **BatteryAssignment** | | |
-| 717 | `create-battery` | — | reserved |
-| 718 | `delete-battery` | — | reserved |
-| 719 | `change-battery-capacity` | — | reserved |
-| 720 | `change-battery-max-charge` | — | reserved |
-| 721 | `change-battery-max-discharge` | — | reserved |
-| 722 | `change-battery-round-trip-efficiency` | — | reserved |
+| 717 | `create-battery` | 🪙️ | LANDED (G4) |
+| 718 | `delete-battery` | ♒️ | LANDED (G4) |
+| 719 | `change-battery-capacity` | 🥫️ | LANDED (G4) |
+| 720 | `change-battery-max-charge` | ⏫️ | LANDED (G4) |
+| 721 | `change-battery-max-discharge` | ⏬️ | LANDED (G4) |
+| 722 | `change-battery-round-trip-efficiency` | 🥉️ | LANDED (G4) |
 | | **ShwSystemConfig** | | |
-| 723 | `create-shw-system` | — | reserved |
-| 724 | `delete-shw-system` | — | reserved |
-| 725 | `change-shw-system-heater-capacity` | — | reserved |
-| 726 | `change-shw-system-storage-volume` | — | reserved |
-| 727 | `change-shw-system-setpoint` | — | reserved |
-| 728 | `change-shw-system-schedule` | — | reserved |
+| 723 | `create-shw-system` | 🛀️ | LANDED (G4) |
+| 724 | `delete-shw-system` | 🚱️ | LANDED (G4) |
+| 725 | `change-shw-system-heater-capacity` | 🍵️ | LANDED (G4) |
+| 726 | `change-shw-system-storage-volume` | 🛢️ | LANDED (G4) |
+| 727 | `change-shw-system-setpoint` | 🏹️ | LANDED (G4) |
+| 728 | `change-shw-system-schedule` | 🕐️ | LANDED (G4) |
 | | **SolarThermalConfig** | | |
-| 729 | `create-solar-thermal-system` | — | reserved |
-| 730 | `delete-solar-thermal-system` | — | reserved |
-| 731 | `change-solar-thermal-system-collector-area` | — | reserved |
-| 732 | `change-solar-thermal-system-efficiency` | — | reserved |
-| 733 | `change-solar-thermal-system-storage-volume` | — | reserved |
-| 734 | `change-solar-thermal-system-tilt` | — | reserved |
-| 735 | `change-solar-thermal-system-azimuth` | — | reserved |
+| 729 | `create-solar-thermal-system` | 🌄️ | LANDED (G4) |
+| 730 | `delete-solar-thermal-system` | 🌆️ | LANDED (G4) |
+| 731 | `change-solar-thermal-system-collector-area` | 🟩️ | LANDED (G4) |
+| 732 | `change-solar-thermal-system-efficiency` | 🏅️ | LANDED (G4) |
+| 733 | `change-solar-thermal-system-storage-volume` | 🧃️ | LANDED (G4) |
+| 734 | `change-solar-thermal-system-tilt` | 🔼️ | LANDED (G4) |
+| 735 | `change-solar-thermal-system-azimuth` | ⛵️ | LANDED (G4) |
 | | **RefrigerationConfig** | | |
-| 736 | `create-refrigeration-system` | — | reserved |
-| 737 | `delete-refrigeration-system` | — | reserved |
-| 738 | `change-refrigeration-system-case-count` | — | reserved |
-| 739 | `change-refrigeration-system-design-load` | — | reserved |
-| 740 | `change-refrigeration-system-defrost-schedule` | — | reserved |
+| 736 | `create-refrigeration-system` | ❄️ | LANDED (G4) |
+| 737 | `delete-refrigeration-system` | 🫠️ | LANDED (G4) |
+| 738 | `change-refrigeration-system-case-count` | 🗄️ | LANDED (G4) |
+| 739 | `change-refrigeration-system-design-load` | 🏋️ | LANDED (G4) |
+| 740 | `change-refrigeration-system-defrost-schedule` | 🕑️ | LANDED (G4) |
 | | **WaterSystemConfig** | | |
-| 741 | `create-water-system` | — | reserved |
-| 742 | `delete-water-system` | — | reserved |
-| 743 | `change-water-system-fixture-count` | — | reserved |
-| 744 | `change-water-system-peak-flow` | — | reserved |
-| 745 | `change-water-system-schedule` | — | reserved |
+| 741 | `create-water-system` | 🚽️ | LANDED (G4) |
+| 742 | `delete-water-system` | 🧼️ | LANDED (G4) |
+| 743 | `change-water-system-fixture-count` | 🪣️ | LANDED (G4) |
+| 744 | `change-water-system-peak-flow` | 🚾️ | LANDED (G4) |
+| 745 | `change-water-system-schedule` | 🕒️ | LANDED (G4) |
 | | **FaultDefinition** | | |
-| 746 | `create-fault` | — | reserved |
-| 747 | `delete-fault` | — | reserved |
-| 748 | `change-fault-target-equipment` | — | reserved |
-| 749 | `change-fault-type` | — | reserved |
-| 750 | `change-fault-severity` | — | reserved |
-| 751 | `change-fault-start-schedule` | — | reserved |
+| 746 | `create-fault` | ⚠️ | LANDED (G4) |
+| 747 | `delete-fault` | 🩹️ | LANDED (G4) |
+| 748 | `change-fault-target-equipment` | 🎣️ | LANDED (G4) |
+| 749 | `change-fault-type` | 🐛️ | LANDED (G4) |
+| 750 | `change-fault-severity` | 🌶️ | LANDED (G4) |
+| 751 | `change-fault-start-schedule` | 🕓️ | LANDED (G4) |
 
 ### Grouping collections — `800`–`899` (§4.9)
 
 | # | kind | emoji | status |
 |---|---|---|---|
 | | **SpaceList** | | |
-| 800 | `create-space-list` | — | reserved |
-| 801 | `delete-space-list` | — | reserved |
-| 802 | `rename-space-list` | — | reserved |
-| 803 | `add-space-list-member` | — | reserved |
-| 804 | `remove-space-list-member` | — | reserved |
+| 800 | `create-space-list` | 📋️ | LANDED (G4) |
+| 801 | `delete-space-list` | 🗒️ | LANDED (G4) |
+| 802 | `rename-space-list` | 🪶️ | LANDED (G4) |
+| 803 | `add-space-list-member` | ➡️ | LANDED (G4) |
+| 804 | `remove-space-list-member` | 🪤️ | LANDED (G4) |
 | | **ThermalEnclosure** | | |
-| 805 | `create-thermal-enclosure` | — | reserved |
-| 806 | `delete-thermal-enclosure` | — | reserved |
-| 807 | `rename-thermal-enclosure` | — | reserved |
-| 808 | `add-thermal-enclosure-zone` | — | reserved |
-| 809 | `remove-thermal-enclosure-zone` | — | reserved |
+| 805 | `create-thermal-enclosure` | 🏟️ | LANDED (G4) |
+| 806 | `delete-thermal-enclosure` | 🏯️ | LANDED (G4) |
+| 807 | `rename-thermal-enclosure` | 🖋️ | LANDED (G4) |
+| 808 | `add-thermal-enclosure-zone` | 🔒️ | LANDED (G4) |
+| 809 | `remove-thermal-enclosure-zone` | 🔓️ | LANDED (G4) |
 
-### Schedules — `900`–`999` (§5.1 (new — schedules are now persisted `Model` data))
+### Schedules — `900`–`999` (§5.1 — schedules are persisted `Model` data as of this ticket)
 
 | # | kind | emoji | status |
 |---|---|---|---|
 | | **ConstantSchedule** | | |
-| 900 | `create-constant-schedule` | — | reserved |
-| 901 | `delete-constant-schedule` | — | reserved |
-| 902 | `change-constant-schedule-value` | — | reserved |
+| 900 | `create-constant-schedule` | 🕜️ | LANDED (G4) |
+| 901 | `delete-constant-schedule` | 📍️ | LANDED (G4) |
+| 902 | `change-constant-schedule-value` | 🕝️ | LANDED (G4) |
 | | **DailySchedule** | | |
-| 903 | `create-daily-schedule` | — | reserved |
-| 904 | `delete-daily-schedule` | — | reserved |
-| 905 | `replace-daily-schedule-hourly-values` | — | reserved |
-| 906 | `change-daily-schedule-interpolation` | — | reserved |
-| 907 | `change-daily-schedule-limits` | — | reserved |
+| 903 | `create-daily-schedule` | 🕞️ | LANDED (G4) |
+| 904 | `delete-daily-schedule` | 🌓️ | LANDED (G4) |
+| 905 | `replace-daily-schedule-hourly-values` | 🕔️ | LANDED (G4) |
+| 906 | `change-daily-schedule-interpolation` | 🕕️ | LANDED (G4) |
+| 907 | `change-daily-schedule-limits` | 🕟️ | LANDED (G4) |
 | | **WeeklySchedule** | | |
-| 908 | `create-weekly-schedule` | — | reserved |
-| 909 | `delete-weekly-schedule` | — | reserved |
-| 910 | `change-weekly-schedule-day` | — | reserved |
+| 908 | `create-weekly-schedule` | 🗓️ | LANDED (G4) |
+| 909 | `delete-weekly-schedule` | 🕖️ | LANDED (G4) |
+| 910 | `change-weekly-schedule-day` | 🕗️ | LANDED (G4) |
 | | **AnnualSchedule** | | |
-| 911 | `create-annual-schedule` | — | reserved |
-| 912 | `delete-annual-schedule` | — | reserved |
-| 913 | `add-annual-schedule-rule` | — | reserved |
-| 914 | `remove-annual-schedule-rule` | — | reserved |
-| 915 | `reorder-annual-schedule-rules` | — | reserved |
-| 916 | `change-annual-schedule-default-daily-schedule` | — | reserved |
-| 917 | `change-annual-schedule-holiday-daily-schedule` | — | reserved |
-| 918 | `add-annual-schedule-holiday` | — | reserved |
-| 919 | `remove-annual-schedule-holiday` | — | reserved |
+| 911 | `create-annual-schedule` | 📚️ | LANDED (G4) |
+| 912 | `delete-annual-schedule` | 📕️ | LANDED (G4) |
+| 913 | `insert-annual-schedule-rule` | 📗️ | LANDED (G4) |
+| 914 | `remove-annual-schedule-rule` | 📙️ | LANDED (G4) |
+| 915 | `reorder-annual-schedule-rules` | 🗂️ | LANDED (G4) |
+| 916 | `change-annual-schedule-default-daily-schedule` | 🎌️ | LANDED (G4) |
+| 917 | `change-annual-schedule-holiday-daily-schedule` | 🎄️ | LANDED (G4) |
+| 918 | `add-annual-schedule-holiday` | 🎉️ | LANDED (G4) |
+| 919 | `remove-annual-schedule-holiday` | 🎊️ | LANDED (G4) |
 | | **TimeSeriesSchedule** | | |
-| 920 | `create-time-series-schedule` | — | reserved |
-| 921 | `delete-time-series-schedule` | — | reserved |
-| 922 | `replace-time-series-schedule-values` | — | reserved |
-| 923 | `change-time-series-schedule-timestep` | — | reserved |
+| 920 | `create-time-series-schedule` | 🪗️ | LANDED (G4) |
+| 921 | `delete-time-series-schedule` | 🎞️ | LANDED (G4) |
+| 922 | `replace-time-series-schedule-values` | 🕘️ | LANDED (G4) |
+| 923 | `change-time-series-schedule-timestep` | 🕙️ | LANDED (G4) |
 
 <!-- total 265 -->
 
@@ -462,8 +482,44 @@ who both re-run it after adding only their own entries produce the same file, no
 - **`change-fault-target-equipment` (`757`)** addresses an untyped `EntityId` with no discriminator;
   it cannot be given a real referential-integrity check until `FaultDefinition::target_equipment_id`
   becomes a tagged reference.
+- **G1 landed 228–235 beyond the reserved rows.** `Fenestration` gained `glazing_construction_id:
+  Option<EntityId>` (the layered-glazing escape from the U/SHGC/VLT simplification the ticket's oracle
+  comparison measured at +5.7…+8.1 % annual cooling), and W-C's ANSI/ASHRAE 140 work had already added
+  `height_m`/`sill_height_m` and the four overhang/fin fields — so the geometry range carries a
+  `bind`/`clear` pair for the glazing slot and six `change` kinds for the window geometry §4.3 never
+  listed. `assign` is NOT in `protocol::APPROVED_VERBS`, so the glazing pair uses `bind`/`clear`.
 - **`delete-zone` (`105`) must REFUSE while any space or surface still references the zone**
   (`mutation.target-in-use`), rather than cascading — the cascade would have to delete surfaces,
   which cascade to fenestrations and adjacency pairs. `delete-surface` (`201`) DOES cascade, stripping
   the fenestrations and adjacency pairs that address it and emitting `mutation.cascade` at info level
   (`📸️remodel`'s `🪓delete-stream` is the worked reference).
+
+## 7. G4 amendments (electrical 700–799, grouping 800–899, schedules 900–999)
+
+- **`703`/`704` `add-/remove-electrical-load-center-generator` are NOT AUTHORED, and the numbers stay
+  reserved.** `ElectricalLoadCenter::generator_ids` references a collection `Model` does not have
+  (vocabulary §5.4); `⚡️electrical`'s `Generator` type exists in the engine but is not reachable from
+  the document. A kind that can only ever refuse cannot carry the `✅️` happy vector the generator's
+  own `audit()` now requires, and adding `generators: Vec<…>` to `Model` mid-ticket would invalidate
+  every committed `🔋️model.json` and every oracle-emitted document. `generator_ids` IS carried
+  verbatim by `create-electrical-load-center` (unchecked, documented in the leaf), so `delete`'s
+  inverse restores a load centre exactly. Author 703/704 the moment a backing collection lands.
+- **`913` is `insert-annual-schedule-rule`, not `add-annual-schedule-rule`.** `📓️taxonomy.md`
+  reserves `add` for set-like membership and `insert` for an ordered, index-addressed list, and
+  `AnnualSchedule::rules` is measurably ordered: `ScheduleSet::annual_value`
+  (`⚙️engine/🗓️schedule/🦀️.rs`) returns the FIRST rule whose date range contains the day, which is
+  also why `915 reorder-annual-schedule-rules` exists at all. `914 remove-annual-schedule-rule` keeps
+  its name — `remove` is `insert`'s partner in the same table.
+- **`918`/`919` stay `add`/`remove`.** `AnnualSchedule::holiday_dates` is consumed by a `contains`
+  test, so it is a set; the FINAL-state `index` on `add` exists only because a JSON array compares
+  positionally, and it is what lets `remove`'s inverse put the date back where it was.
+- **`748 change-fault-target-equipment` now HAS a real referential check.** The ledger's earlier note
+  said it could not, for want of a discriminator. The engine supplies one: the kernel's
+  `SystemSubstepStage::Fault` matches `fault.target_equipment_id == ideal.id` and
+  `🧠️precompute`'s `PrecomputeStage::Faults` keys the severity map by the same id, so `ideal_loads`
+  is the collection it actually addresses, and both `746` and `748` check it there.
+- **Schedule ids are one namespace across all five groups.** `ScheduleSet::lookup` searches
+  constants → annual → weekly → daily → time-series in turn, so every `create-*-schedule` refuses an
+  id ANY group already holds, and every `delete-*-schedule` refuses while any of the fourteen
+  `ScheduleId`-typed slots in the document — schedule-to-schedule references included — still
+  resolves it.

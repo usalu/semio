@@ -6,10 +6,11 @@
 //! `RemodelingMutation`'s own doc), so the whole load stays inside the retained bounded-first-step
 //! envelope every other route uses.
 
-use crate::artifacts::remodeling::mutations::{create_camera_calibration, create_gcp, create_stream, delete_camera_calibration, delete_gcp, delete_stream, replace_job, update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params, update_mesh_params, update_motion_params, update_sfm_params};
+use crate::artifacts::remodeling::mutations::{create_asset, create_camera_calibration, create_gcp, create_stream, delete_camera_calibration, delete_gcp, delete_stream, replace_job, update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params, update_mesh_params, update_motion_params, update_sfm_params};
 use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::artifacts::remodeling::{ImageAsset, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use crate::editor::remodeling::decode_still_image;
 use crate::editor::remodeling::examples::example_text;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -30,11 +31,33 @@ pub struct SetActiveExample {
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     let Some(text) = example_text(&payload.example_id) else { return Ok(Emit::default()) };
     let Ok(next) = crate::artifacts::remodeling::snapshot::text::parse_dsl(text) else { return Ok(Emit::default()) };
-    let mutations = replace_document_operations(doc.snapshot, &next);
+    let mut mutations = example_media_operations(&payload.example_id, doc.snapshot);
+    mutations.extend(replace_document_operations(doc.snapshot, &next));
     match mutations.is_empty() {
         true => Ok(Emit::default()),
         false => Ok(Emit::mutations(mutations)),
     }
+}
+
+/// 🎞️ The media an example's DSL declares but cannot carry. `RemodelingSnapshot::assets` holds pixel
+/// bytes, and a `.dsl.semio` document only names the asset ids its frame table points at, so a
+/// selected example whose frames are committed PNGs has to mint one `create-asset` per frame the same
+/// way a file-picker drop does. Only `📚️examples/🛰️synthetic-orbit` ships frames today; the other two
+/// examples declare no media and answer with an empty set. Assets already in the document are skipped,
+/// so re-selecting the same example is not a stream of rejected duplicate creates.
+fn example_media_operations(example_id: &str, current: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+    use crate::artifacts::remodeling::examples::synthetic_orbit;
+    if example_id != synthetic_orbit::ID {
+        return Vec::new();
+    }
+    synthetic_orbit::FRAMES
+        .iter()
+        .filter(|(asset_id, _)| !current.assets.contains_key(*asset_id))
+        .map(|(asset_id, bytes)| {
+            let (width, height) = decode_still_image(synthetic_orbit::FRAME_MIME, bytes).map_or((0, 0), |image| (image.width, image.height));
+            create_asset((*asset_id).to_string(), ImageAsset { mime: synthetic_orbit::FRAME_MIME.to_string(), data: base64_codec::base64_standard_encode(bytes), width, height })
+        })
+        .collect()
 }
 
 /// 🔁️ The field-granular replace set: every declared collection is emptied and refilled, and all eight

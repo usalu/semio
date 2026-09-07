@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "slab_l1"
+  ]
+}

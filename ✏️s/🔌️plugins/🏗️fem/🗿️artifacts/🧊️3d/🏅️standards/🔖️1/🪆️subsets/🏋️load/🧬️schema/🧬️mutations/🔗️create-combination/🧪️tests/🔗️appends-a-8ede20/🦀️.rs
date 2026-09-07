@@ -1,4 +1,4 @@
-//! 🧪️ `create-combination` fixture — `🔗️appends-a-serviceability-combination-keyed-by-case-id`.
+//! 🧪️ `create-combination` fixture — `🔗️appends-a-8ede20`.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -32,10 +32,10 @@ fn mutation() -> Fem3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("create-combination applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "create-combination/appends-a-serviceability-combination-keyed-by-case-id: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.combinations.len(), 1, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: exactly one combination may be coined");
-    assert_eq!(snapshot.combinations[0].terms.len(), 2, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: both keyed factors must survive");
-    assert_eq!(snapshot.combinations[0].terms.get("wind").copied(), Some(0.5), "create-combination/appends-a-serviceability-combination-keyed-by-case-id: the wind factor must be reachable by its case id and exact");
+    assert_eq!(snapshot, expected_after(), "create-combination/appends-a-8ede20: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot.combinations.len(), 1, "create-combination/appends-a-8ede20: exactly one combination may be coined");
+    assert_eq!(snapshot.combinations[0].terms.len(), 2, "create-combination/appends-a-8ede20: both keyed factors must survive");
+    assert_eq!(snapshot.combinations[0].terms.get("wind").copied(), Some(0.5), "create-combination/appends-a-8ede20: the wind factor must be reachable by its case id and exact");
 }
 
 /// ↩️ The inverse is a `delete-combination` of `sls`, restoring the combination-free document.
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_fem3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "create-combination/appends-a-8ede20: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
@@ -59,28 +59,35 @@ fn committed_json_is_canonical() {
         let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::ToValue::to_value(&decoded);
         let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "create-combination/appends-a-8ede20: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = dsl::ToValue::to_value(&decoded_mutation);
     let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "create-combination/appends-a-8ede20: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
+///
+/// 🚦️ Refusal is read off the OUTCOME, never off the `Result`. `vcs::apply_mutation` is
+/// policy-agnostic: a refused mutation carries the empty diff, so it still applies cleanly and
+/// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
     let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let refused = produced.messages().iter().any(|message| message.level >= protocol::Severity::Error);
     let mut snapshot = before();
-    let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
+    apply_fem3d_mutation(&mut snapshot, &mutation()).expect("the produced diff applies to its own before-snapshot");
     match status {
-        "applied" => assert!(applied, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: declared applied but the mutation was rejected"),
+        "applied" => assert!(!refused, "create-combination/appends-a-8ede20: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
-            assert!(!applied, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "create-combination/appends-a-serviceability-combination-keyed-by-case-id: rejected mutation must leave the snapshot untouched");
+            assert!(refused, "create-combination/appends-a-8ede20: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
+            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "create-combination/appends-a-8ede20: a refused mutation must carry the empty diff");
+            assert_eq!(snapshot, before(), "create-combination/appends-a-8ede20: a refused mutation must leave the snapshot untouched");
         }
-        other => panic!("create-combination/appends-a-serviceability-combination-keyed-by-case-id: unknown outcome status {other:?}"),
+        other => panic!("create-combination/appends-a-8ede20: unknown outcome status {other:?}"),
     }
 }
 
@@ -89,11 +96,11 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
-    assert!(outcome.diff().combinations.is_some(), "create-combination/appends-a-serviceability-combination-keyed-by-case-id: the coined combination must surface in the combinations delta");
-    assert!(outcome.diff().load_cases.is_none(), "create-combination/appends-a-serviceability-combination-keyed-by-case-id: the referenced cases are read-only");
+    assert!(outcome.diff().combinations.is_some(), "create-combination/appends-a-8ede20: the coined combination must surface in the combinations delta");
+    assert!(outcome.diff().load_cases.is_none(), "create-combination/appends-a-8ede20: the referenced cases are read-only");
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, committed, "create-combination/appends-a-8ede20: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -102,7 +109,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "create-combination/appends-a-serviceability-combination-keyed-by-case-id: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "create-combination/appends-a-8ede20: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `combinations.added` entry on `before` must reproduce the combination verbatim.
@@ -110,5 +117,5 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "create-combination/appends-a-serviceability-combination-keyed-by-case-id: committed diff did not carry before to after");
+    assert_eq!(produced, expected_after(), "create-combination/appends-a-8ede20: committed diff did not carry before to after");
 }

@@ -1,12 +1,14 @@
 //#region 🔗️DependencyContributionFixture
 //! 🔗️ Concrete value contribution used only by PluginBuilder dependency tests.
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub struct DependencyTestSnapshot { pub value: i32 }
+pub struct DependencyTestSnapshot {
+    pub value: i32,
+}
 
 impl store::ArtifactPack for DependencyTestSnapshot {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -20,7 +22,9 @@ impl store::ArtifactPack for DependencyTestSnapshot {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub struct DependencyTestDiff { pub deltas: Vec<i32> }
+pub struct DependencyTestDiff {
+    pub deltas: Vec<i32>,
+}
 
 impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
     fn apply(&self, base: &DependencyTestSnapshot) -> protocol::MutationApplyResult<DependencyTestSnapshot> {
@@ -30,7 +34,9 @@ impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
         }
         Ok(DependencyTestSnapshot { value })
     }
-    fn absorb(&mut self, other: Self) { self.deltas.extend(other.deltas); }
+    fn absorb(&mut self, other: Self) {
+        self.deltas.extend(other.deltas);
+    }
 }
 
 #[path = "🧬️mutations/🦀️.rs"]

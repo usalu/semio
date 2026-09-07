@@ -22,7 +22,15 @@ fn descriptor_and_provenance_are_direct() {
     assert_eq!(provenance.owner, AddValue::DESCRIPTOR.owner);
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", provenance.owner));
     assert_eq!(provenance.descriptor_path, format!("{}/🔣️.json", provenance.owner));
-    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, owner_layout: protocol::MutationOwnerLayout::Flat, taxonomy_path: provenance.taxonomy_path, mutation_payload_facet: "🦠️mutation", source_filename: "🦀️.rs", descriptor_filename: "🔣️.json" };
+    let scope = protocol::MutationLeafSourceScope {
+        workspace_token: provenance.workspace_token,
+        mutation_root: provenance.mutation_root,
+        owner_layout: protocol::MutationOwnerLayout::Flat,
+        taxonomy_path: provenance.taxonomy_path,
+        mutation_payload_facet: "🦠️mutation",
+        source_filename: "🦀️.rs",
+        descriptor_filename: "🔣️.json",
+    };
     assert!(protocol::validate_mutation_leaf_source(&AddValue::DESCRIPTOR, &provenance, &scope).is_ok());
 }
 
@@ -38,7 +46,11 @@ fn ordered_checked_diff_and_minimum_inverse_are_lawful() {
             stored_inverse.extend(mutation.inverse(&current));
             match mutation.diff(&current).diff().apply(&current) {
                 Ok(next) => current = next,
-                Err(error) => { assert_eq!(error.code, "mutation.apply.overflow"); rejected = true; break; }
+                Err(error) => {
+                    assert_eq!(error.code, "mutation.apply.overflow");
+                    rejected = true;
+                    break;
+                }
             }
         }
         if row.get("error").is_some() {
@@ -47,7 +59,12 @@ fn ordered_checked_diff_and_minimum_inverse_are_lawful() {
         }
         assert!(!rejected, "{row}");
         assert_eq!(i64::from(current.value), row["result"].as_i64().expect("result"));
-        let inverse: Vec<i32> = stored_inverse.iter().map(|mutation| match mutation { WireTestMutation::AddValue(value) => value.delta }).collect();
+        let inverse: Vec<i32> = stored_inverse
+            .iter()
+            .map(|mutation| match mutation {
+                WireTestMutation::AddValue(value) => value.delta,
+            })
+            .collect();
         assert_eq!(serde_json::to_value(inverse).expect("inverse JSON"), row["inverse"]);
         for mutation in stored_inverse.iter().rev() {
             current = mutation.diff(&current).diff().apply(&current).expect("Store reverse inverse");

@@ -30,6 +30,23 @@ fn action(id: &str, en: &str, de: &str, args: Vec<ActionArgDef>) -> ActionDefini
     action
 }
 
+/// 📅️ The one DOCUMENT verb this window owns. The run period is model data (W-D0 moved it onto
+/// `crate::model::Model`), so it is an `ActionKind::Mutation` reduced through the semantic
+/// `update-run-period` kind — but it is declared HERE because this window is where it is rendered
+/// and edited. Declaring it nowhere would leave it out of `migrated_tool_ids()` while the surface
+/// root still proves it, which `AppActionRegistry::validate_tool_job_rows` refuses at app
+/// construction with `interactive-job.catalog-incomplete`.
+fn run_period_action() -> ActionDefinition {
+    let mut action = ActionDefinition::bounded_catalog(crate::editor::model::SET_RUN_PERIOD_ACTION_ID, LocalizedLabel::native("Set run period", "Simulationszeitraum setzen"), ActionKind::Mutation).with_args(vec![
+        ActionArgDef::slider("startMonth", LocalizedLabel::native("Start month", "Startmonat"), 1.0, 12.0).required(),
+        ActionArgDef::slider("startDay", LocalizedLabel::native("Start day", "Starttag"), 1.0, 31.0).required(),
+        ActionArgDef::slider("endMonth", LocalizedLabel::native("End month", "Endmonat"), 1.0, 12.0).required(),
+        ActionArgDef::slider("endDay", LocalizedLabel::native("End day", "Endtag"), 1.0, 31.0).required(),
+    ]);
+    action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+    action
+}
+
 /// ♻️ The four identity arguments every non-`start` session verb carries, so a cancel/retry/discard/
 /// adopt can never be applied to a run other than the one the user is looking at.
 fn request_identity_args() -> Vec<ActionArgDef> {
@@ -66,6 +83,7 @@ pub fn definition() -> WindowKindDefinition {
                     ActionArgDef::slider("warmupDays", LocalizedLabel::native("Warmup days", "Einschwingtage"), 0.0, 365.0).required(),
                 ],
             ),
+            run_period_action(),
         ],
         utilities: Vec::new(),
         interactions: Vec::new(),
@@ -267,7 +285,8 @@ mod tests {
     #[test]
     fn actions_are_localized_and_registered_as_interactive() {
         let definition = definition();
-        assert_eq!(definition.actions.len(), 6);
+        assert_eq!(definition.actions.len(), 7);
+        assert!(definition.actions.iter().any(|action| action.id == crate::editor::model::SET_RUN_PERIOD_ACTION_ID), "the run period is edited here, so it must be declared here");
         assert!(definition.actions.iter().all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
         assert_eq!(definition.label, LocalizedLabel::native("Energy simulation", "Energiesimulation"));
         for action in &definition.actions {

@@ -1,0 +1,12 @@
+{
+  "mutation": "createSupport",
+  "support": {
+    "id": "sup_x",
+    "nodeId": "bl_9",
+    "fixed": [
+      "Tx",
+      "Ty",
+      "Tz"
+    ]
+  }
+}

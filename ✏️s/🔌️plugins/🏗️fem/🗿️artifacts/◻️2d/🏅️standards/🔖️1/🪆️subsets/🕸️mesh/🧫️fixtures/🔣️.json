@@ -332,7 +332,7 @@
     "toleranceProfile": "fem-polygon-exact",
     "reproducible": true,
     "family": "rectangles",
-    "notes": "4×2 m, 0.25 m thick — mirrors the committed create-region/appends-a-solid-rectangular-slab scenario exactly (same outline+thickness)."
+    "notes": "4×2 m, 0.25 m thick — mirrors the committed create-region/appends-a-solid-d78275 scenario exactly (same outline+thickness)."
   },
   {
     "schema": "semio.repository-test.fixture/v2",

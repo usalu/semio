@@ -1,0 +1,33 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": {
+    "added": [
+      {
+        "kind": "bar",
+        "id": "br2",
+        "start": "n4",
+        "end": "n5",
+        "materialId": "steel_s355",
+        "sectionId": "chs889"
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

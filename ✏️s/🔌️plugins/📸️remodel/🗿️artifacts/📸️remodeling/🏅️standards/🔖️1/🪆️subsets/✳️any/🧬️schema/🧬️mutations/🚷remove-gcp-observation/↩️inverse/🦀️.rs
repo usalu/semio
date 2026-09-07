@@ -1,5 +1,6 @@
-//! ↩️ Inverse for `RemoveGcpObservation` — re-`add-gcp-observation`s the captured BASE observation.
-//! Missing target/index ⇒ `Vec::new()`.
+//! ↩️ Inverse for `RemoveGcpObservation` — re-`add-gcp-observation`s the captured BASE observation,
+//! which lands at its canonical `(stream_id, frame_index)` position, i.e. exactly the one it was
+//! removed from. Missing target/index ⇒ `Vec::new()`.
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::RemodelingSnapshot;
 

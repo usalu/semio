@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific-heat",
+  "semanticKind": "change-material-specific-heat",
+  "displayName": "Change Material Specific Heat",
+  "emoji": "♨️",
+  "aggregateVariant": "ChangeMaterialSpecificHeat",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-material-specific-heat",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

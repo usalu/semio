@@ -17,6 +17,18 @@
             {
               "id": "appends-concrete-c30",
               "directoryName": "🧱️appends-concrete-c30"
+            },
+            {
+              "id": "adds-the-c25-slab-11d8df",
+              "directoryName": "🏗️adds-the-c25-slab-11d8df"
+            },
+            {
+              "id": "rejects-a-duplicate-f3220b",
+              "directoryName": "🚫️rejects-a-duplicate-f3220b"
+            },
+            {
+              "id": "denies-poisson-329e35",
+              "directoryName": "⚗️denies-poisson-329e35"
             }
           ]
         },
@@ -26,8 +38,20 @@
           "mutationDirectoryName": "🗑️delete-material",
           "scenarios": [
             {
-              "id": "removes-the-unreferenced-timber-material",
-              "directoryName": "🚫️removes-the-unreferenced-timber-material"
+              "id": "removes-the-30f7a2",
+              "directoryName": "🚫️removes-the-30f7a2"
+            },
+            {
+              "id": "drops-the-spare-00e964",
+              "directoryName": "🗑️drops-the-spare-00e964"
+            },
+            {
+              "id": "rejects-a-missing-d5b18f",
+              "directoryName": "⛔️rejects-a-missing-d5b18f"
+            },
+            {
+              "id": "blocks-in-use-e99619",
+              "directoryName": "🔗️blocks-in-use-e99619"
             }
           ]
         },
@@ -37,8 +61,24 @@
           "mutationDirectoryName": "🔁️replace-material",
           "scenarios": [
             {
-              "id": "restates-steel-as-s355-in-its-original-slot",
-              "directoryName": "🏗️restates-steel-as-s355-in-its-original-slot"
+              "id": "restates-steel-7c22bc",
+              "directoryName": "🏗️restates-steel-7c22bc"
+            },
+            {
+              "id": "cracks-the-c30-b2b220",
+              "directoryName": "📉️cracks-the-c30-b2b220"
+            },
+            {
+              "id": "rejects-a-missing-b3adee",
+              "directoryName": "⛔️rejects-a-missing-b3adee"
+            },
+            {
+              "id": "denies-rename-a0d7aa",
+              "directoryName": "🪪️denies-rename-a0d7aa"
+            },
+            {
+              "id": "denies-zero-modulus-71e69a",
+              "directoryName": "⚗️denies-zero-modulus-71e69a"
             }
           ]
         }

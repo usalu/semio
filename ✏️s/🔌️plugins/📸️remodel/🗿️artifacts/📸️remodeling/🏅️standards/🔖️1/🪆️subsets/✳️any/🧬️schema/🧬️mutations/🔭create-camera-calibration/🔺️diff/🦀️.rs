@@ -1,4 +1,6 @@
-//! 🔺️ Sparse diff builder for `CreateCameraCalibration`. Duplicate `camera.id` ⇒ Fatal.
+//! 🔺️ Sparse diff builder for `CreateCameraCalibration` — inserts at the camera's canonical `id`
+//! position so `delete-camera-calibration` puts it back exactly where it was. Duplicate `camera.id` ⇒
+//! Fatal.
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::RemodelingSnapshot;
 
@@ -8,7 +10,8 @@ pub fn diff(payload: &super::CreateCameraCalibration, base: &RemodelingSnapshot)
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A camera calibration with id \"{}\" already exists.", payload.camera.id), [payload.camera.id.clone()]);
     }
     let mut calibration = base.calibration.clone();
-    calibration.cameras.push(payload.camera.clone());
+    let at = crate::artifacts::remodeling::mutations::ordered_index(&calibration.cameras, &payload.camera.id, |camera| camera.id.clone());
+    calibration.cameras.insert(at, payload.camera.clone());
     protocol::MutationOutcome::new(RemodelingDiff { calibration: Some(calibration), ..Default::default() })
 }
 //#endregion 🔖️Diff

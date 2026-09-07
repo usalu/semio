@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak-flow",
+  "semanticKind": "change-water-system-peak-flow",
+  "displayName": "Change Water System Peak Flow",
+  "emoji": "🚾️",
+  "aggregateVariant": "ChangeWaterSystemPeakFlow",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-water-system-peak-flow",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

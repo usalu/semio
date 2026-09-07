@@ -1,0 +1,340 @@
+{
+  "analysis": {
+    "bucklingCount": 3,
+    "deformationScale": 100.0,
+    "modalCount": 4
+  },
+  "combinations": [
+    {
+      "id": "uls",
+      "name": "ULS",
+      "terms": {
+        "dead": 1.35,
+        "live": 1.5
+      }
+    },
+    {
+      "id": "sls",
+      "name": "SLS characteristic",
+      "terms": {
+        "dead": 1.0,
+        "live": 1.0
+      }
+    }
+  ],
+  "elements": [
+    {
+      "end": "h1",
+      "id": "col_1",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "col",
+      "start": "c1"
+    },
+    {
+      "end": "h2",
+      "id": "col_2",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "col",
+      "start": "c2"
+    },
+    {
+      "end": "h3",
+      "id": "col_3",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "col",
+      "start": "c3"
+    },
+    {
+      "end": "h4",
+      "id": "col_4",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "col",
+      "start": "c4"
+    },
+    {
+      "end": "h2",
+      "id": "roof_1",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "beam",
+      "start": "h1"
+    },
+    {
+      "end": "h3",
+      "id": "roof_2",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "beam",
+      "start": "h2"
+    },
+    {
+      "end": "h4",
+      "id": "roof_3",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "beam",
+      "start": "h3"
+    },
+    {
+      "end": "h1",
+      "id": "roof_4",
+      "kind": "frame",
+      "materialId": "steel",
+      "roll": 0.0,
+      "sectionId": "beam",
+      "start": "h4"
+    },
+    {
+      "end": "h2",
+      "id": "brace",
+      "kind": "bar",
+      "materialId": "steel",
+      "sectionId": "beam",
+      "start": "c1"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "dead",
+      "loads": [
+        {
+          "elementId": "roof_1",
+          "id": "g_roof_1",
+          "kind": "memberUdl",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -10000.0
+        },
+        {
+          "elementId": "roof_2",
+          "id": "g_roof_2",
+          "kind": "memberUdl",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -10000.0
+        },
+        {
+          "elementId": "roof_3",
+          "id": "g_roof_3",
+          "kind": "memberUdl",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -10000.0
+        },
+        {
+          "elementId": "roof_4",
+          "id": "g_roof_4",
+          "kind": "memberUdl",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -10000.0
+        }
+      ],
+      "name": "Dead Load",
+      "selfWeight": true
+    },
+    {
+      "id": "live",
+      "loads": [
+        {
+          "dof": "Tz",
+          "id": "q_h2",
+          "kind": "nodal",
+          "nodeId": "h2",
+          "value": -20000.0
+        },
+        {
+          "dof": "Tz",
+          "id": "q_h3",
+          "kind": "nodal",
+          "nodeId": "h3",
+          "value": -20000.0
+        }
+      ],
+      "name": "Live Load",
+      "selfWeight": false
+    },
+    {
+      "id": "wind",
+      "loads": [
+        {
+          "dof": "Ty",
+          "id": "w_h1",
+          "kind": "nodal",
+          "nodeId": "h1",
+          "value": 12000.0
+        },
+        {
+          "dof": "Ty",
+          "id": "w_h2",
+          "kind": "nodal",
+          "nodeId": "h2",
+          "value": 12000.0
+        }
+      ],
+      "name": "Wind Y",
+      "selfWeight": false
+    }
+  ],
+  "materials": [
+    {
+      "e": 210000000000.0,
+      "g": 80769230769.0,
+      "id": "steel",
+      "name": "Steel S355",
+      "nu": 0.3,
+      "rho": 7850.0
+    },
+    {
+      "e": 11000000000.0,
+      "g": 690000000.0,
+      "id": "spare_material",
+      "name": "C24 Timber",
+      "nu": 0.3,
+      "rho": 420.0
+    }
+  ],
+  "nodes": [
+    {
+      "id": "c1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "c2",
+      "x": 6.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "c3",
+      "x": 6.0,
+      "y": 5.0,
+      "z": 0.0
+    },
+    {
+      "id": "c4",
+      "x": 0.0,
+      "y": 5.0,
+      "z": 0.0
+    },
+    {
+      "id": "h1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 4.0
+    },
+    {
+      "id": "h2",
+      "x": 6.0,
+      "y": 0.0,
+      "z": 4.0
+    },
+    {
+      "id": "h3",
+      "x": 6.0,
+      "y": 5.0,
+      "z": 4.0
+    },
+    {
+      "id": "h4",
+      "x": 0.0,
+      "y": 5.0,
+      "z": 4.0
+    },
+    {
+      "id": "spare_node",
+      "x": 10.0,
+      "y": 10.0,
+      "z": 0.0
+    }
+  ],
+  "sections": [
+    {
+      "area": 0.0106,
+      "id": "col",
+      "iy": 0.00011259,
+      "iz": 3.923e-05,
+      "j": 1.027e-06,
+      "name": "HEB 240 Column"
+    },
+    {
+      "area": 0.00845,
+      "id": "beam",
+      "iy": 0.00023128,
+      "iz": 1.318e-05,
+      "j": 5.11e-07,
+      "name": "IPE 400 Roof Beam"
+    }
+  ],
+  "solids": [],
+  "supports": [
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "id": "foot_1",
+      "nodeId": "c1"
+    },
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "id": "foot_2",
+      "nodeId": "c2"
+    },
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "id": "foot_3",
+      "nodeId": "c3"
+    },
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "id": "foot_4",
+      "nodeId": "c4"
+    },
+    {
+      "fixed": [
+        "Tx"
+      ],
+      "id": "roller",
+      "nodeId": "h1"
+    }
+  ]
+}

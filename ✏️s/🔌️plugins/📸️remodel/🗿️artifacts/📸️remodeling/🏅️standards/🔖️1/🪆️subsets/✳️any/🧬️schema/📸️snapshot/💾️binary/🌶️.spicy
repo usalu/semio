@@ -40,3 +40,31 @@ type Footer = unit {
     prev_footer_offset: uint64;
     footer_crc32:       uint32;
 };
+
+# 🔤️ Decompressed symbols(3) payload (os_pack::format::encode_symbols).
+type Symbols = unit {
+    count:   uint64 &convert=$$;
+    symbols: Symbol[self.count];
+};
+
+type Symbol = unit {
+    len:  uint64 &convert=$$;
+    text: bytes &size=self.len;
+};
+
+# 🧾️ Decompressed document(4) payloads concatenated: os_pack::encode_record_fields —
+# `field_count varint, field_count*(field_id varint, tagged value)`, sorted by ascending field id,
+# Absent fields omitted. RemodelingSnapshot::__dsl_spec() field ids (DslRecord assigns
+# id = 0-based declaration index): 0 schema Text, 1 id Text, 2 streams Table, 3 assets Map,
+# 4 durable-artifacts Map, 5 calibration Block, 6 params Block, 7 gcps Table, 8 job Block,
+# 9 results Block. Tag 0x0D (record) nests this same unit.
+type RecordFields = unit {
+    field_count: uint64 &convert=$$;
+    fields:      FieldEntry[self.field_count];
+};
+
+type FieldEntry = unit {
+    field_id: uint64 &convert=$$;
+    tag:      uint8;
+    value:    bytes &eod;
+};

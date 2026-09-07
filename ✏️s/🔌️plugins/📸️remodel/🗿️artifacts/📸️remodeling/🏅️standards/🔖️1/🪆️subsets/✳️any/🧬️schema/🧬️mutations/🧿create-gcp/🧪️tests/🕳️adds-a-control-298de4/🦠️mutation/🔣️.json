@@ -1,0 +1,13 @@
+{
+  "mutation": "createGcp",
+  "gcp": {
+    "id": "gcp-benchmark",
+    "name": "Levelling Benchmark",
+    "worldPosition": [
+      0.0,
+      0.0,
+      -1.25
+    ],
+    "observations": []
+  }
+}

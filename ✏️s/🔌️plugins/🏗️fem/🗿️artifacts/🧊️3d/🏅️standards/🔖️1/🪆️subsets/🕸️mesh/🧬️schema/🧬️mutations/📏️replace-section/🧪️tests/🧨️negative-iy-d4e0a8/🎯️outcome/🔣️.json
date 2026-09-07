@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "sec_tie"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.invariant"
+    }
+  ]
+}

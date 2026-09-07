@@ -8,6 +8,7 @@ export const ENERGY_SIMULATION_ACTIONS = [
   { id: "discard-energy-simulation", label: { en: "Discard result", de: "Ergebnis verwerfen" }, keyboard: null },
   { id: "adopt-energy-simulation", label: { en: "Adopt final result", de: "Endergebnis übernehmen" }, keyboard: "mod+shift+enter" },
   { id: "configure-energy-simulation", label: { en: "Configure run", de: "Lauf konfigurieren" }, keyboard: null },
+  { id: "set-run-period", label: { en: "Set run period", de: "Simulationszeitraum setzen" }, keyboard: null },
 ] as const;
 
 /** 🎛️ The editable, ephemeral local-only run settings `configure-energy-simulation` carries. The run

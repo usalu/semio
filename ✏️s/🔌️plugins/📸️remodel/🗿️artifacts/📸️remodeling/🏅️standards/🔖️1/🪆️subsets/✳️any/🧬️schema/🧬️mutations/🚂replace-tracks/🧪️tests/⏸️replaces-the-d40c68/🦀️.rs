@@ -1,120 +1,100 @@
-//! 🧪️ `replace-tracks` fixture — `⏸️replaces-the-moving-track-with-two-static-tracks`.
+//! 🧪️ `replace-tracks` fixture — `⏸️replaces-the-d40c68`.
 //!
-//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
-//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
-//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
-//! asserted by the shared codec-matrix harness, not here.
+//! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `replace-tracks` is this vector's scenario id in
+//! `../../../../🧪️tests/📸️mutate-remodeling-1/🥒️.feature`, where the same bytes are replayed against
+//! this subset's independent Python reference.
+//!
+//! 🏞️ the pre-existing two-stream unit vector, regenerated onto the corrected toy base
 
 use crate::artifacts::remodeling::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
-use crate::artifacts::remodeling::TrackClass;
 use crate::artifacts::remodeling::{RemodelingDiff, RemodelingSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
 const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
+const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> RemodelingSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> RemodelingMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<RemodelingDiff> {
     <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation(), &before())
 }
+fn json_of<T: dsl::ToValue>(value: &T) -> pack::JsonValue {
+    pack::json_from_dsl_value(&dsl::ToValue::to_value(value))
+}
 
-/// ▶️ `tracks` is a plain `Vec`, not an `Option`: the payload list replaces the base list
-/// wholesale, so ids present only in the base simply disappear.
+/// ▶️ The verb reaches its committed after-document, and moved it.
 #[semio_framework_async_macros::async_test]
-async fn replaces_the_track_list_wholesale() {
+async fn reaches_the_committed_after_document() {
     let applied = apply_remodeling_mutation(&before(), &mutation()).expect("replace-tracks applies to its committed before-snapshot");
-    assert_eq!(applied, expected_after(), "replace-tracks/replaces-the-moving-track-with-two-static-tracks: applied state differs from committed after-snapshot");
-    let ids: Vec<&str> = applied.results.tracks.iter().map(|track| track.id.as_str()).collect();
-    assert_eq!(ids, ["track-b", "track-c"], "the base track-a is gone — this is a replace, not a merge");
-    assert!(applied.results.tracks.iter().all(|track| track.class == TrackClass::Static), "every replacement track carries the static class");
-    assert_eq!(applied.params.motion, before().params.motion, "replacing tracks never enables the motion params that would produce them");
-    assert_eq!(applied.results.qc, before().results.qc, "the QC report's own mean-track-length summary is not recomputed");
+    assert_eq!(applied, expected_after(), "replace-tracks/replaces-the-d40c68: applied state differs from committed after-snapshot");
+    assert_ne!(applied, before(), "replace-tracks/replaces-the-d40c68: an applied vector must move the document");
 }
 
-/// ↩️ The inverse is the same verb carrying the captured base list.
-#[semio_framework_async_macros::async_test]
-async fn inverse_restores_the_single_moving_track() {
-    let base = before();
-    let inverse = inverse_remodeling_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelingMutation::ReplaceTracks(payload)] if payload.tracks.len() == 1 && payload.tracks[0].class == TrackClass::Moving),
-        "replace-tracks inverts to itself carrying the captured single moving track, got {inverse:?}"
-    );
-    let mut snapshot = apply_remodeling_mutation(&base, &mutation()).expect("forward applies");
-    for step in &inverse {
-        snapshot = apply_remodeling_mutation(&snapshot, step).expect("inverse step applies");
-    }
-    assert_eq!(snapshot, base, "replace-tracks/replaces-the-moving-track-with-two-static-tracks: inverse did not restore the before-snapshot");
-}
-
-/// 🎯️ Declared `applied`: the payload list differs from the base list, so the `mutation.no-op`
-/// warning — this leaf's only guard — stays silent.
-#[semio_framework_async_macros::async_test]
-async fn declared_applied_outcome_has_only_a_no_op_guard() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(declared["status"], "applied", "replace-tracks/replaces-the-moving-track-with-two-static-tracks declares an applied outcome");
-    let produced = produced();
-    assert!(produced.messages().is_empty(), "a genuinely different track list raises no mutation.no-op, got {:?}", produced.messages());
-    let results = produced.diff().results.as_ref().expect("replace-tracks writes the results field");
-    assert_eq!(results.tracks.len(), 2, "the results delta carries the replacement track list");
-    assert!(produced.diff().params.is_none(), "replace-tracks writes results alone");
-}
-
-/// 🔣️ The committed snapshots and the committed mutation are already canonical: decode→encode is a
-/// fixed point, so `fixtures generate` derives the other encodings from stable bytes.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RemodelingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "replace-tracks/replaces-the-moving-track-with-two-static-tracks: committed {label} JSON is not canonical");
-    }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "replace-tracks/replaces-the-moving-track-with-two-static-tracks: committed mutation JSON is not canonical");
-}
-
-/// 🔺️ The sparse delta `replace-tracks` produces is EXACTLY the committed diff — the
-/// load-bearing assertion of the whole fixture, because it pins which fields this leaf is allowed to
-/// touch rather than merely that the end state matches.
+/// 🔺️ The sparse delta this leaf produces is EXACTLY the committed diff — the load-bearing
+/// assertion, because it pins WHICH lanes the verb is allowed to touch, not merely the end state.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = produced();
-    let encoded = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(encoded, committed, "replace-tracks/replaces-the-moving-track-with-two-static-tracks: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let committed_diff: RemodelingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let results = committed_diff.results.as_ref().expect("replace-tracks' delta is the whole results block");
-    assert_eq!(results.tracks.len(), 2, "the committed delta carries the replacement track list");
-    assert_eq!(results.trajectory, before().results.trajectory, "and repeats every results sibling unchanged");
+    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
+    assert_eq!(json_of(outcome.diff()), committed, "replace-tracks/replaces-the-d40c68: produced diff differs from the committed 🔺️diff/🔣️.json");
+    let decoded: RemodelingDiff = pack::from_json_str(DIFF).expect("committed diff decodes into the diff type");
+    assert_eq!(json_of(&decoded), committed, "replace-tracks/replaces-the-d40c68: committed diff JSON is not canonical");
 }
 
-/// 🔣️ The committed diff is itself canonical and decodes back into `RemodelingDiff`, whose seventeen
-/// `Option` fields carry no `skip_serializing_if` — every untouched field must be present as `null`.
+/// 🩹 Applying the committed diff straight to `before` yields `after` — the delta is a COMPLETE
+/// description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
-    let decoded: RemodelingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "replace-tracks/replaces-the-moving-track-with-two-static-tracks: committed diff JSON is not canonical");
-}
-
-/// 🩹 Applying the committed diff straight to `before` yields `after` — the delta is a complete
-/// description of `replace-tracks`'s change, not a summary of it.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
-    let decoded: RemodelingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+async fn committed_diff_carries_before_to_after() {
+    let decoded: RemodelingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let applied = <RemodelingDiff as protocol::MutationDiff<RemodelingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(applied, expected_after(), "replace-tracks/replaces-the-moving-track-with-two-static-tracks: committed diff did not carry before to after");
+    assert_eq!(applied, expected_after(), "replace-tracks/replaces-the-d40c68: committed diff did not carry before to after");
+}
+
+/// 🎯️ The declared outcome — its status and every diagnostic it names — is what this leaf emits.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let declared = pack::parse_json(OUTCOME).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("applied"), "replace-tracks/replaces-the-d40c68 declares an applied outcome");
+    let produced = produced();
+    let declared_codes: Vec<String> = match declared.get("messages") {
+        Some(pack::JsonValue::Array(entries)) => entries.iter().filter_map(|entry| entry.get("code").and_then(|code| code.as_str()).map(str::to_string)).collect(),
+        _ => Vec::new(),
+    };
+    let emitted: Vec<String> = produced.messages().iter().map(|message| message.code.0.clone()).collect();
+    assert_eq!(emitted, declared_codes, "replace-tracks/replaces-the-d40c68: emitted diagnostics differ from the declared ones");
+}
+
+/// ↩️ Applying the verb and then EVERY step of its own computed inverse restores the committed
+/// before-document — member positions included, which a delete undone by re-appending would fail.
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_the_before_document() {
+    let base = before();
+    let mut snapshot = apply_remodeling_mutation(&base, &mutation()).expect("forward applies");
+    for step in &inverse_remodeling_mutation(&base, &mutation()) {
+        snapshot = apply_remodeling_mutation(&snapshot, step).expect("inverse step applies");
+    }
+    assert_eq!(snapshot, base, "replace-tracks/replaces-the-d40c68: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ The committed snapshots and the committed mutation are already canonical: decode→encode is a
+/// fixed point over `pack::json`, which is the codec the crate uses since serde left this type graph.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: RemodelingSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let original = pack::parse_json(text).expect("snapshot reparses");
+        assert_eq!(json_of(&decoded), original, "replace-tracks/replaces-the-d40c68: committed {label} JSON is not canonical");
+    }
+    let original = pack::parse_json(MUTATION).expect("mutation reparses");
+    assert_eq!(json_of(&mutation()), original, "replace-tracks/replaces-the-d40c68: committed mutation JSON is not canonical");
 }

@@ -1,16 +1,16 @@
 //! 🩹️ Retained fixed-admission reconciliation for mounted plugin surfaces.
 
+use super::instance_lifetime::NativeCloseKey;
 use semio_framework_job::{CancelToken, Generation, OperationId, StepBudget, StepContext};
 use semio_framework_ui_contract as ui_contract;
 #[cfg(test)]
 use semio_framework_ui_runtime::ComponentTree;
 use semio_framework_ui_runtime::{
-    ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation, SurfaceReconcileTerminal,
-    SurfaceReconciler, TreeNode, SURFACE_RECONCILE_ADMISSION_SLOTS,
+    ComponentTreeProducer, ComponentTreeProducerStep, SURFACE_RECONCILE_ADMISSION_SLOTS, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation,
+    SurfaceReconcileTerminal, SurfaceReconciler, TreeNode,
 };
+use semio_framework_ui_runtime::{SurfaceReconcileOutputReservation, SurfaceReconcileOutputTransfer, SurfaceReconcileOutputs};
 use std::cell::RefCell;
-use super::instance_lifetime::NativeCloseKey;
-use semio_framework_ui_runtime::{SurfaceReconcileOutputReservation, SurfaceReconcileOutputs, SurfaceReconcileOutputTransfer};
 
 const READY_PATCH_CAPACITY: usize = SURFACE_RECONCILE_ADMISSION_SLOTS;
 
@@ -96,7 +96,9 @@ impl ReadySlot {
     fn close_step(&mut self) -> Result<bool, &'static str> {
         self.closing = true;
         if let Some(reservation) = self.reservation.as_mut() {
-            if reservation.close_step(1)?.complete { self.reservation = None; }
+            if reservation.close_step(1)?.complete {
+                self.reservation = None;
+            }
             return Ok(false);
         }
         Ok(self.outputs.close_step(1, 4096)?.complete && self.outputs.terminal_is_empty())
@@ -130,7 +132,9 @@ enum MountedReconcileOwner {
 impl MountedReconcileGrant {
     pub fn commit_source(mut self, root: TreeNode) -> Result<(), TreeNode> {
         let mut state = self.state.borrow_mut();
-        if state.closing_instances.iter().flatten().any(|closing| closing.key == self.key) { return Err(root); }
+        if state.closing_instances.iter().flatten().any(|closing| closing.key == self.key) {
+            return Err(root);
+        }
         if state.unadmitted[self.index].as_ref().is_none_or(|slot| slot.generation != self.generation) {
             return Err(root);
         }
@@ -219,10 +223,18 @@ impl MountedReconcileGrant {
         if state.rejected_reserved[self.rejected_index] == Some(self.generation) {
             state.rejected_reserved[self.rejected_index] = None;
         }
-        if let Some(output) = state.ready[self.output_index].as_mut().filter(|output| output.key == self.key && output.generation == self.generation) { output.closing = true; }
-        if let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index)) { slot.output_index = None; }
-        if let Some(output) = state.ready[self.output_index].as_mut().filter(|output| output.key == self.key && output.generation == self.generation) { output.closing = true; }
-        if let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index)) { slot.output_index = None; }
+        if let Some(output) = state.ready[self.output_index].as_mut().filter(|output| output.key == self.key && output.generation == self.generation) {
+            output.closing = true;
+        }
+        if let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index)) {
+            slot.output_index = None;
+        }
+        if let Some(output) = state.ready[self.output_index].as_mut().filter(|output| output.key == self.key && output.generation == self.generation) {
+            output.closing = true;
+        }
+        if let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index)) {
+            slot.output_index = None;
+        }
         let owner = std::mem::replace(&mut self.owner, MountedReconcileOwner::Transferred);
         if let (MountedReconcileOwner::Live { reconciler, reservation }, Some(slot)) = (owner, state.slots[self.surface_index].as_mut()) {
             slot.reconciler = Some(reconciler);
@@ -362,7 +374,10 @@ impl PatchTracker {
             Err(surface) => return Err((surface, tree)),
         };
         let key = NativeCloseKey::fixture(surface_instance(surface_id.as_ref()).unwrap_or(0), 1);
-        let grant = match self.reserve_mounted_owned(surface_id, key) { Ok(grant) => grant, Err(surface) => return Err((surface.0.to_string(), tree)) };
+        let grant = match self.reserve_mounted_owned(surface_id, key) {
+            Ok(grant) => grant,
+            Err(surface) => return Err((surface.0.to_string(), tree)),
+        };
         let generation = grant.generation;
         grant.commit(tree);
         Ok(generation)
@@ -374,7 +389,9 @@ impl PatchTracker {
     }
 
     pub(crate) fn reserve_mounted(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
-        if surface_instance(surface.as_ref()) != Some(key.instance()) { return Err(surface); }
+        if surface_instance(surface.as_ref()) != Some(key.instance()) {
+            return Err(surface);
+        }
         self.reserve_mounted_owned(surface, key)
     }
 
@@ -398,7 +415,10 @@ impl PatchTracker {
         let output_reservation = match outputs.try_reserve(generation, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES) {
             Ok(Some(owner)) => owner,
             Ok(None) => return Err(surface),
-            Err(fault) => { state.output_fault = Some((key, fault, false)); return Err(surface); }
+            Err(fault) => {
+                state.output_fault = Some((key, fault, false));
+                return Err(surface);
+            }
         };
         state.ready[output_index] = Some(ReadySlot { generation, key, outputs, reservation: Some(output_reservation), published: false, closing: false });
         let reconciler = if let Some(slot) = state.slots[surface_index].as_mut() {
@@ -430,9 +450,12 @@ impl PatchTracker {
 
     pub fn drive_one(&self) -> bool {
         let mut state = self.state.borrow_mut();
-        if state.output_fault.is_some() { return true; }
-        let Some(index) =
-            (0..SURFACE_RECONCILE_ADMISSION_SLOTS).map(|offset| (state.drive_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS).find(|index| state.slots[*index].as_ref().is_some_and(|slot| !state.closing_instances.iter().flatten().any(|closing| closing.key == slot.key) && (slot.producer.is_some() || slot.job.is_some())))
+        if state.output_fault.is_some() {
+            return true;
+        }
+        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .map(|offset| (state.drive_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .find(|index| state.slots[*index].as_ref().is_some_and(|slot| !state.closing_instances.iter().flatten().any(|closing| closing.key == slot.key) && (slot.producer.is_some() || slot.job.is_some())))
         else {
             return has_work(&state);
         };
@@ -452,7 +475,9 @@ impl PatchTracker {
             tests::after_producer_step();
             context.consume_fuel(1);
             slot.preview_sequence = preview_sequence;
-            if outcome != ComponentTreeProducerStep::MoreWork { producer.outcome = Some(outcome); }
+            if outcome != ComponentTreeProducerStep::MoreWork {
+                producer.outcome = Some(outcome);
+            }
             return has_work(&state);
         };
         let Some(mut slot) = state.slots[index].take() else { return has_work(&state) };
@@ -513,7 +538,9 @@ impl PatchTracker {
                 }
             }
             if slot.producer.is_none() && slot.job.is_none() && state.rejected.iter().flatten().all(|rejected| rejected.authority.generation() != slot.generation) {
-                if let Some(output) = slot.output_index.take().and_then(|index| state.ready[index].as_mut()) { output.closing = true; }
+                if let Some(output) = slot.output_index.take().and_then(|index| state.ready[index].as_mut()) {
+                    output.closing = true;
+                }
             }
             state.slots[index] = Some(slot);
             return has_work(&state);
@@ -529,7 +556,12 @@ impl PatchTracker {
     /// 🚨️ Returns one mounted surface failure while retaining its incremental cleanup owner.
     pub fn take_render_fault(&self) -> Option<(u32, String)> {
         let mut state = self.state.borrow_mut();
-        if let Some((key, fault, reported)) = state.output_fault.as_mut() { if !*reported { *reported = true; return Some((key.instance(), (*fault).to_owned())); } }
+        if let Some((key, fault, reported)) = state.output_fault.as_mut() {
+            if !*reported {
+                *reported = true;
+                return Some((key.instance(), (*fault).to_owned()));
+            }
+        }
         for terminal in state.producer_terminals.iter_mut().flatten().filter(|terminal| !terminal.close) {
             if let Some(fault) = terminal.authority.as_ref().and_then(|authority| authority.fault()) {
                 terminal.close = true;
@@ -547,18 +579,27 @@ impl PatchTracker {
 
     pub(crate) fn ready_patch_key(&self) -> Result<Option<(NativeCloseKey, u64)>, &'static str> {
         let state = self.state.try_borrow().map_err(|_| "patch publication target is busy")?;
-        Ok(next_ready_index(&state).map(|index| { let ready = state.ready[index].as_ref().expect("selected output"); (ready.key, ready.generation) }))
+        Ok(next_ready_index(&state).map(|index| {
+            let ready = state.ready[index].as_ref().expect("selected output");
+            (ready.key, ready.generation)
+        }))
     }
 
     pub(crate) fn take_ready_patch_into(&self, key: NativeCloseKey, generation: u64, target: &mut Option<SurfaceReconcileReadyPatch>, admitted_bytes: usize) -> Result<bool, &'static str> {
-        if target.is_some() { return Ok(false); }
+        if target.is_some() {
+            return Ok(false);
+        }
         let metadata = std::mem::size_of::<ReadySlot>();
         let Some(bytes) = admitted_bytes.checked_sub(metadata) else { return Ok(false) };
         let mut state = self.state.try_borrow_mut().map_err(|_| "patch publication target is busy")?;
         let Some(index) = next_ready_index(&state) else { return Ok(false) };
         let output = state.ready[index].as_mut().expect("selected retained output");
-        if output.key != key || output.generation != generation { return Err("patch publication belongs to another allocation or generation"); }
-        if !output.outputs.take_front_into(target, bytes)? { return Ok(false); }
+        if output.key != key || output.generation != generation {
+            return Err("patch publication belongs to another allocation or generation");
+        }
+        if !output.outputs.take_front_into(target, bytes)? {
+            return Ok(false);
+        }
         output.published = false;
         output.closing = true;
         Ok(true)
@@ -572,25 +613,31 @@ impl PatchTracker {
         target
     }
 
-    pub fn mark_rejected(&self, surface: &str) {
+    pub(crate) fn mark_rejected(&self, surface: &str, expected_generation: u64) -> bool {
         let mut state = self.state.borrow_mut();
-        let Some(index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface.as_ref() == surface)) else { return };
-        let Some(target_index) = state.terminals.iter().position(Option::is_none) else { return };
+        let Some(index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface.as_ref() == surface)) else { return false };
+        let current_generation = state.slots[index].as_ref().expect("matched rejection surface").generation;
+        if current_generation != expected_generation {
+            return expected_generation != 0 && current_generation > expected_generation;
+        }
+        let Some(target_index) = state.terminals.iter().position(Option::is_none) else { return false };
         if state.slots[index].as_ref().is_some_and(|slot| slot.producer.is_some() || slot.job.is_some()) {
-            let Some(slot) = state.slots[index].as_mut() else { return };
+            let Some(slot) = state.slots[index].as_mut() else { return false };
             slot.cancel.cancel_now();
             if slot.producer.is_some() {
-                return;
+                return false;
             }
-            let Some(job) = slot.job.take() else { return };
+            let Some(job) = slot.job.take() else { return false };
             let terminal = job.into_terminal();
-            if slot.reconciler.is_none() { slot.reconciler = Some(SurfaceReconciler::new(slot.surface.clone())); }
+            if slot.reconciler.is_none() {
+                slot.reconciler = Some(SurfaceReconciler::new(slot.surface.clone()));
+            }
             state.terminals[target_index] = Some(TerminalSlot { key: slot.key, instance: surface_instance(surface), authority: terminal, close: true });
             close_output(&mut state, index);
-            return;
+            return true;
         }
-        let Some(generation) = next_generation(&state) else { return };
-        let Some(reconciler) = state.slots[index].as_mut().and_then(|slot| slot.reconciler.take()) else { return };
+        let Some(generation) = next_generation(&state) else { return false };
+        let Some(reconciler) = state.slots[index].as_mut().and_then(|slot| slot.reconciler.take()) else { return false };
         let terminal = match SurfaceReconcileTerminal::try_from_reconciler(reconciler, generation) {
             Ok(terminal) => terminal,
             Err(reconciler) => {
@@ -599,17 +646,18 @@ impl PatchTracker {
                 } else {
                     drop(reconciler);
                 }
-                return;
+                return false;
             }
         };
         commit_generation(&mut state, generation);
         let Some(slot) = state.slots[index].as_mut() else {
             drop(terminal);
-            return;
+            return false;
         };
         slot.cancel.cancel_now();
         slot.reconciler = Some(SurfaceReconciler::new(slot.surface.clone()));
         state.terminals[target_index] = Some(TerminalSlot { key: slot.key, instance: surface_instance(surface), authority: terminal, close: true });
+        true
     }
 
     pub fn mark_published_ack(&self, ack: &SurfaceReconcilePublishedAck) -> Result<bool, &'static str> {
@@ -617,7 +665,10 @@ impl PatchTracker {
         let revision = ack.revision().0;
         let Some(surface) = ack.surface().map(|surface| surface.0.as_str()) else { return Ok(false) };
         let mut state = self.state.try_borrow_mut().map_err(|_| "published ACK target is busy")?;
-        let Some(slot) = state.slots.iter_mut().flatten().find(|slot| slot.surface.0.as_str() == surface && slot.generation == generation) else { return Ok(false) };
+        let Some(slot) = state.slots.iter_mut().flatten().find(|slot| slot.surface.0.as_str() == surface) else { return Ok(false) };
+        if slot.generation != generation {
+            return Ok(generation != 0 && slot.generation > generation);
+        }
         let current = slot.reconciler.as_ref().map_or_else(
             || slot.producer.as_ref().and_then(|producer| producer.reconciler.as_ref()).map_or_else(|| slot.job.as_ref().map_or(ui_contract::UiRevision::default(), SurfaceReconcileJob::base_revision), SurfaceReconciler::revision),
             SurfaceReconciler::revision,
@@ -655,10 +706,13 @@ impl PatchTracker {
             || state.rejected.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
             || state.terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
             || state.producer_terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
-            || state.unadmitted.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key) {
+            || state.unadmitted.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+        {
             return Err("patch descendants belong to another allocation");
         }
-        if state.closing_instances.iter().all(Option::is_some) { return Err("patch close reservation is full"); }
+        if state.closing_instances.iter().all(Option::is_some) {
+            return Err("patch close reservation is full");
+        }
         Ok(())
     }
 
@@ -672,7 +726,8 @@ impl PatchTracker {
             || state.rejected.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
             || state.terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
             || state.producer_terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
-            || state.unadmitted.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key) {
+            || state.unadmitted.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+        {
             return Err("patch descendants belong to another allocation");
         }
         let slot = state.closing_instances.iter_mut().find(|slot| slot.is_none()).ok_or("patch close reservation is full")?;
@@ -701,11 +756,13 @@ impl PatchTracker {
 
     pub fn close_step(&self) -> bool {
         let Ok(mut state) = self.state.try_borrow_mut() else { return false };
-        if state.output_fault.is_some() { return false; }
+        if state.output_fault.is_some() {
+            return false;
+        }
         if let Some(index) = state.ready.iter().position(|output| output.as_ref().is_some_and(|output| output.closing)) {
             match state.ready[index].as_mut().expect("retained output close").close_step() {
                 Ok(true) => state.ready[index] = None,
-                Ok(false) => {},
+                Ok(false) => {}
                 Err(fault) => state.output_fault = Some((state.ready[index].as_ref().expect("faulted retained output").key, fault, false)),
             }
             return false;
@@ -885,14 +942,23 @@ impl PatchTracker {
 }
 
 fn next_ready_index(state: &PatchTrackerState) -> Option<usize> {
-    let (index, ready) = state.ready.iter().enumerate().filter_map(|(index, ready)| ready.as_ref().filter(|ready| ready.published && !ready.closing && !state.closing_instances.iter().flatten().any(|closing| closing.key == ready.key)).map(|ready| (index, ready))).min_by_key(|(_, ready)| ready.generation)?;
+    let (index, ready) = state
+        .ready
+        .iter()
+        .enumerate()
+        .filter_map(|(index, ready)| ready.as_ref().filter(|ready| ready.published && !ready.closing && !state.closing_instances.iter().flatten().any(|closing| closing.key == ready.key)).map(|ready| (index, ready)))
+        .min_by_key(|(_, ready)| ready.generation)?;
     let pending = state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| slot.generation).min();
-    if pending.is_some_and(|generation| generation < ready.generation) { return None; }
+    if pending.is_some_and(|generation| generation < ready.generation) {
+        return None;
+    }
     Some(index)
 }
 
 fn close_output(state: &mut PatchTrackerState, index: usize) {
-    if let Some(output) = state.slots[index].as_mut().and_then(|slot| slot.output_index.take()).and_then(|output| state.ready[output].as_mut()) { output.closing = true; }
+    if let Some(output) = state.slots[index].as_mut().and_then(|slot| slot.output_index.take()).and_then(|output| state.ready[output].as_mut()) {
+        output.closing = true;
+    }
 }
 
 fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
@@ -910,7 +976,9 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
     if job.is_ready() {
         let slot = state.slots[index].as_mut().expect("retained ready job slot");
         let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_us, &mut slot.preview_sequence);
-        if slot.job.as_mut().expect("retained ready job authority").drive_one(&mut context) != SurfaceReconcileJobStep::Ready { return; }
+        if slot.job.as_mut().expect("retained ready job authority").drive_one(&mut context) != SurfaceReconcileJobStep::Ready {
+            return;
+        }
         let receiver_bytes = std::mem::size_of::<ReadySlot>();
         let Some(grant) = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES.checked_sub(receiver_bytes) else { return };
         let output = state.ready[output_index].as_mut().expect("output reserved before producer");
@@ -922,7 +990,10 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
                 output.closing = true;
             }
             Ok(SurfaceReconcileOutputTransfer::Pending) => return,
-            Err(fault) => { state.output_fault = Some((slot.key, fault, false)); return; }
+            Err(fault) => {
+                state.output_fault = Some((slot.key, fault, false));
+                return;
+            }
         }
         #[cfg(test)]
         tests::after_output_transfer();
@@ -939,7 +1010,8 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
 }
 
 fn has_work(state: &PatchTrackerState) -> bool {
-    state.output_fault.is_some() || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some())
+    state.output_fault.is_some()
+        || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some())
         || state.terminals.iter().any(Option::is_some)
         || state.producer_terminals.iter().any(Option::is_some)
         || state.deferred.iter().any(Option::is_some)
@@ -974,11 +1046,22 @@ mod tests {
     thread_local! { static PANIC_AFTER_PRODUCER_STEP: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
 
     pub(super) fn after_output_transfer() {
-        PANIC_AFTER_OUTPUT_TRANSFER.with(|pending| { if pending.replace(false) { panic!("[DEBUG] actual mounted direct-output transfer unwind"); } });
+        PANIC_AFTER_OUTPUT_TRANSFER.with(|pending| {
+            if pending.replace(false) {
+                panic!("[DEBUG] actual mounted direct-output transfer unwind");
+            }
+        });
     }
 
     pub(super) fn after_producer_step() {
-        if PANIC_AFTER_PRODUCER_STEP.with(|pending| pending.replace(false)) { panic!("[DEBUG] actual mounted producer partial-step unwind"); }
+        if PANIC_AFTER_PRODUCER_STEP.with(|pending| pending.replace(false)) {
+            panic!("[DEBUG] actual mounted producer partial-step unwind");
+        }
+    }
+
+    fn reject_current(tracker: &PatchTracker, surface: &str) {
+        let generation = tracker.state.borrow().slots.iter().flatten().find(|slot| slot.surface.as_ref() == surface).expect("current test surface").generation;
+        tracker.mark_rejected(surface, generation);
     }
 
     fn reserve(tracker: &PatchTracker, surface: ui_contract::SurfaceId) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
@@ -1010,7 +1093,9 @@ mod tests {
         for turn in 0..65_536 {
             let step = published.close_step_with_grant(1, 4096).unwrap();
             assert!(step.released_items <= 1 && step.released_bytes <= 4096);
-            if step.complete && published.terminal_is_empty() { return; }
+            if step.complete && published.terminal_is_empty() {
+                return;
+            }
             assert!(turn < 65_535);
         }
     }
@@ -1019,7 +1104,9 @@ mod tests {
         for turn in 0..65_536 {
             let step = ack.close_step_with_grant(1, 4096).unwrap();
             assert!(step.released_items <= 1 && step.released_bytes <= 4096);
-            if step.complete && ack.terminal_is_empty() { return; }
+            if step.complete && ack.terminal_is_empty() {
+                return;
+            }
             assert!(turn < 65_535);
         }
     }
@@ -1029,7 +1116,9 @@ mod tests {
         *owner.source_mut().unwrap() = Some(patch);
         for turn in 0..65_536 {
             owner.close_step(1, 4096).unwrap();
-            if owner.terminal_is_empty() { return; }
+            if owner.terminal_is_empty() {
+                return;
+            }
             assert!(turn < 65_535);
         }
     }
@@ -1099,7 +1188,11 @@ mod tests {
             let surface = ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap();
             let grant = reserve(&tracker, surface.clone()).unwrap();
             let generation = grant.generation;
-            if drop_grant { drop(grant); } else { grant.cancel(); }
+            if drop_grant {
+                drop(grant);
+            } else {
+                grant.cancel();
+            }
             let preserved = tracker.state.borrow().slots.iter().flatten().find(|slot| slot.surface == surface).is_some_and(|slot| slot.generation == generation && generation != 0);
             let revision = tracker.revision(surface.as_ref()).0;
             close_instance_to_empty(&tracker, 74);
@@ -1120,10 +1213,18 @@ mod tests {
         }
         let tracker = PatchTracker::new();
         let admitted = match reserve(&tracker, ui_contract::SurfaceId::try_from("71:output-admission").unwrap()) {
-            Ok(grant) => { grant.cancel(); true }
-            Err(surface) => { assert_eq!(surface.as_ref(), "71:output-admission"); false }
+            Ok(grant) => {
+                grant.cancel();
+                true
+            }
+            Err(surface) => {
+                assert_eq!(surface.as_ref(), "71:output-admission");
+                false
+            }
         };
-        for owner in &mut reservations { while !owner.close_step(1).unwrap().complete {} }
+        for owner in &mut reservations {
+            while !owner.close_step(1).unwrap().complete {}
+        }
         while !outputs.close_step(1, 4096).unwrap().complete {}
         close_instance_to_empty(&tracker, 71);
         assert_eq!(admitted, fixture["extraInvocation"].as_bool().unwrap());
@@ -1145,7 +1246,10 @@ mod tests {
         PANIC_AFTER_PRODUCER_STEP.with(|pending| pending.set(true));
         let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracker.drive_one()));
         assert!(caught.is_err());
-        let retained = tracker.state.borrow().slots[index].as_ref().and_then(|slot| slot.producer.as_ref()).is_some_and(|producer| producer.authority.as_ref() as *const _ == pointer && producer.reservation.as_ref().is_some_and(|owner| owner.generation() == generation));
+        let retained = tracker.state.borrow().slots[index]
+            .as_ref()
+            .and_then(|slot| slot.producer.as_ref())
+            .is_some_and(|producer| producer.authority.as_ref() as *const _ == pointer && producer.reservation.as_ref().is_some_and(|owner| owner.generation() == generation));
         if !retained {
             let mut state = tracker.state.borrow_mut();
             assert_eq!(state.rejected_reserved[rejected_index], Some(generation));
@@ -1167,7 +1271,9 @@ mod tests {
             let slot = state.slots[index].as_mut().unwrap();
             let producer = slot.producer.as_mut().unwrap();
             for turn in 0..64 {
-                if producer.authority.step(slot.generation, false, false) == ComponentTreeProducerStep::Complete { break; }
+                if producer.authority.step(slot.generation, false, false) == ComponentTreeProducerStep::Complete {
+                    break;
+                }
                 assert!(turn < 63);
             }
             (index, slot.generation, producer.authority.as_ref() as *const _, producer.reconciler.take().unwrap())
@@ -1181,7 +1287,9 @@ mod tests {
                 (producer.reservation.as_ref().is_some_and(|owner| owner.generation() == generation), producer.authority.take_complete().is_some_and(|tree| tree.root.key.as_str() == "owned-root"))
             } else if let Some(terminal) = state.producer_terminals.iter_mut().flatten().find(|terminal| terminal.authority.as_ref().is_some_and(|owner| owner.as_ref() as *const _ == pointer)) {
                 (terminal.reservation.as_ref().is_some_and(|owner| owner.generation() == generation), terminal.authority.as_mut().unwrap().take_complete().is_some_and(|tree| tree.root.key.as_str() == "owned-root"))
-            } else { (false, false) };
+            } else {
+                (false, false)
+            };
             state.slots[index].as_mut().unwrap().reconciler = Some(reconciler);
             result
         };
@@ -1204,7 +1312,10 @@ mod tests {
         PANIC_AFTER_OUTPUT_TRANSFER.with(|pending| pending.set(true));
         let mut caught = false;
         for _ in 0..65_536 {
-            if std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracker.drive_one())).is_err() { caught = true; break; }
+            if std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracker.drive_one())).is_err() {
+                caught = true;
+                break;
+            }
         }
         assert!(caught, "actual live job-to-pool transfer callback ran");
         let exact_roots = {
@@ -1243,7 +1354,10 @@ mod tests {
         let grant = tracker.reserve_mounted(ui_contract::SurfaceId::try_from("76:grant").unwrap(), key).unwrap();
         tracker.reserve_close_instance(key).unwrap();
         tracker.activate_close_instance(key).unwrap();
-        for _ in 0..8 { tracker.close_step(); assert!(!tracker.close_instance_complete(key).unwrap()); }
+        for _ in 0..8 {
+            tracker.close_step();
+            assert!(!tracker.close_instance_complete(key).unwrap());
+        }
         let root = tree_with_owned_child("returned");
         let pointer = root.root.children.get(0).unwrap().key.as_ptr();
         let returned = grant.commit_source(root.root).expect_err("closing lifetime rejects producer invocation");
@@ -1258,7 +1372,9 @@ mod tests {
         let law = &fixture["concurrentAdmission"];
         let mut occupied = SurfaceReconcileOutputs::default();
         let mut reservations = Vec::new();
-        for generation in 1..=law["occupied"].as_u64().unwrap() { reservations.push(occupied.try_reserve(generation, 32768).unwrap().unwrap()); }
+        for generation in 1..=law["occupied"].as_u64().unwrap() {
+            reservations.push(occupied.try_reserve(generation, 32768).unwrap().unwrap());
+        }
         let barrier = std::sync::Arc::new(std::sync::Barrier::new(3));
         let (tx, rx) = std::sync::mpsc::channel();
         let mut workers = Vec::new();
@@ -1273,28 +1389,45 @@ mod tests {
                 barrier.wait();
                 for _ in 0..64 {
                     match tracker.reserve_mounted(surface, key) {
-                        Ok(grant) => { admitted = Some(grant); break; }
-                        Err(returned) => { assert_eq!(returned.as_ref(), format!("{instance}:concurrent")); surface = returned; std::thread::yield_now(); }
+                        Ok(grant) => {
+                            admitted = Some(grant);
+                            break;
+                        }
+                        Err(returned) => {
+                            assert_eq!(returned.as_ref(), format!("{instance}:concurrent"));
+                            surface = returned;
+                            std::thread::yield_now();
+                        }
                     }
                 }
                 tx.send(admitted.is_some()).unwrap();
                 barrier.wait();
-                if let Some(grant) = admitted { grant.cancel(); }
+                if let Some(grant) = admitted {
+                    grant.cancel();
+                }
                 close_instance_to_empty(&tracker, instance);
             }));
         }
         barrier.wait();
         let accepted = usize::from(rx.recv().unwrap()) + usize::from(rx.recv().unwrap());
         barrier.wait();
-        for worker in workers { worker.join().unwrap(); }
-        for reservation in &mut reservations { while !reservation.close_step(1).unwrap().complete {} }
+        for worker in workers {
+            worker.join().unwrap();
+        }
+        for reservation in &mut reservations {
+            while !reservation.close_step(1).unwrap().complete {}
+        }
         while !occupied.close_step(1, 4096).unwrap().complete {}
         assert_eq!(accepted, law["accepted"].as_u64().unwrap() as usize);
         let mut reused = SurfaceReconcileOutputs::default();
         let mut restored = Vec::new();
-        for generation in 1..=64 { restored.push(reused.try_reserve(generation, 32768).unwrap().unwrap()); }
+        for generation in 1..=64 {
+            restored.push(reused.try_reserve(generation, 32768).unwrap().unwrap());
+        }
         assert!(reused.try_reserve(65, 32768).unwrap().is_none());
-        for reservation in &mut restored { while !reservation.close_step(1).unwrap().complete {} }
+        for reservation in &mut restored {
+            while !reservation.close_step(1).unwrap().complete {}
+        }
         while !reused.close_step(1, 4096).unwrap().complete {}
         eprintln!("[DEBUG] live-output same-process-workers=2 preoccupied=63 accepted={accepted} exact-refusal=true full64-restored=true");
     }
@@ -1427,13 +1560,24 @@ mod tests {
                 let (patch, authority) = publish_test(owner);
                 let mut authority = Some(authority);
                 let mut acknowledgement = None;
-                assert!(semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut authority, &mut acknowledgement, fixture["surface"].as_str().unwrap(), patch.revision.0, semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()).unwrap());
+                assert!(
+                    semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(
+                        &mut authority,
+                        &mut acknowledgement,
+                        fixture["surface"].as_str().unwrap(),
+                        patch.revision.0,
+                        semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()
+                    )
+                    .unwrap()
+                );
                 assert!(tracker.mark_published_ack(acknowledgement.as_ref().unwrap()).unwrap());
                 close_ack(acknowledgement.take().unwrap());
                 published = Some(patch);
                 break;
             }
-            if !tracker.has_work() { break; }
+            if !tracker.has_work() {
+                break;
+            }
         }
         let fault = format!("{:?}", tracker.state.borrow().terminals.iter().flatten().map(|slot| slot.authority.fault()).collect::<Vec<_>>());
         close_instance_to_empty(&tracker, 1);
@@ -1456,7 +1600,10 @@ mod tests {
         let mut reported = None;
         for _ in 0..4096 {
             tracker.drive_one();
-            if let Some(fault) = tracker.take_render_fault() { reported = Some(fault); break; }
+            if let Some(fault) = tracker.take_render_fault() {
+                reported = Some(fault);
+                break;
+            }
         }
         assert!(tracker.take_ready_patch().is_none());
         assert!(tracker.take_render_fault().is_none());
@@ -1485,7 +1632,10 @@ mod tests {
         let mut reported = None;
         for _ in 0..65_536 {
             tracker.drive_one();
-            if let Some(fault) = tracker.take_render_fault() { reported = Some(fault); break; }
+            if let Some(fault) = tracker.take_render_fault() {
+                reported = Some(fault);
+                break;
+            }
         }
         assert!(tracker.take_ready_patch().is_none());
         assert!(tracker.take_render_fault().is_none());
@@ -1555,6 +1705,65 @@ mod tests {
     }
 
     #[test]
+    fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
+        use super::super::pending::PendingPatchAuthority;
+        use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📨️pending/🧫️fixture/🩹️receipt.json")).unwrap();
+        let surface = fixture["issued"]["surface"].as_str().unwrap();
+        for rejection in [false, true] {
+            let tracker = PatchTracker::new();
+            let mut pending = PendingPatchAuthority::new();
+            let first = tracker.begin(surface.into(), leaf("root", "first")).unwrap();
+            let mut ready = None;
+            for _ in 0..4096 {
+                tracker.drive_one();
+                if let Some(owner) = tracker.take_ready_patch() {
+                    ready = Some(owner);
+                    break;
+                }
+            }
+            pending.push_reconcile(ready.expect("real reconcile publication")).unwrap_or_else(|_| panic!("empty pending slot"));
+            assert!(pending.take_one(65536).unwrap().is_none());
+            let patch = pending.take_one(65536).unwrap().unwrap();
+            let issued = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 41, instance_id: 7, guest_lifetime: 3 }, patch_sequence: 8 };
+            pending.stage_emission(issued, &patch).unwrap();
+            pending.commit_emission();
+            let revision = patch.revision.0;
+            close_test_patch(patch);
+            assert!(!tracker.mark_rejected(surface, first + 1), "future feedback cannot reset a current generation");
+            for turn in 0..4096 {
+                tracker.drive_one();
+                tracker.close_step();
+                if tracker.state.borrow().slots.iter().flatten().any(|slot| slot.surface.as_ref() == surface && slot.job.is_none() && slot.producer.is_none() && slot.output_index.is_none() && slot.reconciler.is_some()) {
+                    break;
+                }
+                assert!(turn < 4095);
+            }
+            let second = tracker.begin(surface.into(), leaf("root", "second")).expect("old published owner permits a later real render");
+            assert!(second > first);
+            let before = tracker.revision(surface);
+            if rejection {
+                assert!(pending.apply_issued_rejection(issued, surface, revision, |generation| tracker.mark_rejected(surface, generation)));
+            } else {
+                assert!(pending.apply_issued_ack(issued, surface, revision, 65536, |ack| tracker.mark_published_ack(ack)).unwrap());
+            }
+            assert_eq!(tracker.revision(surface), before);
+            assert_eq!(tracker.state.borrow().slots.iter().flatten().find(|slot| slot.surface.as_ref() == surface).unwrap().generation, second);
+            for turn in 0..65536 {
+                if pending.close_step().unwrap() {
+                    break;
+                }
+                assert!(turn < 65535);
+            }
+            assert!(!pending.receipt_is_issued(issued));
+            assert!(!pending.has_unpublished());
+            assert!(pending.has_capacity());
+            close_instance_to_empty(&tracker, 7);
+            eprintln!("[DEBUG] obsolete real reconcile feedback rejection={} old={} current={} exact old owner retired", rejection, first, second);
+        }
+    }
+
+    #[test]
     fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_aba_without_authority_loss() {
         let tracker = PatchTracker::new();
         let mut published = Some(published(&tracker, "71:ack"));
@@ -1569,7 +1778,7 @@ mod tests {
             let slot = state.slots.iter_mut().flatten().find(|slot| slot.surface.as_ref() == "71:ack").expect("published surface");
             slot.generation += 1;
         }
-        assert!(!tracker.mark_published_ack(ack.as_ref().unwrap()).unwrap(), "ABA generation is inert");
+        assert!(tracker.mark_published_ack(ack.as_ref().unwrap()).unwrap(), "obsolete exact published owner can retire without mutating current generation");
         assert_eq!(ack.as_ref().unwrap().surface().unwrap().0.as_str(), "71:ack", "ABA refusal preserves the identical structural authority");
         {
             let mut state = tracker.state.borrow_mut();
@@ -1639,11 +1848,10 @@ mod tests {
         for index in 0..capacity - 1 {
             tracker.retain_unadmitted(format!("{index}:queued"), leaf("root", "queued")).expect("fixed unadmitted slot");
             let admitted = index + 2;
-            assert_eq!(ui_contract::UiResidentPermit::snapshot().unwrap(), ui_contract::UiResidentSnapshot {
-                bytes: fixed_bytes.checked_add(admitted.checked_mul(limits.max_bytes).unwrap()).unwrap(),
-                items: admitted.checked_mul(limits.max_items).unwrap(),
-                used_slots: admitted,
-            });
+            assert_eq!(
+                ui_contract::UiResidentPermit::snapshot().unwrap(),
+                ui_contract::UiResidentSnapshot { bytes: fixed_bytes.checked_add(admitted.checked_mul(limits.max_bytes).unwrap()).unwrap(), items: admitted.checked_mul(limits.max_items).unwrap(), used_slots: admitted }
+            );
         }
         let full = ui_contract::UiResidentPermit::snapshot().unwrap();
         assert!(full.bytes <= aggregate && full.bytes.checked_add(limits.max_bytes).unwrap() > aggregate);
@@ -1660,7 +1868,9 @@ mod tests {
         }
         for _ in 0..65_536 {
             tracker.close_step();
-            if keys.iter().all(|key| tracker.close_instance_complete(*key).unwrap()) { break; }
+            if keys.iter().all(|key| tracker.close_instance_complete(*key).unwrap()) {
+                break;
+            }
         }
         for key in &keys {
             assert!(tracker.close_instance_complete(*key).unwrap());
@@ -1675,7 +1885,7 @@ mod tests {
     fn stale_generation_fault_is_publicly_retrievable() {
         let tracker = PatchTracker::new();
         let generation = tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
-        tracker.mark_rejected("main");
+        reject_current(&tracker, "main");
         let mut terminal = tracker.take_terminal(generation).expect("terminal owner");
         for _ in 0..32 {
             if terminal.close_step() && terminal.terminal_is_empty() {
@@ -1693,7 +1903,7 @@ mod tests {
             assert!(tracker.defer(ui_contract::SurfaceId::try_from("7:main").expect("bounded surface")).is_ok());
         }
         assert!(tracker.take_deferred_ready().is_none());
-        tracker.mark_rejected("7:main");
+        reject_current(&tracker, "7:main");
         let mut terminal = tracker.take_terminal(generation).expect("cancelled owner");
         for _ in 0..32 {
             if terminal.close_step() && terminal.terminal_is_empty() {
@@ -1719,7 +1929,7 @@ mod tests {
     fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_slot() {
         let tracker = PatchTracker::new();
         let old = tracker.begin("9:first".into(), leaf("root", "a")).expect("old generation");
-        tracker.mark_rejected("9:first");
+        reject_current(&tracker, "9:first");
         let terminal = tracker.take_terminal(old).expect("old terminal");
         tracker.begin("9:first".into(), leaf("root", "b")).expect("reopened generation");
         let terminal = tracker.resume_terminal(terminal).expect_err("old generation cannot mutate reopened slot");
@@ -1754,7 +1964,12 @@ mod tests {
             let mut state = tracker.state.borrow_mut();
             let target = state.terminals.iter_mut().find(|slot| slot.is_none()).expect("terminal capacity");
             let surface = ui_contract::SurfaceId::try_from(surface("terminal")).expect("bounded surface fixture");
-            *target = Some(TerminalSlot { key: NativeCloseKey::fixture(instance, 1), instance: Some(instance), authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(surface), 90_012).expect("fixed terminal admission"), close: true });
+            *target = Some(TerminalSlot {
+                key: NativeCloseKey::fixture(instance, 1),
+                instance: Some(instance),
+                authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(surface), 90_012).expect("fixed terminal admission"),
+                close: true,
+            });
         }
         let key = super::super::instance_lifetime::NativeCloseKey::fixture(instance, 1);
         tracker.reserve_close_instance(key).expect("exact close reservation");
@@ -1788,7 +2003,7 @@ mod tests {
             }
         }
         let generation = tracker.begin("44:active".into(), leaf("root", "active")).expect("active");
-        tracker.mark_rejected("44:active");
+        reject_current(&tracker, "44:active");
         assert!(tracker.state.borrow().slots.iter().flatten().find(|slot| slot.surface.as_ref() == "44:active").is_some_and(|slot| slot.job.is_some()), "saturation retains the exact job locally");
         let mut released = tracker.take_terminal(100_000).expect("free one terminal grant");
         for _ in 0..32 {
@@ -1797,7 +2012,7 @@ mod tests {
             }
         }
         assert!(released.terminal_is_empty());
-        tracker.mark_rejected("44:active");
+        reject_current(&tracker, "44:active");
         assert!(tracker.take_terminal(generation).is_some(), "freed capacity receives the original generation");
     }
 
@@ -1885,7 +2100,7 @@ mod tests {
             });
         }
         saturate_terminals(&tracker, 62, 620_000);
-        tracker.mark_rejected("62:idle");
+        reject_current(&tracker, "62:idle");
         {
             let state = tracker.state.borrow();
             assert_eq!(state.next_generation, u64::MAX - 1);
@@ -1894,7 +2109,7 @@ mod tests {
         }
         let terminal = tracker.state.borrow_mut().terminals[0].take().expect("free one exact terminal reservation");
         drop(terminal);
-        tracker.mark_rejected("62:idle");
+        reject_current(&tracker, "62:idle");
         let state = tracker.state.borrow();
         assert_eq!(state.next_generation, u64::MAX);
         assert!(state.generation_exhausted);

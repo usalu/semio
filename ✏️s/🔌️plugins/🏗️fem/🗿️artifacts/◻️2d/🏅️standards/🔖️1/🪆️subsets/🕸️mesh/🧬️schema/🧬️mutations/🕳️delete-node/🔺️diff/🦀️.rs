@@ -1,4 +1,10 @@
 //! 🔺️ Sparse diff builder for `DeleteNode`.
+//!
+//! One guard only: `mutation.target-missing` (Error). `delete-node` is the ONE deliberately
+//! cascade-free `delete-` in this vocabulary — a plan node is a drafting coordinate, and dropping
+//! one while an element, a support or a nodal load still names it is the SPECIFIED behaviour, not
+//! an oversight; the committed vector `🚫️removes-node-n3-without-6eab3f` pins it. Every other
+//! guarded `delete-` refuses with `mutation.target-referenced` instead (see `mutations::guards`).
 use super::DeleteNode;
 use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dNodesDelta};
 use crate::artifacts::fem2d::Fem2dSnapshot;

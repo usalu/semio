@@ -1,0 +1,10 @@
+{
+  "mutation": "createAsset",
+  "key": "orbit-frame-11",
+  "asset": {
+    "mime": "image/png",
+    "data": "remodeling-content:orbit-blob-3|stage-7|2",
+    "width": 320,
+    "height": 240
+  }
+}

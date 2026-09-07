@@ -2478,3 +2478,55 @@ The components genuinely are days stale and must be rebuilt; only `cad` is curre
 `build16` running: stdio → flow → procedural → gis → process → puzzle → sourcing → demonstrator,
 `wasm-dev`, isolated `target-demonstrator-dev` (warm from cad), retry-on-transient, healer active,
 0 broken `#[path]` at launch.
+
+## 🔧️ Components rebuilt + four more defects fixed — 2026-09-06 04:30-21:10
+
+The box finally went quiet (load 20 → 8, from 460). Same builds that were getting ~3 s of CPU per
+120 s ran at full speed: stdio's whole dependency graph compiled in **11 minutes** having previously
+taken hours. Contention, not the build, was the dominant cost all along.
+
+### Target dir moved outside the repo (this held)
+`target-demonstrator-dev` was swept mid-build at 23:07 — a 4h42m clean stdio build died with
+`couldn't create a temp dir: No such file or directory … /deps/rmetaXXXX` at 20618 lines and 0 errors,
+taking the already-built `semio_s_plugin_cad.wasm` with it. Moved to `$HOME/semio-demonstrator-target`
+(outside the repo) and it has survived every sweep since; the retry classifier now treats
+`couldn't create a temp dir` / `failed to create file encoder` as transient.
+
+### Components now fresh (09-06)
+`procedural` 08:46 · `gis` 09:15 · `puzzle` 09:12 · `sourcing` 09:23 · `process` 19:22 ·
+`demonstrator` 19:41 · `cad` 19:59. Only `flow` and `stdio` outstanding.
+
+### Four defects found and fixed
+1. **cad — renamed asset files.** 11 `include_str!` targets pointed at pre-rename names; a peer had
+   truncated long filenames with a hash suffix
+   (`🧱️constructOneWayReinforcedConcreteSlab.json` → `🧱️constructOneWayRe-72a083.json`). Repointed by
+   matching the shared prefix; all 219 include refs in cad now resolve.
+2. **framework — stale re-export.** `⚛️reactor/🦀️.rs:1020` still said
+   `pub use wit_bridge::drain_task_resumes;` after the function moved to `🔄️turn` (`mod turn;` at :1088).
+   This blocked `semio-framework-plugin` and therefore flow, process **and** demonstrator. One-line fix
+   → all three then built.
+3. **flow — wrong type path.** Three sites used `semio_framework_plugin::ArtifactOwnedToolJobContext`;
+   the type lives at `::app::` (which the same file already used at two other sites). Repointed.
+4. **flow — unclassified interactive command.** The descriptor probe panicked with
+   `app-definition.interactive-job-classification: unclassified interactive command 'flow-main:toggleAutomation'`
+   (and five sibling windows). Cause: only the *action declaration* at :2154 had been renamed
+   `toggleExtension` → `toggleAutomation`, while the command enum (:200), tool-id list (:777),
+   publication contract (:1253) and the catalogue panel that dispatches it all still say
+   `toggleExtension` — and so does the classification. Reverted the stray declaration rather than
+   inventing a classification for a command nothing else knows about.
+
+### Demonstrator module routing — third and final route bug
+After the earlier route-prefix and directory-name fixes, extensions still failed with
+`plugin.descriptor-invalid: /🧩️extension-modules/…/🔣️.json returned HTML`. Cause: the demonstrator
+served only the *computed transitive closure* of module directories, while the generated runtime session
+(`🤖️generated/🟦️session.ts`) lists **every** installed extension's `moduleUrl`. Everything outside the
+closure fell through to the SPA fallback, which answers with HTML.
+
+`os/dev`'s own config serves `MODULE_EXTENSION_ROUTE` whole, and serves `MODULE_PLUGIN_ROUTE` whole in
+dev (per-name entries exist only so a production build copies them into `dist/`). Matched that: whole-dir
+entries for both routes, per-name entries kept ahead of them for `dist`.
+
+Residual, and **correct**: `/🔌️plugin-modules/🗄️stdio/🔣️.json` and a few extension descriptors still
+return HTML because those files genuinely do not exist — `stagePluginDescriptor` stages nothing when a
+crate has no source descriptor ("Unmigrated crates remain honest"). These are non-fatal program-load
+warnings, not the boot failure.

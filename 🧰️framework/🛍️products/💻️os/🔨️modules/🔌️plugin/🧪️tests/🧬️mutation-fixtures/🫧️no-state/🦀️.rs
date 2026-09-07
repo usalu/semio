@@ -63,9 +63,7 @@ fn keyed_no_transient_terminal_owner(owner: &store::TransientStore<crate::app::N
 impl ArtifactOwnedDisposer<store::TransientStore<crate::app::NoTransient, crate::app::NoTransientMutation>> for KeyedNoTransientStoreDisposer {
     fn close_step(&mut self, owner: &mut store::TransientStore<crate::app::NoTransient, crate::app::NoTransientMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if let KeyedNoTransientStoreRetirement::Complete { terminal_root, terminal_generation } = &self.0 {
-            return keyed_no_transient_terminal_owner(owner, terminal_root, *terminal_generation)
-                .then_some(PluginCloseStep::Complete)
-                .ok_or_else(|| Fault::from("keyed no-state transient terminal owner changed after completion"));
+            return keyed_no_transient_terminal_owner(owner, terminal_root, *terminal_generation).then_some(PluginCloseStep::Complete).ok_or_else(|| Fault::from("keyed no-state transient terminal owner changed after completion"));
         }
         if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -79,7 +77,9 @@ impl ArtifactOwnedDisposer<store::TransientStore<crate::app::NoTransient, crate:
             self.0 = KeyedNoTransientStoreRetirement::Retiring { retirement, terminal_root, terminal_generation };
         }
         let (step, terminal_root, terminal_generation) = match &mut self.0 {
-            KeyedNoTransientStoreRetirement::Retiring { retirement, terminal_root, terminal_generation } => (store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes).map_err(Fault::from)?, terminal_root.clone(), *terminal_generation),
+            KeyedNoTransientStoreRetirement::Retiring { retirement, terminal_root, terminal_generation } => {
+                (store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes).map_err(Fault::from)?, terminal_root.clone(), *terminal_generation)
+            }
             KeyedNoTransientStoreRetirement::Unstarted | KeyedNoTransientStoreRetirement::Complete { .. } => unreachable!("keyed no-state transient close state is resolved before retirement"),
         };
         match step {

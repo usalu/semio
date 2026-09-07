@@ -39,6 +39,28 @@ const UNOBSERVABLE: &[&str] = &[
 const DERIVED_ASSET: &str = "local://🏗️timber-portal-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
+//#region 🔖️Scenarios
+/// 📇️ Every FORWARD committed vector this subset owns, as `(scenario id, kind)`. Two per kind:
+/// the pre-existing `spec-vector-<kind>` and the steel-frame `frame-vector-<kind>`.
+const COMMITTED: &[(&str, &str)] = &[
+    ("spec-vector-create-support", "create-support"),
+    ("frame-vector-create-support", "create-support"),
+    ("spec-vector-delete-support", "delete-support"),
+    ("frame-vector-delete-support", "delete-support"),
+    ("spec-vector-replace-support", "replace-support"),
+    ("frame-vector-replace-support", "replace-support"),
+];
+
+/// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
+const REFUSED: &[(&str, &str)] = &[
+    ("reject-create-support-1", "create-support"),
+    ("reject-delete-support-1", "delete-support"),
+    ("reject-replace-support-1", "replace-support"),
+    ("reject-replace-support-2", "replace-support"),
+    ("reject-replace-support-3", "replace-support"),
+];
+//#endregion 🔖️Scenarios
+
 //#region 🔖️Fixtures
 /// 🧫️ One kind's committed `(before, mutation, after, diff, outcome)` specification vector, read
 /// literally via `include_str!`. This IS the independently handcrafted evidence this case rests on —
@@ -47,34 +69,90 @@ struct Vector {
     before: &'static str,
     mutation: &'static str,
     after: &'static str,
-    diff: &'static str,
+    diff: Option<&'static str>,
     outcome: &'static str,
 }
 
-fn vector(kind: &str) -> Vector {
-    match kind {
-        "create-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-roller-at-node-n2/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-roller-at-node-n2/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-roller-at-node-n2/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-roller-at-node-n2/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-roller-at-node-n2/🎯️outcome/🔣️.json"),
+fn vector(scenario: &str) -> Vector {
+    match scenario {
+        "spec-vector-create-support" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/🎯️outcome/🔣️.json"),
         },
-        "delete-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-roller-at-node-n2/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-roller-at-node-n2/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-roller-at-node-n2/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-roller-at-node-n2/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-roller-at-node-n2/🎯️outcome/🔣️.json"),
+        "frame-vector-create-support" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/🎯️outcome/🔣️.json"),
         },
-        "replace-support" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-roller-at-n2-to-a-full-fixity/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-roller-at-n2-to-a-full-fixity/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-roller-at-n2-to-a-full-fixity/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-roller-at-n2-to-a-full-fixity/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-roller-at-n2-to-a-full-fixity/🎯️outcome/🔣️.json"),
+        "reject-create-support-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/🎯️outcome/🔣️.json"),
         },
-        other => panic!("mutate-fem2d-1-boundary: no committed specification vector is registered for kind {other:?}"),
+        "spec-vector-delete-support" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-delete-support" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/🎯️outcome/🔣️.json"),
+        },
+        "reject-delete-support-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-replace-support" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-replace-support" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-support-1" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-support-2" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-support-3" => Vector {
+            before: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/🎯️outcome/🔣️.json"),
+        },
+        other => panic!("🛡️mutate-fem2d-1-boundary: no committed specification vector is registered for scenario {other:?}"),
     }
 }
 
@@ -260,26 +338,62 @@ mod subject {
         }
     }
 
-    /// 📐️ Replays one committed handcrafted specification vector. This is where the evidence the case
-    /// carried before the relocation still lives, undiminished: the applied model is held to the
-    /// committed after-snapshot, the produced delta to the committed `🔺️diff`, and the diagnostics to
-    /// the committed `🎯️outcome`.
-    pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// 📐️ Replays one committed handcrafted specification vector, addressed by SCENARIO id rather
+    /// than by kind — every kind now carries several. This is where the evidence the case carried
+    /// before the relocation still lives, undiminished: the applied model is held to the committed
+    /// after-snapshot, the produced delta to the committed `🔺️diff`, and the diagnostics to the
+    /// committed `🎯️outcome`.
+    pub fn committed_vector(kind: &'static str, scenario: &str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        let scenario = scenario.to_string();
         move |_ctx: &Context| {
-            let committed = vector(kind);
-            let report = report_of(&format!("spec-vector-{kind}"), committed.before, committed.mutation, committed.after)?;
+            let committed = vector(&scenario);
+            let report = report_of(&scenario, committed.before, committed.mutation, committed.after)?;
             let applied = member(&report, "snapshot")?;
             if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
-                return Err(format!("spec-vector-{kind}: the applied model is not the committed after-snapshot — {first}"));
+                return Err(format!("{scenario}: the applied model is not the committed after-snapshot — {first}"));
             }
-            if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(committed.diff)) {
-                return Err(format!("spec-vector-{kind}: the produced delta is not the committed 🔺️diff — {first}"));
+            match committed.diff {
+                Some(text) => {
+                    if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(text)) {
+                        return Err(format!("{scenario}: the produced delta is not the committed 🔺️diff — {first}"));
+                    }
+                }
+                None => return Err(format!("{scenario}: a forward vector must carry a committed 🔺️diff")),
             }
             declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
             law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
-            touches_one(&format!("spec-vector-{kind}"), kind, member(&report, "base")?, applied)?;
+            touches_one(&scenario, kind, member(&report, "base")?, applied)?;
             law::inverse_restores(kind, member(&report, "inverseSnapshot")?, member(&report, "base")?)?;
             Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
+        }
+    }
+
+    /// 🚫️ Replays one committed REFUSAL or no-op vector. The projection carries the diagnostic
+    /// beside the model on purpose: two implementations that merely both decline to move a document
+    /// agree vacuously, and what these rows are evidence for is that they refuse for the SAME
+    /// reason — same code, same level, same address.
+    pub fn reject(kind: &'static str, scenario: &str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        let scenario = scenario.to_string();
+        move |_ctx: &Context| {
+            let committed = vector(&scenario);
+            if committed.diff.is_some() {
+                return Err(format!("{scenario}: a refusal vector carries 🔺️diff/🚫️.absent, never a committed delta"));
+            }
+            let report = report_of(&scenario, committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            if let Some(first) = law::divergence(applied, member(&report, "base")?) {
+                return Err(format!("{scenario}: a refused or no-op mutation must leave the model exactly where it was — {first}"));
+            }
+            let raised = members(&report, "messages")?;
+            let first = raised.first().ok_or_else(|| format!("{scenario}: the vector declares a refusal, the implementation raised nothing"))?;
+            declared_outcome_holds(kind, &raised, &canonical(committed.outcome))?;
+            let refusal = Json::Object(vec![
+                ("code".to_string(), Json::String(first.str("code"))),
+                ("level".to_string(), Json::String(level_of(&first.str("level")))),
+                ("target".to_string(), Json::Array(strings(first, "target").into_iter().map(Json::String).collect())),
+            ]);
+            let projection = Json::Object(vec![("model".to_string(), applied.clone()), ("refusal".to_string(), refusal)]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }
     //#endregion 🔖️Handlers
@@ -298,13 +412,18 @@ pub fn adapter() -> Adapter {
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
             built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
-            built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
+        }
+        for &(scenario, kind) in COMMITTED {
+            built = built.subject(scenario, subject::committed_vector(kind, scenario));
+        }
+        for &(scenario, kind) in REFUSED {
+            built = built.subject(scenario, subject::reject(kind, scenario));
         }
         return built;
     }
     #[cfg(not(feature = "sut"))]
     {
-        let _ = (KINDS, UNOBSERVABLE, vector as fn(&str) -> Vector);
+        let _ = (KINDS, UNOBSERVABLE, COMMITTED, REFUSED, vector as fn(&str) -> Vector);
         built
     }
 }

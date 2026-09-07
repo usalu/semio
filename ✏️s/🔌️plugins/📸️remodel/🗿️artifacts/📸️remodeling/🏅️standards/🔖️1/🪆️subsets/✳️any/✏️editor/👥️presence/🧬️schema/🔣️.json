@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/app/remodeling/remodeling/presence.json",
+  "$id": "https://semio.tech/schema/app/remodel/remodeling/presence.json",
   "title": "RemodelingPresence",
   "type": "object",
   "additionalProperties": false,

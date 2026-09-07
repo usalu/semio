@@ -454,6 +454,7 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
             overhang_offset_m: overhang.map(|(_, shade)| number_or(shade, "height_above_window_or_door", 0.0)).unwrap_or(0.0),
             fin_depth_m: fin.map(|(_, shade)| number_or(shade, "left_depth_as_fraction_of_window_door_width", 0.0) * height).unwrap_or(0.0),
             fin_offset_m: fin.map(|(_, shade)| number_or(shade, "left_extension_from_window_door", 0.0)).unwrap_or(0.0),
+            glazing_construction_id: None,
         });
         let _ = glazing_construction_name(name);
     }
@@ -645,6 +646,17 @@ pub fn import_bytes(bytes: &[u8]) -> Result<EpJsonImport, String> {
     decode_model(&pack::json::parse_bytes(bytes).map_err(|error| error.to_string())?)
 }
 //#endregion 🔖️Leaf
+
+//#region 🌉️Bridge
+/// 🌉️ Text in, text out — the import half of the export leaf's own bridge, for the out-of-crate
+/// test adapter that cannot name [`Model`]. Returns `(model json, diagnostics json)` so a scenario
+/// can assert both what came back and what could not be represented.
+pub fn model_json_from_epjson(epjson: &str) -> Result<(String, String), String> {
+    let import = decode_model(&pack::json::parse(epjson).map_err(|error| error.to_string())?)?;
+    let diagnostics = Value::Array(import.diagnostics.iter().map(EpJsonDiagnostic::to_json).collect());
+    Ok((pack::json::to_json_string(&import.model), pack::json::to_string(&diagnostics)))
+}
+//#endregion 🌉️Bridge
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -1,0 +1,10 @@
+{
+  "mutation": "replaceSection",
+  "id": "ipe240",
+  "newSection": {
+    "id": "ipe240",
+    "name": "IPE 240",
+    "area": 0.003912,
+    "iy": 0.0
+  }
+}

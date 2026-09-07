@@ -1960,6 +1960,32 @@
       "presentation": { "group": "4_gate", "order": 407.66 }
     },
     {
+      "name": "⚖️gate🖥️host🪪️guest-fault-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-plugin-host:guest-fault-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.67
+      }
+    },
+    {
+      "name": "⚖️gate🖥️host🪪️guest-fault-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-plugin-host:guest-fault-check --skip-nx-cache -- --native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 407.68
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/guest-fault-native",
+        "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target"
+      }
+    },
+    {
       "name": "⚖️gate🖥️host⏱️wasi-clock",
       "type": "node-terminal",
       "request": "launch",
@@ -5466,6 +5492,51 @@
         "SEMIO_CMD_BUDGET_MS": "86700000"
       },
       "presentation": { "group": "4_gate", "order": 411.1494 }
+    },
+    {
+      "name": "⚖️gate🛡️canonical-bootstrap-folder-mirror🗂️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-os-dev:canonical-bootstrap-folder-mirror-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.1495 }
+    },
+    {
+      "name": "⚖️gate🛡️canonical-bootstrap-folder-mirror🗂️process",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-os-dev:canonical-bootstrap-folder-mirror-process-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/canonical-bootstrap-folder-mirror"
+      },
+      "presentation": { "group": "4_gate", "order": 411.1496 }
+    },
+    {
+      "name": "⚖️gate🧊️cold-document-pair-ingress📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-plugin:cold-document-pair-ingress-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.1497 }
+    },
+    {
+      "name": "⚖️gate🧊️cold-document-pair-ingress🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-plugin:cold-document-pair-ingress-native-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/cold-document-pair-ingress-exact",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
+        "CARGO_BUILD_JOBS": "1",
+        "RUST_MIN_STACK": "268435456",
+        "RUSTC_WRAPPER": "",
+        "SEMIO_BUILD_BUDGET_MS": "86400000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
+        "SEMIO_CMD_BUDGET_MS": "86700000"
+      },
+      "presentation": { "group": "4_gate", "order": 411.1498 }
     },
     {
       "name": "🛠️dev🗄️os-hub",

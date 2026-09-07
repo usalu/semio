@@ -1,0 +1,242 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": {
+    "orbit-dsm": {
+      "childId": "remodeling-asset-e343c47d5dab64bd",
+      "target": {
+        "artifactId": "orbit-dsm-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-00": {
+      "childId": "remodeling-asset-067b2f3bbc35f9dc",
+      "target": {
+        "artifactId": "orbit-frame-00-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-01": {
+      "childId": "remodeling-asset-c9ce5074a949b814",
+      "target": {
+        "artifactId": "orbit-frame-01-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-02": {
+      "childId": "remodeling-asset-e6e19e89d3320aa7",
+      "target": {
+        "artifactId": "orbit-frame-02-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-03": {
+      "childId": "remodeling-asset-57eae0612a914a1d",
+      "target": {
+        "artifactId": "orbit-frame-03-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-04": {
+      "childId": "remodeling-asset-d4c82c1242643297",
+      "target": {
+        "artifactId": "orbit-frame-04-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-05": {
+      "childId": "remodeling-asset-05c98ef601003277",
+      "target": {
+        "artifactId": "orbit-frame-05-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-06": {
+      "childId": "remodeling-asset-46a0165861c691ec",
+      "target": {
+        "artifactId": "orbit-frame-06-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-07": {
+      "childId": "remodeling-asset-9051c89a0cde8a83",
+      "target": {
+        "artifactId": "orbit-frame-07-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-08": {
+      "childId": "remodeling-asset-6b399f4b66f9b650",
+      "target": {
+        "artifactId": "orbit-frame-08-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    },
+    "orbit-frame-09": {
+      "childId": "remodeling-asset-e504dc15dc9b8978",
+      "target": {
+        "artifactId": "orbit-frame-09-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  },
+  "durableArtifacts": {
+    "remodeling-asset-05c98ef601003277": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDU="
+      ]
+    },
+    "remodeling-asset-067b2f3bbc35f9dc": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDA="
+      ]
+    },
+    "remodeling-asset-46a0165861c691ec": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDY="
+      ]
+    },
+    "remodeling-asset-57eae0612a914a1d": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDM="
+      ]
+    },
+    "remodeling-asset-6b399f4b66f9b650": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDg="
+      ]
+    },
+    "remodeling-asset-9051c89a0cde8a83": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDc="
+      ]
+    },
+    "remodeling-asset-c9ce5074a949b814": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDE="
+      ]
+    },
+    "remodeling-asset-d4c82c1242643297": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDQ="
+      ]
+    },
+    "remodeling-asset-e343c47d5dab64bd": {
+      "kind": "image",
+      "mime": "image/tiff",
+      "width": 512,
+      "height": 512,
+      "chunks": [
+        "b3JiaXQtZHNtLXRpbGU="
+      ]
+    },
+    "remodeling-asset-e504dc15dc9b8978": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDk="
+      ]
+    },
+    "remodeling-asset-e6e19e89d3320aa7": {
+      "kind": "image",
+      "mime": "image/png",
+      "width": 320,
+      "height": 240,
+      "chunks": [
+        "b3JiaXQtZnJhbWUtMDI="
+      ]
+    }
+  },
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

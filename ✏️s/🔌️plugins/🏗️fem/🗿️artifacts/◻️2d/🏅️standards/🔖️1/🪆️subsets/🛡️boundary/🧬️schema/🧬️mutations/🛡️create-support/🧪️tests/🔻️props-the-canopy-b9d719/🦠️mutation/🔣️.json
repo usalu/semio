@@ -1,0 +1,10 @@
+{
+  "mutation": "createSupport",
+  "support": {
+    "id": "sup_canopy",
+    "nodeId": "n7",
+    "fixed": [
+      "Ty"
+    ]
+  }
+}

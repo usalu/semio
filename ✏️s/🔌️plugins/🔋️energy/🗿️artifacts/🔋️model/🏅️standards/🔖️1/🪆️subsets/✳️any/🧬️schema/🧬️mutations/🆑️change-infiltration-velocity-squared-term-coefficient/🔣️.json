@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆑️change-infiltration-velocity-squared-term-coefficient",
+  "semanticKind": "change-infiltration-velocity-squared-term-coefficient",
+  "displayName": "Change Infiltration Velocity Squared Term Coefficient",
+  "emoji": "🆑️",
+  "aggregateVariant": "ChangeInfiltrationVelocitySquaredTermCoefficient",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-infiltration-velocity-squared-term-coefficient",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

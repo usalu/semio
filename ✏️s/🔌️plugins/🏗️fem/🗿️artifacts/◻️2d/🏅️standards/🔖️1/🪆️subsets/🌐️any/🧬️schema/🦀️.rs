@@ -205,9 +205,36 @@ pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🌱️DerivedEmpty
-/// 🌱️ An empty `Fem2dSnapshot` — the app's genesis document and every test fixture's blank baseline.
+/// 🌱️ An empty `Fem2dSnapshot` — every test fixture's blank baseline and the fallback boot document.
 pub fn empty_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
     crate::artifacts::fem2d::Fem2dSnapshot::default()
+}
+
+/// 🌱️ The document every fresh fem2d surface boots on: the bundled `📚️examples/🎬️demo` DSL, so the
+/// editor and the viewer both paint a real structure at first frame instead of an empty canvas. A
+/// fixture that ever stops parsing degrades to `empty_fem2d_snapshot` rather than faulting the boot,
+/// and says so on the console.
+pub fn default_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
+    match <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT) {
+        Ok(snapshot) => {
+            eprintln!(
+                "[DEBUG] fem2d boot snapshot: loaded the bundled example — nodes={} elements={} regions={} materials={} sections={} supports={} loadCases={} combinations={}",
+                snapshot.nodes.len(),
+                snapshot.elements.len(),
+                snapshot.regions.len(),
+                snapshot.materials.len(),
+                snapshot.sections.len(),
+                snapshot.supports.len(),
+                snapshot.load_cases.len(),
+                snapshot.combinations.len()
+            );
+            snapshot
+        }
+        Err(error) => {
+            eprintln!("[DEBUG] fem2d boot snapshot: the bundled example failed to parse, falling back to the empty document — {error}");
+            empty_fem2d_snapshot()
+        }
+    }
 }
 //#endregion 🌱️DerivedEmpty
 

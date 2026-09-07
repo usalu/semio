@@ -49,10 +49,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
+                #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🦀️.rs"]
+                mod standard_root;
+                pub use standard_root::*;
+
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
+                        mod subset_root;
+                        pub use subset_root::*;
+
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
@@ -139,6 +147,18 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-stream/🧪️tests/🎥️adds-stream-c-458900/🦀️.rs"]
                                     mod tests_adds_stream_c_458900;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-stream/🧪️tests/🛰️adds-a-third-61fb5d/🦀️.rs"]
+                                    mod tests_adds_a_third_61fb5d;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-stream/🧪️tests/🎞️adds-an-unbound-2b2373/🦀️.rs"]
+                                    mod tests_adds_an_unbound_2b2373;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-stream/🧪️tests/🔂️rejects-a-6b58da/🦀️.rs"]
+                                    mod tests_rejects_a_6b58da;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-stream/🧪️tests/👻️rejects-a-stream-aac5c2/🦀️.rs"]
+                                    mod tests_rejects_a_stream_aac5c2;
                                 }
                                 #[path = "."]
                                 pub mod delete_stream {
@@ -150,8 +170,17 @@ pub mod artifacts {
                                     pub mod inverse;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪓delete-stream/🧪️tests/🚫️removes-stream-b-0f62a7/🦀️.rs"]
-                                    mod tests_removes_stream_b_0f62a7;
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪓delete-stream/🧪️tests/🚫️refuses-to-3c20ff/🦀️.rs"]
+                                    mod tests_refuses_to_3c20ff;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪓delete-stream/🧪️tests/⏮️removes-the-first-c0fc2a/🦀️.rs"]
+                                    mod tests_removes_the_first_c0fc2a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪓delete-stream/🧪️tests/🪓removes-the-spare-556d1d/🦀️.rs"]
+                                    mod tests_removes_the_spare_556d1d;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪓delete-stream/🧪️tests/⛓️refuses-to-remove-422a37/🦀️.rs"]
+                                    mod tests_refuses_to_remove_422a37;
                                 }
                                 #[path = "."]
                                 pub mod change_stream_sync {
@@ -165,6 +194,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-stream-sync/🧪️tests/⏱️shifts-stream-a-5b442c/🦀️.rs"]
                                     mod tests_shifts_stream_a_5b442c;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-stream-sync/🧪️tests/🚫️refuses-to-8095d3/🦀️.rs"]
+                                    mod tests_refuses_to_8095d3;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-stream-sync/🧪️tests/🔁️warns-that-the-a98c13/🦀️.rs"]
+                                    mod tests_warns_that_the_a98c13;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-stream-sync/🧪️tests/⏱️retimes-the-50dd75/🦀️.rs"]
+                                    mod tests_retimes_the_50dd75;
                                 }
                                 #[path = "."]
                                 pub mod add_stream_frame {
@@ -178,6 +216,18 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-stream-frame/🧪️tests/🎞️appends-a-third-8ac259/🦀️.rs"]
                                     mod tests_appends_a_third_8ac259;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-stream-frame/🧪️tests/🚫️refuses-to-c93e98/🦀️.rs"]
+                                    mod tests_refuses_to_c93e98;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-stream-frame/🧪️tests/🔁️warns-that-the-1e8abe/🦀️.rs"]
+                                    mod tests_warns_that_the_1e8abe;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-stream-frame/🧪️tests/🎞️appends-an-0c2164/🦀️.rs"]
+                                    mod tests_appends_an_0c2164;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-stream-frame/🧪️tests/🎬️refuses-a-frame-81beea/🦀️.rs"]
+                                    mod tests_refuses_a_frame_81beea;
                                 }
                                 #[path = "."]
                                 pub mod remove_stream_frame {
@@ -191,6 +241,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-stream-frame/🧪️tests/🚫️removes-the-last-304bdf/🦀️.rs"]
                                     mod tests_removes_the_last_304bdf;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-stream-frame/🧪️tests/⏮️drops-the-first-d98a0f/🦀️.rs"]
+                                    mod tests_drops_the_first_d98a0f;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-stream-frame/🧪️tests/🚫️refuses-a-frame-e7c374/🦀️.rs"]
+                                    mod tests_refuses_a_frame_e7c374;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-stream-frame/🧪️tests/✂️drops-the-middle-2d6d53/🦀️.rs"]
+                                    mod tests_drops_the_middle_2d6d53;
                                 }
                                 #[path = "."]
                                 pub mod replace_stream_source {
@@ -204,6 +263,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-stream-source/🧪️tests/🧹️clears-the-video-143f2b/🦀️.rs"]
                                     mod tests_clears_the_video_143f2b;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-stream-source/🧪️tests/📼️attaches-a-607df8/🦀️.rs"]
+                                    mod tests_attaches_a_607df8;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-stream-source/🧪️tests/🚫️refuses-to-f7f40d/🦀️.rs"]
+                                    mod tests_refuses_to_f7f40d;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-stream-source/🧪️tests/🎥️reingests-the-311c32/🦀️.rs"]
+                                    mod tests_reingests_the_311c32;
                                 }
                                 #[path = "."]
                                 pub mod create_asset {
@@ -217,6 +285,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷create-asset/🧪️tests/🖼️stores-a-new-d56283/🦀️.rs"]
                                     mod tests_stores_a_new_d56283;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷create-asset/🧪️tests/🖼️stores-an-9f39e1/🦀️.rs"]
+                                    mod tests_stores_an_9f39e1;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷create-asset/🧪️tests/🚫️refuses-an-asset-cb0d4b/🦀️.rs"]
+                                    mod tests_refuses_an_asset_cb0d4b;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷create-asset/🧪️tests/♻️overwrites-an-a34b9d/🦀️.rs"]
+                                    mod tests_overwrites_an_a34b9d;
                                 }
                                 #[path = "."]
                                 pub mod delete_asset {
@@ -228,8 +305,20 @@ pub mod artifacts {
                                     pub mod inverse;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🧪️tests/🗑️removes-asset-a-170889/🦀️.rs"]
-                                    mod tests_removes_asset_a_170889;
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🧪️tests/🚫️refuses-to-c4563a/🦀️.rs"]
+                                    mod tests_refuses_to_c4563a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🧪️tests/🧹️drops-the-spare-c6ffb6/🦀️.rs"]
+                                    mod tests_drops_the_spare_c6ffb6;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🧪️tests/🗺️refuses-to-5c6f74/🦀️.rs"]
+                                    mod tests_refuses_to_5c6f74;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🧪️tests/🗑️sweeps-the-503b27/🦀️.rs"]
+                                    mod tests_sweeps_the_503b27;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🧪️tests/🖼️refuses-to-f9541f/🦀️.rs"]
+                                    mod tests_refuses_to_f9541f;
                                 }
                                 #[path = "."]
                                 pub mod create_camera_calibration {
@@ -243,6 +332,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭create-camera-calibration/🧪️tests/📷️adds-the-cam-c-82c8fb/🦀️.rs"]
                                     mod tests_adds_the_cam_c_82c8fb;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭create-camera-calibration/🧪️tests/🚫️refuses-a-camera-e92a02/🦀️.rs"]
+                                    mod tests_refuses_a_camera_e92a02;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭create-camera-calibration/🧪️tests/📷️adds-a-fourth-97e912/🦀️.rs"]
+                                    mod tests_adds_a_fourth_97e912;
                                 }
                                 #[path = "."]
                                 pub mod update_camera_calibration {
@@ -256,6 +351,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera-calibration/🧪️tests/🔍️refines-the-cam-0eaef0/🦀️.rs"]
                                     mod tests_refines_the_cam_0eaef0;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera-calibration/🧪️tests/🚫️refuses-to-b60a39/🦀️.rs"]
+                                    mod tests_refuses_to_b60a39;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera-calibration/🧪️tests/🔁️warns-that-the-697b4f/🦀️.rs"]
+                                    mod tests_warns_that_the_697b4f;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera-calibration/🧪️tests/🔍️refines-the-9fd25a/🦀️.rs"]
+                                    mod tests_refines_the_9fd25a;
                                 }
                                 #[path = "."]
                                 pub mod delete_camera_calibration {
@@ -269,6 +373,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫delete-camera-calibration/🧪️tests/🚫️removes-the-cam-f90b89/🦀️.rs"]
                                     mod tests_removes_the_cam_f90b89;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫delete-camera-calibration/🧪️tests/🚫️refuses-to-73655a/🦀️.rs"]
+                                    mod tests_refuses_to_73655a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫delete-camera-calibration/🧪️tests/🚫️removes-the-40cba4/🦀️.rs"]
+                                    mod tests_removes_the_40cba4;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫delete-camera-calibration/🧪️tests/⛓️refuses-to-remove-3c8f32/🦀️.rs"]
+                                    mod tests_refuses_to_remove_3c8f32;
                                 }
                                 #[path = "."]
                                 pub mod create_rig_extrinsic {
@@ -282,6 +395,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️create-rig-extrinsic/🧪️tests/🔗️adds-a-rig-2df5df/🦀️.rs"]
                                     mod tests_adds_a_rig_2df5df;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️create-rig-extrinsic/🧪️tests/🚫️refuses-a-second-95e04d/🦀️.rs"]
+                                    mod tests_refuses_a_second_95e04d;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️create-rig-extrinsic/🧪️tests/🔗️places-the-0d0b8d/🦀️.rs"]
+                                    mod tests_places_the_0d0b8d;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️create-rig-extrinsic/🧪️tests/🚫️refuses-a-rig-cb71ba/🦀️.rs"]
+                                    mod tests_refuses_a_rig_cb71ba;
                                 }
                                 #[path = "."]
                                 pub mod delete_rig_extrinsic {
@@ -295,6 +417,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-rig-extrinsic/🧪️tests/✂️drops-the-cam-a-a1f8a2/🦀️.rs"]
                                     mod tests_drops_the_cam_a_a1f8a2;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-rig-extrinsic/🧪️tests/⏮️unplaces-the-f5b35e/🦀️.rs"]
+                                    mod tests_unplaces_the_f5b35e;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-rig-extrinsic/🧪️tests/🚫️refuses-to-1805df/🦀️.rs"]
+                                    mod tests_refuses_to_1805df;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-rig-extrinsic/🧪️tests/✂️unplaces-the-a39356/🦀️.rs"]
+                                    mod tests_unplaces_the_a39356;
                                 }
                                 #[path = "."]
                                 pub mod update_rig_extrinsic {
@@ -308,6 +439,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩update-rig-extrinsic/🧪️tests/📍️retunes-the-cam-4ca5a2/🦀️.rs"]
                                     mod tests_retunes_the_cam_4ca5a2;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩update-rig-extrinsic/🧪️tests/🚫️refuses-to-2cfb53/🦀️.rs"]
+                                    mod tests_refuses_to_2cfb53;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩update-rig-extrinsic/🧪️tests/🔁️warns-that-the-89422a/🦀️.rs"]
+                                    mod tests_warns_that_the_89422a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩update-rig-extrinsic/🧪️tests/📍️retunes-the-675f52/🦀️.rs"]
+                                    mod tests_retunes_the_675f52;
                                 }
                                 #[path = "."]
                                 pub mod create_gcp {
@@ -321,6 +461,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧿create-gcp/🧪️tests/📍️adds-gcp-tower-d71a54/🦀️.rs"]
                                     mod tests_adds_gcp_tower_d71a54;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧿create-gcp/🧪️tests/🚫️refuses-a-19c1ab/🦀️.rs"]
+                                    mod tests_refuses_a_19c1ab;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧿create-gcp/🧪️tests/📍️adds-a-quay-7569de/🦀️.rs"]
+                                    mod tests_adds_a_quay_7569de;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧿create-gcp/🧪️tests/🕳️adds-a-control-298de4/🦀️.rs"]
+                                    mod tests_adds_a_control_298de4;
                                 }
                                 #[path = "."]
                                 pub mod delete_gcp {
@@ -334,6 +483,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-gcp/🧪️tests/🚫️removes-gcp-209b7d/🦀️.rs"]
                                     mod tests_removes_gcp_209b7d;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-gcp/🧪️tests/🚫️refuses-to-12366b/🦀️.rs"]
+                                    mod tests_refuses_to_12366b;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-gcp/🧪️tests/🚮removes-the-south-42cd9e/🦀️.rs"]
+                                    mod tests_removes_the_south_42cd9e;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-gcp/🧪️tests/🕳️removes-an-8f3868/🦀️.rs"]
+                                    mod tests_removes_an_8f3868;
                                 }
                                 #[path = "."]
                                 pub mod add_gcp_observation {
@@ -347,6 +505,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎add-gcp-observation/🧪️tests/🔎️adds-the-first-05b1b5/🦀️.rs"]
                                     mod tests_adds_the_first_05b1b5;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎add-gcp-observation/🧪️tests/🚫️refuses-to-pick-3c0570/🦀️.rs"]
+                                    mod tests_refuses_to_pick_3c0570;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎add-gcp-observation/🧪️tests/🔁️warns-that-this-dca661/🦀️.rs"]
+                                    mod tests_warns_that_this_dca661;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎add-gcp-observation/🧪️tests/🔎️picks-the-south-eb0c4d/🦀️.rs"]
+                                    mod tests_picks_the_south_eb0c4d;
                                 }
                                 #[path = "."]
                                 pub mod remove_gcp_observation {
@@ -360,6 +527,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚷remove-gcp-observation/🧪️tests/🚫️removes-the-only-f82e64/🦀️.rs"]
                                     mod tests_removes_the_only_f82e64;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚷remove-gcp-observation/🧪️tests/⏮️drops-the-first-9ebf0b/🦀️.rs"]
+                                    mod tests_drops_the_first_9ebf0b;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚷remove-gcp-observation/🧪️tests/🚫️refuses-an-109cf1/🦀️.rs"]
+                                    mod tests_refuses_an_109cf1;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚷remove-gcp-observation/🧪️tests/🚷drops-the-middle-282fb7/🦀️.rs"]
+                                    mod tests_drops_the_middle_282fb7;
                                 }
                                 #[path = "."]
                                 pub mod update_ingest_params {
@@ -373,6 +549,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥣update-ingest-params/🧪️tests/🔍️tightens-the-499c47/🦀️.rs"]
                                     mod tests_tightens_the_499c47;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥣update-ingest-params/🧪️tests/🚫️refuses-an-59752a/🦀️.rs"]
+                                    mod tests_refuses_an_59752a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥣update-ingest-params/🧪️tests/🔁️warns-that-the-8eaad8/🦀️.rs"]
+                                    mod tests_warns_that_the_8eaad8;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥣update-ingest-params/🧪️tests/📥️widens-the-73f33e/🦀️.rs"]
+                                    mod tests_widens_the_73f33e;
                                 }
                                 #[path = "."]
                                 pub mod update_feature_params {
@@ -386,6 +571,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠update-feature-params/🧪️tests/🔎️switches-the-423de9/🦀️.rs"]
                                     mod tests_switches_the_423de9;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠update-feature-params/🧪️tests/🚫️refuses-a-d82e38/🦀️.rs"]
+                                    mod tests_refuses_a_d82e38;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠update-feature-params/🧪️tests/🔁️warns-that-the-b6b7dc/🦀️.rs"]
+                                    mod tests_warns_that_the_b6b7dc;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠update-feature-params/🧪️tests/🌟️moves-the-3621f6/🦀️.rs"]
+                                    mod tests_moves_the_3621f6;
                                 }
                                 #[path = "."]
                                 pub mod update_match_params {
@@ -399,6 +593,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢update-match-params/🧪️tests/🌳️switches-the-652d03/🦀️.rs"]
                                     mod tests_switches_the_652d03;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢update-match-params/🧪️tests/🚫️refuses-a-ratio-65dcb9/🦀️.rs"]
+                                    mod tests_refuses_a_ratio_65dcb9;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢update-match-params/🧪️tests/🔁️warns-that-the-414aae/🦀️.rs"]
+                                    mod tests_warns_that_the_414aae;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢update-match-params/🧪️tests/🌳️switches-to-a-kd-d6fa4b/🦀️.rs"]
+                                    mod tests_switches_to_a_kd_d6fa4b;
                                 }
                                 #[path = "."]
                                 pub mod update_sfm_params {
@@ -412,6 +615,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮update-sfm-params/🧪️tests/🎯️switches-the-7f0371/🦀️.rs"]
                                     mod tests_switches_the_7f0371;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮update-sfm-params/🧪️tests/🔁️warns-that-the-79a92a/🦀️.rs"]
+                                    mod tests_warns_that_the_79a92a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮update-sfm-params/🧪️tests/🎯️tightens-the-850036/🦀️.rs"]
+                                    mod tests_tightens_the_850036;
                                 }
                                 #[path = "."]
                                 pub mod update_dense_params {
@@ -425,6 +634,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌁update-dense-params/🧪️tests/🔬️raises-the-dense-ddb263/🦀️.rs"]
                                     mod tests_raises_the_dense_ddb263;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌁update-dense-params/🧪️tests/🔁️warns-that-the-4e65c8/🦀️.rs"]
+                                    mod tests_warns_that_the_4e65c8;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌁update-dense-params/🧪️tests/🧊️sharpens-the-25044c/🦀️.rs"]
+                                    mod tests_sharpens_the_25044c;
                                 }
                                 #[path = "."]
                                 pub mod update_mesh_params {
@@ -438,6 +653,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️update-mesh-params/🧪️tests/🔳️doubles-the-c245d5/🦀️.rs"]
                                     mod tests_doubles_the_c245d5;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️update-mesh-params/🧪️tests/🔁️warns-that-the-887e9f/🦀️.rs"]
+                                    mod tests_warns_that_the_887e9f;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️update-mesh-params/🧪️tests/🔳️halves-the-voxel-21b53d/🦀️.rs"]
+                                    mod tests_halves_the_voxel_21b53d;
                                 }
                                 #[path = "."]
                                 pub mod update_motion_params {
@@ -451,6 +672,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏎️update-motion-params/🧪️tests/🏃️enables-motion-2444a3/🦀️.rs"]
                                     mod tests_enables_motion_2444a3;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏎️update-motion-params/🧪️tests/🔁️warns-that-the-83ff67/🦀️.rs"]
+                                    mod tests_warns_that_the_83ff67;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏎️update-motion-params/🧪️tests/🏃️triples-the-4bb69f/🦀️.rs"]
+                                    mod tests_triples_the_4bb69f;
                                 }
                                 #[path = "."]
                                 pub mod update_geo_params {
@@ -464,6 +691,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐update-geo-params/🧪️tests/🌐️enables-georefere-18a68a/🦀️.rs"]
                                     mod tests_enables_georefere_18a68a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐update-geo-params/🧪️tests/🚫️refuses-a-zero-fa917f/🦀️.rs"]
+                                    mod tests_refuses_a_zero_fa917f;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐update-geo-params/🧪️tests/🔁️warns-that-the-efc6e8/🦀️.rs"]
+                                    mod tests_warns_that_the_efc6e8;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐update-geo-params/🧪️tests/🌐️halves-the-002a17/🦀️.rs"]
+                                    mod tests_halves_the_002a17;
                                 }
                                 #[path = "."]
                                 pub mod replace_job {
@@ -477,6 +713,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🎨️advances-the-job-c1e878/🦀️.rs"]
                                     mod tests_advances_the_job_c1e878;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🔁️warns-that-the-bdf2e9/🦀️.rs"]
+                                    mod tests_warns_that_the_bdf2e9;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️replace-job/🧪️tests/🎨️advances-the-555298/🦀️.rs"]
+                                    mod tests_advances_the_555298;
                                 }
                                 #[path = "."]
                                 pub mod commit_reconstruction {
@@ -487,6 +729,15 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/🧪️tests/🖼️rejects-an-e9fa51/🦀️.rs"]
+                                    mod tests_rejects_an_e9fa51;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/🧪️tests/🕸️rejects-an-5d3a60/🦀️.rs"]
+                                    mod tests_rejects_an_5d3a60;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/🧪️tests/⭐️rejects-an-2e5568/🦀️.rs"]
+                                    mod tests_rejects_an_2e5568;
                                 }
                                 #[path = "."]
                                 pub mod replace_sparse {
@@ -500,6 +751,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭐replace-sparse/🧪️tests/✨️swaps-in-an-6d9ae4/🦀️.rs"]
                                     mod tests_swaps_in_an_6d9ae4;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭐replace-sparse/🧪️tests/🔁️warns-that-the-56a3a9/🦀️.rs"]
+                                    mod tests_warns_that_the_56a3a9;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭐replace-sparse/🧪️tests/✨️swaps-in-a-re-3cfa6d/🦀️.rs"]
+                                    mod tests_swaps_in_a_re_3cfa6d;
                                 }
                                 #[path = "."]
                                 pub mod replace_dense {
@@ -513,6 +770,12 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️replace-dense/🧪️tests/☁️swaps-in-a-two-c688db/🦀️.rs"]
                                     mod tests_swaps_in_a_two_c688db;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️replace-dense/🧪️tests/🔁️warns-that-the-675b6e/🦀️.rs"]
+                                    mod tests_warns_that_the_675b6e;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️replace-dense/🧪️tests/☁️swaps-in-a-denser-4174e1/🦀️.rs"]
+                                    mod tests_swaps_in_a_denser_4174e1;
                                 }
                                 #[path = "."]
                                 pub mod replace_mesh_result {
@@ -526,6 +789,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱replace-mesh-result/🧪️tests/🕸️swaps-in-an-f23e71/🦀️.rs"]
                                     mod tests_swaps_in_an_f23e71;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱replace-mesh-result/🧪️tests/🔁️warns-that-the-b39bab/🦀️.rs"]
+                                    mod tests_warns_that_the_b39bab;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱replace-mesh-result/🧪️tests/🕸️swaps-the-c43d9c/🦀️.rs"]
+                                    mod tests_swaps_the_c43d9c;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱replace-mesh-result/🧪️tests/🚫️refuses-a-48f3a6/🦀️.rs"]
+                                    mod tests_refuses_a_48f3a6;
                                 }
                                 #[path = "."]
                                 pub mod replace_trajectory {
@@ -539,6 +811,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️replace-trajectory/🧪️tests/🧹️clears-the-d2f81a/🦀️.rs"]
                                     mod tests_clears_the_d2f81a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️replace-trajectory/🧪️tests/🚫️refuses-to-clear-524569/🦀️.rs"]
+                                    mod tests_refuses_to_clear_524569;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️replace-trajectory/🧪️tests/🛣️swaps-in-a-three-49b17f/🦀️.rs"]
+                                    mod tests_swaps_in_a_three_49b17f;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️replace-trajectory/🧪️tests/🕳️drops-the-6436a8/🦀️.rs"]
+                                    mod tests_drops_the_6436a8;
                                 }
                                 #[path = "."]
                                 pub mod replace_tracks {
@@ -552,6 +833,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚂replace-tracks/🧪️tests/⏸️replaces-the-d40c68/🦀️.rs"]
                                     mod tests_replaces_the_d40c68;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚂replace-tracks/🧪️tests/🕳️clears-every-760061/🦀️.rs"]
+                                    mod tests_clears_every_760061;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚂replace-tracks/🧪️tests/🏃️swaps-in-two-166265/🦀️.rs"]
+                                    mod tests_swaps_in_two_166265;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚂replace-tracks/🧪️tests/🔁️warns-that-the-8dbf82/🦀️.rs"]
+                                    mod tests_warns_that_the_8dbf82;
                                 }
                                 #[path = "."]
                                 pub mod replace_geo_products {
@@ -565,6 +855,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾replace-geo-products/🧪️tests/🗺️adds-the-dtm-and-64d5bb/🦀️.rs"]
                                     mod tests_adds_the_dtm_and_64d5bb;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾replace-geo-products/🧪️tests/🚫️refuses-to-clear-b8c54a/🦀️.rs"]
+                                    mod tests_refuses_to_clear_b8c54a;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾replace-geo-products/🧪️tests/🧹️clears-the-geo-f4886e/🦀️.rs"]
+                                    mod tests_clears_the_geo_f4886e;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾replace-geo-products/🧪️tests/🗺️records-a-dtm-6e132a/🦀️.rs"]
+                                    mod tests_records_a_dtm_6e132a;
                                 }
                                 #[path = "."]
                                 pub mod replace_qc {
@@ -578,6 +877,15 @@ pub mod artifacts {
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾replace-qc/🧪️tests/📋️records-a-qc-f5caf4/🦀️.rs"]
                                     mod tests_records_a_qc_f5caf4;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾replace-qc/🧪️tests/🚫️refuses-to-clear-30cbb5/🦀️.rs"]
+                                    mod tests_refuses_to_clear_30cbb5;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾replace-qc/🧪️tests/🧹️clears-the-qc-1d2249/🦀️.rs"]
+                                    mod tests_clears_the_qc_1d2249;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾replace-qc/🧪️tests/✅️files-a-qc-report-64d222/🦀️.rs"]
+                                    mod tests_files_a_qc_report_64d222;
                                 }
                             }
                         }

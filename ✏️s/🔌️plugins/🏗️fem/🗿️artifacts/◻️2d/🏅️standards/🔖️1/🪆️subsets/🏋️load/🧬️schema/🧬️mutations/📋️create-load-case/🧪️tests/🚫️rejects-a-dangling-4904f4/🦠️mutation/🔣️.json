@@ -1,0 +1,17 @@
+{
+  "mutation": "createLoadCase",
+  "loadCase": {
+    "id": "seismic",
+    "name": "Seismic",
+    "loads": [
+      {
+        "kind": "memberUdl",
+        "id": "lse1",
+        "elementId": "e42",
+        "wx": 0.0,
+        "wy": -2000.0
+      }
+    ],
+    "selfWeight": false
+  }
+}

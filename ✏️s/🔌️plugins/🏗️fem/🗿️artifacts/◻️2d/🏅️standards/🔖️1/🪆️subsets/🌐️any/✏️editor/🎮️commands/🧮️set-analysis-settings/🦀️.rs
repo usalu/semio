@@ -42,7 +42,7 @@ mod tests {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::SetAnalysisSettings(SetAnalysisSettings { modal_count: Some(4), buckling_count: Some(6), deformation_scale: Some(50.0) })).await;
         dispatch(&mut app, Fem2dCommand::SetAnalysisSettings(SetAnalysisSettings { modal_count: None, buckling_count: None, deformation_scale: Some(300.0) })).await;
-        let settings = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").analysis.clone();
+        let settings = app.snapshot().expect("snapshot").analysis.clone();
         assert_eq!(settings.modal_count, 4);
         assert_eq!(settings.buckling_count, 6);
         assert_eq!(settings.deformation_scale, 300.0);

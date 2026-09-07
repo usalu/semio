@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series-schedule-values",
+  "semanticKind": "replace-time-series-schedule-values",
+  "displayName": "Replace Time Series Schedule Values",
+  "emoji": "🕘️",
+  "aggregateVariant": "ReplaceTimeSeriesScheduleValues",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "replace-time-series-schedule-values",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

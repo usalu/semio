@@ -4,8 +4,9 @@
  * through it the repository library's discovery walk) into Vite's config bundle. `bun:sqlite` stays a
  * lazy dynamic import: Vite loads this module's exports under Node before the dev server's Bun
  * runtime exists. */
+import { createHash, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
@@ -74,6 +75,156 @@ async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").D
 }
 type BackboneSqliteHandle = InstanceType<typeof import("bun:sqlite").Database>;
 
+export const CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH = `${BACKBONE_ENDPOINT_PATH}/canonical-bootstrap`;
+export const CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES = 64 * 1024 * 1024;
+const CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BODY_BYTES = CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES + 10;
+const SHA256_HEX = /^[0-9a-f]{64}$/u;
+
+export type CanonicalBootstrapFolderMirrorFrontierV1 = {
+  readonly documentId: string;
+  readonly headEditOrdinal: number;
+  readonly headEditId: string;
+  readonly lastCommitSeq: number;
+  readonly chainSha256: string;
+};
+
+export type CanonicalBootstrapFolderMirrorReserveV1 = {
+  readonly schema: "semio.backbone.canonical-bootstrap-folder-mirror-reserve/v1";
+  readonly artifactSchema: string;
+  readonly descriptorDigestV1: string;
+  readonly aggregateSha256: string;
+  readonly baselineFrontier: CanonicalBootstrapFolderMirrorFrontierV1;
+};
+
+export type CanonicalBootstrapFolderMirrorOwnerV1 = {
+  readonly schema: "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1";
+  readonly epoch: number;
+  readonly capability: string;
+};
+
+type CanonicalBootstrapFolderMirrorControlV1 = { readonly epoch: number; readonly capability: string };
+
+function canonicalBootstrapMirrorError(code: "invalid" | "conflict" | "too-large"): Error {
+  return Object.assign(new Error(`canonical bootstrap folder mirror ${code}`), { code });
+}
+
+function canonicalBootstrapFolderMirrorDbPath(uri: string): string {
+  const folder = uri.slice("folder://".length);
+  if (backboneKindFromUri(uri) !== "folder" || !isAbsolute(folder)) throw canonicalBootstrapMirrorError("invalid");
+  return join(folder, ".semio", "documents.db");
+}
+
+function validateCanonicalBootstrapDocumentId(documentId: string): void {
+  if (documentId.length === 0 || new TextEncoder().encode(documentId).byteLength > 512 || documentId.includes("\0")) throw canonicalBootstrapMirrorError("invalid");
+}
+
+function validateCanonicalBootstrapFrontier(frontier: CanonicalBootstrapFolderMirrorFrontierV1, documentId: string): void {
+  if (
+    frontier?.documentId !== documentId ||
+    !Number.isSafeInteger(frontier.headEditOrdinal) ||
+    frontier.headEditOrdinal < 0 ||
+    !Number.isSafeInteger(frontier.lastCommitSeq) ||
+    frontier.lastCommitSeq < 0 ||
+    typeof frontier.headEditId !== "string" ||
+    frontier.headEditId.length === 0 ||
+    !SHA256_HEX.test(frontier.chainSha256)
+  )
+    throw canonicalBootstrapMirrorError("invalid");
+}
+
+function validateCanonicalBootstrapReserve(request: CanonicalBootstrapFolderMirrorReserveV1, documentId: string): void {
+  if (
+    request?.schema !== "semio.backbone.canonical-bootstrap-folder-mirror-reserve/v1" ||
+    typeof request.artifactSchema !== "string" ||
+    request.artifactSchema.length === 0 ||
+    !SHA256_HEX.test(request.descriptorDigestV1) ||
+    !SHA256_HEX.test(request.aggregateSha256)
+  )
+    throw canonicalBootstrapMirrorError("invalid");
+  validateCanonicalBootstrapFrontier(request.baselineFrontier, documentId);
+}
+
+function validateCanonicalBootstrapControl(control: CanonicalBootstrapFolderMirrorControlV1): void {
+  if (!Number.isSafeInteger(control?.epoch) || control.epoch < 1 || typeof control.capability !== "string" || !SHA256_HEX.test(control.capability)) throw canonicalBootstrapMirrorError("invalid");
+}
+
+async function canonicalBootstrapFolderMirrorDb(uri: string): Promise<BackboneSqliteHandle> {
+  const dbPath = canonicalBootstrapFolderMirrorDbPath(uri);
+  mkdirSync(dirname(dbPath), { recursive: true });
+  return backboneDbHandleFor(dbPath);
+}
+
+/** 🪪️ Mints and persists the sole current folder-mirror epoch; reserving a successor makes every prior stage and published pair non-current in the same transaction. */
+export async function reserveCanonicalBootstrapFolderMirror(uri: string, documentId: string, request: CanonicalBootstrapFolderMirrorReserveV1): Promise<CanonicalBootstrapFolderMirrorOwnerV1> {
+  validateCanonicalBootstrapDocumentId(documentId);
+  validateCanonicalBootstrapReserve(request, documentId);
+  const db = await canonicalBootstrapFolderMirrorDb(uri);
+  const capability = randomBytes(32).toString("hex");
+  const reserve = db.transaction(() => {
+    const prior = db.query("SELECT epoch FROM canonical_bootstrap_owner WHERE document_id = ?1").get(documentId) as { epoch?: number } | null;
+    const epoch = Number(prior?.epoch ?? 0) + 1;
+    if (!Number.isSafeInteger(epoch)) throw canonicalBootstrapMirrorError("conflict");
+    db.run("DELETE FROM canonical_bootstrap_stage WHERE document_id = ?1", [documentId]);
+    db.run(
+      "INSERT INTO canonical_bootstrap_owner (document_id, epoch, capability, state, artifact_schema, descriptor_digest_v1, aggregate_sha256, baseline_frontier_json, updated_at) VALUES (?1, ?2, ?3, 'reserved', ?4, ?5, ?6, ?7, ?8) ON CONFLICT(document_id) DO UPDATE SET epoch = excluded.epoch, capability = excluded.capability, state = excluded.state, artifact_schema = excluded.artifact_schema, descriptor_digest_v1 = excluded.descriptor_digest_v1, aggregate_sha256 = excluded.aggregate_sha256, baseline_frontier_json = excluded.baseline_frontier_json, updated_at = excluded.updated_at",
+      [documentId, epoch, capability, request.artifactSchema, request.descriptorDigestV1, request.aggregateSha256, JSON.stringify(request.baselineFrontier), Date.now()],
+    );
+    return epoch;
+  });
+  return { schema: "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1", epoch: reserve(), capability };
+}
+
+/** 🧱️ Stages one bounded, exactly framed canonical pair without changing folder-visible state. */
+export async function stageCanonicalBootstrapFolderMirror(uri: string, documentId: string, control: CanonicalBootstrapFolderMirrorControlV1, payload: Uint8Array): Promise<void> {
+  validateCanonicalBootstrapDocumentId(documentId);
+  validateCanonicalBootstrapControl(control);
+  if (payload.byteLength > CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BODY_BYTES) throw canonicalBootstrapMirrorError("too-large");
+  let pack: Uint8Array, spr: Uint8Array;
+  try {
+    ({ pack, spr } = decodeDocumentPackBytes(payload));
+  } catch {
+    throw canonicalBootstrapMirrorError("invalid");
+  }
+  if (pack.byteLength + spr.byteLength > CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES) throw canonicalBootstrapMirrorError("too-large");
+  const aggregate = createHash("sha256").update(pack).update(spr).digest("hex");
+  const db = await canonicalBootstrapFolderMirrorDb(uri);
+  const stage = db.transaction(() => {
+    const owner = db.query("SELECT aggregate_sha256 AS aggregateSha256 FROM canonical_bootstrap_owner WHERE document_id = ?1 AND epoch = ?2 AND capability = ?3 AND state = 'reserved'").get(documentId, control.epoch, control.capability) as { aggregateSha256?: string } | null;
+    if (owner?.aggregateSha256 !== aggregate) throw canonicalBootstrapMirrorError("conflict");
+    db.run("INSERT INTO canonical_bootstrap_stage (document_id, epoch, pack, spr, aggregate_sha256) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(document_id, epoch) DO UPDATE SET pack = excluded.pack, spr = excluded.spr, aggregate_sha256 = excluded.aggregate_sha256", [documentId, control.epoch, pack, spr, aggregate]);
+  });
+  stage();
+}
+
+/** 📣️ Makes a staged pair current only while the exact server-minted epoch remains reserved. */
+export async function publishCanonicalBootstrapFolderMirror(uri: string, documentId: string, control: CanonicalBootstrapFolderMirrorControlV1): Promise<void> {
+  validateCanonicalBootstrapDocumentId(documentId);
+  validateCanonicalBootstrapControl(control);
+  const db = await canonicalBootstrapFolderMirrorDb(uri);
+  const publish = db.transaction(() => {
+    const stage = db
+      .query("SELECT 1 AS present FROM canonical_bootstrap_owner owner JOIN canonical_bootstrap_stage stage ON stage.document_id = owner.document_id AND stage.epoch = owner.epoch WHERE owner.document_id = ?1 AND owner.epoch = ?2 AND owner.capability = ?3 AND owner.state = 'reserved' AND stage.aggregate_sha256 = owner.aggregate_sha256")
+      .get(documentId, control.epoch, control.capability) as { present?: number } | null;
+    if (stage?.present !== 1) throw canonicalBootstrapMirrorError("conflict");
+    const changed = db.run("UPDATE canonical_bootstrap_owner SET state = 'published', updated_at = ?4 WHERE document_id = ?1 AND epoch = ?2 AND capability = ?3 AND state = 'reserved'", [documentId, control.epoch, control.capability, Date.now()]);
+    if (changed.changes !== 1) throw canonicalBootstrapMirrorError("conflict");
+  });
+  publish();
+}
+
+/** 🧹️ Retires only the exact current epoch; a stale owner cannot hide or alter its successor. */
+export async function retireCanonicalBootstrapFolderMirror(uri: string, documentId: string, control: CanonicalBootstrapFolderMirrorControlV1): Promise<void> {
+  validateCanonicalBootstrapDocumentId(documentId);
+  validateCanonicalBootstrapControl(control);
+  const db = await canonicalBootstrapFolderMirrorDb(uri);
+  const retire = db.transaction(() => {
+    const changed = db.run("UPDATE canonical_bootstrap_owner SET state = 'retired', updated_at = ?4 WHERE document_id = ?1 AND epoch = ?2 AND capability = ?3 AND state IN ('reserved', 'published')", [documentId, control.epoch, control.capability, Date.now()]);
+    if (changed.changes !== 1) throw canonicalBootstrapMirrorError("conflict");
+    db.run("DELETE FROM canonical_bootstrap_stage WHERE document_id = ?1 AND epoch = ?2", [documentId, control.epoch]);
+  });
+  retire();
+}
+
 /** @emoji 🗄️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): per-path `bun:sqlite` handle cache.
  * `readBackbonePayload`/`writeBackbonePayload` used to `new Database(dbPath)` — and re-run the
  * (idempotent but non-free) `CREATE TABLE IF NOT EXISTS` — on EVERY single read/write request, so a
@@ -92,6 +243,8 @@ export async function backboneDbHandleFor(dbPath: string): Promise<BackboneSqlit
   const Database = await backboneDatabaseCtorLazy();
   const db = new Database(dbPath);
   db.run("CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)");
+  db.run("CREATE TABLE IF NOT EXISTS canonical_bootstrap_owner (document_id TEXT PRIMARY KEY, epoch INTEGER NOT NULL, capability TEXT NOT NULL, state TEXT NOT NULL CHECK (state IN ('reserved', 'published', 'retired', 'generic')), artifact_schema TEXT NOT NULL, descriptor_digest_v1 TEXT NOT NULL, aggregate_sha256 TEXT NOT NULL, baseline_frontier_json TEXT NOT NULL, updated_at INTEGER NOT NULL)");
+  db.run("CREATE TABLE IF NOT EXISTS canonical_bootstrap_stage (document_id TEXT NOT NULL, epoch INTEGER NOT NULL, pack BLOB NOT NULL, spr BLOB NOT NULL, aggregate_sha256 TEXT NOT NULL, PRIMARY KEY (document_id, epoch))");
   backboneDbHandles.set(dbPath, db);
   return db;
 }
@@ -103,7 +256,7 @@ export async function backboneDbHandleFor(dbPath: string): Promise<BackboneSqlit
  * pass one — app documents (per `OsDocumentRef`) always pass their own id explicitly. */
 const SPACE_FOLDER_DOCUMENT_ID = "studio";
 
-async function readBackbonePayload(uri: string, documentId: string | null): Promise<Uint8Array | null> {
+export async function readBackbonePayload(uri: string, documentId: string | null): Promise<Uint8Array | null> {
   const kind = backboneKindFromUri(uri);
   if (kind === "file") {
     const path = uri.slice("file://".length);
@@ -115,6 +268,16 @@ async function readBackbonePayload(uri: string, documentId: string | null): Prom
     const dbPath = join(folder, ".semio", "documents.db");
     if (!existsSync(dbPath)) return null;
     const db = await backboneDbHandleFor(dbPath);
+    const canonical = db
+      .query("SELECT owner.state, owner.aggregate_sha256 AS expectedAggregate, stage.aggregate_sha256 AS stagedAggregate, stage.pack, stage.spr FROM canonical_bootstrap_owner owner LEFT JOIN canonical_bootstrap_stage stage ON stage.document_id = owner.document_id AND stage.epoch = owner.epoch WHERE owner.document_id = ?1")
+      .get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { state?: string; expectedAggregate?: string; stagedAggregate?: string; pack?: Uint8Array; spr?: Uint8Array } | null;
+    if (canonical && canonical.state !== "generic") {
+      if (canonical.state !== "published" || !canonical.pack) return null;
+      const pack = canonical.pack instanceof Uint8Array ? canonical.pack : new Uint8Array(canonical.pack as ArrayBuffer);
+      const spr = canonical.spr instanceof Uint8Array ? canonical.spr : new Uint8Array((canonical.spr ?? []) as ArrayBuffer);
+      if (canonical.stagedAggregate !== canonical.expectedAggregate || createHash("sha256").update(pack).update(spr).digest("hex") !== canonical.expectedAggregate) return null;
+      return encodeDocumentPackBytes(pack, spr);
+    }
     const row = db.query("SELECT pack, spr FROM document WHERE id = ?1").get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { pack?: Uint8Array; spr?: Uint8Array } | null;
     if (!row?.pack) return null;
     const pack = row.pack instanceof Uint8Array ? row.pack : new Uint8Array(row.pack as ArrayBuffer);
@@ -124,7 +287,7 @@ async function readBackbonePayload(uri: string, documentId: string | null): Prom
   return null;
 }
 
-async function writeBackbonePayload(uri: string, documentId: string | null, schema: string | null, payload: Uint8Array): Promise<void> {
+export async function writeBackbonePayload(uri: string, documentId: string | null, schema: string | null, payload: Uint8Array): Promise<void> {
   const kind = backboneKindFromUri(uri);
   const { pack, spr } = decodeDocumentPackBytes(payload);
   if (kind === "file") {
@@ -138,13 +301,17 @@ async function writeBackbonePayload(uri: string, documentId: string | null, sche
     const dbPath = join(folder, ".semio", "documents.db");
     mkdirSync(dirname(dbPath), { recursive: true });
     const db = await backboneDbHandleFor(dbPath);
-    db.run("INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at", [
-      documentId ?? SPACE_FOLDER_DOCUMENT_ID,
-      schema ?? "",
-      pack,
-      spr,
-      Date.now(),
-    ]);
+    const id = documentId ?? SPACE_FOLDER_DOCUMENT_ID;
+    const write = db.transaction(() => {
+      const canonical = db.query("SELECT state FROM canonical_bootstrap_owner WHERE document_id = ?1").get(id) as { state?: string } | null;
+      if (canonical?.state === "reserved" || canonical?.state === "published") throw canonicalBootstrapMirrorError("conflict");
+      if (canonical?.state === "retired") {
+        db.run("DELETE FROM canonical_bootstrap_stage WHERE document_id = ?1", [id]);
+        db.run("UPDATE canonical_bootstrap_owner SET state = 'generic', updated_at = ?2 WHERE document_id = ?1 AND state = 'retired'", [id, Date.now()]);
+      }
+      db.run("INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at", [id, schema ?? "", pack, spr, Date.now()]);
+    });
+    write();
     return;
   }
   throw new Error(`unsupported backbone uri: ${uri}`);
@@ -183,8 +350,46 @@ function subscribeFolderWatch(uri: string, subscriber: { write: (chunk: string) 
   };
 }
 
-type BackboneServerRequest = { method?: string; url?: string; on: (event: string, handler: (chunk?: unknown) => void) => void };
+type BackboneServerRequest = { method?: string; url?: string; headers?: Record<string, string | string[] | undefined>; on: (event: string, handler: (chunk?: unknown) => void) => void };
 type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string | Uint8Array) => void };
+
+function canonicalBootstrapMirrorControlFromHeaders(headers: BackboneServerRequest["headers"]): CanonicalBootstrapFolderMirrorControlV1 {
+  const epochSource = headers?.["x-semio-canonical-bootstrap-epoch"];
+  const authorization = headers?.authorization;
+  if (Array.isArray(epochSource) || Array.isArray(authorization) || !/^[1-9][0-9]*$/u.test(epochSource ?? "") || !authorization?.startsWith("SemioFolderBootstrap ")) throw canonicalBootstrapMirrorError("invalid");
+  const epoch = Number(epochSource);
+  const control = { epoch, capability: authorization.slice("SemioFolderBootstrap ".length) };
+  validateCanonicalBootstrapControl(control);
+  return control;
+}
+
+function canonicalBootstrapMirrorContentType(headers: BackboneServerRequest["headers"]): string | null {
+  const source = headers?.["content-type"];
+  return typeof source === "string" ? source.trim().toLowerCase() : null;
+}
+
+function canonicalBootstrapMirrorStatus(error: unknown): number {
+  const code = typeof error === "object" && error !== null && "code" in error ? (error as { code?: unknown }).code : undefined;
+  return code === "conflict" ? 409 : code === "too-large" ? 413 : 400;
+}
+
+function collectBackboneRequestBody(req: BackboneServerRequest, limit: number, complete: (body: Uint8Array | null) => void): void {
+  const chunks: Buffer[] = [];
+  let length = 0;
+  let exceeded = false;
+  req.on("data", (chunk) => {
+    if (exceeded) return;
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+    length += bytes.byteLength;
+    if (length > limit) {
+      exceeded = true;
+      chunks.length = 0;
+      return;
+    }
+    chunks.push(bytes);
+  });
+  req.on("end", () => complete(exceeded ? null : new Uint8Array(Buffer.concat(chunks))));
+}
 
 /** @emoji 💓️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): both dev SSE endpoints below previously
  * wrote `: connected\n\n` once on connect and nothing else until a real event fired — a quiet dev
@@ -260,6 +465,53 @@ export function semioBackboneVitePlugin() {
         }
         const documentId = requestUrl.searchParams.get("documentId");
         const schema = requestUrl.searchParams.get("schema");
+        if (requestUrl.pathname.startsWith(`${CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH}/`)) {
+          const action = requestUrl.pathname.slice(CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH.length + 1);
+          if (documentId === null || backboneKindFromUri(uri) !== "folder" || requestUrl.searchParams.size !== 2 || !["reserve", "stage", "publish", "retire"].includes(action)) {
+            res.statusCode = 400;
+            res.end("invalid canonical bootstrap folder mirror request");
+            return;
+          }
+          if ((action === "stage" && req.method !== "PUT") || (action !== "stage" && req.method !== "POST")) {
+            res.statusCode = 405;
+            res.end("method not allowed");
+            return;
+          }
+          const expectedContentType = action === "reserve" ? "application/json" : action === "stage" ? "application/octet-stream" : null;
+          if (canonicalBootstrapMirrorContentType(req.headers) !== expectedContentType) {
+            res.statusCode = 415;
+            res.end("unsupported media type");
+            return;
+          }
+          const limit = action === "reserve" ? 8_192 : action === "stage" ? CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BODY_BYTES : 0;
+          collectBackboneRequestBody(req, limit, (body) => {
+            void (async () => {
+              if (body === null) throw canonicalBootstrapMirrorError("too-large");
+              if (action === "reserve") {
+                const source = new TextDecoder("utf-8", { fatal: true }).decode(body);
+                const parsed = JSON.parse(source) as CanonicalBootstrapFolderMirrorReserveV1;
+                if (JSON.stringify(parsed) !== source) throw canonicalBootstrapMirrorError("invalid");
+                const owner = await reserveCanonicalBootstrapFolderMirror(uri, documentId, parsed);
+                res.statusCode = 201;
+                res.setHeader("content-type", "application/json");
+                res.setHeader("cache-control", "no-store");
+                res.end(`${JSON.stringify(owner)}\n`);
+                return;
+              }
+              const control = canonicalBootstrapMirrorControlFromHeaders(req.headers);
+              if (action === "stage") await stageCanonicalBootstrapFolderMirror(uri, documentId, control, body);
+              else if (action === "publish") await publishCanonicalBootstrapFolderMirror(uri, documentId, control);
+              else await retireCanonicalBootstrapFolderMirror(uri, documentId, control);
+              res.statusCode = 204;
+              res.end();
+            })().catch((error) => {
+              res.statusCode = canonicalBootstrapMirrorStatus(error);
+              res.setHeader("content-type", "application/json");
+              res.end(`${JSON.stringify({ error: error instanceof Error ? error.message : "canonical bootstrap folder mirror invalid" })}\n`);
+            });
+          });
+          return;
+        }
         if (req.method === "GET") {
           readBackbonePayload(uri, documentId)
             .then((payload) => {
@@ -279,13 +531,13 @@ export function semioBackboneVitePlugin() {
           return;
         }
         if (req.method === "PUT") {
-          const chunks: Buffer[] = [];
-          req.on("data", (chunk) => {
-            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
-          });
-          req.on("end", () => {
-            const body = Buffer.concat(chunks);
-            writeBackbonePayload(uri, documentId, schema, new Uint8Array(body))
+          collectBackboneRequestBody(req, CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BODY_BYTES, (body) => {
+            if (body === null) {
+              res.statusCode = 413;
+              res.end("payload too large");
+              return;
+            }
+            writeBackbonePayload(uri, documentId, schema, body)
               .then(() => {
                 res.statusCode = 200;
                 res.setHeader("content-type", "application/octet-stream");

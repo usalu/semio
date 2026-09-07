@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHumidistatDehumidifyingSetpointSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDehumidifyingSetpointScheduleId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newDehumidifyingSetpointScheduleId": {
+      "type": "integer"
+    }
+  }
+}

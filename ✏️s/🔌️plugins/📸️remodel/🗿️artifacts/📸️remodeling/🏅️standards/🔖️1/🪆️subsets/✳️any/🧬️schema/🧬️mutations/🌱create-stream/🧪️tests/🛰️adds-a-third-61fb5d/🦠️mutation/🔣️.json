@@ -1,0 +1,13 @@
+{
+  "mutation": "createStream",
+  "stream": {
+    "id": "orbit-tertiary",
+    "name": "Orbit Tertiary",
+    "kind": "image-sequence",
+    "cameraId": "orbit-cam-tertiary",
+    "syncOffsetMs": 80.0,
+    "fpsHint": 2.0,
+    "frames": [],
+    "source": null
+  }
+}

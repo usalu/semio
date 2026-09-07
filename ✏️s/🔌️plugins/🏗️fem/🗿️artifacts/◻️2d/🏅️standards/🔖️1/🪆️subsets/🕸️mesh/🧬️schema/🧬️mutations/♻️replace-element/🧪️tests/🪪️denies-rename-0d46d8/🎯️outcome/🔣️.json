@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.id-mismatch",
+  "path": [
+    "b2",
+    "b3"
+  ]
+}

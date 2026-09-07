@@ -1,4 +1,5 @@
-//! ↩️ Inverse for `DeleteRigExtrinsic` — recreates the captured BASE record.
+//! ↩️ Inverse for `DeleteRigExtrinsic` — recreates the captured BASE record at its canonical
+//! `camera_id` position.
 //! Missing target ⇒ `Vec::new()`.
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::RemodelingSnapshot;

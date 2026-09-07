@@ -1,0 +1,23 @@
+{
+  "mutation": "replaceTracks",
+  "tracks": [
+    {
+      "id": "orbit-track-a",
+      "length": 9,
+      "class": "static",
+      "meanSpeedMS": 0.0
+    },
+    {
+      "id": "orbit-track-b",
+      "length": 7,
+      "class": "moving",
+      "meanSpeedMS": 0.75
+    },
+    {
+      "id": "orbit-track-c",
+      "length": 4,
+      "class": "moving",
+      "meanSpeedMS": 0.125
+    }
+  ]
+}

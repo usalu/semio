@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.referenced",
+  "path": [
+    "orbit-secondary",
+    "calibration.rig.orbit-cam-secondary"
+  ]
+}

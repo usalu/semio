@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration-effective-leakage-area",
+  "semanticKind": "change-infiltration-effective-leakage-area",
+  "displayName": "Change Infiltration Effective Leakage Area",
+  "emoji": "🕳️",
+  "aggregateVariant": "ChangeInfiltrationEffectiveLeakageArea",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-infiltration-effective-leakage-area",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

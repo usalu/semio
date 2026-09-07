@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/remodeling/remodeling/diff.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/diff.json",
   "title": "RemodelingDiff",
   "type": "object",
   "additionalProperties": false,

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::AddOutputVariable, base: &EnergyModelSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.invariant", "An output variable name must not be blank.", [payload.key.clone()]);
     }
     if base.model.output_variables.iter().any(|spec| spec.name == payload.name && spec.key == payload.key) {
-        return protocol::MutationOutcome::error("mutation.duplicate", format!("Output variable \"{}\" is already registered for \"{}\".", payload.name, payload.key), [payload.name.clone(), payload.key.clone()]);
+        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Output variable \"{}\" is already registered for \"{}\".", payload.name, payload.key), [payload.name.clone(), payload.key.clone()]);
     }
     let mut model = base.model.clone();
     model.output_variables.push(crate::model::OutputVariableSpec { name: payload.name.clone(), key: payload.key.clone(), reporting_frequency: payload.reporting_frequency });

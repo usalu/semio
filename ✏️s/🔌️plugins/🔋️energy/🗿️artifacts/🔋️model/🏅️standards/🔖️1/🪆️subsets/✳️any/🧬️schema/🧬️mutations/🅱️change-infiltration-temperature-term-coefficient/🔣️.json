@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅱️change-infiltration-temperature-term-coefficient",
+  "semanticKind": "change-infiltration-temperature-term-coefficient",
+  "displayName": "Change Infiltration Temperature Term Coefficient",
+  "emoji": "🅱️",
+  "aggregateVariant": "ChangeInfiltrationTemperatureTermCoefficient",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-infiltration-temperature-term-coefficient",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

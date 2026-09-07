@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BindFenestrationGlazingConstruction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "constructionId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "constructionId": {
+      "type": "integer"
+    }
+  }
+}

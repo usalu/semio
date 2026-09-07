@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/remodeling/remodeling/mutation.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/mutation.json",
   "title": "RemodelingMutation",
   "description": "One handcrafted semantic mutation kind per $defs entry - the tagged union RemodelingMutation dispatches on.",
   "oneOf": [

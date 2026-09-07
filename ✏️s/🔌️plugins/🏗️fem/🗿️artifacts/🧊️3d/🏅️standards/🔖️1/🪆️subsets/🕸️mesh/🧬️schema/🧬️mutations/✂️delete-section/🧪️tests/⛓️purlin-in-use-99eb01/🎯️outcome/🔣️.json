@@ -1,0 +1,19 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-referenced",
+  "path": [
+    "sec_pur",
+    "pur_e_l_0",
+    "pur_a_0",
+    "pur_e_r_0",
+    "pur_e_l_1",
+    "pur_a_1",
+    "pur_e_r_1"
+  ],
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-referenced"
+    }
+  ]
+}

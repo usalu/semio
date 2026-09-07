@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemoveElectricalLoadCenterPv",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "pvId"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "pvId": {
+      "type": "integer"
+    }
+  }
+}

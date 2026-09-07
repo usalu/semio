@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "uls_acc"
+  ],
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-missing"
+    }
+  ]
+}

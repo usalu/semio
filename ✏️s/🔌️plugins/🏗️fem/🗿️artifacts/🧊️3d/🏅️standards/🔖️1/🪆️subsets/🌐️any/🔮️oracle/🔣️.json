@@ -129,6 +129,111 @@
       ],
       "homepage": "https://docs.rs/serde_json",
       "rationale": "📖️ A READER over a DIFFERENT CARRIER, which is why it covers what the two mesh oracles cannot.\n\n`three-fem3d-mesh-reader` and `manifold-fem3d-mesh-measure` read the STL/OBJ export, so they witness GEOMETRY. A material's Young's modulus, a section's second moment of area, a support's restrained DOFs, a load case's self-weight flag and the analysis settings do not move a single triangle — which is exactly why 22 of this subset's kinds were recorded `-uncarried` against those two. That label was honest about the MESH carrier and does not generalise.\n\nThis subset's JSON export is not a stub. Unlike its csv/md/txt leaves, which wrap the DSL text in a single blob, its json leaf emits `serde_json::to_value(snapshot)` — the real structured tree, every snapshot field. So all nine collections are carrier-level facts and a third-party JSON implementation witnesses every one of them.\n\nThis is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers: the judge is a third-party implementation of the CARRIER, and nothing in this repository predicts the answer it is judging. The expected state is the committed `after` half of each fixture."
+    },
+    {
+      "id": "pynite-fem3d-solver",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "PyNiteFEA",
+      "version": "3.0.0",
+      "source": {
+        "repository": "https://github.com/JWock82/Pynite",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "pynite",
+        "implementation": "Pynite.FEModel3D direct-stiffness frame and truss solver",
+        "version": "3.0.0"
+      },
+      "capabilities": [
+        "fem3d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-fem3d-analysis-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://pynite.readthedocs.io",
+      "rationale": "🧮 An independent 3D frame and truss finite-element solver, pure Python, MIT. It assembles its own stiffness, applies its own boundary conditions and solves its own system; nothing of this repository's kernel reaches it, and it shares no engine family with `crate::sparse`'s hand-rolled LDLT.\n\nWHAT IT ADJUDICATES, AND WHY THAT DISCHARGES A DEBT THIS FILE CARRIED FOR A LONG TIME. `fem3d-non-geometry-mutation-semantics` recorded, correctly, that a finite-element solver cannot adjudicate document ALGEBRA — a solver reads a model, it does not edit one — and concluded that twenty-two of this vocabulary's twenty-five kinds therefore had no qualifying reference available at all. That survey asked only half the question. A solver adjudicates what the edited document MEANS, and every one of those twenty-two kinds changes what the model means: a section that carries less, a support that has stopped holding, a material that has got softer, a load case that no longer exists. `📈️analysis/🧪️tests/🧮️solves-fem3d-1-benchmarks` therefore mutates through PRODUCTION dispatch, holds the applied model to the committed after-model, and then SOLVES it against this oracle — displacements, reactions, member forces, every load case and every combination — and additionally requires both implementations to report the same MECHANISM: which combinations moved, which are untouched, which appeared and which are gone.\n\nHOW THE TWO COORDINATE SYSTEMS ARE RECONCILED, which is the load-bearing part of trusting it. This artifact is Z-up and PyNite is Y-up, and the two build a member's local axes from different reference directions (this artifact from global +Z, PyNite from global +Y). The reference maps between the frames with the proper rotation `(X, Y, Z)ₚ = (x, z, −y)` — determinant +1, so every cross product either solver takes keeps its handedness — computes this artifact's OWN local triad from its documented rule, and solves for the PyNite roll angle that makes the two coincide. It then checks the result against PyNite's own transformation matrix to `1e-12` per member, so a scenario stops before it compares anything if `Iy` and `Iz` have stopped naming the same axes.\n\nTWO DEFECT-CLASS FINDINGS THE INTEGRATION PRODUCED, reported rather than worked around. (1) PyNite's `add_member` builds a PHYSICAL member that silently subdivides itself at any model node lying on its axis; on the shared `🧊️steel-frame` fixture that turns the spare node `n3` into a mid-height support carrying 8.3 kN this artifact's own model never puts there. The reference narrows the subdivision search to the member's own two ends so the two element sets are the same set. (2) A `bar` is a two-force member with three translational degrees of freedom and no bending stiffness; PyNite's `Spring3D` is exactly that, so a bar maps to `add_spring(ks = EA/L)` and every rotational freedom at a node only bars touch is restrained — mirroring `crate::model::build_dof_map`'s own union-of-incident-elements rule rather than assuming PyNite's default.\n\nWHY IT CAN BE TRUSTED AS THE REFERENCE. Alongside it, on the cases where one exists, sits a CLOSED FORM: `PL³/3EI`, `PL²/2EI`, `TL/GJ`, `5wL⁴/384EI`, `wL/2`, `wL`. The reference asserts every one of them in role before it projects anything, and asserts global equilibrium — reactions cancel the applied resultant to `1e-9` relative — on every case and every combination of every model, including the ones with no closed form. A library can be wrong; a library that agrees with statics on a twenty-seven-node, forty-two-member space frame under three load cases and two combinations is not."
+    },
+    {
+      "id": "scipy-fem3d-eigen",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "scipy",
+      "version": "1.18.0",
+      "source": {
+        "repository": "https://github.com/scipy/scipy",
+        "license": "BSD-3-Clause"
+      },
+      "engine": {
+        "family": "lapack",
+        "implementation": "scipy.linalg.eigh dense symmetric generalised eigensolver",
+        "version": "1.18.0"
+      },
+      "capabilities": [
+        "fem3d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-fem3d-eigen-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://scipy.org",
+      "rationale": "🎵 A dense symmetric generalised eigensolver over LAPACK, adjudicating the two eigenvalue analyses `crate::fem3d_engine::modal_buckling` computes — free-vibration frequencies and linear-buckling load factors — which this repository answers with its own hand-rolled subspace iteration (`crate::sparse::subspace_iteration`) and which had, until `📈️analysis/🧪️tests/🎵️solves-fem3d-1-eigen`, no external reference of any kind. The kernel's own benchmarks compared them with a closed form at a TEN-percent tolerance and with nothing else at all.\n\nWHAT THE EIGENSOLVER IS HANDED. `K`, `M` and `Kg` assembled by the reference itself from the textbook Euler-Bernoulli frame matrices, in ONE stated sign convention — in the local `[u, v, w, θx, θy, θz]` ordering both this artifact and every textbook use, the y-bending plane measures its rotation as `θy = −∂w/∂x`, which puts a sign flip on the off-diagonal `L` terms of every matrix in that plane (formally `S·M·S` with `S = diag(1, −1, 1, −1)`), and the stiffness, the consistent mass AND the consistent geometric stiffness must all carry it or the pair's eigenvalues are not the structure's.\n\nWHAT IS COMPARED, AND WHY NOT THE EIGENVALUES THEMSELVES. A subspace iteration and a LAPACK factorisation of the same pencil agree to their own convergence tolerance, not to a digit count, so a projection demanding digits would be measuring convergence settings rather than correctness. What the two implementations are held to jointly is the CLOSED FORM — `βₙ²/(2πL²)·√(EI/ρA)` for a cantilever's frequencies, `π²EI/(KL)²` for a column's critical load at `K = 0.5, 0.7, 1.0, 2.0` — and whether each of them independently lands within two percent of it over an eight-element discretisation. This oracle's own agreement is what makes that a fair demand rather than a wish: it lands inside 0.3 % on every one of the five scenarios. The eigenvalues themselves are asserted numerically by the subject against the committed reference this oracle produced."
+    },
+    {
+      "id": "skfem-fem3d-solid",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "scikit-fem",
+      "version": "12.0.2",
+      "source": {
+        "repository": "https://github.com/kinnala/scikit-fem",
+        "license": "BSD-3-Clause"
+      },
+      "engine": {
+        "family": "scikit-fem",
+        "implementation": "scikit-fem 3D isotropic linear elasticity over a hexahedral mesh",
+        "version": "12.0.2"
+      },
+      "capabilities": [
+        "fem3d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-fem3d-solid-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://scikit-fem.readthedocs.io",
+      "rationale": "🧱 An independent continuum finite-element library, adjudicating the one analysis path a frame solver structurally cannot see: a `FemSolid`, which `crate::fem3d_engine::meshing::resolve_geometry` triangulates, extrudes and splits into `Tet4` elements before solving it as a three-dimensional elastic continuum. It builds its OWN hexahedral mesh of the same prism, assembles its own isotropic elasticity operator from the Lamé parameters, and condenses and solves its own system; it never sees this artifact's triangulation, its extrusion, its tetrahedra or its solver — which is what makes the comparison worth making, since two different meshes of one continuum must still agree on the continuum's answer.\n\nWHY THE FIXTURE IS SHAPED THE WAY IT IS. `🧱️prismatic-solid-column.snapshot.json` gives its solid a `meshSize` larger than its own footprint diagonal, so the footprint triangulates into exactly its four corners — every base node is then a DOCUMENT node the fixture can name and restrain, which no ordinary solid fixture can do, because `resolve_geometry` synthesizes the rest. The restraint set it declares (`Tz` at all four corners, `Tx`+`Ty` at the origin, `Ty` at the +x corner, `Tx` at the +y corner) is precisely the one the uniform-stress solution already satisfies, so it removes the six rigid-body freedoms without fighting the Poisson contraction. Under a uniform 0.5 MPa top pressure the continuum answer is therefore exactly `σ = −p` and `δ_top = −pH/E`, which a constant-strain tetrahedron reproduces to machine precision and which this oracle reproduces to `8e-16` on its own mesh. Under self weight the answer is `−ρgH²/2E`, which a hexahedral mesh and a tetrahedral one approach from their own sides rather than hit — this oracle lands 0.26 % below it — so that case is a five-percent verdict, and nothing tighter would be honest about either discretisation.\n\nIT DOES NOT REPLACE THE GEOMETRY ORACLES. `three-fem3d-mesh-reader` and `manifold-fem3d-mesh-measure` adjudicate what the solid's mesh IS; this one adjudicates what it DOES under load. The three `create-`/`delete-`/`replace-solid` kinds carry all three requirements for that reason."
     }
   ],
   "mutationCatalogs": [
@@ -203,15 +308,7 @@
       "vectors": []
     }
   ],
-  "noOracleDecisions": [
-    {
-      "id": "fem3d-non-geometry-mutation-semantics",
-      "capabilities": [
-        "fem3d-1-mutate-uncarried"
-      ],
-      "rationale": "🧱 Twenty-two of this subset's twenty-five mutations edit a field `build_semio_mesh_snapshot` never reads: materials, sections, nodes, `Bar/Frame` elements (`area`/`iy`/`iz`/`j` are scalar section properties, not a cross-section PROFILE, so no honest 3D solid can be derived from a bar/frame — see the bridge fn's own doc), supports, load cases, individual loads, combinations and analysis settings. `build_semio_mesh_snapshot` reads only `solid.{outline, holes, height and baseZ}` and nothing else on `Fem3dSnapshot` — a mesh carrier sees geometry, not solver settings or materials, and this repository's OBJ/STL leaves for this subset encode nothing else. `../🔬️probes/📜️script.ts` is never even asked about these kinds; there is no `unsupported` branch for them because they are not wired to a carrier at all.\n\nA third-party FE SOLVER was surveyed and declined for the same reason `fem3d-python-independent`'s own rationale already gives: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of these twenty-two kinds edits the model DOCUMENT itself and none of them reads a solved result. That survey stands for this decision too; it is not re-litigated here.\n\nWHAT DISCHARGES THESE TODAY: only `fem3d-python-independent`, a `cross-semio-implementation` — a required SUPPLEMENTAL oracle, never a substitute per protocol v2. A qualifying third-party reference for `fem3d-1-mutate-uncarried` is still owed and is recorded here as a debt, not a verdict: these twenty-two kinds report honestly as un-oracled via the `oracleRequirements` naming `fem3d-1-mutate-uncarried` in `mutationManifests` below, rather than being silently absorbed into `fem3d-1-mutate`'s three-kind geometry coverage."
-    }
-  ],
+  "noOracleDecisions": [],
   "mutationManifests": [
     {
       "schema": "semio.repository-test.mutation-manifest/v2",
@@ -243,7 +340,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -277,7 +375,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -311,7 +410,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -345,7 +445,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -380,7 +481,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -414,7 +516,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -448,7 +551,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -483,7 +587,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -517,7 +622,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -551,7 +657,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -586,7 +693,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -620,7 +728,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -654,7 +763,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -689,7 +799,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -725,6 +836,11 @@
               "capability": "fem3d-1-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "manifold-fem3d-mesh-measure"
+            },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "skfem-fem3d-solid"
             }
           ],
           "carriers": [
@@ -764,6 +880,11 @@
               "capability": "fem3d-1-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "manifold-fem3d-mesh-measure"
+            },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "skfem-fem3d-solid"
             }
           ],
           "carriers": [
@@ -804,6 +925,11 @@
               "capability": "fem3d-1-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "manifold-fem3d-mesh-measure"
+            },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "skfem-fem3d-solid"
             }
           ],
           "carriers": [
@@ -841,7 +967,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -875,7 +1002,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -910,7 +1038,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -944,7 +1073,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -979,7 +1109,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -1013,7 +1144,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -1047,7 +1179,8 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -1081,7 +1214,13 @@
             },
             {
               "capability": "fem3d-1-mutate",
-              "qualifyingKind": "third-party-library"
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
+            },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "scipy-fem3d-eigen"
             }
           ],
           "invariants": {
@@ -3179,6 +3318,141 @@
       "family": "mechanical",
       "notes": "A deterministic fem3d model carrying at least two of every collection, with the update-analysis-settings mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "fem3d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "benchmarks-analysis-reference",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.3d",
+        "standard": "1",
+        "subset": "analysis"
+      },
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian",
+        "handedness": "right",
+        "up": "z"
+      },
+      "files": [
+        {
+          "role": "expected-analysis",
+          "path": "../../📈️analysis/🧪️tests/🧮️solves-fem3d-1-benchmarks/🧫️fixtures/📊️expected.results.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:4ae1fc6f9f8f8cdc3947f3b0e9641208c66ba79c37aac5819491d752e06bcc29",
+          "bytes": 491605
+        }
+      ],
+      "generator": {
+        "oracle": "pynite-fem3d-solver",
+        "packageVersion": "3.0.0",
+        "engineFamily": "pynite",
+        "engineVersion": "3.0.0",
+        "command": "uv run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/FEM-PLUGIN-END-TO-END/🔨️run-fem3d-oracle.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (PyNiteFEA) / BSD-3-Clause (SciPy, scikit-fem)",
+        "attribution": "Solved with PyNiteFEA, SciPy and scikit-fem; every value additionally held to a closed form or to global equilibrium in role",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-fem3d-analysis-v1",
+      "reproducible": true,
+      "family": "analysis",
+      "notes": "displacements, reactions and bar forces for three real structures, four closed-form cases and one mutate-then-solve pair per non-geometry kind — twenty-nine scenarios, each additionally held to global equilibrium in role."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "eigen-analysis-reference",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.3d",
+        "standard": "1",
+        "subset": "analysis"
+      },
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian",
+        "handedness": "right",
+        "up": "z"
+      },
+      "files": [
+        {
+          "role": "expected-analysis",
+          "path": "../../📈️analysis/🧪️tests/🎵️solves-fem3d-1-eigen/🧫️fixtures/📊️expected.results.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:876c3aa968c8a176394b13ac089240cc45d448a92df78d82c569d1423ba5be48",
+          "bytes": 2556
+        }
+      ],
+      "generator": {
+        "oracle": "scipy-fem3d-eigen",
+        "packageVersion": "1.18.0",
+        "engineFamily": "lapack",
+        "engineVersion": "1.18.0",
+        "command": "uv run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/FEM-PLUGIN-END-TO-END/🔨️run-fem3d-oracle.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (PyNiteFEA) / BSD-3-Clause (SciPy, scikit-fem)",
+        "attribution": "Solved with PyNiteFEA, SciPy and scikit-fem; every value additionally held to a closed form or to global equilibrium in role",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-fem3d-eigen-v1",
+      "reproducible": true,
+      "family": "analysis",
+      "notes": "cantilever natural frequencies and Euler load factors at K = 0.5, 0.7, 1.0 and 2.0, each within 0.3 % of its closed form."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "solid-analysis-reference",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.3d",
+        "standard": "1",
+        "subset": "analysis"
+      },
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian",
+        "handedness": "right",
+        "up": "z"
+      },
+      "files": [
+        {
+          "role": "expected-analysis",
+          "path": "../../📈️analysis/🧪️tests/🧱️solves-fem3d-1-solid/🧫️fixtures/📊️expected.results.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:25e5cebf1ff58f57fe8124da38c1e529948f9b4e92f6de9a264f9bc16bef42ad",
+          "bytes": 751
+        }
+      ],
+      "generator": {
+        "oracle": "skfem-fem3d-solid",
+        "packageVersion": "12.0.2",
+        "engineFamily": "scikit-fem",
+        "engineVersion": "12.0.2",
+        "command": "uv run python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/FEM-PLUGIN-END-TO-END/🔨️run-fem3d-oracle.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (PyNiteFEA) / BSD-3-Clause (SciPy, scikit-fem)",
+        "attribution": "Solved with PyNiteFEA, SciPy and scikit-fem; every value additionally held to a closed form or to global equilibrium in role",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-fem3d-solid-v1",
+      "reproducible": true,
+      "family": "analysis",
+      "notes": "top-face shortening of a prismatic column under uniform pressure (exact) and under self weight (0.26 % below the closed form)."
     }
   ],
   "probes": [
@@ -3332,6 +3606,24 @@
         "minZRelativeError",
         "expectedBaseZ"
       ]
+    },
+    {
+      "id": "semantic-fem3d-analysis-v1",
+      "description": "One solved model's answer as each case's four scale-carrying scalars — displacement norm, largest translation, largest rotation, the reaction force resultant and the largest bar force — each written as NORMALIZED DECIMAL TEXT at six significant figures, plus, for a mutate-then-solve scenario, the categorical mechanism the edit produced per combination (`changed`, `unchanged`, `appeared`, `disappeared`, `reshaped`). Text and not a float on purpose: two solvers' last bits never agree, and a float projection would compare their round-off rather than their answers. Six figures is a millionfold margin over the `1e-12`-scale disagreement two direct double-precision factorisations of one linear system actually show, and a resultant that cancels by symmetry — `−2.5e-11` in one solver, `+8.1e-12` in the other — is snapped to zero when it is under a billionth of its own group's largest component, because six significant figures OF ROUND-OFF is noise rather than agreement. The FULL displacement, reaction and member-force field is not compared here: it is asserted, at `1e-6` relative, by the subject against the case's committed `📊️expected.results.json`, which this profile's oracle produced.",
+      "arrays": "ordered",
+      "text": true
+    },
+    {
+      "id": "semantic-fem3d-eigen-v1",
+      "description": "A modal or buckling answer as the CLOSED FORM both implementations are held to — normalized decimal text at six significant figures — together with each implementation's own verdict on whether it landed within two percent of it, and the mode or factor count the document asked for. The eigenvalues themselves are deliberately not compared: a subspace iteration and a LAPACK factorisation of the same pencil agree to their own convergence tolerance, not to a digit count, so comparing digits would measure convergence settings rather than correctness. They are asserted, at `1e-3` relative, by the subject against the case's committed `📊️expected.results.json`.",
+      "arrays": "ordered",
+      "text": true
+    },
+    {
+      "id": "semantic-fem3d-solid-v1",
+      "description": "A meshed-solid answer as the closed forms `−pH/E` and `−ρgH²/2E` in normalized decimal text at six significant figures, the pressure case's top-face shortening at the same six figures — where a constant-strain tetrahedron and a trilinear hexahedron are both EXACT, so six figures is a demand both genuinely meet — and the shared five-percent verdict on the self-weight case, which is all two different meshes of one continuum honestly share. The displacements themselves are asserted by the subject against the case's committed `📊️expected.results.json`.",
+      "arrays": "ordered",
+      "text": true
     }
   ],
   "toleranceProfiles": [

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling-setpoint-schedule",
+  "semanticKind": "change-thermostat-cooling-setpoint-schedule",
+  "displayName": "Change Thermostat Cooling Setpoint Schedule",
+  "emoji": "🐧️",
+  "aggregateVariant": "ChangeThermostatCoolingSetpointSchedule",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-thermostat-cooling-setpoint-schedule",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

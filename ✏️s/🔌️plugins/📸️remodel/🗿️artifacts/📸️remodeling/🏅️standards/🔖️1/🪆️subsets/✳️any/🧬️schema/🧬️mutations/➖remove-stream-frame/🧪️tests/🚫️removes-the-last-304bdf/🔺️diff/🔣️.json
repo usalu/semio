@@ -24,8 +24,8 @@
           "codec": "avc",
           "durationMs": 6400.0,
           "frameCount": 160,
-          "width": 1920,
-          "height": 1080
+          "width": 1024,
+          "height": 768
         }
       },
       {
@@ -47,6 +47,7 @@
     ]
   },
   "assets": null,
+  "durableArtifacts": null,
   "calibration": null,
   "params": null,
   "gcps": null,

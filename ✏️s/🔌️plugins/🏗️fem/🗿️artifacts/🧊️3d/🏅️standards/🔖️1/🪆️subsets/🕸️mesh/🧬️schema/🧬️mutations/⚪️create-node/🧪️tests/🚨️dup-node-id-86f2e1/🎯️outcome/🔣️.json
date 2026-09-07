@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.duplicate-id",
+  "path": [
+    "ap_1"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.duplicate-id"
+    }
+  ]
+}

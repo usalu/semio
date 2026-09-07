@@ -1,0 +1,9 @@
+{
+  "mutation": "createSection",
+  "section": {
+    "id": "hea220",
+    "name": "HEA 220",
+    "area": 0.006434,
+    "iy": 0.0000541
+  }
+}

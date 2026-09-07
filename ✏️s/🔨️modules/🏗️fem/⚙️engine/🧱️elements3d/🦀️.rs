@@ -140,6 +140,9 @@ pub struct Frame3 {
     pub density: f64,
 }
 
+/// ↕️ `θy = −∂w/∂x` sign flip of the odd (`L`-carrying) rows/columns in the y-bending block.
+const Y_PLANE_SIGN: [f64; 4] = [1.0, -1.0, 1.0, -1.0];
+
 impl Frame3 {
     /// 🧭️ Builds the member length, local 12x12 stiffness, and the 12x12 global<->local block-diagonal
     /// rotation `T` (four `R^T` 3x3 blocks) shared by `stiffness_global` and `recover`.
@@ -197,7 +200,11 @@ impl Frame3 {
     /// 🏋️ Local 12x12 consistent mass: axial `ρAL/6*[[2,1],[1,2]]` at `(0,6)`, torsion `ρJL/6*[[2,1],[1,2]]`
     /// at `(3,9)` — a simplified polar-inertia proxy (not rigorously exact rotary inertia, but the
     /// accepted simplification at this scope — see `mass`'s doc), and both bending planes ([1,5,7,11]
-    /// z-plane, [2,4,8,10] y-plane) using the same 156/22L/54/-13L consistent-beam-mass pattern.
+    /// z-plane, [2,4,8,10] y-plane) using the same 156/22L/54/-13L consistent-beam-mass pattern. The
+    /// y-plane carries `θy = −∂w/∂x`, exactly as `local_stiffness` and `local_udl` do, so its block is
+    /// `S·M·S` with `S = diag(1, −1, 1, −1)` (`Y_PLANE_SIGN`) — without it self-weight fixed-end
+    /// moments and the y-bending modal family come out with the wrong sign (ticket
+    /// 26/09/06/FEM-PLUGIN-END-TO-END, W6 PyNite/scipy oracle: −66.7 % on a one-element cantilever).
     fn local_mass(&self, l: f64) -> MatD {
         let mut m = MatD::zeros(12, 12);
         let axial = self.density * self.a * l / 6.0;
@@ -222,7 +229,7 @@ impl Frame3 {
         }
         for (bi, &gi) in [2usize, 4, 8, 10].iter().enumerate() {
             for (bj, &gj) in [2usize, 4, 8, 10].iter().enumerate() {
-                m.set(gi, gj, factor * block[bi][bj]);
+                m.set(gi, gj, Y_PLANE_SIGN[bi] * Y_PLANE_SIGN[bj] * factor * block[bi][bj]);
             }
         }
         m
@@ -243,7 +250,7 @@ impl Frame3 {
         }
         for (bi, &gi) in [2usize, 4, 8, 10].iter().enumerate() {
             for (bj, &gj) in [2usize, 4, 8, 10].iter().enumerate() {
-                kg.set(gi, gj, coeff * block[bi][bj]);
+                kg.set(gi, gj, Y_PLANE_SIGN[bi] * Y_PLANE_SIGN[bj] * coeff * block[bi][bj]);
             }
         }
         kg
@@ -912,6 +919,24 @@ mod tests {
     use super::*;
     use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
+    /// ↕️ The y-bending blocks of `local_mass` and `local_geometric_stiffness` must be `S·B·S` of the
+    /// z-bending blocks (`S = diag(1, −1, 1, −1)`), the same `θy = −∂w/∂x` flip `local_stiffness` carries.
+    #[test]
+    fn frame3_y_plane_mass_and_geometric_blocks_carry_the_theta_y_sign_flip() {
+        let frame = Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 210e9, g: 80.77e9, a: 0.005, iy: 1e-5, iz: 1e-5, j: 1e-6, roll: 0.0, density: 7850.0 };
+        let l = 3.0;
+        let z = [1usize, 5, 7, 11];
+        let y = [2usize, 4, 8, 10];
+        for matrix in [frame.local_mass(l), frame.local_geometric_stiffness(l, -1.0e4)] {
+            for (bi, (&gz, &gy)) in z.iter().zip(y.iter()).enumerate() {
+                for (bj, (&hz, &hy)) in z.iter().zip(y.iter()).enumerate() {
+                    let expected = Y_PLANE_SIGN[bi] * Y_PLANE_SIGN[bj] * matrix.get(gz, hz);
+                    assert!((matrix.get(gy, hy) - expected).abs() <= 1e-12 * expected.abs().max(1.0), "({gy},{hy}) = {} vs {expected}", matrix.get(gy, hy));
+                }
+            }
+        }
+    }
+
     /// 🪵️ Headless axial elongation check along an arbitrary (non-axis-aligned) 3D direction.
     #[test]
     fn bar3_axial_matches_hand_calc_on_skew_member() {
@@ -1339,65 +1364,67 @@ mod solid_tests {
         }
     }
 
-    /// 🏗️ Coarse hex-meshed cantilever (4 elements along the span) vs classical beam theory
-    /// `δ = PL³/3EI` — a sanity check on assembly/BC wiring, not on element accuracy (low-order hex
-    /// without incompatible modes is known to lock somewhat stiff in bending), so the tolerance is
-    /// wide: just confirm the deflection is negative (toward the load), finite, and the right order
-    /// of magnitude.
-    #[test]
-    fn hex8_meshed_cantilever_deflection_is_right_order_of_magnitude() {
+    /// 🏗️ Structured `Hex8` cantilever mesh over the `4.0 x 1.0 x 2.0` box (E=200 GPa, ν=0.3), fully
+    /// clamped on `x=0`, a total 10 kN `-Z` tip load split evenly over the `x=L` face nodes. Solved
+    /// through the sparse `analyses::solve_multi_case` pipeline (the refined mesh has 702 DOFs, well
+    /// past what the dense `solve_linear_static` path is meant for). Returns the mean tip `Tz`.
+    fn hex8_cantilever_tip_deflection(nx: usize, ny: usize, nz: usize) -> f64 {
+        use crate::analyses::{solve_multi_case, AnalysisModel, LoadCase};
         let (e, nu) = (200e9, 0.3);
-        let (b, h, l, nx) = (0.2, 0.3, 4.0, 4usize);
-        let dx = l / nx as f64;
-        let corner_id = |ix: usize, iy: usize, iz: usize| format!("n{ix}_{iy}_{iz}");
-        let corners = [(0usize, 0usize), (1, 0), (1, 1), (0, 1)];
+        let (length, width, height) = (4.0_f64, 1.0_f64, 2.0_f64);
+        let id = |i: usize, j: usize, k: usize| format!("n{i}_{j}_{k}");
 
         let mut nodes = Vec::new();
-        for ix in 0..=nx {
-            let x = dx * ix as f64;
-            for &(iy, iz) in &corners {
-                let y = if iy == 0 { 0.0 } else { b };
-                let z = if iz == 0 { 0.0 } else { h };
-                nodes.push(Node { id: corner_id(ix, iy, iz), pos: [x, y, z] });
+        for i in 0..=nx {
+            for j in 0..=ny {
+                for k in 0..=nz {
+                    nodes.push(Node { id: id(i, j, k), pos: [length * i as f64 / nx as f64, width * j as f64 / ny as f64, height * k as f64 / nz as f64] });
+                }
             }
         }
 
         let mut elements: Vec<Elements> = Vec::new();
-        for ix in 0..nx {
-            elements.push(
-                Hex8 {
-                    id: format!("hex{ix}"),
-                    nodes: [corner_id(ix, 0, 0), corner_id(ix + 1, 0, 0), corner_id(ix + 1, 1, 0), corner_id(ix, 1, 0), corner_id(ix, 0, 1), corner_id(ix + 1, 0, 1), corner_id(ix + 1, 1, 1), corner_id(ix, 1, 1)],
-                    e,
-                    nu,
-                    density: 0.0,
+        for i in 0..nx {
+            for j in 0..ny {
+                for k in 0..nz {
+                    elements.push(Hex8 { id: format!("h{i}_{j}_{k}"), nodes: [id(i, j, k), id(i + 1, j, k), id(i + 1, j + 1, k), id(i, j + 1, k), id(i, j, k + 1), id(i + 1, j, k + 1), id(i + 1, j + 1, k + 1), id(i, j + 1, k + 1)], e, nu, density: 0.0 }.into());
                 }
-                .into(),
-            );
+            }
         }
 
-        let supports = corners.iter().map(|&(iy, iz)| Support { node_id: corner_id(0, iy, iz), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }).collect();
-        let p_total = 1e4;
-        let nodal_loads = corners.iter().map(|&(iy, iz)| NodalLoad { node_id: corner_id(nx, iy, iz), dof: Dof::Tz, value: -p_total / 4.0 }).collect();
+        let face: Vec<(usize, usize)> = (0..=ny).flat_map(|j| (0..=nz).map(move |k| (j, k))).collect();
+        let supports = face.iter().map(|&(j, k)| Support { node_id: id(0, j, k), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }).collect();
+        let share = -1e4 / face.len() as f64;
+        let nodal_loads = face.iter().map(|&(j, k)| NodalLoad { node_id: id(nx, j, k), dof: Dof::Tz, value: share }).collect();
 
-        let model = Model { nodes, elements, supports, nodal_loads, member_loads: vec![] };
-        let result = solve_linear_static(&model).expect("solves");
+        let model = AnalysisModel { nodes, elements, supports };
+        let case = LoadCase { id: "tip".into(), nodal_loads, member_loads: vec![], self_weight: false };
+        let results = solve_multi_case(&model, std::slice::from_ref(&case), &[], [0.0, 0.0, 0.0]).expect("hex cantilever solves");
+        let result = results.get("tip").unwrap();
+        face.iter().map(|&(j, k)| result.displacements.iter().find(|d| d.node_id == id(nx, j, k)).unwrap().values[Dof::Tz.index()]).sum::<f64>() / face.len() as f64
+    }
 
-        let tip_dz: f64 = corners
-            .iter()
-            .map(|&(iy, iz)| {
-                let id = corner_id(nx, iy, iz);
-                result.displacements.iter().find(|d| d.node_id == id).unwrap().values[Dof::Tz.index()]
-            })
-            .sum::<f64>()
-            / corners.len() as f64;
+    /// 🏗️ Hex-meshed cantilever against BOTH an exact same-mesh reference and the Timoshenko closed
+    /// form `δ = PL³/3EI + PL/(κGA)`, `κ=5/6` (1.600e-6 + 3.120e-7 = 1.912e-6 m for this box).
+    /// `🔨️w7-kernel-references.py` section 5 computes the same-mesh values two independent ways —
+    /// scikit-fem 12.0.2's `ElementHex1` at `intorder=2` and a hand-assembled numpy trilinear hex —
+    /// which agree to twelve digits: -1.722214505218e-6 m (8x2x2, 243 DOFs) and -1.822205573460e-6 m
+    /// (12x2x5, 702 DOFs). A trilinear hex without incompatible modes shear-locks, so beam theory is
+    /// only approached from below (90.07 % then 95.30 %) — hence the 5 % bound on the refined mesh.
+    #[test]
+    fn hex8_meshed_cantilever_matches_reference_and_beam_theory() {
+        let coarse = hex8_cantilever_tip_deflection(8, 2, 2);
+        let fine = hex8_cantilever_tip_deflection(12, 2, 5);
+        for (label, actual, reference) in [("8x2x2", coarse, -1.722214505218e-6), ("12x2x5", fine, -1.822205573460e-6)] {
+            assert!((actual - reference).abs() / reference.abs() < 1e-6, "{label}: {actual} vs scikit-fem {reference}");
+        }
 
-        let i_area = b * h.powi(3) / 12.0;
-        let expected = p_total * l.powi(3) / (3.0 * e * i_area);
-        assert!(tip_dz.is_finite());
-        assert!(tip_dz < 0.0, "tip should deflect toward -Z, got {tip_dz}");
-        let ratio = tip_dz.abs() / expected;
-        assert!(ratio > 0.02 && ratio < 3.0, "deflection ratio {ratio} (actual {tip_dz} vs beam-theory {expected}) out of order-of-magnitude range");
+        let (e, nu, length, width, height, p_total) = (200e9_f64, 0.3_f64, 4.0_f64, 1.0_f64, 2.0_f64, 1e4_f64);
+        let shear_modulus = e / (2.0 * (1.0 + nu));
+        let inertia = width * height.powi(3) / 12.0;
+        let closed_form = p_total * length.powi(3) / (3.0 * e * inertia) + p_total * length / ((5.0 / 6.0) * shear_modulus * width * height);
+        assert!(fine < coarse && coarse < 0.0, "hex must stiffen-lock and converge upward in magnitude, got {coarse} then {fine}");
+        assert!((fine.abs() - closed_form).abs() / closed_form < 0.05, "refined tip {fine} vs Timoshenko closed form {closed_form}");
     }
 
     /// ⚖️ `Hex8::mass`'s total (pure-`Tx` submatrix sum) equals `ρV` on the UNIT cube (skewed hex

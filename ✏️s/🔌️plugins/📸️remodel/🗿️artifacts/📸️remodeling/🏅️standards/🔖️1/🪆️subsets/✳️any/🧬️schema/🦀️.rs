@@ -66,7 +66,7 @@ pub fn video_codec_from_label(label: &str) -> VideoCodec {
 /// 🧬️ Full remodeling artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.remodeling.remodeling")]
+#[artifact_schema(id = "s.remodel.remodeling")]
 pub struct RemodelingArtifact {
     #[state(artifact)]
     pub schema: String,
@@ -223,10 +223,10 @@ impl RemodelingArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.remodeling.remodeling` — twenty handcrafted schema leaves.
+/// 🧬️ Descriptor for `s.remodel.remodeling` — twenty handcrafted schema leaves.
 pub fn remodeling_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
-        id: "s.remodeling.remodeling",
+        id: "s.remodel.remodeling",
         artifact: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),

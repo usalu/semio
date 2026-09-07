@@ -3,8 +3,12 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 
-fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.json")).expect("neutral builder fixture cases") }
-fn operation(delta: i32) -> DependencyTestOp { DependencyTestOp::AddValue(AddValue { delta }) }
+fn cases() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🔣️.json")).expect("neutral builder fixture cases")
+}
+fn operation(delta: i32) -> DependencyTestOp {
+    DependencyTestOp::AddValue(AddValue { delta })
+}
 
 pub(super) fn assert_add_value_contract(descriptor: &str) {
     assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(&AddValue::DESCRIPTOR)), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor JSON"));
@@ -23,7 +27,15 @@ fn actual_descriptor_provenance() {
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", provenance.owner));
     assert_eq!(provenance.descriptor_path, format!("{}/🔣️.json", provenance.owner));
     assert!(provenance.owner.ends_with("/🧬️mutations/➕️add-value"));
-    let scope = protocol::MutationLeafSourceScope { workspace_token: provenance.workspace_token, mutation_root: provenance.mutation_root, owner_layout: protocol::MutationOwnerLayout::Flat, taxonomy_path: provenance.taxonomy_path, mutation_payload_facet: "🦠️mutation", source_filename: "🦀️.rs", descriptor_filename: "🔣️.json" };
+    let scope = protocol::MutationLeafSourceScope {
+        workspace_token: provenance.workspace_token,
+        mutation_root: provenance.mutation_root,
+        owner_layout: protocol::MutationOwnerLayout::Flat,
+        taxonomy_path: provenance.taxonomy_path,
+        mutation_payload_facet: "🦠️mutation",
+        source_filename: "🦀️.rs",
+        descriptor_filename: "🔣️.json",
+    };
     assert!(protocol::validate_mutation_leaf_source(&AddValue::DESCRIPTOR, &provenance, &scope).is_ok());
     let mut invalid = provenance;
     invalid.source_path = "elsewhere/🦀️.rs";
@@ -42,15 +54,30 @@ fn exact_i32_inverse_and_boundary_laws() {
             inverse.extend(mutation.inverse(&current));
             match mutation.diff(&current).diff().apply(&current) {
                 Ok(next) => current = next,
-                Err(error) => { assert_eq!(error.code, "mutation.apply.overflow"); rejected = true; break; }
+                Err(error) => {
+                    assert_eq!(error.code, "mutation.apply.overflow");
+                    rejected = true;
+                    break;
+                }
             }
         }
-        if row["error"].as_bool() == Some(true) { assert!(rejected, "{row}"); continue; }
+        if row["error"].as_bool() == Some(true) {
+            assert!(rejected, "{row}");
+            continue;
+        }
         assert!(!rejected);
         assert_eq!(i64::from(current.value), row["result"].as_i64().expect("result"));
-        let stored: Vec<_> = inverse.iter().map(|mutation| { let DependencyTestOp::AddValue(leaf) = mutation; leaf.delta }).collect();
+        let stored: Vec<_> = inverse
+            .iter()
+            .map(|mutation| {
+                let DependencyTestOp::AddValue(leaf) = mutation;
+                leaf.delta
+            })
+            .collect();
         assert_eq!(serde_json::to_value(stored).expect("stored inverse"), row["inverse"]);
-        for inverse in inverse.iter().rev() { current = inverse.diff(&current).diff().apply(&current).expect("Store reverse inverse"); }
+        for inverse in inverse.iter().rev() {
+            current = inverse.diff(&current).diff().apply(&current).expect("Store reverse inverse");
+        }
         assert_eq!(current, base);
     }
 }
@@ -94,7 +121,7 @@ fn strict_payload_and_all_codecs() {
         assert!(text.starts_with("add-value"));
         assert_eq!(DependencyTestOp::parse_op(&text).expect("text decode"), mutation);
         let bytes = mutation.encode_op().expect("binary encode");
-        assert_eq!(&bytes[..2], &[1,0]);
+        assert_eq!(&bytes[..2], &[1, 0]);
         assert_eq!(DependencyTestOp::decode_op(&bytes).expect("binary decode"), mutation);
     }
     for value in cases()["invalid"].as_array().expect("invalid cases") {
@@ -103,7 +130,7 @@ fn strict_payload_and_all_codecs() {
         envelope["operation"] = serde_json::json!("addValue");
         assert!(serde_json::from_value::<DependencyTestOp>(envelope).is_err());
     }
-    assert!(DependencyTestOp::decode_op(&[1,1]).is_err());
+    assert!(DependencyTestOp::decode_op(&[1, 1]).is_err());
 }
 
 #[test]

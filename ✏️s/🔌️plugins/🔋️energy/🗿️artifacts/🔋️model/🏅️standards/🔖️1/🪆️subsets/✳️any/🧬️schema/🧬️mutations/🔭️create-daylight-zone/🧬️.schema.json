@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateDaylightZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "zoneId",
+    "illuminanceTargetLux",
+    "glareLimit",
+    "windowTransmittance"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "illuminanceTargetLux": {
+      "type": "number"
+    },
+    "glareLimit": {
+      "type": "number"
+    },
+    "windowTransmittance": {
+      "type": "number"
+    }
+  }
+}

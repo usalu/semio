@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RenameMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newName"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newName": {
+      "type": "string"
+    }
+  }
+}

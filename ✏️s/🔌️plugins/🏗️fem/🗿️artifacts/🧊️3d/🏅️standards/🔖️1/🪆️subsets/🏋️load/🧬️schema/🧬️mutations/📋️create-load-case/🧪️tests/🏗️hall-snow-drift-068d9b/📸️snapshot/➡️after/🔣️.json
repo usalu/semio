@@ -1,0 +1,649 @@
+{
+  "nodes": [
+    {
+      "id": "bl_0",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "el_0",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 4.2
+    },
+    {
+      "id": "ap_0",
+      "x": 6.0,
+      "y": 0.0,
+      "z": 6.5
+    },
+    {
+      "id": "er_0",
+      "x": 12.0,
+      "y": 0.0,
+      "z": 4.2
+    },
+    {
+      "id": "br_0",
+      "x": 12.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "bl_1",
+      "x": 0.0,
+      "y": 6.0,
+      "z": 0.0
+    },
+    {
+      "id": "el_1",
+      "x": 0.0,
+      "y": 6.0,
+      "z": 4.2
+    },
+    {
+      "id": "ap_1",
+      "x": 6.0,
+      "y": 6.0,
+      "z": 6.5
+    },
+    {
+      "id": "er_1",
+      "x": 12.0,
+      "y": 6.0,
+      "z": 4.2
+    },
+    {
+      "id": "br_1",
+      "x": 12.0,
+      "y": 6.0,
+      "z": 0.0
+    },
+    {
+      "id": "bl_2",
+      "x": 0.0,
+      "y": 12.0,
+      "z": 0.0
+    },
+    {
+      "id": "el_2",
+      "x": 0.0,
+      "y": 12.0,
+      "z": 4.2
+    },
+    {
+      "id": "ap_2",
+      "x": 6.0,
+      "y": 12.0,
+      "z": 6.5
+    },
+    {
+      "id": "er_2",
+      "x": 12.0,
+      "y": 12.0,
+      "z": 4.2
+    },
+    {
+      "id": "br_2",
+      "x": 12.0,
+      "y": 12.0,
+      "z": 0.0
+    },
+    {
+      "id": "n_ext_a",
+      "x": 6.0,
+      "y": 18.0,
+      "z": 0.0
+    },
+    {
+      "id": "n_ext_b",
+      "x": 6.0,
+      "y": 18.0,
+      "z": 4.2
+    }
+  ],
+  "elements": [
+    {
+      "kind": "frame",
+      "id": "col_l_0",
+      "start": "bl_0",
+      "end": "el_0",
+      "materialId": "gl24h",
+      "sectionId": "sec_col",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "raf_l_0",
+      "start": "el_0",
+      "end": "ap_0",
+      "materialId": "gl24h",
+      "sectionId": "sec_raf",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "raf_r_0",
+      "start": "ap_0",
+      "end": "er_0",
+      "materialId": "gl24h",
+      "sectionId": "sec_raf",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_r_0",
+      "start": "br_0",
+      "end": "er_0",
+      "materialId": "gl24h",
+      "sectionId": "sec_col",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_l_1",
+      "start": "bl_1",
+      "end": "el_1",
+      "materialId": "gl24h",
+      "sectionId": "sec_col",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "raf_l_1",
+      "start": "el_1",
+      "end": "ap_1",
+      "materialId": "gl24h",
+      "sectionId": "sec_raf",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "raf_r_1",
+      "start": "ap_1",
+      "end": "er_1",
+      "materialId": "gl24h",
+      "sectionId": "sec_raf",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_r_1",
+      "start": "br_1",
+      "end": "er_1",
+      "materialId": "gl24h",
+      "sectionId": "sec_col",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_l_2",
+      "start": "bl_2",
+      "end": "el_2",
+      "materialId": "gl24h",
+      "sectionId": "sec_col",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "raf_l_2",
+      "start": "el_2",
+      "end": "ap_2",
+      "materialId": "gl24h",
+      "sectionId": "sec_raf",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "raf_r_2",
+      "start": "ap_2",
+      "end": "er_2",
+      "materialId": "gl24h",
+      "sectionId": "sec_raf",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_r_2",
+      "start": "br_2",
+      "end": "er_2",
+      "materialId": "gl24h",
+      "sectionId": "sec_col",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "pur_e_l_0",
+      "start": "el_0",
+      "end": "el_1",
+      "materialId": "c24",
+      "sectionId": "sec_pur",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "pur_a_0",
+      "start": "ap_0",
+      "end": "ap_1",
+      "materialId": "c24",
+      "sectionId": "sec_pur",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "pur_e_r_0",
+      "start": "er_0",
+      "end": "er_1",
+      "materialId": "c24",
+      "sectionId": "sec_pur",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "pur_e_l_1",
+      "start": "el_1",
+      "end": "el_2",
+      "materialId": "c24",
+      "sectionId": "sec_pur",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "pur_a_1",
+      "start": "ap_1",
+      "end": "ap_2",
+      "materialId": "c24",
+      "sectionId": "sec_pur",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "pur_e_r_1",
+      "start": "er_1",
+      "end": "er_2",
+      "materialId": "c24",
+      "sectionId": "sec_pur",
+      "roll": 0.0
+    },
+    {
+      "kind": "bar",
+      "id": "brc_0",
+      "start": "el_0",
+      "end": "ap_1",
+      "materialId": "s355",
+      "sectionId": "sec_tie"
+    },
+    {
+      "kind": "bar",
+      "id": "brc_1",
+      "start": "ap_0",
+      "end": "el_1",
+      "materialId": "s355",
+      "sectionId": "sec_tie"
+    },
+    {
+      "kind": "bar",
+      "id": "tie_spare",
+      "start": "el_2",
+      "end": "er_2",
+      "materialId": "s355",
+      "sectionId": "sec_tie"
+    }
+  ],
+  "materials": [
+    {
+      "id": "gl24h",
+      "name": "GL24h Glulam",
+      "e": 11500000000.0,
+      "g": 650000000.0,
+      "nu": 0.3,
+      "rho": 420.0
+    },
+    {
+      "id": "c24",
+      "name": "C24 Solid Timber",
+      "e": 11000000000.0,
+      "g": 690000000.0,
+      "nu": 0.3,
+      "rho": 420.0
+    },
+    {
+      "id": "s355",
+      "name": "Steel S355",
+      "e": 210000000000.0,
+      "g": 81000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0
+    },
+    {
+      "id": "c25_30",
+      "name": "C25/30 Concrete",
+      "e": 31000000000.0,
+      "g": 12920000000.0,
+      "nu": 0.2,
+      "rho": 2500.0
+    },
+    {
+      "id": "gl32c",
+      "name": "GL32c Glulam",
+      "e": 13500000000.0,
+      "g": 650000000.0,
+      "nu": 0.3,
+      "rho": 440.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "sec_col",
+      "name": "GL24h Column 200x400",
+      "area": 0.08,
+      "iy": 0.00106667,
+      "iz": 0.00026667,
+      "j": 0.000733
+    },
+    {
+      "id": "sec_raf",
+      "name": "GL24h Rafter 180x600",
+      "area": 0.108,
+      "iy": 0.00324,
+      "iz": 0.0002916,
+      "j": 0.00092
+    },
+    {
+      "id": "sec_pur",
+      "name": "C24 Purlin 100x200",
+      "area": 0.02,
+      "iy": 6.667e-05,
+      "iz": 1.667e-05,
+      "j": 4.58e-05
+    },
+    {
+      "id": "sec_tie",
+      "name": "M24 Tie Rod",
+      "area": 0.000353,
+      "iy": 1.03e-08,
+      "iz": 1.03e-08,
+      "j": 2.06e-08
+    },
+    {
+      "id": "sec_strut",
+      "name": "SHS 100x100x5",
+      "area": 0.00184,
+      "iy": 2.79e-06,
+      "iz": 2.79e-06,
+      "j": 4.45e-06
+    }
+  ],
+  "solids": [
+    {
+      "id": "slab_raft",
+      "name": "Workshop Raft Slab",
+      "outline": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          12.0,
+          0.0
+        ],
+        [
+          12.0,
+          12.0
+        ],
+        [
+          0.0,
+          12.0
+        ]
+      ],
+      "holes": [
+        [
+          [
+            4.0,
+            4.0
+          ],
+          [
+            8.0,
+            4.0
+          ],
+          [
+            8.0,
+            8.0
+          ],
+          [
+            4.0,
+            8.0
+          ]
+        ]
+      ],
+      "baseZ": -0.35,
+      "height": 0.35,
+      "layers": 1,
+      "meshSize": 1.0,
+      "materialId": "c25_30"
+    },
+    {
+      "id": "slab_apron",
+      "name": "Door Apron Slab",
+      "outline": [
+        [
+          12.0,
+          0.0
+        ],
+        [
+          15.0,
+          0.0
+        ],
+        [
+          15.0,
+          12.0
+        ],
+        [
+          12.0,
+          12.0
+        ]
+      ],
+      "holes": [],
+      "baseZ": -0.2,
+      "height": 0.2,
+      "layers": 1,
+      "meshSize": 1.5,
+      "materialId": "c25_30"
+    }
+  ],
+  "supports": [
+    {
+      "id": "sup_bl_0",
+      "nodeId": "bl_0",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "sup_br_0",
+      "nodeId": "br_0",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "sup_bl_1",
+      "nodeId": "bl_1",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "sup_br_1",
+      "nodeId": "br_1",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "sup_bl_2",
+      "nodeId": "bl_2",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "sup_br_2",
+      "nodeId": "br_2",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "sup_ext_a",
+      "nodeId": "n_ext_a",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead Load",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "ld_roof",
+          "elementId": "raf_l_1",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -2700.0
+        },
+        {
+          "kind": "area",
+          "id": "ld_floor",
+          "solidId": "slab_raft",
+          "pressure": 2500.0
+        }
+      ],
+      "selfWeight": true
+    },
+    {
+      "id": "snow",
+      "name": "Snow",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "ld_snow_l",
+          "elementId": "raf_l_1",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -4320.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "ld_snow_r",
+          "elementId": "raf_r_1",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -4320.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "wind_x",
+      "name": "Wind X",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "ld_wx_0",
+          "nodeId": "el_0",
+          "dof": "Tx",
+          "value": 5400.0
+        },
+        {
+          "kind": "nodal",
+          "id": "ld_wx_1",
+          "nodeId": "el_1",
+          "dof": "Tx",
+          "value": 10800.0
+        },
+        {
+          "kind": "nodal",
+          "id": "ld_wx_spare",
+          "nodeId": "el_2",
+          "dof": "Tx",
+          "value": 5400.0
+        }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "crane_spare",
+      "name": "Crane Runway",
+      "loads": [],
+      "selfWeight": false
+    },
+    {
+      "id": "snow_drift",
+      "name": "Snow Drift",
+      "loads": [
+        {
+          "kind": "memberUdl",
+          "id": "ld_drift_l",
+          "elementId": "raf_l_1",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -8640.0
+        }
+      ],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [
+    {
+      "id": "uls_str",
+      "name": "ULS STR",
+      "terms": {
+        "dead": 1.35,
+        "snow": 1.5,
+        "wind_x": 0.9
+      }
+    },
+    {
+      "id": "sls_char",
+      "name": "SLS Characteristic",
+      "terms": {
+        "dead": 1.0,
+        "snow": 1.0
+      }
+    },
+    {
+      "id": "sls_qp_spare",
+      "name": "SLS Quasi-Permanent",
+      "terms": {
+        "dead": 1.0
+      }
+    }
+  ],
+  "analysis": {
+    "modalCount": 6,
+    "bucklingCount": 4,
+    "deformationScale": 150.0
+  }
+}

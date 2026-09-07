@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateSizingObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "zoneId",
+    "sizingType",
+    "designDayType"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "zoneId": {
+      "type": "integer"
+    },
+    "sizingType": {
+      "enum": [
+        "Heating",
+        "Cooling",
+        "OutdoorAir"
+      ]
+    },
+    "designDayType": {
+      "enum": [
+        "Heating",
+        "Cooling"
+      ]
+    }
+  }
+}

@@ -56,8 +56,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.remodel.remodeling.standard.v1", "standard", "1", &[], None),
         ("s.remodel.remodeling.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.remodel.remodeling.schema.artifact", "schema", "s.remodeling.remodeling", &[("schema", "s.remodeling.remodeling")], None),
-        ("s.remodel.remodeling.inference.artifact", "inference", "s.remodeling.remodeling.inference", &[("schema", "s.remodeling.remodeling.inference")], None),
+        ("s.remodel.remodeling.schema.artifact", "schema", "s.remodel.remodeling", &[("schema", "s.remodel.remodeling")], None),
+        ("s.remodel.remodeling.inference.artifact", "inference", "s.remodel.remodeling.inference", &[("schema", "s.remodel.remodeling.inference")], None),
         ("s.remodel.remodeling.composer.native", "composer", "s.remodel.remodeling@1/*", &[("dialect", "s.remodel.remodeling@1/*")], None),
         ("s.remodel.remodeling.composer.format-1", "composer", "s.stdio.las@1.0/*", &[("dialect", "s.stdio.las@1.0/*")], None),
         ("s.remodel.remodeling.composer.format-2", "composer", "s.stdio.ply@1.0/*", &[("dialect", "s.stdio.ply@1.0/*")], None),
@@ -90,78 +90,20 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::remodeling::schema::remodeling_artifact_schema_descriptor())
-        .inferences([crate::artifacts::remodeling::standards::v1::subsets::any::schema::inferences::remodeling_artifact_inference_descriptor()])
-        .composers(crate::artifacts::remodeling::standards::v1::subsets::any::io::native_composer_entries())
-        .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::remodeling::RemodelingPlayApp>>()
-        .try_build()
+/// 🗿️ New declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §2)
+/// — replaces the OLD `declaration()`/`pilot_languages()` pair outright (atomic cutover, no dual
+/// registration channel), the same cutover `🗒️note`/`🔱️trinity` already made. The five
+/// `dsl::LanguageSpec`s `pilot_languages()` built now live beside their own codec in the subset's
+/// `🚪️io/🦀️.rs` `io()`, which `commit_artifact_declarations` registers; `.composers(…)`'s single
+/// surviving native row has no field on this tree because `io()`'s typed `IoEntry` slice replaced
+/// that channel. `localization: &[]` is a documented shortfall (debt D1): the real en/de names
+/// ("Remodeling"/"Umbau") still live on `definition()`'s kept `ArtifactCapability` rows.
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::RemodelApps> {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.remodel.remodeling").expect("canonical remodeling kind"), localization: &[], standards: vec![crate::artifacts::remodeling::standards::v1::standard()] }
 }
 
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
-/// `OnceLock`-backed `io_registry::entries()` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                dsl::LanguageSpec {
-                    id: "remodeling.document",
-                    extension: Some("remodeling"),
-                    role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::remodeling::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::remodeling::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("remodeling.document"),
-                },
-                dsl::LanguageSpec {
-                    id: "remodeling.op",
-                    extension: None,
-                    role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::remodeling::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::remodeling::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("remodeling.op"),
-                },
-                dsl::LanguageSpec {
-                    id: "remodeling.diff",
-                    extension: None,
-                    role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::remodeling::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::remodeling::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: dsl::passthrough_hooks("remodeling.diff"),
-                },
-                dsl::LanguageSpec {
-                    id: "remodeling.pack",
-                    extension: None,
-                    role: dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("remodeling.pack"),
-                },
-                dsl::LanguageSpec {
-                    id: "remodeling.spr",
-                    extension: None,
-                    role: dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("remodeling.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
 //#endregion 🔖️Register
 
 pub use crate::artifacts::remodeling::schema::mutations::RemodelingMutation;
@@ -819,7 +761,7 @@ fn remodeling_test_meshes() -> &'static Mutex<BTreeMap<String, MeshData>> {
 
 #[cfg(test)]
 pub fn mint_and_stash_mesh(mesh: MeshData) -> RemodelingMeshChild {
-    let bytes = serde_json::to_vec(&mesh).unwrap_or_default();
+    let bytes = pack::to_json_string(&mesh).into_bytes();
     let child_id = mesh_digest_bytes([bytes.as_slice()]);
     remodeling_test_meshes().lock().expect("remodeling test mesh lock").insert(child_id.clone(), mesh);
     mesh_child_handle(child_id, "remodeling-mesh".into())
@@ -1660,7 +1602,7 @@ mod tests {
     /// pre-existing `populated_scene_roundtrips_through_json`) actually walk the full document shape
     /// instead of just `default_remodeling_scene()`'s mostly-empty surface. Duplicated verbatim into every
     /// taxonomy node that needs it (`🗣️dsl`, `🔧️op`, `🎒️pack`) since it is a private test-only builder.
-    async fn populated_scene_fixture() -> RemodelingSnapshot {
+    fn populated_scene_fixture() -> RemodelingSnapshot {
         let mut scene = default_remodeling_scene();
         scene.streams.push(MediaStream {
             id: "stream-1".into(),
@@ -1766,16 +1708,16 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn scene_roundtrips_through_json() {
         let scene = default_remodeling_scene();
-        let json = serde_json::to_string(&scene).expect("serialize");
-        let parsed: RemodelingSnapshot = serde_json::from_str(&json).expect("deserialize");
+        let json = pack::to_json_string(&scene);
+        let parsed: RemodelingSnapshot = pack::from_json_str(&json).expect("deserialize");
         assert_eq!(parsed, scene);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn populated_scene_roundtrips_through_json() {
         let scene = populated_scene_fixture();
-        let json = serde_json::to_string(&scene).expect("serialize");
-        let parsed: RemodelingSnapshot = serde_json::from_str(&json).expect("deserialize");
+        let json = pack::to_json_string(&scene);
+        let parsed: RemodelingSnapshot = pack::from_json_str(&json).expect("deserialize");
         assert_eq!(parsed, scene);
     }
 

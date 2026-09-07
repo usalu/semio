@@ -1,7 +1,7 @@
 //! 🫧️ Exact zero-payload transient closure, fenced to its installed terminal root and generation.
 
-use crate::{ArtifactOwnedDisposer, Fault, NoTransient, NoTransientMutation, PluginCloseStep};
 use crate::store::TransientStore;
+use crate::{ArtifactOwnedDisposer, Fault, NoTransient, NoTransientMutation, PluginCloseStep};
 use std::sync::{Arc, Weak};
 
 type Store = TransientStore<NoTransient, NoTransientMutation>;
@@ -17,7 +17,9 @@ pub struct NoTransientStoreDisposer {
 }
 
 impl NoTransientStoreDisposer {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     fn owns_terminal(&self, owner: &Store) -> bool {
         self.terminal_generation == owner.generation_now() && self.terminal_root.as_ref().and_then(Weak::upgrade).is_some_and(|root| Arc::ptr_eq(&root, &owner.current_root()))
@@ -29,7 +31,9 @@ impl ArtifactOwnedDisposer<Store> for NoTransientStoreDisposer {
         if self.terminal_root.is_some() {
             return self.owns_terminal(owner).then_some(PluginCloseStep::Complete).ok_or_else(|| Fault::from("empty transient terminal owner or generation changed"));
         }
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         let retired = std::mem::replace(owner, Store::new(NoTransient::default()));
         self.terminal_root = Some(Arc::downgrade(&owner.current_root()));
         self.terminal_generation = owner.generation_now();
@@ -37,5 +41,7 @@ impl ArtifactOwnedDisposer<Store> for NoTransientStoreDisposer {
         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
     }
 
-    fn terminal_is_empty(&self, owner: &Store) -> bool { self.owns_terminal(owner) }
+    fn terminal_is_empty(&self, owner: &Store) -> bool {
+        self.owns_terminal(owner)
+    }
 }
